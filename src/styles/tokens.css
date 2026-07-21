@@ -16,6 +16,28 @@
   --font-plex: 'IBM Plex Mono', Consolas, 'Courier New', monospace;
 }
 
+/* ---------- Tintas de proceso (registro/misregistration) ----------
+   No dependen de la edición: son las tintas de la prensa. Solo ajustan
+   luminosidad en oscuro. */
+:root {
+  --reg-c1: #00a6e0; /* cian proceso */
+  --reg-c2: #e0007a; /* magenta proceso */
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --reg-c1: #3fc1ff;
+    --reg-c2: #ff4fa3;
+  }
+}
+:root[data-theme='light'] {
+  --reg-c1: #00a6e0;
+  --reg-c2: #e0007a;
+}
+:root[data-theme='dark'] {
+  --reg-c1: #3fc1ff;
+  --reg-c2: #ff4fa3;
+}
+
 /* ============ AFICHE ============ */
 :root,
 :root[data-tema='afiche'] {

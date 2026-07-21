@@ -2,7 +2,8 @@
 // Persistencia en localStorage: ms-tema / ms-theme (el anti-FOUC de
 // Base.astro los lee antes del primer paint).
 import gsap from 'gsap';
-import { heroTimeline } from './hero';
+import { pageReveal } from './registro';
+import './eases';
 
 const NOMBRES: Record<string, string> = { afiche: 'Afiche', terminal: 'Terminal', plano: 'Plano' };
 
@@ -53,14 +54,14 @@ export function initTema(reduced: boolean): void {
             gsap.set(wipe, { yPercent: -100 });
           },
         })
-        .fromTo(wipe, { yPercent: -100 }, { yPercent: 0, duration: 0.42, ease: 'power4.inOut' })
+        .fromTo(wipe, { yPercent: -100 }, { yPercent: 0, duration: 0.4, ease: 'prensa' })
         .add(() => applyTema(tema))
-        .to(wipe, { yPercent: 100, duration: 0.42, ease: 'power4.inOut' }, '+=0.12')
-        // Creado recién acá: si se instancia antes, sus fromTo esconden el
-        // hero de inmediato (immediateRender) con la cortina todavía arriba.
+        .to(wipe, { yPercent: 100, duration: 0.4, ease: 'salida' }, '+=0.1')
+        // Creado recién acá: si se instancia antes, sus fromTo esconden la
+        // página de inmediato (immediateRender) con la cortina todavía arriba.
         .add(() => {
-          heroTimeline(true);
-        }, '-=0.3');
+          pageReveal(true);
+        }, '-=0.28');
     });
   });
 

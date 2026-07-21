@@ -1,13 +1,10 @@
 ---
 import Base from '../layouts/Base.astro';
-import Intro from '../components/Intro.astro';
 import Topbar from '../components/Topbar.astro';
 import Hero from '../components/Hero.astro';
 ---
 
 <Base>
-  <Intro />
-
   <div class="wipe" id="wipe" aria-hidden="true">
     <span id="wipe-label">reimprimiendo</span>
   </div>
@@ -19,37 +16,33 @@ import Hero from '../components/Hero.astro';
       <Hero />
     </div>
 
-    <div class="marquee-strip" aria-hidden="true">
-      <div class="marquee-track">
-        <span class="marquee-seg only-afiche only-inline">
-          Se exhibe trabajo real · <span class="hit">funciones todos los días en producción</span> · impreso en Buenos Aires ·&nbsp;
-        </span>
-        <span class="marquee-seg only-afiche only-inline">
-          Se exhibe trabajo real · <span class="hit">funciones todos los días en producción</span> · impreso en Buenos Aires ·&nbsp;
-        </span>
-        <span class="marquee-seg only-terminal only-inline">
-          $ status: <span class="hit">en producción</span> · laruculagastrobar.es · argpiscinas.es · 4 proyectos seleccionados ·&nbsp;
-        </span>
-        <span class="marquee-seg only-terminal only-inline">
-          $ status: <span class="hit">en producción</span> · laruculagastrobar.es · argpiscinas.es · 4 proyectos seleccionados ·&nbsp;
-        </span>
-        <span class="marquee-seg only-plano only-inline">
-          Láminas 01–04 · esc 1:1 · <span class="hit">dibujó: M. Sonzogni</span> · Río de la Plata · producción real ·&nbsp;
-        </span>
-        <span class="marquee-seg only-plano only-inline">
-          Láminas 01–04 · esc 1:1 · <span class="hit">dibujó: M. Sonzogni</span> · Río de la Plata · producción real ·&nbsp;
-        </span>
+    <section id="tirada" class="tirada" aria-label="La tirada">
+      <div class="wrap" data-reveal>
+        <div class="tirada-head">
+          <h2>La tirada</h2>
+          <p class="tirada-nota">4 piezas · 2 en producción</p>
+        </div>
+        <p class="tirada-placeholder">
+          El pliego con los trabajos está en prensa — entra en la próxima edición de este sitio.
+        </p>
       </div>
-    </div>
-
-    <section class="teaser wrap" aria-label="Próximas secciones">
-      <p class="teaser-note">En prensa — trabajos seleccionados, sobre mí y contacto llegan en el próximo paso.</p>
     </section>
   </main>
 
-  <footer class="foot">
-    <span>© 2026 Mateo Sonzogni</span>
-    <span>Buenos Aires · Río de la Plata</span>
+  <footer id="colofon" class="colofon" aria-label="Colofón">
+    <div class="wrap" data-reveal>
+      <h2>Colofón</h2>
+      <p class="colofon-texto">
+        Este sitio se compuso en Anton, IBM Plex Mono y Archivo, y se imprimió con Astro,
+        GSAP y Lenis sobre papel digital. Edición al cuidado de su autor.
+        Buenos Aires · Río de la Plata · 2026.
+      </p>
+      <p class="colofon-contacto">
+        <a href="mailto:mateogabus@gmail.com">mateogabus@gmail.com</a>
+        <span aria-hidden="true">·</span>
+        <a href="https://github.com/MateoGs013" target="_blank" rel="noopener">github.com/MateoGs013</a>
+      </p>
+    </div>
   </footer>
 </Base>
 
@@ -73,65 +66,77 @@ import Hero from '../components/Hero.astro';
     text-transform: uppercase;
   }
 
-  .marquee-strip {
+  .tirada {
     border-top: 1px solid var(--line);
-    border-bottom: 1px solid var(--line);
-    overflow: hidden;
-    white-space: nowrap;
-    background: var(--bg2);
-    transition: background-color 0.5s;
+    padding: clamp(40px, 8vh, 90px) 0;
   }
-  .marquee-track {
-    display: inline-block;
-    padding: 12px 0;
-    font-family: var(--font-m);
-    font-size: 12px;
-    letter-spacing: 0.18em;
-    text-transform: uppercase;
-    animation: marquee 28s linear infinite;
-  }
-  .marquee-seg .hit {
-    color: var(--accent);
-  }
-  @keyframes marquee {
-    from {
-      transform: translateX(0);
-    }
-    to {
-      transform: translateX(-50%);
-    }
-  }
-  @media (prefers-reduced-motion: reduce) {
-    .marquee-track {
-      animation: none;
-    }
-  }
-
-  .teaser {
-    min-height: 46vh;
+  .tirada-head {
     display: flex;
-    align-items: center;
-  }
-  .teaser-note {
-    font-family: var(--font-m);
-    font-size: 12px;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    color: var(--soft);
-    max-width: 44em;
-  }
-
-  .foot {
-    border-top: 1px solid var(--line);
-    padding: 22px clamp(16px, 4vw, 48px);
-    display: flex;
+    align-items: baseline;
     justify-content: space-between;
-    gap: 12px;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-bottom: 18px;
+  }
+  .tirada-head h2 {
+    margin: 0;
+    font-family: var(--font-d);
+    font-weight: var(--weight-d);
+    font-size: clamp(1.5rem, 1rem + 2.2vw, 2.6rem);
+  }
+  .tirada-nota {
+    margin: 0;
+    font-family: var(--font-m);
+    font-size: 12px;
+    color: var(--soft);
+    font-variant-numeric: tabular-nums;
+  }
+  .tirada-placeholder {
+    margin: 0;
+    color: var(--soft);
+    max-width: 52ch;
+  }
+
+  .colofon {
+    border-top: 1px solid var(--line);
+    padding: clamp(30px, 6vh, 60px) 0 clamp(26px, 5vh, 50px);
+  }
+  .colofon h2 {
+    margin: 0 0 12px;
+    font-family: var(--font-d);
+    font-weight: var(--weight-d);
+    font-size: 1.15rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+  .colofon-texto {
+    margin: 0 0 14px;
+    color: var(--soft);
+    font-size: 0.92rem;
+    max-width: 58ch;
+  }
+  .colofon-contacto {
+    margin: 0;
+    display: flex;
+    gap: 10px;
     flex-wrap: wrap;
     font-family: var(--font-m);
-    font-size: 11px;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
+    font-size: 13px;
+    overflow-wrap: anywhere;
+  }
+  .colofon-contacto a {
+    color: var(--ink);
+    text-decoration: none;
+    border-bottom: 2px solid var(--accent);
+    padding-bottom: 2px;
+  }
+  .colofon-contacto a:hover {
+    color: var(--accent);
+    text-shadow:
+      -1.5px 0 var(--reg-c1),
+      1.5px 0 var(--reg-c2);
+  }
+  .colofon-contacto span {
     color: var(--soft);
   }
 </style>

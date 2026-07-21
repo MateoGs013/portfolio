@@ -5,14 +5,18 @@
 ---
 
 <header class="topbar" id="topbar">
-  <span class="brand">M·S — Portfolio 2026</span>
+  <span class="brand">Imprenta M·S</span>
+  <nav class="secciones" aria-label="Secciones">
+    <a href="#tirada">La tirada</a>
+    <a href="#colofon">Colofón</a>
+  </nav>
   <nav class="selector" aria-label="Edición del portfolio">
     <span class="selector-label">Edición</span>
     <button class="chip" data-tema-btn="afiche">Afiche</button>
     <button class="chip" data-tema-btn="terminal">Terminal</button>
     <button class="chip" data-tema-btn="plano">Plano</button>
-    <button class="chip mode" id="mode-btn" aria-label="Cambiar entre modo claro y oscuro">
-      Claro / Oscuro
+    <button class="chip mode" id="mode-btn" aria-label="Cambiar la tinta entre modo claro y oscuro">
+      Tinta ◐
     </button>
   </nav>
 </header>
@@ -37,6 +41,23 @@
     font-size: 13px;
     letter-spacing: 0.08em;
     text-transform: uppercase;
+  }
+  .secciones {
+    display: flex;
+    gap: 16px;
+  }
+  .secciones a {
+    font-size: 13px;
+    text-decoration: none;
+    color: var(--soft);
+    border-bottom: 1px solid transparent;
+    transition: color 0.15s;
+  }
+  .secciones a:hover {
+    color: var(--accent);
+    text-shadow:
+      -1.5px 0 var(--reg-c1),
+      1.5px 0 var(--reg-c2);
   }
   .selector {
     display: flex;

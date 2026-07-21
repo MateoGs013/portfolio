@@ -1,153 +1,153 @@
 ---
-// Hero de la home. Las clases .hero-title y .only-* tienen reglas
-// globales por edición en ediciones.css; el reveal lo maneja site.ts.
+// Portada del pliego. El masthead es la "plancha" (efecto registro de
+// tintas en scripts/registro.ts); el resto se imprime por barridos.
+// Reglas por edición (folio, reglas del masthead, métricas) en ediciones.css.
 ---
 
-<section class="hero" aria-label="Presentación">
-  <p class="kicker" data-hero="kicker">
-    <span class="kicker-line" aria-hidden="true"></span>
-    Portfolio 2026 · Buenos Aires · Río de la Plata
-  </p>
+<section class="portada" aria-label="Portada">
+  <header class="masthead">
+    <p class="folio only-afiche">Año I · Pliego Nº 001 · Buenos Aires · sale cuando hay algo que mostrar</p>
+    <p class="folio only-terminal">MATEO_SONZOGNI(1) — manual del pliego · sección 001 · Buenos Aires</p>
+    <p class="folio only-plano">Lámina 001 · portada · esc 1:1 · dibujó: M.S. · Buenos Aires</p>
+    <h1 class="hero-title">
+      <span class="registro" data-text="Mateo Sonzogni">Mateo Sonzogni</span>
+    </h1>
+    <div class="masthead-rule" aria-hidden="true"></div>
+  </header>
 
-  <h1 class="hero-title">
-    <span class="line"><span class="line-inner" data-hero="line">Mateo</span></span>
-    <span class="line alt"><span class="line-inner" data-hero="line">Sonzogni</span></span>
-  </h1>
-
-  <div class="cota only-plano" data-hero="deco" aria-hidden="true">
-    <div class="cota-line">campo tipográfico · esc 1:1</div>
+  <div class="portada-grid">
+    <h2 class="titular" data-reveal>
+      Dos clientes en producción en España, un SaaS propio y una tesis que respira WebGL.
+    </h2>
+    <div class="portada-rail" data-reveal>
+      <p class="bajada">
+        Creative developer. Cada trabajo sale de esta imprenta con identidad propia — este
+        sitio también: <strong>cambiá la edición arriba y mirá cómo se reimprime</strong>.
+      </p>
+      <a class="cta" href="#tirada">Ver la tirada ↓</a>
+    </div>
   </div>
-  <p class="prompt-line only-terminal" data-hero="deco" aria-hidden="true">
-    $ whoami <span class="ok">→ creative developer · front-end con carácter</span>
-  </p>
-
-  <p class="bajada" data-hero="bajada">
-    Creative developer. Un mismo portfolio, muchas tintas: <strong>esta página se reimprime en la edición que elijas</strong> — porque diseñar distinto para cada proyecto es exactamente lo que hago.
-  </p>
-
-  <div class="hero-meta" data-hero="meta">
-    <div><span class="k">Rol</span>Creative developer</div>
-    <div><span class="k">Enfoque</span>Front-end · Motion · WebGL</div>
-    <div><span class="k">Estado</span>Disponible · 2026</div>
-  </div>
-
-  <p class="scroll-hint" data-hero="hint" aria-hidden="true">scrolleá ↓</p>
 </section>
 
 <style>
-  .hero {
-    padding: clamp(60px, 12vh, 130px) 0 clamp(40px, 7vh, 80px);
-    position: relative;
+  .portada {
+    padding-top: clamp(34px, 7vh, 90px);
   }
-  .kicker {
-    font-family: var(--font-m);
+
+  /* ---- Masthead ---- */
+  .folio {
+    margin: 0 0 10px;
     font-size: 11px;
-    letter-spacing: 0.22em;
+    letter-spacing: 0.08em;
     text-transform: uppercase;
     color: var(--soft);
-    margin: 0 0 18px;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-  }
-  .kicker-line {
-    width: 34px;
-    height: 1px;
-    background: var(--accent);
-    transform-origin: left center;
+    overflow-wrap: anywhere;
   }
   .hero-title {
     margin: 0;
     font-family: var(--font-d);
     font-weight: var(--weight-d);
     color: var(--ink);
-    font-size: clamp(2.6rem, 1rem + 9.5vw, 8.6rem);
-    line-height: 0.94;
+    font-size: clamp(2.1rem, 0.4rem + 9.2vw, 8rem);
+    line-height: 0.98;
+    white-space: nowrap;
+  }
+  .registro {
+    position: relative;
+    display: inline-block;
+    /* variables animadas por registro.ts */
+    --r1x: 0em;
+    --r1y: 0em;
+    --r2x: 0em;
+    --r2y: 0em;
+    --rega: 0;
+  }
+  .registro::before,
+  .registro::after {
+    content: attr(data-text);
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    opacity: var(--rega);
+    pointer-events: none;
+  }
+  .registro::before {
+    color: var(--reg-c1);
+    transform: translate(var(--r1x), var(--r1y));
+  }
+  .registro::after {
+    color: var(--reg-c2);
+    transform: translate(var(--r2x), var(--r2y));
+  }
+  .masthead-rule {
+    margin-top: 14px;
+  }
+
+  /* ---- Cuerpo de portada: asimétrico ---- */
+  .portada-grid {
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    gap: clamp(18px, 3vw, 40px);
+    padding: clamp(26px, 5vh, 56px) 0 clamp(40px, 8vh, 90px);
+    align-items: start;
+  }
+  .titular {
+    grid-column: 1 / 8;
+    margin: 0;
+    font-family: var(--font-d);
+    font-weight: var(--weight-d);
+    font-size: clamp(1.45rem, 0.8rem + 2.6vw, 3.1rem);
+    line-height: 1.08;
     text-wrap: balance;
   }
-  .line {
-    display: block;
-    overflow: hidden;
-    padding-bottom: 0.06em;
-    margin-bottom: -0.06em;
-  }
-  .line-inner {
-    display: inline-block;
-    will-change: transform;
-  }
-  .line.alt .line-inner {
-    color: var(--accent);
+  .portada-rail {
+    grid-column: 9 / 13;
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+    border-left: 1px solid var(--line);
+    padding-left: clamp(14px, 1.6vw, 24px);
   }
   .bajada {
-    max-width: 34em;
+    margin: 0;
     color: var(--soft);
-    margin: 26px 0 0;
-    font-size: clamp(0.95rem, 0.85rem + 0.4vw, 1.15rem);
+    font-size: 0.98rem;
+    line-height: 1.6;
+    max-width: 34ch;
   }
   .bajada strong {
     color: var(--ink);
     font-weight: 600;
   }
-  .hero-meta {
-    display: flex;
-    gap: clamp(18px, 4vw, 48px);
-    flex-wrap: wrap;
-    margin-top: 40px;
-    padding-top: 18px;
-    border-top: 1px solid var(--line);
-  }
-  .hero-meta div {
+  .cta {
+    align-self: flex-start;
     font-family: var(--font-m);
-    font-size: 12px;
+    font-size: 13px;
+    letter-spacing: 0.06em;
+    text-decoration: none;
+    color: var(--ink);
+    border-bottom: 3px solid var(--accent);
+    padding-bottom: 3px;
+    transition: color 0.15s;
   }
-  .hero-meta .k {
-    display: block;
-    font-size: 10px;
-    letter-spacing: 0.18em;
-    text-transform: uppercase;
-    color: var(--soft);
-    margin-bottom: 4px;
-  }
-  .scroll-hint {
-    position: absolute;
-    right: 0;
-    bottom: 6px;
-    margin: 0;
-    font-family: var(--font-m);
-    font-size: 11px;
-    letter-spacing: 0.18em;
-    text-transform: uppercase;
-    color: var(--soft);
-  }
-  .prompt-line {
-    font-family: var(--font-m);
-    font-size: 12px;
-    color: var(--soft);
-    margin: 14px 0 0;
-    overflow-wrap: anywhere;
-  }
-  .prompt-line .ok {
+  .cta:hover {
     color: var(--accent);
+    /* misregistration de hover: los canales se corren un pelo */
+    text-shadow:
+      -2px 0 var(--reg-c1),
+      2px 0 var(--reg-c2);
   }
-  .cota {
-    margin-top: 10px;
-  }
-  .cota-line {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-family: var(--font-m);
-    font-size: 10px;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    color: var(--accent);
-  }
-  .cota-line::before,
-  .cota-line::after {
-    content: '';
-    flex: 1;
-    height: 1px;
-    background: var(--accent);
-    opacity: 0.7;
+
+  @media (max-width: 860px) {
+    .titular {
+      grid-column: 1 / 13;
+    }
+    .portada-rail {
+      grid-column: 1 / 13;
+      border-left: none;
+      padding-left: 0;
+      border-top: 1px solid var(--line);
+      padding-top: 18px;
+    }
   }
 </style>

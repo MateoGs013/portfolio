@@ -1,8 +1,11 @@
 /* Reglas globales que dependen de la edición activa (data-tema en <html>).
    Viven acá porque los estilos de componentes Astro son scoped y estos
-   selectores cruzan el root con el componente. */
+   selectores cruzan el root con el componente.
 
-/* Visibilidad condicional por edición */
+   DESIGN.md §3.2: cada edición difiere también en MÉTRICAS (reglas, radios,
+   densidad, mobiliario), no solo en color y fuente. */
+
+/* ---------- Visibilidad condicional por edición ---------- */
 .only-afiche,
 .only-terminal,
 .only-plano {
@@ -19,20 +22,98 @@
   display: inline-block;
 }
 
-/* Carácter tipográfico del hero por edición */
-:root[data-tema='afiche'] .hero-title {
+/* ---------- AFICHE: denso, macizo, reglas gruesas, cero curvas ---------- */
+:root[data-tema='afiche'] .hero-title,
+:root[data-tema='afiche'] .titular {
   text-transform: uppercase;
   letter-spacing: 0.01em;
 }
-:root[data-tema='terminal'] .hero-title {
-  font-size: clamp(2rem, 1rem + 6.5vw, 6.2rem);
+:root[data-tema='afiche'] .masthead-rule {
+  border-top: 7px solid var(--ink);
+  border-bottom: 2px solid var(--ink);
+  height: 4px;
 }
-:root[data-tema='plano'] .hero-title {
+:root[data-tema='afiche'] .chip,
+:root[data-tema='afiche'] .cta {
+  border-radius: 0;
+}
+:root[data-tema='afiche'] .folio {
+  font-family: var(--font-b);
+  font-weight: 600;
+}
+
+/* ---------- TERMINAL: mobiliario ASCII, tamaños contenidos ---------- */
+:root[data-tema='terminal'] .hero-title {
+  font-size: clamp(1.7rem, 0.6rem + 6.4vw, 6rem);
+}
+:root[data-tema='terminal'] .masthead-rule {
+  border-top: 1px dashed var(--ink);
+  border-bottom: 1px dashed var(--ink);
+  height: 5px;
+}
+:root[data-tema='terminal'] .folio {
+  font-family: var(--font-m);
+  text-transform: none;
+  letter-spacing: 0.02em;
+}
+:root[data-tema='terminal'] .chip {
+  border: none;
+  padding-left: 4px;
+  padding-right: 4px;
+}
+:root[data-tema='terminal'] .chip::before {
+  content: '[';
+  opacity: 0.55;
+}
+:root[data-tema='terminal'] .chip::after {
+  content: ']';
+  opacity: 0.55;
+}
+:root[data-tema='terminal'] .chip.on {
+  background: transparent;
+  color: var(--accent);
+}
+:root[data-tema='terminal'] .chip.on::before,
+:root[data-tema='terminal'] .chip.on::after {
+  opacity: 1;
+}
+
+/* ---------- PLANO: aire, hairlines, esquinas apenas quebradas ---------- */
+:root[data-tema='plano'] .hero-title,
+:root[data-tema='plano'] .titular {
   text-transform: uppercase;
   letter-spacing: 0.03em;
 }
+/* Archivo en caja alta es más ancha que Anton: clamp propio para no
+   desbordar el masthead nowrap en 390px. */
+:root[data-tema='plano'] .hero-title {
+  font-size: clamp(1.5rem, 0.2rem + 7.8vw, 7rem);
+}
+:root[data-tema='plano'] .portada {
+  padding-top: clamp(50px, 10vh, 120px);
+}
+:root[data-tema='plano'] .masthead-rule {
+  border-top: 1px solid var(--ink);
+  height: 6px;
+  position: relative;
+}
+:root[data-tema='plano'] .masthead-rule::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 38%;
+  bottom: 0;
+  border-bottom: 1px solid var(--accent);
+}
+:root[data-tema='plano'] .folio {
+  font-family: var(--font-m);
+  letter-spacing: 0.05em;
+}
+:root[data-tema='plano'] .chip {
+  border-radius: 2px;
+}
 
-/* Lenis (recomendado por la lib) */
+/* ---------- Lenis (recomendado por la lib) ---------- */
 html.lenis,
 html.lenis body {
   height: auto;

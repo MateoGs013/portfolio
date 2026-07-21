@@ -35,9 +35,11 @@ src/
   pages/especimen.astro Espécimen del sistema de diseño (referencia interna)
   scripts/              Motion en módulos:
     site.ts               entry — orquesta e importa el resto
+    eases.ts              curvas del sistema (prensa/tinta/salida) — las ÚNICAS
     lenis.ts              scroll con inercia (ticker de GSAP)
-    intro.ts              intro cinemática (corta en repeat, skip en reduced-motion)
-    hero.ts               heroTimeline() — reveal reutilizado por intro y tema
+    registro.ts           registro de tintas (reemplazo del preloader) +
+                          pageReveal() reutilizado por el cambio de edición +
+                          scrub de drift al scroll
     tema.ts               selector de edición (barrido) + claro/oscuro + persistencia
   styles/
     tokens.css            TODO el color vive acá (6 paletas: 3 ediciones × 2 temas)
