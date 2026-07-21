@@ -1,0 +1,274 @@
+// Composición en tipos (DESIGN.md §4): el retrato del impresor compuesto
+// con los caracteres de la edición activa — tipos móviles, no shader ASCII
+// genérico. Canvas 2D sin WebGL: el retrato se muestrea una vez por layout
+// y se dibuja un glifo por celda. Solo consume frames cuando hay tinta en
+// movimiento: la composición inicial, el cursor entintando cerca o el
+// scroll rápido desregistrando la plancha.
+
+type Tipos = {
+  canvas: HTMLCanvasElement;
+  ctx: CanvasRenderingContext2D;
+  cols: number;
+  rows: number;
+  cell: number;
+  dpr: number;
+  dark: Float32Array; // densidad de tinta por celda (0 = papel)
+  delay: Float32Array; // retardo de composición inicial por celda (ms)
+  heat: Float32Array; // tinta de cursor por celda
+};
+
+let T: Tipos | null = null;
+let raf = 0;
+let vivo = false;
+let visible = true;
+let reducido = false;
+let introT0 = 0;
+let introListo = false;
+let activo = false;
+const mouse = { x: -1e4, y: -1e4 };
+let lastY = 0;
+let scramble = 0;
+let img: HTMLImageElement | null = null;
+let ro: ResizeObserver | null = null;
+let mo: MutationObserver | null = null;
+let io: IntersectionObserver | null = null;
+let escuchando = false;
+
+// Rampas de menor a mayor densidad de tinta, con el material de cada edición:
+// letras de caja de madera, ASCII de terminal, tramado de plotter, máquina
+// de escribir del fanzine.
+const CHARSETS: Record<string, string> = {
+  afiche: ' ·ILTSEM',
+  terminal: ' ·:-=+*#%@',
+  plano: ' ·:/+×%#',
+  fanzine: ' .·oxXOMW',
+};
+const FONTS: Record<string, string> = {
+  afiche: '--font-d',
+  terminal: '--font-m',
+  plano: '--font-b',
+  fanzine: '--font-m',
+};
+
+function token(nombre: string): string {
+  return getComputedStyle(document.documentElement).getPropertyValue(nombre).trim();
+}
+
+// Pseudo-random determinista (mismo truco que halftone.ts): sin Math.random
+// para que la plancha sea estable entre frames y rebuilds.
+function hash(x: number, y: number): number {
+  const s = Math.sin(x * 12.9898 + y * 78.233) * 43758.5453;
+  return s - Math.floor(s);
+}
+
+function build(): void {
+  if (!T || !img || !img.complete || !img.naturalWidth) return;
+  const w = T.canvas.clientWidth;
+  const h = T.canvas.clientHeight;
+  if (!w || !h) return;
+  T.dpr = Math.min(2, window.devicePixelRatio || 1);
+  T.cell = window.innerWidth < 700 ? 8 : 10;
+  T.cols = Math.max(8, Math.floor(w / T.cell));
+  T.rows = Math.max(8, Math.floor(h / T.cell));
+  T.canvas.width = Math.round(w * T.dpr);
+  T.canvas.height = Math.round(h * T.dpr);
+
+  // El retrato se rasteriza a la resolución de la grilla (cover, anclado
+  // abajo: el busto apoya sobre la regla del masthead).
+  const off = document.createElement('canvas');
+  off.width = T.cols;
+  off.height = T.rows;
+  const octx = off.getContext('2d', { willReadFrequently: true });
+  if (!octx) return;
+  const s = Math.max(T.cols / img.naturalWidth, T.rows / img.naturalHeight);
+  const dw = img.naturalWidth * s;
+  const dh = img.naturalHeight * s;
+  octx.drawImage(img, (T.cols - dw) / 2, T.rows - dh, dw, dh);
+  const px = octx.getImageData(0, 0, T.cols, T.rows).data;
+
+  const n = T.cols * T.rows;
+  T.dark = new Float32Array(n);
+  T.delay = new Float32Array(n);
+  T.heat = new Float32Array(n);
+  for (let i = 0; i < n; i++) {
+    const a = px[i * 4 + 3] / 255;
+    const lum = (0.2126 * px[i * 4] + 0.7152 * px[i * 4 + 1] + 0.0722 * px[i * 4 + 2]) / 255;
+    // Fondo transparente ⇒ papel; el resto, más oscuro = más tinta.
+    // Gamma 0.8: los medios tonos del rostro ganan cuerpo en la trama.
+    const d = Math.pow(a * (1 - lum * 0.85), 0.8);
+    T.dark[i] = d < 0.1 ? 0 : Math.min(1, d);
+    T.delay[i] = hash(i % T.cols, Math.floor(i / T.cols)) * 1000;
+  }
+}
+
+function draw(now: number): void {
+  if (!T) return;
+  const { ctx, cols, rows, cell, dpr } = T;
+  const tema = document.documentElement.getAttribute('data-tema') || 'afiche';
+  const ramp = CHARSETS[tema] || CHARSETS.afiche;
+  const fam = token(FONTS[tema] || '--font-d') || 'sans-serif';
+  const ink = token('--ink');
+  const accent = token('--accent');
+
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, T.canvas.clientWidth, T.canvas.clientHeight);
+  ctx.font = `${Math.ceil(cell * 0.95)}px ${fam}`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+
+  const tIntro = introListo ? Infinity : now - introT0;
+  const rect = T.canvas.getBoundingClientRect();
+  const mx = mouse.x - rect.left;
+  const my = mouse.y - rect.top;
+  const radio = 130;
+  let tinta = false;
+
+  for (let gy = 0; gy < rows; gy++) {
+    for (let gx = 0; gx < cols; gx++) {
+      const i = gy * cols + gx;
+      const d = T.dark[i];
+      if (d === 0) continue;
+      const x = gx * cell + cell / 2;
+      const y = gy * cell + cell / 2;
+
+      const dist = Math.hypot(x - mx, y - my);
+      if (dist < radio) T.heat[i] = Math.max(T.heat[i], 1 - dist / radio);
+      const heat = T.heat[i];
+      if (heat > 0.02) {
+        T.heat[i] *= 0.94;
+        tinta = true;
+      } else {
+        T.heat[i] = 0;
+      }
+
+      let ch = ramp[1 + Math.round(d * (ramp.length - 2))];
+      const componiendo = tIntro < T.delay[i];
+      if (componiendo || (scramble > 0.02 && hash(gx + (now % 97), gy) < scramble * 0.5)) {
+        // Tipos sueltos todavía sin distribuir en la rama, o plancha
+        // desregistrada por scroll rápido.
+        ch = ramp[1 + Math.floor(hash(gx, gy + now) * (ramp.length - 1))];
+      }
+
+      ctx.globalAlpha = Math.min(0.9, componiendo ? 0.1 : 0.12 + d * 0.34 + heat * 0.4);
+      ctx.fillStyle = heat > 0.12 ? accent : ink;
+      ctx.fillText(ch, x, y);
+    }
+  }
+  ctx.globalAlpha = 1;
+  if (!introListo && tIntro > 1150) introListo = true;
+  activo = !introListo || tinta || scramble > 0.02;
+}
+
+function loop(now: number): void {
+  const y = window.scrollY;
+  scramble = Math.max(scramble * 0.9, Math.min(0.9, Math.abs(y - lastY) / 60));
+  lastY = y;
+  draw(now);
+  if (activo && visible) {
+    raf = requestAnimationFrame(loop);
+  } else {
+    vivo = false;
+  }
+}
+
+function wake(): void {
+  if (vivo || !T || reducido || !visible) return;
+  vivo = true;
+  lastY = window.scrollY;
+  raf = requestAnimationFrame(loop);
+}
+
+function onMove(e: PointerEvent): void {
+  mouse.x = e.clientX;
+  mouse.y = e.clientY;
+  wake();
+}
+function onScroll(): void {
+  wake();
+}
+
+export function initTipos(reduced: boolean): void {
+  clearTipos();
+  reducido = reduced;
+  const canvas = document.querySelector<HTMLCanvasElement>('[data-tipos]');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return;
+  T = {
+    canvas,
+    ctx,
+    cols: 0,
+    rows: 0,
+    cell: 12,
+    dpr: 1,
+    dark: new Float32Array(0),
+    delay: new Float32Array(0),
+    heat: new Float32Array(0),
+  };
+
+  img = new Image();
+  img.src = canvas.dataset.src || '';
+  img.onload = () => {
+    // Sin la fuente cargada los glifos caen a fallback y la trama cambia
+    // de textura a mitad de intro.
+    document.fonts.ready.then(() => {
+      if (!T) return;
+      build();
+      introT0 = performance.now();
+      if (reducido) {
+        introListo = true;
+        draw(performance.now());
+      } else {
+        wake();
+      }
+    });
+  };
+
+  ro = new ResizeObserver(() => {
+    if (!T) return;
+    build();
+    draw(performance.now());
+  });
+  ro.observe(canvas);
+
+  // Cambio de edición/tinta: recolorear y recomponer con el charset nuevo.
+  mo = new MutationObserver(() => {
+    if (!T) return;
+    draw(performance.now());
+  });
+  mo.observe(document.documentElement, {
+    attributes: true,
+    attributeFilter: ['data-tema', 'data-theme'],
+  });
+
+  io = new IntersectionObserver((entries) => {
+    visible = entries[0]?.isIntersecting ?? true;
+    if (visible) wake();
+  });
+  io.observe(canvas);
+
+  if (!reducido && !escuchando) {
+    window.addEventListener('pointermove', onMove, { passive: true });
+    window.addEventListener('scroll', onScroll, { passive: true });
+    escuchando = true;
+  }
+}
+
+export function clearTipos(): void {
+  cancelAnimationFrame(raf);
+  vivo = false;
+  activo = false;
+  introListo = false;
+  scramble = 0;
+  ro?.disconnect();
+  mo?.disconnect();
+  io?.disconnect();
+  ro = mo = io = null;
+  if (escuchando) {
+    window.removeEventListener('pointermove', onMove);
+    window.removeEventListener('scroll', onScroll);
+    escuchando = false;
+  }
+  img = null;
+  T = null;
+}

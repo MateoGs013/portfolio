@@ -2,13 +2,19 @@
 // Portada del pliego: primera ESCENA (DESIGN.md §4). El masthead ocupa el
 // viewport completo y el nombre compone en diagonal a escala de plancha
 // (Mateo arriba a la izquierda, Sonzogni abajo a la derecha, sangrando los
-// bordes). El pie de la escena es el marco vivo del taller (reloj en
-// scripts/vivo.ts). El efecto registro vive en scripts/registro.ts;
-// métricas por edición en ediciones.css.
+// bordes). Detrás, el retrato del impresor compuesto en tipos móviles
+// (scripts/tipos.ts). El pie de la escena es el marco vivo del taller
+// (reloj en scripts/vivo.ts). El efecto registro vive en
+// scripts/registro.ts; métricas por edición en ediciones.css.
+import { getImage } from 'astro:assets';
+import retratoOriginal from '../assets/retrato.png';
+
+const retrato = await getImage({ src: retratoOriginal, width: 520, format: 'webp' });
 ---
 
 <section class="portada" aria-label="Portada">
   <header class="masthead">
+    <canvas class="tipos" data-tipos data-src={retrato.src} aria-hidden="true"></canvas>
     <div class="wrap masthead-top">
       <p class="folio only-afiche">Año I · Pliego Nº 001 · Buenos Aires · sale cuando hay algo que mostrar</p>
       <p class="folio only-terminal">MATEO_SONZOGNI(1) — manual del pliego · sección 001 · Buenos Aires</p>
@@ -60,10 +66,28 @@
 <style>
   /* ---- Escena 1: el masthead ocupa el viewport ---- */
   .masthead {
+    position: relative;
     min-height: calc(100svh - 52px); /* 52px ≈ topbar sticky */
     display: flex;
     flex-direction: column;
     overflow: clip; /* la plancha sangra los bordes sin generar scroll */
+  }
+
+  /* Retrato compuesto en tipos: detrás del nombre, apoyado sobre la regla */
+  .tipos {
+    position: absolute;
+    right: clamp(0px, 5vw, 110px);
+    bottom: 66px;
+    height: min(82%, 84svh);
+    aspect-ratio: 3 / 4;
+    z-index: 0;
+    pointer-events: none;
+  }
+  .masthead-top,
+  .hero-title,
+  .masthead-pie {
+    position: relative;
+    z-index: 1;
   }
   .masthead-top {
     width: 100%;
@@ -251,6 +275,12 @@
     }
     .vivo-dato {
       font-size: 11px;
+    }
+    .tipos {
+      right: 50%;
+      transform: translateX(50%);
+      bottom: 78px;
+      height: 64%;
     }
   }
 </style>
