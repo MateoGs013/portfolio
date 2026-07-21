@@ -1,68 +1,105 @@
 ---
-// Portada del pliego. El masthead es la "plancha" (efecto registro de
-// tintas en scripts/registro.ts); el resto se imprime por barridos.
-// Reglas por edición (folio, reglas del masthead, métricas) en ediciones.css.
+// Portada del pliego: primera ESCENA (DESIGN.md §4). El masthead ocupa el
+// viewport completo y el nombre compone en diagonal a escala de plancha
+// (Mateo arriba a la izquierda, Sonzogni abajo a la derecha, sangrando los
+// bordes). El pie de la escena es el marco vivo del taller (reloj en
+// scripts/vivo.ts). El efecto registro vive en scripts/registro.ts;
+// métricas por edición en ediciones.css.
 ---
 
 <section class="portada" aria-label="Portada">
   <header class="masthead">
-    <p class="folio only-afiche">Año I · Pliego Nº 001 · Buenos Aires · sale cuando hay algo que mostrar</p>
-    <p class="folio only-terminal">MATEO_SONZOGNI(1) — manual del pliego · sección 001 · Buenos Aires</p>
-    <p class="folio only-plano">Lámina 001 · portada · esc 1:1 · dibujó: M.S. · Buenos Aires</p>
-    <p class="folio only-fanzine">fanzine m·s · edición pirata · nº 001 · fotocopiado en buenos aires</p>
+    <div class="wrap masthead-top">
+      <p class="folio only-afiche">Año I · Pliego Nº 001 · Buenos Aires · sale cuando hay algo que mostrar</p>
+      <p class="folio only-terminal">MATEO_SONZOGNI(1) — manual del pliego · sección 001 · Buenos Aires</p>
+      <p class="folio only-plano">Lámina 001 · portada · esc 1:1 · dibujó: M.S. · Buenos Aires</p>
+      <p class="folio only-fanzine">fanzine m·s · edición pirata · nº 001 · fotocopiado en buenos aires</p>
+    </div>
+
     <h1 class="hero-title">
-      <span class="registro" data-text="Mateo Sonzogni">Mateo Sonzogni</span>
+      <span class="linea"><span class="registro" data-text="Mateo">Mateo</span></span>
+      <span class="linea linea-b"><span class="registro" data-text="Sonzogni">Sonzogni</span></span>
     </h1>
-    <div class="masthead-rule" aria-hidden="true"></div>
+
+    <div class="masthead-pie">
+      <div class="masthead-rule" aria-hidden="true"></div>
+      <div class="wrap vivo" data-reveal>
+        <p class="vivo-dato"><span data-reloj>--:--:--</span> · Buenos Aires</p>
+        <p class="vivo-dato vivo-estado"><span class="pulso" aria-hidden="true"></span> taller abierto a encargos</p>
+      </div>
+    </div>
   </header>
 
-  <div class="portada-grid">
-    <h2 class="titular only-afiche" data-reveal>
-      Dos clientes en producción en España, un SaaS propio y una tesis que respira WebGL.
-    </h2>
-    <h2 class="titular only-terminal" data-reveal>
-      $ uptime → 2 clientes en producción · 1 SaaS propio · 1 tesis WebGL. Nada guardado en un
-      cajón.
-    </h2>
-    <h2 class="titular only-plano" data-reveal>
-      Memoria descriptiva: dos obras entregadas y en uso en España, un producto propio y una
-      tesis en cálculo.
-    </h2>
-    <h2 class="titular only-fanzine" data-reveal>
-      Dos clientes vivos, un SaaS y una tesis. Todo hecho a mano, nada de plantillas.
-    </h2>
-    <div class="portada-rail" data-reveal>
-      <p class="bajada">
-        Creative developer. Cada trabajo sale de esta imprenta con identidad propia — este
-        sitio también: <strong>cambiá la edición arriba y mirá cómo se reimprime</strong>.
-      </p>
-      <a class="cta" href="#tirada">Ver la tirada ↓</a>
+  <div class="wrap">
+    <div class="portada-grid">
+      <h2 class="titular only-afiche" data-reveal>
+        Dos clientes en producción en España, un SaaS propio y una tesis que respira WebGL.
+      </h2>
+      <h2 class="titular only-terminal" data-reveal>
+        $ uptime → 2 clientes en producción · 1 SaaS propio · 1 tesis WebGL. Nada guardado en un
+        cajón.
+      </h2>
+      <h2 class="titular only-plano" data-reveal>
+        Memoria descriptiva: dos obras entregadas y en uso en España, un producto propio y una
+        tesis en cálculo.
+      </h2>
+      <h2 class="titular only-fanzine" data-reveal>
+        Dos clientes vivos, un SaaS y una tesis. Todo hecho a mano, nada de plantillas.
+      </h2>
+      <div class="portada-rail" data-reveal>
+        <p class="bajada">
+          Creative developer. Cada trabajo sale de esta imprenta con identidad propia — este
+          sitio también: <strong>cambiá la edición arriba y mirá cómo se reimprime</strong>.
+        </p>
+        <a class="cta" href="#tirada">Ver la tirada ↓</a>
+      </div>
     </div>
   </div>
 </section>
 
 <style>
-  .portada {
-    padding-top: clamp(34px, 7vh, 90px);
+  /* ---- Escena 1: el masthead ocupa el viewport ---- */
+  .masthead {
+    min-height: calc(100svh - 52px); /* 52px ≈ topbar sticky */
+    display: flex;
+    flex-direction: column;
+    overflow: clip; /* la plancha sangra los bordes sin generar scroll */
   }
-
-  /* ---- Masthead ---- */
+  .masthead-top {
+    width: 100%;
+    padding-top: clamp(12px, 2.2svh, 24px);
+  }
   .folio {
-    margin: 0 0 10px;
+    margin: 0;
     font-size: 11px;
     letter-spacing: 0.08em;
     text-transform: uppercase;
     color: var(--soft);
     overflow-wrap: anywhere;
   }
+
   .hero-title {
-    margin: 0;
+    /* Cada edición pisa --hero-fs en ediciones.css (anchos de fuente distintos) */
+    --hero-fs: min(23vw, 30svh);
+    margin: auto 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.03em;
     font-family: var(--font-d);
     font-weight: var(--weight-d);
+    font-size: var(--hero-fs);
+    line-height: 0.88;
     color: var(--ink);
-    font-size: clamp(2.1rem, 0.4rem + 9.2vw, 8rem);
-    line-height: 0.98;
-    white-space: nowrap;
+  }
+  .linea {
+    display: block;
+    margin-left: -0.02em; /* sangrado óptico contra el borde */
+  }
+  .linea-b {
+    align-self: flex-end;
+    margin-left: 0;
+    margin-right: -0.02em;
+    text-align: right;
   }
   .registro {
     position: relative;
@@ -91,16 +128,60 @@
     color: var(--reg-c2);
     transform: translate(var(--r2x), var(--r2y));
   }
+
+  /* ---- Pie de escena: regla full-bleed + marco vivo ---- */
   .masthead-rule {
-    margin-top: 14px;
+    width: 100%;
+  }
+  .vivo {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    width: 100%;
+    padding-top: 10px;
+    padding-bottom: 14px;
+  }
+  .vivo-dato {
+    margin: 0;
+    font-family: var(--font-m);
+    font-size: 12px;
+    letter-spacing: 0.06em;
+    color: var(--soft);
+    font-variant-numeric: tabular-nums;
+  }
+  .vivo-estado {
+    color: var(--ink);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .pulso {
+    width: 9px;
+    height: 9px;
+    background: var(--accent);
+    display: inline-block;
+    animation: pulso 2.2s infinite;
+  }
+  @keyframes pulso {
+    0%,
+    100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.25;
+    }
   }
 
-  /* ---- Cuerpo de portada: asimétrico ---- */
+  /* ---- Escena 2: titular de portada, con aire propio ---- */
   .portada-grid {
+    min-height: min(80svh, 760px);
+    align-content: center;
     display: grid;
     grid-template-columns: repeat(12, 1fr);
     gap: clamp(18px, 3vw, 40px);
-    padding: clamp(26px, 5vh, 56px) 0 clamp(40px, 8vh, 90px);
+    padding: clamp(40px, 8svh, 90px) 0;
     align-items: start;
   }
   .titular {
@@ -108,7 +189,7 @@
     margin: 0;
     font-family: var(--font-d);
     font-weight: var(--weight-d);
-    font-size: clamp(1.45rem, 0.8rem + 2.6vw, 3.1rem);
+    font-size: clamp(1.7rem, 0.9rem + 3.4vw, 4.2rem);
     line-height: 1.08;
     text-wrap: balance;
   }
@@ -160,6 +241,16 @@
       padding-left: 0;
       border-top: 1px solid var(--line);
       padding-top: 18px;
+    }
+  }
+  @media (max-width: 640px) {
+    .masthead {
+      /* Topbar envuelta en dos filas; tope para que en pantallas muy altas
+         la escena no quede vacía y la siguiente asome (invita a scrollear) */
+      min-height: min(calc(100svh - 128px), 660px);
+    }
+    .vivo-dato {
+      font-size: 11px;
     }
   }
 </style>

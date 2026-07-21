@@ -31,11 +31,11 @@
   text-transform: uppercase;
   letter-spacing: 0.01em;
 }
-/* El masthead manda: el titular baja un escalón para no competir
-   (crítica del director: dos bloques Anton máximos apilados se aplanan). */
+/* El masthead manda, pero desde la escenografía (§4) vive en su propia
+   escena: el titular puede subir sin competir con él. */
 :root[data-tema='afiche'] .titular {
-  font-size: clamp(1.25rem, 0.7rem + 2vw, 2.5rem);
-  line-height: 1.14;
+  font-size: clamp(1.5rem, 0.8rem + 2.9vw, 3.6rem);
+  line-height: 1.12;
 }
 :root[data-tema='afiche'] .masthead-rule {
   border-top: 7px solid var(--ink);
@@ -60,8 +60,9 @@
 }
 
 /* ---------- TERMINAL: mobiliario ASCII, tamaños contenidos ---------- */
+/* Plex Mono es ancha por carácter: la plancha baja de escala. */
 :root[data-tema='terminal'] .hero-title {
-  font-size: clamp(1.7rem, 0.6rem + 6.4vw, 6rem);
+  --hero-fs: min(14vw, 22svh);
 }
 :root[data-tema='terminal'] .masthead-rule {
   border-top: 2px dashed var(--ink);
@@ -101,13 +102,9 @@
   text-transform: uppercase;
   letter-spacing: 0.03em;
 }
-/* Archivo en caja alta es más ancha que Anton: clamp propio para no
-   desbordar el masthead nowrap en 390px. */
+/* Archivo en caja alta es más ancha que Anton: escala propia de plancha. */
 :root[data-tema='plano'] .hero-title {
-  font-size: clamp(1.5rem, 0.2rem + 7.8vw, 7rem);
-}
-:root[data-tema='plano'] .portada {
-  padding-top: clamp(50px, 10vh, 120px);
+  --hero-fs: min(17vw, 26svh);
 }
 :root[data-tema='plano'] .masthead-rule {
   border-top: 1px solid var(--ink);
@@ -137,8 +134,8 @@
   letter-spacing: 0.01em;
 }
 :root[data-tema='fanzine'] .titular {
-  font-size: clamp(1.25rem, 0.7rem + 2vw, 2.5rem);
-  line-height: 1.14;
+  font-size: clamp(1.5rem, 0.8rem + 2.9vw, 3.6rem);
+  line-height: 1.12;
 }
 :root[data-tema='fanzine'] .masthead-rule {
   border-top: 5px solid var(--ink);

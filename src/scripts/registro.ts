@@ -81,16 +81,18 @@ export function initRegistro(reduced: boolean): void {
   // al scroll, reversible (scrub 0.8 le da peso). Solo en la home (masthead).
   // Anima un objeto proxy — nunca las CSS vars directas — para no pelear con
   // el converge de pageReveal por las mismas propiedades.
-  const reg = document.querySelector<HTMLElement>(REGISTRO);
-  if (document.querySelector('.masthead') && reg) {
+  const regs = Array.from(document.querySelectorAll<HTMLElement>(REGISTRO));
+  if (document.querySelector('.masthead') && regs.length) {
     const drift = { p: 0 };
     gsap.to(drift, {
       p: 1,
       ease: 'none',
       onUpdate: () => {
-        reg.style.setProperty('--r1x', `${(-0.035 * drift.p).toFixed(4)}em`);
-        reg.style.setProperty('--r2x', `${(0.028 * drift.p).toFixed(4)}em`);
-        reg.style.setProperty('--rega', String(0.55 * drift.p));
+        for (const reg of regs) {
+          reg.style.setProperty('--r1x', `${(-0.035 * drift.p).toFixed(4)}em`);
+          reg.style.setProperty('--r2x', `${(0.028 * drift.p).toFixed(4)}em`);
+          reg.style.setProperty('--rega', String(0.55 * drift.p));
+        }
       },
       scrollTrigger: {
         trigger: '.masthead',

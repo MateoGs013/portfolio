@@ -41,7 +41,7 @@ shift, scroll con peso real. Astro (islands, JS mínimo) es ventaja: cuidarla.
 
 ## 2. PROHIBIDO (no negociable)
 
-1. **Preloader con contador de porcentaje.** Ver §4 para el reemplazo.
+1. **Preloader con contador de porcentaje.** Ver §5 para el reemplazo.
 2. **Marquesinas infinitas** de texto decorativo.
 3. **Cursor custom** que sigue el mouse y crece en hover.
 4. **Fade-up + stagger uniforme** como reveal por defecto de secciones.
@@ -92,7 +92,38 @@ shift, scroll con peso real. Astro (islands, JS mínimo) es ventaja: cuidarla.
 8. **Performance como feature**: presupuesto de JS por isla, imágenes
    optimizadas, cero layout shift. Verde en PageSpeed es parte del portfolio.
 
-## 4. El intro (reemplazo del contador)
+## 4. Escenografía — escala de experiencia (enmienda 21-jul-2026)
+
+Diagnóstico: la home tenía el craft correcto pero a **escala de documento** —
+flujo continuo de revista, denso, sin un momento donde la página cambie de
+estado. Las referencias que el cliente marcó como norte (russellnumo.nl,
+Awwwards Nominee 7.81; specia1ne.com, Nominee 9.30) usan nuestro mismo stack
+(Astro/Next + GSAP + Lenis, cero three.js): la brecha es de **puesta en
+escena**, no de tecnología. Reglas:
+
+1. **Una idea por viewport.** Las secciones de la home son escenas (~100svh)
+   con una sola idea y aire enorme. La densidad editorial queda para fichas,
+   casos y colofón — el contraste escena/ficha es parte del lenguaje.
+2. **Escala brutal.** El protagonista de cada escena llena el ancho del
+   viewport y puede sangrar los bordes (la plancha es más grande que el
+   papel; `overflow: clip`, nunca scroll horizontal).
+3. **Un takeover por página.** Al menos un momento donde la página entera
+   cambia de estado (se entinta full-bleed) ligado al scroll. En specia1ne es
+   el azul de "Selected Work"; acá, la tirada entintándose.
+4. **Marco vivo.** Datos reales en tiempo real con lenguaje de taller: reloj,
+   estado ("taller abierto a encargos"), folio de pliego, avance de tirada
+   con el scroll. Un instrumento calibrado, no una página.
+5. **El scroll dirige escenas.** Pinning coreografiado con scrub, permitido y
+   deseado en los momentos clave; el scroll no solo desplaza — dirige.
+6. **Cursor y velocidad son tinta.** Las interacciones firma pueden leer la
+   posición del mouse y la velocidad del scroll (desregistro, halftone),
+   siempre sutiles y reversibles. El cursor custom sigue PROHIBIDO (§2.3):
+   esto es la página reaccionando, no un puntero disfrazado.
+7. **Pendiente declarado:** cada edición tendrá una experiencia propia de
+   motion/layout, no solo cambio de tintas. Ninguna decisión nueva debe
+   cerrarle la puerta a eso.
+
+## 5. El intro (reemplazo del contador)
 
 El intro es "el sitio saliendo de la prensa", diegético y corto (~800–1200ms,
 solo primera visita de la sesión):
@@ -101,10 +132,10 @@ solo primera visita de la sesión):
    (cian desde la izquierda, magenta desde arriba…) y convergen a registro —
    misregistration de serigrafía, barato en CSS (capas + `mix-blend-mode`).
 2. Opcional al asentar: la trama **halftone** gruesa se afina hasta imagen
-   nítida (mismo shader que se reutiliza en el resto del sitio, §5.4).
+   nítida (mismo shader que se reutiliza en el resto del sitio, §6.4).
 3. En visitas repetidas: sin intro. El mejor loader es el que no existe.
 
-## 5. Sistema de motion
+## 6. Sistema de motion
 
 ### Curvas (definir en `CustomEase`, usar SOLO estas)
 
@@ -151,7 +182,7 @@ valor final. Prohibido volver a `power2.out`/`expo.out` genéricos.
 
 `prefers-reduced-motion` se respeta SIEMPRE (ya es contrato en CLAUDE.md).
 
-## 6. Referencias
+## 7. Referencias
 
 **Nivel de craft (no clonar el lenguaje):** Dennis Snellenberg (ya
 sobre-clonado — estudiar el nivel, no el look), Clement Grellier, Karim Saab,
@@ -166,16 +197,24 @@ Arnaud Rocca, James Clapham, Valentin Gassend, Patrick Heng
   tympanus.net/codrops/2026/04/08/creating-custom-page-transitions-in-astro-with-barba-js-and-gsap
 - Timing: nngroup.com/articles/animation-duration · valhead.com
 
+**Escenografía (§4):** russellnumo.nl (shader hover ~40 líneas, hand-rolled) ·
+specia1ne.com (sistema numerado + takeover, Astro+GSAP) ·
+tympanus.net/codrops/2026/02/18 (breakdown Spitzer: SplitText por línea, Flip
+shared-element, misma familia técnica).
+
 **Antipatrones:** 925studios.co/blog/ai-slop-web-design-guide ·
 impeccable.style/slop · solodesign.cc/blog/ai-design-slop-the-tells ·
 dev.to/studiomeyer_io (qué sobrevivió de 2026)
 
-## 7. Checklist antes de cada merge visual
+## 8. Checklist antes de cada merge visual
 
 - [ ] ¿Alguna decisión es "el default"? → justificarla o cambiarla.
 - [ ] ¿El copy serviría en el portfolio de otro dev? → reescribir.
 - [ ] ¿Cada animación se explica con lenguaje de imprenta? → si no, afuera.
-- [ ] ¿Las 6 combinaciones (3 ediciones × 2 temas) se ven intencionales?
+- [ ] ¿La sección nueva es una ESCENA con una idea (§4), o volvió la densidad
+      de documento?
+- [ ] ¿Las 16 combinaciones (4 ediciones × 2 temas × 2 viewports) se ven
+      intencionales?
 - [ ] ¿Medida de texto 45–75ch, jerarquía dramática, asimetría presente?
 - [ ] ¿`npm run qa` verde y screenshots revisados?
 - [ ] ¿Nada del catálogo PROHIBIDO (§2) entró de vuelta?
