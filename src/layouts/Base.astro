@@ -36,7 +36,7 @@ const {
       (function () {
         try {
           var tema = localStorage.getItem('ms-tema');
-          if (tema === 'terminal' || tema === 'plano') {
+          if (tema === 'terminal' || tema === 'plano' || tema === 'fanzine') {
             document.documentElement.setAttribute('data-tema', tema);
           }
           var theme = localStorage.getItem('ms-theme');
@@ -51,6 +51,7 @@ const {
     <div class="wipe" id="wipe" aria-hidden="true">
       <span id="wipe-label">reimprimiendo</span>
     </div>
+    <div id="toast" role="status"></div>
     <slot />
   </body>
 </html>
@@ -73,5 +74,29 @@ const {
     font-size: 12px;
     letter-spacing: 0.3em;
     text-transform: uppercase;
+  }
+  #toast {
+    position: fixed;
+    left: 50%;
+    bottom: 26px;
+    transform: translate(-50%, 180%);
+    z-index: 95;
+    background: var(--accent);
+    color: var(--accent-ink);
+    font-family: var(--font-m);
+    font-size: 11px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    padding: 12px 18px;
+    max-width: 92vw;
+    transition: transform 0.45s cubic-bezier(0.2, 0.9, 0.3, 1.2);
+  }
+  #toast:global(.show) {
+    transform: translate(-50%, 0);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    #toast {
+      transition: none;
+    }
   }
 </style>

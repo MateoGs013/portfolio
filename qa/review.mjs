@@ -21,7 +21,7 @@ if (!url) {
   await new Promise((r) => setTimeout(r, 2500));
 }
 
-const EDICIONES = ['afiche', 'terminal', 'plano'];
+const EDICIONES = ['afiche', 'terminal', 'plano', 'fanzine'];
 const TEMAS = ['light', 'dark'];
 const VIEWPORTS = [
   { tag: 'desktop', width: 1440, height: 900 },
@@ -33,6 +33,8 @@ const problems = [];
 
 for (const vp of VIEWPORTS) {
   const page = await browser.newPage({ viewport: { width: vp.width, height: vp.height } });
+  // La edición secreta se presetea desbloqueada para poder recorrerla.
+  await page.addInitScript(() => localStorage.setItem('ms-fanzine', '1'));
   await page.goto(url);
   await page.waitForTimeout(3400); // intro + reveal
 

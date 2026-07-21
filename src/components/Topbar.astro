@@ -16,6 +16,7 @@
     <button class="chip" data-tema-btn="afiche">Afiche</button>
     <button class="chip" data-tema-btn="terminal">Terminal</button>
     <button class="chip" data-tema-btn="plano">Plano</button>
+    <button class="chip secreta" data-tema-btn="fanzine" hidden>Fanzine</button>
     <button class="chip mode" id="mode-btn" aria-label="Cambiar la tinta entre modo claro y oscuro">
       Tinta ◐
     </button>
@@ -95,6 +96,24 @@
     background: var(--ink);
     color: var(--bg);
     border-color: var(--ink);
+  }
+  .chip.secreta {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+  .chip.secreta:global(.pop) {
+    animation: chip-pop 0.5s;
+  }
+  @keyframes chip-pop {
+    0% {
+      transform: scale(0.7);
+    }
+    60% {
+      transform: scale(1.15);
+    }
+    100% {
+      transform: scale(1);
+    }
   }
   .chip.mode {
     background: transparent;

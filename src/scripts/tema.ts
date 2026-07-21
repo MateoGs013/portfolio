@@ -5,7 +5,12 @@ import gsap from 'gsap';
 import { pageReveal } from './registro';
 import './eases';
 
-const NOMBRES: Record<string, string> = { afiche: 'Afiche', terminal: 'Terminal', plano: 'Plano' };
+const NOMBRES: Record<string, string> = {
+  afiche: 'Afiche',
+  terminal: 'Terminal',
+  plano: 'Plano',
+  fanzine: 'Fanzine',
+};
 
 export function initTema(reduced: boolean): void {
   const root = document.documentElement;
@@ -31,6 +36,17 @@ export function initTema(reduced: boolean): void {
   const wipeLabel = document.getElementById('wipe-label');
   const chips = gsap.utils.toArray<HTMLElement>('[data-tema-btn]');
   let switching = false;
+
+  // La edición secreta: el chip Fanzine solo existe para quien la desbloqueó
+  // con el clicker (o ya la tiene activa). Corre en todas las páginas.
+  const chipFanzine = chips.find((c) => c.getAttribute('data-tema-btn') === 'fanzine');
+  if (chipFanzine) {
+    let fanzineLibre = root.getAttribute('data-tema') === 'fanzine';
+    try {
+      fanzineLibre = fanzineLibre || localStorage.getItem('ms-fanzine') === '1';
+    } catch {}
+    chipFanzine.hidden = !fanzineLibre;
+  }
 
   const applyTema = (tema: string): void => {
     root.setAttribute('data-tema', tema);

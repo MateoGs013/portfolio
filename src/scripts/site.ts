@@ -13,6 +13,7 @@ import { initTema } from './tema';
 import { initRegistro } from './registro';
 import { initHalftone, clearHalftone } from './halftone';
 import { initTirada } from './tirada';
+import { initImprenta } from './imprenta';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -30,4 +31,5 @@ document.addEventListener('astro:page-load', () => {
   initRegistro(reduced);
   initHalftone(reduced);
   initTirada(reduced);
+  initImprenta(reduced);
 });

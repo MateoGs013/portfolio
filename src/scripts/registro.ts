@@ -23,6 +23,8 @@ const EN_REGISTRO = { '--r1x': '0em', '--r1y': '0em', '--r2x': '0em', '--r2y': '
 
 /** Timeline de impresión de la página. Reutilizada por el cambio de edición. */
 export function pageReveal(fast = false): gsap.core.Timeline {
+  // Nada puede pisar el converge: cualquier tween previo sobre la plancha muere.
+  gsap.killTweensOf(REGISTRO);
   const speed = fast ? 0.55 : 1;
   const tl = gsap.timeline();
   tl.fromTo(REGISTRO, DESALINEADO, {
@@ -77,12 +79,19 @@ export function initRegistro(reduced: boolean): void {
 
   // La plancha se corre apenas al pasar la hoja: drift de registro ligado
   // al scroll, reversible (scrub 0.8 le da peso). Solo en la home (masthead).
-  if (document.querySelector('.masthead')) {
-    gsap.to(REGISTRO, {
-      '--r1x': '-0.035em',
-      '--r2x': '0.028em',
-      '--rega': 0.55,
+  // Anima un objeto proxy — nunca las CSS vars directas — para no pelear con
+  // el converge de pageReveal por las mismas propiedades.
+  const reg = document.querySelector<HTMLElement>(REGISTRO);
+  if (document.querySelector('.masthead') && reg) {
+    const drift = { p: 0 };
+    gsap.to(drift, {
+      p: 1,
       ease: 'none',
+      onUpdate: () => {
+        reg.style.setProperty('--r1x', `${(-0.035 * drift.p).toFixed(4)}em`);
+        reg.style.setProperty('--r2x', `${(0.028 * drift.p).toFixed(4)}em`);
+        reg.style.setProperty('--rega', String(0.55 * drift.p));
+      },
       scrollTrigger: {
         trigger: '.masthead',
         start: 'top top',

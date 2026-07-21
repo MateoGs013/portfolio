@@ -8,17 +8,20 @@
 /* ---------- Visibilidad condicional por edición ---------- */
 .only-afiche,
 .only-terminal,
-.only-plano {
+.only-plano,
+.only-fanzine {
   display: none;
 }
 :root[data-tema='afiche'] .only-afiche,
 :root[data-tema='terminal'] .only-terminal,
-:root[data-tema='plano'] .only-plano {
+:root[data-tema='plano'] .only-plano,
+:root[data-tema='fanzine'] .only-fanzine {
   display: block;
 }
 :root[data-tema='afiche'] .only-afiche.only-inline,
 :root[data-tema='terminal'] .only-terminal.only-inline,
-:root[data-tema='plano'] .only-plano.only-inline {
+:root[data-tema='plano'] .only-plano.only-inline,
+:root[data-tema='fanzine'] .only-fanzine.only-inline {
   display: inline-block;
 }
 
@@ -125,6 +128,45 @@
 }
 :root[data-tema='plano'] .chip {
   border-radius: 2px;
+}
+
+/* ---------- FANZINE: fotocopia casera, recortes torcidos, riso rosa ---------- */
+:root[data-tema='fanzine'] .hero-title,
+:root[data-tema='fanzine'] .titular {
+  text-transform: uppercase;
+  letter-spacing: 0.01em;
+}
+:root[data-tema='fanzine'] .titular {
+  font-size: clamp(1.25rem, 0.7rem + 2vw, 2.5rem);
+  line-height: 1.14;
+}
+:root[data-tema='fanzine'] .masthead-rule {
+  border-top: 5px solid var(--ink);
+  border-bottom: 1px dashed var(--ink);
+  height: 6px;
+}
+:root[data-tema='fanzine'] .folio {
+  font-family: var(--font-m);
+  text-transform: lowercase;
+  letter-spacing: 0.04em;
+}
+/* Recortes pegados a mano: los chips quedan apenas torcidos. */
+:root[data-tema='fanzine'] .chip {
+  border-radius: 0;
+  border-style: solid;
+  transform: rotate(-1.1deg);
+}
+:root[data-tema='fanzine'] .chip:nth-child(2n) {
+  transform: rotate(0.9deg);
+}
+:root[data-tema='fanzine'] .chip.on {
+  background: var(--accent);
+  color: var(--accent-ink);
+  border-color: var(--accent);
+}
+:root[data-tema='fanzine'] .pieza-dato {
+  text-transform: lowercase;
+  letter-spacing: 0.06em;
 }
 
 /* ---------- Lenis (recomendado por la lib) ---------- */

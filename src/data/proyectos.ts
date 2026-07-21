@@ -25,6 +25,8 @@ export interface Proyecto {
     afiche: Lectura;
     terminal: Lectura;
     plano: Lectura;
+    /** Edición secreta: la lectura más punk — corta, shoutona, sin humo. */
+    fanzine: Lectura;
   };
   /** Página de caso (/pieza/[slug]) — solo los proyectos con historia completa. */
   caso?: {
@@ -62,6 +64,11 @@ export const proyectos: Proyecto[] = [
         texto:
           'Decisión de planta: el tráfico entra por QR desde la mesa, así que el menú es el edificio y la home es la fachada. Motion con significado: reveals de línea y acentos SVG de trazo manual.',
         dato: 'detalle 01 · ia menu-first · esc 1:1',
+      },
+      fanzine: {
+        texto:
+          'Un restaurante con carta QR que no da vergüenza ajena. Hecho a mano, frente al mar, y quedó hermoso.',
+        dato: 'fotocopiado con amor · tirada corta',
       },
     },
     caso: {
@@ -119,6 +126,10 @@ export const proyectos: Proyecto[] = [
           'Estructura en dos cuerpos sobre la misma API: catálogo público y panel de gestión. El cliente carga la obra; el sitio la muestra sin intermediarios.',
         dato: 'detalle 02 · corte a-a · público / panel',
       },
+      fanzine: {
+        texto: 'Piscinas reales, web real, cero chamuyo. El cliente carga la obra y listo.',
+        dato: 'pegado con cinta · funciona igual',
+      },
     },
     caso: {
       intro:
@@ -175,6 +186,10 @@ export const proyectos: Proyecto[] = [
           'Planta del negocio: el mostrador era el cuello de botella. El sistema saca las reservas del teléfono y las pone en la agenda, del turno a la caja.',
         dato: 'detalle 03 · flujo turno → caja',
       },
+      fanzine: {
+        texto: 'Turnos sin teléfono. La barbería respira. Punto.',
+        dato: 'grapado a mano · edición limitada',
+      },
     },
   },
   {
@@ -204,6 +219,10 @@ export const proyectos: Proyecto[] = [
         texto:
           'Memoria de proyecto: la obra está en cálculo. La narrativa espacial se dibuja primero; la tecnología entra al servicio de la atmósfera, nunca al revés.',
         dato: 'lámina 04 · en preparación',
+      },
+      fanzine: {
+        texto: 'La tesis. Shaders a mano, atmósfera de otro plano. Va a estar buenísima.',
+        dato: 'próximo número · no te lo pierdas',
       },
     },
   },

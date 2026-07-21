@@ -2,8 +2,10 @@
 
 Portfolio personal de un creative developer. Concepto **"Ediciones"**: un mismo
 contenido que se "reimprime" en distintos sistemas de diseño (Afiche · Terminal ·
-Plano), cada uno con modo claro y oscuro diseñados por separado. Incluye un
-mini-juego clicker ("La imprenta") que desbloquea las ediciones.
+Plano, siempre libres), cada uno con modo claro y oscuro diseñados por separado
+y su propio reencuadre del contenido. El mini-juego clicker ("La imprenta", en
+la home) desbloquea la 4ª edición secreta **Fanzine** a los 20 ejemplares
+(`ms-tirada` / `ms-fanzine` en localStorage).
 
 **Regla de oro: antes de tocar cualquier cosa visual o de motion, leé
 `docs/DESIGN.md`.** Ahí está la ley del proyecto: qué se hace, qué no, y por qué.
@@ -48,6 +50,7 @@ src/
                           proyectos se "imprimen" — planchas tinta/acento a
                           15°/75° que convergen a registro con el progreso
     tirada.ts             ScrollTriggers scrub de las piezas (halftone + wipes)
+    imprenta.ts           clicker del taller: tirada, hojas, desbloqueo Fanzine
   styles/
     tokens.css            TODO el color vive acá (6 paletas: 3 ediciones × 2 temas)
     base.css              reset, focus, reduced-motion, .wrap
@@ -58,8 +61,9 @@ src/
 
 - **Tokens**: los componentes consumen `var(--bg|--bg2|--ink|--soft|--accent|--accent-ink|--line|--grid|--font-d|--font-b|--font-m)`. Cero color o fuente hardcodeada fuera de `tokens.css`.
 - **Temas**: `data-tema` en `<html>` elige la edición; el claro/oscuro sigue a
-  `prefers-color-scheme` y `data-theme` lo pisa en ambas direcciones. Cualquier
-  componente nuevo debe verse bien en las **6 combinaciones**.
+  `prefers-color-scheme` y `data-theme` lo pisa en ambas direcciones. Ediciones:
+  afiche · terminal · plano · fanzine (secreta). Cualquier componente nuevo debe
+  verse bien en las **16 combinaciones** (4 ediciones × 2 temas × 2 viewports).
 - **Estilos por edición**: los estilos de componentes Astro son scoped — todo
   selector que cruce `:root[data-tema=...]` con un componente va en
   `ediciones.css`, no inline ni con `:global()` disperso.
@@ -79,7 +83,7 @@ src/
 
 1. Leer `docs/DESIGN.md` si el cambio toca UI/motion.
 2. Implementar. 3. `npm run build && npm run qa` — cero overflow horizontal y
-   revisar screenshots de `qa/artifacts/` en las 6 combinaciones.
+   revisar screenshots de `qa/artifacts/` en las 16 combinaciones.
 4. Commit en español, cuerpo explicando el porqué. El usuario revisa cada paso:
    avanzar de a un paso por vez, no hacer todo de una.
 
