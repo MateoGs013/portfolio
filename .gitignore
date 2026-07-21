@@ -25,3 +25,6 @@ pnpm-debug.log*
 
 # oh-my-claudecode runtime state
 .omc/
+
+# artefactos de QA visual
+qa/artifacts/
