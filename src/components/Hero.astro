@@ -73,12 +73,14 @@ const retrato = await getImage({ src: retratoOriginal, width: 520, format: 'webp
     overflow: clip; /* la plancha sangra los bordes sin generar scroll */
   }
 
-  /* Retrato compuesto en tipos: detrás del nombre, apoyado sobre la regla */
+  /* Retrato compuesto en tipos: centrado detrás del nombre, apoyado
+     sobre la regla — el nombre pasa por delante de la figura */
   .tipos {
     position: absolute;
-    right: clamp(0px, 5vw, 110px);
-    bottom: 66px;
-    height: min(82%, 84svh);
+    left: 50%;
+    transform: translateX(-50%);
+    bottom: 64px;
+    height: min(96%, 92svh);
     aspect-ratio: 3 / 4;
     z-index: 0;
     pointer-events: none;
@@ -277,10 +279,8 @@ const retrato = await getImage({ src: retratoOriginal, width: 520, format: 'webp
       font-size: 11px;
     }
     .tipos {
-      right: 50%;
-      transform: translateX(50%);
       bottom: 78px;
-      height: 64%;
+      height: 76%;
     }
   }
 </style>

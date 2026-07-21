@@ -149,7 +149,7 @@ function draw(now: number): void {
         ch = ramp[1 + Math.floor(hash(gx, gy + now) * (ramp.length - 1))];
       }
 
-      ctx.globalAlpha = Math.min(0.9, componiendo ? 0.1 : 0.12 + d * 0.34 + heat * 0.4);
+      ctx.globalAlpha = Math.min(0.95, componiendo ? 0.12 : 0.18 + d * 0.5 + heat * 0.35);
       ctx.fillStyle = heat > 0.12 ? accent : ink;
       ctx.fillText(ch, x, y);
     }
