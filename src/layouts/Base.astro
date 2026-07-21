@@ -1,0 +1,48 @@
+---
+import '@fontsource/anton';
+import '@fontsource-variable/archivo';
+import '@fontsource/ibm-plex-mono/400.css';
+import '@fontsource/ibm-plex-mono/500.css';
+import '@fontsource/ibm-plex-mono/700.css';
+import '../styles/tokens.css';
+import '../styles/base.css';
+
+interface Props {
+  title?: string;
+  description?: string;
+}
+
+const {
+  title = 'Mateo Sonzogni — Creative Developer',
+  description = 'Portfolio de Mateo Sonzogni: interfaces con oficio, motion y WebGL. Un mismo portfolio, muchas tintas.',
+} = Astro.props;
+---
+
+<!doctype html>
+<html lang="es" data-tema="afiche">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content={description} />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <title>{title}</title>
+    <script is:inline>
+      // Anti-FOUC: edición y tema guardados se aplican antes del primer paint.
+      (function () {
+        try {
+          var tema = localStorage.getItem('ms-tema');
+          if (tema === 'terminal' || tema === 'plano') {
+            document.documentElement.setAttribute('data-tema', tema);
+          }
+          var theme = localStorage.getItem('ms-theme');
+          if (theme === 'light' || theme === 'dark') {
+            document.documentElement.setAttribute('data-theme', theme);
+          }
+        } catch (e) {}
+      })();
+    </script>
+  </head>
+  <body>
+    <slot />
+  </body>
+</html>
