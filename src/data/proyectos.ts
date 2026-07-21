@@ -26,6 +26,12 @@ export interface Proyecto {
     terminal: Lectura;
     plano: Lectura;
   };
+  /** Página de caso (/pieza/[slug]) — solo los proyectos con historia completa. */
+  caso?: {
+    intro: string;
+    secciones: { titulo: string; texto: string }[];
+    resultados: string[];
+  };
 }
 
 export const proyectos: Proyecto[] = [
@@ -58,6 +64,33 @@ export const proyectos: Proyecto[] = [
         dato: 'detalle 01 · ia menu-first · esc 1:1',
       },
     },
+    caso: {
+      intro:
+        'Cliente real en Chiclana, España. De un encargo de "página de restaurante" a una experiencia menu-first pensada para el QR en la mesa.',
+      secciones: [
+        {
+          titulo: 'El encargo',
+          texto:
+            'La Rúcula necesitaba dejar de ser un PDF escaneado colgado de un QR. El brief real: que la carta se sienta tan cuidada como el plato, y que el dueño pueda editarla sin llamar a nadie.',
+        },
+        {
+          titulo: 'El taller',
+          texto:
+            'Arquitectura menu-first: el sitio se reduce a /, /menu y /menu/:slug — la mayoría del tráfico entra por QR, así que el menú es el producto. El contenido del shell vive en un CMS multi-tenant con fallback local: si la API duerme, el sitio no. Y antes de dar por cerrada una sección, el flujo del proyecto exige npm run ux (review visual con Playwright en 3 viewports) y npm run a11y (baseline de accesibilidad con axe).',
+        },
+        {
+          titulo: 'La pieza',
+          texto:
+            'Home inmersiva de dirección de arte mediterránea — editorial, artística, calma, lejos del layout genérico de restaurante. Motion con significado: reveals de línea, stagger tipográfico y acentos SVG de trazo manual. La regla del proyecto: cohesión sobre novedad.',
+        },
+      ],
+      resultados: [
+        'En producción en laruculagastrobar.es',
+        'Modo QR optimizado para llegada directa desde la mesa',
+        'Multi-locale con preservación del idioma entre rutas',
+        'Review UX + accesibilidad automatizadas antes de cada deploy',
+      ],
+    },
   },
   {
     slug: 'argpiscinas',
@@ -86,6 +119,33 @@ export const proyectos: Proyecto[] = [
           'Estructura en dos cuerpos sobre la misma API: catálogo público y panel de gestión. El cliente carga la obra; el sitio la muestra sin intermediarios.',
         dato: 'detalle 02 · corte a-a · público / panel',
       },
+    },
+    caso: {
+      intro:
+        'Cliente real en Andalucía: una constructora de piscinas que necesitaba mostrar obra terminada y cotizar sin fricción.',
+      secciones: [
+        {
+          titulo: 'El encargo',
+          texto:
+            'ARG venía de mostrar su trabajo por WhatsApp, foto por foto. El brief: un catálogo serio que muestre obra real, presupuesto en línea, y un panel que el propio cliente pueda operar sin depender de nadie.',
+        },
+        {
+          titulo: 'El taller',
+          texto:
+            'Dos cuerpos sobre una misma API: catálogo público y panel de gestión. Node + Prisma con datos tipados de punta a punta — la obra que carga el cliente es exactamente la que muestra el sitio, sin intermediarios ni deploys de por medio.',
+        },
+        {
+          titulo: 'La pieza',
+          texto:
+            'Front Vue 3 directo y rápido: la obra primero, el argumento después. Catálogo, presupuesto y contacto en el camino más corto posible — el sitio trabaja como la empresa: sin vueltas.',
+        },
+      ],
+      resultados: [
+        'En producción en argpiscinas.es',
+        'Panel autoadministrable: el cliente carga obra sin tocar código',
+        'Catálogo tipado de punta a punta con Prisma',
+        'Cargas rápidas con datos consistentes',
+      ],
     },
   },
   {

@@ -58,24 +58,37 @@ export function initRegistro(reduced: boolean): void {
   } catch {}
 
   if (repeat) {
-    // Sin intro: el mejor loader es el que no existe (DESIGN.md §4.3).
-    setImpreso();
+    // Sin intro completa — pero la plancha se RE-registra en cada llegada:
+    // un converge corto, coherente con navegar entre páginas de la imprenta.
+    gsap.set(REVEAL, { clipPath: 'none' });
+    if (document.querySelector(REGISTRO)) {
+      gsap
+        .timeline()
+        .fromTo(
+          REGISTRO,
+          { '--r1x': '-0.07em', '--r1y': '0.025em', '--r2x': '0.055em', '--r2y': '-0.03em', '--rega': 1 },
+          { ...EN_REGISTRO, duration: 0.5, ease: 'prensa' }
+        )
+        .to(REGISTRO, { '--rega': 0, duration: 0.2, ease: 'salida' }, 0.38);
+    }
   } else {
     pageReveal();
   }
 
   // La plancha se corre apenas al pasar la hoja: drift de registro ligado
-  // al scroll, reversible (scrub 0.8 le da peso).
-  gsap.to(REGISTRO, {
-    '--r1x': '-0.035em',
-    '--r2x': '0.028em',
-    '--rega': 0.55,
-    ease: 'none',
-    scrollTrigger: {
-      trigger: '.masthead',
-      start: 'top top',
-      end: '+=500',
-      scrub: 0.8,
-    },
-  });
+  // al scroll, reversible (scrub 0.8 le da peso). Solo en la home (masthead).
+  if (document.querySelector('.masthead')) {
+    gsap.to(REGISTRO, {
+      '--r1x': '-0.035em',
+      '--r2x': '0.028em',
+      '--rega': 0.55,
+      ease: 'none',
+      scrollTrigger: {
+        trigger: '.masthead',
+        start: 'top top',
+        end: '+=500',
+        scrub: 0.8,
+      },
+    });
+  }
 }

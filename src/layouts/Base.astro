@@ -1,4 +1,5 @@
 ---
+import { ClientRouter } from 'astro:transitions';
 import '@fontsource/anton';
 import '@fontsource-variable/archivo';
 import '@fontsource/ibm-plex-mono/400.css';
@@ -27,8 +28,11 @@ const {
     <meta name="description" content={description} />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <title>{title}</title>
-    <script is:inline>
+    <ClientRouter />
+    <script is:inline data-astro-rerun>
       // Anti-FOUC: edición y tema guardados se aplican antes del primer paint.
+      // data-astro-rerun: el swap de view transitions pisa los atributos de
+      // <html> con los estáticos — este script los restaura en cada navegación.
       (function () {
         try {
           var tema = localStorage.getItem('ms-tema');
@@ -44,6 +48,30 @@ const {
     </script>
   </head>
   <body>
+    <div class="wipe" id="wipe" aria-hidden="true">
+      <span id="wipe-label">reimprimiendo</span>
+    </div>
     <slot />
   </body>
 </html>
+
+<style>
+  .wipe {
+    position: fixed;
+    inset: 0;
+    z-index: 90;
+    background: var(--ink);
+    transform: translateY(-101%);
+    pointer-events: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .wipe span {
+    color: var(--bg);
+    font-family: var(--font-m);
+    font-size: 12px;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+  }
+</style>

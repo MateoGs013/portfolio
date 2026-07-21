@@ -6,10 +6,6 @@ import Tirada from '../components/Tirada.astro';
 ---
 
 <Base>
-  <div class="wipe" id="wipe" aria-hidden="true">
-    <span id="wipe-label">reimprimiendo</span>
-  </div>
-
   <Topbar />
 
   <main>
@@ -38,25 +34,6 @@ import Tirada from '../components/Tirada.astro';
 </Base>
 
 <style>
-  .wipe {
-    position: fixed;
-    inset: 0;
-    z-index: 90;
-    background: var(--ink);
-    transform: translateY(-101%);
-    pointer-events: none;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-  .wipe span {
-    color: var(--bg);
-    font-family: var(--font-m);
-    font-size: 12px;
-    letter-spacing: 0.3em;
-    text-transform: uppercase;
-  }
-
   .colofon {
     border-top: 1px solid var(--line);
     padding: clamp(30px, 6vh, 60px) 0 clamp(26px, 5vh, 50px);

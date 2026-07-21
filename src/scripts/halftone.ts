@@ -154,6 +154,28 @@ export function setHalftoneProgress(el: Element, progress: number): void {
   render(inst);
 }
 
+/** Limpieza entre navegaciones (astro:before-swap): el DOM viejo se descarta. */
+export function clearHalftone(): void {
+  instancias.clear();
+}
+
+let observerListo = false;
+function observarTema(): void {
+  if (observerListo) return;
+  observerListo = true;
+  // Recolorear cuando cambia la edición o la tinta (documentElement persiste
+  // entre navegaciones, con registrarlo una vez alcanza).
+  new MutationObserver(() => {
+    instancias.forEach((inst) => {
+      inst.colores = leerColores(inst.wrap);
+      render(inst);
+    });
+  }).observe(document.documentElement, {
+    attributes: true,
+    attributeFilter: ['data-tema', 'data-theme'],
+  });
+}
+
 export function initHalftone(reduced: boolean): void {
   const wraps = document.querySelectorAll<HTMLElement>('[data-halftone]');
   wraps.forEach((wrap) => {
@@ -208,16 +230,5 @@ export function initHalftone(reduced: boolean): void {
     }).observe(wrap);
   });
 
-  // Recolorear cuando cambia la edición o la tinta.
-  if (!reduced && wraps.length) {
-    new MutationObserver(() => {
-      instancias.forEach((inst) => {
-        inst.colores = leerColores(inst.wrap);
-        render(inst);
-      });
-    }).observe(document.documentElement, {
-      attributes: true,
-      attributeFilter: ['data-tema', 'data-theme'],
-    });
-  }
+  if (!reduced && wraps.length) observarTema();
 }

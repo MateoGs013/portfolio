@@ -33,6 +33,8 @@ src/
   layouts/Base.astro    <html> + fuentes + anti-FOUC (lee ms-tema / ms-theme)
   components/           Secciones de página (.astro), estilos scoped
   pages/index.astro     Home (ensambla componentes + importa scripts/site.ts)
+  pages/pieza/[slug].astro  Casos de estudio (proyectos con `caso` en los datos);
+                        el título morfea desde la tirada (transition:name)
   pages/especimen.astro Espécimen del sistema de diseño (referencia interna)
   scripts/              Motion en módulos:
     site.ts               entry — orquesta e importa el resto
@@ -64,6 +66,10 @@ src/
 - **Motion**: GSAP timelines en `src/scripts/` (no inline en componentes).
   `prefers-reduced-motion` se respeta SIEMPRE. Ojo con `immediateRender` de los
   `fromTo` en timelines diferidas: crearlas dentro de un callback `.add(() => ...)`.
+- **View transitions**: hay `<ClientRouter />` en Base.astro — los scripts se
+  ejecutan UNA vez; todo init de DOM va en `astro:page-load` y la limpieza
+  (ScrollTriggers, instancias halftone) en `astro:before-swap`. El anti-FOUC
+  lleva `data-astro-rerun` porque el swap pisa los atributos de `<html>`.
 - **Contenido**: proyectos salen de `src/data/proyectos.ts`. Copy en español
   rioplatense (vos), sin grandilocuencia ni relleno.
 - **Persistencia**: `localStorage` → `ms-tema`, `ms-theme`, `ms-tirada` (clicker);

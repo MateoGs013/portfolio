@@ -12,8 +12,21 @@ gsap.registerPlugin(ScrollTrigger);
 export function initTirada(reduced: boolean): void {
   if (reduced) return;
 
+  // Caso de estudio: la imagen hero se imprime sola al cargar la página
+  // (no hay scroll que la maneje — está arriba de todo).
+  document.querySelectorAll('[data-halftone-auto]').forEach((el) => {
+    const estado = { p: 0 };
+    gsap.to(estado, {
+      p: 1,
+      duration: 1.6,
+      delay: 0.25,
+      ease: 'tinta',
+      onUpdate: () => setHalftoneProgress(el, estado.p),
+    });
+  });
+
   gsap.utils.toArray<HTMLElement>('.pieza').forEach((pieza) => {
-    const halftone = pieza.querySelector('[data-halftone]');
+    const halftone = pieza.querySelector('[data-halftone]:not([data-halftone-auto])');
     const lamina = pieza.querySelector('.lamina');
     const titulo = pieza.querySelector('.pieza-titulo');
 

@@ -60,10 +60,16 @@ const enProduccion = proyectos.filter((p) => p.estado === 'produccion').length;
               Pieza {String(i + 1).padStart(2, '0')} / {String(proyectos.length).padStart(2, '0')} ·{' '}
               {p.anio}
             </p>
-            <h3 class="pieza-titulo">
-              <a href={p.url} target="_blank" rel="noopener">
-                {p.titulo}
-              </a>
+            <h3 class="pieza-titulo" transition:name={`pieza-${p.slug}`}>
+              {
+                p.caso ? (
+                  <a href={`/pieza/${p.slug}/`}>{p.titulo}</a>
+                ) : (
+                  <a href={p.url} target="_blank" rel="noopener">
+                    {p.titulo}
+                  </a>
+                )
+              }
             </h3>
             <p class="pieza-desc only-afiche">{p.lecturas.afiche.texto}</p>
             <p class="pieza-desc only-terminal">{p.lecturas.terminal.texto}</p>
@@ -85,9 +91,16 @@ const enProduccion = proyectos.filter((p) => p.estado === 'produccion').length;
                 <dd class={p.estado === 'produccion' ? 'vivo' : ''}>{p.estadoLabel}</dd>
               </div>
             </dl>
-            <a class="pieza-link" href={p.url} target="_blank" rel="noopener">
-              {p.urlLabel} ↗
-            </a>
+            <span class="pieza-links">
+              {p.caso && (
+                <a class="pieza-link" href={`/pieza/${p.slug}/`}>
+                  leer el caso →
+                </a>
+              )}
+              <a class="pieza-link" href={p.url} target="_blank" rel="noopener">
+                {p.urlLabel} ↗
+              </a>
+            </span>
           </div>
         </article>
       ))
@@ -275,6 +288,11 @@ const enProduccion = proyectos.filter((p) => p.estado === 'produccion').length;
   .pieza-ficha dd.vivo {
     color: var(--accent);
     font-weight: 600;
+  }
+  .pieza-links {
+    display: flex;
+    gap: 22px;
+    flex-wrap: wrap;
   }
   .pieza-link {
     font-family: var(--font-m);
