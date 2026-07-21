@@ -1,7 +1,8 @@
 ---
 // Barra superior: marca + selector de ediciones + toggle claro/oscuro.
-// La lógica (wipe GSAP, persistencia) vive en scripts/site.ts.
-// El bloqueo por clicker ("La imprenta") llega en un paso posterior.
+// La lógica (wipe GSAP, persistencia) vive en scripts/tema.ts.
+// Decisión de producto (auditoría jul-2026): las 3 ediciones SIEMPRE libres;
+// el clicker "La imprenta" desbloqueará una 4ª edición secreta (Fanzine).
 ---
 
 <header class="topbar" id="topbar">
@@ -103,5 +104,26 @@
   .chip.mode:hover {
     background: var(--accent);
     color: var(--accent-ink);
+  }
+
+  /* Mobile: menos chrome antes del contenido y targets táctiles WCAG
+     (mín. 24px, apuntamos a 42-44px). */
+  @media (max-width: 640px) {
+    .topbar {
+      padding: 8px 16px;
+      gap: 8px;
+    }
+    .selector-label {
+      display: none;
+    }
+    .secciones a,
+    .chip {
+      min-height: 42px;
+      display: inline-flex;
+      align-items: center;
+    }
+    .secciones {
+      gap: 12px;
+    }
   }
 </style>

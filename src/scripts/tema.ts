@@ -11,11 +11,16 @@ export function initTema(reduced: boolean): void {
   const root = document.documentElement;
 
   /* ---- claro / oscuro ---- */
-  document.getElementById('mode-btn')?.addEventListener('click', () => {
+  const modeBtn = document.getElementById('mode-btn');
+  const esOscuro = (): boolean => {
     const attr = root.getAttribute('data-theme');
-    const dark = attr ? attr === 'dark' : window.matchMedia('(prefers-color-scheme: dark)').matches;
-    const next = dark ? 'light' : 'dark';
+    return attr ? attr === 'dark' : window.matchMedia('(prefers-color-scheme: dark)').matches;
+  };
+  modeBtn?.setAttribute('aria-pressed', String(esOscuro()));
+  modeBtn?.addEventListener('click', () => {
+    const next = esOscuro() ? 'light' : 'dark';
     root.setAttribute('data-theme', next);
+    modeBtn.setAttribute('aria-pressed', String(next === 'dark'));
     try {
       localStorage.setItem('ms-theme', next);
     } catch {}
@@ -29,7 +34,11 @@ export function initTema(reduced: boolean): void {
 
   const applyTema = (tema: string): void => {
     root.setAttribute('data-tema', tema);
-    chips.forEach((c) => c.classList.toggle('on', c.getAttribute('data-tema-btn') === tema));
+    chips.forEach((c) => {
+      const activo = c.getAttribute('data-tema-btn') === tema;
+      c.classList.toggle('on', activo);
+      c.setAttribute('aria-pressed', String(activo));
+    });
     try {
       localStorage.setItem('ms-tema', tema);
     } catch {}

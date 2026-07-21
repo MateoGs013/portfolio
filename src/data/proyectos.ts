@@ -5,6 +5,7 @@ export interface Proyecto {
   slug: string;
   titulo: string;
   descripcion: string;
+  rol: string;
   stack: string[];
   anio: number;
   estado: 'produccion' | 'producto' | 'tesis';
@@ -19,6 +20,7 @@ export const proyectos: Proyecto[] = [
     titulo: 'La Rúcula Gastrobar',
     descripcion:
       'Sitio editorial menu-first para un restaurante frente al mar en Chiclana, España. Cliente real.',
+    rol: 'Diseño y desarrollo completo',
     stack: ['Vue 3', 'GSAP', 'Lenis'],
     anio: 2026,
     estado: 'produccion',
@@ -30,6 +32,7 @@ export const proyectos: Proyecto[] = [
     slug: 'argpiscinas',
     titulo: 'ARG Piscinas',
     descripcion: 'Catálogo y gestión para una empresa de piscinas en Andalucía. Cliente real.',
+    rol: 'Front-end y back-end a medida',
     stack: ['Vue 3', 'Node', 'Prisma'],
     anio: 2025,
     estado: 'produccion',
@@ -41,6 +44,7 @@ export const proyectos: Proyecto[] = [
     slug: 'barberpole',
     titulo: 'barberpole',
     descripcion: 'SaaS de gestión para peluquerías: turnos, clientes y caja en un solo lugar.',
+    rol: 'Producto propio — diseño y desarrollo',
     stack: ['React', 'Express', 'MongoDB'],
     anio: 2024,
     estado: 'producto',
@@ -53,6 +57,7 @@ export const proyectos: Proyecto[] = [
     titulo: 'Ynara',
     descripcion:
       'Experiencia WebGL inmersiva como proyecto de tesis: shaders a mano y narrativa que se recorre.',
+    rol: 'Tesis — dirección creativa y desarrollo',
     stack: ['Vue', 'TresJS', 'GLSL'],
     anio: 2026,
     estado: 'tesis',

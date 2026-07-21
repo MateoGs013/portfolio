@@ -1,0 +1,295 @@
+---
+// La tirada: las piezas del portfolio, desde la fuente única de datos.
+// Cada pieza con foto se "imprime" en halftone al scrollear (halftone.ts +
+// tirada.ts); Ynara (sin deploy aún) va como lámina dibujada.
+import { Image } from 'astro:assets';
+import { proyectos } from '../data/proyectos';
+import imgLaRucula from '../assets/proyectos/la-rucula.jpg';
+import imgArgpiscinas from '../assets/proyectos/argpiscinas.jpg';
+import imgBarberpole from '../assets/proyectos/barberpole.png';
+
+const imagenes: Record<string, ImageMetadata> = {
+  'la-rucula': imgLaRucula,
+  argpiscinas: imgArgpiscinas,
+  barberpole: imgBarberpole,
+};
+
+const enProduccion = proyectos.filter((p) => p.estado === 'produccion').length;
+---
+
+<section id="tirada" class="tirada" aria-label="La tirada — trabajos">
+  <div class="wrap">
+    <div class="tirada-head" data-reveal>
+      <h2>La tirada</h2>
+      <p class="tirada-nota">{proyectos.length} piezas · {enProduccion} en producción</p>
+    </div>
+
+    {
+      proyectos.map((p, i) => (
+        <article class={`pieza ${i % 2 === 1 ? 'pieza--invertida' : ''}`}>
+          <div class="pieza-media">
+            {imagenes[p.slug] ? (
+              <a
+                class="pieza-media-link"
+                href={p.url}
+                target="_blank"
+                rel="noopener"
+                aria-label={`${p.titulo} — ${p.urlLabel}`}
+                data-halftone
+              >
+                <Image
+                  src={imagenes[p.slug]}
+                  alt={`Captura de ${p.titulo}`}
+                  widths={[480, 760, 1100]}
+                  sizes="(max-width: 860px) 92vw, 60vw"
+                  loading={i === 0 ? 'eager' : 'lazy'}
+                />
+                <canvas aria-hidden="true"></canvas>
+              </a>
+            ) : (
+              <div class="lamina" aria-hidden="true">
+                <span class="lamina-orbita" />
+                <span class="lamina-centro" />
+                <span class="lamina-cota">lámina en preparación · estreno 2026</span>
+              </div>
+            )}
+          </div>
+
+          <div class="pieza-info">
+            <p class="pieza-folio">
+              Pieza {String(i + 1).padStart(2, '0')} / {String(proyectos.length).padStart(2, '0')} ·{' '}
+              {p.anio}
+            </p>
+            <h3 class="pieza-titulo">
+              <a href={p.url} target="_blank" rel="noopener">
+                {p.titulo}
+              </a>
+            </h3>
+            <p class="pieza-desc">{p.descripcion}</p>
+            <dl class="pieza-ficha">
+              <div>
+                <dt>Rol</dt>
+                <dd>{p.rol}</dd>
+              </div>
+              <div>
+                <dt>Tinta</dt>
+                <dd>{p.stack.join(' · ')}</dd>
+              </div>
+              <div>
+                <dt>Estado</dt>
+                <dd class={p.estado === 'produccion' ? 'vivo' : ''}>{p.estadoLabel}</dd>
+              </div>
+            </dl>
+            <a class="pieza-link" href={p.url} target="_blank" rel="noopener">
+              {p.urlLabel} ↗
+            </a>
+          </div>
+        </article>
+      ))
+    }
+  </div>
+</section>
+
+<style>
+  .tirada {
+    border-top: 1px solid var(--line);
+    padding: clamp(40px, 8vh, 90px) 0 clamp(50px, 9vh, 110px);
+  }
+  .tirada-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-bottom: clamp(28px, 5vh, 56px);
+  }
+  .tirada-head h2 {
+    margin: 0;
+    font-family: var(--font-d);
+    font-weight: var(--weight-d);
+    font-size: clamp(1.5rem, 1rem + 2.2vw, 2.6rem);
+  }
+  .tirada-nota {
+    margin: 0;
+    font-family: var(--font-m);
+    font-size: 12px;
+    color: var(--soft);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .pieza {
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    gap: clamp(18px, 3vw, 40px);
+    align-items: center;
+    padding: clamp(30px, 6vh, 64px) 0;
+  }
+  .pieza + .pieza {
+    border-top: 1px solid var(--line);
+  }
+  .pieza-media {
+    grid-column: 1 / 8;
+  }
+  .pieza--invertida .pieza-media {
+    grid-column: 6 / 13;
+    order: 2;
+  }
+  .pieza-info {
+    grid-column: 8 / 13;
+  }
+  .pieza--invertida .pieza-info {
+    grid-column: 1 / 6;
+    order: 1;
+  }
+
+  .pieza-media-link {
+    position: relative;
+    display: block;
+    border: 1px solid var(--line);
+    overflow: hidden;
+    aspect-ratio: 16 / 10;
+    background: var(--bg2);
+  }
+  .pieza-media-link img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: top;
+    opacity: 0; /* la revela la trama al asentarse */
+  }
+  .pieza-media-link canvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+  }
+
+  .lamina {
+    position: relative;
+    border: 1px solid var(--line);
+    aspect-ratio: 16 / 10;
+    background: var(--bg2);
+    overflow: hidden;
+  }
+  .lamina-orbita {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 62%;
+    aspect-ratio: 2.4 / 1;
+    border: 1px solid var(--accent);
+    border-radius: 50%;
+    transform: translate(-50%, -50%) rotate(-16deg);
+  }
+  .lamina-centro {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 13%;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    background: var(--ink);
+    transform: translate(-50%, -50%);
+  }
+  .lamina-cota {
+    position: absolute;
+    left: 12px;
+    bottom: 10px;
+    font-family: var(--font-m);
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--soft);
+  }
+
+  .pieza-folio {
+    margin: 0 0 10px;
+    font-family: var(--font-m);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    color: var(--soft);
+    font-variant-numeric: tabular-nums;
+  }
+  .pieza-titulo {
+    margin: 0 0 12px;
+    font-family: var(--font-d);
+    font-weight: var(--weight-d);
+    font-size: clamp(1.6rem, 1rem + 2.6vw, 3rem);
+    line-height: 1.02;
+  }
+  .pieza-titulo a {
+    color: inherit;
+    text-decoration: none;
+  }
+  .pieza-titulo a:hover {
+    color: var(--accent);
+    text-shadow:
+      -2px 0 var(--reg-c1),
+      2px 0 var(--reg-c2);
+  }
+  .pieza-desc {
+    margin: 0 0 18px;
+    color: var(--soft);
+    max-width: 44ch;
+  }
+  .pieza-ficha {
+    margin: 0 0 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    border-top: 1px solid var(--line);
+    padding-top: 14px;
+  }
+  .pieza-ficha div {
+    display: grid;
+    grid-template-columns: 74px 1fr;
+    gap: 10px;
+    align-items: baseline;
+  }
+  .pieza-ficha dt {
+    font-family: var(--font-m);
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--soft);
+  }
+  .pieza-ficha dd {
+    margin: 0;
+    font-size: 0.92rem;
+  }
+  .pieza-ficha dd.vivo {
+    color: var(--accent);
+    font-weight: 600;
+  }
+  .pieza-link {
+    font-family: var(--font-m);
+    font-size: 13px;
+    letter-spacing: 0.05em;
+    text-decoration: none;
+    color: var(--ink);
+    border-bottom: 3px solid var(--accent);
+    padding-bottom: 3px;
+  }
+  .pieza-link:hover {
+    color: var(--accent);
+    text-shadow:
+      -2px 0 var(--reg-c1),
+      2px 0 var(--reg-c2);
+  }
+
+  @media (max-width: 860px) {
+    .pieza,
+    .pieza--invertida {
+      grid-template-columns: 1fr;
+    }
+    .pieza-media,
+    .pieza-info,
+    .pieza--invertida .pieza-media,
+    .pieza--invertida .pieza-info {
+      grid-column: 1 / -1;
+      order: initial;
+    }
+  }
+</style>

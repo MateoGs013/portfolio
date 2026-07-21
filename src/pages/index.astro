@@ -2,6 +2,7 @@
 import Base from '../layouts/Base.astro';
 import Topbar from '../components/Topbar.astro';
 import Hero from '../components/Hero.astro';
+import Tirada from '../components/Tirada.astro';
 ---
 
 <Base>
@@ -16,17 +17,7 @@ import Hero from '../components/Hero.astro';
       <Hero />
     </div>
 
-    <section id="tirada" class="tirada" aria-label="La tirada">
-      <div class="wrap" data-reveal>
-        <div class="tirada-head">
-          <h2>La tirada</h2>
-          <p class="tirada-nota">4 piezas · 2 en producción</p>
-        </div>
-        <p class="tirada-placeholder">
-          El pliego con los trabajos está en prensa — entra en la próxima edición de este sitio.
-        </p>
-      </div>
-    </section>
+    <Tirada />
   </main>
 
   <footer id="colofon" class="colofon" aria-label="Colofón">
@@ -40,7 +31,7 @@ import Hero from '../components/Hero.astro';
       <p class="colofon-contacto">
         <a href="mailto:mateogabus@gmail.com">mateogabus@gmail.com</a>
         <span aria-hidden="true">·</span>
-        <a href="https://github.com/MateoGs013" target="_blank" rel="noopener">github.com/MateoGs013</a>
+        <a href="https://github.com/MateoGs013" target="_blank" rel="noopener">GitHub — @MateoGs013</a>
       </p>
     </div>
   </footer>
@@ -64,37 +55,6 @@ import Hero from '../components/Hero.astro';
     font-size: 12px;
     letter-spacing: 0.3em;
     text-transform: uppercase;
-  }
-
-  .tirada {
-    border-top: 1px solid var(--line);
-    padding: clamp(40px, 8vh, 90px) 0;
-  }
-  .tirada-head {
-    display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: 16px;
-    flex-wrap: wrap;
-    margin-bottom: 18px;
-  }
-  .tirada-head h2 {
-    margin: 0;
-    font-family: var(--font-d);
-    font-weight: var(--weight-d);
-    font-size: clamp(1.5rem, 1rem + 2.2vw, 2.6rem);
-  }
-  .tirada-nota {
-    margin: 0;
-    font-family: var(--font-m);
-    font-size: 12px;
-    color: var(--soft);
-    font-variant-numeric: tabular-nums;
-  }
-  .tirada-placeholder {
-    margin: 0;
-    color: var(--soft);
-    max-width: 52ch;
   }
 
   .colofon {

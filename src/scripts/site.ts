@@ -4,9 +4,13 @@ import './eases';
 import { initLenis } from './lenis';
 import { initTema } from './tema';
 import { initRegistro } from './registro';
+import { initHalftone } from './halftone';
+import { initTirada } from './tirada';
 
 const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 initLenis(reduced);
 initTema(reduced);
 initRegistro(reduced);
+initHalftone(reduced);
+initTirada(reduced);

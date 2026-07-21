@@ -28,6 +28,7 @@ Al iniciar el dev server preferí modo background: `astro dev --background`
 docs/DESIGN.md          Ley de diseño y motion (leer SIEMPRE antes de UI)
 qa/review.mjs           QA visual con Playwright → qa/artifacts/ (gitignored)
 src/
+  assets/proyectos/     Screenshots reales de producción (los consume Tirada.astro)
   data/proyectos.ts     Fuente única de los proyectos (nada de contenido duplicado)
   layouts/Base.astro    <html> + fuentes + anti-FOUC (lee ms-tema / ms-theme)
   components/           Secciones de página (.astro), estilos scoped
@@ -41,6 +42,10 @@ src/
                           pageReveal() reutilizado por el cambio de edición +
                           scrub de drift al scroll
     tema.ts               selector de edición (barrido) + claro/oscuro + persistencia
+    halftone.ts           trama duotono canvas (el momento firma): las fotos de
+                          proyectos se "imprimen" — planchas tinta/acento a
+                          15°/75° que convergen a registro con el progreso
+    tirada.ts             ScrollTriggers scrub de las piezas (halftone + wipes)
   styles/
     tokens.css            TODO el color vive acá (6 paletas: 3 ediciones × 2 temas)
     base.css              reset, focus, reduced-motion, .wrap

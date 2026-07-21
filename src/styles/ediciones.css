@@ -28,6 +28,12 @@
   text-transform: uppercase;
   letter-spacing: 0.01em;
 }
+/* El masthead manda: el titular baja un escalón para no competir
+   (crítica del director: dos bloques Anton máximos apilados se aplanan). */
+:root[data-tema='afiche'] .titular {
+  font-size: clamp(1.25rem, 0.7rem + 2vw, 2.5rem);
+  line-height: 1.14;
+}
 :root[data-tema='afiche'] .masthead-rule {
   border-top: 7px solid var(--ink);
   border-bottom: 2px solid var(--ink);
@@ -70,8 +76,8 @@
   opacity: 0.55;
 }
 :root[data-tema='terminal'] .chip.on {
-  background: transparent;
-  color: var(--accent);
+  background: var(--accent);
+  color: var(--accent-ink);
 }
 :root[data-tema='terminal'] .chip.on::before,
 :root[data-tema='terminal'] .chip.on::after {
