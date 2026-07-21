@@ -1,0 +1,86 @@
+---
+// Barra superior: marca + selector de ediciones + toggle claro/oscuro.
+// La lógica (wipe GSAP, persistencia) vive en scripts/site.ts.
+// El bloqueo por clicker ("La imprenta") llega en un paso posterior.
+---
+
+<header class="topbar" id="topbar">
+  <span class="brand">M·S — Portfolio 2026</span>
+  <nav class="selector" aria-label="Edición del portfolio">
+    <span class="selector-label">Edición</span>
+    <button class="chip" data-tema-btn="afiche">Afiche</button>
+    <button class="chip" data-tema-btn="terminal">Terminal</button>
+    <button class="chip" data-tema-btn="plano">Plano</button>
+    <button class="chip mode" id="mode-btn" aria-label="Cambiar entre modo claro y oscuro">
+      Claro / Oscuro
+    </button>
+  </nav>
+</header>
+
+<style>
+  .topbar {
+    position: sticky;
+    top: 0;
+    z-index: 40;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: wrap;
+    padding: 12px clamp(16px, 4vw, 48px);
+    background: var(--bg);
+    border-bottom: 1px solid var(--line);
+    transition: background-color 0.5s;
+  }
+  .brand {
+    font-family: var(--font-m);
+    font-weight: 700;
+    font-size: 13px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .selector {
+    display: flex;
+    gap: 6px;
+    margin-left: auto;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+  .selector-label {
+    font-family: var(--font-m);
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--soft);
+    margin-right: 4px;
+  }
+  .chip {
+    font-family: var(--font-m);
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 7px 12px;
+    cursor: pointer;
+    background: transparent;
+    color: var(--ink);
+    border: 1px solid var(--line);
+    transition: all 0.25s;
+  }
+  .chip:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+  .chip:global(.on) {
+    background: var(--ink);
+    color: var(--bg);
+    border-color: var(--ink);
+  }
+  .chip.mode {
+    background: var(--accent);
+    color: var(--accent-ink);
+    border-color: var(--accent);
+  }
+  .chip.mode:hover {
+    filter: brightness(1.12);
+    color: var(--accent-ink);
+  }
+</style>

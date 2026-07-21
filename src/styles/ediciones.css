@@ -1,0 +1,48 @@
+/* Reglas globales que dependen de la edición activa (data-tema en <html>).
+   Viven acá porque los estilos de componentes Astro son scoped y estos
+   selectores cruzan el root con el componente. */
+
+/* Visibilidad condicional por edición */
+.only-afiche,
+.only-terminal,
+.only-plano {
+  display: none;
+}
+:root[data-tema='afiche'] .only-afiche,
+:root[data-tema='terminal'] .only-terminal,
+:root[data-tema='plano'] .only-plano {
+  display: block;
+}
+:root[data-tema='afiche'] .only-afiche.only-inline,
+:root[data-tema='terminal'] .only-terminal.only-inline,
+:root[data-tema='plano'] .only-plano.only-inline {
+  display: inline-block;
+}
+
+/* Carácter tipográfico del hero por edición */
+:root[data-tema='afiche'] .hero-title {
+  text-transform: uppercase;
+  letter-spacing: 0.01em;
+}
+:root[data-tema='terminal'] .hero-title {
+  font-size: clamp(2rem, 1rem + 6.5vw, 6.2rem);
+}
+:root[data-tema='plano'] .hero-title {
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+/* Lenis (recomendado por la lib) */
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+.lenis.lenis-smooth [data-lenis-prevent] {
+  overscroll-behavior: contain;
+}
+.lenis.lenis-stopped {
+  overflow: hidden;
+}
