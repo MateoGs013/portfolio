@@ -47,9 +47,9 @@
   font-size: clamp(1.7rem, 0.6rem + 6.4vw, 6rem);
 }
 :root[data-tema='terminal'] .masthead-rule {
-  border-top: 1px dashed var(--ink);
-  border-bottom: 1px dashed var(--ink);
-  height: 5px;
+  border-top: 2px dashed var(--ink);
+  border-bottom: 2px dashed var(--ink);
+  height: 7px;
 }
 :root[data-tema='terminal'] .folio {
   font-family: var(--font-m);
@@ -103,7 +103,7 @@
   left: 0;
   right: 38%;
   bottom: 0;
-  border-bottom: 1px solid var(--accent);
+  border-bottom: 2px solid var(--accent);
 }
 :root[data-tema='plano'] .folio {
   font-family: var(--font-m);
