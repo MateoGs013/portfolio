@@ -67,7 +67,7 @@ function build(): void {
   const h = T.canvas.clientHeight;
   if (!w || !h) return;
   T.dpr = Math.min(2, window.devicePixelRatio || 1);
-  T.cell = window.innerWidth < 700 ? 8 : 10;
+  T.cell = window.innerWidth < 700 ? 6 : 7;
   T.cols = Math.max(8, Math.floor(w / T.cell));
   T.rows = Math.max(8, Math.floor(h / T.cell));
   T.canvas.width = Math.round(w * T.dpr);
@@ -141,7 +141,15 @@ function draw(now: number): void {
         T.heat[i] = 0;
       }
 
-      let ch = ramp[1 + Math.round(d * (ramp.length - 2))];
+      // La caja de tipos respira: cada celda muta periódicamente a un
+      // vecino de densidad parecida (fase propia ⇒ nunca cambian todas
+      // a la vez), con tick mecánico, no fundido.
+      const base = 1 + Math.round(d * (ramp.length - 2));
+      const fase = Math.floor(now / 260 + T.delay[i] * 0.011);
+      const j = hash(gx + fase * 31, gy * 7 + fase);
+      let idx = base;
+      if (j < 0.42) idx = Math.max(1, Math.min(ramp.length - 1, base + (j < 0.21 ? -1 : 1)));
+      let ch = ramp[idx];
       const componiendo = tIntro < T.delay[i];
       if (componiendo || (scramble > 0.02 && hash(gx + (now % 97), gy) < scramble * 0.5)) {
         // Tipos sueltos todavía sin distribuir en la rama, o plancha
@@ -159,12 +167,20 @@ function draw(now: number): void {
   activo = !introListo || tinta || scramble > 0.02;
 }
 
+// La mutación de tipos corre siempre que la escena está a la vista, pero
+// a cadencia de taller: ~8 ticks/s en reposo, 30fps con tinta en juego.
+let ultimoDraw = 0;
+
 function loop(now: number): void {
   const y = window.scrollY;
   scramble = Math.max(scramble * 0.9, Math.min(0.9, Math.abs(y - lastY) / 60));
   lastY = y;
-  draw(now);
-  if (activo && visible) {
+  const intervalo = activo ? 33 : 120;
+  if (now - ultimoDraw >= intervalo) {
+    ultimoDraw = now;
+    draw(now);
+  }
+  if (visible) {
     raf = requestAnimationFrame(loop);
   } else {
     vivo = false;
