@@ -47,6 +47,14 @@
   font-family: var(--font-b);
   font-weight: 600;
 }
+/* En Afiche el dato de cada pieza es una cita, no un comando: va en la
+   sans editorial con cuerpo, no en mono. */
+:root[data-tema='afiche'] .pieza-dato {
+  font-family: var(--font-b);
+  font-weight: 600;
+  font-size: 15px;
+  letter-spacing: 0;
+}
 
 /* ---------- TERMINAL: mobiliario ASCII, tamaños contenidos ---------- */
 :root[data-tema='terminal'] .hero-title {

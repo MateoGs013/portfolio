@@ -65,7 +65,12 @@ const enProduccion = proyectos.filter((p) => p.estado === 'produccion').length;
                 {p.titulo}
               </a>
             </h3>
-            <p class="pieza-desc">{p.descripcion}</p>
+            <p class="pieza-desc only-afiche">{p.lecturas.afiche.texto}</p>
+            <p class="pieza-desc only-terminal">{p.lecturas.terminal.texto}</p>
+            <p class="pieza-desc only-plano">{p.lecturas.plano.texto}</p>
+            <p class="pieza-dato only-afiche">{p.lecturas.afiche.dato}</p>
+            <p class="pieza-dato only-terminal">{p.lecturas.terminal.dato}</p>
+            <p class="pieza-dato only-plano">{p.lecturas.plano.dato}</p>
             <dl class="pieza-ficha">
               <div>
                 <dt>Rol</dt>
@@ -230,9 +235,17 @@ const enProduccion = proyectos.filter((p) => p.estado === 'produccion').length;
       2px 0 var(--reg-c2);
   }
   .pieza-desc {
-    margin: 0 0 18px;
+    margin: 0 0 12px;
     color: var(--soft);
     max-width: 44ch;
+  }
+  .pieza-dato {
+    margin: 0 0 18px;
+    font-family: var(--font-m);
+    font-size: 12px;
+    letter-spacing: 0.04em;
+    color: var(--accent);
+    overflow-wrap: anywhere;
   }
   .pieza-ficha {
     margin: 0 0 20px;
