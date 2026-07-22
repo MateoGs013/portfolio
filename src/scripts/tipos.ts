@@ -1,9 +1,17 @@
 // Composición en tipos (DESIGN.md §4): el retrato del impresor compuesto
 // con los caracteres de la edición activa — tipos móviles, no shader ASCII
 // genérico. Canvas 2D sin WebGL: el retrato se muestrea una vez por layout
-// y se dibuja un glifo por celda. Solo consume frames cuando hay tinta en
-// movimiento: la composición inicial, el cursor entintando cerca o el
-// scroll rápido desregistrando la plancha.
+// y se dibuja un glifo por celda.
+//
+// EL gesto de cursor del sitio (§4b: uno solo, igual en las 4 ediciones):
+// la plancha sale de la prensa recién entintada, y con los segundos LA
+// TINTA SE SECA hasta quedar fantasma sobre el papel. El cursor es el
+// rodillo: por donde pasa re-entinta con falloff — tinta fresca en el
+// accent de la edición, que se seca a tinta negra y se desvanece. Causal
+// (el rodillo entinta por contacto, la tinta se seca de verdad), sin capas
+// nuevas: es el retrato que ya existe tomando y perdiendo cuerpo.
+// En puntero grueso (touch) o reduced-motion no hay gesto: la plancha
+// queda impresa, visible, sin secarse.
 // Al asentar la composición, el retrato se "imprime": la trama pasa de
 // gruesa (blur) a nítida (DESIGN.md §5 — la trama halftone se afina).
 import gsap from 'gsap';
@@ -32,11 +40,8 @@ let activo = false;
 const mouse = { x: -1e4, y: -1e4 };
 let lastY = 0;
 let scramble = 0;
-// Arrastre de fotocopia (solo Fanzine): la velocidad horizontal del cursor
-// "mueve el original sobre el vidrio" — las filas cercanas se corren.
-let smear = 0;
-let lastPX = 0;
-let lastPT = 0;
+let finePointer = false;
+let prevDraw = 0;
 let img: HTMLImageElement | null = null;
 let ro: ResizeObserver | null = null;
 let mo: MutationObserver | null = null;
@@ -107,6 +112,9 @@ function build(): void {
     const d = Math.pow(a * (1 - lum * 0.85), 0.8);
     T.dark[i] = d < 0.1 ? 0 : Math.min(1, d);
     T.delay[i] = hash(i % T.cols, Math.floor(i / T.cols)) * 1000;
+    // Rebuild post-intro (resize, cambio de edición): la plancha vuelve
+    // entintada, no fantasma — el secado arranca de nuevo.
+    if (introListo && T.dark[i] > 0) T.heat[i] = 0.85;
   }
 }
 
@@ -116,7 +124,7 @@ function draw(now: number): void {
   const tema = document.documentElement.getAttribute('data-tema') || 'afiche';
   const ramp = CHARSETS[tema] || CHARSETS.afiche;
   const fam = token(FONTS[tema] || '--font-d') || 'sans-serif';
-  const ink = token('--ink');
+  const inkColor = token('--ink');
   const accent = token('--accent');
 
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -129,11 +137,14 @@ function draw(now: number): void {
   const rect = T.canvas.getBoundingClientRect();
   const mx = mouse.x - rect.left;
   const my = mouse.y - rect.top;
-  const radio = 130;
+  const radio = 150;
   let tinta = false;
-  // El arrastre solo existe en la fotocopia; en el resto la plancha es firme.
-  const smearAmp = tema === 'fanzine' && Math.abs(smear) > 0.03 ? smear : 0;
-  if (smearAmp !== 0) tinta = true;
+  // La tinta se seca en tiempo real (τ ≈ 3,5s), solo donde hay gesto de
+  // cursor; en touch/reduced la plancha queda impresa y no se seca.
+  const dt = prevDraw ? Math.min(200, now - prevDraw) : 33;
+  prevDraw = now;
+  const vivoInk = finePointer && !reducido;
+  const seca = vivoInk ? Math.exp(-dt / 3500) : 1;
 
   for (let gy = 0; gy < rows; gy++) {
     for (let gx = 0; gx < cols; gx++) {
@@ -143,14 +154,20 @@ function draw(now: number): void {
       const x = gx * cell + cell / 2;
       const y = gy * cell + cell / 2;
 
-      const dist = Math.hypot(x - mx, y - my);
-      if (dist < radio) T.heat[i] = Math.max(T.heat[i], 1 - dist / radio);
-      const heat = T.heat[i];
-      if (heat > 0.02) {
-        T.heat[i] *= 0.94;
-        tinta = true;
+      if (vivoInk) {
+        const dist = Math.hypot(x - mx, y - my);
+        if (dist < radio) {
+          // Falloff suave: el rodillo carga más tinta en el centro.
+          T.heat[i] = Math.max(T.heat[i], Math.pow(1 - dist / radio, 1.5));
+        }
+      }
+      let ink = T.heat[i];
+      if (ink > 0.02) {
+        T.heat[i] = ink * seca;
+        if (vivoInk) tinta = true;
       } else {
         T.heat[i] = 0;
+        ink = 0;
       }
 
       // La caja de tipos respira: cada celda muta periódicamente a un
@@ -169,33 +186,35 @@ function draw(now: number): void {
         ch = ramp[1 + Math.floor(hash(gx, gy + now) * (ramp.length - 1))];
       }
 
-      // Fila arrastrada: se corre horizontal con falloff gaussiano alrededor
-      // del cursor, y deja un fantasma — toner que no llegó a fijarse.
-      let dx = 0;
-      if (smearAmp !== 0) {
-        const dy = y - my;
-        dx = smearAmp * 30 * Math.exp(-(dy * dy) / 9800);
-      }
-      const alpha = Math.min(0.95, componiendo ? 0.12 : 0.18 + d * 0.5 + heat * 0.35);
-      ctx.fillStyle = heat > 0.12 ? accent : ink;
-      if (Math.abs(dx) > 2) {
-        ctx.globalAlpha = alpha * 0.35;
-        ctx.fillText(ch, x + dx * 1.9, y);
-      }
+      // Papel seco = fantasma de la plancha; la tinta le da el cuerpo.
+      // Sin gesto (touch/reduced) la plancha queda impresa fija.
+      const papel = vivoInk ? 0.06 + d * 0.16 : 0.18 + d * 0.5;
+      const alpha = componiendo
+        ? 0.12
+        : Math.min(0.95, papel + (vivoInk ? ink * (0.25 + d * 0.55) : 0));
+      // Tinta fresca = accent de la edición; al secarse pasa a tinta negra
+      // (dither con hash para que el borde fresco/seco no sea un anillo).
+      ctx.fillStyle = vivoInk && ink > 0.5 + hash(gx, gy) * 0.2 ? accent : inkColor;
       ctx.globalAlpha = alpha;
-      ctx.fillText(ch, x + dx, y);
+      ctx.fillText(ch, x, y);
     }
   }
   ctx.globalAlpha = 1;
   if (!introListo && tIntro > 1150) {
     introListo = true;
+    // La plancha sale ENTINTADA de la prensa: a partir de acá la tinta
+    // empieza a secarse sola hasta el estado fantasma (solo con gesto).
+    if (T) {
+      for (let i = 0; i < T.heat.length; i++) {
+        if (T.dark[i] > 0) T.heat[i] = 0.85;
+      }
+    }
     // La trama se afina: de halftone grueso (blur) a imagen nítida.
-    // El canvas ya compuso sus tipos; ahora "se imprime" del todo.
     if (!reducido && T) {
       gsap.to(T.canvas, { filter: 'blur(0px)', duration: 1.0, ease: 'tinta' });
     }
   }
-  activo = !introListo || tinta || scramble > 0.02 || Math.abs(smear) > 0.03;
+  activo = !introListo || tinta || scramble > 0.02;
 }
 
 // La mutación de tipos corre siempre que la escena está a la vista, pero
@@ -206,8 +225,6 @@ function loop(now: number): void {
   const y = window.scrollY;
   scramble = Math.max(scramble * 0.9, Math.min(0.9, Math.abs(y - lastY) / 60));
   lastY = y;
-  smear *= 0.9; // el toner se asienta
-  if (Math.abs(smear) < 0.03) smear = 0;
   const intervalo = activo ? 33 : 120;
   if (now - ultimoDraw >= intervalo) {
     ultimoDraw = now;
@@ -228,13 +245,6 @@ function wake(): void {
 }
 
 function onMove(e: PointerEvent): void {
-  const t = performance.now();
-  if (lastPT && document.documentElement.getAttribute('data-tema') === 'fanzine') {
-    const v = (e.clientX - lastPX) / Math.max(8, t - lastPT);
-    smear = Math.max(-1, Math.min(1, smear + v * 0.12));
-  }
-  lastPX = e.clientX;
-  lastPT = t;
   mouse.x = e.clientX;
   mouse.y = e.clientY;
   wake();
@@ -246,6 +256,7 @@ function onScroll(): void {
 export function initTipos(reduced: boolean): void {
   clearTipos();
   reducido = reduced;
+  finePointer = window.matchMedia('(pointer: fine)').matches;
   const canvas = document.querySelector<HTMLCanvasElement>('[data-tipos]');
   if (!canvas) return;
   const ctx = canvas.getContext('2d');
@@ -319,8 +330,7 @@ export function clearTipos(): void {
   activo = false;
   introListo = false;
   scramble = 0;
-  smear = 0;
-  lastPT = 0;
+  prevDraw = 0;
   ro?.disconnect();
   mo?.disconnect();
   io?.disconnect();

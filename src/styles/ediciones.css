@@ -58,40 +58,6 @@
   font-size: 15px;
   letter-spacing: 0;
 }
-/* Instrumento del marco vivo: la imprenta midiéndose al lector. En Afiche
-   la guía lee la posición y la presión en vivo; el readout es un
-   instrumento de taller, no decoración. Solo mouse: en touch el cursor
-   no existe y el silencio es honesto. */
-:root[data-tema='afiche'] .vivo-instrumento {
-  font-family: var(--font-m);
-  font-variant-numeric: tabular-nums;
-  color: var(--ink);
-}
-:root[data-tema='afiche'] .vivo-instrumento [data-cursor] {
-  color: var(--accent);
-}
-:root[data-tema='afiche'] .presion {
-  display: inline-flex;
-  gap: 2px;
-  vertical-align: -0.08em;
-}
-:root[data-tema='afiche'] .presion i {
-  display: inline-block;
-  width: 0.42em;
-  height: 0.6em;
-  background: var(--bg2);
-  border: 1px solid var(--ink);
-  transition: background-color 0.18s ease, border-color 0.18s ease;
-}
-:root[data-tema='afiche'] .presion i.on {
-  background: var(--accent);
-  border-color: var(--accent);
-}
-@media (pointer: coarse) {
-  :root[data-tema='afiche'] .vivo-instrumento {
-    display: none !important;
-  }
-}
 
 /* ---------- TERMINAL: mobiliario ASCII, tamaños contenidos ---------- */
 /* Plex Mono es ancha por carácter: la plancha baja de escala. */
@@ -107,10 +73,6 @@
   font-family: var(--font-m);
   text-transform: none;
   letter-spacing: 0.02em;
-}
-:root[data-tema='terminal'] .folio [data-shell-cursor] {
-  color: var(--accent);
-  font-variant-numeric: tabular-nums;
 }
 :root[data-tema='terminal'] .chip {
   border: none;
@@ -132,17 +94,6 @@
 :root[data-tema='terminal'] .chip.on::before,
 :root[data-tema='terminal'] .chip.on::after {
   opacity: 1;
-}
-/* La guía vertical (Afiche) no tiene sentido en Terminal — ahí el cursor
-   se lee como scanline CRT + caret mono. */
-:root[data-tema='terminal'] .guia {
-  display: none;
-}
-/* Selección de texto tipo editor: al pasar el cursor por el nombre, la
-   palabra se resalta apenas — un velo de accent, sin borde. Que no
-   compita con el nombre. */
-:root[data-tema='terminal'] .registro.sel {
-  background: color-mix(in srgb, var(--accent) 8%, transparent);
 }
 
 /* ---------- PLANO: aire, hairlines, esquinas apenas quebradas ---------- */
@@ -172,22 +123,8 @@
   font-family: var(--font-m);
   letter-spacing: 0.05em;
 }
-:root[data-tema='plano'] .folio [data-plano-cursor] {
-  color: var(--accent);
-  font-variant-numeric: tabular-nums;
-}
 :root[data-tema='plano'] .chip {
   border-radius: 2px;
-}
-/* La guía vertical (Afiche) no tiene sentido en Plano — ahí el cursor
-   se lee como cruz filar + cotas (plano.ts). */
-:root[data-tema='plano'] .guia {
-  display: none;
-}
-/* Elemento acotado: hairline outline tipo selección CAD. */
-:root[data-tema='plano'] .linea.cotada {
-  outline: 1px solid var(--accent);
-  outline-offset: 6px;
 }
 
 /* ---------- FANZINE: fotocopia casera, recortes torcidos, riso rosa ---------- */
@@ -210,29 +147,14 @@
   text-transform: lowercase;
   letter-spacing: 0.04em;
 }
-/* Recortes pegados a mano: los chips quedan apenas torcidos, y tiemblan
-   cuando el cursor se acerca (jitter diegético — el papel no está quieto). */
+/* Recortes pegados a mano: los chips quedan apenas torcidos. */
 :root[data-tema='fanzine'] .chip {
   border-radius: 0;
   border-style: solid;
-  transform: rotate(-1.1deg) translate(var(--jx, 0px), var(--jy, 0px)) rotate(var(--jr, 0deg));
+  transform: rotate(-1.1deg);
 }
 :root[data-tema='fanzine'] .chip:nth-child(2n) {
-  transform: rotate(0.9deg) translate(var(--jx, 0px), var(--jy, 0px)) rotate(var(--jr, 0deg));
-}
-/* La guía vertical (Afiche) no tiene sentido en Fanzine — ahí el cursor
-   se lee como mancha de tinta (fanzine.ts). */
-:root[data-tema='fanzine'] .guia {
-  display: none;
-}
-/* En oscuro la mancha aclara (screen), no oscurece. */
-:root[data-tema='fanzine'][data-theme='dark'] .mancha {
-  mix-blend-mode: screen;
-}
-@media (prefers-color-scheme: dark) {
-  :root[data-tema='fanzine']:not([data-theme='light']) .mancha {
-    mix-blend-mode: screen;
-  }
+  transform: rotate(0.9deg);
 }
 :root[data-tema='fanzine'] .chip.on {
   background: var(--accent);

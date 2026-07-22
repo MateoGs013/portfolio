@@ -12,13 +12,6 @@ gsap.registerPlugin(ScrollTrigger);
 const REVEAL = '[data-reveal]';
 const REGISTRO = '.registro';
 
-// Flag compartido con vivo.ts: mientras un press de Afiche desregistra la
-// plancha, el drift de scroll cede para no pelear por las mismas CSS vars.
-let pressActive = false;
-export function setPressActive(active: boolean): void {
-  pressActive = active;
-}
-
 const DESALINEADO = {
   '--r1x': '-0.16em',
   '--r1y': '0.05em',
@@ -95,7 +88,6 @@ export function initRegistro(reduced: boolean): void {
       p: 1,
       ease: 'none',
       onUpdate: () => {
-        if (pressActive) return;
         for (const reg of regs) {
           reg.style.setProperty('--r1x', `${(-0.035 * drift.p).toFixed(4)}em`);
           reg.style.setProperty('--r2x', `${(0.028 * drift.p).toFixed(4)}em`);

@@ -49,7 +49,6 @@ export function initTema(reduced: boolean): void {
   }
 
   const applyTema = (tema: string): void => {
-    const cambio = root.getAttribute('data-tema') !== tema;
     root.setAttribute('data-tema', tema);
     chips.forEach((c) => {
       const activo = c.getAttribute('data-tema-btn') === tema;
@@ -59,9 +58,6 @@ export function initTema(reduced: boolean): void {
     try {
       localStorage.setItem('ms-tema', tema);
     } catch {}
-    // El wipe no navega: los instrumentos del hero (guía, scanline, cruz,
-    // mancha) se inicializan por edición y necesitan re-armarse acá.
-    if (cambio) document.dispatchEvent(new CustomEvent('ms:tema'));
   };
 
   chips.forEach((chip) => {
