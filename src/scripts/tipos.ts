@@ -4,12 +4,13 @@
 // y se dibuja un glifo por celda.
 //
 // EL gesto de cursor del sitio (§4b: uno solo, igual en las 4 ediciones):
-// la plancha sale de la prensa recién entintada, y con los segundos LA
-// TINTA SE SECA hasta quedar fantasma sobre el papel. El cursor es el
-// rodillo: por donde pasa re-entinta con falloff — tinta fresca en el
-// accent de la edición, que se seca a tinta negra y se desvanece. Causal
+// la plancha sale de la prensa recién entintada y con los segundos LA
+// TINTA SE SECA — queda impresa y legible (protagonista, no marca de
+// agua), pero pierde la frescura: el accent cede a tinta negra. El cursor
+// es el rodillo: por donde pasa RE-ENTINTA con falloff en el accent de la
+// edición, que se seca a tinta negra en manchas orgánicas. Causal
 // (el rodillo entinta por contacto, la tinta se seca de verdad), sin capas
-// nuevas: es el retrato que ya existe tomando y perdiendo cuerpo.
+// nuevas: es el retrato que ya existe tomando y perdiendo frescura.
 // En puntero grueso (touch) o reduced-motion no hay gesto: la plancha
 // queda impresa, visible, sin secarse.
 // Al asentar la composición, el retrato se "imprime": la trama pasa de
@@ -138,7 +139,7 @@ function draw(now: number): void {
   const rect = T.canvas.getBoundingClientRect();
   const mx = mouse.x - rect.left;
   const my = mouse.y - rect.top;
-  const radio = 150;
+  const radio = 180;
   let tinta = false;
   // La tinta se seca en tiempo real (τ ≈ 3,5s), solo donde hay gesto de
   // cursor; en touch/reduced la plancha queda impresa y no se seca.
@@ -159,12 +160,13 @@ function draw(now: number): void {
         const dist = Math.hypot(x - mx, y - my);
         if (dist < radio) {
           // Falloff suave: el rodillo carga más tinta en el centro.
-          T.heat[i] = Math.max(T.heat[i], Math.pow(1 - dist / radio, 1.5));
+          T.heat[i] = Math.max(T.heat[i], Math.pow(1 - dist / radio, 1.3));
         }
       }
-      // La tinta no se evapora: se ASIENTA. Seca hacia un piso IMPRESO —
-      // el retrato seco sigue siendo un retrato (0.4: pierde frescura,
-      // jamás presencia; 0.22 lo dejaba en marca de agua).
+      // La tinta no se evapora: se ASIENTA. La humedad (heat) seca hacia
+      // un piso (0.4) y la PRESENCIA la garantiza el render (papel, abajo):
+      // la plancha seca queda nítida y legible — pierde frescura (el
+      // accent cede a tinta negra), jamás presencia.
       const piso = 0.4;
       let ink = T.heat[i];
       if (ink > piso + 0.02) {
@@ -190,15 +192,19 @@ function draw(now: number): void {
         ch = ramp[1 + Math.floor(hash(gx, gy + now) * (ramp.length - 1))];
       }
 
-      // Papel con plancha asentada = silueta siempre legible; la tinta
-      // fresca le devuelve el cuerpo. Sin gesto (touch/reduced), impresa fija.
-      const papel = vivoInk ? 0.14 + d * 0.34 : 0.22 + d * 0.6;
+      // Plancha impresa = protagonista legible EN SECO: el papel ya trae
+      // el contraste del retrato (por d); la tinta fresca suma cuerpo y
+      // COLOR, no presencia. Sin gesto (touch/reduced), impresa fija.
+      const papel = vivoInk ? 0.24 + d * 0.44 : 0.22 + d * 0.6;
       const alpha = componiendo
         ? 0.12
-        : Math.min(0.95, papel + (vivoInk ? ink * (0.2 + d * 0.5) : 0));
-      // Tinta fresca = accent de la edición; al secarse pasa a tinta negra
-      // (dither con hash para que el borde fresco/seco no sea un anillo).
-      ctx.fillStyle = vivoInk && ink > 0.5 + hash(gx, gy) * 0.2 ? accent : inkColor;
+        : Math.min(0.95, papel + (vivoInk ? ink * (0.15 + d * 0.4) : 0));
+      // Tinta fresca = accent de la edición; al secarse pasa a tinta negra.
+      // El borde fresco/seco es un CAMPO de baja frecuencia (dos octavas de
+      // hash por bloques): la tinta se seca en manchas orgánicas, no en
+      // puntos aislados que se leen como artefactos.
+      const campo = hash(gx >> 2, gy >> 2) * 0.65 + hash((gx + 11) >> 1, (gy + 5) >> 1) * 0.35;
+      ctx.fillStyle = vivoInk && ink > 0.55 + campo * 0.25 ? accent : inkColor;
       ctx.globalAlpha = alpha;
       ctx.fillText(ch, x, y);
     }
