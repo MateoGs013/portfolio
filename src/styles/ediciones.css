@@ -62,11 +62,11 @@
 /* ---------- TERMINAL: mobiliario ASCII, tamaños contenidos ---------- */
 /* Plex Mono es ancha por carácter: la plancha baja de escala. */
 :root[data-tema='terminal'] .hero-title {
-  --hero-fs: min(10.5vw, 15svh);
+  --hero-fs: min(12.5vw, 18svh);
 }
 @media (max-width: 640px) {
   :root[data-tema='terminal'] .hero-title {
-    --hero-fs: min(13vw, 10svh);
+    --hero-fs: min(15vw, 11svh);
   }
 }
 :root[data-tema='terminal'] .masthead-rule {
@@ -109,11 +109,11 @@
 }
 /* Archivo en caja alta es más ancha que Anton: escala propia de plancha. */
 :root[data-tema='plano'] .hero-title {
-  --hero-fs: min(11.5vw, 16svh);
+  --hero-fs: min(14vw, 20svh);
 }
 @media (max-width: 640px) {
   :root[data-tema='plano'] .hero-title {
-    --hero-fs: min(14vw, 11svh);
+    --hero-fs: min(17vw, 12svh);
   }
 }
 :root[data-tema='plano'] .masthead-rule {

@@ -24,7 +24,7 @@ const retrato = await getImage({ src: retratoOriginal, width: 520, format: 'webp
       <p class="folio only-fanzine">fanzine m·s · edición pirata · nº 001 · fotocopiado en buenos aires</p>
     </div>
 
-    <div class="masthead-cuerpo">
+    <div class="wrap masthead-cuerpo">
       <h1 class="hero-title">
         <span class="linea linea-a"><span class="registro" data-text="Mateo">Mateo</span></span>
         <span class="linea linea-b"><span class="registro" data-text="Sonzogni">Sonzogni</span></span>
@@ -86,9 +86,9 @@ const retrato = await getImage({ src: retratoOriginal, width: 520, format: 'webp
   .tipos {
     position: absolute;
     left: auto;
-    right: -4%;
+    right: -2%;
     bottom: 64px;
-    height: min(92%, 88svh);
+    height: min(calc(100% - 80px), 94svh);
     aspect-ratio: 3 / 4;
     z-index: 0;
     pointer-events: none;
@@ -98,6 +98,18 @@ const retrato = await getImage({ src: retratoOriginal, width: 520, format: 'webp
   .masthead-pie {
     position: relative;
     z-index: 1;
+  }
+  /* Grano de papel (§6.8): la escena tiene materia, no chapa plana.
+     feTurbulence estático y barato; sobre TODO el plano, tipos incluidos
+     — el papel está encima de la tinta impresa. */
+  .masthead::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 3;
+    pointer-events: none;
+    opacity: 0.055;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.82' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
   }
 
   .masthead-top {
@@ -114,7 +126,14 @@ const retrato = await getImage({ src: retratoOriginal, width: 520, format: 'webp
   }
 
   .masthead-cuerpo {
-    margin: auto 0;
+    /* Bajo, cruzando por delante de la figura: la tinta del nombre pisa
+       el retrato como en un cartel real — un solo plano compuesto, no
+       dos columnas. Mismo eje de alineación que el folio (wrap): sin
+       width, el flex item se encoge a su contenido y se auto-centra
+       fuera de la grilla. */
+    width: 100%;
+    margin-top: auto;
+    margin-bottom: clamp(20px, 5svh, 56px);
     display: flex;
     flex-direction: column;
     align-items: flex-start;
@@ -122,9 +141,8 @@ const retrato = await getImage({ src: retratoOriginal, width: 520, format: 'webp
   }
   .hero-title {
     /* Cada edición pisa --hero-fs en ediciones.css (anchos de fuente
-       distintos). La escala busca que la cola del apellido llegue hasta
-       el retrato — tensión, no dos columnas partidas. */
-    --hero-fs: min(14vw, 20svh);
+       distintos). La escala busca que el apellido cruce la figura. */
+    --hero-fs: min(17vw, 24svh);
     margin: 0;
     display: flex;
     flex-direction: column;
@@ -312,7 +330,7 @@ const retrato = await getImage({ src: retratoOriginal, width: 520, format: 'webp
       height: 68%;
     }
     .hero-title {
-      --hero-fs: min(16vw, 12svh);
+      --hero-fs: min(20vw, 14svh);
     }
   }
 </style>

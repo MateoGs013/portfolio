@@ -161,13 +161,15 @@ function draw(now: number): void {
           T.heat[i] = Math.max(T.heat[i], Math.pow(1 - dist / radio, 1.5));
         }
       }
+      // La tinta no se evapora: se ASIENTA. Seca hacia un piso visible —
+      // el retrato nunca desaparece de la escena, solo pierde frescura.
+      const piso = 0.22;
       let ink = T.heat[i];
-      if (ink > 0.02) {
-        T.heat[i] = ink * seca;
+      if (ink > piso + 0.02) {
+        T.heat[i] = piso + (ink - piso) * seca;
         if (vivoInk) tinta = true;
-      } else {
-        T.heat[i] = 0;
-        ink = 0;
+      } else if (ink > 0) {
+        T.heat[i] = Math.max(ink, piso);
       }
 
       // La caja de tipos respira: cada celda muta periódicamente a un
@@ -186,12 +188,12 @@ function draw(now: number): void {
         ch = ramp[1 + Math.floor(hash(gx, gy + now) * (ramp.length - 1))];
       }
 
-      // Papel seco = fantasma de la plancha; la tinta le da el cuerpo.
-      // Sin gesto (touch/reduced) la plancha queda impresa fija.
-      const papel = vivoInk ? 0.06 + d * 0.16 : 0.18 + d * 0.5;
+      // Papel con plancha asentada = silueta siempre legible; la tinta
+      // fresca le devuelve el cuerpo. Sin gesto (touch/reduced), impresa fija.
+      const papel = vivoInk ? 0.12 + d * 0.26 : 0.18 + d * 0.5;
       const alpha = componiendo
         ? 0.12
-        : Math.min(0.95, papel + (vivoInk ? ink * (0.25 + d * 0.55) : 0));
+        : Math.min(0.95, papel + (vivoInk ? ink * (0.2 + d * 0.5) : 0));
       // Tinta fresca = accent de la edición; al secarse pasa a tinta negra
       // (dither con hash para que el borde fresco/seco no sea un anillo).
       ctx.fillStyle = vivoInk && ink > 0.5 + hash(gx, gy) * 0.2 ? accent : inkColor;
