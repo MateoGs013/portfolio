@@ -14,8 +14,11 @@ import { initRegistro } from './registro';
 import { initHalftone, clearHalftone } from './halftone';
 import { initTirada } from './tirada';
 import { initImprenta } from './imprenta';
-import { initVivo } from './vivo';
+import { initVivo, initGuia } from './vivo';
 import { initTipos, clearTipos } from './tipos';
+import { initTerminal, clearTerminal } from './terminal';
+import { initPlano, clearPlano } from './plano';
+import { initFanzine, clearFanzine } from './fanzine';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -27,6 +30,18 @@ document.addEventListener('astro:before-swap', () => {
   ScrollTrigger.getAll().forEach((t) => t.kill());
   clearHalftone();
   clearTipos();
+  clearTerminal();
+  clearPlano();
+  clearFanzine();
+});
+
+// Cambio de edición vía selector (wipe, sin navegación): cada edición tiene
+// su propio instrumento de cursor — se re-arman para la edición entrante.
+document.addEventListener('ms:tema', () => {
+  initGuia(reduced);
+  initTerminal(reduced);
+  initPlano(reduced);
+  initFanzine(reduced);
 });
 
 document.addEventListener('astro:page-load', () => {
@@ -36,5 +51,9 @@ document.addEventListener('astro:page-load', () => {
   initTirada(reduced);
   initImprenta(reduced);
   initVivo();
+  initGuia(reduced);
   initTipos(reduced);
+  initTerminal(reduced);
+  initPlano(reduced);
+  initFanzine(reduced);
 });

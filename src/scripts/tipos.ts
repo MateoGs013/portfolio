@@ -4,6 +4,10 @@
 // y se dibuja un glifo por celda. Solo consume frames cuando hay tinta en
 // movimiento: la composición inicial, el cursor entintando cerca o el
 // scroll rápido desregistrando la plancha.
+// Al asentar la composición, el retrato se "imprime": la trama pasa de
+// gruesa (blur) a nítida (DESIGN.md §5 — la trama halftone se afina).
+import gsap from 'gsap';
+import './eases';
 
 type Tipos = {
   canvas: HTMLCanvasElement;
@@ -163,7 +167,14 @@ function draw(now: number): void {
     }
   }
   ctx.globalAlpha = 1;
-  if (!introListo && tIntro > 1150) introListo = true;
+  if (!introListo && tIntro > 1150) {
+    introListo = true;
+    // La trama se afina: de halftone grueso (blur) a imagen nítida.
+    // El canvas ya compuso sus tipos; ahora "se imprime" del todo.
+    if (!reducido && T) {
+      gsap.to(T.canvas, { filter: 'blur(0px)', duration: 1.0, ease: 'tinta' });
+    }
+  }
   activo = !introListo || tinta || scramble > 0.02;
 }
 
@@ -233,8 +244,11 @@ export function initTipos(reduced: boolean): void {
       introT0 = performance.now();
       if (reducido) {
         introListo = true;
+        gsap.set(canvas, { filter: 'blur(0px)' });
         draw(performance.now());
       } else {
+        // La trama arranca gruesa (blur) y se afina al asentar (§5).
+        gsap.set(canvas, { filter: 'blur(5px)' });
         wake();
       }
     });

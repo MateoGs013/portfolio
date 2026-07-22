@@ -15,10 +15,26 @@ const retrato = await getImage({ src: retratoOriginal, width: 520, format: 'webp
 <section class="portada" aria-label="Portada">
   <header class="masthead">
     <canvas class="tipos" data-tipos data-src={retrato.src} aria-hidden="true"></canvas>
+    <div class="guia" data-guia aria-hidden="true"></div>
+    <div class="scanline only-terminal" data-scanline aria-hidden="true"></div>
+    <div class="caret only-terminal" data-caret aria-hidden="true"><span class="caret-blink"></span></div>
+    <div class="cruz only-plano" data-cruz aria-hidden="true">
+      <span class="cruz-h" data-cruz-h></span>
+      <span class="cruz-v" data-cruz-v></span>
+    </div>
+    <div class="cota only-plano" data-cota aria-hidden="true">
+      <span class="cota-line"></span>
+      <span class="cota-label"></span>
+    </div>
+    <div class="mancha only-fanzine" data-mancha aria-hidden="true"></div>
     <div class="wrap masthead-top">
       <p class="folio only-afiche">Año I · Pliego Nº 001 · Buenos Aires · sale cuando hay algo que mostrar</p>
-      <p class="folio only-terminal">MATEO_SONZOGNI(1) — manual del pliego · sección 001 · Buenos Aires</p>
-      <p class="folio only-plano">Lámina 001 · portada · esc 1:1 · dibujó: M.S. · Buenos Aires</p>
+      <p class="folio only-terminal">
+        MATEO_SONZOGNI(1) · sección 001 · cursor <span data-shell-cursor>—</span>
+      </p>
+      <p class="folio only-plano">
+        Lámina 001 · portada · esc 1:1 · cursor <span data-plano-cursor>—</span>
+      </p>
       <p class="folio only-fanzine">fanzine m·s · edición pirata · nº 001 · fotocopiado en buenos aires</p>
     </div>
 
@@ -31,6 +47,12 @@ const retrato = await getImage({ src: retratoOriginal, width: 520, format: 'webp
       <div class="masthead-rule" aria-hidden="true"></div>
       <div class="wrap vivo" data-reveal>
         <p class="vivo-dato"><span data-reloj>--:--:--</span> · Buenos Aires</p>
+        <p class="vivo-dato vivo-instrumento only-afiche" aria-hidden="true">
+          marca <span data-cursor>—</span> · presión
+          <span class="presion" data-presion aria-label="presión"
+            ><i></i><i></i><i></i
+          ></span>
+        </p>
         <p class="vivo-dato vivo-estado"><span class="pulso" aria-hidden="true"></span> taller abierto a encargos</p>
       </div>
     </div>
@@ -90,6 +112,151 @@ const retrato = await getImage({ src: retratoOriginal, width: 520, format: 'webp
   .masthead-pie {
     position: relative;
     z-index: 1;
+  }
+
+  /* Guía de registro: hairline vertical que sigue al cursor por toda la
+     escena (scripts/vivo.ts la mueve; no es un cursor custom — el puntero
+     del sistema queda intacto, esto es la página midiéndose) */
+  .guia {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: 1px;
+    background: var(--accent);
+    opacity: 0;
+    z-index: 2;
+    pointer-events: none;
+    will-change: transform, opacity;
+  }
+  /* Scanline CRT: en Terminal reemplaza a la guía vertical. Una línea
+     horizontal con glow que sigue al cursor en Y. */
+  .scanline {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    height: 2px;
+    background: var(--accent);
+    box-shadow: 0 0 8px var(--accent);
+    opacity: 0;
+    z-index: 2;
+    pointer-events: none;
+    will-change: transform, opacity;
+  }
+  /* Caret mono block: el cursor de la terminal persiguiendo al mouse.
+     El blink es CSS puro dentro; la posición es GSAP quickTo. */
+  .caret {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 0.55em;
+    height: 1em;
+    font-size: 12px;
+    opacity: 0;
+    z-index: 3;
+    pointer-events: none;
+    will-change: transform, opacity;
+  }
+  .caret-blink {
+    display: block;
+    width: 100%;
+    height: 100%;
+    background: var(--accent);
+    animation: caret-blink 1.06s step-end infinite;
+  }
+  @keyframes caret-blink {
+    0%, 55% { opacity: 1; }
+    56%, 100% { opacity: 0; }
+  }
+  /* Cruz filar (Plano): dos hairlines que cruzan en el cursor, como una
+     mira de CAD. Reemplaza a la guía vertical de Afiche. */
+  .cruz {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 2;
+  }
+  .cruz-h,
+  .cruz-v {
+    position: absolute;
+    background: var(--accent);
+    opacity: 0;
+    will-change: transform, opacity;
+  }
+  .cruz-h {
+    left: 0;
+    right: 0;
+    top: 0;
+    height: 1px;
+  }
+  .cruz-v {
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: 1px;
+  }
+  /* Cota arquitectónica (Plano): línea de dimensión con ticks en los
+     extremos y label con la medida real del elemento. Aparece debajo
+     del elemento acotado. */
+  .cota {
+    position: absolute;
+    pointer-events: none;
+    z-index: 2;
+    opacity: 0;
+    will-change: opacity;
+  }
+  .cota-line {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: var(--accent);
+  }
+  .cota-line::before,
+  .cota-line::after {
+    content: '';
+    position: absolute;
+    top: -3px;
+    width: 1px;
+    height: 7px;
+    background: var(--accent);
+  }
+  .cota-line::before {
+    left: 0;
+  }
+  .cota-line::after {
+    right: 0;
+  }
+  .cota-label {
+    position: absolute;
+    top: 5px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-family: var(--font-m);
+    font-size: 10px;
+    letter-spacing: 0.04em;
+    color: var(--accent);
+    background: var(--bg);
+    padding: 0 4px;
+    white-space: nowrap;
+  }
+  /* Mancha de tinta (Fanzine): la fotocopia se mancha bajo el dedo.
+     Multiply en claro (oscurece), screen en oscuro (aclara) — la tinta
+     fresca reacciona al toner del fondo. */
+  .mancha {
+    position: absolute;
+    width: 220px;
+    height: 220px;
+    border-radius: 50%;
+    background: radial-gradient(circle, var(--accent) 0%, transparent 68%);
+    mix-blend-mode: multiply;
+    opacity: 0;
+    pointer-events: none;
+    z-index: 1;
+    will-change: transform, opacity;
+    transform: translate(-50%, -50%);
   }
   .masthead-top {
     width: 100%;
