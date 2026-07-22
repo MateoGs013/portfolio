@@ -11,7 +11,6 @@
 
 /* ---------- Tipografías (autoalojadas via Fontsource) ---------- */
 :root {
-  --font-anton: 'Anton', 'Arial Narrow', 'Helvetica Neue', sans-serif;
   --font-archivo: 'Archivo Variable', 'Helvetica Neue', Arial, sans-serif;
   --font-plex: 'IBM Plex Mono', Consolas, 'Courier New', monospace;
 }
@@ -49,10 +48,10 @@
   --accent-ink: #f1ead7;
   --line: rgba(25, 22, 17, 0.18);
   --grid: none;
-  --font-d: var(--font-anton);
+  --font-d: var(--font-archivo);
   --font-b: var(--font-archivo);
   --font-m: var(--font-plex);
-  --weight-d: 400; /* Anton solo trae 400 */
+  --weight-d: 900; /* Archivo variable: el ancho de imprenta (wdth 62) va en ediciones.css */
 }
 @media (prefers-color-scheme: dark) {
   :root,
@@ -97,10 +96,10 @@
   --accent-ink: #f3f1ea;
   --line: rgba(27, 25, 23, 0.2);
   --grid: repeating-linear-gradient(0deg, rgba(27, 25, 23, 0.02) 0 2px, transparent 2px 7px);
-  --font-d: var(--font-anton);
+  --font-d: var(--font-archivo);
   --font-b: 'Courier New', Courier, monospace;
   --font-m: 'Courier New', Courier, monospace;
-  --weight-d: 400;
+  --weight-d: 800; /* tapa de zine: menos comprimida que la plancha de Afiche (wdth 75 en ediciones.css) */
 }
 @media (prefers-color-scheme: dark) {
   :root[data-tema='fanzine'] {

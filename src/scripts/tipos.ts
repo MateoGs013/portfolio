@@ -65,6 +65,12 @@ const FONTS: Record<string, string> = {
   plano: '--font-b',
   fanzine: '--font-m',
 };
+// Peso/ancho del ctx.font por edición: en Afiche la display es Archivo
+// Variable — la caja de tipos se compone maciza y condensada (wght 900,
+// extra-condensed ≈ wdth 62). En las demás, la fuente se usa como viene.
+const CANVAS_EJES: Record<string, string[]> = {
+  afiche: ['900', 'extra-condensed'],
+};
 
 function token(nombre: string): string {
   return getComputedStyle(document.documentElement).getPropertyValue(nombre).trim();
@@ -131,12 +137,13 @@ function draw(now: number): void {
   const tema = document.documentElement.getAttribute('data-tema') || 'afiche';
   const ramp = CHARSETS[tema] || CHARSETS.afiche;
   const fam = token(FONTS[tema] || '--font-d') || 'sans-serif';
+  const ejes = CANVAS_EJES[tema] || [];
   const inkColor = token('--ink');
   const accent = token('--accent');
 
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   ctx.clearRect(0, 0, T.canvas.clientWidth, T.canvas.clientHeight);
-  ctx.font = `${Math.ceil(cell * 0.95)}px ${fam}`;
+  ctx.font = [...ejes, `${Math.ceil(cell * 0.95)}px`, fam].join(' ');
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
 

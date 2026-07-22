@@ -139,9 +139,27 @@
 /* El masthead ES el afiche (§4.2, escala brutal): el apellido se compone
    a lo ancho del pliego entero — fuera de la caja del wrap, sangrando el
    borde — y cruza POR DELANTE del retrato. El nombre chico y el rol
-   conservan el margen de lectura. */
+   conservan el margen de lectura. Métrica calibrada para Archivo wdth62
+   (misma huella que el Anton histórico: apellido ≈ 94% del viewport). */
 :root[data-tema='afiche'] .hero-title {
-  --hero-fs: min(26vw, 42svh);
+  --hero-fs: min(24.4vw, 38svh);
+}
+/* Display de Afiche = Archivo Variable: la condensación de imprenta vive
+   en el eje wdth. font-stretch SE HEREDA (los links dentro de títulos la
+   toman) y solo afecta a fuentes con eje wdth — el body queda intacto.
+   El peso viaja en --weight-d. Lista de superficies display del sitio. */
+:root[data-tema='afiche'] .hero-title,
+:root[data-tema='afiche'] .titular,
+:root[data-tema='afiche'] .takeover-titulo,
+:root[data-tema='afiche'] .tirada-head h2,
+:root[data-tema='afiche'] .pieza-titulo,
+:root[data-tema='afiche'] .imprenta-head h2,
+:root[data-tema='afiche'] .colofon h2,
+:root[data-tema='afiche'] .display,
+:root[data-tema='afiche'] .caso-titulo,
+:root[data-tema='afiche'] .caso-seccion h2,
+:root[data-tema='afiche'] .caso-siguiente a {
+  font-stretch: 62%;
 }
 :root[data-tema='afiche'] .masthead-cuerpo {
   max-width: none;
@@ -161,7 +179,7 @@
 }
 @media (max-width: 640px) {
   :root[data-tema='afiche'] .hero-title {
-    --hero-fs: min(25vw, 16svh);
+    --hero-fs: min(23.5vw, 15svh);
   }
 }
 /* El masthead manda, pero desde la escenografía (§4) vive en su propia
@@ -271,6 +289,21 @@
 }
 
 /* ---------- FANZINE: fotocopia casera, recortes torcidos, riso rosa ---------- */
+/* Tapa de zine: Archivo menos comprimida que la plancha de Afiche (75%),
+   misma lógica de herencia por font-stretch. */
+:root[data-tema='fanzine'] .hero-title,
+:root[data-tema='fanzine'] .titular,
+:root[data-tema='fanzine'] .takeover-titulo,
+:root[data-tema='fanzine'] .tirada-head h2,
+:root[data-tema='fanzine'] .pieza-titulo,
+:root[data-tema='fanzine'] .imprenta-head h2,
+:root[data-tema='fanzine'] .colofon h2,
+:root[data-tema='fanzine'] .display,
+:root[data-tema='fanzine'] .caso-titulo,
+:root[data-tema='fanzine'] .caso-seccion h2,
+:root[data-tema='fanzine'] .caso-siguiente a {
+  font-stretch: 75%;
+}
 :root[data-tema='fanzine'] .hero-title,
 :root[data-tema='fanzine'] .titular {
   text-transform: uppercase;
