@@ -96,7 +96,12 @@ function build(): void {
   off.height = T.rows;
   const octx = off.getContext('2d', { willReadFrequently: true });
   if (!octx) return;
-  const s = Math.max(T.cols / img.naturalWidth, T.rows / img.naturalHeight);
+  // La plancha es más grande que el papel (§4.2): el retrato se compone
+  // ~18% por encima del cover — los márgenes de aire de la foto (~30% de
+  // altura transparente) quedan fuera de la grilla y la figura llena la
+  // columna del afiche, con la coronilla cerca del filo superior.
+  // Anclado abajo: el busto apoya sobre la regla del masthead.
+  const s = Math.max(T.cols / img.naturalWidth, T.rows / img.naturalHeight) * 1.18;
   const dw = img.naturalWidth * s;
   const dh = img.naturalHeight * s;
   octx.drawImage(img, (T.cols - dw) / 2, T.rows - dh, dw, dh);
