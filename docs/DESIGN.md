@@ -128,10 +128,10 @@ escena**, no de tecnología. Reglas:
    apilar instrumentos: UN gesto de cursor por vista, actuando sobre el
    contenido que ya existe — la página reaccionando, no un puntero
    disfrazado ni un tablero de efectos.
-7. **Pendiente declarado:** cada edición tendrá una experiencia propia de
-   motion/layout, no solo cambio de tintas. Ninguna decisión nueva debe
-   cerrarle la puerta a eso — pero la experiencia propia vive en layout,
-   escenas y scroll, NO en multiplicar vocabularios de cursor (§4b.6).
+7. **Resuelto en §4c:** cada edición tiene una experiencia propia de
+   motion/layout — una FÍSICA de scroll, no un cambio de tintas. La
+   experiencia propia vive en layout, escenas y scroll, NO en multiplicar
+   vocabularios de cursor (§4b.6). La dirección completa es ley en §4c.
 
 ## 4b. Economía del gesto (enmienda 21-jul-2026)
 
@@ -179,6 +179,97 @@ estructurales, no de ejecución:
 7. **Si un número aparece en pantalla, mide algo real** y le sirve al
    lector. Si no, es HUD de utilería (§2.15).
 
+## 4c. Las cuatro físicas (dirección de ediciones, 22-jul-2026)
+
+Cierre del pendiente §4.7. Proceso: 4 conceptos desarrollados en paralelo,
+8 críticas adversarias verificadas contra el código real y un juez de
+familia (plan de obra detallado en `docs/plan-experiencias.md`). La regla
+madre: **cada edición es una física de scroll distinta aplicada al MISMO
+contenido y los MISMOS órganos** (halftone, registro, retrato, wipe). El
+mecanismo compartido es la familia; la física es la identidad.
+
+### Las físicas
+
+- **Afiche = COBERTURA.** La home es una pared de la calle: cada escena es
+  un afiche que se pega ENCIMA del anterior (sticky stacking nativo, scroll
+  1:1, cero scroll-jacking). El viejo no se va: queda un filo real asomando
+  (offsets sticky acumulativos — la pared literal, no ilustrada). Toda
+  rotación ASIENTA a 0 — asentar ES el gesto — y cada cobertura remata con
+  un golpe único: la escobilla del pegador alisa la hoja (diégesis de
+  empapelado, no de prensa). Takeover: "LA TIRADA" en reserva de papel —
+  las letras son papel sin imprimir y el rodillo entinta el fondo (única
+  inversión full-bleed; ES el titular real de la sección, no un duplicado).
+- **Terminal = CUANTIZACIÓN.** La home es `man sonzogni` ejecutándose: UNA
+  diégesis (el manual — no una shell; un solo comando tipeado en toda la
+  home), todo reveal es impresión de líneas enteras en ráfagas de buffer
+  (pops discretos agrupados irregularmente, cero fade), un solo caret que
+  SALTA, jamás viaja. Lo impreso no se des-imprime (scrollback — excepción
+  declarada a §6.1: la reversibilidad vive en los ESTADOS — pager, barra —
+  nunca en la tinta; el halftone avanza con ratchet). Takeover: modo pager
+  con standout (SGR 7) diseñado por tema — jamás inversión ciega — y barra
+  tipo `less` con datos reales que ABSORBE el marco vivo.
+- **Plano = DIRECCIÓN.** La home es una lámina que se delinea delante tuyo:
+  todo se TRAZA en orden de dibujante (ejes → marcos → cotas → tinta),
+  nunca hace fade, y la única cota mide el ancho real del título en TU
+  viewport. Takeover: el ÚNICO pin del sitio — paneo horizontal 100%
+  reversible sobre la tirada, el delineante siempre un trazo adelante;
+  enhancement montado por JS con fallback vertical SIEMPRE (mobile y
+  reduced-motion son la lámina leída de arriba a abajo, no la versión
+  pobre). El rótulo vivo (title block) ABSORBE el marco vivo y al llegar
+  al colofón se firma "conforme a obra" — Plano FIRMA con rúbrica trazada,
+  jamás sella.
+- **Fanzine = MANIPULACIÓN.** La única edición táctil: la tirada colapsa a
+  pila de hojas fotocopiadas (el único layout propio), cada hoja se imprime
+  con la pasada del escáner — que ES la cortina del cambio de edición
+  ("fotocopiando…", una sola pasada, ≤800ms, nunca cortina + pasada
+  apiladas). Los recortes se despegan con drag + inercia y debajo hay
+  PALIMPSESTO: el mismo dato en la voz de OTRA edición — la fanzine está
+  fotocopiada de las otras tres. La rotación es PERMANENTE (la fotocopia
+  quedó torcida; ≤0.6° sobre texto corrido). La contraportada estampa el
+  sello con TU número de ejemplar, congelado al desbloquear (un ejemplar
+  numerado no cambia de número). El sello de goma es DE la fanzine:
+  ninguna otra edición sella.
+
+### Invariantes de familia (lo que hace que sean UN sitio)
+
+1. **Un runtime compartido antes que cualquier edición** (Fase 0): evento
+   `ms:edicion` emitido por `applyTema` + `mount()`/`unmount()`
+   idempotentes por edición + `ScrollTrigger.refresh()`, todo detrás de la
+   cortina. Cuatro lifecycles privados = cuatro sitios pegados.
+2. **Los órganos se parametrizan, nunca se duplican**: halftone (ángulos/
+   celda/umbral/pasos por edición, con rebuild de planchas), registro
+   (ejes/fantasmas/drift por edición), el wipe (los tres barridos
+   full-page — entintado de Afiche, redraw por bandas de Terminal, escáner
+   de Fanzine — son EL MISMO mecanismo de cortina re-parametrizado), el
+   retrato (charset/tinta, ya vigente por §4b.6).
+3. **Las tintas de proceso son de la PRENSA, no de la edición**:
+   `--reg-c1`/`--reg-c2` quedan cian/magenta en las 4 ediciones. La
+   variación por edición es de eje/cantidad/timing, nunca de tinta.
+4. **UN instrumento de marco vivo por edición**: la barra `less` (Terminal)
+   y el rótulo (Plano) absorben reloj y estado, jamás conviven con el
+   vivo. Afiche y Fanzine conservan el vivo tal cual. Un solo blink idle
+   por edición.
+5. **La topbar siempre encima de todo** (`top: var(--topbar-h)`): el
+   selector de ediciones es lo que hace legible el concepto entero —
+   ninguna hoja, pin o pila lo tapa.
+6. **El colofón es la ficha quieta final en las 4 ediciones**: ahí el
+   sitio vuelve a ser uno.
+7. **Regímenes de rotación opuestos y exclusivos**: en Afiche toda
+   rotación asienta a 0; en Fanzine es permanente. Ninguna edición toma
+   prestado el régimen de la otra. Terminal y Plano no rotan.
+
+### Orden de obra
+
+Fase 0 (runtime + parametrización de órganos + QA extendido con posiciones
+de scroll y cambios de edición en caliente) → **Afiche** (es la default y
+la primera impresión; su cirugía de DOM la heredan las demás) →
+**Terminal** (banco de pruebas del runtime, riesgo bajo, craft alto) →
+**Plano** (el mayor riesgo técnico — pin + Lenis + focus — se calibra con
+el sitio ya estable) → **Fanzine** (recompensa secreta: el palimpsesto
+solo tiene sentido con las otras tres vivas). Presupuesto honesto:
+~13-15 días senior. El detalle vinculante por fase vive en
+`docs/plan-experiencias.md`.
+
 ## 5. El intro (reemplazo del contador)
 
 El intro es "el sitio saliendo de la prensa", diegético y corto (~800–1200ms,
@@ -218,6 +309,8 @@ valor final. Prohibido volver a `power2.out`/`expo.out` genéricos.
 
 1. **Scrub direccional**: el scroll es el gesto de pasar la hoja por la prensa
    — las animaciones ligadas al progreso (reversibles), no disparadas una vez.
+   Excepción declarada (§4c): en Terminal la impresión es one-way
+   (scrollback) — allí la reversibilidad vive en los estados, no en la tinta.
 2. **Wipe con textura**: los reveals son barridos de rodillo con borde
    irregular de tinta (`clip-path` animado), no fades.
 3. **Misregistration**: en hovers y transiciones los canales de color se
@@ -282,6 +375,8 @@ dev.to/studiomeyer_io (qué sobrevivió de 2026)
 - [ ] ¿Todo número en pantalla mide algo real? → si no, es HUD de utilería.
 - [ ] ¿La sección nueva es una ESCENA con una idea (§4), o volvió la densidad
       de documento?
+- [ ] ¿El motion nuevo respeta la física de su edición y los invariantes de
+      familia (§4c)? ¿Algún órgano se duplicó en vez de parametrizarse?
 - [ ] ¿Las 16 combinaciones (4 ediciones × 2 temas × 2 viewports) se ven
       intencionales?
 - [ ] ¿Medida de texto 45–75ch, jerarquía dramática, asimetría presente?
