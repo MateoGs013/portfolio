@@ -136,6 +136,34 @@
   text-transform: uppercase;
   letter-spacing: 0.01em;
 }
+/* El masthead ES el afiche (§4.2, escala brutal): el apellido se compone
+   a lo ancho del pliego entero — fuera de la caja del wrap, sangrando el
+   borde — y cruza POR DELANTE del retrato. El nombre chico y el rol
+   conservan el margen de lectura. */
+:root[data-tema='afiche'] .hero-title {
+  --hero-fs: min(26vw, 42svh);
+}
+:root[data-tema='afiche'] .masthead-cuerpo {
+  max-width: none;
+  padding: 0;
+}
+:root[data-tema='afiche'] .linea-a,
+:root[data-tema='afiche'] .hero-rol {
+  padding-left: clamp(16px, 4vw, 48px);
+}
+:root[data-tema='afiche'] .linea-b {
+  margin-left: -0.03em; /* la plancha es más grande que el papel */
+}
+:root[data-tema='afiche'] .hero-rol {
+  /* etiqueta de papel: donde el rol cruza el retrato (mobile) sigue
+     siendo legible — un rótulo pegado sobre el afiche, no texto flotando */
+  background: var(--bg);
+}
+@media (max-width: 640px) {
+  :root[data-tema='afiche'] .hero-title {
+    --hero-fs: min(25vw, 16svh);
+  }
+}
 /* El masthead manda, pero desde la escenografía (§4) vive en su propia
    escena: el titular puede subir sin competir con él. */
 :root[data-tema='afiche'] .titular {

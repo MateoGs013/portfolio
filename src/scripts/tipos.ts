@@ -162,9 +162,10 @@ function draw(now: number): void {
           T.heat[i] = Math.max(T.heat[i], Math.pow(1 - dist / radio, 1.5));
         }
       }
-      // La tinta no se evapora: se ASIENTA. Seca hacia un piso visible —
-      // el retrato nunca desaparece de la escena, solo pierde frescura.
-      const piso = 0.22;
+      // La tinta no se evapora: se ASIENTA. Seca hacia un piso IMPRESO —
+      // el retrato seco sigue siendo un retrato (0.4: pierde frescura,
+      // jamás presencia; 0.22 lo dejaba en marca de agua).
+      const piso = 0.4;
       let ink = T.heat[i];
       if (ink > piso + 0.02) {
         T.heat[i] = piso + (ink - piso) * seca;
@@ -191,7 +192,7 @@ function draw(now: number): void {
 
       // Papel con plancha asentada = silueta siempre legible; la tinta
       // fresca le devuelve el cuerpo. Sin gesto (touch/reduced), impresa fija.
-      const papel = vivoInk ? 0.12 + d * 0.26 : 0.18 + d * 0.5;
+      const papel = vivoInk ? 0.14 + d * 0.34 : 0.22 + d * 0.6;
       const alpha = componiendo
         ? 0.12
         : Math.min(0.95, papel + (vivoInk ? ink * (0.2 + d * 0.5) : 0));
