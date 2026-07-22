@@ -1,11 +1,13 @@
 ---
-// Portada del pliego: primera ESCENA (DESIGN.md §4). El masthead ocupa el
-// viewport completo y el nombre compone en diagonal a escala de plancha
-// (Mateo arriba a la izquierda, Sonzogni abajo a la derecha, sangrando los
-// bordes). Detrás, el retrato del impresor compuesto en tipos móviles
-// (scripts/tipos.ts). El pie de la escena es el marco vivo del taller
-// (reloj en scripts/vivo.ts). El efecto registro vive en
-// scripts/registro.ts; métricas por edición en ediciones.css.
+// Portada del pliego: primera ESCENA (DESIGN.md §4). El retrato del
+// impresor compuesto en tipos móviles (scripts/tipos.ts) es EL
+// protagonista: grande, sangrando el borde derecho, apoyado en la regla.
+// El nombre se compone como bloque editorial a la izquierda con jerarquía
+// dramática (§3.1): Mateo pequeño, SONZOGNI enorme sangrando el borde
+// izquierdo, regla hairline + rol debajo como ficha de espécimen. El pie
+// es el marco vivo del taller (reloj en scripts/vivo.ts). El efecto
+// registro vive en scripts/registro.ts; métricas por edición en
+// ediciones.css.
 import { getImage } from 'astro:assets';
 import retratoOriginal from '../assets/retrato.png';
 
@@ -22,10 +24,13 @@ const retrato = await getImage({ src: retratoOriginal, width: 520, format: 'webp
       <p class="folio only-fanzine">fanzine m·s · edición pirata · nº 001 · fotocopiado en buenos aires</p>
     </div>
 
-    <h1 class="hero-title">
-      <span class="linea"><span class="registro" data-text="Mateo">Mateo</span></span>
-      <span class="linea linea-b"><span class="registro" data-text="Sonzogni">Sonzogni</span></span>
-    </h1>
+    <div class="masthead-cuerpo">
+      <h1 class="hero-title">
+        <span class="linea linea-a"><span class="registro" data-text="Mateo">Mateo</span></span>
+        <span class="linea linea-b"><span class="registro" data-text="Sonzogni">Sonzogni</span></span>
+      </h1>
+      <p class="hero-rol">creative developer</p>
+    </div>
 
     <div class="masthead-pie">
       <div class="masthead-rule" aria-hidden="true"></div>
@@ -73,23 +78,23 @@ const retrato = await getImage({ src: retratoOriginal, width: 520, format: 'webp
     overflow: clip; /* la plancha sangra los bordes sin generar scroll */
   }
 
-  /* Retrato compuesto en tipos: centrado detrás del nombre, apoyado
-     sobre la regla — el nombre pasa por delante de la figura. Sale de la
-     prensa entintado y la tinta SE SECA hasta quedar fantasma; el cursor
-     re-entinta por contacto (scripts/tipos.ts — el único gesto de cursor
-     del sitio, §4b) */
+  /* Retrato compuesto en tipos: protagonista de la escena, a la derecha
+     sangrando el borde, apoyado sobre la regla — la cola del apellido
+     apenas lo pisa. Sale de la prensa entintado y la tinta SE SECA hasta
+     quedar fantasma; el cursor re-entinta por contacto (scripts/tipos.ts
+     — el único gesto de cursor del sitio, §4b) */
   .tipos {
     position: absolute;
-    left: 50%;
-    transform: translateX(-50%);
+    left: auto;
+    right: -4%;
     bottom: 64px;
-    height: min(96%, 92svh);
+    height: min(92%, 88svh);
     aspect-ratio: 3 / 4;
     z-index: 0;
     pointer-events: none;
   }
   .masthead-top,
-  .hero-title,
+  .masthead-cuerpo,
   .masthead-pie {
     position: relative;
     z-index: 1;
@@ -108,28 +113,45 @@ const retrato = await getImage({ src: retratoOriginal, width: 520, format: 'webp
     overflow-wrap: anywhere;
   }
 
-  .hero-title {
-    /* Cada edición pisa --hero-fs en ediciones.css (anchos de fuente distintos) */
-    --hero-fs: min(23vw, 30svh);
+  .masthead-cuerpo {
     margin: auto 0;
     display: flex;
     flex-direction: column;
-    gap: 0.03em;
+    align-items: flex-start;
+    gap: clamp(12px, 2svh, 22px);
+  }
+  .hero-title {
+    /* Cada edición pisa --hero-fs en ediciones.css (anchos de fuente
+       distintos). La escala busca que la cola del apellido llegue hasta
+       el retrato — tensión, no dos columnas partidas. */
+    --hero-fs: min(14vw, 20svh);
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.08em;
     font-family: var(--font-d);
     font-weight: var(--weight-d);
     font-size: var(--hero-fs);
-    line-height: 0.88;
+    line-height: 0.9;
     color: var(--ink);
   }
   .linea {
     display: block;
     margin-left: -0.02em; /* sangrado óptico contra el borde */
   }
-  .linea-b {
-    align-self: flex-end;
-    margin-left: 0;
-    margin-right: -0.02em;
-    text-align: right;
+  .linea-a {
+    /* Jerarquía dramática (§3.1): el nombre chico, el apellido enorme —
+       cabecera de espécimen, no escalera de tamaños parecidos */
+    font-size: clamp(1.35rem, 0.95rem + 1.7vw, 2.5rem);
+  }
+  .hero-rol {
+    margin: 0 0 0 2px;
+    font-family: var(--font-b);
+    font-size: clamp(0.95rem, 0.82rem + 0.5vw, 1.15rem);
+    color: var(--soft);
+    border-top: 1px solid var(--line);
+    padding-top: 10px;
+    padding-right: clamp(24px, 5vw, 80px);
   }
   .registro {
     position: relative;
@@ -283,8 +305,14 @@ const retrato = await getImage({ src: retratoOriginal, width: 520, format: 'webp
       font-size: 11px;
     }
     .tipos {
+      right: auto;
+      left: 50%;
+      transform: translateX(-50%);
       bottom: 78px;
-      height: 76%;
+      height: 68%;
+    }
+    .hero-title {
+      --hero-fs: min(16vw, 12svh);
     }
   }
 </style>
