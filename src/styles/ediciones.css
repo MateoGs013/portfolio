@@ -25,6 +25,111 @@
   display: inline-block;
 }
 
+/* ---------- AFICHE · LA PARED EMPAPELADA (§4c: física = COBERTURA) ----------
+   Cada escena es un afiche que se pega ENCIMA del anterior: las hojas de
+   arriba quedan pegadas (sticky, scroll 1:1 nativo — cero pin) y las
+   siguientes cubren desde el flujo. El offset acumulado deja un filo REAL
+   del afiche viejo asomando bajo el borde rasgado del nuevo. El motion de
+   la pegatina (rotación que asienta, sombra de despegue, golpe) vive en
+   scripts/pared.ts; sin JS la pared apila igual porque es CSS puro. */
+:root[data-tema='afiche'] main {
+  overflow-x: clip; /* las hojas entran apenas rotadas y sangran */
+}
+:root[data-tema='afiche'] .masthead {
+  position: sticky;
+  top: var(--topbar-h, 52px);
+  z-index: 1;
+}
+:root[data-tema='afiche'] .portada-escena {
+  position: sticky;
+  /* 34px de filo: la banda del folio del afiche viejo queda asomando
+     bajo el borde rasgado — la pared literal, no ilustrada */
+  top: calc(var(--topbar-h, 52px) + 34px);
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: calc(100svh - var(--topbar-h, 52px) - 34px); /* hoja completa: nada asoma por abajo */
+}
+:root[data-tema='afiche'] .tirada {
+  z-index: 3;
+}
+:root[data-tema='afiche'] .imprenta {
+  z-index: 4;
+}
+:root[data-tema='afiche'] .tirada,
+:root[data-tema='afiche'] .imprenta {
+  position: relative;
+  border-top: none; /* el filo rasgado reemplaza al hairline */
+}
+:root[data-tema='afiche'] .masthead,
+:root[data-tema='afiche'] .portada-escena,
+:root[data-tema='afiche'] .tirada,
+:root[data-tema='afiche'] .imprenta {
+  /* papel opaco: la hoja de abajo no se transparenta */
+  background-color: var(--bg);
+  background-image: var(--grid);
+}
+/* Filo rasgado: el borde superior de cada hoja que cubre es papel cortado
+   a mano — TRES siluetas distintas (nunca un tile repetido, §4c) cuya
+   sombra sigue la silueta (drop-shadow sobre la máscara). */
+:root[data-tema='afiche'] .portada-escena::before,
+:root[data-tema='afiche'] .tirada::before,
+:root[data-tema='afiche'] .imprenta::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: -12px;
+  height: 13px;
+  background: var(--bg);
+  mask-size: 100% 100%;
+  filter: drop-shadow(0 -3px 4px rgb(0 0 0 / 0.25));
+  pointer-events: none;
+}
+:root[data-tema='afiche'] .portada-escena::before {
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 13' preserveAspectRatio='none'%3E%3Cpath d='M0 13L0 7 38 9 74 3 131 8 172 2 226 9 263 4 317 10 364 3 419 7 466 1 521 8 570 4 611 9 666 2 719 7 761 3 822 10 868 4 906 8 951 2 1008 9 1053 5 1102 8 1147 3 1200 7L1200 13Z'/%3E%3C/svg%3E");
+}
+:root[data-tema='afiche'] .tirada::before {
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 13' preserveAspectRatio='none'%3E%3Cpath d='M0 13L0 4 29 8 81 2 122 9 178 5 231 10 287 3 341 8 396 2 448 9 502 5 557 10 603 2 659 7 713 4 768 9 815 3 871 8 927 2 983 9 1037 4 1090 10 1141 6 1200 3L1200 13Z'/%3E%3C/svg%3E");
+}
+:root[data-tema='afiche'] .imprenta::before {
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 13' preserveAspectRatio='none'%3E%3Cpath d='M0 13L0 9 44 3 97 8 149 2 203 9 249 4 308 10 359 5 411 9 469 2 524 8 577 3 633 9 688 4 741 10 796 3 849 7 903 2 957 8 1013 5 1068 9 1119 3 1200 8L1200 13Z'/%3E%3C/svg%3E");
+}
+/* Sombra de despegue: la esquina que todavía no agarró engrudo — la anima
+   pared.ts (--despegue 1→0) mientras la hoja se aplana al pegarse. */
+:root[data-tema='afiche'] .portada-escena::after,
+:root[data-tema='afiche'] .tirada::after,
+:root[data-tema='afiche'] .imprenta::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: -46px;
+  height: 46px;
+  background: linear-gradient(to top, rgb(0 0 0 / 0.2), transparent);
+  opacity: var(--despegue, 0);
+  pointer-events: none;
+}
+/* El takeover ES el titular de la sección: la cabecera clásica se va */
+:root[data-tema='afiche'] .tirada-head {
+  display: none;
+}
+:root[data-tema='afiche'] .tirada-takeover {
+  display: grid;
+}
+@media (max-width: 860px) {
+  /* Con la columna apilada, la escena del titular puede superar el
+     viewport: no se pega — pero queda RELATIVE, no static (un elemento
+     static ignora el z-index y su filo ::before pierde el ancla): cubre
+     al masthead desde el flujo y la tirada la cubre a ella. */
+  :root[data-tema='afiche'] .portada-escena {
+    position: relative;
+    top: auto;
+    min-height: 0;
+  }
+}
+
 /* ---------- AFICHE: denso, macizo, reglas gruesas, cero curvas ---------- */
 :root[data-tema='afiche'] .hero-title,
 :root[data-tema='afiche'] .titular {

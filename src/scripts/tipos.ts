@@ -42,6 +42,7 @@ let lastY = 0;
 let scramble = 0;
 let finePointer = false;
 let prevDraw = 0;
+let cubierto = false;
 let img: HTMLImageElement | null = null;
 let ro: ResizeObserver | null = null;
 let mo: MutationObserver | null = null;
@@ -232,7 +233,7 @@ function loop(now: number): void {
     ultimoDraw = now;
     draw(now);
   }
-  if (visible) {
+  if (visible && !cubierto) {
     raf = requestAnimationFrame(loop);
   } else {
     vivo = false;
@@ -240,7 +241,7 @@ function loop(now: number): void {
 }
 
 function wake(): void {
-  if (vivo || !T || reducido || !visible) return;
+  if (vivo || !T || reducido || !visible || cubierto) return;
   vivo = true;
   lastY = window.scrollY;
   raf = requestAnimationFrame(loop);
@@ -326,7 +327,17 @@ export function initTipos(reduced: boolean): void {
   }
 }
 
+// La pared de Afiche (pared.ts): cuando una hoja opaca cubre el retrato,
+// el IntersectionObserver no lo sabe (el canvas sigue "intersectando"
+// debajo de la hoja) — la pared avisa y el loop se pausa de verdad.
+export function setCubierto(v: boolean): void {
+  if (cubierto === v) return;
+  cubierto = v;
+  if (!cubierto) wake();
+}
+
 export function clearTipos(): void {
+  cubierto = false;
   cancelAnimationFrame(raf);
   vivo = false;
   activo = false;

@@ -74,6 +74,12 @@ src/
   ejecutan UNA vez; todo init de DOM va en `astro:page-load` y la limpieza
   (ScrollTriggers, instancias halftone) en `astro:before-swap`. El anti-FOUC
   lleva `data-astro-rerun` porque el swap pisa los atributos de `<html>`.
+- **Cambio de edición en caliente**: el selector NO navega — `tema.ts` emite
+  `ms:edicion` (CustomEvent `{saliente, entrante}`) al aplicar la edición, y
+  site.ts desmonta la experiencia saliente, hace `ScrollTrigger.refresh()` y
+  monta la entrante detrás de la cortina (§4c.1). Toda experiencia por
+  edición (p.ej. `pared.ts`) expone `init`/`clear` idempotentes y etiqueta
+  sus ScrollTriggers con id prefijado para kill selectivo.
 - **Contenido**: proyectos salen de `src/data/proyectos.ts`. Copy en español
   rioplatense (vos), sin grandilocuencia ni relleno.
 - **Persistencia**: `localStorage` → `ms-tema`, `ms-theme`, `ms-tirada` (clicker);

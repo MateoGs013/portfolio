@@ -16,6 +16,7 @@ import { initTirada } from './tirada';
 import { initImprenta } from './imprenta';
 import { initVivo } from './vivo';
 import { initTipos, clearTipos } from './tipos';
+import { initPared, clearPared } from './pared';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -24,6 +25,7 @@ const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 initLenis(reduced);
 
 document.addEventListener('astro:before-swap', () => {
+  clearPared();
   ScrollTrigger.getAll().forEach((t) => t.kill());
   clearHalftone();
   clearTipos();
@@ -37,4 +39,16 @@ document.addEventListener('astro:page-load', () => {
   initImprenta(reduced);
   initVivo();
   initTipos(reduced);
+  initPared(reduced);
+});
+
+// Cambio de edición en caliente (ms:edicion, lo emite tema.ts detrás de
+// la cortina): desmontar la experiencia saliente, refrescar los triggers
+// con el layout nuevo (la pared de Afiche cambia posiciones sticky) y
+// montar la entrante. Contrato §4c.1 — acá se suman las experiencias de
+// las demás ediciones cuando lleguen.
+document.addEventListener('ms:edicion', () => {
+  clearPared();
+  ScrollTrigger.refresh();
+  initPared(reduced);
 });

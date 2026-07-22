@@ -49,6 +49,7 @@ export function initTema(reduced: boolean): void {
   }
 
   const applyTema = (tema: string): void => {
+    const saliente = root.getAttribute('data-tema') || '';
     root.setAttribute('data-tema', tema);
     chips.forEach((c) => {
       const activo = c.getAttribute('data-tema-btn') === tema;
@@ -58,6 +59,15 @@ export function initTema(reduced: boolean): void {
     try {
       localStorage.setItem('ms-tema', tema);
     } catch {}
+    // Cambio de edición EN CALIENTE (sin navegar, no dispara astro:*):
+    // el runtime (site.ts) desmonta la experiencia saliente, refresca
+    // ScrollTrigger con el layout nuevo y monta la entrante — acá la
+    // cortina todavía cubre, así que el recableo no se ve.
+    if (saliente !== tema) {
+      document.dispatchEvent(
+        new CustomEvent('ms:edicion', { detail: { saliente, entrante: tema } })
+      );
+    }
   };
 
   chips.forEach((chip) => {

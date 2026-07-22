@@ -18,6 +18,18 @@ const enProduccion = proyectos.filter((p) => p.estado === 'produccion').length;
 ---
 
 <section id="tirada" class="tirada" aria-label="La tirada — trabajos">
+  <!-- Takeover de Afiche (§4c): el titular de la sección como plancha de
+       serigrafía — "LA TIRADA" en reserva de papel (las letras SON el
+       papel sin imprimir) mientras el rodillo entinta el fondo con el
+       scroll (scripts/pared.ts). Reemplaza a .tirada-head solo en Afiche
+       (display en ediciones.css); sin JS o con reduced-motion queda
+       entintada completa. -->
+  <div class="tirada-takeover">
+    <div class="takeover-tinta" aria-hidden="true"></div>
+    <h2 class="takeover-titulo">La tirada</h2>
+    <p class="takeover-nota">{proyectos.length} piezas · {enProduccion} en producción</p>
+  </div>
+
   <div class="wrap">
     <div class="tirada-head" data-reveal>
       <h2>La tirada</h2>
@@ -114,6 +126,63 @@ const enProduccion = proyectos.filter((p) => p.estado === 'produccion').length;
   .tirada {
     border-top: 1px solid var(--line);
     padding: clamp(40px, 8vh, 90px) 0 clamp(50px, 9vh, 110px);
+  }
+
+  /* ---- Takeover (solo Afiche; display lo gobierna ediciones.css) ---- */
+  .tirada-takeover {
+    display: none;
+    position: relative;
+    height: 100svh;
+    overflow: clip;
+    align-content: center;
+    justify-items: center;
+    margin-top: calc(-1 * clamp(40px, 8vh, 90px)); /* pega con el filo de la hoja */
+  }
+  .takeover-tinta {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background: var(--accent);
+    /* Estado base = plancha entintada (no-JS / reduced-motion nunca ven
+       el viewport en blanco); pared.ts la arranca desde 86% y la inunda
+       con el scroll. */
+  }
+  .takeover-tinta::before {
+    /* El frente de tinta no es una regla: borde irregular de rodillo */
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: -12px;
+    height: 13px;
+    background: var(--accent);
+    mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 13' preserveAspectRatio='none'%3E%3Cpath d='M0 13L0 6 44 9 91 2 149 8 203 4 249 10 308 3 359 8 411 2 469 9 524 5 577 10 633 3 688 7 741 2 796 9 849 4 903 8 957 3 1013 9 1068 5 1119 8 1200 4L1200 13Z'/%3E%3C/svg%3E");
+    mask-size: 100% 100%;
+  }
+  .takeover-titulo {
+    position: relative;
+    margin: 0;
+    font-family: var(--font-d);
+    font-weight: var(--weight-d);
+    font-size: 23vw; /* sangra los bordes: la plancha es más grande que el papel (§4.2) */
+    line-height: 0.85;
+    letter-spacing: 0.01em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    color: var(--bg); /* reserva: el papel sin imprimir */
+  }
+  .takeover-nota {
+    position: absolute;
+    left: clamp(16px, 4vw, 48px);
+    bottom: 18px;
+    margin: 0;
+    font-family: var(--font-m);
+    font-size: 12px;
+    letter-spacing: 0.06em;
+    color: var(--bg);
+    font-variant-numeric: tabular-nums;
   }
   .tirada-head {
     display: flex;

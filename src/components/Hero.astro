@@ -1,7 +1,10 @@
 ---
-// Portada del pliego: primera ESCENA (DESIGN.md §4). El retrato del
-// impresor compuesto en tipos móviles (scripts/tipos.ts) es EL
-// protagonista: grande, sangrando el borde derecho, apoyado en la regla.
+// Portada del pliego: las dos primeras ESCENAS (DESIGN.md §4), como
+// secciones HERMANAS — en Afiche son hojas de la pared empapelada (§4c:
+// sticky stacking, ediciones.css + scripts/pared.ts) y el sticky exige
+// que compartan contenedor de bloque. El retrato del impresor compuesto
+// en tipos móviles (scripts/tipos.ts) es EL protagonista: grande,
+// sangrando el borde derecho, apoyado en la regla.
 // El nombre se compone como bloque editorial a la izquierda con jerarquía
 // dramática (§3.1): Mateo pequeño, SONZOGNI enorme sangrando el borde
 // izquierdo, regla hairline + rol debajo como ficha de espécimen. El pie
@@ -14,8 +17,7 @@ import retratoOriginal from '../assets/retrato.png';
 const retrato = await getImage({ src: retratoOriginal, width: 520, format: 'webp' });
 ---
 
-<section class="portada" aria-label="Portada">
-  <header class="masthead">
+<section class="masthead" aria-label="Portada">
     <canvas class="tipos" data-tipos data-src={retrato.src} aria-hidden="true"></canvas>
     <div class="wrap masthead-top">
       <p class="folio only-afiche">Año I · Pliego Nº 001 · Buenos Aires · sale cuando hay algo que mostrar</p>
@@ -39,8 +41,11 @@ const retrato = await getImage({ src: retratoOriginal, width: 520, format: 'webp
         <p class="vivo-dato vivo-estado"><span class="pulso" aria-hidden="true"></span> taller abierto a encargos</p>
       </div>
     </div>
-  </header>
+</section>
 
+<div class="pared-sentinel" data-pared-sentinel aria-hidden="true"></div>
+
+<section class="portada-escena" aria-label="Titular de portada">
   <div class="wrap">
     <div class="portada-grid">
       <h2 class="titular only-afiche" data-reveal>
@@ -245,6 +250,12 @@ const retrato = await getImage({ src: retratoOriginal, width: 520, format: 'webp
   }
 
   /* ---- Escena 2: titular de portada, con aire propio ---- */
+  /* El sentinel marca la posición en FLUJO de la escena: en Afiche la
+     escena es sticky y su rect miente — los triggers de la pegatina
+     (pared.ts) se anclan acá. */
+  .pared-sentinel {
+    height: 0;
+  }
   .portada-grid {
     min-height: min(80svh, 760px);
     align-content: center;
