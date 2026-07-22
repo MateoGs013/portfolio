@@ -23,7 +23,14 @@ export function initPlano(reduced: boolean): void {
   const cota = document.querySelector<HTMLElement>('[data-cota]');
   const cotaLabel = cota?.querySelector<HTMLElement>('.cota-label');
   const planoCursor = document.querySelector<HTMLElement>('[data-plano-cursor]');
+  const medX = document.querySelector<HTMLElement>('[data-medida-x]');
+  const medY = document.querySelector<HTMLElement>('[data-medida-y]');
   if (!masthead || !cruzH || !cruzV || !cota) return;
+
+  const ocultarMedidas = (): void => {
+    medX?.classList.remove('on');
+    medY?.classList.remove('on');
+  };
 
   const hY = gsap.quickTo(cruzH, 'y', { duration: 0.28, ease: 'tinta' });
   const hO = gsap.quickTo(cruzH, 'opacity', { duration: 0.25, ease: 'tinta' });
@@ -53,6 +60,28 @@ export function initPlano(reduced: boolean): void {
       const px = Math.round(e.clientX - r.left);
       const py = Math.round(e.clientY - r.top);
       planoCursor.textContent = `${px},${py}`;
+    }
+
+    // Medidas vivas: la lámina acota el cursor contra los márgenes.
+    // El label X se apoya sobre la hairline horizontal (a mitad de camino
+    // del margen izquierdo); el Y sobre la vertical (a mitad del superior).
+    if (inside) {
+      const cx = e.clientX - r.left;
+      const cy = e.clientY - r.top;
+      if (medX) {
+        medX.style.left = `${cx / 2}px`;
+        medX.style.top = `${cy}px`;
+        medX.textContent = `${Math.round(cx)} mm`;
+        medX.classList.add('on');
+      }
+      if (medY) {
+        medY.style.left = `${cx}px`;
+        medY.style.top = `${cy / 2}px`;
+        medY.textContent = `${Math.round(cy)} mm`;
+        medY.classList.add('on');
+      }
+    } else {
+      ocultarMedidas();
     }
 
     let cotada: HTMLElement | null = null;
@@ -88,6 +117,7 @@ export function initPlano(reduced: boolean): void {
     hO(0);
     vO(0);
     cotaO(0);
+    ocultarMedidas();
     if (planoCursor) planoCursor.textContent = '—';
     if (currentCotada) {
       currentCotada.classList.remove('cotada');

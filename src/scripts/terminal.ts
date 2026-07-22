@@ -80,8 +80,9 @@ export function initTerminal(reduced: boolean): void {
     const r = masthead.getBoundingClientRect();
     const inside = e.clientY >= r.top && e.clientY <= r.bottom;
     if (inside) {
-      scanY(e.clientY - r.top);
-      scanO(0.3);
+      // Banda centrada en el cursor (el haz barre la fila, no la subraya).
+      scanY(e.clientY - r.top - scanline.offsetHeight / 2);
+      scanO(0.9);
       carX(e.clientX - r.left - caret.offsetWidth / 2);
       carY(e.clientY - r.top - caret.offsetHeight / 2);
       carO(0.9);

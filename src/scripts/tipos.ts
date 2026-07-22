@@ -32,6 +32,11 @@ let activo = false;
 const mouse = { x: -1e4, y: -1e4 };
 let lastY = 0;
 let scramble = 0;
+// Arrastre de fotocopia (solo Fanzine): la velocidad horizontal del cursor
+// "mueve el original sobre el vidrio" — las filas cercanas se corren.
+let smear = 0;
+let lastPX = 0;
+let lastPT = 0;
 let img: HTMLImageElement | null = null;
 let ro: ResizeObserver | null = null;
 let mo: MutationObserver | null = null;
@@ -126,6 +131,9 @@ function draw(now: number): void {
   const my = mouse.y - rect.top;
   const radio = 130;
   let tinta = false;
+  // El arrastre solo existe en la fotocopia; en el resto la plancha es firme.
+  const smearAmp = tema === 'fanzine' && Math.abs(smear) > 0.03 ? smear : 0;
+  if (smearAmp !== 0) tinta = true;
 
   for (let gy = 0; gy < rows; gy++) {
     for (let gx = 0; gx < cols; gx++) {
@@ -161,9 +169,21 @@ function draw(now: number): void {
         ch = ramp[1 + Math.floor(hash(gx, gy + now) * (ramp.length - 1))];
       }
 
-      ctx.globalAlpha = Math.min(0.95, componiendo ? 0.12 : 0.18 + d * 0.5 + heat * 0.35);
+      // Fila arrastrada: se corre horizontal con falloff gaussiano alrededor
+      // del cursor, y deja un fantasma — toner que no llegó a fijarse.
+      let dx = 0;
+      if (smearAmp !== 0) {
+        const dy = y - my;
+        dx = smearAmp * 30 * Math.exp(-(dy * dy) / 9800);
+      }
+      const alpha = Math.min(0.95, componiendo ? 0.12 : 0.18 + d * 0.5 + heat * 0.35);
       ctx.fillStyle = heat > 0.12 ? accent : ink;
-      ctx.fillText(ch, x, y);
+      if (Math.abs(dx) > 2) {
+        ctx.globalAlpha = alpha * 0.35;
+        ctx.fillText(ch, x + dx * 1.9, y);
+      }
+      ctx.globalAlpha = alpha;
+      ctx.fillText(ch, x + dx, y);
     }
   }
   ctx.globalAlpha = 1;
@@ -175,7 +195,7 @@ function draw(now: number): void {
       gsap.to(T.canvas, { filter: 'blur(0px)', duration: 1.0, ease: 'tinta' });
     }
   }
-  activo = !introListo || tinta || scramble > 0.02;
+  activo = !introListo || tinta || scramble > 0.02 || Math.abs(smear) > 0.03;
 }
 
 // La mutación de tipos corre siempre que la escena está a la vista, pero
@@ -186,6 +206,8 @@ function loop(now: number): void {
   const y = window.scrollY;
   scramble = Math.max(scramble * 0.9, Math.min(0.9, Math.abs(y - lastY) / 60));
   lastY = y;
+  smear *= 0.9; // el toner se asienta
+  if (Math.abs(smear) < 0.03) smear = 0;
   const intervalo = activo ? 33 : 120;
   if (now - ultimoDraw >= intervalo) {
     ultimoDraw = now;
@@ -206,6 +228,13 @@ function wake(): void {
 }
 
 function onMove(e: PointerEvent): void {
+  const t = performance.now();
+  if (lastPT && document.documentElement.getAttribute('data-tema') === 'fanzine') {
+    const v = (e.clientX - lastPX) / Math.max(8, t - lastPT);
+    smear = Math.max(-1, Math.min(1, smear + v * 0.12));
+  }
+  lastPX = e.clientX;
+  lastPT = t;
   mouse.x = e.clientX;
   mouse.y = e.clientY;
   wake();
@@ -290,6 +319,8 @@ export function clearTipos(): void {
   activo = false;
   introListo = false;
   scramble = 0;
+  smear = 0;
+  lastPT = 0;
   ro?.disconnect();
   mo?.disconnect();
   io?.disconnect();

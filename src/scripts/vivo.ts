@@ -48,6 +48,10 @@ export function initGuia(reduced: boolean): void {
 
   const xTo = gsap.quickTo(guia, 'x', { duration: 0.4, ease: 'tinta' });
   const oTo = gsap.quickTo(guia, 'opacity', { duration: 0.25, ease: 'tinta' });
+  // El rodillo se ensancha con la velocidad: más rápido = más tinta.
+  const sTo = gsap.quickTo(guia, 'scaleX', { duration: 0.45, ease: 'tinta' });
+  let lastGX = 0;
+  let lastGT = 0;
 
   // Afiche: la guía es la prensa. Solo instrumentamos si la edición activa
   // es Afiche — en otras ediciones el readout no existe y la metáfora
@@ -116,8 +120,14 @@ export function initGuia(reduced: boolean): void {
     const r = masthead.getBoundingClientRect();
     const inside = e.clientY >= r.top && e.clientY <= r.bottom;
     if (inside) {
-      xTo(e.clientX - r.left);
-      oTo(0.75);
+      const t = performance.now();
+      const vel = lastGT ? Math.abs(e.clientX - lastGX) / Math.max(8, t - lastGT) : 0;
+      lastGX = e.clientX;
+      lastGT = t;
+      // Banda centrada en el cursor (es un rodillo, no una línea).
+      xTo(e.clientX - r.left - guia.offsetWidth / 2);
+      sTo(1 + Math.min(1.1, vel * 0.55));
+      oTo(1);
     } else {
       oTo(0);
     }

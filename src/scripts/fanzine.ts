@@ -23,6 +23,9 @@ export function initFanzine(reduced: boolean): void {
   const mX = gsap.quickTo(mancha, 'x', { duration: 0.55, ease: 'tinta' });
   const mY = gsap.quickTo(mancha, 'y', { duration: 0.55, ease: 'tinta' });
   const mO = gsap.quickTo(mancha, 'opacity', { duration: 0.35, ease: 'tinta' });
+  // Sin esto, la mancha viaja desde (0,0) —esquina— la primera vez que
+  // aparece: se planta bajo el cursor antes de hacerse visible.
+  let plantada = false;
 
   const chips = Array.from(document.querySelectorAll<HTMLElement>('.chip'));
 
@@ -32,9 +35,14 @@ export function initFanzine(reduced: boolean): void {
     const r = masthead.getBoundingClientRect();
     const inside = e.clientY >= r.top && e.clientY <= r.bottom;
     if (inside) {
+      if (!plantada) {
+        plantada = true;
+        gsap.set(mancha, { x: e.clientX - r.left, y: e.clientY - r.top });
+      }
       mX(e.clientX - r.left);
       mY(e.clientY - r.top);
-      mO(0.5);
+      // La trama de puntos es más rala que el glow anterior: más opacidad.
+      mO(0.85);
     } else {
       mO(0);
     }
