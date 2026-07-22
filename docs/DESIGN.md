@@ -64,6 +64,12 @@ shift, scroll con peso real. Astro (islands, JS mínimo) es ventaja: cuidarla.
     en 1-2 momentos.
 14. **Kinetic typography como base del sitio** (pelea con lectores de pantalla
     y CWV). Como acento puntual, sí.
+15. **Instrumentos de cursor apilados y HUDs decorativos.** Máximo UN gesto
+    de cursor por vista (§4b). Prohibidos los readouts numéricos que no miden
+    nada real (cotas falsas, "presión", coordenadas ornamentales) y cualquier
+    elemento nuevo que aparezca para seguir al puntero por encima del
+    contenido (bandas, scanlines, crosshairs, manchas). El cursor actúa sobre
+    lo que ya existe o no actúa.
 
 ## 3. OBLIGATORIO (los principios)
 
@@ -115,13 +121,63 @@ escena**, no de tecnología. Reglas:
    con el scroll. Un instrumento calibrado, no una página.
 5. **El scroll dirige escenas.** Pinning coreografiado con scrub, permitido y
    deseado en los momentos clave; el scroll no solo desplaza — dirige.
-6. **Cursor y velocidad son tinta.** Las interacciones firma pueden leer la
-   posición del mouse y la velocidad del scroll (desregistro, halftone),
-   siempre sutiles y reversibles. El cursor custom sigue PROHIBIDO (§2.3):
-   esto es la página reaccionando, no un puntero disfrazado.
+6. **Cursor y velocidad son tinta — con presupuesto (§4b).** Las
+   interacciones firma pueden leer la posición del mouse y la velocidad del
+   scroll (desregistro, halftone), siempre con falloff continuo y
+   reversibles. El cursor custom sigue PROHIBIDO (§2.3), y también lo está
+   apilar instrumentos: UN gesto de cursor por vista, actuando sobre el
+   contenido que ya existe — la página reaccionando, no un puntero
+   disfrazado ni un tablero de efectos.
 7. **Pendiente declarado:** cada edición tendrá una experiencia propia de
    motion/layout, no solo cambio de tintas. Ninguna decisión nueva debe
-   cerrarle la puerta a eso.
+   cerrarle la puerta a eso — pero la experiencia propia vive en layout,
+   escenas y scroll, NO en multiplicar vocabularios de cursor (§4b.6).
+
+## 4b. Economía del gesto (enmienda 21-jul-2026)
+
+Diagnóstico: la v2 de "instrumentos de cursor" (rodillo que invierte,
+scanline CRT, cruz con cotas, mancha con arrastre — uno por edición) se
+sintió **forzada**. La investigación (Awwwards SOTD 2024-26, Codrops,
+inventario de los sitios norte) explica por qué, y las razones son
+estructurales, no de ejecución:
+
+- **Inventario real de los norte:** Snellenberg usa UN vocabulario
+  (punto + magnetismo) repetido en todo el sitio; specia1ne usa 2 gestos;
+  el portfolio de Spitzer usa **casi cero** cursor — su firma es una única
+  transición Flip. Presupuesto premiado: **1 gesto firma, tope 2 elementos
+  cursor-reactivos por vista, un solo vocabulario.** Nosotros teníamos 4
+  metáforas compitiendo.
+- **El anti-patrón raíz:** los 4 instrumentos eran **capas nuevas encima
+  del contenido**. Los efectos que se sienten naturales hacen reaccionar
+  lo que YA está en pantalla (la tipografía, el retrato) — Exat (Codrops
+  2026) trata "la tipografía misma como el elemento primario de interfaz".
+  Una banda/scanline/mancha que aparece para seguir al mouse es un objeto
+  ajeno; una letra que gana peso bajo el cursor es el sitio comportándose.
+- **Readouts decorativos = ruido.** "Marca 0,53 · presión ▮▮▮", cotas en
+  mm que no miden nada: fingen dato. Ningún sitio norte los usa.
+
+### Las reglas
+
+1. **Presupuesto duro: UN gesto de cursor por vista** (tope 2 elementos
+   cursor-reactivos contando estados de hover). Un solo vocabulario por
+   sitio.
+2. **El cursor afecta lo que ya existe.** Tinta, peso, registro, revelado
+   del contenido presente. Nada nuevo aparece para seguir al puntero.
+3. **Test de remoción:** si al quitar el efecto la vista queda más limpia,
+   era decoración → afuera. Si queda incompleta, revelaba contenido → se
+   queda. (Aplicarlo antes de cada merge.)
+4. **Causal, no ilustrativo.** El scramble funciona en Terminal porque una
+   terminal realmente baraja caracteres; una scanline CRT es una *foto* de
+   la estética, pegada encima. Preguntar: ¿esto es lo que este objeto
+   HARÍA, o es un disfraz de su época?
+5. **Falloff continuo, reversible, sin residuo.** Distancia con gradiente
+   (estilo Exat), nunca toggle binario. Alejás el cursor y todo vuelve.
+6. **Las ediciones varían PARÁMETROS, no mecanismos.** El gesto firma es
+   el ancla que persiste entre ediciones; cada edición lo re-tinta
+   (charset, tinta, trama, timing). Cambiar el mecanismo por skin son
+   cuatro sitios, no un sitio con cuatro ediciones.
+7. **Si un número aparece en pantalla, mide algo real** y le sirve al
+   lector. Si no, es HUD de utilería (§2.15).
 
 ## 5. El intro (reemplazo del contador)
 
@@ -202,6 +258,14 @@ specia1ne.com (sistema numerado + takeover, Astro+GSAP) ·
 tympanus.net/codrops/2026/02/18 (breakdown Spitzer: SplitText por línea, Flip
 shared-element, misma familia técnica).
 
+**Economía del gesto (§4b):** tympanus.net/codrops/2026/04/10 (Exat: la
+tipografía como interfaz, peso variable por distancia al cursor con falloff) ·
+tympanus.net/codrops/2024/06/19 (terminal typography: scramble causal, no
+decorativo) · awwwards.com — artículo custom cursors (Waaarhol: inversión
+como ÚNICA idea; "don't overdo things") · blog.olivierlarose.com (rebuild
+Snellenberg: un vocabulario punto+magnetismo) · rauno.me (restraint como
+estándar de polish).
+
 **Antipatrones:** 925studios.co/blog/ai-slop-web-design-guide ·
 impeccable.style/slop · solodesign.cc/blog/ai-design-slop-the-tells ·
 dev.to/studiomeyer_io (qué sobrevivió de 2026)
@@ -211,6 +275,11 @@ dev.to/studiomeyer_io (qué sobrevivió de 2026)
 - [ ] ¿Alguna decisión es "el default"? → justificarla o cambiarla.
 - [ ] ¿El copy serviría en el portfolio de otro dev? → reescribir.
 - [ ] ¿Cada animación se explica con lenguaje de imprenta? → si no, afuera.
+- [ ] ¿Hay más de UN gesto de cursor en la vista, o algún elemento nuevo
+      siguiendo al puntero? → recortar (§4b.1-2).
+- [ ] Test de remoción (§4b.3): ¿quitando el efecto la vista queda más
+      limpia? → era decoración, afuera.
+- [ ] ¿Todo número en pantalla mide algo real? → si no, es HUD de utilería.
 - [ ] ¿La sección nueva es una ESCENA con una idea (§4), o volvió la densidad
       de documento?
 - [ ] ¿Las 16 combinaciones (4 ediciones × 2 temas × 2 viewports) se ven
