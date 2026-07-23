@@ -243,12 +243,12 @@
   content: ']';
   opacity: 0.55;
 }
-:root[data-tema='terminal'] .chip.on {
+:root[data-tema='terminal'] .chip[aria-current='page'] {
   background: var(--accent);
   color: var(--accent-ink);
 }
-:root[data-tema='terminal'] .chip.on::before,
-:root[data-tema='terminal'] .chip.on::after {
+:root[data-tema='terminal'] .chip[aria-current='page']::before,
+:root[data-tema='terminal'] .chip[aria-current='page']::after {
   opacity: 1;
 }
 
@@ -332,7 +332,7 @@
 :root[data-tema='fanzine'] .chip:nth-child(2n) {
   transform: rotate(0.9deg);
 }
-:root[data-tema='fanzine'] .chip.on {
+:root[data-tema='fanzine'] .chip[aria-current='page'] {
   background: var(--accent);
   color: var(--accent-ink);
   border-color: var(--accent);
