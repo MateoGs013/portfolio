@@ -12,16 +12,18 @@ import '../styles/ediciones.css';
 interface Props {
   title?: string;
   description?: string;
+  edicion?: 'afiche' | 'terminal' | 'plano' | 'fanzine';
 }
 
 const {
   title = 'Mateo Sonzogni — Creative Developer',
   description = 'Portfolio de Mateo Sonzogni: interfaces con oficio, motion y WebGL. Un mismo portfolio, muchas tintas.',
+  edicion = 'afiche',
 } = Astro.props;
 ---
 
 <!doctype html>
-<html lang="es" data-tema="afiche">
+<html lang="es" data-tema={edicion}>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -30,15 +32,13 @@ const {
     <title>{title}</title>
     <ClientRouter />
     <script is:inline data-astro-rerun>
-      // Anti-FOUC: edición y tema guardados se aplican antes del primer paint.
-      // data-astro-rerun: el swap de view transitions pisa los atributos de
-      // <html> con los estáticos — este script los restaura en cada navegación.
+      // Anti-FOUC: el modo claro/oscuro guardado se aplica antes del primer
+      // paint. La edicion NO se restaura de localStorage: la fija la ruta
+      // (data-tema server-side en <html>). data-astro-rerun: el swap de view
+      // transitions pisa los atributos de <html> con los estaticos — este
+      // script restaura data-theme en cada navegacion.
       (function () {
         try {
-          var tema = localStorage.getItem('ms-tema');
-          if (tema === 'terminal' || tema === 'plano' || tema === 'fanzine') {
-            document.documentElement.setAttribute('data-tema', tema);
-          }
           var theme = localStorage.getItem('ms-theme');
           if (theme === 'light' || theme === 'dark') {
             document.documentElement.setAttribute('data-theme', theme);
@@ -48,33 +48,12 @@ const {
     </script>
   </head>
   <body>
-    <div class="wipe" id="wipe" aria-hidden="true">
-      <span id="wipe-label">reimprimiendo</span>
-    </div>
     <div id="toast" role="status"></div>
     <slot />
   </body>
 </html>
 
 <style>
-  .wipe {
-    position: fixed;
-    inset: 0;
-    z-index: 90;
-    background: var(--ink);
-    transform: translateY(-101%);
-    pointer-events: none;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-  .wipe span {
-    color: var(--bg);
-    font-family: var(--font-m);
-    font-size: 12px;
-    letter-spacing: 0.3em;
-    text-transform: uppercase;
-  }
   #toast {
     position: fixed;
     left: 50%;

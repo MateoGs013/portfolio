@@ -5,7 +5,8 @@
 // (la escobilla del pegador la alisa; despegar hacia atrás es suave: la
 // asimetría es la causalidad). También el takeover: el rodillo entinta
 // la plancha de la tirada y "LA TIRADA" queda en reserva de papel.
-// Montaje/desmontaje en caliente vía ms:edicion (orquestado en site.ts).
+// Montaje/desmontaje por navegación: astro:page-load / astro:before-swap
+// (orquestado en site.ts). Solo monta en la ruta Afiche (gate data-tema).
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import './eases';

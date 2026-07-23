@@ -1,19 +1,10 @@
-// Selector de edición (con barrido de reimpresión) y toggle claro/oscuro.
-// Persistencia en localStorage: ms-tema / ms-theme (el anti-FOUC de
-// Base.astro los lee antes del primer paint).
-import gsap from 'gsap';
-import { pageReveal, setImpreso } from './registro';
-import { runPortal } from './portal';
-import './eases';
-
-const NOMBRES: Record<string, string> = {
-  afiche: 'Afiche',
-  terminal: 'Terminal',
-  plano: 'Plano',
-  fanzine: 'Fanzine',
-};
+// Toggle claro/oscuro (Tinta) + revelado del enlace secreto Fanzine.
+// El cambio de EDICION ya NO ocurre acá: es navegacion por ruta (los chips
+// del selector pasan a ser <a href> — ver Topbar.astro). La edicion la fija
+// la ruta via data-tema en <html> (server-side). Persistencia: ms-theme.
 
 export function initTema(reduced: boolean): void {
+  void reduced; // el toggle no depende de reduced; se conserva la firma comun
   const root = document.documentElement;
 
   /* ---- claro / oscuro ---- */
@@ -32,110 +23,14 @@ export function initTema(reduced: boolean): void {
     } catch {}
   });
 
-  /* ---- selector de edición ---- */
-  const wipe = document.getElementById('wipe');
-  const wipeLabel = document.getElementById('wipe-label');
-  const chips = gsap.utils.toArray<HTMLElement>('[data-tema-btn]');
-  let switching = false;
-
-  // La edición secreta: el chip Fanzine solo existe para quien la desbloqueó
-  // con el clicker (o ya la tiene activa). Corre en todas las páginas.
-  const chipFanzine = chips.find((c) => c.getAttribute('data-tema-btn') === 'fanzine');
+  /* ---- edicion secreta: revelar el chip/enlace Fanzine si ya se desbloqueo
+     con el clicker (ms-fanzine) o si estamos parados en esa edicion ---- */
+  const chipFanzine = document.querySelector<HTMLElement>('[data-tema-btn="fanzine"]');
   if (chipFanzine) {
-    let fanzineLibre = root.getAttribute('data-tema') === 'fanzine';
+    let libre = root.getAttribute('data-tema') === 'fanzine';
     try {
-      fanzineLibre = fanzineLibre || localStorage.getItem('ms-fanzine') === '1';
+      libre = libre || localStorage.getItem('ms-fanzine') === '1';
     } catch {}
-    chipFanzine.hidden = !fanzineLibre;
+    chipFanzine.hidden = !libre;
   }
-
-  const applyTema = (tema: string): void => {
-    const saliente = root.getAttribute('data-tema') || '';
-    root.setAttribute('data-tema', tema);
-    chips.forEach((c) => {
-      const activo = c.getAttribute('data-tema-btn') === tema;
-      c.classList.toggle('on', activo);
-      c.setAttribute('aria-pressed', String(activo));
-    });
-    try {
-      localStorage.setItem('ms-tema', tema);
-    } catch {}
-    // Cambio de edición EN CALIENTE (sin navegar, no dispara astro:*):
-    // el runtime (site.ts) desmonta la experiencia saliente, refresca
-    // ScrollTrigger con el layout nuevo y monta la entrante — acá la
-    // cortina todavía cubre, así que el recableo no se ve.
-    if (saliente !== tema) {
-      document.dispatchEvent(
-        new CustomEvent('ms:edicion', { detail: { saliente, entrante: tema } })
-      );
-    }
-  };
-
-  chips.forEach((chip) => {
-    chip.addEventListener('click', () => {
-      const tema = chip.getAttribute('data-tema-btn');
-      if (!tema || switching || root.getAttribute('data-tema') === tema) return;
-
-      if (reduced || !wipe) {
-        applyTema(tema);
-        return;
-      }
-
-      const saliente = root.getAttribute('data-tema') || 'afiche';
-      // PORTAL generation-loss (§4d.2) — prototipo del par Plano↔Afiche: cada
-      // dirección es su propia máquina (imprimir/degradar vs re-exponer/restaurar),
-      // con el retrato-master cruzando. El resto de ediciones sigue con el wipe.
-      if ((saliente === 'plano' || saliente === 'afiche') && (tema === 'plano' || tema === 'afiche')) {
-        switching = true;
-        if (wipeLabel) {
-          wipeLabel.textContent = `${tema === 'afiche' ? 'imprimiendo' : 're-exponiendo'} · edición ${NOMBRES[tema]}`;
-        }
-        // El swap ocurre bajo la cortina de la máquina: montamos la edición nueva
-        // ya IMPRESA y en reposo (setImpreso), sin el fantasma RGB de pageReveal
-        // pisándose con el reveal del propio portal. El portal ES el reveal.
-        runPortal(saliente, tema, () => {
-          applyTema(tema);
-          setImpreso();
-        }).then(() => {
-          switching = false;
-        });
-        return;
-      }
-
-      switching = true;
-      if (wipeLabel) wipeLabel.textContent = `reimprimiendo · edición ${NOMBRES[tema]}`;
-      const regs = document.querySelectorAll('.registro');
-      gsap
-        .timeline({
-          onComplete: () => {
-            switching = false;
-            gsap.set(wipe, { yPercent: -100 });
-          },
-        })
-        // 1. La edición saliente se "arranca": la plancha se desregistra
-        //    antes de que la cortina cubra — el gesto de levantar la hoja.
-        .to(regs, {
-          '--r1x': '-0.16em',
-          '--r1y': '0.05em',
-          '--r2x': '0.12em',
-          '--r2y': '-0.07em',
-          '--rega': 1,
-          duration: 0.28,
-          ease: 'salida',
-        })
-        // 2. Cortina baja (la hoja nueva entra a la prensa)
-        .fromTo(wipe, { yPercent: -100 }, { yPercent: 0, duration: 0.4, ease: 'prensa' }, '-=0.08')
-        .add(() => applyTema(tema))
-        // 3. Cortina sube (la hoja sale reimpresa)
-        .to(wipe, { yPercent: 100, duration: 0.4, ease: 'salida' }, '+=0.1')
-        // 4. La nueva edición se registra (creado recién acá: si se instancia
-        //    antes, sus fromTo esconden la página de inmediato).
-        .add(() => {
-          pageReveal(true);
-        }, '-=0.28');
-    });
-  });
-
-  // Sincronizar chips con la edición inicial (anti-FOUC ya la aplicó).
-  applyTema(root.getAttribute('data-tema') || 'afiche');
 }
