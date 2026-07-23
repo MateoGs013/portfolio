@@ -7,6 +7,17 @@ una crítica que encontró el bug en el repo, no en abstracto. Se implementa
 en el orden de §4c; cada fase cierra con `npm run build && npm run qa`
 (16 combinaciones) + screenshots claro/oscuro revisados + commit propio.
 
+> **⏸ ACTUALIZACIÓN 23-jul-2026 — el runtime pasó a RUTAS.** La Fase 0 de abajo
+> asumía un cambio de edición EN CALIENTE (`ms:edicion`, `portal.ts`, cortina
+> `#wipe`, `mount/unmount` bajo la cortina). Eso se **retiró**: cada edición es
+> ahora una RUTA (`/`, `/terminal`, `/plano`, `/fanzine`) y el remonte lo hace
+> el ciclo natural de navegación (`astro:before-swap` / `astro:page-load`).
+> Sigue vigente la parametrización de órganos (halftone `PARAMS`/renderer,
+> registro `DESREGISTRO`, `setCubierto`, `--topbar-h`, `lenis.on('scroll',…)`).
+> Las físicas por edición (Fases 1-4) siguen siendo el plan, pero montan POR
+> RUTA (gate `data-tema`), no bajo cortina. Prioridad: terminar **Afiche**
+> impecable antes de tocar otra. Ver el banner CONGELADO de DESIGN.md.
+
 ---
 
 ## Fase 0 — Runtime compartido (bloquea todo, ~2 días)
