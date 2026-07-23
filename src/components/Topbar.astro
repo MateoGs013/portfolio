@@ -1,22 +1,40 @@
 ---
-// Barra superior: marca + selector de ediciones + toggle claro/oscuro.
-// La lógica (wipe GSAP, persistencia) vive en scripts/tema.ts.
-// Decisión de producto (auditoría jul-2026): las 3 ediciones SIEMPRE libres;
-// el clicker "La imprenta" desbloqueará una 4ª edición secreta (Fanzine).
+// Barra superior: marca + selector de EDICIONES (rutas) + toggle claro/oscuro.
+// El selector NAVEGA: cada edición es una ruta propia (/, /terminal, /plano,
+// /fanzine) y el ClientRouter hace la transición. La edición activa se marca
+// con aria-current según la URL. El toggle claro/oscuro (mode-btn) y el
+// revelado del enlace Fanzine (data-tema-btn="fanzine", oculto) los maneja
+// scripts/tema.ts; el desbloqueo por el clicker lo dispara scripts/imprenta.ts.
+const p = Astro.url.pathname;
+const activa =
+  p.startsWith('/terminal') ? 'terminal'
+  : p.startsWith('/plano') ? 'plano'
+  : p.startsWith('/fanzine') ? 'fanzine'
+  : p === '/' ? 'afiche'
+  : '';
+// En rutas de edición los links de sección son relativos (misma página); en
+// pieza/especimen (activa vacía) vuelven a la home.
+const secc = activa ? '' : '/';
 ---
 
 <header class="topbar" id="topbar">
   <span class="brand">Imprenta M·S</span>
   <nav class="secciones" aria-label="Secciones">
-    <a href="/#tirada">La tirada</a>
-    <a href="/#colofon">Colofón</a>
+    <a href={`${secc}#tirada`}>La tirada</a>
+    <a href={`${secc}#colofon`}>Colofón</a>
   </nav>
   <nav class="selector" aria-label="Edición del portfolio">
     <span class="selector-label">Edición</span>
-    <button class="chip" data-tema-btn="afiche">Afiche</button>
-    <button class="chip" data-tema-btn="terminal">Terminal</button>
-    <button class="chip" data-tema-btn="plano">Plano</button>
-    <button class="chip secreta" data-tema-btn="fanzine" hidden>Fanzine</button>
+    <a class="chip" href="/" aria-current={activa === 'afiche' ? 'page' : undefined}>Afiche</a>
+    <a class="chip" href="/terminal" aria-current={activa === 'terminal' ? 'page' : undefined}>Terminal</a>
+    <a class="chip" href="/plano" aria-current={activa === 'plano' ? 'page' : undefined}>Plano</a>
+    <a
+      class="chip secreta"
+      href="/fanzine"
+      data-tema-btn="fanzine"
+      aria-current={activa === 'fanzine' ? 'page' : undefined}
+      hidden>Fanzine</a
+    >
     <button class="chip mode" id="mode-btn" aria-label="Cambiar la tinta entre modo claro y oscuro">
       Tinta ◐
     </button>
@@ -77,10 +95,13 @@
     margin-right: 4px;
   }
   .chip {
+    display: inline-flex;
+    align-items: center;
     font-family: var(--font-m);
     font-size: 11px;
     letter-spacing: 0.12em;
     text-transform: uppercase;
+    text-decoration: none;
     padding: 7px 12px;
     cursor: pointer;
     background: transparent;
@@ -92,7 +113,8 @@
     border-color: var(--accent);
     color: var(--accent);
   }
-  .chip:global(.on) {
+  /* Edición activa = la ruta actual (aria-current), antes era la clase .on. */
+  .chip[aria-current='page'] {
     background: var(--ink);
     color: var(--bg);
     border-color: var(--ink);
@@ -138,8 +160,6 @@
     .secciones a,
     .chip {
       min-height: 42px;
-      display: inline-flex;
-      align-items: center;
     }
     .secciones {
       gap: 12px;
