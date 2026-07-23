@@ -71,7 +71,10 @@ export function pageReveal(fast = false): gsap.core.Timeline {
   return tl;
 }
 
-function setImpreso(): void {
+/** Fuerza el estado "impreso y en reposo": plancha registrada, reveals visibles.
+ *  Lo usa el portal para aterrizar la edición nueva limpia (sin fantasma RGB). */
+export function setImpreso(): void {
+  gsap.killTweensOf(REGISTRO);
   gsap.set(REGISTRO, { ...EN_REGISTRO, '--rega': 0 });
   gsap.set(REVEAL, { clipPath: 'none' });
 }

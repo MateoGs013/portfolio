@@ -2,7 +2,8 @@
 // Persistencia en localStorage: ms-tema / ms-theme (el anti-FOUC de
 // Base.astro los lee antes del primer paint).
 import gsap from 'gsap';
-import { pageReveal } from './registro';
+import { pageReveal, setImpreso } from './registro';
+import { runPortal } from './portal';
 import './eases';
 
 const NOMBRES: Record<string, string> = {
@@ -77,6 +78,27 @@ export function initTema(reduced: boolean): void {
 
       if (reduced || !wipe) {
         applyTema(tema);
+        return;
+      }
+
+      const saliente = root.getAttribute('data-tema') || 'afiche';
+      // PORTAL generation-loss (§4d.2) — prototipo del par Plano↔Afiche: cada
+      // dirección es su propia máquina (imprimir/degradar vs re-exponer/restaurar),
+      // con el retrato-master cruzando. El resto de ediciones sigue con el wipe.
+      if ((saliente === 'plano' || saliente === 'afiche') && (tema === 'plano' || tema === 'afiche')) {
+        switching = true;
+        if (wipeLabel) {
+          wipeLabel.textContent = `${tema === 'afiche' ? 'imprimiendo' : 're-exponiendo'} · edición ${NOMBRES[tema]}`;
+        }
+        // El swap ocurre bajo la cortina de la máquina: montamos la edición nueva
+        // ya IMPRESA y en reposo (setImpreso), sin el fantasma RGB de pageReveal
+        // pisándose con el reveal del propio portal. El portal ES el reveal.
+        runPortal(saliente, tema, () => {
+          applyTema(tema);
+          setImpreso();
+        }).then(() => {
+          switching = false;
+        });
         return;
       }
 

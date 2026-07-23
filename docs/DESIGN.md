@@ -1,5 +1,25 @@
 # DESIGN.md — Ley de diseño y motion del proyecto
 
+> **⏸ CONGELADO — 23-jul-2026.** El concepto está cerrado: generation-loss (§4d)
+> es la ley final. **Cero re-fundaciones hasta que una edición salga a la calle
+> terminada.** Causa raíz diagnosticada: cuatro re-fundaciones en 48h (§4, §4b,
+> §4c, §4d — §4d deroga a §4c del día anterior) hicieron que el código nunca
+> alcanzara a una espec que se recolaba los cimientos cada día. Se corta acá.
+> Decisiones de ejecución (23-jul):
+>
+> 1. **Las ediciones son RUTAS, no un swap en caliente.** `/` = Afiche ·
+>    `/terminal` · `/plano` · Fanzine gated. El selector navega (ClientRouter, ya
+>    activo); la lectura de "reimpresión" se logra con `transition:persist` /
+>    `transition:name` (§6.6). Se retira la maquinaria in-place: `portal.ts`,
+>    el evento `ms:edicion`, el `.wipe` y las ramas de swap de `tema.ts`. §4d.2
+>    (portales) se reinterpreta como **transición de página temática**, no como
+>    cortina sobre DOM vivo. Es más robusto y más Astro-native.
+> 2. **Se termina UNA edición impecable antes de tocar la siguiente:** Afiche
+>    (default, sin WebGL, la más avanzada). Una cosa terminada sobre la que
+>    iterar — el modo de falla a evitar es "3 mundos geniales y 1 roto" (§4d).
+> 3. **Ideas nuevas van a un backlog, NO reabren el concepto.** El doc se toca
+>    para AJUSTAR lo que se está construyendo, nunca para re-fundar.
+
 > Escrito en julio 2026 tras una investigación de tendencias, catálogo de
 > antipatrones "AI slop" y craft de motion (fuentes al final). **Leer entero
 > antes de tocar cualquier cosa visual o de motion.** Si una decisión
@@ -35,6 +55,17 @@ distintos (Afiche · Terminal · Plano), con claro/oscuro por edición y el clic
 el **antídoto exacto** al look-AI — pero solo si se ejecuta con rigor de
 imprenta real, no como textura decorativa encima de un template.
 
+> **Re-fundación 22-jul-2026 — GENERATION-LOSS (ley detallada en §4d).** El hilo
+> conductor deja de ser "imprenta / tinta sobre papel" y pasa a ser la **pérdida
+> de generación**: las ediciones NO son cuatro hermanas paralelas, son una
+> **cadena descendente de copias de un mismo master** — **Plano** (el master, la
+> lámina madre) → **Afiche** (1ª impresión off del master) → **Terminal** (el
+> master transmitido a una pantalla) → **Fanzine** (3ª generación, la fotocopia
+> de las fotocopias). Cada edición muestra degradación visible respecto de la
+> más limpia, y ese ORDEN es la restricción dura que reemplaza al sustrato de
+> papel compartido. La cohesión se muda del material al contenido, la voz, el
+> selector y el retrato-master.
+
 Lo que se premia hoy (Awwwards Developer Award 2026) no es el efecto vistoso:
 es el **craft técnico invisible** — transiciones custom, 60fps, cero layout
 shift, scroll con peso real. Astro (islands, JS mínimo) es ventaja: cuidarla.
@@ -61,7 +92,10 @@ shift, scroll con peso real. Astro (islands, JS mínimo) es ventaja: cuidarla.
 12. **Mono como body copy global** — el mono es tinta de datos, no la voz por
     defecto (excepción: edición Terminal, donde es la identidad y se asume).
 13. **WebGL como capa base** que bloquea el first paint. Solo como acento lazy
-    en 1-2 momentos.
+    en 1-2 momentos. Momento sancionado (§4d): la difusión volumétrica de luz
+    por el vellum de Plano — lazy, con fallback CSS estático y kill-switch a
+    60fps. Terminal puede sumar un bloom-pass opcional sólo en oscuro. Afiche y
+    Fanzine, sin WebGL.
 14. **Kinetic typography como base del sitio** (pelea con lectores de pantalla
     y CWV). Como acento puntual, sí.
 15. **Instrumentos de cursor apilados y HUDs decorativos.** Máximo UN gesto
@@ -184,9 +218,11 @@ estructurales, no de ejecución:
 Cierre del pendiente §4.7. Proceso: 4 conceptos desarrollados en paralelo,
 8 críticas adversarias verificadas contra el código real y un juez de
 familia (plan de obra detallado en `docs/plan-experiencias.md`). La regla
-madre: **cada edición es una física de scroll distinta aplicada al MISMO
-contenido y los MISMOS órganos** (halftone, registro, retrato, wipe). El
-mecanismo compartido es la familia; la física es la identidad.
+madre (re-fundada en §4d): **cada edición es una GENERACIÓN distinta de un mismo
+master** — una física de scroll propia aplicada al MISMO contenido (§4c.8), con
+los órganos partidos en un Nivel A compartido y un Nivel B bifurcado por
+generación (§4c.2). El contenido y la voz son la familia; la generación es la
+identidad.
 
 ### Las físicas
 
@@ -236,15 +272,19 @@ mecanismo compartido es la familia; la física es la identidad.
    `ms:edicion` emitido por `applyTema` + `mount()`/`unmount()`
    idempotentes por edición + `ScrollTrigger.refresh()`, todo detrás de la
    cortina. Cuatro lifecycles privados = cuatro sitios pegados.
-2. **Los órganos se parametrizan, nunca se duplican**: halftone (ángulos/
-   celda/umbral/pasos por edición, con rebuild de planchas), registro
-   (ejes/fantasmas/drift por edición), el wipe (los tres barridos
-   full-page — entintado de Afiche, redraw por bandas de Terminal, escáner
-   de Fanzine — son EL MISMO mecanismo de cortina re-parametrizado), el
-   retrato (charset/tinta, ya vigente por §4b.6).
-3. **Las tintas de proceso son de la PRENSA, no de la edición**:
-   `--reg-c1`/`--reg-c2` quedan cian/magenta en las 4 ediciones. La
-   variación por edición es de eje/cantidad/timing, nunca de tinta.
+2. **Los órganos se parten en DOS NIVELES (re-fundado, §4d).** Nivel A —
+   compartido como mecanismo único re-parametrizado: los **portales** (§4d.2,
+   reemplazan a la cortina única), las 3 curvas y el marco vivo. Nivel B —
+   **bifurcado en renderers distintos por generación** (NO un órgano con los
+   mismos ángulos): el retrato (§4c.9) y el halftone. `halftone.ts` PARAMS lleva
+   un campo `renderer` (`contour` Plano / `rosette` Afiche / `scanline` Terminal /
+   `diffusion` Fanzine), no sólo ángulos/celda/umbral.
+3. **Cada edición declara su CANAL de reproducción, no tintas de proceso**
+   (DEROGADO el §4c.3 original — cian/magenta en las 4 —, ver §4d). Plano = un
+   solo canal de luz (halo de difusión) · Afiche = spot 2 tintas · Terminal =
+   eco de señal mono · Fanzine = feed-slip vertical 1-bit. `--reg-c1`/`--reg-c2`
+   se redefinen por `[data-tema]` en `tokens.css`, no en `:root`. `registro.ts`
+   DESREGISTRO lleva eje + cantidad de fantasmas + canal, no sólo drift.
 4. **UN instrumento de marco vivo por edición**: la barra `less` (Terminal)
    y el rótulo (Plano) absorben reloj y estado, jamás conviven con el
    vivo. Afiche y Fanzine conservan el vivo tal cual. Un solo blink idle
@@ -257,6 +297,16 @@ mecanismo compartido es la familia; la física es la identidad.
 7. **Regímenes de rotación opuestos y exclusivos**: en Afiche toda
    rotación asienta a 0; en Fanzine es permanente. Ninguna edición toma
    prestado el régimen de la otra. Terminal y Plano no rotan.
+8. **Paridad de contenido (NUEVO, §4d).** Los mismos 4 proyectos, el retrato
+   del autor, el colofón y el reloj vivo aparecen en las 4 ediciones; ningún
+   mundo agrega ni saca un átomo de contenido. Es la regla de cohesión
+   load-bearing que reemplaza al sustrato de papel compartido. Check de merge (§8).
+9. **El retrato es el master de reproducción (NUEVO, §4d).** El canvas `.tipos`
+   NO se desmonta en el switch: se sostienen sus píxeles fuente y sólo se
+   reconstruye el renderer por generación (§4c.2 Nivel B). Es la misma cara
+   re-reproducida por la máquina nueva — el único ancla que carga entre mundos
+   a través del portal (§4d.2). Refina §4b.6: el retrato deja de ser
+   tipos-móviles-en-las-4 y pasa a ser un renderer por generación.
 
 ### Orden de obra
 
@@ -269,6 +319,108 @@ el sitio ya estable) → **Fanzine** (recompensa secreta: el palimpsesto
 solo tiene sentido con las otras tres vivas). Presupuesto honesto:
 ~13-15 días senior. El detalle vinculante por fase vive en
 `docs/plan-experiencias.md`.
+
+## 4d. Re-fundación: GENERATION-LOSS (22-jul-2026)
+
+Origen: auditoría con criterio de jurado Awwwards (5 lentes + adversario) sobre
+el sitio construido, las referencias de norte que marcó el autor
+(dragonfly.xyz/Studio Freight, bymonolog, wembi, nithinmwarrier — todas
+restrainadas, frías, tipográficas, con **casi cero WebGL**) y un juez escéptico
+del concepto. Diagnóstico aceptado: las 4 ediciones compartían el layout de
+masthead y sólo cambiaban color/fuente/charset — **re-skin, no re-composición** —
+y las reglas de cohesión de §4c (§4c.2 órganos, §4c.3 tintas, sustrato de papel
+compartido) eran justamente lo que las hacía RIMAR. "Reproducción" a secas no
+alcanzaba: era un adjetivo que no diferenciaba nada — un tell de slop sofisticado.
+
+**La ley nueva — no son cuatro hermanas, es un LINAJE.** Un mismo master copiado
+por tecnologías distintas, degradándose generación a generación:
+
+| Gen | Edición | Rol en la cadena | Sustrato · luz | Canal de reproducción |
+|-----|---------|------------------|----------------|-----------------------|
+| 0 | **Plano** | el master, la lámina madre | vellum retroiluminado · luz transmisiva | exposición por contacto (un canal de luz) |
+| 1 | **Afiche** | 1ª impresión off del master | papel serigrafiado sobre muro · luz reflejada mate | tintas SPOT (accent + spot cálido) |
+| 2 | **Terminal** | el master transmitido a pantalla | vidrio + fósforo · luz emisiva | haz de electrones (eco de señal) |
+| 3 | **Fanzine** | la fotocopia de las fotocopias | bond barato + tóner · luz reventada | difusión de error 1-bit (feed-slip vertical) |
+
+Por qué es LOAD-BEARING y no otra narrativa colgada: recupera una **restricción
+dura** (cada edición debe mostrar degradación visible respecto de la más limpia,
+y hay un ORDEN) que reemplaza a la que se pierde al romper el sustrato compartido.
+Y le da trabajo a la transición (§4d.2): bajar de generación degrada/copia; subir
+re-expone/restaura. El parecido Afiche↔Fanzine deja de ser bug — Fanzine ES la
+fotocopia degradada de Afiche — y el peel del palimpsesto de Fanzine pasa a ser
+el remate verificable de toda la cadena.
+
+### Lo que se DEROGA y lo que se AGREGA
+
+- **§4c.2 (órganos) → dos niveles.** Nivel A compartido: portales (§4d.2), las 3
+  curvas, el marco vivo. Nivel B bifurcado por generación: retrato (§4c.9) y
+  halftone (`renderer`: contour/rosette/scanline/diffusion). Retrato por mundo:
+  Plano = contorno/isolíneas · Afiche = screenprint 2 tintas QUIETO (churn
+  apagada, glifo→punto) · Terminal = ráster/dither dibujado por el haz · Fanzine
+  = xerox 1-bit por difusión de error.
+- **§4c.3 (tintas de proceso cian/magenta en las 4) → DEROGADO.** Cada edición
+  declara su canal de reproducción (tabla de arriba). `--reg-c1`/`--reg-c2` se
+  redefinen por `[data-tema]` en `tokens.css`; `registro.ts` DESREGISTRO gana eje
+  + fantasmas + canal.
+- **§4c.2 (cláusula del wipe) → DEROGADO. Cuatro PORTALES, no una cortina** (§4d.2).
+- **§4c.8 (NUEVO) — Paridad de contenido** (ver §4c invariantes).
+- **§4c.9 (NUEVO) — El retrato es el master de reproducción** (ver §4c invariantes).
+- **§2.13 → enmienda:** el momento WebGL sancionado es la difusión volumétrica de
+  luz por el vellum de Plano — lazy, sin bloquear first paint, con fallback CSS
+  estático y kill-switch a 60fps. Terminal puede sumar un bloom-pass opcional
+  sólo en oscuro. Afiche y Fanzine, sin WebGL.
+- **§4b.4 → enmienda SÓLO para Terminal:** se habilitan glow / persistencia /
+  colapso-a-scanline SIEMPRE que sean CAUSALES (emergentes del haz que dibuja y
+  el fósforo que decae), no una foto de la estética pegada encima. La curvatura
+  de barril sigue prohibida (no es causal de nada).
+- **Sustrato de papel crema compartido → ELIMINADO** como portador de cohesión.
+  La cohesión se muda a: contenido invariante (§4c.8) + voz de Mateo + selector
+  siempre presente (§4c.5) + retrato-master (§4c.9) + colofón (§4c.6) + la ley de
+  craft invisible (cero fade autoral, las 3 curvas, un gesto de cursor, mismo
+  piso de accesibilidad).
+
+### §4d.2 — Los portales (reemplazan a la cortina única de §5 / `tema.ts`)
+
+El switch deja de ser un `div.wipe` que baja y sube. Cada portal es **la máquina
+de copiar del mundo de destino encendiéndose sobre el viewport**, con mecanismo
+FÍSICO propio (no una cortina de cuatro colores):
+
+- **A Afiche:** una hoja full-bleed se PEGA torcida y la escobilla la asienta en
+  una pasada (gesto de pegador; reutiliza el vocabulario de `pared.ts`).
+- **A Terminal:** el viewport COLAPSA a una línea de fósforo y la pantalla se
+  ENCIENDE (apagón-a-scanline + degauss; imposible con un fade).
+- **A Plano:** una MESA DE LUZ prende bajo el vellum y el mundo se revela por
+  exposición, ploteándose en orden de dibujante.
+- **A Fanzine:** la BARRA del escáner barre top→bottom (clunk-whirr) y detrás
+  aparece el tóner.
+
+Invariante duro: cada portal alcanza su **pico de oclusión** exactamente en el
+frame donde el runtime hace `unmount → applyTema → ScrollTrigger.refresh() →
+mount` (el recableo nunca se ve). Ninguno tapa la topbar (§4c.5): viven DEBAJO
+del selector. El retrato-master (§4c.9) es lo único que carga a través del portal
+— metamorfosis, no corte. Presupuesto 680–820ms (§6). Reduced-motion: se apagan
+los cuatro mecanismos (colapso CRT, blanco reventado y titileo fluorescente son
+riesgos fotosensibles — se eliminan, no se atenúan) → crossfade ≤160ms teñido al
+sustrato de destino, foco preservado, selector nunca oculto.
+
+### Disciplina de ejecución (vinculante)
+
+- **La trampa a evitar:** un theme-switcher técnicamente deslumbrante disfrazado
+  de concepto editorial = una versión más fina del mismo slop que el cliente ya
+  cazó. Generation-loss es el antídoto SÓLO si la degradación es visible y el
+  switch se lee como REIMPRESIÓN (el contenido persiste), no como cambiar de
+  página.
+- **Temperatura:** las referencias del autor son frías, restrainadas,
+  tipográficas. Los mundos se ejecutan FRÍOS y con aire, no con textura-máxima.
+  `plano-dark` (el objeto más logrado del set en la auditoría) marca el norte
+  cromático.
+- **Terminal es el mejor craft y el peor concepto** (el CRT-portfolio es cliché):
+  se construye SÓLO si el primer vistazo se lee "impresora de líneas", no "iTerm
+  con glow". Si no se garantiza, se recorta.
+- **Scope:** el modo de falla no es "todo mediocre" sino "3 mundos geniales y 1
+  roto = demo inconcluso", peor que un solo mundo impecable. Se envían DOS mundos
+  impecables (Afiche ya está + uno más) antes de tocar el tercero. Plano conserva
+  su kill-switch a fallback vertical (§4c / plan Fase 3).
 
 ## 5. El intro (reemplazo del contador)
 
@@ -377,6 +529,10 @@ dev.to/studiomeyer_io (qué sobrevivió de 2026)
       de documento?
 - [ ] ¿El motion nuevo respeta la física de su edición y los invariantes de
       familia (§4c)? ¿Algún órgano se duplicó en vez de parametrizarse?
+- [ ] ¿El switch se lee como REIMPRESIÓN (el contenido persiste a través del
+      portal, la generación degrada visible) y no como re-navegación (§4d)?
+- [ ] ¿Paridad de contenido intacta en las 4 ediciones (§4c.8)? ¿Ningún mundo
+      agrega ni saca un átomo?
 - [ ] ¿Las 16 combinaciones (4 ediciones × 2 temas × 2 viewports) se ven
       intencionales?
 - [ ] ¿Medida de texto 45–75ch, jerarquía dramática, asimetría presente?
