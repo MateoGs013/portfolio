@@ -30,7 +30,7 @@ invisible y el **restraint**, no el efecto vistoso.
 
 | Ruta | Etapa | Lenguaje visual | Estado del retrato |
 |------|-------|-----------------|--------------------|
-| `/` | **Ideación** | grilla de ingeniería, trazo a mano, el problema planteado | líneas / puntos dispersos |
+| `/` | **Ideación** | papel de libreta, trazo a lápiz, el problema planteado | trazos de lápiz (boceto) |
 | `/maquetado` | **Maquetado** | wireframe: cajas grises, el esqueleto del layout | celdas / bloques |
 | `/programacion` | **Programación** | monoespaciada, el build corriendo, código real | dither / ASCII |
 | `/producto` | **Producto** | terminado, a todo color, los proyectos reales | foto en halftone nítida |
@@ -89,8 +89,10 @@ el cliente ya cazó). Que se acuerden del nombre por la experiencia.
 2. **Un gesto firma por etapa, con disciplina** (§6). No un parque de efectos.
 3. **Rigor editorial**: grid, medida 45–75ch, jerarquía dramática (display gigante
    contra micro-mono, nada en el medio). Müller-Brockmann como norte.
-4. **Lenguaje de ficha técnica**: folios numerados, marcas de registro `+`,
-   contadores tabulares. El marco es un instrumento, no chrome.
+4. **Cero ficha técnica como disfraz**: folios numerados, marcas de registro
+   `+`, contadores `01/04` y etiquetas mono-caps están PROHIBIDOS como chrome
+   decorativo (fue el tell central del hero rechazado). Un dato aparece solo si
+   es real y funcional: un año, un dominio en producción, un estado verificable.
 5. **Contenido real siempre**: screenshots de producción, dominios reales, datos
    verificables. Copy con voz de Mateo (rioplatense, concreto, sin humo).
 6. **Motion diegético**: cada animación se explica con el lenguaje de imprenta/

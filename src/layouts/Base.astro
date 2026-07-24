@@ -12,7 +12,7 @@ import '../styles/ediciones.css';
 interface Props {
   title?: string;
   description?: string;
-  edicion?: 'afiche' | 'terminal' | 'plano' | 'fanzine';
+  edicion?: 'afiche' | 'terminal' | 'plano' | 'fanzine' | 'ideacion' | 'maquetado' | 'programacion' | 'producto';
 }
 
 const {
@@ -44,6 +44,12 @@ const {
             document.documentElement.setAttribute('data-theme', theme);
           }
         } catch (e) {}
+        // js-motion: los estados pre-animación (líneas cubiertas, etc.)
+        // viven bajo esta clase — solo con JS vivo y sin reduced-motion.
+        // Sin JS o con reduced-motion la página pinta completa (DESIGN.md §5.7).
+        if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+          document.documentElement.classList.add('js-motion');
+        }
       })();
     </script>
   </head>

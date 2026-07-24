@@ -1,11 +1,13 @@
 ---
-// Home — edición Afiche (la default, la 1ª impresión del master). El cuerpo
-// vive en Portada.astro (compartido con /terminal, /plano, /fanzine). La
-// edición la fija esta ruta vía la prop `edicion`.
+// Home — Etapa 01: Ideación (docs/etapas/ideacion.md). El making-of arranca
+// con los problemas reales que trajeron los encargos, leídos con lápiz en la
+// mano. Las otras etapas (/maquetado /programacion /producto) son stubs
+// honestos hasta que se construyan; las rutas viejas de ediciones conviven
+// mientras dura la migración.
 import Base from '../layouts/Base.astro';
-import Portada from '../components/Portada.astro';
+import Ideacion from '../components/Ideacion.astro';
 ---
 
-<Base edicion="afiche">
-  <Portada />
+<Base edicion="ideacion">
+  <Ideacion />
 </Base>

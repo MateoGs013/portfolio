@@ -17,6 +17,7 @@ import { initImprenta } from './imprenta';
 import { initVivo } from './vivo';
 import { initTipos, clearTipos } from './tipos';
 import { initPared, clearPared } from './pared';
+import { initIdeacion, clearIdeacion } from './ideacion';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -26,6 +27,7 @@ initLenis(reduced);
 
 document.addEventListener('astro:before-swap', () => {
   clearPared();
+  clearIdeacion();
   ScrollTrigger.getAll().forEach((t) => t.kill());
   clearHalftone();
   clearTipos();
@@ -40,4 +42,5 @@ document.addEventListener('astro:page-load', () => {
   initVivo();
   initTipos(reduced);
   initPared(reduced);
+  initIdeacion(reduced);
 });

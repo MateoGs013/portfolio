@@ -1,0 +1,597 @@
+---
+// Etapa 01 · Ideación — "Notas al margen" (spec: docs/etapas/ideacion.md).
+// El display gigante NO es el nombre: es el problema real con el que llegó
+// cada encargo (discurso indirecto verificable contra proyectos.ts, cero
+// comillas fingidas). La regla del lápiz: el azul (--accent) es siempre y
+// solamente la intervención de Mateo, y se seca a tinta. El retrato usa el
+// motor de tipos.ts en estado boceto; el texto que lo pisa knockea la trama
+// (texto y retrato comparten papel). Motion en scripts/ideacion.ts.
+import { getImage } from 'astro:assets';
+import { proyectos } from '../data/proyectos';
+import retratoOriginal from '../assets/retrato.png';
+import Colofon from './Colofon.astro';
+
+const retrato = await getImage({ src: retratoOriginal, width: 520, format: 'webp' });
+const por = Object.fromEntries(proyectos.map((p) => [p.slug, p]));
+
+// El índice de encargos: problema primero (esta etapa lee los encargos, no
+// archiva piezas). Los hechos (título, año, estado, enlace) salen de la
+// fuente única; la lectura problema-first es propia de la etapa.
+const indice = [
+  { slug: 'la-rucula', problema: 'un PDF colgado de un QR' },
+  { slug: 'argpiscinas', problema: 'la obra por WhatsApp' },
+  { slug: 'barberpole', problema: 'turnos por teléfono y cuaderno' },
+  { slug: 'ynara', problema: 'no se navega: se recorre' },
+].map((e) => ({ ...e, p: por[e.slug] }));
+---
+
+<div class="ideacion">
+  <header class="cabecera">
+    <h1 class="firma">mateo sonzogni</h1>
+    <nav class="etapas" aria-label="Etapas del trabajo">
+      <a href="/" aria-current="page">ideación</a>
+      <a href="/maquetado">maquetado</a>
+      <a href="/programacion">programación</a>
+      <a href="/producto">producto</a>
+    </nav>
+    <button class="tinta" id="mode-btn" aria-label="Cambiar la tinta entre modo claro y oscuro">
+      ◐
+    </button>
+  </header>
+
+  <div class="taller">
+    <!-- El atril: el retrato-boceto queda pegado al viewport mientras dura
+         el taller (sticky, alto 0 en flujo). La hairline es la regla del
+         banco de trabajo: la única línea dibujada de la etapa. -->
+    <div class="atril" aria-hidden="true">
+      <canvas class="tipos" data-tipos data-src={retrato.src}></canvas>
+      <div class="banco"></div>
+    </div>
+
+    <section class="abre" aria-label="El primer encargo">
+      <div class="wrap abre-grid">
+        <div class="abre-cuerpo" data-tipos-knockout>
+          <blockquote class="cita">
+            <span class="linea">Un PDF</span>
+            <span class="linea">escaneado</span>
+            <span class="linea">colgado de un <span class="marca" data-marca>QR</span>.</span>
+          </blockquote>
+          <p class="atrib">
+            así llegó el encargo · La Rúcula Gastrobar, Chiclana — hoy es{' '}
+            <a href={por['la-rucula'].url} target="_blank" rel="noopener">laruculagastrobar.es</a>
+          </p>
+        </div>
+        <p class="nota" data-tipos-knockout>
+          <span class="rotulo">la idea:</span> el tráfico entra por el QR de la mesa — el menú es
+          el edificio y la home, la fachada.
+        </p>
+      </div>
+    </section>
+
+    <p class="puente wrap" data-tipos-knockout>así me llegan los encargos:</p>
+
+    <section class="mesa" aria-label="La mesa de encargos">
+      <article class="encargo encargo--arg">
+        <div class="wrap">
+          <div class="encargo-caja" data-tipos-knockout>
+            <blockquote class="cita">
+              <span class="linea">Venían de mostrar</span>
+              <span class="linea">la obra por <span class="marca" data-marca>WhatsApp</span>,</span>
+              <span class="linea">foto por foto.</span>
+            </blockquote>
+            <p class="atrib">
+              así llegó · ARG Piscinas, Andalucía — hoy es{' '}
+              <a href={por['argpiscinas'].url} target="_blank" rel="noopener">argpiscinas.es</a>
+            </p>
+            <p class="nota">
+              un catálogo con panel: el cliente carga la obra y el sitio la muestra, sin
+              intermediarios.
+            </p>
+          </div>
+        </div>
+      </article>
+
+      <article class="encargo encargo--barber">
+        <div class="wrap">
+          <div class="encargo-caja" data-tipos-knockout>
+            <blockquote class="cita">
+              <span class="linea">El <span class="marca" data-marca>mostrador</span> era</span>
+              <span class="linea">el cuello de botella.</span>
+            </blockquote>
+            <p class="atrib">esto lo vi yo, atendiendo · barberpole, producto propio, 2024</p>
+            <p class="nota">
+              los turnos salen del teléfono y entran a una agenda que va del turno a la caja.
+            </p>
+          </div>
+        </div>
+      </article>
+
+      <article class="encargo encargo--ynara">
+        <div class="wrap">
+          <div class="encargo-caja" data-tipos-knockout>
+            <blockquote class="cita">
+              <span class="linea">¿Y si una página</span>
+              <span class="linea">no se navega,</span>
+              <span class="linea">sino que se recorre?</span>
+            </blockquote>
+            <p class="atrib">
+              este problema no lo trajo nadie: me lo pregunté yo · Ynara, tesis 2026
+            </p>
+            <p class="nota">
+              shaders escritos a mano, materia que reacciona al paso. la tecnología al servicio
+              de la atmósfera, nunca al revés.
+            </p>
+          </div>
+        </div>
+      </article>
+    </section>
+  </div>
+
+  <section class="indice" aria-label="El índice de encargos">
+    <div class="wrap">
+      <ol class="filas">
+        {
+          indice.map((e) => (
+            <li class="fila" data-tipos-knockout>
+              <span class="f-problema">{e.problema}</span>
+              <span class="f-titulo">{e.p.titulo}</span>
+              <span class="f-anio">{e.p.anio}</span>
+              <span class="f-estado">
+                {e.p.estado === 'produccion' && <span class="f-tick" data-tick />}
+                {e.p.estadoLabel}
+              </span>
+              <a class="f-enlace" href={e.p.url} target="_blank" rel="noopener">
+                {e.p.urlLabel}
+              </a>
+            </li>
+          ))
+        }
+      </ol>
+    </div>
+  </section>
+
+  <section class="pase" aria-label="El pase de etapa">
+    <div class="wrap">
+      <div class="endereza" data-endereza></div>
+      <p class="pase-texto">
+        La idea del menú-edificio todavía es un renglón a lápiz. En el maquetado se para en
+        columnas.
+      </p>
+      <a class="pase-link" href="/maquetado">seguí al maquetado →</a>
+    </div>
+  </section>
+
+  <p class="firma-final wrap">pensado y hecho por mateo sonzogni</p>
+  <Colofon />
+</div>
+
+<style>
+  .ideacion {
+    /* La etapa vive sobre el papel del sistema: tokens, nada local. */
+    overflow-x: clip;
+  }
+
+  /* ---- Cabecera de una línea: el nombre se registra, no se gana acá ---- */
+  .cabecera {
+    display: flex;
+    align-items: baseline;
+    gap: clamp(14px, 3vw, 34px);
+    flex-wrap: wrap;
+    padding: 16px clamp(16px, 4vw, 48px);
+  }
+  .firma {
+    margin: 0;
+    font-family: var(--font-b);
+    font-weight: 600;
+    font-size: 14px;
+    letter-spacing: 0.01em;
+  }
+  .etapas {
+    margin-left: auto;
+    display: flex;
+    gap: clamp(10px, 1.8vw, 22px);
+    flex-wrap: wrap;
+  }
+  .etapas a {
+    font-family: var(--font-m);
+    font-size: 13px;
+    text-decoration: none;
+    color: var(--soft);
+  }
+  .etapas a:hover {
+    color: var(--ink);
+  }
+  /* La etapa activa se distingue por peso y densidad de tinta, sin subrayado:
+     el trazo se reserva para el contenido, nunca para chrome. */
+  .etapas a[aria-current='page'] {
+    color: var(--ink);
+    font-weight: 700;
+  }
+  .tinta {
+    border: 0;
+    background: none;
+    padding: 0 2px;
+    cursor: pointer;
+    font-size: 15px;
+    line-height: 1;
+    color: var(--soft);
+  }
+  .tinta:hover {
+    color: var(--ink);
+  }
+
+  /* ---- El atril: retrato-boceto pegado al viewport durante el taller ---- */
+  .taller {
+    position: relative;
+  }
+  .atril {
+    position: sticky;
+    top: 0;
+    height: 100svh;
+    margin-bottom: -100svh;
+    pointer-events: none;
+    z-index: 0;
+  }
+  .tipos {
+    position: absolute;
+    right: -2%;
+    bottom: 7svh;
+    height: min(58svh, 640px);
+    aspect-ratio: 3 / 3.8;
+    opacity: 0.75;
+  }
+  .banco {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 7svh;
+    border-top: 1px solid var(--line);
+  }
+
+  /* ---- Escena 1: el primer encargo ---- */
+  .abre {
+    position: relative;
+    z-index: 1;
+    /* El pliegue corta al puente: la escena no llena el viewport a propósito. */
+    min-height: calc(100svh - 150px);
+    display: flex;
+    align-items: flex-start;
+  }
+  .abre-grid {
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    gap: clamp(18px, 3vw, 40px);
+    align-items: end;
+    padding-top: clamp(40px, 11svh, 130px);
+  }
+  .abre-cuerpo {
+    grid-column: 1 / 10;
+  }
+  .cita {
+    margin: 0;
+    font-family: var(--font-d);
+    font-weight: 900;
+    font-stretch: 62%;
+    font-size: clamp(2.7rem, 7.6vw, 7.4rem);
+    line-height: 0.98;
+    letter-spacing: 0.004em;
+    color: var(--ink);
+  }
+  .linea {
+    display: block;
+  }
+  .marca {
+    position: relative;
+    display: inline-block;
+  }
+  .atrib {
+    margin: clamp(16px, 3svh, 30px) 0 0;
+    font-family: var(--font-m);
+    font-size: 13px;
+    letter-spacing: 0.02em;
+    color: var(--soft);
+    max-width: 62ch;
+  }
+  .atrib a {
+    color: var(--ink);
+    text-decoration: none;
+    border-bottom: 1px solid var(--line);
+  }
+  .atrib a:hover {
+    border-color: var(--ink);
+  }
+  .nota {
+    margin: 0;
+    font-family: var(--font-m);
+    font-size: 13px;
+    line-height: 1.6;
+    max-width: 26ch;
+    color: var(--ink);
+  }
+  .abre .nota {
+    grid-column: 10 / 13;
+    align-self: end;
+    margin-bottom: 4.2em;
+  }
+  /* El rótulo enseña la mecánica UNA vez: nace fresco y se seca (la clase
+     seco la pone la coreografía; sin JS queda seco de entrada). */
+  .rotulo {
+    font-weight: 700;
+  }
+  :global(html.js-motion) .rotulo:not(:global(.seco)) {
+    color: var(--accent);
+    transition: color 3.5s ease-out;
+  }
+
+  /* ---- El puente ---- */
+  .puente {
+    position: relative;
+    z-index: 1;
+    margin: 0 auto;
+    padding-bottom: clamp(30px, 8svh, 80px);
+    font-size: 1.1rem;
+    color: var(--soft);
+  }
+
+  /* ---- La mesa de encargos (flujo por defecto; el pin lo arma JS) ---- */
+  .mesa {
+    position: relative;
+    z-index: 1;
+  }
+  .encargo {
+    padding: clamp(40px, 10svh, 110px) 0;
+  }
+  .mesa .cita {
+    font-size: clamp(2.1rem, 5.6vw, 5.4rem);
+  }
+  .mesa .nota {
+    margin-top: clamp(14px, 2.6svh, 26px);
+  }
+  /* La caja del encargo abraza solo el texto: es lo que knockea la trama del
+     boceto (si knockeara el article entero, carvaría el canvas completo). */
+  .encargo-caja {
+    width: fit-content;
+  }
+  /* Cero rima de cards: cada encargo se apoya distinto sobre la mesa. */
+  .encargo--barber .wrap {
+    padding-left: clamp(40px, 12vw, 190px);
+  }
+  .encargo--ynara .cita {
+    font-weight: 600;
+    font-stretch: 75%;
+  }
+
+  /* ---- El índice de encargos ---- */
+  .indice {
+    position: relative;
+    z-index: 1;
+    padding: clamp(50px, 12svh, 130px) 0 clamp(30px, 6svh, 70px);
+  }
+  .filas {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .fila {
+    display: grid;
+    grid-template-columns: 1.25fr 1fr 52px 1fr auto;
+    gap: clamp(10px, 2vw, 26px);
+    align-items: baseline;
+    padding: 15px 0;
+    border-top: 1px solid var(--line);
+    font-family: var(--font-m);
+    font-size: 13px;
+  }
+  .fila:last-child {
+    border-bottom: 1px solid var(--line);
+  }
+  .f-problema {
+    color: var(--soft);
+  }
+  .f-titulo {
+    color: var(--ink);
+    font-weight: 500;
+  }
+  .f-anio {
+    color: var(--soft);
+    font-variant-numeric: tabular-nums;
+  }
+  .f-estado {
+    color: var(--ink);
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    text-transform: lowercase;
+  }
+  .f-tick {
+    display: inline-flex;
+    width: 17px;
+    height: 14px;
+  }
+  .f-enlace {
+    justify-self: end;
+    color: var(--ink);
+    text-decoration: none;
+    border-bottom: 1px solid var(--line);
+  }
+  .f-enlace:hover {
+    border-color: var(--ink);
+  }
+
+  /* ---- El pase de etapa ---- */
+  .pase {
+    padding: clamp(50px, 14svh, 150px) 0 clamp(60px, 14svh, 150px);
+  }
+  .endereza {
+    position: relative;
+    height: 44px;
+    width: min(460px, 72%);
+    margin-bottom: clamp(20px, 4svh, 40px);
+  }
+  .pase-texto {
+    margin: 0 0 18px;
+    font-size: clamp(1.05rem, 0.9rem + 0.7vw, 1.35rem);
+    max-width: 46ch;
+    text-wrap: balance;
+  }
+  .pase-link {
+    font-family: var(--font-m);
+    font-size: 14px;
+    color: var(--ink);
+    text-decoration: none;
+    border-bottom: 1px solid var(--ink);
+    padding-bottom: 2px;
+  }
+  .pase-link:hover {
+    color: var(--soft);
+    border-color: var(--soft);
+  }
+
+  .firma-final {
+    margin: 0 auto;
+    padding-bottom: 10px;
+    font-family: var(--font-m);
+    font-size: 13px;
+    color: var(--soft);
+  }
+
+  /* ---- Mobile: una columna, el margen no existe ---- */
+  @media (max-width: 700px) {
+    .abre {
+      min-height: calc(100svh - 120px);
+    }
+    .abre-grid {
+      grid-template-columns: 1fr;
+      align-items: start;
+      padding-top: clamp(24px, 6svh, 60px);
+    }
+    .abre-cuerpo {
+      grid-column: 1 / -1;
+    }
+    .abre .nota {
+      grid-column: 1 / -1;
+      align-self: start;
+      margin-bottom: 0;
+      margin-top: 26px;
+      max-width: 32ch;
+    }
+    .cita {
+      font-size: clamp(2.4rem, 11.5vw, 3.4rem);
+    }
+    .mesa .cita {
+      font-size: clamp(1.9rem, 9vw, 2.7rem);
+    }
+    .tipos {
+      right: -8%;
+      bottom: 6svh;
+      height: min(42svh, 420px);
+    }
+    .banco {
+      bottom: 6svh;
+    }
+    .encargo--barber .wrap {
+      padding-left: clamp(24px, 9vw, 60px);
+    }
+    .fila {
+      grid-template-columns: 1fr auto;
+      grid-template-areas:
+        'problema problema'
+        'titulo anio'
+        'estado enlace';
+      row-gap: 6px;
+    }
+    .f-problema {
+      grid-area: problema;
+    }
+    .f-titulo {
+      grid-area: titulo;
+    }
+    .f-anio {
+      grid-area: anio;
+    }
+    .f-estado {
+      grid-area: estado;
+    }
+    .f-enlace {
+      grid-area: enlace;
+    }
+  }
+</style>
+
+<style is:global>
+  /* Los trazos del lápiz los inyecta scripts/trazo.ts (sin scope de Astro):
+     nacen frescos en el accent y se secan a tinta — la regla del lápiz. */
+  .ideacion svg.trazo {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+    pointer-events: none;
+  }
+  .ideacion .trazo path {
+    stroke: var(--accent);
+    transition: stroke 3.5s ease-out;
+  }
+  .ideacion .trazo.seco path {
+    stroke: var(--ink);
+  }
+  .ideacion svg.trazo-tick {
+    position: static;
+    width: 17px;
+    height: 14px;
+  }
+  .ideacion .trazo-endereza {
+    position: absolute;
+    inset: 0;
+  }
+
+  /* Estados pre-animación: SOLO bajo js-motion (JS vivo y sin
+     reduced-motion). Sin JS o con reduced-motion la página pinta completa. */
+  html.js-motion .ideacion .abre .linea {
+    clip-path: inset(-6% 102% -6% 0);
+  }
+  html.js-motion .ideacion .abre .nota {
+    clip-path: inset(0 0 102% 0);
+  }
+  html.js-motion .ideacion .abre .atrib {
+    opacity: 0;
+  }
+  html.js-motion .ideacion .puente {
+    clip-path: inset(0 102% 0 0);
+  }
+  html.js-motion .ideacion .indice .fila {
+    clip-path: inset(0 102% 0 0);
+  }
+  /* La mesa pineada: los tres encargos apilados en absoluto, cada uno con su
+     posición propia (cero rima). El alto lo reserva el viewport; lo que se
+     estampa (opacity) es la CAJA, no el article — la caja es también el
+     knockout del boceto. */
+  html.js-motion .ideacion .mesa {
+    height: 100svh;
+  }
+  html.js-motion .ideacion .mesa .encargo {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    padding: 0;
+  }
+  html.js-motion .ideacion .mesa .encargo-caja {
+    opacity: 0;
+  }
+  html.js-motion .ideacion .mesa .encargo .wrap {
+    width: 100%;
+  }
+  html.js-motion .ideacion .encargo--arg {
+    align-items: flex-start;
+  }
+  html.js-motion .ideacion .encargo--arg .wrap {
+    padding-top: 14svh;
+  }
+</style>
+
+<script>
+  import '../scripts/site';
+</script>

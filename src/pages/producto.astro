@@ -1,0 +1,56 @@
+---
+// Etapa 04 · Producto — stub honesto, pero con lo único que un stub puede
+// afirmar sin humo: los enlaces reales de lo que ya está entregado.
+import Base from '../layouts/Base.astro';
+import EtapaStub from '../components/EtapaStub.astro';
+import { proyectos } from '../data/proyectos';
+---
+
+<Base edicion="producto" title="Producto — Mateo Sonzogni">
+  <EtapaStub etapa="producto" titulo="Acá se entrega.">
+    <ul class="entregas">
+      {
+        proyectos.map((p) => (
+          <li>
+            <a href={p.url} target="_blank" rel="noopener">
+              {p.titulo}
+            </a>
+            <span>
+              {p.anio} · {p.estadoLabel.toLowerCase()}
+            </span>
+          </li>
+        ))
+      }
+    </ul>
+  </EtapaStub>
+</Base>
+
+<style>
+  .entregas {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    font-family: var(--font-m);
+    font-size: 13px;
+  }
+  .entregas li {
+    display: flex;
+    gap: 14px;
+    align-items: baseline;
+    flex-wrap: wrap;
+  }
+  .entregas a {
+    color: var(--ink);
+    text-decoration: none;
+    border-bottom: 1px solid var(--line);
+  }
+  .entregas a:hover {
+    border-color: var(--ink);
+  }
+  .entregas span {
+    color: var(--soft);
+  }
+</style>

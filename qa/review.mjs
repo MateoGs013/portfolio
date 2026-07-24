@@ -38,7 +38,9 @@ if (!url) {
 // es un click en caliente: es navegación real.
 const base = url.replace(/\/+$/, '');
 const EDICIONES = [
-  { tema: 'afiche', path: '/' },
+  // La home es la etapa Ideación del making-of (docs/etapas/ideacion.md);
+  // las ediciones viejas siguen vivas en sus rutas mientras dura la migración.
+  { tema: 'ideacion', path: '/' },
   { tema: 'terminal', path: '/terminal' },
   { tema: 'plano', path: '/plano' },
   { tema: 'fanzine', path: '/fanzine' },

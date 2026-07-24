@@ -1,16 +1,18 @@
 # Portfolio — Mateo Sonzogni
 
-Portfolio personal de un creative developer. Concepto **"Ediciones"**: un mismo
-contenido que se "reimprime" en distintos sistemas de diseño (Afiche · Terminal ·
-Plano, siempre libres), cada uno con modo claro y oscuro diseñados por separado
-y su propio reencuadre del contenido. El mini-juego clicker ("La imprenta", en
-la home) desbloquea la 4ª edición secreta **Fanzine** a los 20 ejemplares
-(`ms-tirada` / `ms-fanzine` en localStorage).
+Portfolio personal de un creative developer. Concepto **"EL MAKING-OF"**
+(DESIGN.md §1): el sitio muestra el trabajo HACIÉNDOSE, en 4 etapas = 4 rutas
+(`/` = **Ideación** · `/maquetado` · `/programacion` · `/producto`). La home es
+la etapa Ideación ("Notas al margen", spec en `docs/etapas/ideacion.md`): el
+display gigante es el problema real de cada encargo y el accent es SOLO la
+intervención del autor (el lápiz, que se seca a tinta). Las etapas futuras son
+stubs honestos (`EtapaStub.astro`) — jamás un 404.
 
-Cada edición es una **ruta** propia (`/` = Afiche · `/terminal` · `/plano` ·
-`/fanzine`): el selector navega y el `<ClientRouter />` hace la transición. La
-edición la fija la ruta del lado del servidor (prop `edicion` → `data-tema` en
-`<html>`), no un swap en caliente.
+Cada etapa/edición es una **ruta** propia y `data-tema` lo fija la ruta del
+lado del servidor (prop `edicion` → `<html>`), no un swap en caliente; el
+`<ClientRouter />` hace la transición. Las ediciones viejas (Terminal · Plano ·
+Fanzine, con la Portada compartida) siguen vivas en sus rutas mientras dura la
+migración al making-of.
 
 **Regla de oro: antes de tocar cualquier cosa visual o de motion, leé
 `docs/DESIGN.md`.** Ahí está la ley del proyecto: qué se hace, qué no, y por qué.
@@ -34,7 +36,10 @@ Al iniciar el dev server preferí modo background: `astro dev --background`
 
 ```
 docs/DESIGN.md          Ley de diseño y motion (leer SIEMPRE antes de UI)
+docs/etapas/ideacion.md Spec de la home (dirección "Notas al margen")
 qa/review.mjs           QA visual con Playwright → qa/artifacts/ (gitignored)
+qa/_etapa-capture.mjs   Storyboard de una etapa: cuadros de la carga + scroll
+                        (BASE=http://localhost:4322 node qa/_etapa-capture.mjs)
 src/
   assets/proyectos/     Screenshots reales de producción (los consume Tirada.astro)
   data/proyectos.ts     Fuente única de los proyectos (nada de contenido duplicado)
@@ -42,11 +47,14 @@ src/
                         (prop `edicion` → data-tema); el anti-FOUC sólo restaura
                         ms-theme (claro/oscuro)
   components/           Secciones de página (.astro), estilos scoped
-    Portada.astro       cuerpo compartido (Topbar+Hero+Tirada+Imprenta+Colofón);
-                        MISMA composición para las 4 ediciones (paridad §4c.8)
-    Colofon.astro       la ficha de imprenta final (compartida por las 4)
-  pages/index.astro     Home = edición Afiche (<Base edicion="afiche"><Portada/>)
-  pages/{terminal,plano,fanzine}.astro  Las otras ediciones: misma Portada,
+    Ideacion.astro      la home: etapa 01 del making-of (Notas al margen)
+    EtapaStub.astro     stub honesto de etapa no construida (maq/prog/prod)
+    Portada.astro       cuerpo compartido de las ediciones viejas
+                        (Topbar+Hero+Tirada+Imprenta+Colofón)
+    Colofon.astro       la ficha de imprenta final (compartida por todo)
+  pages/index.astro     Home = etapa Ideación (<Base edicion="ideacion"><Ideacion/>)
+  pages/{maquetado,programacion,producto}.astro  Etapas futuras (EtapaStub)
+  pages/{terminal,plano,fanzine}.astro  Ediciones viejas: misma Portada,
                         distinto data-tema por ruta (Fanzine gated por el link)
   pages/pieza/[slug].astro  Casos de estudio (proyectos con `caso` en los datos);
                         el título morfea desde la tirada (transition:name)
@@ -65,6 +73,12 @@ src/
                           15°/75° que convergen a registro con el progreso
     tirada.ts             ScrollTriggers scrub de las piezas (halftone + wipes)
     imprenta.ts           clicker del taller: tirada, hojas, desbloqueo Fanzine
+    tipos.ts              retrato compuesto en glifos por edición (+ estado
+                          boceto `ideacion` y knockout bajo [data-tipos-knockout])
+    trazo.ts              el lápiz de Ideación: elipse que no cierra, tick,
+                          enderezado — nace accent y SE SECA a tinta
+    ideacion.ts           coreografía de la home: carga que escribe, mesa de
+                          encargos (el único pin), índice, pase de etapa
   styles/
     tokens.css            TODO el color vive acá (8 paletas: 4 ediciones × 2 temas)
     base.css              reset, focus, reduced-motion, .wrap

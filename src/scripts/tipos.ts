@@ -45,6 +45,11 @@ let finePointer = false;
 let prevDraw = 0;
 let cubierto = false;
 let img: HTMLImageElement | null = null;
+// Knockout (etapa Ideación): elementos [data-tipos-knockout] que pisan el
+// canvas carvan la trama — el boceto no dibuja celdas bajo el texto, texto
+// y retrato comparten papel. El texto con opacity animada (mesa de encargos)
+// solo knockea mientras se ve.
+let knocks: HTMLElement[] = [];
 let ro: ResizeObserver | null = null;
 let mo: MutationObserver | null = null;
 let io: IntersectionObserver | null = null;
@@ -52,18 +57,20 @@ let escuchando = false;
 
 // Rampas de menor a mayor densidad de tinta, con el material de cada edición:
 // letras de caja de madera, ASCII de terminal, tramado de plotter, máquina
-// de escribir del fanzine.
+// de escribir del fanzine, trazos de lápiz del boceto (etapa Ideación).
 const CHARSETS: Record<string, string> = {
   afiche: ' ·ILTSEM',
   terminal: ' ·:-=+*#%@',
   plano: ' ·:/+×%#',
   fanzine: ' .·oxXOMW',
+  ideacion: ' ·-/\\',
 };
 const FONTS: Record<string, string> = {
   afiche: '--font-d',
   terminal: '--font-m',
   plano: '--font-b',
   fanzine: '--font-m',
+  ideacion: '--font-m',
 };
 // Peso/ancho del ctx.font por edición: en Afiche la display es Archivo
 // Variable — la caja de tipos se compone maciza y condensada (wght 900,
@@ -149,6 +156,21 @@ function draw(now: number): void {
 
   const tIntro = introListo ? Infinity : now - introT0;
   const rect = T.canvas.getBoundingClientRect();
+  const huecos: Array<[number, number, number, number]> = [];
+  for (const el of knocks) {
+    const op = el.style.opacity;
+    if (op !== '' && parseFloat(op) < 0.35) continue;
+    const kr = el.getBoundingClientRect();
+    if (kr.bottom < rect.top || kr.top > rect.bottom || kr.right < rect.left || kr.left > rect.right)
+      continue;
+    const pad = 10;
+    huecos.push([
+      kr.left - rect.left - pad,
+      kr.top - rect.top - pad,
+      kr.right - rect.left + pad,
+      kr.bottom - rect.top + pad,
+    ]);
+  }
   const mx = mouse.x - rect.left;
   const my = mouse.y - rect.top;
   const radio = 180;
@@ -167,6 +189,17 @@ function draw(now: number): void {
       if (d === 0) continue;
       const x = gx * cell + cell / 2;
       const y = gy * cell + cell / 2;
+
+      if (huecos.length) {
+        let dentro = false;
+        for (const h of huecos) {
+          if (x > h[0] && x < h[2] && y > h[1] && y < h[3]) {
+            dentro = true;
+            break;
+          }
+        }
+        if (dentro) continue;
+      }
 
       if (vivoInk) {
         const dist = Math.hypot(x - mx, y - my);
@@ -294,6 +327,7 @@ export function initTipos(reduced: boolean): void {
     delay: new Float32Array(0),
     heat: new Float32Array(0),
   };
+  knocks = Array.from(document.querySelectorAll<HTMLElement>('[data-tipos-knockout]'));
 
   img = new Image();
   img.src = canvas.dataset.src || '';
@@ -373,5 +407,6 @@ export function clearTipos(): void {
     escuchando = false;
   }
   img = null;
+  knocks = [];
   T = null;
 }
