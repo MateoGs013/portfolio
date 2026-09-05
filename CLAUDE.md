@@ -45,6 +45,7 @@ pnpm prisma studio
 app/worlds/datos/     renderer DATOS
 app/worlds/diseno/    renderer DISEÑO
 app/lib/fieldMeta.ts  qué campos ve cada mundo, y con qué tipo
+app/lib/path.ts       la ruta como estado: path, profundidad por mundo, truncado
 app/nitro/            reservado; Nitro no sirve rutas (el API es Express)
 server/src/           API Express (server/generated/ es el cliente Prisma, ignorado)
 server/admin/         UI del admin propio, servida por el API en /admin
@@ -71,4 +72,4 @@ Este archivo solo tiene lo que aplica siempre. Lo específico se carga solo cuan
 
 ## Estado
 
-Fases 0 y 1 cerradas (5-sep-2026): schema migrado, seis endpoints, seed real y admin propio en `/admin`. Sigue la Fase 2 (shell: routing y estado compartido). Cambiar el schema implica migración nueva y revisar `app/lib/fieldMeta.ts`.
+Fases 0, 1 y 2 cerradas (5-sep-2026): schema migrado, seis endpoints, admin propio en `/admin`, y el shell (routing por mundo, `path` compartido con truncado, tokens, umbral, cookie, control de pasaje sin animar). Sigue la Fase 3 (DATOS completo: columnas en perspectiva, teclado, facetas). Cambiar el schema implica migración nueva y revisar `app/lib/fieldMeta.ts`.

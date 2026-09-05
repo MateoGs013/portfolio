@@ -1,0 +1,39 @@
+/* Mundo DATOS. Tinta sobre papel: claro, frío, plano.
+   Prefijo --d-. Se declara en :root porque el umbral y el control de pasaje
+   necesitan las dos paletas a la vez; el mundo activo se marca en html[data-mundo]. */
+:root {
+  /* temperatura */
+  --d-paper: #e2e2de;
+  --d-ink: #0d0d0c;
+  --d-rule: #b3b2ac;
+  --d-dim: #75746e;
+  --d-faint: #9b9a93;
+  --d-hover: #d8d8d3;
+  --d-sig: #2020cc; /* solo relaciones y links; el estado se marca por inversión */
+
+  /* densidad */
+  --d-frame: clamp(16px, 2.4vw, 34px);
+  --d-col: 224px;
+  --d-pane: 376px;
+  --d-z: 56px; /* profundidad entre columnas, casi imperceptible a propósito */
+  --d-fs: 12px;
+  --d-fs-name: 13.5px;
+  --d-fs-meta: 9px;
+  --d-lh: 1.45;
+  --d-track: 0.16em;
+
+  /* ritmo: acá el movimiento es latencia */
+  --d-dur: 120ms;
+  --d-dur-nav: 660ms;
+  --d-ease: cubic-bezier(0.72, 0, 0.14, 1);
+}
+
+html[data-mundo="datos"] {
+  color-scheme: light;
+  background: var(--d-paper);
+  color: var(--d-ink);
+}
+html[data-mundo="datos"] :focus-visible {
+  outline: 2px solid var(--d-sig);
+  outline-offset: 2px;
+}

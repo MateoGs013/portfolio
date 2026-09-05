@@ -29,24 +29,27 @@ Criterio para las colecciones: **cada una debería ser la respuesta a una pregun
 
 ---
 
-## Fase 2 — Shell
+## Fase 2 — Shell ✅ cerrada el 5-sep-2026
 
-- [ ] Routing `/datos/*` y `/diseno/*`
-- [ ] Estado compartido: `path = [collection, slug, sub]`
-- [ ] Truncado al cambiar de mundo
-- [ ] Tokens de los dos mundos
-- [ ] Carga de fuentes con preload
-- [ ] Umbral, salteable con link directo
-- [ ] Persistencia del mundo elegido
-- [ ] Control de pasaje, sin animar todavía
+- [x] Routing `/datos/*` y `/diseno/*` — `app/pages/{datos,diseno}/[[...path]].vue`, un renderer por mundo en `app/worlds/`
+- [x] Estado compartido: `path = [collection, slug, sub]` — `app/lib/path.ts`, leído siempre de la ruta (`useMundo`)
+- [x] Truncado al cambiar de mundo — tabla `depth` por mundo y raíz; la query viaja intacta
+- [x] Tokens de los dos mundos — `app/worlds/<mundo>/tokens.css`, prefijos `--d-` y `--n-`
+- [x] Carga de fuentes con preload — `usePreloadFonts`, una lista por superficie
+- [x] Umbral, salteable con link directo — `/` (y `/umbral`, que no redirige)
+- [x] Persistencia del mundo elegido — cookie `mundo`, un año; `/` redirige en el servidor
+- [x] Control de pasaje, sin animar todavía — `PasajeControl.vue`, dos links
 
-**Terminado cuando:** se cambia de mundo conservando la posición, y un link directo saltea el umbral.
+**Terminado cuando:** se cambia de mundo conservando la posición, y un link directo saltea el umbral. ✅ Verificado el 5-sep-2026 con un recorrido en Chrome headless: `/datos/projects/la-rucula/techs?stack=vue` → `/diseno/projects/la-rucula?stack=vue` → `/datos/projects/la-rucula?stack=vue`, sin recarga.
+
+Lo que dejó para la Fase 3: DATOS ya resuelve todos los niveles en una sola columna (`app/worlds/datos/levels.ts`), que es la forma mobile; faltan las columnas en perspectiva, el teclado y las facetas. `orgs` no tiene endpoint: `/datos/orgs/:slug` da 404 hasta que lo tenga.
 
 ---
 
 ## Fase 3 — DATOS completo
 
 - [ ] Explorador de columnas en perspectiva CSS
+- [ ] Endpoint de `orgs` por relación (`/api/orgs/:slug` con sus proyectos y experiencias) para poder saltar de lado
 - [ ] Panel de detalle con campos y tipos
 - [ ] Profundidad variable por rama
 - [ ] Teclado completo

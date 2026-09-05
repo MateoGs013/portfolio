@@ -105,6 +105,25 @@ Prisma trata a Postgres como ciudadano de primera: enums, arrays nativos (`Strin
 
 ---
 
+## Shell
+
+**La posición es la ruta, y el truncado es una tabla.**
+Descartado: un store en memoria que recuerde dónde estaba cada mundo.
+`path = [raíz, slug, sub]` se lee de la URL en los dos mundos. Cada mundo declara hasta qué profundidad entiende cada raíz (`depth` en `app/lib/path.ts`): DATOS baja a la subvista, DISEÑO se detiene en el record y no tiene `orgs`. Al cambiar de mundo se recorta a eso y nada más. La query viaja intacta aunque DISEÑO no filtre: así la vuelta a DATOS encuentra los filtros donde estaban.
+
+**El mundo elegido se guarda en una cookie, no en localStorage.**
+Con cookie el servidor redirige `/` al mundo recordado en el primer byte, sin flash del umbral ni JS. Entrar por link directo a un mundo también lo elige. `/umbral` es el alias que siempre muestra el umbral.
+
+**Los tokens de los dos mundos cargan siempre, con prefijo.**
+Descartado: un solo set de tokens semánticos que cambia de valor según el mundo.
+El umbral y el control de pasaje necesitan las dos paletas a la vez, y el pasaje animado (Fase 6) también. `--d-*` es DATOS y `--n-*` es DISEÑO; el mundo activo va en `html[data-mundo]` y de ahí sale el fondo.
+
+**Preload de fuentes por superficie, con las URLs del bundler.**
+Descartado: copiar las fuentes a `public/` para tener rutas fijas, o el módulo `@nuxt/fonts`.
+`?url` de Vite da la misma URL hasheada que emite el CSS de @fontsource, así que el preload coincide sin duplicar archivos. Cada superficie precarga solo lo que usa arriba de todo: DATOS mono y sans, DISEÑO Fraunces y sans, el umbral las tres.
+
+---
+
 ## El pasaje
 
 **Ancla FLIP sobre el nombre del record.**
@@ -121,6 +140,10 @@ El nombre existe en los dos lados, así que se clona y vuela de una posición a 
 **Pantalla partida en dos, el visitante elige.**
 Descartado: modal con dos botones, y entrar por defecto a uno con el switch visible.
 El umbral es la tesis en miniatura y hay que gastarlo bien. Tiene que ser salteable con link directo y la elección persiste.
+
+**Cada mitad tiene la temperatura de su mundo.**
+Descartado: el umbral uniformemente oscuro del prototipo `dos-mundos.html`.
+Papel frío a la izquierda, película cálida a la derecha: la costura entre las dos ya es la tesis sin una palabra. El nombre cruza la costura en `mix-blend-mode: difference`, negro sobre el papel y claro sobre la película, una sola vez escrito.
 
 ---
 

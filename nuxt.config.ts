@@ -9,7 +9,13 @@ export default defineNuxtConfig({
   serverDir: 'app/nitro',
   nitro: { typescript: { tsConfig: { exclude: ['../../server/**/*'] } } },
 
-  css: ['~/assets/css/fonts.css', '~/assets/css/base.css'],
+  css: [
+    '~/assets/css/fonts.css',
+    '~/assets/css/base.css',
+    // Los tokens de los dos mundos cargan siempre: umbral y control de pasaje usan las dos paletas.
+    '~/worlds/datos/tokens.css',
+    '~/worlds/diseno/tokens.css',
+  ],
 
   runtimeConfig: {
     public: {
