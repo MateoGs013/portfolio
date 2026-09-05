@@ -95,6 +95,16 @@ export interface Tech {
   _count: { projects: number, experiences: number }
 }
 
+export interface Org {
+  id: number
+  slug: string
+  name: string
+  url: string | null
+  city: string | null
+  projects: { slug: string, title: string, year: number }[]
+  experiences: { slug: string, role: string, startedAt: string, endedAt: string | null }[]
+}
+
 export interface Doc {
   key: DocKey
   title: string
@@ -107,7 +117,7 @@ export interface CollectionRecord {
   projects: Project
   experience: Experience
   stack: Tech
-  orgs: never
+  orgs: Org
 }
 
-export type AnyRecord = Project | Experience | Tech
+export type AnyRecord = Project | Experience | Tech | Org

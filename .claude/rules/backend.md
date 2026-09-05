@@ -33,6 +33,7 @@ GET /api/projects           → ?stack=&year=&role=&featured=
 GET /api/projects/:slug     → record + subviews + media + links
 GET /api/experience
 GET /api/stack
+GET /api/orgs/:slug          → org + sus proyectos y experiencias (sin lista: se llega por relación)
 GET /api/docs/:key
 ```
 

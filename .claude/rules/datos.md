@@ -15,6 +15,10 @@ Explorador de columnas tipo Finder en perspectiva CSS. Tinta sobre papel: claro,
 - **Un solo renderer para todas las colecciones.** Una base de datos trata a todos los records igual. No hacer tratamientos especiales por colección: eso es trabajo del otro mundo.
 - **La señal primaria de estado es la inversión, no el color.** Item activo = bloque negro con texto papel. El azul (`--d-sig`) queda solo para relaciones y links.
 
+## Dirección (Fase 3, ver `docs/decisiones.md`)
+
+Hoja técnica, no Finder ni terminal. Identificadores en minúscula y sin espaciado, tal como están en el schema. Filas numeradas de 44px. La ruta se ve como escalera: fila elegida invertida y el encabezado de la columna siguiente repite ese nombre, invertido. La hoja del record es una spec sheet: nombre grande, línea `record · Model · updatedAt`, tabla con el tipo a la derecha. Facetar es tocar un valor. El pie muestra el request real con sus milisegundos. Todo esto vive en `app/worlds/datos/` (`explorer.ts` resuelve, los componentes dibujan).
+
 ## Trampa conocida
 
 La columna 0 es siempre la raíz, y **cada columna extra requiere que haya algo seleccionado en la anterior**. Sin ese chequeo el loop pide los hijos de una ruta vacía en cada vuelta y dibuja N columnas raíz idénticas. Ya pasó una vez.

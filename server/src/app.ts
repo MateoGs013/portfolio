@@ -6,6 +6,7 @@ import { adminApi, adminUi } from './admin/router.js'
 import { envelope } from './envelope.js'
 import { docs } from './routes/docs.js'
 import { experience } from './routes/experience.js'
+import { orgs } from './routes/orgs.js'
 import { projects } from './routes/projects.js'
 import { schema } from './routes/schema.js'
 import { stack } from './routes/stack.js'
@@ -24,7 +25,7 @@ app.get('/api/health', async (_req, res) => {
   res.status(dbOk ? 200 : 503).json(envelope({ ok: true, db: dbOk, version }))
 })
 
-app.use('/api', schema, projects, experience, stack, docs)
+app.use('/api', schema, projects, experience, stack, orgs, docs)
 app.use('/api/admin', adminApi)
 app.use('/admin', adminUi)
 

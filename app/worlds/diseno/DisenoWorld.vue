@@ -51,7 +51,7 @@ const { data: view, error } = await useAsyncData<View>(
 
     const nameField = fieldMeta[root].nameField
     if (slug) {
-      const r = (await api.record(root, slug)) as unknown as Record<string, unknown>
+      const r = (await api.record(root, slug)).data as unknown as Record<string, unknown>
       const cover = root === 'projects' ? ((r as unknown as Project).media ?? []).find(m => m.role === 'COVER') ?? null : null
       // Lo compartido con motivo: la org rotula la banda, los años son la dimensión de la experiencia.
       const rotulo = root === 'experience'
@@ -140,9 +140,8 @@ if (import.meta.server && error.value) {
   padding: 14px 6px;
   border-right: 1px solid var(--n-edge);
   color: var(--n-faint);
-  font-size: var(--n-fs-k);
-  letter-spacing: var(--n-track);
-  text-transform: uppercase;
+  font-size: 12px;
+  font-weight: 500;
   text-align: center;
   text-decoration: none;
   transition: color var(--n-dur-ui);
@@ -160,9 +159,7 @@ if (import.meta.server && error.value) {
 }
 .k {
   margin: 0;
-  font-size: var(--n-fs-k);
-  letter-spacing: var(--n-track);
-  text-transform: uppercase;
+  font-size: 12px;
   color: var(--n-faint);
 }
 

@@ -34,6 +34,21 @@ A la tercera vez sería una molestia. Todo el drama del eje Z se gasta una sola 
 Descartado: oscuro con acento, para los dos mundos.
 Si los dos son oscuros, el switch se siente como un reskin. Claro y frío contra oscuro y cálido se siente como cambiar de material.
 
+**Los prototipos son estructura, no look.**
+Descartado: reproducir `mundo-datos-v3.html` / `dos-mundos.html` con tokens.
+La Fase 2 salió así y Mateo la rechazó: "se ve exactamente igual que los demos, y solo eran para mostrarte la idea". De los prototipos queda qué hay (columnas, ruta, detalle con tipos, pasaje) y se decide de nuevo todo lo demás.
+
+**Dirección de la Fase 3: hoja técnica, no Finder.**
+Descartado: la columna tipo Finder de 224px con hover gris, etiquetas mono en mayúsculas espaciadas, títulos en negrita apretada.
+El referente es el documento técnico bien compuesto (spec sheet, plano, tabla de figuras), no el explorador de archivos ni la terminal. Lo que eso significa en concreto:
+- **Identificadores en minúscula y sin espaciado**, tal como están en el schema (`startedAt`, `relation → Org`). Las etiquetas mono en mayúsculas espaciadas son un tell de plantilla y además mienten sobre cómo se llama el campo.
+- **Filas numeradas** (`01`, `02`) y con aire: 44px de alto, nombre en General Sans 500 a 15px, dato dominante alineado a la derecha en mono. El número de fila es lo que hace que la lista se lea como registro y no como menú.
+- **La ruta se ve como una escalera de bloques negros.** La fila elegida se invierte (regla del mundo) y el encabezado de la columna siguiente es ese mismo nombre, también invertido. No hay línea dibujada ni ornamento: la propia inversión, repetida, es el trazo de la ruta.
+- **El detalle es una hoja de especificaciones:** el nombre grande (40px, 600, apretado) como único gesto tipográfico, debajo la línea `record · Project · actualizado 2026-09-05`, y la tabla de campos con el tipo alineado a la derecha en su propia columna. Los valores que son filtros válidos (`year`, `status`, `role`, `category`, cada tech, cada org) son links con subrayado punteado que agregan la faceta a la URL: **facetar es tocar un valor**, no abrir un panel.
+- **La máquina a la vista, con números medidos:** el pie muestra el request real, el status y los milisegundos que tardó, no un adorno.
+- **Perspectiva casi nula** (56px en Z, opacidad que cae hasta 0.55) y una sola transición: la columna nueva entra 12px desde la derecha en 160ms. Todo lo demás es instantáneo.
+- **"Ir a" con `/`:** una línea de texto sobre el papel, resultados como filas `projects / La Rúcula Gastrobar`. Sin prompt, sin cursor parpadeando: no es una consola, es un índice.
+
 ---
 
 ## Mundo DISEÑO

@@ -63,6 +63,7 @@ Este archivo solo tiene lo que aplica siempre. Lo específico se carga solo cuan
 - `docs/concepto.md` — el porqué, en largo. Leerlo antes de proponer algo estructural.
 - `docs/decisiones.md` — qué se probó y se descartó. **Leerlo antes de proponer una idea creativa**, para no repetir un camino ya cerrado.
 - `docs/fases.md` — el orden de trabajo y los criterios de terminado.
+- `docs/prototipos/` — validaron mecánicas, **no dirección de arte**. Tomar la estructura, decidir el resto de nuevo: reproducirlos ya se rechazó una vez.
 
 ## Skills
 
@@ -72,4 +73,4 @@ Este archivo solo tiene lo que aplica siempre. Lo específico se carga solo cuan
 
 ## Estado
 
-Fases 0, 1 y 2 cerradas (5-sep-2026): schema migrado, seis endpoints, admin propio en `/admin`, y el shell (routing por mundo, `path` compartido con truncado, tokens, umbral, cookie, control de pasaje sin animar). Sigue la Fase 3 (DATOS completo: columnas en perspectiva, teclado, facetas). Cambiar el schema implica migración nueva y revisar `app/lib/fieldMeta.ts`.
+Fases 0 a 3 cerradas (5-sep-2026): schema, siete endpoints, admin en `/admin`, shell (ruta como estado, truncado, cookie, umbral) y DATOS completo (columnas en perspectiva, hoja, teclado, ir a, facetas). Sigue la Fase 4 (DISEÑO: proyectos), con `/nueva-seccion`. Cambiar el schema implica migración nueva y revisar `app/lib/fieldMeta.ts`.

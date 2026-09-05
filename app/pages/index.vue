@@ -1,6 +1,6 @@
 <script setup lang="ts">
 // El umbral: pantalla partida, el visitante elige. Es el nivel cero, no una
-// pantalla aparte. Cada mitad tiene la temperatura de su mundo: la costura
+// pantalla aparte. Cada mitad tiene la temperatura de su mundo y su tipografía: la costura
 // entre las dos es la tesis sin palabras. Sin animación todavía.
 // `/` redirige al mundo recordado (middleware); `/umbral` lo muestra siempre.
 definePageMeta({ layout: false, alias: ['/umbral'] })
@@ -14,18 +14,16 @@ usePreloadFonts('umbral')
     <h1 class="nombre">Mateo Sonzogni</h1>
 
     <NuxtLink to="/datos" class="mitad datos">
-      <span class="tag">01 · consultar</span>
       <span class="texto">
-        <span class="mundo">DATOS</span>
-        <span class="que">Explorador de columnas. Denso, frío, navegable entero con el teclado.</span>
+        <span class="mundo">datos</span>
+        <span class="que">Los mismos trabajos como registros: campos, tipos, relaciones. Todo a un teclado de distancia.</span>
       </span>
     </NuxtLink>
 
     <NuxtLink to="/diseno" class="mitad diseno">
-      <span class="tag">02 · mirar</span>
       <span class="texto">
-        <span class="mundo">DISEÑO</span>
-        <span class="que">Cada sección con su propia forma. Las piezas se construyen solas.</span>
+        <span class="mundo">diseño</span>
+        <span class="que">Los mismos trabajos como piezas: la obra, el proceso, el tiempo que llevó.</span>
       </span>
     </NuxtLink>
   </main>
@@ -45,30 +43,24 @@ html[data-mundo="umbral"] { background: var(--n-bg); color-scheme: dark; }
   flex: 1;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
-  padding: clamp(20px, 3.4vw, 46px);
+  justify-content: flex-end;
+  padding: clamp(24px, 4vw, 56px);
   text-decoration: none;
   transition: background 400ms;
-}
-.tag {
-  font-family: var(--font-mono);
-  font-size: 9px;
-  letter-spacing: 0.22em;
-  text-transform: uppercase;
 }
 .texto { display: block; }
 .mundo {
   display: block;
-  font-size: clamp(34px, 6vw, 72px);
+  font-size: clamp(40px, 7vw, 88px);
   line-height: 0.9;
-  letter-spacing: -0.035em;
+  letter-spacing: -0.04em;
 }
 .que {
   display: block;
-  margin-top: 14px;
-  max-width: 32ch;
-  font-size: 12px;
-  line-height: 1.6;
+  margin-top: 18px;
+  max-width: 30ch;
+  font-size: 14px;
+  line-height: 1.55;
 }
 
 .datos {
@@ -76,8 +68,8 @@ html[data-mundo="umbral"] { background: var(--n-bg); color-scheme: dark; }
   color: var(--d-ink);
 }
 .datos:hover { background: var(--d-hover); }
-.datos .tag, .datos .que { color: var(--d-dim); }
-.datos .mundo { font-family: var(--font-text); font-weight: 700; }
+.datos .que { color: var(--d-dim); }
+.datos .mundo { font-family: var(--font-text); font-weight: 600; }
 .datos:focus-visible { outline: 2px solid var(--d-sig); outline-offset: -6px; }
 
 .diseno {
@@ -85,12 +77,11 @@ html[data-mundo="umbral"] { background: var(--n-bg); color-scheme: dark; }
   color: var(--n-paper);
 }
 .diseno:hover { background: #141009; }
-.diseno .tag { color: var(--n-faint); }
 .diseno .que { color: var(--n-dim); }
 .diseno .mundo {
   font-family: var(--font-display);
-  font-weight: 620;
-  font-variation-settings: 'opsz' 90, 'SOFT' 0, 'WONK' 1;
+  font-weight: 560;
+  font-variation-settings: 'opsz' 144, 'SOFT' 40, 'WONK' 1;
 }
 .diseno:focus-visible { outline: 2px solid var(--n-ember); outline-offset: -6px; }
 
@@ -106,9 +97,8 @@ html[data-mundo="umbral"] { background: var(--n-bg); color-scheme: dark; }
   margin: 0;
   font-family: var(--font-text);
   font-weight: 500;
-  font-size: 11px;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
+  font-size: 13px;
+  letter-spacing: 0;
   white-space: nowrap;
   color: #fff;
   mix-blend-mode: difference;

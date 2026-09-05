@@ -46,21 +46,23 @@ Lo que dejó para la Fase 3: DATOS ya resuelve todos los niveles en una sola col
 
 ---
 
-## Fase 3 — DATOS completo
+## Fase 3 — DATOS completo ✅ cerrada el 5-sep-2026
 
-- [ ] Explorador de columnas en perspectiva CSS
-- [ ] Endpoint de `orgs` por relación (`/api/orgs/:slug` con sus proyectos y experiencias) para poder saltar de lado
-- [ ] Panel de detalle con campos y tipos
-- [ ] Profundidad variable por rama
-- [ ] Teclado completo
-- [ ] Command palette
-- [ ] Filtros como facetas
-- [ ] SSR
-- [ ] Mobile: una columna
+- [x] Explorador de columnas en perspectiva CSS — `app/worlds/datos/DatosWorld.vue` + `DatosColumn.vue`; `explorer.ts` resuelve el path en columnas
+- [x] Endpoint de `orgs` por relación — `GET /api/orgs/:slug` con proyectos y experiencias
+- [x] Panel de detalle con campos y tipos — `DatosDetail.vue`; la raíz muestra la base (motor, tablas, records) y cada colección su definición
+- [x] Profundidad variable por rama — docs son hoja; records abren sus relaciones; las relaciones abren sus items
+- [x] Teclado completo — `↑↓` mover, `→`/Enter entrar, `←`/Esc volver, `/` o Ctrl+K ir a
+- [x] Command palette — `DatosGoto.vue`: índice de schema, proyectos, experiencia y stack
+- [x] Filtros como facetas — tocar un valor filtrable en la hoja agrega `?campo=valor`; chips con `×` en la columna
+- [x] SSR — todo se resuelve en el servidor; el 404 sale con status 404
+- [x] Mobile: una columna — bajo 900px, la última columna o la hoja
 
-**Terminado cuando:** todo el contenido es alcanzable sin mouse y con JS apagado.
+**Terminado cuando:** todo el contenido es alcanzable sin mouse y con JS apagado. ✅ Verificado el 5-sep-2026: 29 chequeos en Chrome headless (teclado, ir a, facetas, salto proyecto → org → experiencia, pasaje con sub y query) y todos los niveles renderizan en SSR como links.
 
-**El sitio puede salir acá.** DISEÑO es la parte cara y va segunda.
+**Dirección de arte:** hoja técnica (ver `docs/decisiones.md`). La Fase 2 se había construido copiando los prototipos y se rehízo.
+
+**El sitio puede salir acá.** DISEÑO es la parte cara y va segunda. Falta la Fase 7 antes de publicar.
 
 ---
 

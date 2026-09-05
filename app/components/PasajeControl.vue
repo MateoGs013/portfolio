@@ -34,12 +34,12 @@ function to(w: (typeof worlds)[number]) {
   display: flex;
   border: 1px solid var(--pasaje-line);
   font-family: var(--font-text);
-  font-size: 9px;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1;
 }
 .pasaje a {
-  padding: 9px 15px;
+  padding: 10px 14px;
   text-decoration: none;
   color: var(--pasaje-off);
   transition: background var(--pasaje-dur), color var(--pasaje-dur);

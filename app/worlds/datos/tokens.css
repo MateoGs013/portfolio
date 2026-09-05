@@ -1,31 +1,33 @@
-/* Mundo DATOS. Tinta sobre papel: claro, frío, plano.
+/* Mundo DATOS. Hoja técnica: papel frío, tinta, una sola señal de color.
    Prefijo --d-. Se declara en :root porque el umbral y el control de pasaje
-   necesitan las dos paletas a la vez; el mundo activo se marca en html[data-mundo]. */
+   necesitan las dos paletas a la vez; el mundo activo se marca en html[data-mundo].
+   Dirección en docs/decisiones.md → "Dirección de la Fase 3". */
 :root {
   /* temperatura */
-  --d-paper: #e2e2de;
-  --d-ink: #0d0d0c;
-  --d-rule: #b3b2ac;
-  --d-dim: #75746e;
-  --d-faint: #9b9a93;
-  --d-hover: #d8d8d3;
-  --d-sig: #2020cc; /* solo relaciones y links; el estado se marca por inversión */
+  --d-paper: #eceeeb;
+  --d-ink: #101214;
+  --d-rule: #c9cdc8;
+  --d-dim: #6d726d;
+  --d-faint: #a0a5a0;
+  --d-hover: #e1e4e0;
+  --d-sig: #1b3fd9; /* solo relaciones, links y facetas; el estado se marca por inversión */
+  --d-inv-dim: #a9ada8; /* texto secundario dentro de un bloque invertido */
 
   /* densidad */
-  --d-frame: clamp(16px, 2.4vw, 34px);
-  --d-col: 224px;
-  --d-pane: 376px;
+  --d-frame: clamp(20px, 2.6vw, 40px);
+  --d-col: 272px;
+  --d-pane-min: 440px;
+  --d-row: 44px;
   --d-z: 56px; /* profundidad entre columnas, casi imperceptible a propósito */
-  --d-fs: 12px;
-  --d-fs-name: 13.5px;
-  --d-fs-meta: 9px;
+  --d-fs-mono: 11px;
+  --d-fs-name: 15px;
+  --d-fs-read: 17px;
+  --d-fs-title: clamp(28px, 3vw, 40px);
   --d-lh: 1.45;
-  --d-track: 0.16em;
 
   /* ritmo: acá el movimiento es latencia */
-  --d-dur: 120ms;
-  --d-dur-nav: 660ms;
-  --d-ease: cubic-bezier(0.72, 0, 0.14, 1);
+  --d-dur: 160ms;
+  --d-ease: cubic-bezier(0.2, 0, 0, 1);
 }
 
 html[data-mundo="datos"] {
@@ -35,5 +37,5 @@ html[data-mundo="datos"] {
 }
 html[data-mundo="datos"] :focus-visible {
   outline: 2px solid var(--d-sig);
-  outline-offset: 2px;
+  outline-offset: -2px;
 }
