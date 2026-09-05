@@ -70,4 +70,4 @@ Este archivo solo tiene lo que aplica siempre. Lo específico se carga solo cuan
 
 ## Estado
 
-⚠ **El schema todavía no está confirmado.** Es lo único que bloquea todo lo demás. Hay una propuesta de trabajo en `prisma/schema.prisma`; no migrar sin aprobación explícita.
+Schema aprobado y migrado (5-sep-2026). Fase 1 en curso: endpoints y seed listos, falta el admin. Cambiar el schema implica migración nueva y revisar `app/lib/fieldMeta.ts`.

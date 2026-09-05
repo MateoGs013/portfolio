@@ -119,8 +119,9 @@ export const fieldMeta: Record<CollectionKey, CollectionMeta> = {
   },
 }
 
-/** Forma de cada item de `Doc.fields`. `worlds` ausente = los dos. */
-export interface DocField {
+/** Forma de cada item de `Doc.fields`. `worlds` ausente = los dos.
+ *  Es un `type` y no una `interface` para que sea asignable al Json de Prisma. */
+export type DocField = {
   name: string
   type: FieldType
   value: string

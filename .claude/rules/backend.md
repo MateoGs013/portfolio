@@ -13,7 +13,7 @@ El mundo DATOS **muestra en pantalla los nombres de campo, sus tipos y sus relac
 
 Criterio para agregar una colección: **cada una debería ser la respuesta a una pregunta concreta que trae quien entra.**
 
-⚠ El schema todavía no está confirmado. No correr `prisma migrate` sin aprobación explícita.
+El schema está migrado. Todo cambio pasa por `prisma migrate dev` con nombre descriptivo y se refleja en `app/lib/fieldMeta.ts` en el mismo commit.
 
 ## Contrato de URL
 

@@ -4,12 +4,12 @@ Orden de trabajo y criterios de terminado. Marcar con `[x]` a medida que se cier
 
 ---
 
-## Fase 0 — Schema ⚠ BLOQUEANTE
+## Fase 0 — Schema ✅ cerrada el 5-sep-2026
 
-- [ ] Definir las colecciones reales — propuesta en `prisma/schema.prisma` (5-sep-2026)
-- [ ] Definir campos y tipos de cada una — ídem
-- [ ] Decidir a qué mundo pertenece cada campo — propuesta en `app/lib/fieldMeta.ts`
-- [ ] Aprobar y migrar
+- [x] Definir las colecciones reales — `prisma/schema.prisma`
+- [x] Definir campos y tipos de cada una
+- [x] Decidir a qué mundo pertenece cada campo — `app/lib/fieldMeta.ts`
+- [x] Aprobar y migrar — migración `20260905174945_init`
 
 **Terminado cuando:** `schema.prisma` está aprobado y migrado, y cada campo tiene asignado su mundo.
 
@@ -19,11 +19,11 @@ Criterio para las colecciones: **cada una debería ser la respuesta a una pregun
 
 ## Fase 1 — Backend
 
-- [ ] Modelos Prisma y migración
-- [ ] Los seis endpoints
-- [ ] Filtros como query params, con el mapeo uno a uno a la URL pública
+- [x] Modelos Prisma y migración
+- [x] Los seis endpoints — `server/src/routes/`
+- [x] Filtros como query params, con el mapeo uno a uno a la URL pública — `meta.filters` devuelve lo aplicado
 - [ ] Admin
-- [ ] Seed con contenido real, no lorem
+- [x] Seed con contenido real, no lorem — `server/src/seed.ts`. Falta: `experience` (sin datos reales todavía), `Tech.note`, `Tech.since` real, `metrics`
 
 **Terminado cuando:** se puede cargar un proyecto de punta a punta desde el admin y verlo en los seis endpoints.
 

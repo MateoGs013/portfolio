@@ -78,6 +78,19 @@ El scrubber reaparece con distintos trabajos (construcción en proyectos, tiempo
 
 ## Backend
 
+**`orgs` como modelo, no strings sueltos.**
+Descartado: `client` en proyectos y `company` en experiencia como texto.
+La misma organización puede ser cliente de un proyecto y empleador en una experiencia. Como modelo, `project.org` y `experience.org` son relaciones de verdad y DATOS puede saltar de lado entre ellas. No es colección de primer nivel: se llega por relación.
+
+**`since` en lugar de `years` en stack.**
+Un contador de años envejece; un año de inicio no. Los años se derivan al renderizar.
+
+**Fechas reales en experience, no años.**
+DISEÑO las dibuja como bandas sobre un eje y DATOS las muestra como `date`. Con años sueltos las bandas mienten.
+
+**Campos compartidos solo con motivo escrito.**
+`slug` y el nombre del record (ruta y ancla del pasaje), fechas de experience y `since` de stack (la dimensión dominante de cada colección). Todo lo demás es exclusivo de un mundo. El motivo va como comentario en `fieldMeta.ts`.
+
 **PostgreSQL, no MySQL.**
 Descartado: MySQL (el stack inicial).
 Prisma trata a Postgres como ciudadano de primera: enums, arrays nativos (`String[]` para `stack`, `languages`) y JSON con índices, todo cosas que el mundo DATOS muestra en pantalla como tipos declarados. MySQL obliga a serializar los arrays o a tablas puente por cada lista chica. Además es lo que ofrecen gratis Neon, Supabase y Railway. Decidido el 5 de septiembre de 2026, antes de escribir el schema.
@@ -105,7 +118,6 @@ El umbral es la tesis en miniatura y hay que gastarlo bien. Tiene que ser saltea
 
 ## Abierto
 
-- **El schema.** Cuáles son las colecciones reales y con qué campos. Bloquea todo lo demás.
 - **El admin.** Propio con Prisma, o Payload. Evitar Directus: se parece tanto al mundo DATOS que va a parecer que se embebió el panel.
 - **Cómo se muestra que DISEÑO todavía no está listo** si el sitio sale al final de la Fase 3. Un botón en `disabled` es la solución mínima; que la espera sea parte del diseño es la buena.
 
