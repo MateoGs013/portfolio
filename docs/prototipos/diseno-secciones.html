@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>MUNDO DISEÑO — una forma por sección</title>
+<link href="https://api.fontshare.com/v2/css?f[]=general-sans@600,500,400&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT,WONK@9..144,300..900,0..100,0..1&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<style>
+:root{
+  --bg:#0e0b07; --panel:#15100a; --edge:#2c251a;
+  --paper:#efe4cc; --ink:#211c15; --bone:#ebe1cb;
+  --dim:#8b7f6b; --faint:#584f40; --ember:#c8451c; --gold:#b08a34;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%;overflow:hidden}
+body{background:var(--bg);color:var(--bone);
+  font-family:'General Sans','Helvetica Neue',Arial,sans-serif;font-size:13px;
+  -webkit-font-smoothing:antialiased}
+.app{height:100%;display:flex;flex-direction:column}
+.nav{flex:none;display:flex;border-bottom:1px solid var(--edge)}
+.nb{flex:1;background:none;border:none;border-right:1px solid var(--edge);color:var(--faint);
+  font:inherit;font-size:9px;letter-spacing:.22em;text-transform:uppercase;padding:15px 8px;
+  cursor:pointer;transition:color .35s,background .35s;position:relative}
+.nb:last-child{border-right:none}
+.nb:hover{color:var(--bone)}
+.nb[aria-pressed="true"]{color:var(--bone)}
+.nb i{position:absolute;left:0;right:0;bottom:-1px;height:2px;background:var(--ember);
+  transform:scaleX(0);transform-origin:left;display:block}
+.wrap{flex:1;position:relative;overflow:hidden}
+.sec{position:absolute;inset:0;display:none;flex-direction:column;
+  padding:clamp(20px,3.4vw,48px);overflow:auto}
+.sec.on{display:flex}
+.hd{flex:none;margin-bottom:clamp(16px,2.6vw,32px)}
+.hd .k{font-size:9px;letter-spacing:.24em;text-transform:uppercase;color:var(--faint)}
+.hd h2{font-family:'Fraunces',Georgia,serif;font-size:clamp(26px,4vw,46px);line-height:.94;
+  letter-spacing:-.035em;margin-top:6px;
+  font-variation-settings:'opsz' 60,'wght' 560,'SOFT' 30,'WONK' 1}
+
+/* ================= 1 · EXPERIENCIA — línea de tiempo ================= */
+.tl{flex:1;display:flex;flex-direction:column;gap:18px;min-height:0}
+.axis{position:relative;height:26px;flex:none;border-bottom:1px solid var(--edge)}
+.tick{position:absolute;bottom:0;transform:translateX(-50%);font-size:9px;letter-spacing:.14em;
+  color:var(--faint);padding-bottom:7px}
+.tick::after{content:'';position:absolute;left:50%;bottom:0;width:1px;height:6px;background:var(--edge)}
+.bands{position:relative;flex:none;display:flex;flex-direction:column;gap:9px;padding-top:4px}
+.band{position:relative;height:52px;background:var(--panel);border:1px solid var(--edge);
+  transform-origin:left center;display:flex;align-items:center;padding:0 16px;overflow:hidden;
+  cursor:pointer;transition:border-color .4s,background .4s}
+.band:hover{border-color:var(--gold)}
+.band .fill{position:absolute;inset:0;background:linear-gradient(90deg,rgba(200,69,28,.28),rgba(176,138,52,.12));
+  transform-origin:left;transform:scaleX(0)}
+.band .bn{position:relative;font-family:'Fraunces',Georgia,serif;font-size:17px;
+  font-variation-settings:'opsz' 20,'wght' 520,'WONK' 1}
+.band .br{position:relative;margin-left:auto;font-size:9px;letter-spacing:.18em;
+  text-transform:uppercase;color:var(--dim)}
+.band.dim{opacity:.34}
+.play{position:absolute;top:0;bottom:0;width:1px;background:var(--ember);pointer-events:none;z-index:5}
+.play::before{content:'';position:absolute;left:-4px;top:-5px;width:9px;height:9px;background:var(--ember)}
+.tlscrub{flex:none;-webkit-appearance:none;appearance:none;height:2px;background:#2c251a;
+  outline:none;cursor:pointer;width:100%}
+.tlscrub::-webkit-slider-thumb{-webkit-appearance:none;width:11px;height:11px;background:var(--ember);border-radius:0}
+.tlscrub::-moz-range-thumb{width:11px;height:11px;background:var(--ember);border:none;border-radius:0}
+.tldet{flex:none;border-top:1px solid var(--edge);padding-top:14px;min-height:72px}
+.tldet h3{font-family:'Fraunces',Georgia,serif;font-size:22px;letter-spacing:-.02em;
+  font-variation-settings:'opsz' 28,'wght' 540,'WONK' 1}
+.tldet p{color:var(--dim);font-size:12px;line-height:1.55;max-width:52ch;margin-top:6px}
+
+/* ================= 2 · STACK — muestrario ================= */
+.fan{flex:1;position:relative;display:flex;align-items:center;justify-content:center;min-height:260px}
+.chip{position:absolute;width:clamp(112px,15vw,158px);aspect-ratio:5/7;cursor:pointer;
+  transform-origin:50% 118%;will-change:transform;
+  background:var(--paper);box-shadow:0 18px 40px -16px rgba(0,0,0,.85);
+  padding:12px;display:flex;flex-direction:column;justify-content:space-between}
+.chip .sw{width:100%;flex:1;margin-bottom:10px}
+.chip .cn{font-family:'Fraunces',Georgia,serif;color:var(--ink);font-size:15px;line-height:1;
+  font-variation-settings:'opsz' 18,'wght' 580,'WONK' 1}
+.chip .cy{font-size:8px;letter-spacing:.18em;text-transform:uppercase;color:#8a7c62;margin-top:4px}
+.fandet{flex:none;border-top:1px solid var(--edge);padding-top:14px;min-height:78px}
+.fandet h3{font-family:'Fraunces',Georgia,serif;font-size:22px;
+  font-variation-settings:'opsz' 28,'wght' 540,'WONK' 1}
+.fandet p{color:var(--dim);font-size:12px;line-height:1.55;max-width:52ch;margin-top:6px}
+
+/* ================= 3 · ABOUT — specimen ================= */
+.spec{flex:1;display:flex;flex-direction:column;gap:20px;min-height:0}
+.specname{font-family:'Fraunces',Georgia,serif;color:var(--paper);line-height:.84;
+  letter-spacing:-.045em;font-size:clamp(56px,13vw,164px);
+  font-variation-settings:'opsz' var(--o,120),'wght' var(--w,700),'SOFT' var(--s,20),'WONK' var(--k,1)}
+.axes{display:flex;gap:clamp(14px,2.4vw,34px);flex-wrap:wrap;
+  border-top:1px solid var(--edge);border-bottom:1px solid var(--edge);padding:14px 0}
+.ax{flex:1;min-width:118px}
+.ax label{display:flex;justify-content:space-between;font-size:9px;letter-spacing:.18em;
+  text-transform:uppercase;color:var(--faint);margin-bottom:7px}
+.ax label b{font-weight:400;color:var(--gold)}
+.ax input{width:100%;-webkit-appearance:none;appearance:none;height:2px;background:#2c251a;outline:none;cursor:pointer}
+.ax input::-webkit-slider-thumb{-webkit-appearance:none;width:10px;height:10px;background:var(--bone);border-radius:0}
+.ax input::-moz-range-thumb{width:10px;height:10px;background:var(--bone);border:none;border-radius:0}
+.specbody{display:grid;grid-template-columns:1.4fr .6fr;gap:clamp(18px,3vw,44px)}
+.specbody p{font-family:'Fraunces',Georgia,serif;font-size:clamp(14px,1.6vw,19px);line-height:1.5;
+  color:#c2b69d;max-width:44ch;
+  font-variation-settings:'opsz' 18,'wght' calc(300 + var(--w,700)*.16),'SOFT' var(--s,20)}
+.specdata div{display:flex;justify-content:space-between;gap:12px;padding:7px 0;
+  border-bottom:1px solid var(--edge);font-size:10px}
+.specdata b{font-weight:400;letter-spacing:.18em;text-transform:uppercase;color:var(--faint)}
+.specdata span{color:var(--dim)}
+
+/* ================= 4 · CONTACT — impresión ================= */
+.print{flex:1;display:flex;flex-direction:column;justify-content:center;gap:26px}
+.plate{position:relative;display:inline-block;align-self:flex-start;max-width:100%}
+.plate .ink{font-family:'Fraunces',Georgia,serif;font-size:clamp(28px,6.4vw,80px);
+  letter-spacing:-.035em;line-height:.95;color:var(--paper);white-space:nowrap;
+  font-variation-settings:'opsz' 100,'wght' 620,'SOFT' 24,'WONK' 1;
+  display:block;overflow:hidden}
+.plate .ink span{display:block}
+.stamps{display:flex;gap:12px;flex-wrap:wrap}
+.stamp{border:1px dashed var(--faint);background:none;color:var(--dim);font:inherit;font-size:10px;
+  letter-spacing:.2em;text-transform:uppercase;padding:11px 17px;cursor:pointer;
+  transition:all .4s;position:relative}
+.stamp:hover{border-color:var(--ember);color:var(--paper);border-style:solid}
+.pnote{font-size:11px;color:var(--faint);letter-spacing:.02em;max-width:44ch;line-height:1.6}
+
+.foot{flex:none;border-top:1px solid var(--edge);padding:13px clamp(20px,3.4vw,48px);
+  font-size:11px;line-height:1.55;color:var(--dim)}
+.foot b{font-weight:400;color:var(--gold)}
+
+@media (max-width:760px){
+  .specbody{grid-template-columns:1fr}
+  .nb{font-size:8px;letter-spacing:.14em;padding:13px 4px}
+}
+@media (prefers-reduced-motion:reduce){*{transition-duration:1ms!important}}
+</style>
+</head>
+<body>
+<div class="app">
+
+<div class="nav" id="nav">
+  <button class="nb" data-s="0" aria-pressed="true">Experiencia<i></i></button>
+  <button class="nb" data-s="1" aria-pressed="false">Stack<i></i></button>
+  <button class="nb" data-s="2" aria-pressed="false">Sobre mí<i></i></button>
+  <button class="nb" data-s="3" aria-pressed="false">Contacto<i></i></button>
+</div>
+
+<div class="wrap">
+
+  <!-- 1 · EXPERIENCIA -->
+  <div class="sec on" data-s="0">
+    <div class="hd"><p class="k">tratamiento · línea de tiempo</p><h2>experiencia</h2></div>
+    <div class="tl">
+      <div class="axis" id="axis"><span class="play" id="play"></span></div>
+      <div class="bands" id="bands"></div>
+      <input type="range" class="tlscrub" id="tlscrub" min="0" max="1000" value="1000">
+      <div class="tldet" id="tldet"></div>
+    </div>
+  </div>
+
+  <!-- 2 · STACK -->
+  <div class="sec" data-s="1">
+    <div class="hd"><p class="k">tratamiento · muestrario</p><h2>stack</h2></div>
+    <div class="fan" id="fan"></div>
+    <div class="fandet" id="fandet"></div>
+  </div>
+
+  <!-- 3 · SOBRE MÍ -->
+  <div class="sec" data-s="2">
+    <div class="hd"><p class="k">tratamiento · specimen tipográfico</p><h2>sobre mí</h2></div>
+    <div class="spec">
+      <div class="specname" id="sname">Mateo</div>
+      <div class="axes">
+        <div class="ax"><label>tamaño óptico <b id="vo">120</b></label>
+          <input type="range" id="ao" min="9" max="144" value="120"></div>
+        <div class="ax"><label>peso <b id="vw">700</b></label>
+          <input type="range" id="aw" min="300" max="900" value="700"></div>
+        <div class="ax"><label>soft <b id="vs">20</b></label>
+          <input type="range" id="as" min="0" max="100" value="20"></div>
+        <div class="ax"><label>wonk <b id="vk">1</b></label>
+          <input type="range" id="ak" min="0" max="1" step="1" value="1"></div>
+      </div>
+      <div class="specbody">
+        <p id="sbio">Diseño y construyo interfaces. Me interesa el punto donde la decisión estética y la decisión técnica son la misma decisión — y este sitio es el argumento.</p>
+        <div class="specdata">
+          <div><b>base</b><span>Buenos Aires, AR</span></div>
+          <div><b>idiomas</b><span>es · en</span></div>
+          <div><b>foco</b><span>frontend · motion</span></div>
+          <div><b>disponible</b><span>sí</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4 · CONTACTO -->
+  <div class="sec" data-s="3">
+    <div class="hd"><p class="k">tratamiento · impresión</p><h2>contacto</h2></div>
+    <div class="print">
+      <div class="plate"><span class="ink" id="ink1"><span>hola@ejemplo.com</span></span></div>
+      <div class="stamps">
+        <button class="stamp">github</button>
+        <button class="stamp">linkedin</button>
+        <button class="stamp">cv · pdf</button>
+      </div>
+      <p class="pnote">No hay formulario. Un formulario es una barrera con buena prensa: escribí directo.</p>
+    </div>
+  </div>
+
+</div>
+
+<div class="foot" id="foot"></div>
+</div>
+
+<script>
+(function(){
+var RM=matchMedia('(prefers-reduced-motion:reduce)').matches;
+var Y0=2020,Y1=2026;
+var EXP=[
+ {n:'Pegasuz',r:'Frontend Lead',a:2024,b:2026.6,
+  d:'Arquitectura frontend multi-tenant y un sistema de diseño compartido entre productos.'},
+ {n:'Estudio Norte',r:'Frontend Dev',a:2022,b:2024,
+  d:'Sitios de autor para clientes culturales. Motion y tipografía como el trabajo principal.'},
+ {n:'Freelance',r:'Diseño + Front',a:2020,b:2022,
+  d:'De la marca al deploy para estudios chicos. Aprendí a cotizar y a decir que no.'}
+];
+var TECH=[
+ {n:'Vue 3',y:5,c:'#c8451c',k:'framework',d:'Donde pienso primero cuando aparece un problema de estado.'},
+ {n:'Nuxt 4',y:3,c:'#b08a34',k:'framework',d:'El default cuando hace falta SSR y no quiero pelear con el build.'},
+ {n:'GSAP',y:4,c:'#7d5ba6',k:'motion',d:'Timeline y FLIP resuelven casi todo lo que parece imposible.'},
+ {n:'Three.js',y:3,c:'#3f7d6e',k:'3d',d:'Lo uso cuando el efecto justifica perder el DOM. Solo ahí.'},
+ {n:'Prisma',y:2,c:'#8a6a3f',k:'backend',d:'El schema como documento legible, no como archivo de migración.'},
+ {n:'GLSL',y:2,c:'#5b6ea8',k:'shaders',d:'Poco, pero lo suficiente para no depender de librerías.'}
+];
+var NOTE=[
+ 'La <b>línea de tiempo</b> es la forma honesta de un CV: bandas que se superponen sobre un eje de años. Arrastrá el cabezal y las bandas que no tocás se apagan. El mismo instrumento que en proyectos scrubbea la construcción, acá scrubbea el tiempo.',
+ 'El <b>muestrario</b> evita la peor plantilla de portafolio: las barras de skill. Cada tecnología es una muestra física con su color, y los años se leen en el tamaño del chip, no en un porcentaje inventado.',
+ 'El <b>specimen tipográfico</b> convierte tu bio en una pieza de diseño usable. Movés los ejes reales de Fraunces y el texto responde. Muestra criterio tipográfico haciéndolo, no diciéndolo.',
+ 'La <b>impresión</b> trata al contacto como algo que se imprime, no como un formulario. La tinta baja sobre el papel y los links son sellos. Sin campos que llenar.'
+];
+
+/* ============ 1 · TIMELINE ============ */
+var axis=document.getElementById('axis'),bands=document.getElementById('bands'),
+    play=document.getElementById('play'),tls=document.getElementById('tlscrub'),
+    tld=document.getElementById('tldet');
+for(var y=Y0;y<=Y1;y++){
+  var t=document.createElement('span'); t.className='tick';
+  t.style.left=((y-Y0)/(Y1-Y0)*100)+'%'; t.textContent=y; axis.appendChild(t);
+}
+bands.innerHTML=EXP.map(function(e,i){
+  var l=(e.a-Y0)/(Y1-Y0)*100, w=(Math.min(e.b,Y1)-e.a)/(Y1-Y0)*100;
+  return '<div class="band" data-i="'+i+'" style="margin-left:'+l+'%;width:'+w+'%">'+
+    '<span class="fill"></span><span class="bn">'+e.n+'</span><span class="br">'+e.r+'</span></div>';
+}).join('');
+function tlAt(p){
+  var yr=Y0+p*(Y1-Y0);
+  play.style.left=(p*100)+'%';
+  var act=null;
+  bands.querySelectorAll('.band').forEach(function(b,i){
+    var e=EXP[i], on=(yr>=e.a&&yr<=e.b);
+    b.classList.toggle('dim',!on); if(on&&!act) act=e;
+  });
+  if(act) tld.innerHTML='<h3>'+act.n+'</h3><p>'+act.d+'</p>';
+  else tld.innerHTML='<h3 style="color:var(--faint)">—</h3><p>Nada en ese año.</p>';
+}
+tls.addEventListener('input',function(){ tlAt(this.value/1000); });
+bands.addEventListener('click',function(e){
+  var b=e.target.closest('.band'); if(!b) return;
+  var x=EXP[+b.dataset.i], mid=((x.a+Math.min(x.b,Y1))/2-Y0)/(Y1-Y0);
+  gsap.to(tls,{value:mid*1000,duration:.7,ease:'expo.out',onUpdate:function(){tlAt(tls.value/1000);}});
+});
+
+/* ============ 2 · MUESTRARIO ============ */
+var fan=document.getElementById('fan'),fandet=document.getElementById('fandet'),pick=0;
+fan.innerHTML=TECH.map(function(t,i){
+  return '<div class="chip" data-i="'+i+'"><span class="sw" style="background:'+t.c+'"></span>'+
+    '<span><span class="cn">'+t.n+'</span><span class="cy">'+t.y+' años · '+t.k+'</span></span></div>';
+}).join('');
+var chips=fan.querySelectorAll('.chip');
+function fanLay(sel,animate){
+  pick=sel;
+  chips.forEach(function(c,i){
+    var off=i-sel, sp=Math.abs(off);
+    var vars={x:off*(window.innerWidth<760?58:96), rotation:off*7,
+      y:sp*13-(i===sel?26:0), scale:i===sel?1.14:1-sp*0.045,
+      zIndex:20-sp, opacity:sp>3?0:1};
+    animate&&!RM ? gsap.to(c,Object.assign(vars,{duration:.75,ease:'expo.out'}))
+                 : gsap.set(c,vars);
+  });
+  var t=TECH[sel];
+  fandet.innerHTML='<h3>'+t.n+'</h3><p>'+t.d+'</p>';
+}
+fan.addEventListener('click',function(e){
+  var c=e.target.closest('.chip'); if(c) fanLay(+c.dataset.i,true);
+});
+fanLay(0,false);
+
+/* ============ 3 · SPECIMEN ============ */
+var sn=document.getElementById('sname'),sb=document.getElementById('sbio');
+[['ao','o','vo'],['aw','w','vw'],['as','s','vs'],['ak','k','vk']].forEach(function(a){
+  var inp=document.getElementById(a[0]),out=document.getElementById(a[2]);
+  inp.addEventListener('input',function(){
+    sn.style.setProperty('--'+a[1],this.value);
+    sb.style.setProperty('--'+a[1],this.value);
+    out.textContent=this.value;
+  });
+});
+
+/* ============ 4 · IMPRESIÓN ============ */
+function printInk(){
+  if(RM) return;
+  var el=document.querySelector('#ink1 span');
+  gsap.fromTo(el,{yPercent:104,skewY:2.4,opacity:0},
+    {yPercent:0,skewY:0,opacity:1,duration:1.05,ease:'expo.out'});
+  gsap.fromTo('.stamp',{y:16,opacity:0,rotation:-1.5},
+    {y:0,opacity:1,rotation:0,duration:.7,ease:'back.out(1.6)',stagger:.09,delay:.25});
+  gsap.fromTo('.pnote',{opacity:0},{opacity:1,duration:.8,delay:.6});
+}
+
+/* ============ entradas por sección ============ */
+var foot=document.getElementById('foot');
+function enter(s){
+  foot.innerHTML=NOTE[s];
+  if(RM) return;
+  if(s===0){
+    gsap.fromTo('.tick',{opacity:0,y:8},{opacity:1,y:0,duration:.5,ease:'power2.out',stagger:.05});
+    gsap.fromTo('.band',{scaleX:0,opacity:0},
+      {scaleX:1,opacity:1,duration:.95,ease:'expo.out',stagger:.11});
+    gsap.fromTo('.band .fill',{scaleX:0},{scaleX:1,duration:1.1,ease:'expo.out',stagger:.11,delay:.2});
+    gsap.fromTo(play,{opacity:0},{opacity:1,duration:.6,delay:.6});
+    tlAt(1);
+  }
+  if(s===1){
+    gsap.fromTo('.chip',{y:70,opacity:0,rotation:0,scale:.9},
+      {y:0,opacity:1,duration:.85,ease:'expo.out',stagger:.06,
+       onComplete:function(){fanLay(pick,true);}});
+  }
+  if(s===2){
+    gsap.fromTo(sn,{yPercent:26,opacity:0,'--w':300,'--s':0},
+      {yPercent:0,opacity:1,'--w':700,'--s':20,duration:1.25,ease:'expo.out'});
+    gsap.fromTo('.ax',{y:18,opacity:0},{y:0,opacity:1,duration:.7,ease:'expo.out',stagger:.07,delay:.25});
+    gsap.fromTo('.specbody > *',{y:22,opacity:0},{y:0,opacity:1,duration:.8,ease:'expo.out',stagger:.1,delay:.4});
+  }
+  if(s===3) printInk();
+}
+document.getElementById('nav').addEventListener('click',function(e){
+  var b=e.target.closest('.nb'); if(!b) return;
+  var s=+b.dataset.s;
+  document.querySelectorAll('.nb').forEach(function(n){
+    n.setAttribute('aria-pressed',n===b);
+    gsap.to(n.querySelector('i'),{scaleX:n===b?1:0,duration:.5,ease:'expo.out'});
+  });
+  document.querySelectorAll('.sec').forEach(function(d){d.classList.toggle('on',+d.dataset.s===s);});
+  enter(s);
+});
+gsap.set('.nb[data-s="0"] i',{scaleX:1});
+enter(0);
+})();
+</script>
+</body>
+</html>

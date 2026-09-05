@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>MUNDO DISEÑO — construcción</title>
+<link href="https://api.fontshare.com/v2/css?f[]=general-sans@600,500,400&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT,WONK@9..144,300..900,0..100,0..1&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<style>
+:root{
+  --bg:#0e0b07; --panel:#15100a; --edge:#2c251a;
+  --paper:#efe4cc; --hot:#fff8e9;
+  --ink:#211c15; --bone:#ebe1cb; --dim:#8b7f6b; --faint:#584f40;
+  --ember:#c8451c; --gold:#b08a34;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%;overflow:hidden}
+body{background:var(--bg);color:var(--bone);
+  font-family:'General Sans','Helvetica Neue',Arial,sans-serif;font-size:13px;
+  -webkit-font-smoothing:antialiased}
+.app{height:100%;display:flex;flex-direction:column}
+
+/* ---------- head ---------- */
+.head{flex:none;display:flex;justify-content:space-between;align-items:center;
+  padding:16px clamp(18px,3vw,40px);border-bottom:1px solid var(--edge);
+  font-size:9px;letter-spacing:.22em;text-transform:uppercase;color:var(--dim)}
+.head .n{color:var(--gold)}
+
+/* ---------- escenario ---------- */
+.main{flex:1;display:grid;grid-template-columns:1.35fr .65fr;gap:clamp(20px,3.4vw,54px);
+  padding:clamp(20px,3vw,44px) clamp(18px,3vw,40px);min-height:0;align-items:center}
+.stage{position:relative;height:100%;min-height:0;display:flex;align-items:center;justify-content:center;
+  perspective:1400px}
+.hero{position:relative;width:100%;max-height:100%;aspect-ratio:4/3;
+  box-shadow:0 40px 90px -30px rgba(0,0,0,.95),0 0 0 1px rgba(255,240,210,.07);
+  transform-style:preserve-3d;will-change:transform}
+.hero svg{display:block;width:100%;height:100%}
+.glow{position:absolute;inset:-14%;pointer-events:none;z-index:-1;
+  background:radial-gradient(closest-side circle at 50% 50%,rgba(255,214,150,.16),transparent 72%)}
+
+/* ---------- info ---------- */
+.info{display:flex;flex-direction:column;gap:16px;min-width:0}
+.mask{overflow:hidden;display:block}
+.mask>span{display:block;will-change:transform}
+h1{font-family:'Fraunces',Georgia,serif;font-size:clamp(34px,5.2vw,68px);line-height:.9;
+  letter-spacing:-.035em;
+  font-variation-settings:'opsz' calc(20 + var(--fx,1)*120),'wght' calc(300 + var(--fx,1)*440),
+    'SOFT' calc(var(--fx,1)*54),'WONK' 1}
+.lede{font-family:'Fraunces',Georgia,serif;font-size:clamp(13px,1.45vw,16px);line-height:1.55;
+  color:#b6aa93;max-width:34ch;font-variation-settings:'opsz' 15,'wght' 380,'SOFT' 40}
+.meta{display:flex;flex-direction:column;gap:0;margin-top:4px;border-top:1px solid var(--edge)}
+.meta .row{display:flex;justify-content:space-between;gap:14px;padding:9px 0;
+  border-bottom:1px solid var(--edge)}
+.meta b{font-weight:400;font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:var(--faint)}
+.meta span{font-family:'Fraunces',Georgia,serif;font-size:14px;color:var(--bone);
+  font-variation-settings:'opsz' 16,'wght' 480}
+
+/* ---------- construcción ---------- */
+.build{flex:none;display:flex;align-items:center;gap:clamp(12px,2vw,26px);
+  padding:12px clamp(18px,3vw,40px);border-top:1px solid var(--edge);border-bottom:1px solid var(--edge)}
+.build .lb{font-size:9px;letter-spacing:.22em;text-transform:uppercase;color:var(--faint);flex:none}
+.scrub{flex:1;-webkit-appearance:none;appearance:none;height:2px;background:#2c251a;outline:none;
+  cursor:pointer;min-width:60px}
+.scrub::-webkit-slider-thumb{-webkit-appearance:none;width:11px;height:11px;background:var(--ember);
+  cursor:grab;border-radius:0}
+.scrub::-moz-range-thumb{width:11px;height:11px;background:var(--ember);border:none;border-radius:0}
+.stages{display:flex;gap:2px;flex:none}
+.stg{font-size:8px;letter-spacing:.14em;text-transform:uppercase;color:var(--faint);
+  padding:5px 9px;border:1px solid var(--edge);transition:color .3s,border-color .3s,background .3s}
+.stg.on{color:var(--bg);background:var(--gold);border-color:var(--gold)}
+.rp{background:none;border:1px solid var(--edge);color:var(--dim);font:inherit;font-size:9px;
+  letter-spacing:.18em;text-transform:uppercase;padding:7px 13px;cursor:pointer;flex:none;
+  transition:all .3s}
+.rp:hover{border-color:var(--ember);color:var(--bone)}
+
+/* ---------- tira ---------- */
+.strip{flex:none;height:clamp(78px,11vh,104px);display:flex;gap:1px;background:var(--edge);
+  overflow-x:auto;overflow-y:hidden}
+.th{flex:none;width:clamp(96px,13vw,142px);background:var(--panel);border:none;cursor:pointer;
+  padding:9px;position:relative;overflow:hidden}
+.th svg{width:100%;height:100%;display:block;opacity:.5;transition:opacity .45s}
+.th:hover svg{opacity:.85}
+.th[aria-pressed="true"] svg{opacity:1}
+.th .bar{position:absolute;left:0;right:0;top:0;height:2px;background:var(--ember);
+  transform:scaleX(0);transform-origin:left}
+.th .nm{position:absolute;left:9px;bottom:6px;font-size:8px;letter-spacing:.16em;
+  text-transform:uppercase;color:var(--faint)}
+.th[aria-pressed="true"] .nm{color:var(--gold)}
+
+.ghost{position:fixed;z-index:80;pointer-events:none;box-shadow:0 40px 90px -30px rgba(0,0,0,.9)}
+.ghost svg{width:100%;height:100%;display:block}
+
+@media (max-width:820px){
+  .main{grid-template-columns:1fr;gap:18px;overflow:auto}
+  .stage{height:auto}
+  .hero{max-height:38vh}
+  .build{flex-wrap:wrap;gap:10px}
+  .stages{order:3;width:100%}
+}
+@media (prefers-reduced-motion:reduce){*{transition-duration:1ms!important}}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <div class="head">
+    <span>diseño · construcción</span>
+    <span><span class="n" id="hn">01</span> / 05</span>
+  </div>
+
+  <div class="main">
+    <div class="stage">
+      <div class="glow"></div>
+      <div class="hero" id="hero"></div>
+    </div>
+    <div class="info">
+      <span class="mask"><span><h1 id="ttl">kalei</h1></span></span>
+      <span class="mask"><span><p class="lede" id="lede"></p></span></span>
+      <div class="meta" id="meta"></div>
+    </div>
+  </div>
+
+  <div class="build">
+    <span class="lb">construcción</span>
+    <input type="range" class="scrub" id="scrub" min="0" max="1000" value="1000">
+    <div class="stages" id="stages">
+      <span class="stg" data-s="0">papel</span>
+      <span class="stg" data-s="1">línea</span>
+      <span class="stg" data-s="2">color</span>
+      <span class="stg" data-s="3">marcas</span>
+    </div>
+    <button class="rp" id="rp">↻ rehacer</button>
+  </div>
+
+  <div class="strip" id="strip"></div>
+</div>
+
+<script>
+(function(){
+var RM=matchMedia('(prefers-reduced-motion:reduce)').matches;
+var P=[
+ {s:'kalei',y:2025,r:'Lead',c:'Estudio Norte',k:'nuxt · webgl',m:0,
+  l:'Un índice que mezclaba tres taxonomías, reducido a una sola superficie navegable.'},
+ {s:'meridiano',y:2024,r:'Dev',c:'Banco Sur',k:'next · three',m:1,
+  l:'Series temporales para un equipo repartido en dos husos horarios.'},
+ {s:'atlas',y:2024,r:'Lead',c:'Fundación Atlas',k:'vue · gsap',m:2,
+  l:'Archivo público pensado para durar veinte años sin mantenimiento.'},
+ {s:'nocturno',y:2023,r:'Dev',c:'Sello Nocturno',k:'nuxt · canvas',m:3,
+  l:'Catálogo de jazz donde el disco suena antes de que cargue la tapa.'},
+ {s:'ferro',y:2023,r:'Dev',c:'Ferro Analytics',k:'react · d3',m:4,
+  l:'Once planillas sueltas reemplazadas por una sola fuente de verdad.'}
+];
+var C={pap:'#efe4cc',ink:'#211c15',emb:'#c8451c',gld:'#b08a34'};
+
+/* ---------- obra en cuatro capas ---------- */
+function art(n){
+  var col='',lin='',mrk='';
+  if(n===0){
+    col='<rect x="150" y="66" width="164" height="164" fill="'+C.emb+'" opacity=".88"/>'+
+        '<rect x="90" y="120" width="108" height="108" fill="'+C.gld+'" opacity=".85"/>';
+    for(var k=0;k<5;k++){var z=184-k*33;
+      lin+='<rect x="'+(200-z/2)+'" y="'+(150-z/2)+'" width="'+z+'" height="'+z+
+           '" transform="rotate('+(k*13)+' 200 150)"/>';}
+    mrk='<circle cx="200" cy="150" r="4.5"/><line x1="28" y1="272" x2="372" y2="272"/>';
+  } else if(n===1){
+    col='<path d="M40 232 Q200 56 360 232 Z" fill="'+C.gld+'" opacity=".72"/>'+
+        '<rect x="188" y="150" width="24" height="82" fill="'+C.emb+'" opacity=".9"/>';
+    for(var k=0;k<7;k++){var r=26+k*23;
+      lin+='<path d="M'+(200-r)+' 232 A '+r+' '+r+' 0 0 1 '+(200+r)+' 232"/>';}
+    mrk='<line x1="22" y1="232" x2="378" y2="232"/><circle cx="200" cy="232" r="6"/>';
+  } else if(n===2){
+    col='<path d="M60 244 L200 46 L340 244 Z" fill="'+C.emb+'" opacity=".26"/>'+
+        '<rect x="150" y="180" width="100" height="64" fill="'+C.gld+'" opacity=".7"/>';
+    for(var yy=0;yy<5;yy++)for(var xx=0;xx<7;xx++)
+      lin+='<circle cx="'+(86+xx*38)+'" cy="'+(72+yy*38)+'" r="3.6"/>';
+    mrk='<line x1="68" y1="58" x2="332" y2="244"/><rect x="192" y="42" width="16" height="16"/>';
+  } else if(n===3){
+    col='<circle cx="200" cy="150" r="100" fill="'+C.ink+'"/>'+
+        '<circle cx="238" cy="130" r="88" fill="'+C.pap+'"/>'+
+        '<rect x="284" y="52" width="18" height="18" fill="'+C.gld+'"/>';
+    for(var k=-3;k<=3;k++) lin+='<line x1="66" y1="'+(150+k*27)+'" x2="334" y2="'+(150+k*27)+'"/>';
+    mrk='<circle cx="200" cy="150" r="100"/>';
+  } else {
+    var hs=[70,132,96,178,120,82,150];
+    for(var k=0;k<7;k++){
+      col+='<rect x="'+(52+k*44)+'" y="'+(254-hs[k])+'" width="30" height="'+hs[k]+
+           '" fill="'+(k%2?C.gld:C.emb)+'" opacity=".82"/>';
+      lin+='<rect x="'+(52+k*44)+'" y="'+(254-hs[k])+'" width="30" height="'+hs[k]+'"/>';}
+    mrk='<line x1="38" y1="254" x2="362" y2="254"/><circle cx="200" cy="30" r="5"/>';
+  }
+  return '<svg viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg">'+
+    '<g class="Lp"><rect width="400" height="300" fill="'+C.pap+'"/></g>'+
+    '<g class="Lc">'+col+'</g>'+
+    '<g class="Ll" fill="none" stroke="'+C.ink+'" stroke-width="1.3">'+lin+'</g>'+
+    '<g class="Lm" fill="none" stroke="'+C.ink+'" stroke-width="1.6">'+mrk+'</g></svg>';
+}
+
+var hero=document.getElementById('hero'), strip=document.getElementById('strip'),
+    ttl=document.getElementById('ttl'), lede=document.getElementById('lede'),
+    meta=document.getElementById('meta'), scrub=document.getElementById('scrub'),
+    stages=document.querySelectorAll('.stg'), hn=document.getElementById('hn'),
+    idx=0, tl=null;
+
+strip.innerHTML=P.map(function(p,i){
+  return '<button class="th" data-i="'+i+'" aria-pressed="'+(i===0)+'"><span class="bar"></span>'+
+    art(p.m)+'<span class="nm">'+p.s+'</span></button>';}).join('');
+
+/* ---------- la línea de tiempo de construcción ---------- */
+function buildTL(){
+  var svg=hero.querySelector('svg');
+  var paper=svg.querySelector('.Lp rect'),
+      color=svg.querySelectorAll('.Lc > *'),
+      line =svg.querySelectorAll('.Ll > *'),
+      mark =svg.querySelectorAll('.Lm > *');
+
+  line.forEach(function(n){ var L=420; try{L=n.getTotalLength();}catch(e){}
+    gsap.set(n,{strokeDasharray:L,strokeDashoffset:L}); });
+  mark.forEach(function(n){ var L=420; try{L=n.getTotalLength();}catch(e){}
+    gsap.set(n,{strokeDasharray:L,strokeDashoffset:L}); });
+  gsap.set(color,{transformOrigin:'50% 100%',scaleY:0});
+  gsap.set(paper,{transformOrigin:'50% 50%'});
+
+  var t=gsap.timeline({paused:true,
+    onUpdate:function(){
+      if(!dragging) scrub.value=Math.round(t.progress()*1000);
+      var p=t.progress();
+      stages.forEach(function(s,i){ s.classList.toggle('on', p >= [0,.16,.42,.74][i]); });
+    }});
+
+  t.fromTo(paper,{scaleX:.86,scaleY:.86,opacity:0},
+    {scaleX:1,scaleY:1,opacity:1,duration:.7,ease:'expo.out'},0)
+   .to(line,{strokeDashoffset:0,duration:1.1,ease:'power2.inOut',stagger:.045},.18)
+   .to(color,{scaleY:1,duration:.85,ease:'expo.out',stagger:.06},.62)
+   .to(mark,{strokeDashoffset:0,duration:.7,ease:'power2.out',stagger:.07},1.15)
+
+   /* el texto entra con la obra, no después */
+   .fromTo('#ttl',{yPercent:112,'--fx':0},
+     {yPercent:0,'--fx':1,duration:1.05,ease:'expo.out'},.28)
+   .fromTo('#lede',{yPercent:108,opacity:0},
+     {yPercent:0,opacity:1,duration:.9,ease:'expo.out'},.44)
+   .fromTo('.meta .row',{yPercent:60,opacity:0},
+     {yPercent:0,opacity:1,duration:.7,ease:'expo.out',stagger:.07},.62);
+
+  return t;
+}
+
+function fill(i){
+  var p=P[i];
+  hero.innerHTML=art(p.m);
+  ttl.textContent=p.s; lede.textContent=p.l; hn.textContent=String(i+1).padStart(2,'0');
+  meta.innerHTML=[['año',p.y],['rol',p.r],['cliente',p.c],['stack',p.k]].map(function(f){
+    return '<div class="row"><b>'+f[0]+'</b><span>'+f[1]+'</span></div>';}).join('');
+}
+
+/* ---------- FLIP: la miniatura se convierte en la obra ---------- */
+function show(i,fromEl){
+  var prev=hero.getBoundingClientRect();
+  idx=i; fill(i);
+  strip.querySelectorAll('.th').forEach(function(b,j){
+    b.setAttribute('aria-pressed',j===i);
+    gsap.to(b.querySelector('.bar'),{scaleX:j===i?1:0,duration:.5,ease:'expo.out'});
+  });
+
+  if(fromEl && !RM){
+    var r=fromEl.getBoundingClientRect(), to=hero.getBoundingClientRect();
+    gsap.fromTo(hero,
+      {x:r.left-to.left,y:r.top-to.top,scaleX:r.width/to.width,scaleY:r.height/to.height,
+       transformOrigin:'top left'},
+      {x:0,y:0,scaleX:1,scaleY:1,duration:.95,ease:'expo.out',
+       onComplete:function(){gsap.set(hero,{clearProps:'transform'});ambient();}});
+  }
+  if(tl) tl.kill();
+  tl=buildTL();
+  RM ? tl.progress(1) : tl.play(0);
+}
+
+/* ---------- vida ambiente ---------- */
+var amb=null;
+function ambient(){
+  if(RM) return;
+  if(amb) amb.kill();
+  amb=gsap.to(hero,{y:'-=9',duration:4.2,ease:'sine.inOut',yoyo:true,repeat:-1});
+}
+document.querySelector('.stage').addEventListener('pointermove',function(e){
+  if(RM) return;
+  var r=this.getBoundingClientRect();
+  var px=(e.clientX-r.left)/r.width-.5, py=(e.clientY-r.top)/r.height-.5;
+  gsap.to(hero,{rotationY:px*7,rotationX:-py*7,duration:.9,ease:'power2.out',overwrite:'auto'});
+});
+document.querySelector('.stage').addEventListener('pointerleave',function(){
+  if(RM) return;
+  gsap.to(hero,{rotationY:0,rotationX:0,duration:1.2,ease:'expo.out'});
+});
+
+/* ---------- controles ---------- */
+var dragging=false;
+scrub.addEventListener('pointerdown',function(){dragging=true;if(tl)tl.pause();});
+addEventListener('pointerup',function(){dragging=false;});
+scrub.addEventListener('input',function(){ if(tl) tl.progress(this.value/1000).pause(); });
+document.getElementById('rp').addEventListener('click',function(){ if(tl) tl.play(0); });
+strip.addEventListener('click',function(e){
+  var b=e.target.closest('.th'); if(!b) return;
+  var i=+b.dataset.i; if(i===idx){ if(tl) tl.play(0); return; }
+  show(i,b);
+});
+addEventListener('keydown',function(e){
+  if(e.key==='ArrowRight'){show((idx+1)%P.length,strip.querySelectorAll('.th')[(idx+1)%P.length]);e.preventDefault();}
+  if(e.key==='ArrowLeft'){var n=(idx-1+P.length)%P.length;show(n,strip.querySelectorAll('.th')[n]);e.preventDefault();}
+  if(e.key===' '){ if(tl) tl.play(0); e.preventDefault(); }
+});
+
+show(0,null); ambient();
+})();
+</script>
+</body>
+</html>

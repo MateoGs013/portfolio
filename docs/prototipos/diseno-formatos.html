@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>MUNDO DISEÑO — cuatro formatos</title>
+<link href="https://api.fontshare.com/v2/css?f[]=general-sans@600,500,400&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT,WONK@9..144,300..900,0..100,0..1&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0f0c08; --panel:#171209; --edge:#2e271c;
+  --light:#efe4cc; --hot:#fff8e9;
+  --film:#211c15; --bone:#e9dfc9; --dim:#8b7f6b; --faint:#564e40;
+  --ember:#c8451c; --gold:#b08a34;
+  --e:cubic-bezier(.4,0,.2,1);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--bone);
+  font-family:'General Sans','Helvetica Neue',Arial,sans-serif;font-size:13px;
+  -webkit-font-smoothing:antialiased;padding:clamp(16px,3vw,36px)}
+.serif{font-family:'Fraunces',Georgia,serif}
+h1.top{font-family:'Fraunces',Georgia,serif;font-size:clamp(22px,3vw,32px);
+  letter-spacing:-.03em;font-variation-settings:'opsz' 40,'wght' 560,'WONK' 1;margin-bottom:4px}
+.sub{color:var(--dim);font-size:12px;margin-bottom:22px;max-width:64ch;line-height:1.5}
+
+/* tabs */
+.tabs{display:flex;gap:0;border:1px solid var(--edge);margin-bottom:0;flex-wrap:wrap}
+.tab{flex:1;min-width:130px;background:none;border:none;border-right:1px solid var(--edge);
+  color:var(--dim);font:inherit;font-size:10px;letter-spacing:.18em;text-transform:uppercase;
+  padding:13px 10px;cursor:pointer;transition:all 260ms}
+.tab:last-child{border-right:none}
+.tab:hover{color:var(--bone);background:#141009}
+.tab[aria-pressed="true"]{background:var(--bone);color:var(--bg)}
+
+.stagewrap{border:1px solid var(--edge);border-top:none;height:clamp(420px,62vh,600px);
+  position:relative;overflow:hidden;background:var(--panel)}
+.demo{position:absolute;inset:0;display:none;flex-direction:column}
+.demo.on{display:flex}
+.note{border:1px solid var(--edge);border-top:none;padding:16px 18px;
+  display:grid;grid-template-columns:1fr 1fr;gap:16px 30px}
+.note div b{display:block;font-weight:400;font-size:9px;letter-spacing:.2em;
+  text-transform:uppercase;color:var(--gold);margin-bottom:5px}
+.note div p{font-size:12px;line-height:1.55;color:var(--dim)}
+.hint{font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:var(--faint)}
+
+/* ============ 1 · VISOR ============ */
+.v-main{flex:1;position:relative;display:flex;align-items:center;justify-content:center;
+  padding:26px;min-height:0;background:radial-gradient(90% 90% at 50% 45%,#1c1610,#0d0a06)}
+.v-art{height:100%;max-height:100%;aspect-ratio:4/3;box-shadow:0 26px 70px -22px rgba(0,0,0,.9);
+  transition:opacity 420ms var(--e),transform 420ms var(--e)}
+.v-art.swap{opacity:0;transform:scale(.97)}
+.v-cap{position:absolute;left:26px;bottom:22px;pointer-events:none}
+.v-cap .t{font-family:'Fraunces',Georgia,serif;font-size:26px;letter-spacing:-.025em;
+  font-variation-settings:'opsz' 40,'wght' 560,'WONK' 1;line-height:1}
+.v-cap .y{font-size:10px;letter-spacing:.2em;color:var(--dim);margin-top:5px;text-transform:uppercase}
+.v-strip{flex:none;height:92px;border-top:1px solid var(--edge);display:flex;gap:1px;
+  background:var(--edge);overflow-x:auto}
+.v-thumb{flex:none;width:112px;background:var(--panel);border:none;cursor:pointer;
+  padding:9px;transition:background 240ms;position:relative}
+.v-thumb:hover{background:#1e1810}
+.v-thumb[aria-pressed="true"]{background:#241d12}
+.v-thumb[aria-pressed="true"]::after{content:'';position:absolute;left:0;right:0;top:0;height:2px;background:var(--ember)}
+.v-thumb svg{width:100%;height:100%;opacity:.62}
+.v-thumb[aria-pressed="true"] svg{opacity:1}
+
+/* ============ 2 · CAPAS ============ */
+.l-wrap{flex:1;display:flex;min-height:0}
+.l-canvas{flex:1;position:relative;display:flex;align-items:center;justify-content:center;
+  padding:30px;background:radial-gradient(90% 90% at 50% 45%,#1c1610,#0d0a06);min-width:0}
+.l-stack{position:relative;height:100%;aspect-ratio:4/3;max-width:100%;
+  box-shadow:0 26px 70px -22px rgba(0,0,0,.9)}
+.l-stack svg{position:absolute;inset:0;width:100%;height:100%;
+  transition:opacity 480ms var(--e)}
+.l-stack svg[data-off="1"]{opacity:0}
+.l-panel{flex:none;width:min(238px,42%);border-left:1px solid var(--edge);
+  display:flex;flex-direction:column;background:var(--panel)}
+.l-head{font-size:9px;letter-spacing:.22em;text-transform:uppercase;color:var(--dim);
+  padding:13px 15px;border-bottom:1px solid var(--edge)}
+.l-item{display:flex;align-items:center;gap:11px;width:100%;background:none;border:none;
+  border-bottom:1px solid var(--edge);font:inherit;text-align:left;color:var(--bone);
+  padding:12px 15px;cursor:pointer;transition:background 220ms}
+.l-item:hover{background:#1c1610}
+.l-eye{width:15px;height:15px;flex:none;border:1px solid var(--faint);position:relative}
+.l-item[aria-pressed="true"] .l-eye{background:var(--gold);border-color:var(--gold)}
+.l-item .ln{font-size:12px}
+.l-item .lt{margin-left:auto;font-size:9px;letter-spacing:.14em;color:var(--faint);text-transform:uppercase}
+.l-item[aria-pressed="false"] .ln{color:var(--faint)}
+
+/* ============ 3 · PLIEGOS ============ */
+.s-wrap{flex:1;display:flex;align-items:center;justify-content:center;padding:26px;
+  min-height:0;background:radial-gradient(90% 90% at 50% 45%,#1c1610,#0d0a06)}
+.spread{display:flex;height:100%;aspect-ratio:16/10;max-width:100%;
+  box-shadow:0 26px 70px -22px rgba(0,0,0,.9);transition:opacity 400ms var(--e)}
+.spread.swap{opacity:0}
+.pg{flex:1;background:var(--light);position:relative;overflow:hidden}
+.pg.left{border-right:1px solid rgba(33,28,21,.22)}
+.pg svg{width:100%;height:100%;display:block}
+.pg .inner{padding:clamp(14px,2.4vw,32px);height:100%;display:flex;flex-direction:column;
+  justify-content:center;gap:12px}
+.pg h3{font-family:'Fraunces',Georgia,serif;color:var(--film);font-size:clamp(20px,3vw,34px);
+  line-height:.98;letter-spacing:-.03em;font-variation-settings:'opsz' 48,'wght' 560,'WONK' 1}
+.pg p{font-family:'Fraunces',Georgia,serif;color:#4a4136;font-size:clamp(11px,1.3vw,14px);
+  line-height:1.55;max-width:32ch;font-variation-settings:'opsz' 14,'wght' 380,'SOFT' 40}
+.pg .fol{position:absolute;bottom:10px;font-size:8px;letter-spacing:.2em;color:#8d8069}
+.pg.left .fol{left:14px} .pg.right .fol{right:14px}
+.s-nav{flex:none;height:76px;border-top:1px solid var(--edge);display:flex;gap:1px;background:var(--edge)}
+.s-pg{flex:none;width:96px;background:var(--panel);border:none;cursor:pointer;padding:8px;
+  display:flex;gap:2px;position:relative;transition:background 220ms}
+.s-pg:hover{background:#1e1810}
+.s-pg i{flex:1;background:#2d2519;display:block}
+.s-pg[aria-pressed="true"] i{background:var(--light)}
+.s-pg[aria-pressed="true"]::after{content:'';position:absolute;left:0;right:0;top:0;height:2px;background:var(--ember)}
+
+/* ============ 4 · LIENZO ============ */
+.c-wrap{flex:1;display:flex;min-height:0}
+.c-tree{flex:none;width:min(174px,30%);border-right:1px solid var(--edge);background:var(--panel);
+  overflow:auto}
+.c-canvas{flex:1;position:relative;overflow:hidden;min-width:0;
+  background:
+    linear-gradient(rgba(255,240,210,.028) 1px,transparent 1px) 0 0/26px 26px,
+    linear-gradient(90deg,rgba(255,240,210,.028) 1px,transparent 1px) 0 0/26px 26px,
+    #100c07}
+.c-props{flex:none;width:min(196px,32%);border-left:1px solid var(--edge);background:var(--panel);
+  padding:0;overflow:auto}
+.c-node{position:absolute;cursor:pointer;border:1px solid transparent;transition:border-color 240ms,transform 380ms var(--e)}
+.c-node svg{display:block;width:100%;height:100%}
+.c-node[aria-pressed="true"]{border-color:var(--ember);transform:scale(1.04);z-index:3}
+.c-node[aria-pressed="true"]::after{content:'';position:absolute;left:-1px;top:-19px;
+  background:var(--ember);color:#fff;font-size:8px;letter-spacing:.14em;padding:2px 6px;
+  text-transform:uppercase;content:attr(data-n)}
+.c-row{display:flex;align-items:center;gap:9px;width:100%;background:none;border:none;
+  border-bottom:1px solid var(--edge);font:inherit;text-align:left;color:var(--dim);
+  padding:10px 13px;cursor:pointer;font-size:11px;transition:all 200ms}
+.c-row:hover{background:#1c1610;color:var(--bone)}
+.c-row[aria-pressed="true"]{background:var(--bone);color:var(--bg)}
+.c-row i{width:9px;height:9px;border:1px solid currentColor;flex:none;opacity:.6}
+.p-art{width:100%;aspect-ratio:4/3;background:#0d0a06;border-bottom:1px solid var(--edge)}
+.p-art svg{width:100%;height:100%;display:block}
+.p-body{padding:14px}
+.p-body h4{font-family:'Fraunces',Georgia,serif;font-size:19px;letter-spacing:-.02em;
+  font-variation-settings:'opsz' 26,'wght' 560,'WONK' 1;margin-bottom:12px}
+.p-f{display:flex;justify-content:space-between;gap:10px;padding:7px 0;
+  border-bottom:1px solid #241d13;font-size:10px}
+.p-f b{font-weight:400;letter-spacing:.16em;text-transform:uppercase;color:var(--faint)}
+.p-f span{color:var(--dim);text-align:right}
+
+@media (max-width:720px){
+  .note{grid-template-columns:1fr}
+  .l-panel,.c-props{display:none}
+  .c-tree{width:120px}
+}
+@media (prefers-reduced-motion:reduce){*{transition-duration:1ms!important}}
+</style>
+</head>
+<body>
+
+<h1 class="top">Cuatro formatos de aplicación</h1>
+<p class="sub">El mismo contenido en cada uno. Lo único que cambia es qué te deja hacer la interfaz — y por lo tanto qué tipo de atención te pide.</p>
+
+<div class="tabs" id="tabs">
+  <button class="tab" data-d="1" aria-pressed="true">01 · Visor</button>
+  <button class="tab" data-d="2" aria-pressed="false">02 · Capas</button>
+  <button class="tab" data-d="3" aria-pressed="false">03 · Pliegos</button>
+  <button class="tab" data-d="4" aria-pressed="false">04 · Lienzo</button>
+</div>
+
+<div class="stagewrap">
+
+  <!-- ============ 1 · VISOR ============ -->
+  <div class="demo on" id="d1">
+    <div class="v-main">
+      <div class="v-art" id="vArt"></div>
+      <div class="v-cap"><div class="t" id="vT">kalei</div><div class="y" id="vY"></div></div>
+    </div>
+    <div class="v-strip" id="vStrip"></div>
+  </div>
+
+  <!-- ============ 2 · CAPAS ============ -->
+  <div class="demo" id="d2">
+    <div class="l-wrap">
+      <div class="l-canvas"><div class="l-stack" id="lStack"></div></div>
+      <div class="l-panel">
+        <div class="l-head">capas · kalei</div>
+        <div id="lList"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ 3 · PLIEGOS ============ -->
+  <div class="demo" id="d3">
+    <div class="s-wrap"><div class="spread" id="sSpread"></div></div>
+    <div class="s-nav" id="sNav"></div>
+  </div>
+
+  <!-- ============ 4 · LIENZO ============ -->
+  <div class="demo" id="d4">
+    <div class="c-wrap">
+      <div class="c-tree" id="cTree"></div>
+      <div class="c-canvas" id="cCanvas"></div>
+      <div class="c-props" id="cProps"></div>
+    </div>
+  </div>
+
+</div>
+
+<div class="note" id="note"></div>
+
+<script>
+(function(){
+/* ---------------- contenido compartido ---------------- */
+var P=[
+  {s:'kalei',    y:2025,r:'Lead',c:'Estudio Norte',k:'nuxt · webgl',m:0,
+   l:'Un índice que mezclaba tres taxonomías, reducido a una sola superficie navegable.'},
+  {s:'meridiano',y:2024,r:'Dev', c:'Banco Sur',    k:'next · three',m:1,
+   l:'Series temporales para un equipo repartido en dos husos horarios.'},
+  {s:'atlas',    y:2024,r:'Lead',c:'Fundación Atlas',k:'vue · gsap',m:2,
+   l:'Archivo público pensado para durar veinte años sin mantenimiento.'},
+  {s:'nocturno', y:2023,r:'Dev', c:'Sello Nocturno',k:'nuxt · canvas',m:3,
+   l:'Catálogo de jazz donde el disco suena antes de que cargue la tapa.'},
+  {s:'ferro',    y:2023,r:'Dev', c:'Ferro Analytics',k:'react · d3',m:4,
+   l:'Once planillas sueltas reemplazadas por una sola fuente de verdad.'}
+];
+var PAL={paper:'#efe4cc',ink:'#211c15',ember:'#c8451c',gold:'#b08a34',mid:'#8a7a5e'};
+
+/* obras generativas — placeholder digno hasta que haya piezas reales */
+function art(n,layers){
+  var L=layers||{bg:1,wire:1,color:1,detail:1}, g='';
+  if(L.bg) g+='<rect width="400" height="300" fill="'+PAL.paper+'"/>';
+  if(n===0){
+    if(L.color){g+='<rect x="150" y="70" width="160" height="160" fill="'+PAL.ember+'" opacity=".9"/>';
+      g+='<rect x="96" y="118" width="104" height="104" fill="'+PAL.gold+'" opacity=".85"/>';}
+    if(L.wire){for(var k=0;k<5;k++){var z=180-k*32;
+      g+='<rect x="'+(200-z/2)+'" y="'+(150-z/2)+'" width="'+z+'" height="'+z+
+         '" transform="rotate('+(k*13)+' 200 150)" fill="none" stroke="'+PAL.ink+'" stroke-width="1.2"/>';}}
+    if(L.detail){g+='<line x1="30" y1="268" x2="370" y2="268" stroke="'+PAL.ink+'" stroke-width="1"/>'+
+      '<circle cx="200" cy="150" r="4" fill="'+PAL.ink+'"/>';}
+  } else if(n===1){
+    if(L.color)g+='<path d="M40 230 Q200 60 360 230 Z" fill="'+PAL.gold+'" opacity=".75"/>';
+    if(L.wire){for(var k=0;k<7;k++){var r=26+k*22;
+      g+='<path d="M'+(200-r)+' 230 A '+r+' '+r+' 0 0 1 '+(200+r)+' 230" fill="none" stroke="'+PAL.ink+'" stroke-width="1.1"/>';}}
+    if(L.detail)g+='<line x1="24" y1="230" x2="376" y2="230" stroke="'+PAL.ink+'" stroke-width="1.4"/>'+
+      '<rect x="192" y="222" width="16" height="16" fill="'+PAL.ember+'"/>';
+  } else if(n===2){
+    if(L.color)g+='<path d="M60 240 L200 50 L340 240 Z" fill="'+PAL.ember+'" opacity=".22"/>';
+    if(L.wire){for(var yy=0;yy<5;yy++)for(var xx=0;xx<7;xx++)
+      g+='<circle cx="'+(88+xx*38)+'" cy="'+(74+yy*38)+'" r="3.4" fill="none" stroke="'+PAL.ink+'" stroke-width="1"/>';}
+    if(L.detail)g+='<line x1="70" y1="60" x2="330" y2="240" stroke="'+PAL.ember+'" stroke-width="1.6"/>';
+  } else if(n===3){
+    if(L.color)g+='<circle cx="200" cy="150" r="98" fill="'+PAL.ink+'"/>'+
+      '<circle cx="234" cy="132" r="86" fill="'+PAL.paper+'"/>';
+    if(L.wire){for(var k=-3;k<=3;k++)g+='<line x1="70" y1="'+(150+k*26)+'" x2="330" y2="'+(150+k*26)+
+      '" stroke="'+PAL.ink+'" stroke-width=".9"/>';}
+    if(L.detail)g+='<circle cx="200" cy="150" r="98" fill="none" stroke="'+PAL.ink+'" stroke-width="1.3"/>'+
+      '<circle cx="290" cy="70" r="7" fill="'+PAL.gold+'"/>';
+  } else {
+    var hs=[70,130,96,176,120,82,148];
+    if(L.color)for(var k=0;k<7;k++)g+='<rect x="'+(52+k*44)+'" y="'+(252-hs[k])+'" width="30" height="'+hs[k]+
+      '" fill="'+(k%2?PAL.gold:PAL.ember)+'" opacity=".8"/>';
+    if(L.wire)for(var k=0;k<7;k++)g+='<rect x="'+(52+k*44)+'" y="'+(252-hs[k])+'" width="30" height="'+hs[k]+
+      '" fill="none" stroke="'+PAL.ink+'" stroke-width="1"/>';
+    if(L.detail)g+='<line x1="40" y1="252" x2="360" y2="252" stroke="'+PAL.ink+'" stroke-width="1.4"/>';
+  }
+  return '<svg viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice">'+g+'</svg>';
+}
+
+/* ============ 1 · VISOR ============ */
+var vArt=document.getElementById('vArt'),vT=document.getElementById('vT'),
+    vY=document.getElementById('vY'),vStrip=document.getElementById('vStrip'),vI=0;
+vStrip.innerHTML=P.map(function(p,i){
+  return '<button class="v-thumb" data-i="'+i+'" aria-pressed="'+(i===0)+'">'+art(p.m)+'</button>';}).join('');
+function vShow(i){
+  vI=i; vArt.classList.add('swap');
+  setTimeout(function(){
+    vArt.innerHTML=art(P[i].m); vT.textContent=P[i].s;
+    vY.textContent=P[i].y+' · '+P[i].r+' · '+P[i].c;
+    vArt.classList.remove('swap');
+  },220);
+  vStrip.querySelectorAll('.v-thumb').forEach(function(b,j){b.setAttribute('aria-pressed',j===i);});
+}
+vStrip.addEventListener('click',function(e){var b=e.target.closest('.v-thumb');if(b)vShow(+b.dataset.i);});
+vArt.innerHTML=art(P[0].m); vY.textContent=P[0].y+' · '+P[0].r+' · '+P[0].c;
+
+/* ============ 2 · CAPAS ============ */
+var LAY=[{k:'detail',n:'anotaciones',t:'vector'},{k:'color',n:'color',t:'fill'},
+         {k:'wire',n:'wireframe',t:'línea'},{k:'bg',n:'papel',t:'base'}];
+var on={bg:1,wire:1,color:1,detail:1};
+var lStack=document.getElementById('lStack'),lList=document.getElementById('lList');
+function lDraw(){
+  lStack.innerHTML=LAY.slice().reverse().map(function(L){
+    var only={}; only[L.k]=1;
+    return '<svg data-off="'+(on[L.k]?0:1)+'" viewBox="0 0 400 300" preserveAspectRatio="xMidYMid slice">'+
+      art(0,only).replace(/^<svg[^>]*>|<\/svg>$/g,'')+'</svg>';}).join('');
+  lList.innerHTML=LAY.map(function(L){
+    return '<button class="l-item" data-k="'+L.k+'" aria-pressed="'+(on[L.k]?'true':'false')+'">'+
+      '<span class="l-eye"></span><span class="ln">'+L.n+'</span><span class="lt">'+L.t+'</span></button>';}).join('');
+}
+lList.addEventListener('click',function(e){
+  var b=e.target.closest('.l-item'); if(!b) return;
+  on[b.dataset.k]=on[b.dataset.k]?0:1; lDraw();
+});
+lDraw();
+
+/* ============ 3 · PLIEGOS ============ */
+var sSpread=document.getElementById('sSpread'),sNav=document.getElementById('sNav'),sI=0;
+sNav.innerHTML=P.map(function(p,i){
+  return '<button class="s-pg" data-i="'+i+'" aria-pressed="'+(i===0)+'"><i></i><i></i></button>';}).join('');
+function sShow(i){
+  sI=i; sSpread.classList.add('swap');
+  setTimeout(function(){
+    var p=P[i];
+    sSpread.innerHTML='<div class="pg left">'+art(p.m)+'<span class="fol">'+(i*2+2)+'</span></div>'+
+      '<div class="pg right"><div class="inner"><h3>'+p.s+'</h3><p>'+p.l+'</p>'+
+      '<p style="color:#8d8069;font-size:11px">'+p.y+' · '+p.r+' · '+p.c+'</p></div>'+
+      '<span class="fol">'+(i*2+3)+'</span></div>';
+    sSpread.classList.remove('swap');
+  },200);
+  sNav.querySelectorAll('.s-pg').forEach(function(b,j){b.setAttribute('aria-pressed',j===i);});
+}
+sNav.addEventListener('click',function(e){var b=e.target.closest('.s-pg');if(b)sShow(+b.dataset.i);});
+sShow(0);
+
+/* ============ 4 · LIENZO ============ */
+var cTree=document.getElementById('cTree'),cCanvas=document.getElementById('cCanvas'),
+    cProps=document.getElementById('cProps'),cI=0;
+var POS=[[6,10,42,44],[54,6,40,40],[10,58,38,36],[54,52,26,28],[84,52,14,26]];
+cCanvas.innerHTML=P.map(function(p,i){
+  var q=POS[i];
+  return '<div class="c-node" data-i="'+i+'" data-n="'+p.s+'" aria-pressed="'+(i===0)+'" style="left:'+
+    q[0]+'%;top:'+q[1]+'%;width:'+q[2]+'%;height:'+q[3]+'%">'+art(p.m)+'</div>';}).join('');
+cTree.innerHTML='<div class="l-head" style="border-bottom:1px solid var(--edge)">página</div>'+
+  P.map(function(p,i){
+    return '<button class="c-row" data-i="'+i+'" aria-pressed="'+(i===0)+'"><i></i>'+p.s+'</button>';}).join('');
+function cShow(i){
+  cI=i; var p=P[i];
+  cProps.innerHTML='<div class="p-art">'+art(p.m)+'</div><div class="p-body"><h4>'+p.s+'</h4>'+
+    [['año',p.y],['rol',p.r],['cliente',p.c],['stack',p.k]].map(function(f){
+      return '<div class="p-f"><b>'+f[0]+'</b><span>'+f[1]+'</span></div>';}).join('')+
+    '<p style="margin-top:12px;font-size:11px;line-height:1.5;color:var(--dim)">'+p.l+'</p></div>';
+  cCanvas.querySelectorAll('.c-node').forEach(function(n,j){n.setAttribute('aria-pressed',j===i);});
+  cTree.querySelectorAll('.c-row').forEach(function(n,j){n.setAttribute('aria-pressed',j===i);});
+}
+cCanvas.addEventListener('click',function(e){var n=e.target.closest('.c-node');if(n)cShow(+n.dataset.i);});
+cTree.addEventListener('click',function(e){var n=e.target.closest('.c-row');if(n)cShow(+n.dataset.i);});
+cShow(0);
+
+/* ============ tabs + notas ============ */
+var NOTES={
+ 1:[['Qué te deja hacer','Mirar una pieza a la vez, grande. La tira de abajo te dice cuántas hay y dónde estás. Se entiende sin instrucciones.'],
+    ['Qué te cuesta','Es el formato más convencional de los cuatro. Casi no argumenta nada por sí solo — todo el peso cae en la calidad de las piezas.']],
+ 2:[['Qué te deja hacer','Apagar y prender capas para ver cómo se construyó la pieza. El proceso deja de ser un texto que contás y pasa a ser algo que el visitante desarma.'],
+    ['Qué te cuesta','Cada proyecto necesita estar realmente descompuesto en capas. No se puede fingir, y no todo trabajo se descompone bien.']],
+ 3:[['Qué te deja hacer','Ritmo editorial. Imagen a la izquierda, texto a la derecha, y pasás páginas. Le da tiempo y respiración a cada proyecto.'],
+    ['Qué te cuesta','Impone un orden de lectura, que es justo lo que querías evitar. Y de los cuatro es el que menos se siente como una aplicación.']],
+ 4:[['Qué te deja hacer','Ves todo junto y seleccionás para inspeccionar. Árbol a la izquierda, propiedades a la derecha. Es el más "aplicación" de todos.'],
+    ['Qué te cuesta','Es el más parecido al mundo DATOS: también es un árbol con un panel de detalle. Corrés riesgo de repetir la misma experiencia con otra piel.']]
+};
+var note=document.getElementById('note');
+function setNote(d){ note.innerHTML=NOTES[d].map(function(n){
+  return '<div><b>'+n[0]+'</b><p>'+n[1]+'</p></div>';}).join(''); }
+document.getElementById('tabs').addEventListener('click',function(e){
+  var b=e.target.closest('.tab'); if(!b) return;
+  document.querySelectorAll('.tab').forEach(function(t){t.setAttribute('aria-pressed',t===b);});
+  document.querySelectorAll('.demo').forEach(function(d){d.classList.toggle('on',d.id==='d'+b.dataset.d);});
+  setNote(b.dataset.d);
+});
+setNote(1);
+})();
+</script>
+</body>
+</html>
