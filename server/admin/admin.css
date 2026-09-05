@@ -1,0 +1,75 @@
+/* Admin. Herramienta interna: claro, denso, sin decoración. No es uno de los dos mundos. */
+:root {
+  --bg: #f4f4f2;
+  --paper: #fff;
+  --ink: #111;
+  --soft: #6b6b66;
+  --line: #d9d9d4;
+  --sig: #1f4fd6;
+  --danger: #b3261e;
+  --mono: ui-monospace, "Cascadia Mono", Consolas, monospace;
+}
+[v-cloak] { display: none; }
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; }
+body { font: 14px/1.45 system-ui, sans-serif; color: var(--ink); background: var(--bg); }
+button, input, select, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; border: 1px solid var(--line); background: var(--paper); border-radius: 4px; padding: 4px 10px; }
+button.primary { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+button.ghost { background: transparent; border-color: transparent; color: var(--soft); }
+button.danger { color: var(--danger); }
+button.on { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+input[type="text"], input[type="number"], input[type="date"], input[type="datetime-local"], input[type="password"], select, textarea {
+  width: 100%; padding: 6px 8px; border: 1px solid var(--line); border-radius: 4px; background: var(--paper);
+}
+input.short { width: 5.5em; }
+textarea { resize: vertical; }
+.mono { font-family: var(--mono); font-size: 12px; }
+small { color: var(--soft); font-weight: normal; }
+
+.top { display: flex; align-items: center; gap: 12px; padding: 10px 16px; border-bottom: 1px solid var(--line); background: var(--paper); position: sticky; top: 0; }
+.top nav { display: flex; gap: 6px; }
+.spacer { flex: 1; }
+.status { font-family: var(--mono); font-size: 12px; color: var(--soft); }
+.status.err { color: var(--danger); }
+.status.ok { color: var(--sig); }
+
+.login { display: grid; place-items: center; height: calc(100% - 45px); }
+.login form { display: grid; gap: 10px; width: min(360px, 90vw); }
+.login label { display: grid; gap: 4px; font-family: var(--mono); font-size: 12px; }
+
+.work { display: grid; grid-template-columns: 300px 1fr; height: calc(100% - 45px); }
+.list { border-right: 1px solid var(--line); overflow: auto; background: var(--paper); }
+.list-head { display: flex; justify-content: space-between; align-items: center; padding: 10px 12px; color: var(--soft); font-family: var(--mono); font-size: 12px; border-bottom: 1px solid var(--line); }
+.row { display: flex; flex-direction: column; align-items: flex-start; width: 100%; text-align: left; border: 0; border-bottom: 1px solid var(--line); border-radius: 0; padding: 8px 12px; background: transparent; }
+.row.on { background: var(--ink); color: var(--paper); }
+.row.on .row-meta { color: #bbb; }
+.row-meta { font-family: var(--mono); font-size: 11px; color: var(--soft); }
+
+.form { overflow: auto; padding: 20px 28px 60px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px 24px; align-content: start; }
+.form.empty { display: grid; place-items: center; color: var(--soft); }
+.form h2 { grid-column: 1 / -1; margin: 0 0 6px; font-size: 20px; font-weight: 600; }
+.field { display: grid; gap: 4px; }
+.field.wide, .sub, .actions { grid-column: 1 / -1; }
+.field label { font-family: var(--mono); font-size: 12px; }
+.field input[type="checkbox"] { width: auto; justify-self: start; }
+.checks { display: flex; flex-wrap: wrap; gap: 6px 14px; padding: 6px 0; }
+.checks label { display: flex; gap: 4px; align-items: center; }
+
+.sub h3 { display: flex; align-items: center; gap: 10px; margin: 10px 0 6px; font-size: 14px; font-family: var(--mono); font-weight: 600; }
+table { width: 100%; border-collapse: collapse; background: var(--paper); border: 1px solid var(--line); }
+th, td { text-align: left; padding: 6px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-family: var(--mono); font-size: 11px; color: var(--soft); font-weight: normal; }
+td textarea { min-width: 220px; }
+.thumb { width: 64px; height: 40px; object-fit: cover; display: block; background: var(--bg); }
+.upload { display: flex; gap: 8px; align-items: center; margin-top: 8px; flex-wrap: wrap; }
+.upload input[type="text"] { width: 240px; }
+
+.actions { display: flex; gap: 10px; align-items: center; padding-top: 10px; border-top: 1px solid var(--line); }
+.error { color: var(--danger); font-family: var(--mono); font-size: 12px; }
+
+@media (max-width: 800px) {
+  .work { grid-template-columns: 1fr; grid-template-rows: 200px 1fr; }
+  .list { border-right: 0; border-bottom: 1px solid var(--line); }
+  .form { grid-template-columns: 1fr; padding: 16px; }
+}

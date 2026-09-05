@@ -2,6 +2,7 @@ import cors from 'cors'
 import express, { type Express, type NextFunction, type Request, type Response } from 'express'
 import { db } from './db.js'
 import { env } from './env.js'
+import { adminApi, adminUi } from './admin/router.js'
 import { envelope } from './envelope.js'
 import { docs } from './routes/docs.js'
 import { experience } from './routes/experience.js'
@@ -24,6 +25,8 @@ app.get('/api/health', async (_req, res) => {
 })
 
 app.use('/api', schema, projects, experience, stack, docs)
+app.use('/api/admin', adminApi)
+app.use('/admin', adminUi)
 
 app.use((_req, res) => {
   res.status(404).json({ error: 'not found' })

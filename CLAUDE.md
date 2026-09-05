@@ -47,6 +47,7 @@ app/worlds/diseno/    renderer DISEÑO
 app/lib/fieldMeta.ts  qué campos ve cada mundo, y con qué tipo
 app/nitro/            reservado; Nitro no sirve rutas (el API es Express)
 server/src/           API Express (server/generated/ es el cliente Prisma, ignorado)
+server/admin/         UI del admin propio, servida por el API en /admin
 prisma/               schema y migraciones
 docs/                 concepto, decisiones, fases, prototipos
 ```
@@ -70,4 +71,4 @@ Este archivo solo tiene lo que aplica siempre. Lo específico se carga solo cuan
 
 ## Estado
 
-Schema aprobado y migrado (5-sep-2026). Fase 1 en curso: endpoints y seed listos, falta el admin. Cambiar el schema implica migración nueva y revisar `app/lib/fieldMeta.ts`.
+Fases 0 y 1 cerradas (5-sep-2026): schema migrado, seis endpoints, seed real y admin propio en `/admin`. Sigue la Fase 2 (shell: routing y estado compartido). Cambiar el schema implica migración nueva y revisar `app/lib/fieldMeta.ts`.

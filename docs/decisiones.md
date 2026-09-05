@@ -91,6 +91,10 @@ DISEÑO las dibuja como bandas sobre un eje y DATOS las muestra como `date`. Con
 **Campos compartidos solo con motivo escrito.**
 `slug` y el nombre del record (ruta y ancla del pasaje), fechas de experience y `since` de stack (la dimensión dominante de cada colección). Todo lo demás es exclusivo de un mundo. El motivo va como comentario en `fieldMeta.ts`.
 
+**Admin propio, no Payload ni Directus.**
+Descartado: Payload (trae su propio schema y duplicaría el modelo, contra el invariante 1) y Directus (se parece tanto al mundo DATOS que parecería el panel embebido).
+Cuatro proyectos que se editan cada tanto no justifican un CMS. Es un router de Express con token fijo y una página Vue sin build, generada desde un descriptor por modelo. Cuesta unas 600 líneas y no agrega dependencias de peso.
+
 **PostgreSQL, no MySQL.**
 Descartado: MySQL (el stack inicial).
 Prisma trata a Postgres como ciudadano de primera: enums, arrays nativos (`String[]` para `stack`, `languages`) y JSON con índices, todo cosas que el mundo DATOS muestra en pantalla como tipos declarados. MySQL obliga a serializar los arrays o a tablas puente por cada lista chica. Además es lo que ofrecen gratis Neon, Supabase y Railway. Decidido el 5 de septiembre de 2026, antes de escribir el schema.
@@ -118,7 +122,6 @@ El umbral es la tesis en miniatura y hay que gastarlo bien. Tiene que ser saltea
 
 ## Abierto
 
-- **El admin.** Propio con Prisma, o Payload. Evitar Directus: se parece tanto al mundo DATOS que va a parecer que se embebió el panel.
 - **Cómo se muestra que DISEÑO todavía no está listo** si el sitio sale al final de la Fase 3. Un botón en `disabled` es la solución mínima; que la espera sea parte del diseño es la buena.
 
 ---

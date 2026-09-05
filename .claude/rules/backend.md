@@ -60,6 +60,10 @@ Antes de agregar un campo, decidir a qué mundo pertenece. Si la respuesta es "a
 
 `wide:true` saca al campo de la grilla angosta y le da ancho completo con medida de lectura propia. Existe porque la prosa larga metida en una columna de valores queda torpe — es el único punto donde el mundo DATOS se pone incómodo.
 
+## Admin
+
+Propio y mínimo: `server/src/admin/` (API en `/api/admin/*`) y `server/admin/` (UI en `/admin`, Vue global sin build). Bearer `ADMIN_TOKEN` desde `.env`; sin token el admin responde 503. Un descriptor por modelo en `admin.js` genera el formulario: al agregar un campo al schema, agregarlo ahí también. La media se sube por multipart a `public/media/projects/` y el tamaño se lee del archivo, no se pide.
+
 ## Nullables
 
 `metrics` y otros campos opcionales se muestran como `NULL` en DATOS, no se esconden. Devolver `null` explícito, no omitir la clave.

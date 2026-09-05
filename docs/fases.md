@@ -17,15 +17,15 @@ Criterio para las colecciones: **cada una debería ser la respuesta a una pregun
 
 ---
 
-## Fase 1 — Backend
+## Fase 1 — Backend ✅ cerrada el 5-sep-2026
 
 - [x] Modelos Prisma y migración
 - [x] Los seis endpoints — `server/src/routes/`
 - [x] Filtros como query params, con el mapeo uno a uno a la URL pública — `meta.filters` devuelve lo aplicado
-- [ ] Admin
-- [x] Seed con contenido real, no lorem — `server/src/seed.ts`. Falta: `experience` (sin datos reales todavía), `Tech.note`, `Tech.since` real, `metrics`
+- [x] Admin — propio, en `/admin` servido por el API, protegido con `ADMIN_TOKEN`
+- [x] Seed con contenido real, no lorem — `server/src/seed.ts`, cronología tomada de GitHub. Falta afinar desde el admin: `Tech.since`, `Tech.note`, `metrics`
 
-**Terminado cuando:** se puede cargar un proyecto de punta a punta desde el admin y verlo en los seis endpoints.
+**Terminado cuando:** se puede cargar un proyecto de punta a punta desde el admin y verlo en los seis endpoints. ✅ Verificado el 5-sep-2026: proyecto con org, techs, media subida y pasos creado por el admin y leído en `/api/projects/:slug`.
 
 ---
 

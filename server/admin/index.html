@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>admin · portfolio</title>
+  <link rel="stylesheet" href="/admin/admin.css">
+</head>
+<body>
+  <div id="app" v-cloak>
+    <header class="top">
+      <strong>admin</strong>
+      <nav>
+        <button v-for="(m, key) in models" :key="key" :class="{ on: section === key }" @click="open(key)">{{ m.label }}</button>
+      </nav>
+      <span class="spacer"></span>
+      <span class="status" :class="status.kind">{{ status.text }}</span>
+      <button class="ghost" @click="logout">salir</button>
+    </header>
+
+    <main v-if="!token" class="login">
+      <form @submit.prevent="login">
+        <label>ADMIN_TOKEN <input v-model="tokenInput" type="password" autocomplete="off" autofocus></label>
+        <button>entrar</button>
+      </form>
+    </main>
+
+    <main v-else class="work">
+      <aside class="list">
+        <div class="list-head">
+          <span>{{ rows.length }} records</span>
+          <button v-if="model.creatable !== false" @click="startNew">+ nuevo</button>
+        </div>
+        <button v-for="r in rows" :key="rowKey(r)" class="row" :class="{ on: current && rowKey(current) === rowKey(r) }" @click="edit(r)">
+          <span class="row-name">{{ model.name(r) }}</span>
+          <span class="row-meta">{{ model.meta ? model.meta(r) : '' }}</span>
+        </button>
+      </aside>
+
+      <section v-if="form" class="form">
+        <h2>{{ isNew ? 'nuevo' : model.name(form) }} <small>{{ model.label }}</small></h2>
+
+        <div v-for="f in model.fields" :key="f.name" class="field" :class="{ wide: f.type === 'text' || f.type === 'json' }">
+          <label :for="'f-' + f.name">{{ f.name }} <small>{{ f.type }}</small></label>
+
+          <input v-if="f.type === 'string' || f.type === 'url'" :id="'f-' + f.name" v-model="form[f.name]" type="text">
+          <input v-else-if="f.type === 'int'" :id="'f-' + f.name" v-model.number="form[f.name]" type="number" step="1">
+          <input v-else-if="f.type === 'bool'" :id="'f-' + f.name" v-model="form[f.name]" type="checkbox">
+          <input v-else-if="f.type === 'date'" :id="'f-' + f.name" v-model="form[f.name]" type="date">
+          <input v-else-if="f.type === 'datetime'" :id="'f-' + f.name" v-model="form[f.name]" type="datetime-local">
+          <textarea v-else-if="f.type === 'text'" :id="'f-' + f.name" v-model="form[f.name]" rows="5"></textarea>
+          <textarea v-else-if="f.type === 'json'" :id="'f-' + f.name" v-model="form[f.name]" rows="4" spellcheck="false" class="mono"></textarea>
+          <select v-else-if="f.type.startsWith('enum:')" :id="'f-' + f.name" v-model="form[f.name]">
+            <option v-for="v in meta.enums[f.type.slice(5)]" :key="v" :value="v">{{ v }}</option>
+          </select>
+          <select v-else-if="f.type.startsWith('rel:')" :id="'f-' + f.name" v-model="form[f.name]">
+            <option :value="null">NULL</option>
+            <option v-for="o in meta.options[f.type.slice(4)]" :key="o.id" :value="o.id">{{ o.name || o.title }}</option>
+          </select>
+          <div v-else-if="f.type.startsWith('rels:')" class="checks">
+            <label v-for="o in meta.options[f.type.slice(5)]" :key="o.id">
+              <input v-model="form[f.name]" type="checkbox" :value="o.id"> {{ o.name || o.title }}
+            </label>
+          </div>
+        </div>
+
+        <div v-for="(cols, sub) in model.sub || {}" :key="sub" class="sub">
+          <h3>{{ sub }} <small>{{ form[sub].length }}</small> <button class="ghost" @click="form[sub].push(blankRow(cols))">+ fila</button></h3>
+          <table v-if="form[sub].length">
+            <thead><tr><th v-for="c in cols" :key="c.name">{{ c.name }}</th><th></th></tr></thead>
+            <tbody>
+              <tr v-for="(row, i) in form[sub]" :key="i">
+                <td v-for="c in cols" :key="c.name">
+                  <input v-if="c.type === 'bool'" v-model="row[c.name]" type="checkbox">
+                  <input v-else-if="c.type === 'int'" v-model.number="row[c.name]" type="number">
+                  <select v-else-if="c.type.startsWith('rel:')" v-model="row[c.name]">
+                    <option :value="null">NULL</option>
+                    <option v-for="o in relOptions(c.type.slice(4))" :key="o.id" :value="o.id">{{ o.alt || o.name || o.title }}</option>
+                  </select>
+                  <select v-else-if="c.type.startsWith('enum:')" v-model="row[c.name]">
+                    <option v-for="v in meta.enums[c.type.slice(5)]" :key="v" :value="v">{{ v }}</option>
+                  </select>
+                  <input v-else-if="c.type === 'worlds'" v-model="row[c.name]" type="text" placeholder="datos,diseno">
+                  <textarea v-else-if="c.type === 'text'" v-model="row[c.name]" rows="2"></textarea>
+                  <input v-else v-model="row[c.name]" type="text">
+                </td>
+                <td><button class="ghost danger" @click="form[sub].splice(i, 1)">×</button></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div v-if="model.media && !isNew" class="sub">
+          <h3>media <small>{{ form.media.length }}</small></h3>
+          <table v-if="form.media.length">
+            <thead><tr><th></th><th>src</th><th>alt</th><th>role</th><th>layer</th><th>order</th><th>size</th><th></th></tr></thead>
+            <tbody>
+              <tr v-for="m in form.media" :key="m.id">
+                <td><img :src="m.src" :alt="m.alt" class="thumb"></td>
+                <td class="mono">{{ m.src }}</td>
+                <td><input v-model="m.alt" type="text" @change="saveMedia(m)"></td>
+                <td><select v-model="m.role" @change="saveMedia(m)"><option v-for="v in meta.enums.MediaRole" :key="v" :value="v">{{ v }}</option></select></td>
+                <td><input v-model.number="m.layer" type="number" class="short" @change="saveMedia(m)"></td>
+                <td><input v-model.number="m.order" type="number" class="short" @change="saveMedia(m)"></td>
+                <td class="mono">{{ m.width }}×{{ m.height }} · {{ (m.bytes / 1024).toFixed(0) }} KB</td>
+                <td><button class="ghost danger" @click="deleteMedia(m)">×</button></td>
+              </tr>
+            </tbody>
+          </table>
+          <form class="upload" @submit.prevent="uploadMedia">
+            <input ref="file" type="file" accept="image/png,image/jpeg,image/webp" required>
+            <input v-model="uploadForm.alt" type="text" placeholder="alt (obligatorio)" required>
+            <select v-model="uploadForm.role"><option v-for="v in meta.enums.MediaRole" :key="v" :value="v">{{ v }}</option></select>
+            <input v-model.number="uploadForm.layer" type="number" placeholder="layer" class="short">
+            <input v-model.number="uploadForm.order" type="number" placeholder="order" class="short">
+            <button>subir</button>
+          </form>
+        </div>
+
+        <footer class="actions">
+          <button class="primary" @click="save">{{ isNew ? 'crear' : 'guardar' }}</button>
+          <button v-if="!isNew && model.deletable !== false" class="ghost danger" @click="remove">borrar</button>
+          <span v-if="error" class="error">{{ error }}</span>
+        </footer>
+      </section>
+
+      <section v-else class="form empty">elegí un record o creá uno nuevo</section>
+    </main>
+  </div>
+
+  <script src="/admin/vendor/vue.js"></script>
+  <script src="/admin/admin.js"></script>
+</body>
+</html>
