@@ -1,0 +1,176 @@
+// PROPUESTA — Fase 0. No migrar sin aprobación explícita.
+//
+// El mundo DATOS muestra estos nombres, tipos y relaciones en pantalla.
+// Cada nombre de campo es una decisión visible. Qué campo ve cada mundo
+// se declara en app/lib/fieldMeta.ts, no acá.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../server/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ─── Colecciones ────────────────────────────────────────────────────────────
+// Cada una responde a una pregunta concreta de quien entra:
+//   projects    ¿qué hizo?
+//   experience  ¿dónde y cuándo trabajó?
+//   stack       ¿con qué?
+//   orgs        ¿para quién?  (se llega por relación, no desde la raíz)
+
+model Project {
+  id          Int           @id @default(autoincrement())
+  slug        String        @unique
+  title       String
+  year        Int
+  role        String // "Lead", "Dev", "Diseño + Front"
+  status      ProjectStatus @default(LIVE)
+  featured    Boolean       @default(false)
+  summary     String // una línea. DATOS.
+  brief       String?       @db.Text // el problema, en largo. DISEÑO.
+  outcome     String?       @db.Text // qué pasó después. DISEÑO.
+  url         String?
+  repo        String?
+  metrics     Json? // { lcp, bundleKb, a11y, ... } — NULL a la vista si no hay
+  sortOrder   Int           @default(0)
+  publishedAt DateTime?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  org   Org?          @relation(fields: [orgId], references: [id])
+  orgId Int?
+  techs Tech[]
+  media Media[]
+  steps ProcessStep[]
+  links Link[]
+
+  @@index([year])
+  @@index([orgId])
+}
+
+enum ProjectStatus {
+  LIVE
+  ARCHIVED
+  WIP
+}
+
+// Subvista `process` de un proyecto. Ordenada. DISEÑO la recorre con el scrubber.
+model ProcessStep {
+  id        Int     @id @default(autoincrement())
+  order     Int
+  title     String // "01 · problema"
+  body      String  @db.Text
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  projectId Int
+  media     Media?  @relation(fields: [mediaId], references: [id])
+  mediaId   Int?
+
+  @@unique([projectId, order])
+}
+
+// Una pieza visual. `layer` es opcional: si un proyecto no viene descompuesto
+// en capas, DISEÑO degrada a la obra terminada. `role` dice para qué sirve.
+model Media {
+  id        Int           @id @default(autoincrement())
+  kind      MediaKind     @default(IMAGE)
+  role      MediaRole     @default(GALLERY)
+  src       String
+  alt       String
+  width     Int
+  height    Int
+  layer     Int? // 0 = fondo … n = frente. NULL = pieza completa.
+  order     Int           @default(0)
+  bytes     Int? // DATOS lo muestra al lado del thumbnail
+  project   Project       @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  projectId Int
+  steps     ProcessStep[]
+
+  @@index([projectId, role, order])
+}
+
+enum MediaKind {
+  IMAGE
+  VIDEO
+}
+
+enum MediaRole {
+  COVER
+  GALLERY
+  LAYER
+}
+
+model Link {
+  id        Int     @id @default(autoincrement())
+  label     String // "sitio", "repo", "caso"
+  url       String
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  projectId Int
+}
+
+// Colección `stack`. `since` en lugar de `years`: los años se derivan y no envejecen.
+model Tech {
+  id          Int          @id @default(autoincrement())
+  slug        String       @unique
+  name        String
+  category    TechCategory
+  since       Int // año en que empezó a usarla
+  note        String? // una línea de criterio: cuándo la elige
+  color       String? // hex. Solo DISEÑO (los chips).
+  projects    Project[]
+  experiences Experience[]
+}
+
+enum TechCategory {
+  LANGUAGE
+  FRAMEWORK
+  MOTION
+  GRAPHICS
+  BACKEND
+  DATA
+  TOOLING
+  DESIGN
+}
+
+// Colección `experience`. Fechas reales, no años sueltos: DISEÑO las dibuja
+// como bandas y DATOS las muestra como `date`.
+model Experience {
+  id        Int       @id @default(autoincrement())
+  slug      String    @unique
+  role      String
+  startedAt DateTime  @db.Date
+  endedAt   DateTime? @db.Date // NULL = actual
+  summary   String // una línea. DATOS.
+  story     String?   @db.Text // qué aprendió ahí. DISEÑO.
+  org       Org       @relation(fields: [orgId], references: [id])
+  orgId     Int
+  techs     Tech[]
+
+  @@index([startedAt])
+}
+
+// Clientes y empleadores. Existe para que `project.org` y `experience.org`
+// sean relaciones de verdad y DATOS pueda saltar de lado entre ellas.
+model Org {
+  id          Int          @id @default(autoincrement())
+  slug        String       @unique
+  name        String
+  url         String?
+  city        String?
+  projects    Project[]
+  experiences Experience[]
+}
+
+// ─── Documentos ─────────────────────────────────────────────────────────────
+// `about` y `contact` son contenido libre, no colecciones. Cada campo lleva
+// su propio tipo porque DATOS lo muestra:
+//   fields: [{ name, type, value, wide?, worlds? }]
+//   worlds por defecto = los dos; declarar ['datos'] o ['diseno'] cuando no.
+
+model Doc {
+  key       String   @id // "about" | "contact"
+  title     String
+  fields    Json
+  updatedAt DateTime @updatedAt
+}

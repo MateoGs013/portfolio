@@ -6,9 +6,9 @@ Orden de trabajo y criterios de terminado. Marcar con `[x]` a medida que se cier
 
 ## Fase 0 — Schema ⚠ BLOQUEANTE
 
-- [ ] Definir las colecciones reales
-- [ ] Definir campos y tipos de cada una
-- [ ] Decidir a qué mundo pertenece cada campo (`app/lib/fieldMeta.ts`)
+- [ ] Definir las colecciones reales — propuesta en `prisma/schema.prisma` (5-sep-2026)
+- [ ] Definir campos y tipos de cada una — ídem
+- [ ] Decidir a qué mundo pertenece cada campo — propuesta en `app/lib/fieldMeta.ts`
 - [ ] Aprobar y migrar
 
 **Terminado cuando:** `schema.prisma` está aprobado y migrado, y cada campo tiene asignado su mundo.

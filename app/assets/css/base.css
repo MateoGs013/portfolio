@@ -1,0 +1,23 @@
+/* Base común a los dos mundos. Los tokens de temperatura, densidad y ritmo
+   de cada mundo van en app/worlds/<mundo>/ (Fase 2), no acá. */
+:root {
+  --font-display: 'Fraunces Variable', Georgia, serif;
+  --font-text: 'General Sans Variable', system-ui, sans-serif;
+  --font-mono: 'Martian Mono Variable', ui-monospace, monospace;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+body { margin: 0; font-family: var(--font-text); line-height: 1.5; }
+
+img, svg, video { display: block; max-width: 100%; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}

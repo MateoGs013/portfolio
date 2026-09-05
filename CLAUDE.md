@@ -28,12 +28,12 @@ Fuentes: Fraunces Variable, General Sans, Martian Mono.
 
 ## Comandos
 
-<!-- Ajustar a los reales cuando exista el repo. -->
-
 ```bash
-pnpm dev              # front
-pnpm dev:api          # backend
-pnpm typecheck        # antes de dar algo por terminado
+cp .env.example .env  # una vez
+pnpm db:up            # Postgres 17 en Docker (pnpm db:down para bajarlo)
+pnpm dev              # front en :3000
+pnpm dev:api          # API Express en :3001
+pnpm typecheck        # antes de dar algo por terminado (Nuxt + server)
 pnpm lint
 pnpm prisma migrate dev
 pnpm prisma studio
@@ -45,7 +45,8 @@ pnpm prisma studio
 app/worlds/datos/     renderer DATOS
 app/worlds/diseno/    renderer DISEÑO
 app/lib/fieldMeta.ts  qué campos ve cada mundo, y con qué tipo
-server/               API Express
+app/nitro/            reservado; Nitro no sirve rutas (el API es Express)
+server/src/           API Express (server/generated/ es el cliente Prisma, ignorado)
 prisma/               schema y migraciones
 docs/                 concepto, decisiones, fases, prototipos
 ```
