@@ -7,7 +7,7 @@ defineProps<{ detail: Detail }>()
 </script>
 
 <template>
-  <article class="hoja" :aria-label="detail.name">
+  <article class="hoja" :class="{ portada: detail.kind === 'root' }" :aria-label="detail.name">
     <header class="cabecera">
       <h1 class="titulo" data-anchor>{{ detail.name }}</h1>
       <p class="linea">
@@ -30,6 +30,20 @@ defineProps<{ detail: Detail }>()
         </dd>
       </div>
     </dl>
+
+    <section v-for="g in detail.groups" :key="g.head" class="grupo" :aria-label="g.head">
+      <h2 class="grupo-head">{{ g.head }} <span class="grupo-n">{{ pad(g.rows.length) }}</span></h2>
+      <dl class="campos tablas">
+        <div v-for="row in g.rows" :key="row.name" class="campo">
+          <dt class="nombre"><NuxtLink v-if="row.to" :to="row.to">{{ row.name }}</NuxtLink><template v-else>{{ row.name }}</template></dt>
+          <dd class="tipo">{{ row.type }}</dd>
+          <dd class="valor">
+            <NuxtLink v-if="row.to" :to="row.to" class="rel">{{ row.value }} <span aria-hidden="true">›</span></NuxtLink>
+            <template v-else>{{ row.value }}</template>
+          </dd>
+        </div>
+      </dl>
+    </section>
   </article>
 </template>
 
@@ -37,7 +51,7 @@ defineProps<{ detail: Detail }>()
 .hoja {
   flex: 1 1 var(--d-pane-min);
   min-width: var(--d-pane-min);
-  max-width: 760px;
+  max-width: 1040px;
   padding-right: 16px;
   animation: entrar var(--d-dur) var(--d-ease) both;
 }
@@ -51,13 +65,20 @@ defineProps<{ detail: Detail }>()
   border-bottom: 1px solid var(--d-ink);
 }
 .titulo {
-  margin: 6px 0 10px;
+  margin: 4px 0 12px;
   font-family: var(--font-text);
   font-size: var(--d-fs-title);
   font-weight: 600;
   letter-spacing: -0.035em;
   line-height: 1;
   overflow-wrap: anywhere;
+}
+.portada .titulo {
+  margin: 2px 0 18px;
+  font-size: var(--d-fs-portada);
+  letter-spacing: -0.045em;
+  line-height: 0.92;
+  max-width: 12ch;
 }
 .linea {
   display: flex;
@@ -73,7 +94,7 @@ defineProps<{ detail: Detail }>()
 .campos { margin: 0; }
 .campo {
   display: grid;
-  grid-template-columns: 136px minmax(0, 1fr) auto;
+  grid-template-columns: 168px minmax(0, 1fr) auto;
   grid-template-areas: "nombre valor tipo";
   gap: 4px 16px;
   align-items: baseline;
@@ -92,11 +113,29 @@ defineProps<{ detail: Detail }>()
   grid-area: valor;
   margin: 0;
   font-family: var(--font-text);
-  font-size: var(--d-fs-name);
+  font-size: var(--d-fs-value);
   line-height: var(--d-lh);
   overflow-wrap: anywhere;
 }
-.campo.wide .valor { max-width: 60ch; font-size: var(--d-fs-read); line-height: 1.55; }
+.campo.wide .valor { max-width: 62ch; font-size: var(--d-fs-read); line-height: 1.5; }
+
+.grupo { margin-top: 40px; }
+.grupo-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin: 0;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--d-ink);
+  font-family: var(--font-mono);
+  font-size: var(--d-fs-mono);
+  font-weight: 400;
+  color: var(--d-dim);
+}
+.tablas .campo { min-height: 56px; }
+.tablas .nombre { font-family: var(--font-text); font-size: var(--d-fs-value); font-weight: 500; color: var(--d-ink); }
+.tablas .nombre a { color: inherit; text-decoration: none; }
+.tablas .nombre a:hover { color: var(--d-sig); }
 
 .valor a { color: var(--d-sig); text-decoration: none; }
 .valor a:hover { text-decoration: underline; }

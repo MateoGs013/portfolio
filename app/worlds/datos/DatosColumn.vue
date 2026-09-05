@@ -76,7 +76,7 @@ defineProps<{
   border-bottom: 1px solid var(--d-ink);
   font-family: var(--font-mono);
   font-size: var(--d-fs-mono);
-  color: var(--d-dim);
+  color: var(--d-ink);
 }
 .head-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .head-count { font-variant-numeric: tabular-nums; }
@@ -129,7 +129,7 @@ defineProps<{
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.meta { font-family: var(--font-mono); font-size: var(--d-fs-mono); color: var(--d-dim); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.meta { font-family: var(--font-text); font-size: var(--d-fs-ui); color: var(--d-dim); font-variant-numeric: tabular-nums; white-space: nowrap; }
 .chev { color: var(--d-faint); text-align: right; }
 .vacio { margin: 0; padding: 14px 12px; font-family: var(--font-mono); font-size: var(--d-fs-mono); color: var(--d-faint); }
 </style>

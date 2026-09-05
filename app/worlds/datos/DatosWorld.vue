@@ -160,11 +160,12 @@ onBeforeUnmount(() => removeEventListener('keydown', onKey))
   flex-direction: column;
   height: 100dvh;
   color: var(--d-ink);
-  font-family: var(--font-mono);
-  font-size: var(--d-fs-mono);
+  font-family: var(--font-text);
+  font-size: var(--d-fs-ui);
   line-height: var(--d-lh);
   font-variant-numeric: tabular-nums;
 }
+.ruta, .req, kbd { font-family: var(--font-mono); font-size: var(--d-fs-mono); }
 
 .rail {
   flex: none;
@@ -189,17 +190,19 @@ onBeforeUnmount(() => removeEventListener('keydown', onKey))
   background: none;
   padding: 6px 0;
   font: inherit;
+  font-weight: 500;
   color: var(--d-dim);
   cursor: pointer;
 }
 .goto-btn:hover { color: var(--d-ink); }
 kbd {
   display: inline-block;
-  min-width: 16px;
+  min-width: 18px;
   margin: 0 2px;
-  padding: 0 4px;
+  padding: 1px 4px 0;
   border: 1px solid var(--d-rule);
-  font: inherit;
+  border-radius: 2px;
+  line-height: 1.3;
   text-align: center;
   color: var(--d-dim);
 }
@@ -222,10 +225,12 @@ kbd {
   display: flex;
   align-items: flex-start;
   flex: none;
+  width: 100%;
   max-height: 100%;
   margin-right: auto;
   transform-style: preserve-3d;
 }
+.track:has(.col:nth-child(3)) { width: max-content; min-width: 100%; }
 .track > * {
   max-height: 100%;
   overflow-y: auto;

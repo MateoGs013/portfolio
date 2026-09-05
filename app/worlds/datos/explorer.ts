@@ -63,11 +63,13 @@ export interface Row {
 }
 
 export interface Detail {
-  kind: 'record' | 'document'
+  kind: 'root' | 'record' | 'document'
   name: string
   type: string
   updated: string | null
   rows: Row[]
+  /** Bloques adicionales con su propio encabezado (la raíz lista las tablas). */
+  groups?: { head: string, rows: Row[] }[]
 }
 
 export interface Explorer {
@@ -158,6 +160,14 @@ function rowFor(collection: CollectionKey, record: AnyRecord, name: string, quer
   return row
 }
 
+/** Un campo de documento como fila: las urls y los mails se vuelven links. */
+function docRow(f: { name: string, type: string, value: string, wide?: boolean }): Row {
+  const row: Row = { name: f.name, type: f.type, value: f.value, wide: f.wide }
+  if (f.type === 'url') row.href = f.value
+  else if (/^[^\s@]+@[^\s@]+$/.test(f.value)) row.href = `mailto:${f.value}`
+  return row
+}
+
 function facetsOf(collection: CollectionKey, query: LocationQuery): Facet[] {
   const active = filtersFor(collection, query)
   return Object.entries(active).map(([key, value]) => {
@@ -191,22 +201,32 @@ export async function resolveExplorer(api: Api, path: Path, query: LocationQuery
   })
 
   if (!root) {
-    // La hoja de la raíz es la base misma: motor, tablas, cuántos records. Todo medido.
-    const health = await api.get<{ ok: boolean, db: boolean, version: string | null }>('/health')
-    const collections = schema.data.filter(e => e.kind === 'collection')
-    const documents = schema.data.filter(e => e.kind === 'document')
+    // La raíz es la ficha de la persona, no la base: quien entra por /datos ve a Mateo
+    // como registro y, debajo, las tablas. El motor y el request van al pie.
+    const [about, contact] = await Promise.all([api.doc('about'), api.doc('contact')])
+    const pick = (doc: typeof about, names: string[]): Row[] => names
+      .map(n => doc.data.fields.find(f => f.name === n && (!f.worlds || f.worlds.includes('datos'))))
+      .filter((f): f is NonNullable<typeof f> => !!f)
+      .map(f => docRow(f))
+    const name = about.data.fields.find(f => f.name === 'name')?.value ?? about.data.title
     detail = {
-      kind: 'document',
-      name: 'db',
-      type: 'database',
-      updated: null,
+      kind: 'root',
+      name,
+      type: 'record · about + contact',
+      updated: about.data.updatedAt.slice(0, 10),
       rows: [
-        { name: 'engine', type: 'string', value: health.data.version },
-        { name: 'collections', type: 'string[]', value: collections.map(c => c.key).join(' · ') },
-        { name: 'documents', type: 'string[]', value: documents.map(d => d.key).join(' · ') },
-        { name: 'records', type: 'int', value: String(collections.reduce((n, c) => n + c.count, 0)) },
-        { name: 'api', type: 'url', value: api.apiBase, href: api.apiBase },
+        ...pick(about, ['role', 'from', 'available', 'availability', 'languages', 'freelance_since']),
+        ...pick(contact, contact.data.fields.map(f => f.name)),
       ],
+      groups: [{
+        head: 'tables',
+        rows: schema.data.map(e => ({
+          name: e.key,
+          type: e.kind === 'collection' ? `collection · ${modelName[e.key as CollectionKey] ?? e.key}` : 'document',
+          value: `${pad(e.count)} ${e.kind === 'collection' ? 'records' : 'fields'}`,
+          to: routeFor('datos', [e.key]),
+        })),
+      }],
     }
     return done()
   }
@@ -224,7 +244,7 @@ export async function resolveExplorer(api: Api, path: Path, query: LocationQuery
       updated: answer.data.updatedAt.slice(0, 10),
       rows: answer.data.fields
         .filter(f => !f.worlds || f.worlds.includes('datos'))
-        .map(f => ({ name: f.name, type: f.type, value: f.value, wide: f.wide })),
+        .map(f => docRow(f)),
     }
     return done()
   }
