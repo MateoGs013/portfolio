@@ -72,15 +72,17 @@ export const fieldMeta: Record<CollectionKey, CollectionMeta> = {
   experience: {
     label: 'experience',
     kind: 'collection',
-    nameField: 'org',
+    // El nombre es el rol, no la organización: la experiencia es freelance y
+    // propia, y varias etapas no tienen organización detrás.
+    nameField: 'role',
     fields: {
       slug: { type: 'string', worlds: ['datos', 'diseno'] },
-      org: { type: 'relation → Org', worlds: ['datos', 'diseno'] }, // es el nombre del record
+      role: { type: 'string', worlds: ['datos', 'diseno'] }, // es el nombre del record
+      org: { type: 'relation → Org', worlds: ['datos', 'diseno'], nullable: true }, // rotula la banda en DISEÑO
       // Compartidas porque el tiempo es la dimensión dominante de esta colección:
       // DATOS las lista como fechas, DISEÑO las dibuja como bandas.
       startedAt: { type: 'date', worlds: ['datos', 'diseno'] },
       endedAt: { type: 'date', worlds: ['datos', 'diseno'], nullable: true },
-      role: { type: 'string', worlds: ['datos'] },
       summary: { type: 'string', worlds: ['datos'], wide: true },
       techs: { type: 'relation[] → Tech', worlds: ['datos'] },
       story: { type: 'text', worlds: ['diseno'], nullable: true },

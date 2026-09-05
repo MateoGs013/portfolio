@@ -88,6 +88,10 @@ Un contador de años envejece; un año de inicio no. Los años se derivan al ren
 **Fechas reales en experience, no años.**
 DISEÑO las dibuja como bandas sobre un eje y DATOS las muestra como `date`. Con años sueltos las bandas mienten.
 
+**`experience.org` opcional y el rol como nombre del record.**
+Descartado: organización obligatoria con el nombre de la empresa como título, como en un CV clásico.
+Toda la experiencia es freelance o propia: "freelance desde 2023" y el título técnico no tienen una empresa detrás, y forzar una sería mentir. El rol nombra la etapa; la organización, cuando existe, rotula la banda en DISEÑO. Migración `experience_org_optional`.
+
 **Campos compartidos solo con motivo escrito.**
 `slug` y el nombre del record (ruta y ancla del pasaje), fechas de experience y `since` de stack (la dimensión dominante de cada colección). Todo lo demás es exclusivo de un mundo. El motivo va como comentario en `fieldMeta.ts`.
 

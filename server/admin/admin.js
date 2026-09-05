@@ -57,7 +57,7 @@ const MODELS = {
   experience: {
     label: 'experience',
     path: 'experience',
-    name: r => `${r.org ? r.org.name : '?'} · ${r.role}`,
+    name: r => (r.org ? `${r.role} · ${r.org.name}` : r.role),
     meta: r => `${toDateOnly(r.startedAt)} → ${r.endedAt ? toDateOnly(r.endedAt) : 'actual'}`,
     fields: [
       F('slug', 'string'), F('role', 'string'), F('startedAt', 'date'), F('endedAt', 'date'),

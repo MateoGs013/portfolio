@@ -12,7 +12,8 @@
  *   - Tech.since: año del primer repo público que la usa. Puede ser anterior.
  *   - Tech.note y Tech.color: NULL hasta que haya criterio escrito y paleta.
  *   - Media.layer: ninguna pieza viene descompuesta en capas todavía.
- *   - Experience "escuela-da-vinci": el inicio es el del primer repo (abr-2021).
+ *   - Experience "cet-30" y "freelance": los meses de inicio/fin son aproximados
+ *     (Mateo dio los años: CET 2017-2023, freelance desde 2023).
  */
 import { db } from './db.js'
 import type { DocField } from '../../app/lib/fieldMeta.js'
@@ -53,8 +54,8 @@ const orgs = [
   { slug: 'la-rucula-gastrobar', name: 'La Rúcula Gastrobar', url: 'https://laruculagastrobar.es/', city: 'Chiclana de la Frontera, ES' },
   { slug: 'arg-piscinas', name: 'ARG Piscinas', url: 'https://www.argpiscinas.es/', city: 'Andalucía, ES' },
   { slug: 'pegasuz', name: 'Pegasuz', url: null, city: 'Buenos Aires, AR' },
-  { slug: 'briardevv', name: 'BriarDevv', url: 'https://github.com/BriarDevv', city: null },
   { slug: 'escuela-da-vinci', name: 'Escuela Da Vinci', url: 'https://www.davinci.edu.ar/', city: 'Buenos Aires, AR' },
+  { slug: 'cet-30', name: 'CET N.º 30', url: null, city: 'Río Negro, AR' },
 ]
 
 // ─── projects ───────────────────────────────────────────────────────────────
@@ -133,15 +134,15 @@ const projects: SeedProject[] = [
     slug: 'ynara',
     title: 'Ynara',
     year: 2026,
-    role: 'Contribuidor principal · 382 commits',
+    role: 'Tesis Da Vinci 2026 · contribuidor principal, 382 commits',
     status: ProjectStatus.WIP,
     featured: true,
-    summary: 'Asistente personal de IA adaptativo, on-prem y en rioplatense, con memoria cifrada semántica, episódica y procedural sobre Postgres y pgvector.',
+    summary: 'Tesis en equipo, preaprobada. Asistente personal de IA adaptativo, on-prem y en rioplatense, con memoria cifrada semántica, episódica y procedural sobre Postgres y pgvector.',
     brief: 'Un asistente que corre en tu máquina, habla como vos y se acuerda. Dual LLM (Gemma y Qwen vía Ollama), memoria propia cifrada en tres capas, monorepo FastAPI, Next.js y Expo.',
     outcome: null,
     url: null,
     repo: 'https://github.com/BriarDevv/Ynara',
-    org: 'briardevv',
+    org: 'escuela-da-vinci',
     techs: ['python', 'fastapi', 'next', 'react', 'postgresql', 'typescript'],
     links: [{ label: 'repo', url: 'https://github.com/BriarDevv/Ynara' }],
     steps: [],
@@ -151,15 +152,15 @@ const projects: SeedProject[] = [
     slug: 'ynara-web',
     title: 'Ynara Web',
     year: 2026,
-    role: 'Tesis Da Vinci 2026 · dirección creativa y desarrollo',
+    role: 'Landing del producto · diseño y desarrollo',
     status: ProjectStatus.WIP,
     featured: false,
-    summary: 'Sitio inmersivo WebGL para Ynara: una forma de luz que morfea con el scroll.',
+    summary: 'Landing inmersiva WebGL para Ynara: una forma de luz que morfea con el scroll. No es la tesis: es su puerta de entrada.',
     brief: 'Una experiencia que no se navega: se recorre. La narrativa espacial se dibuja primero; la tecnología entra al servicio de la atmósfera, nunca al revés.',
     outcome: null,
     url: null,
     repo: 'https://github.com/MateoGs013/Ynara-Web',
-    org: 'escuela-da-vinci',
+    org: null,
     techs: ['next', 'react', 'three', 'gsap', 'lenis', 'typescript', 'tailwind'],
     links: [{ label: 'repo', url: 'https://github.com/MateoGs013/Ynara-Web' }],
     steps: [],
@@ -215,7 +216,7 @@ const projects: SeedProject[] = [
 
 interface SeedExperience {
   slug: string
-  org: string
+  org: string | null
   role: string
   startedAt: string
   endedAt: string | null
@@ -225,6 +226,16 @@ interface SeedExperience {
 }
 
 const experience: SeedExperience[] = [
+  {
+    slug: 'freelance',
+    org: null,
+    role: 'Freelance · diseño y desarrollo web',
+    startedAt: '2023-01-01',
+    endedAt: null,
+    summary: 'Alrededor de diez proyectos reales para clientes desde 2023. El primero: la web de un estudio de arquitectura.',
+    story: 'Del brief al deploy: estructura, contenido y experiencia en Figma; front; back; APIs y bases de datos; responsive y accesibilidad; producción. Trabajo iterativo, con entregables divididos y revisiones progresivas.',
+    techs: ['javascript', 'typescript', 'vue', 'react', 'node', 'laravel'],
+  },
   {
     slug: 'pegasuz',
     org: 'pegasuz',
@@ -257,23 +268,33 @@ const experience: SeedExperience[] = [
   },
   {
     slug: 'ynara',
-    org: 'briardevv',
-    role: 'Contribuidor principal',
+    org: 'escuela-da-vinci',
+    role: 'Tesis en equipo · contribuidor principal',
     startedAt: '2026-05-18',
     endedAt: '2026-06-28',
-    summary: '382 commits en seis semanas sobre un asistente de IA on-prem: FastAPI, Next.js, Expo, Postgres con pgvector.',
+    summary: '382 commits en seis semanas sobre Ynara, la tesis: asistente de IA on-prem con FastAPI, Next.js, Expo y Postgres con pgvector. Preaprobada; falta la defensa.',
     story: null,
     techs: ['python', 'fastapi', 'next', 'postgresql', 'typescript'],
   },
   {
     slug: 'escuela-da-vinci',
     org: 'escuela-da-vinci',
-    role: 'Estudiante · promoción 2026',
-    startedAt: '2021-04-29',
+    role: 'Estudiante · Diseño y Desarrollo Web',
+    startedAt: '2024-03-01',
     endedAt: null,
-    summary: 'Diseño y programación web. Tesis 2026: Ynara Web.',
+    summary: 'Carrera en curso, promoción 2026. UI/UX, dirección visual, front moderno, back, bases de datos y arquitectura. Tesis preaprobada: Ynara.',
     story: null,
-    techs: ['javascript', 'typescript', 'angular', 'vue', 'php', 'laravel', 'react', 'mongodb'],
+    techs: ['vue', 'react', 'php', 'laravel', 'mongodb', 'fastapi', 'postgresql'],
+  },
+  {
+    slug: 'cet-30',
+    org: 'cet-30',
+    role: 'Técnico en Programación',
+    startedAt: '2017-03-01',
+    endedAt: '2023-12-01',
+    summary: 'Programación en el CET N.º 30, Río Negro. Título de Técnico en Programación en 2023.',
+    story: null,
+    techs: [],
   },
 ]
 
@@ -281,19 +302,24 @@ const experience: SeedExperience[] = [
 
 const aboutFields: DocField[] = [
   { name: 'name', type: 'string', value: 'Mateo Gabriel Sonzogni' },
-  { name: 'role', type: 'string', value: 'creative developer · full stack, corazón en el front-end' },
-  { name: 'based_in', type: 'string', value: 'Buenos Aires, AR' },
-  { name: 'education', type: 'string', value: 'Escuela Da Vinci · promoción 2026' },
+  { name: 'role', type: 'string', value: 'desarrollador frontend y full stack · creative developer' },
+  { name: 'from', type: 'string', value: 'Río Negro, AR' },
+  { name: 'technical_degree', type: 'string', value: 'Técnico en Programación · CET N.º 30 · 2017–2023' },
+  { name: 'education', type: 'string', value: 'Diseño y Desarrollo Web · Escuela Da Vinci · 2024–2026 · tesis preaprobada' },
+  { name: 'freelance_since', type: 'int', value: '2023' },
+  { name: 'client_projects', type: 'string', value: '≈ 10' },
   { name: 'available', type: 'bool', value: 'true' },
-  { name: 'languages', type: 'string', value: 'es · en' },
+  { name: 'availability', type: 'string', value: 'remoto · híbrido · presencial' },
+  { name: 'languages', type: 'string', value: 'es nativo · en B2' },
   { name: 'works_with_ai', type: 'bool', value: 'true' },
-  { name: 'bio', type: 'text', wide: true, value: 'Desarrollador full stack de Argentina, más cómodo en el front-end: interfaces que se mueven, responden y se sienten vivas. Trabajo en el borde creativo de la web con Vue 3, GSAP y WebGL, y también construyo lo de abajo: APIs REST, backends en Node y Laravel. Dos clientes en producción en España, un CMS propio, un SaaS y una tesis que respira WebGL. Programo en pareja con IA sin esconderlo: la dirección, la arquitectura y el gusto son míos; la velocidad es compartida.' },
+  { name: 'goal', type: 'text', wide: true, value: 'Consolidarme como desarrollador en un equipo con proyectos reales de mayor escala. A mediano plazo, liderazgo técnico: coordinar, organizar, comunicar y conectar perfiles de distintas áreas.' },
+  { name: 'bio', type: 'text', wide: true, value: 'Desarrollador frontend y full stack de Río Negro, con criterio de diseño y foco en el producto entero: qué problema resuelve, cómo debería verse, cómo debería sentirse, cómo se construye y cómo llega a producción. Empecé freelance en 2023 con la web de un estudio de arquitectura; desde entonces, unos diez proyectos reales para clientes. Trabajo el ciclo completo: estructura y experiencia en Figma, front, back, APIs y bases de datos, accesibilidad, deploy. Me interesa el creative frontend, el motion cuando cumple una función, y no posicionarme solo como programador ni solo como diseñador.' },
 ]
 
 const contactFields: DocField[] = [
   { name: 'email', type: 'url', value: 'mateogabus@gmail.com' },
   { name: 'github', type: 'url', value: 'https://github.com/MateoGs013' },
-  { name: 'status', type: 'string', value: 'buscando mi primer equipo' },
+  { name: 'status', type: 'string', value: 'buscando mi primer equipo · remoto, híbrido o presencial' },
 ]
 
 // ─── carga ──────────────────────────────────────────────────────────────────
@@ -308,7 +334,11 @@ async function main() {
   await db.org.deleteMany()
   await db.doc.deleteMany()
 
-  await db.tech.createMany({ data: techs.map(t => ({ ...t, note: null, color: null })) })
+  const notes: Partial<Record<TechSlug, string>> = {
+    gsap: 'Motion cuando cumple una función dentro de la experiencia, no como efecto decorativo aislado.',
+    three: 'WebGL solo cuando el efecto justifica perder el DOM.',
+  }
+  await db.tech.createMany({ data: techs.map(t => ({ ...t, note: notes[t.slug] ?? null, color: null })) })
   await db.org.createMany({ data: orgs })
 
   for (const [i, p] of projects.entries()) {
@@ -335,7 +365,7 @@ async function main() {
         ...scalars,
         startedAt: new Date(startedAt),
         endedAt: endedAt ? new Date(endedAt) : null,
-        org: { connect: { slug: org } },
+        org: org ? { connect: { slug: org } } : undefined,
         techs: { connect: techSlugs.map(slug => ({ slug })) },
       },
     })

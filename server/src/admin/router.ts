@@ -277,7 +277,7 @@ function experienceData(b: Record<string, unknown>) {
     endedAt: optDate(b, 'endedAt'),
     summary: str(b, 'summary'),
     story: optStr(b, 'story'),
-    orgId: int(b, 'orgId'),
+    orgId: optInt(b, 'orgId'),
   }
 }
 

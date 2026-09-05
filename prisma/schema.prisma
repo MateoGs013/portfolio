@@ -134,7 +134,9 @@ enum TechCategory {
 }
 
 // Colección `experience`. Fechas reales, no años sueltos: DISEÑO las dibuja
-// como bandas y DATOS las muestra como `date`.
+// como bandas y DATOS las muestra como `date`. Modela encargos y etapas, no
+// puestos: toda la experiencia es freelance o propia. Por eso `org` es
+// opcional: "freelance desde 2023" no tiene una organización detrás.
 model Experience {
   id        Int       @id @default(autoincrement())
   slug      String    @unique
@@ -143,8 +145,8 @@ model Experience {
   endedAt   DateTime? @db.Date // NULL = actual
   summary   String // una línea. DATOS.
   story     String?   @db.Text // qué aprendió ahí. DISEÑO.
-  org       Org       @relation(fields: [orgId], references: [id])
-  orgId     Int
+  org       Org?      @relation(fields: [orgId], references: [id])
+  orgId     Int?
   techs     Tech[]
 
   @@index([startedAt])
