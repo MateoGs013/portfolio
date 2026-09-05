@@ -218,15 +218,6 @@ export async function resolveExplorer(api: Api, path: Path, query: LocationQuery
         ...pick(about, ['role', 'from', 'available', 'availability', 'languages', 'freelance_since']),
         ...pick(contact, contact.data.fields.map(f => f.name)),
       ],
-      groups: [{
-        head: 'tables',
-        rows: schema.data.map(e => ({
-          name: e.key,
-          type: e.kind === 'collection' ? `collection · ${modelName[e.key as CollectionKey] ?? e.key}` : 'document',
-          value: `${pad(e.count)} ${e.kind === 'collection' ? 'records' : 'fields'}`,
-          to: routeFor('datos', [e.key]),
-        })),
-      }],
     }
     return done()
   }

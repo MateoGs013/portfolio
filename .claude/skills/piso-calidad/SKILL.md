@@ -30,7 +30,7 @@ Desenchufar el mouse y recorrer el sitio entero.
 
 ## 3 · Lector de pantalla
 
-- Las columnas fuera de foco tienen que ser `inert` **y** `aria-hidden`. Si no, se leen cuatro niveles apilados.
+- Cada columna es una región con nombre (`section aria-label`) para navegar por regiones. **No** usar `inert`: mata el click lateral, que es la razón de tener columnas (decidido el 5-sep-2026, ver `docs/decisiones.md`).
 - Las capas del mundo DISEÑO fuera de la vista activa, igual.
 - Los SVG decorativos con `aria-hidden="true"`.
 - Las imágenes con `alt` real, no el filename.

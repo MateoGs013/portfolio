@@ -15,10 +15,10 @@ defineProps<{
 <template>
   <section class="col" :style="{ '--dist': dist }" :aria-label="column.head">
     <div class="col-in">
-      <header class="head" :class="{ inv: column.level > 0 }">
+      <h2 class="head" :class="{ inv: column.level > 0 }">
         <span class="head-name">{{ column.head }}</span>
         <span class="head-count">{{ pad(column.count) }}</span>
-      </header>
+      </h2>
 
       <ul v-if="column.facets.length" class="facets" aria-label="Filtros">
         <li v-for="f in column.facets" :key="f.key">
@@ -57,7 +57,7 @@ defineProps<{
 .col {
   flex: none;
   width: var(--d-col);
-  margin-right: 28px;
+  margin-right: 24px;
   transform: translateZ(calc(var(--dist) * var(--d-z) * -1));
   opacity: max(0.55, calc(1 - var(--dist) * 0.15));
   transition: transform var(--d-dur) var(--d-ease), opacity var(--d-dur) var(--d-ease);
@@ -72,7 +72,9 @@ defineProps<{
   justify-content: space-between;
   align-items: center;
   height: var(--d-row);
+  margin: 0;
   padding: 0 12px;
+  font-weight: 400;
   border-bottom: 1px solid var(--d-ink);
   font-family: var(--font-mono);
   font-size: var(--d-fs-mono);

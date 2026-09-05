@@ -14,6 +14,7 @@ const { path, query } = useMundo()
 
 useHead({
   htmlAttrs: { 'data-mundo': 'datos' },
+  meta: [{ name: 'theme-color', content: '#eef0f2' }],
   title: computed(() => ['datos', ...path.value].join(' / ')),
 })
 usePreloadFonts('datos')
@@ -52,6 +53,19 @@ const mobile = computed(() => {
 
 const gotoOpen = ref(false)
 
+// Tras navegar con el teclado, el foco sigue a la posición: la fila elegida
+// en la columna que quedó activa, o el título de la hoja si se entró a un record.
+const viaTeclado = ref(false)
+watch(ex, async () => {
+  if (!viaTeclado.value) return
+  viaTeclado.value = false
+  await nextTick()
+  const root = document.querySelector<HTMLElement>('.datos')
+  const target = root?.querySelector<HTMLElement>('.col.live .row[aria-current]')
+    ?? root?.querySelector<HTMLElement>('.hoja .titulo')
+  target?.focus({ preventScroll: false })
+}, { flush: 'post' })
+
 function onKey(e: KeyboardEvent) {
   if (gotoOpen.value) return
   const t = e.target as HTMLElement | null
@@ -70,6 +84,7 @@ function onKey(e: KeyboardEvent) {
   const go = (item?: Item) => {
     if (!item?.to) return
     e.preventDefault()
+    viaTeclado.value = true
     navigateTo(item.to)
   }
 
@@ -91,6 +106,7 @@ function onKey(e: KeyboardEvent) {
     case 'Escape':
       if (path.value.length) {
         e.preventDefault()
+        viaTeclado.value = true
         navigateTo(routeFor('datos', path.value.slice(0, -1), path.value.length > 1 ? query.value : undefined))
       }
       break
@@ -116,7 +132,7 @@ onBeforeUnmount(() => removeEventListener('keydown', onKey))
       </button>
     </header>
 
-    <main class="exp">
+    <main id="contenido" class="exp" tabindex="-1">
       <div v-if="error" class="track">
         <DatosDetail
           :detail="{
@@ -176,6 +192,7 @@ onBeforeUnmount(() => removeEventListener('keydown', onKey))
   padding: 0 var(--d-frame);
 }
 .rail.top { border-bottom: 1px solid var(--d-rule); padding-right: 172px; }
+.exp:focus { outline: none; }
 .rail.bot { height: 40px; border-top: 1px solid var(--d-rule); color: var(--d-dim); }
 
 .ruta { display: flex; align-items: center; min-width: 0; white-space: nowrap; overflow: hidden; }
@@ -247,10 +264,10 @@ kbd {
   .rail.top { padding-right: 150px; }
   .goto-btn { display: none; }
   .exp { perspective: none; overflow: visible; display: block; mask-image: none; }
-  .track { display: block; transform: none; margin: 0; }
+  .track, .track:has(.col:nth-child(3)) { display: block; width: auto; min-width: 0; transform: none; margin: 0; }
   .track > * { max-height: none; overflow: visible; }
   .track > :deep(.col) { width: 100%; margin: 0; transform: none; opacity: 1; }
-  .track > :deep(.hoja) { min-width: 0; }
+  .track > :deep(.hoja) { min-width: 0; padding-right: 0; }
   /* Una sola cosa por pantalla. */
   .m-columna .track > :deep(.col:not(.last)), .m-columna .track > :deep(.hoja) { display: none; }
   .m-hoja .track > :deep(.col) { display: none; }

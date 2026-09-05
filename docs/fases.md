@@ -62,6 +62,8 @@ Lo que dejó para la Fase 3: DATOS ya resuelve todos los niveles en una sola col
 
 **Dirección de arte:** hoja técnica (ver `docs/decisiones.md`). La Fase 2 se había construido copiando los prototipos y se rehízo.
 
+**Auditoría del 5-sep-2026** (`/piso-calidad`, `/revision-mundos`, guidelines de interfaz web, build de producción): CLS 0 · LCP 192 ms · JS 241 KB transferidos · CSS 24 KB · sin JS todo navegable por links · primer Tab cae en "saltar al contenido" · el foco sigue a la navegación por teclado · 320px sin desborde · reduced motion corta las animaciones. Pendiente para la Fase 7: medir con datos reales de producción y exponer esas cifras como contenido.
+
 **El sitio puede salir acá.** DISEÑO es la parte cara y va segunda. Falta la Fase 7 antes de publicar.
 
 ---

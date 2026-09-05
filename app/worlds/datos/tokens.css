@@ -4,18 +4,18 @@
    Dirección en docs/decisiones.md → "Dirección de la Fase 3". */
 :root {
   /* temperatura */
-  --d-paper: #f3f3f0;
-  --d-ink: #0b0c0d;
-  --d-rule: #c4c7c2;
-  --d-dim: #5e635e;
-  --d-faint: #989d98;
-  --d-hover: #e7e9e5;
+  --d-paper: #eef0f2;
+  --d-ink: #0b0d10;
+  --d-rule: #c3c8ce;
+  --d-dim: #51575e; /* 6.9:1 sobre papel: sirve para tipos y etiquetas, que son contenido */
+  --d-faint: #737a82; /* 4.6:1: solo números de fila y chevrones */
+  --d-hover: #e2e5e9;
   --d-sig: #1b3fd9; /* solo relaciones, links y facetas; el estado se marca por inversión */
-  --d-inv-dim: #a9ada8; /* texto secundario dentro de un bloque invertido */
+  --d-inv-dim: #a6acb4; /* texto secundario dentro de un bloque invertido */
 
   /* densidad */
   --d-frame: clamp(20px, 3vw, 56px);
-  --d-col: 288px;
+  --d-col: 256px;
   --d-pane-min: 480px;
   --d-row: 44px;
   --d-z: 56px; /* profundidad entre columnas, casi imperceptible a propósito */
@@ -25,7 +25,7 @@
   --d-fs-value: 16px;
   --d-fs-read: 18px;
   --d-fs-title: clamp(30px, 3.2vw, 44px);
-  --d-fs-portada: clamp(48px, 6vw, 96px);
+  --d-fs-portada: clamp(44px, 5vw, 80px);
   --d-lh: 1.45;
 
   /* ritmo: acá el movimiento es latencia */

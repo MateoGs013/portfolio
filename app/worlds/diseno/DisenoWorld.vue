@@ -12,6 +12,7 @@ const { path, query } = useMundo()
 
 useHead({
   htmlAttrs: { 'data-mundo': 'diseno' },
+  meta: [{ name: 'theme-color', content: '#0e0b07' }],
   title: computed(() => ['diseño', ...path.value].join(' / ')),
 })
 usePreloadFonts('diseno')
@@ -92,7 +93,7 @@ if (import.meta.server && error.value) {
       </NuxtLink>
     </nav>
 
-    <main class="cuerpo">
+    <main id="contenido" class="cuerpo" tabindex="-1">
       <p v-if="error" class="k">{{ error.statusCode ?? 500 }} · {{ error.statusMessage ?? error.message }}</p>
 
       <template v-else-if="view?.kind === 'list'">
