@@ -25,7 +25,7 @@
   --d-fs-name: 15px;
   --d-fs-value: 16px;
   --d-fs-read: 18px;
-  --d-fs-title: clamp(30px, 3.2vw, 44px);
+  --d-fs-title: 22px; /* el nombre de un archivo abierto, a escala de interfaz */
   --d-lh: 1.45;
 
   /* ritmo: acá el movimiento es latencia */
