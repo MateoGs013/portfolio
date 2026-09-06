@@ -1,21 +1,19 @@
 /**
- * El explorador de DATOS. Dado un path devuelve las columnas que hay que
- * dibujar, la tabla o la hoja que ocupa el resto de la pantalla y el request
- * que lo produjo. Un solo resolutor para todas las colecciones: una base de
- * datos trata a todos los records igual.
+ * El explorador de DATOS. Dado un path devuelve el único panel que se
+ * dibuja en ese nivel, a dónde se sube desde ahí, los vecinos a los que se
+ * puede pasar de lado, y el request que lo produjo. Un solo resolutor para
+ * todas las colecciones: una base de datos trata a todos los records igual.
  *
- *   []                       columna 0: el schema · hoja: la persona
- *   [about]                  columna 0 · hoja: los campos del documento
- *   [projects]               columna 0 · tabla: los records, con las facetas de la query
- *   [projects, la-rucula]    columna 0 · columna 1: los records · hoja: el record, relaciones incluidas
- *   [orgs, pegasuz]          orgs no está en el schema: la columna 1 es la org alcanzada
+ *   []                       hoja: la persona · índice: las tablas de la base
+ *   [about]                  hoja: los campos del documento
+ *   [projects]               tabla: los records, con las facetas de la query
+ *   [projects, la-rucula]    hoja: el record, relaciones incluidas · prev/next: los records vecinos
+ *   [orgs, pegasuz]          orgs no tiene lista: la hoja de la org alcanzada, sin vecinos
  *
- * No hay sub-nivel: las relaciones de un record se leen en su hoja y cada
- * una es un link. Quien busca "qué hizo con Vue" filtra la tabla tocando el
- * valor; no baja tres niveles.
- *
- * Trampa conocida: cada columna extra requiere que haya algo seleccionado en
- * la anterior. Acá eso es estructural, porque las columnas salen del path.
+ * Es una carpeta por pantalla: se ve un nivel, se entra a un item, se vuelve
+ * por la ruta. No hay sub-nivel: las relaciones de un record se leen en su
+ * hoja y cada una es un link. Quien busca "qué hizo con Vue" filtra la tabla
+ * tocando el valor; no baja tres niveles.
  */
 import type { LocationQuery, RouteLocationRaw } from 'vue-router'
 import type { AnyRecord, LinkRef, Org, TechRef } from '~/lib/api'
@@ -28,11 +26,9 @@ type Api = ReturnType<typeof useApi>
 export interface Item {
   key: string
   label: string
-  /** El dato dominante de la colección, alineado a la derecha. */
+  /** El dato dominante, alineado a la derecha: cuántos records tiene la tabla. */
   meta: string
-  kids: boolean
-  to?: RouteLocationRaw
-  href?: string
+  to: RouteLocationRaw
 }
 
 export interface Facet {
@@ -41,15 +37,16 @@ export interface Facet {
   remove: RouteLocationRaw
 }
 
-export interface Column {
-  /** Nivel del path que esta columna elige. */
-  level: number
-  /** Encabezado: `db` en la raíz; después, el nombre de lo elegido en la columna anterior. */
-  head: string
+/** El índice de la base: una fila por tabla o documento. Solo existe en la raíz. */
+export interface Index {
   count: number
   items: Item[]
-  selected: string | null
-  facets: Facet[]
+}
+
+/** Un record vecino en la lista de la colección: a dónde se pasa de lado. */
+export interface Vecino {
+  label: string
+  to: RouteLocationRaw
 }
 
 /** Un valor que lleva a algún lado: record, filtro o URL externa. */
@@ -101,9 +98,15 @@ export interface Table {
 }
 
 export interface Explorer {
-  columns: Column[]
+  /** Profundidad del path: 0 raíz, 1 colección o documento, 2 record. */
+  level: number
+  index: Index | null
   table: Table | null
   detail: Detail | null
+  /** La carpeta de arriba. `null` en la raíz. */
+  up: RouteLocationRaw | null
+  prev: Vecino | null
+  next: Vecino | null
   request: { line: string, status: number, ms: number, count: number }
 }
 
@@ -252,33 +255,28 @@ function facetsOf(collection: CollectionKey, query: LocationQuery): Facet[] {
 
 export async function resolveExplorer(api: Api, path: Path, query: LocationQuery): Promise<Explorer> {
   const [root, slug, sub] = path
-  const columns: Column[] = []
+  let index: Index | null = null
   let table: Table | null = null
   let detail: Detail | null = null
+  let up: RouteLocationRaw | null = null
+  let prev: Vecino | null = null
+  let next: Vecino | null = null
   let last: Answer<unknown>
-
-  // Columna 0: el schema.
-  const schema = await api.schema()
-  last = schema
-  columns.push({
-    level: 0,
-    head: 'db',
-    count: schema.meta.count,
-    selected: root ?? null,
-    facets: [],
-    items: schema.data.map(e => ({
-      key: e.key,
-      label: e.label,
-      meta: `${pad(e.count)} ${e.kind === 'collection' ? 'records' : 'fields'}`,
-      kids: true,
-      to: routeFor('datos', [e.key]),
-    })),
-  })
 
   if (!root) {
     // La raíz es la ficha de la persona, no la base: quien entra por /datos ve a Mateo
-    // como registro y, al lado, las tablas. El motor y el request van al pie.
-    const [about, contact] = await Promise.all([api.doc('about'), api.doc('contact')])
+    // como registro y, debajo del nombre, las tablas. El motor y el request van al pie.
+    const [schema, about, contact] = await Promise.all([api.schema(), api.doc('about'), api.doc('contact')])
+    last = schema
+    index = {
+      count: schema.meta.count,
+      items: schema.data.map(e => ({
+        key: e.key,
+        label: e.label,
+        meta: `${pad(e.count)} ${e.kind === 'collection' ? 'records' : 'fields'}`,
+        to: routeFor('datos', [e.key]),
+      })),
+    }
     const pick = (doc: typeof about, names: string[]): Row[] => names
       .map(n => doc.data.fields.find(f => f.name === n && (!f.worlds || f.worlds.includes('datos'))))
       .filter((f): f is NonNullable<typeof f> => !!f)
@@ -298,6 +296,7 @@ export async function resolveExplorer(api: Api, path: Path, query: LocationQuery
   }
   if (!isRoot(root)) throw notFound()
   if (sub) throw notFound('no hay nada debajo de un record')
+  up = routeFor('datos', [])
 
   // Documento: es una hoja. Sus campos van directo al detalle.
   if (isDoc(root)) {
@@ -319,26 +318,11 @@ export async function resolveExplorer(api: Api, path: Path, query: LocationQuery
   const collection = root
   const meta = fieldMeta[collection]
 
-  // Columna 1: los records de la colección (o la org alcanzada por relación).
   let record: AnyRecord | null = null
   if (listEndpoint[collection]) {
     const answer = await api.list(collection, query)
     last = answer
     const records = answer.data as AnyRecord[]
-    columns.push({
-      level: 1,
-      head: collection,
-      count: answer.meta.count,
-      selected: slug ?? null,
-      facets: facetsOf(collection, query),
-      items: records.map(r => ({
-        key: r.slug,
-        label: nameOf(collection, r),
-        meta: metaOf(collection, r),
-        kids: true,
-        to: routeFor('datos', [collection, r.slug], query),
-      })),
-    })
     if (!slug) {
       // La colección es una tabla: una fila por record, una columna por campo de lista.
       table = {
@@ -356,6 +340,13 @@ export async function resolveExplorer(api: Api, path: Path, query: LocationQuery
       }
       return done()
     }
+    // Se sube a la tabla con los mismos filtros, y los vecinos son los de esa
+    // misma lista filtrada: con ?stack=vue, ↑↓ pasa entre los proyectos con Vue.
+    up = routeFor('datos', [collection], query)
+    const at = records.findIndex(r => r.slug === slug)
+    const vecino = (r?: AnyRecord): Vecino | null => r ? { label: nameOf(collection, r), to: routeFor('datos', [collection, r.slug], query) } : null
+    prev = vecino(records[at - 1])
+    next = vecino(records[at + 1])
     // projects tiene detalle propio (media, steps); el resto ya vino completo en la lista.
     if (collection === 'projects') {
       const one = await api.record(collection, slug)
@@ -363,7 +354,7 @@ export async function resolveExplorer(api: Api, path: Path, query: LocationQuery
       record = one.data
     }
     else {
-      record = records.find(r => r.slug === slug) ?? null
+      record = records[at] ?? null
       if (!record) throw notFound()
     }
   }
@@ -372,14 +363,6 @@ export async function resolveExplorer(api: Api, path: Path, query: LocationQuery
     const one = await api.record(collection, slug)
     last = one
     record = one.data
-    columns.push({
-      level: 1,
-      head: collection,
-      count: 1,
-      selected: slug,
-      facets: [],
-      items: [{ key: slug, label: nameOf(collection, record), meta: metaOf(collection, record), kids: true, to: routeFor('datos', [collection, slug]) }],
-    })
   }
 
   // Las relaciones inversas de una tech son literalmente un filtro de la otra
@@ -414,9 +397,13 @@ export async function resolveExplorer(api: Api, path: Path, query: LocationQuery
 
   function done(): Explorer {
     return {
-      columns,
+      level: path.length,
+      index,
       table,
       detail,
+      up,
+      prev,
+      next,
       request: { line: last.request, status: last.status, ms: last.ms, count: last.meta.count },
     }
   }

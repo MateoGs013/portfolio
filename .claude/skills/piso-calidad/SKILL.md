@@ -30,7 +30,7 @@ Desenchufar el mouse y recorrer el sitio entero.
 
 ## 3 · Lector de pantalla
 
-- Cada columna es una región con nombre (`section aria-label`) para navegar por regiones. **No** usar `inert`: mata el click lateral, que es la razón de tener columnas (decidido el 5-sep-2026, ver `docs/decisiones.md`).
+- DATOS muestra un panel por nivel; el índice de la raíz y los vecinos de la hoja son regiones con nombre (`section` / `nav` con `aria-label`). Las filas de la tabla llevan `tabindex="-1"` solo para el foco itinerante del teclado: el Tab sigue pasando por los links, no por las filas.
 - Las capas del mundo DISEÑO fuera de la vista activa, igual.
 - Los SVG decorativos con `aria-hidden="true"`.
 - Las imágenes con `alt` real, no el filename.
@@ -52,7 +52,7 @@ Activar `prefers-reduced-motion: reduce`.
 
 ## 6 · Responsive
 
-- DATOS por debajo de ~900px: perspectiva apagada, una columna sola.
+- DATOS por debajo de ~900px: la misma estructura de un panel por nivel, la tabla apilada, sin perspectiva.
 - DISEÑO: verificar que cada sección tenga una versión mobile pensada, no solo apretada.
 - Probar a 320px de ancho.
 

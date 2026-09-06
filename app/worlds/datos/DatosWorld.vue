@@ -1,14 +1,16 @@
 <script setup lang="ts">
-// Renderer DATOS: explorador de columnas en perspectiva CSS, con la tabla de
-// la colección o la hoja del record al final. Un solo renderer para todas las
-// colecciones. La ruta es el estado: el teclado y el "ir a" solo navegan; no
-// hay selección en memoria.
-import DatosColumn from './DatosColumn.vue'
+// Renderer DATOS: una carpeta por pantalla. La raíz es la persona con el
+// índice de la base debajo; una colección es una tabla; un record es una
+// hoja. Un solo panel por nivel, la ruta arriba para volver, y los vecinos
+// a los lados. Un solo renderer para todas las colecciones. La ruta es el
+// estado: el teclado mueve el foco por las filas y navega; no hay selección
+// en memoria.
 import DatosDetail from './DatosDetail.vue'
 import DatosGoto from './DatosGoto.vue'
+import DatosIndex from './DatosIndex.vue'
 import DatosTable from './DatosTable.vue'
-import { pad, resolveExplorer, type Explorer, type Item } from './explorer'
-import { isDoc, routeFor, type Root } from '~/lib/path'
+import { pad, resolveExplorer, type Explorer } from './explorer'
+import { routeFor } from '~/lib/path'
 
 const api = useApi()
 const route = useRoute()
@@ -32,88 +34,102 @@ if (import.meta.server && error.value) {
   if (event) setResponseStatus(event, error.value.statusCode ?? 500)
 }
 
-const columns = computed(() => ex.value?.columns ?? [])
+const index = computed(() => ex.value?.index ?? null)
 const table = computed(() => ex.value?.table ?? null)
 const detail = computed(() => ex.value?.detail ?? null)
-/** La tabla reemplaza a la última columna: son los mismos records, con ancho. */
-const visible = computed(() => table.value ? columns.value.slice(0, -1) : columns.value)
+/** Un record o un documento: la hoja sola, sin filas que recorrer. */
+const hoja = computed(() => !!detail.value && !index.value && !table.value)
 
 const segments = computed(() => [
   { label: 'db', to: routeFor('datos', []) },
   ...path.value.map((seg, i) => ({ label: seg, to: routeFor('datos', path.value.slice(0, i + 1), query.value) })),
 ])
 
-/** La columna cuya elección es el último segmento del path. */
-const focus = computed(() => Math.max(0, path.value.length - 1))
-
-/** Distancia en Z: la última superficie (la tabla o la hoja, si hay) está a 0. */
-const dist = (i: number) => visible.value.length - 1 - i + (detail.value || table.value ? 1 : 0)
-
-/** Mobile muestra una sola cosa: la tabla en una colección, la hoja en un record o un doc, si no la última columna. */
-const mobile = computed(() => {
-  if (table.value) return 'tabla'
-  const root = path.value[0]
-  const leaf = path.value.length === 2 || (path.value.length === 1 && isDoc(root as Root))
-  return detail.value && leaf ? 'hoja' : 'columna'
+// Entrar a una carpeta acerca el panel nuevo; subir lo trae desde adelante.
+// Es el único movimiento del mundo y dura lo que tarda el request.
+const dir = ref<'' | 'deeper' | 'up' | 'lateral'>('')
+watch(() => ex.value?.level, (now, before) => {
+  if (now === undefined || before === undefined) return
+  dir.value = now > before ? 'deeper' : now < before ? 'up' : 'lateral'
 })
 
 const gotoOpen = ref(false)
+const pane = ref<HTMLElement | null>(null)
 
-// Tras navegar con el teclado, el foco sigue a la posición: la fila elegida
-// en la columna que quedó activa, o el título de la hoja si se entró a un record.
+/** Las filas que el teclado recorre en el panel actual, en orden de lectura. */
+const rows = () => Array.from(pane.value?.querySelectorAll<HTMLElement>('[data-row]') ?? [])
+
+// Tras navegar con el teclado, el foco sigue a la posición: al subir, la fila
+// de la que se venía; si no, el título del panel nuevo.
 const viaTeclado = ref(false)
+let cameFrom: string | null = null
 watch(ex, async () => {
   if (!viaTeclado.value) return
   viaTeclado.value = false
   await nextTick()
-  const root = document.querySelector<HTMLElement>('.datos')
-  const target = root?.querySelector<HTMLElement>('.col.live .row[aria-current]')
-    ?? root?.querySelector<HTMLElement>('[data-anchor]')
-  target?.focus({ preventScroll: false })
+  const back = cameFrom ? rows().find(r => r.dataset.row === cameFrom) : undefined
+  cameFrom = null
+  ;(back ?? pane.value?.querySelector<HTMLElement>('[data-anchor]'))?.focus({ preventScroll: false })
 }, { flush: 'post' })
 
+function go(to: Parameters<typeof navigateTo>[0], from?: string) {
+  viaTeclado.value = true
+  cameFrom = from ?? null
+  navigateTo(to)
+}
+
 function onKey(e: KeyboardEvent) {
-  if (gotoOpen.value) return
+  if (gotoOpen.value || !ex.value) return
   const t = e.target as HTMLElement | null
   if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) return
-
-  if (e.key === '/' || (e.key === 'k' && (e.metaKey || e.ctrlKey))) {
-    e.preventDefault()
-    gotoOpen.value = true
+  if (e.altKey || e.metaKey || e.ctrlKey) {
+    if (e.key === 'k' && (e.metaKey || e.ctrlKey)) { e.preventDefault(); gotoOpen.value = true }
     return
   }
 
-  const cols = columns.value
-  const col = cols[focus.value]
-  if (!col) return
-  const idx = col.items.findIndex(i => i.key === col.selected)
-  const go = (item?: Item) => {
-    if (!item?.to) return
-    e.preventDefault()
-    viaTeclado.value = true
-    navigateTo(item.to)
-  }
-
   switch (e.key) {
+    case '/':
+      e.preventDefault()
+      gotoOpen.value = true
+      break
+
     case 'ArrowDown':
-      go(col.items[idx < 0 ? 0 : Math.min(idx + 1, col.items.length - 1)])
-      break
-    case 'ArrowUp':
-      go(col.items[idx < 0 ? col.items.length - 1 : Math.max(idx - 1, 0)])
-      break
-    case 'ArrowRight':
-    case 'Enter': {
-      if (e.key === 'Enter' && t?.tagName === 'A') return // el link ya navega solo
-      const next = cols[focus.value + 1]
-      if (col.selected && next?.items.length) go(next.items[0])
+    case 'ArrowUp': {
+      const down = e.key === 'ArrowDown'
+      if (hoja.value) {
+        // En la hoja no hay lista: ↑↓ pasan al record vecino.
+        const vecino = down ? ex.value.next : ex.value.prev
+        if (vecino) { e.preventDefault(); go(vecino.to) }
+        return
+      }
+      const list = rows()
+      if (!list.length) return
+      e.preventDefault()
+      const at = list.findIndex(r => r === t || r.contains(t))
+      const to = at < 0 ? (down ? 0 : list.length - 1) : Math.min(Math.max(at + (down ? 1 : -1), 0), list.length - 1)
+      list[to]?.focus()
       break
     }
+
+    case 'ArrowRight':
+    case 'Enter': {
+      // Abrir la fila que tiene el foco. Un link con Enter ya navega solo.
+      if (e.key === 'Enter' && t?.tagName === 'A') return
+      const row = t?.closest<HTMLElement>('[data-row]')
+      const link = row && (row.tagName === 'A' ? row : row.querySelector('a'))
+      if (!link) return
+      e.preventDefault()
+      viaTeclado.value = true
+      link.click()
+      break
+    }
+
     case 'ArrowLeft':
+    case 'Backspace':
     case 'Escape':
-      if (path.value.length) {
+      if (ex.value.up) {
         e.preventDefault()
-        viaTeclado.value = true
-        navigateTo(routeFor('datos', path.value.slice(0, -1), path.value.length > 1 ? query.value : undefined))
+        go(ex.value.up, path.value[path.value.length - 1])
       }
       break
   }
@@ -124,7 +140,7 @@ onBeforeUnmount(() => removeEventListener('keydown', onKey))
 </script>
 
 <template>
-  <div class="datos" :class="`m-${mobile}`">
+  <div class="datos">
     <header class="rail top">
       <nav class="ruta" aria-label="Ruta">
         <template v-for="(seg, i) in segments" :key="seg.label + i">
@@ -141,7 +157,7 @@ onBeforeUnmount(() => removeEventListener('keydown', onKey))
     </header>
 
     <main id="contenido" class="exp" tabindex="-1">
-      <div v-if="error" class="track">
+      <div v-if="error" class="pane">
         <DatosDetail
           :detail="{
             kind: 'document',
@@ -156,23 +172,26 @@ onBeforeUnmount(() => removeEventListener('keydown', onKey))
           }"
         />
       </div>
-      <div v-else class="track">
-        <DatosColumn
-          v-for="(c, i) in visible"
-          :key="`${i}:${c.head}`"
-          :column="c"
-          :dist="dist(i)"
-          :class="{ last: i === visible.length - 1, live: i === focus }"
-        />
-        <DatosTable v-if="table" :table="table" />
-        <DatosDetail v-if="detail" :detail="detail" />
+      <div v-else-if="ex" ref="pane" :key="route.fullPath" class="pane" :class="dir">
+        <DatosDetail v-if="detail && index" :detail="detail">
+          <template #index>
+            <DatosIndex :index="index" />
+          </template>
+        </DatosDetail>
+        <DatosTable v-else-if="table" :table="table" />
+        <DatosDetail v-else-if="detail" :detail="detail" :prev="ex.prev" :next="ex.next" />
       </div>
     </main>
 
     <footer class="rail bot">
       <span v-if="ex" class="req">{{ ex.request.line }}</span>
       <span v-if="ex" class="medida">{{ ex.request.status }} · {{ ex.request.ms }} ms · {{ pad(ex.request.count) }} {{ ex.request.count === 1 ? 'record' : 'records' }}</span>
-      <span class="keys" aria-hidden="true"><kbd>↑</kbd><kbd>↓</kbd> mover <kbd>→</kbd> entrar <kbd>←</kbd> volver <kbd>/</kbd> ir a</span>
+      <span class="keys" aria-hidden="true">
+        <template v-if="hoja && (ex?.prev || ex?.next)"><kbd>↑</kbd><kbd>↓</kbd> vecino</template>
+        <template v-else-if="!hoja"><kbd>↑</kbd><kbd>↓</kbd> mover <kbd>↵</kbd> abrir</template>
+        <template v-if="ex?.up"><kbd>←</kbd> volver</template>
+        <kbd>/</kbd> ir a
+      </span>
     </footer>
 
     <DatosGoto v-if="gotoOpen" @close="gotoOpen = false" />
@@ -204,10 +223,11 @@ onBeforeUnmount(() => removeEventListener('keydown', onKey))
 .exp:focus { outline: none; }
 .rail.bot { height: 40px; border-top: 1px solid var(--d-rule); color: var(--d-dim); }
 
-.ruta { display: flex; align-items: center; min-width: 0; white-space: nowrap; overflow: hidden; }
-.ruta a { color: var(--d-sig); text-decoration: none; }
+/* La ruta es la barra de dirección: cada segmento es una carpeta a la que se vuelve. */
+.ruta { display: flex; align-items: center; min-width: 0; white-space: nowrap; overflow: hidden; font-size: 12.5px; }
+.ruta a { color: var(--d-sig); text-decoration: none; padding: 6px 0; }
 .ruta a:hover { text-decoration: underline; }
-.sep { color: var(--d-faint); padding: 0 8px; }
+.sep { color: var(--d-faint); padding: 0 9px; }
 .here { color: var(--d-ink); }
 
 .goto-btn {
@@ -245,32 +265,20 @@ kbd {
   flex: 1;
   min-height: 0;
   padding: var(--d-frame);
-  /* Profundidad casi imperceptible: las columnas retroceden apenas hacia la izquierda,
-     sin converger hacia el centro (eso las haría pisarse). */
-  perspective: 2400px;
-  perspective-origin: 0% 50%;
-  overflow: hidden;
-  display: flex;
-  justify-content: flex-end;
-  /* Lo que no entra por la izquierda se desvanece en vez de cortarse. */
-  mask-image: linear-gradient(to right, transparent 0, #000 var(--d-frame));
-}
-.track {
-  display: flex;
-  align-items: flex-start;
-  flex: none;
-  width: 100%;
-  max-height: 100%;
-  margin-right: auto;
-  transform-style: preserve-3d;
-}
-.track:has(.col:nth-child(3)) { width: max-content; min-width: 100%; }
-.track > * {
-  max-height: 100%;
   overflow-y: auto;
   scrollbar-width: thin;
   scrollbar-color: var(--d-rule) transparent;
+  /* La profundidad ya no es una disposición: es el gesto de entrar y salir de una carpeta. */
+  perspective: 1200px;
+  perspective-origin: 50% 40%;
 }
+.pane { animation: var(--d-dur) var(--d-ease) both; }
+.pane.deeper { animation-name: acercar; }
+.pane.up { animation-name: alejar; }
+.pane.lateral { animation-name: correr; }
+@keyframes acercar { from { transform: translateZ(calc(var(--d-z) * -1)); opacity: 0; } }
+@keyframes alejar { from { transform: translateZ(var(--d-z)); opacity: 0; } }
+@keyframes correr { from { transform: translateX(12px); opacity: 0; } }
 
 .req { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .medida { flex: none; }
@@ -280,14 +288,7 @@ kbd {
   .datos { height: auto; min-height: 100dvh; }
   .rail.top { padding-right: calc(var(--d-frame) + 130px); }
   .goto-btn { display: none; }
-  .exp { perspective: none; overflow: visible; display: block; mask-image: none; }
-  .track, .track:has(.col:nth-child(3)) { display: block; width: auto; min-width: 0; transform: none; margin: 0; }
-  .track > * { max-height: none; overflow: visible; }
-  .track > :deep(.col) { width: 100%; margin: 0; transform: none; opacity: 1; }
-  .track > :deep(.hoja) { min-width: 0; padding-right: 0; }
-  /* Una sola cosa por pantalla. */
-  .m-columna .track > :deep(.col:not(.last)), .m-columna .track > :deep(.hoja) { display: none; }
-  .m-hoja .track > :deep(.col), .m-tabla .track > :deep(.col) { display: none; }
+  .exp { overflow: visible; perspective: none; }
   .keys { display: none; }
 }
 </style>

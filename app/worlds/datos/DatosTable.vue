@@ -9,6 +9,12 @@ import { pad, type Table } from './explorer'
 defineProps<{ table: Table }>()
 const uid = useId()
 
+/** La fila entera abre el record, como en una carpeta. Un link dentro de la fila gana. */
+function open(e: MouseEvent, to: Table['rows'][number]['to']) {
+  if ((e.target as HTMLElement).closest('a') || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey) return
+  navigateTo(to)
+}
+
 /** Ancho de columna según el tipo: los números no se parten, el texto sí. */
 function kind(type: string, first: boolean): string {
   if (first) return 'name'
@@ -54,7 +60,7 @@ function kind(type: string, first: boolean): string {
         </tr>
       </thead>
       <tbody>
-        <tr v-for="(row, i) in table.rows" :key="row.key">
+        <tr v-for="(row, i) in table.rows" :key="row.key" :data-row="row.key" tabindex="-1" @click="open($event, row.to)">
           <td class="n">{{ pad(i + 1) }}</td>
           <td
             v-for="(cell, j) in row.cells"
@@ -72,16 +78,7 @@ function kind(type: string, first: boolean): string {
 </template>
 
 <style scoped>
-.tabla {
-  flex: 1 1 var(--d-pane-min);
-  min-width: 0;
-  padding-right: 16px;
-  scrollbar-gutter: stable;
-  animation: entrar var(--d-dur) var(--d-ease) both;
-}
-@keyframes entrar {
-  from { transform: translateX(12px); opacity: 0; }
-}
+.tabla { min-width: 0; }
 
 .cabecera {
   padding-top: 2px;
@@ -161,7 +158,9 @@ td.n, th.n { width: 24px; padding-right: 10px; font-family: var(--font-mono); fo
 td.name { font-weight: 500; letter-spacing: -0.01em; }
 td.num, td.enum { white-space: nowrap; font-variant-numeric: tabular-nums; }
 td.url { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+tbody tr { cursor: pointer; }
 tbody tr:hover { background: var(--d-hover); }
+tbody tr:focus-visible { outline: 2px solid var(--d-sig); outline-offset: -2px; }
 td:last-child { padding-right: 0; }
 .vacio { margin: 0; padding: 14px 0; font-family: var(--font-mono); font-size: var(--d-fs-mono); color: var(--d-faint); }
 
@@ -176,6 +175,7 @@ td:last-child { padding-right: 0; }
   td.name { white-space: normal; font-size: var(--d-fs-name); margin-bottom: 4px; }
   td:not(.n):not(.name) { font-size: var(--d-fs-ui); color: var(--d-ink); }
   td:not(.n):not(.name)::before { content: attr(data-name) '  '; font-family: var(--font-mono); font-size: var(--d-fs-mono); color: var(--d-dim); white-space: pre; }
+  tbody tr { cursor: auto; }
   tbody tr:hover { background: none; }
 }
 </style>

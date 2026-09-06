@@ -19,14 +19,13 @@ Tener dos permite que ninguno sea el promedio. DATOS puede ser áspero porque DI
 
 ## Mundo DATOS
 
-**Explorador de columnas tipo Finder.**
-Descartado: capas apiladas a pantalla completa.
-Una capa que tapa a la anterior no es un explorador. Con columnas se ve la ruta entera y se puede saltar de lado.
+**Una carpeta por pantalla (revisado el 5-sep-2026, ver más abajo).**
+Descartado primero: capas apiladas a pantalla completa, porque una capa que tapa a la anterior no es un explorador. Elegido entonces: columnas tipo Finder, para ver la ruta entera y saltar de lado. Descartado después: las columnas, porque con tres superficies a la vez la navegación abrumaba. Lo que las columnas daban se conserva de otra forma: la ruta entera está en el riel superior y el salto de lado son los vecinos de la hoja.
 
 **CSS 3D, no WebGL.**
 El requisito pedía profundidad 3D y máxima accesibilidad, que normalmente se pelean. Con Three.js el texto queda en canvas: no se selecciona, no aparece en Ctrl+F, no lo lee un lector de pantalla, no lo indexa Google. Sería el mundo accesible construido sobre la tecnología menos accesible.
 
-**Profundidad casi imperceptible entre columnas (~56px).**
+**Profundidad casi imperceptible (~56px), y solo al entrar o salir de una carpeta.**
 Descartado: viaje espectacular en cada navegación.
 A la tercera vez sería una molestia. Todo el drama del eje Z se gasta una sola vez, en el umbral.
 
@@ -48,7 +47,6 @@ El referente es el documento técnico bien compuesto (spec sheet, plano, tabla d
 - **La raíz es la persona, no la base.** Descartado: una hoja con motor, tablas y cantidad de registros como primera pantalla (se probó y se rechazó el mismo día: parecía un panel de administración). Quien entra por `/datos` ve a Mateo como registro (rol, origen, disponibilidad, idiomas, contacto) y debajo las tablas con sus conteos. El motor y el request quedan en el pie.
 - **Mono solo para identificadores.** Descartado: rieles, ayudas y contadores en monospace. Con todo en mono el conjunto parecía consola. Nombres de campo, tipos, ruta y request van en Martian Mono; todo lo demás, incluidos los rótulos de los rieles y el dato dominante de cada fila, en General Sans.
 - **La hoja es de dos columnas cuando hay ancho.** Descartado: la hoja como bloque angosto pegado a las columnas, con el resto de la pantalla vacío. A partir de 1700px el título vive en su propia columna (fija) y los campos en la de lectura; el tipo va en una columna angosta pegada al valor, nunca en el borde derecho de una fila de 1000px. Por debajo, todo se apila.
-- **Las columnas fuera de foco no llevan `inert`.** Descartado: lo que pedía `/piso-calidad` (inert y aria-hidden en las columnas no activas). `inert` mata el click lateral en las columnas anteriores, que es la razón de tener columnas y no capas. Cada columna es una región con su nombre (`section aria-label`), y el lector navega por regiones. La skill queda corregida.
 - **La máquina a la vista, con números medidos:** el pie muestra el request real, el status y los milisegundos que tardó, no un adorno.
 - **Perspectiva casi nula** (56px en Z, opacidad que cae hasta 0.55) y una sola transición: la columna nueva entra 12px desde la derecha en 160ms. Todo lo demás es instantáneo.
 - **"Ir a" con `/`:** una línea de texto sobre el papel, resultados como filas `projects / La Rúcula Gastrobar`. Sin prompt, sin cursor parpadeando: no es una consola, es un índice.
@@ -59,8 +57,19 @@ Mateo lo revisó con capturas y el diagnóstico fue que la navegación directa s
 - **Una colección es una tabla.** `/datos/projects` muestra los records como filas anchas, con las columnas que se comparan de un vistazo (`fieldMeta[...].list`: título, año, rol, stack, estado, url) y el tipo de cada una en el encabezado. Cada valor filtrable es un link con subrayado punteado que corre la query: tocar "Vue 3" en la tabla es `?stack=vue`. Los filtros disponibles se leen en la línea bajo el título. Un solo componente (`DatosTable.vue`) para todas las colecciones: el invariante 6 sigue en pie.
 - **El record es una hoja plana, sin sub-nivel.** Las relaciones se leen en la hoja y cada item es un link: `techs` lista las tecnologías con link a su record, `links` las URLs, y una tech lista los proyectos y experiencias que la usan (el mismo request que el filtro). `depth` de DATOS baja a 2. Tres niveles para llegar al stack de un proyecto era demasiado.
 - **Orden de lectura, no orden de schema.** El orden de campos en `fieldMeta` es el orden de la hoja: primero lo que dice qué es (summary, año, rol, estado), después relaciones y links, al final la metadata (`publishedAt`, `updatedAt`, `slug`). El nombre del record es el título de la hoja y no se repite como fila.
-- **La escalera queda en dos peldaños.** En una colección: `db` y la tabla. En un record: `db`, la columna de la colección y la hoja. Con eso tres superficies entran en 1024px sin recortar ninguna, y el desvanecido de la izquierda deja de verse como un error. Las columnas miden `clamp(224px, 20vw, 288px)`.
 - **"Ir a" parece lo que es.** Un campo con borde, `ir a` en mono, el placeholder `proyecto, tecnología, etapa…` y la tecla `/`. El control de mundo entra en el riel superior de 48px en vez de flotar sobre su línea.
+
+**Segunda revisión del 5-sep-2026: una carpeta por pantalla, no columnas.**
+Descartado: el explorador de columnas en perspectiva (columna `db` siempre visible, columna de la colección al lado de la hoja, escalera de bloques invertidos, desvanecido a la izquierda, `↑↓` que navegaban entre records a cada tecla).
+Mateo lo usó y el diagnóstico fue que la navegación abrumaba: en un record había tres superficies a la vez, cada una con su encabezado, su conteo y su metadata, y la columna de `stack` con 22 items scrolleaba sola al lado de la hoja. Pidió algo más mínimo, que se sienta como navegar carpetas, con el teclado intacto pero también usable de la forma tradicional. Lo que cambió:
+- **Un solo panel por nivel.** La raíz es la persona con el índice de la base debajo del nombre (`DatosIndex.vue`: cinco filas con su conteo); una colección es la tabla sola; un record es la hoja sola. La columna `db` desaparece porque repetía lo que ya dice la ruta.
+- **La ruta es la barra de dirección.** Lo que las columnas daban ("ver la ruta entera") lo da el riel superior: `db / projects / la-rucula`, cada segmento clickeable. Es la navegación por carpetas que cualquiera conoce.
+- **El salto de lado son los vecinos.** La hoja de un record muestra `‹ anterior` y `siguiente ›` con sus nombres, tomados de la misma lista filtrada: con `?stack=vue`, los vecinos son los proyectos con Vue.
+- **El teclado es el de una carpeta y no navega al mover.** `↑↓` mueven el foco por las filas del panel (roving focus), `→`/`Enter` abren la fila con foco, `←`/`Backspace`/`Esc` suben y dejan el foco en la fila de la que se venía. Antes cada `↑↓` era un request; ahora mover el foco no toca la ruta, que sigue siendo el único estado (invariante 3, mejor cumplido que antes). En una hoja, donde no hay filas, `↑↓` pasan al vecino.
+- **El mouse hace lo mismo de la forma tradicional.** La fila entera de la tabla abre el record (un link dentro de la fila gana), y se vuelve por la ruta o con el botón atrás del navegador.
+- **La profundidad queda como gesto, no como disposición.** Entrar a una carpeta acerca el panel nuevo 56px en Z, subir lo trae desde adelante; pasar a un vecino lo corre 12px. Sigue siendo CSS 3D, sigue siendo casi imperceptible, y `prefers-reduced-motion` lo apaga.
+- **Los valores filtrables se subrayan en gris, no en azul.** En una tabla casi todo es filtrable y con azul la pantalla se llenaba de puntos. El azul aparece al pasar por encima.
+- **Mobile deja de ser un caso aparte.** Con un panel por nivel, el teléfono muestra la misma estructura; solo la tabla se apila.
 
 ---
 

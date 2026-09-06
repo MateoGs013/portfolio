@@ -37,8 +37,10 @@ defineProps<{
 a { color: var(--d-sig); text-decoration: none; }
 a:hover { text-decoration: underline; }
 .rel.plain { color: var(--d-ink); }
-.facet { color: var(--d-ink); text-decoration: underline dotted var(--d-sig); text-underline-offset: 3px; }
-.facet:hover { color: var(--d-sig); text-decoration-style: solid; }
+/* Un valor filtrable se marca en gris, no en azul: en una tabla casi todo lo es,
+   y con azul la pantalla se llenaba de puntos. El azul aparece al pasar. */
+.facet { color: var(--d-ink); text-decoration: underline dotted var(--d-faint); text-underline-offset: 3px; }
+.facet:hover { color: var(--d-sig); text-decoration: underline solid var(--d-sig); }
 .ext { text-decoration: underline; text-decoration-color: var(--d-rule); }
 .nul { font-family: var(--font-mono); font-size: var(--d-fs-mono); color: var(--d-dim); }
 </style>

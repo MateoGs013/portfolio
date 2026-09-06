@@ -2,11 +2,17 @@
 // La hoja del record, compuesta como hoja de especificaciones: el título
 // arriba, los campos debajo con el tipo en su propia columna angosta, pegado
 // al valor. Las relaciones están a la vista y cada una es un link; no hay
-// nada escondido en un nivel más abajo.
+// nada escondido en un nivel más abajo. En la raíz, el índice de la base
+// entra entre el nombre y los campos (slot `index`); en un record, los
+// vecinos de la lista van al lado del título.
 import DatosValor from './DatosValor.vue'
-import { pad, type Detail } from './explorer'
+import { pad, type Detail, type Vecino } from './explorer'
 
-defineProps<{ detail: Detail }>()
+defineProps<{
+  detail: Detail
+  prev?: Vecino | null
+  next?: Vecino | null
+}>()
 const uid = useId()
 </script>
 
@@ -19,7 +25,15 @@ const uid = useId()
         <span v-if="detail.updated">updatedAt {{ detail.updated }}</span>
         <span>{{ pad(detail.rows.length) }} fields</span>
       </p>
+      <nav v-if="prev || next" class="vecinos" aria-label="Records vecinos">
+        <NuxtLink v-if="prev" :to="prev.to" class="vecino" rel="prev"><span aria-hidden="true">‹</span> {{ prev.label }}</NuxtLink>
+        <NuxtLink v-if="next" :to="next.to" class="vecino" rel="next">{{ next.label }} <span aria-hidden="true">›</span></NuxtLink>
+      </nav>
     </header>
+
+    <div v-if="$slots.index" class="indice">
+      <slot name="index" />
+    </div>
 
     <dl class="campos">
       <div v-for="row in detail.rows" :key="row.name" class="campo" :class="{ wide: row.wide || row.items }">
@@ -33,29 +47,35 @@ const uid = useId()
 
 <style scoped>
 .hoja {
-  flex: 1 1 var(--d-pane-min);
-  min-width: var(--d-pane-min);
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   gap: 20px 48px;
   align-content: start;
-  padding-right: 16px;
-  scrollbar-gutter: stable;
-  animation: entrar var(--d-dur) var(--d-ease) both;
-}
-@keyframes entrar {
-  from { transform: translateX(12px); opacity: 0; }
+  max-width: var(--d-pane-max);
 }
 /* Con ancho, el título vive en su propia columna y los campos en la de lectura. */
 @media (min-width: 1700px) {
-  .hoja { grid-template-columns: minmax(240px, 2fr) minmax(0, 5fr); }
+  .hoja { max-width: none; grid-template-columns: minmax(240px, 2fr) minmax(0, 5fr); }
   .cabecera { position: sticky; top: 0; }
+  .indice { grid-column: 2; }
 }
 
 .cabecera {
   padding-top: 2px;
   border-top: 1px solid var(--d-ink);
 }
+.vecinos {
+  display: flex;
+  justify-content: space-between;
+  gap: 24px;
+  margin-top: 14px;
+  font-family: var(--font-text);
+  font-size: var(--d-fs-ui);
+}
+.vecino { color: var(--d-dim); text-decoration: none; }
+.vecino:hover { color: var(--d-ink); text-decoration: underline; }
+.vecino[rel="next"] { margin-left: auto; }
+.indice { margin-top: -4px; }
 .titulo {
   margin: 14px 0 12px;
   font-family: var(--font-text);
