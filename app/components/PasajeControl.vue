@@ -52,8 +52,8 @@ function to(w: (typeof worlds)[number]) {
 /* Toma la temperatura del mundo activo. */
 html[data-mundo="datos"] .pasaje {
   /* En la franja de arriba de la ventana del explorador; en el teléfono, dentro de su barra. */
-  top: 8px;
-  right: max(var(--d-frame), calc((100vw - 1320px) / 2)); /* al ras del borde derecho de la ventana del explorador */
+  top: var(--d-frame);
+  right: max(var(--d-frame), calc((100vw - 1320px) / 2)); /* sobre la línea del marco, al ras del borde derecho de la ventana */
   --pasaje-line: var(--d-ink);
   --pasaje-off: var(--d-dim);
   --pasaje-on-bg: var(--d-ink);
@@ -61,9 +61,6 @@ html[data-mundo="datos"] .pasaje {
   --pasaje-dur: var(--d-dur);
 }
 html[data-mundo="datos"] .pasaje a { padding: 8px 12px; }
-@media (max-width: 900px) {
-  html[data-mundo="datos"] .pasaje { top: 8px; right: 10px; }
-}
 html[data-mundo="diseno"] .pasaje {
   --pasaje-line: #4a4032;
   --pasaje-off: #7d7160;

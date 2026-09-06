@@ -212,7 +212,8 @@ onBeforeUnmount(() => removeEventListener('keydown', onKey))
   display: flex;
   flex-direction: column;
   height: 100dvh;
-  padding: 56px var(--d-frame) var(--d-frame);
+  /* El mismo marco a los lados y abajo; arriba, además, la franja del pasaje. */
+  padding: calc(var(--d-frame) + 40px) var(--d-frame) var(--d-frame);
   color: var(--d-ink);
   font-family: var(--font-text);
   font-size: var(--d-fs-ui);
@@ -240,7 +241,7 @@ onBeforeUnmount(() => removeEventListener('keydown', onKey))
   align-items: center;
   gap: 12px;
   height: 52px;
-  padding: 0 12px;
+  padding: 0 var(--d-inset);
   border-bottom: 1px solid var(--d-ink);
 }
 .historia { display: flex; gap: 4px; }
@@ -314,7 +315,7 @@ kbd {
 .exp {
   flex: 1;
   min-height: 0;
-  padding: 20px 24px 28px;
+  padding: var(--d-inset) var(--d-inset) 28px;
   overflow-y: auto;
   scrollbar-width: thin;
   scrollbar-color: var(--d-rule) transparent;
@@ -338,7 +339,7 @@ kbd {
   align-items: center;
   gap: 20px;
   height: 34px;
-  padding: 0 12px;
+  padding: 0 var(--d-inset);
   border-top: 1px solid var(--d-rule);
   color: var(--d-dim);
 }
@@ -349,12 +350,11 @@ kbd {
 @media (max-width: 900px) {
   /* En el teléfono la ventana sigue siendo una ventana, con un marco angosto y el
      pasaje en la franja de arriba; crece con el contenido en vez de scrollear adentro. */
-  .datos { height: auto; min-height: 100dvh; padding: 48px 10px 10px; }
+  .datos { height: auto; min-height: 100dvh; }
   .ventana { max-width: none; }
-  .barra { gap: 8px; padding: 0 8px; }
+  .barra { gap: 8px; }
   .goto-btn { display: none; }
-  .exp { overflow: visible; perspective: none; padding: 16px 14px 24px; }
-  .estado { padding: 0 8px; }
+  .exp { overflow: visible; perspective: none; padding-bottom: 24px; }
   .keys { display: none; }
 }
 </style>

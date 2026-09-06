@@ -45,6 +45,8 @@ export interface Facet {
 export interface Folder {
   /** `db` en la raíz; el nombre de la colección adentro. */
   head: string
+  /** La línea de tipo bajo el nombre: `database · 05 tables`, `collection · Project · 06 records`. */
+  line: string[]
   count: number
   items: Item[]
   facets: Facet[]
@@ -249,6 +251,7 @@ export async function resolveExplorer(api: Api, path: Path, query: LocationQuery
     last = schema
     folder = {
       head: 'db',
+      line: ['database', `${pad(schema.meta.count)} tables`],
       count: schema.meta.count,
       facets: [],
       items: schema.data.map(e => ({
@@ -295,6 +298,7 @@ export async function resolveExplorer(api: Api, path: Path, query: LocationQuery
       // La colección es una carpeta: una fila por record, con su nombre y su dato dominante.
       folder = {
         head: collection,
+        line: ['collection', modelName[collection], `${pad(answer.meta.count)} ${answer.meta.count === 1 ? 'record' : 'records'}`],
         count: answer.meta.count,
         facets: facetsOf(collection, query),
         items: records.map(r => ({

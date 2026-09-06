@@ -14,8 +14,8 @@
   --d-inv-dim: #a6acb4; /* texto secundario dentro de un bloque invertido */
 
   /* densidad */
-  --d-frame: clamp(20px, 3vw, 56px);
-  --d-pane-max: 1120px; /* la hoja no se estira más que un ancho de lectura */
+  --d-frame: clamp(16px, 3vw, 48px); /* el marco alrededor de la ventana, igual a los lados y abajo */
+  --d-inset: clamp(14px, 1.6vw, 22px); /* el margen interno de la ventana: barra, contenido y barra de estado alineados */
   --d-row: 44px;
   --d-tile: 184px; /* ancho mínimo de una baldosa en la vista de íconos */
   --d-tile-sm: 128px; /* lo mismo, en el teléfono */
