@@ -195,7 +195,7 @@ onBeforeUnmount(() => tl?.kill())
   <div class="proyectos" :class="{ js: conJs }">
     <p v-if="error" class="k">{{ error.statusCode ?? 500 }} · {{ error.statusMessage ?? error.message }}</p>
 
-    <!-- El índice: la tira de película, grande. -->
+    <!-- El índice: la hoja de contactos. -->
     <section v-else-if="!obra" class="indice" aria-label="Proyectos">
       <ProyectosTira :items="items" size="grande" @pick="onPick" />
     </section>
@@ -269,7 +269,7 @@ onBeforeUnmount(() => tl?.kill())
 .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
 
 /* ---- El índice ---- */
-.indice { flex: 1; display: flex; flex-direction: column; justify-content: center; }
+.indice { flex: 1; padding-top: clamp(4px, 1.5vh, 16px); }
 
 /* ---- Un proyecto ---- */
 .proyecto {

@@ -16,6 +16,8 @@
 
   /* densidad: baja, respirada */
   --n-frame: clamp(16px, 2.8vw, 40px);
+  --n-head: 72px; /* la cabecera; el control de pasaje se centra en ella */
+  --n-head-sm: 52px; /* la fila de la marca en el teléfono */
   --n-fs: 13px;
   --n-fs-k: 9px; /* rótulos en versalitas espaciadas */
   --n-lh: 1.55;

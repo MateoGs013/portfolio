@@ -129,6 +129,10 @@ Degradación, por si faltan cosas: sin portada, la obra es una placa oscura con 
 
 Descartado dentro de la forma elegida: perforaciones en la tira (ornamento), autoplay en loop (criterio 5), mostrar año, rol o stack en la tarjeta (son de DATOS; acá la tarjeta es solo la obra y el nombre), y etiquetas mono en mayúsculas para las etapas (los títulos de las etapas ya vienen del contenido).
 
+**La cabecera de DISEÑO y la hoja de contactos (6-sep-2026).**
+Descartado: la barra de secciones de la Fase 2 (cinco celdas iguales a todo el ancho, con el control de pasaje flotando encima y pisándola) y el índice de proyectos como una tira sola centrada en el vacío. Mateo: "la navegación se superpone con el cambiador de mundos, y me gustaría un mínimo de front más aceptable y desarrollado".
+La cabecera es una fila de 72px (`--n-head`) con tres cosas: la marca (el nombre, leído del documento `about`, en Fraunces a 19px), las secciones como links de texto con la activa subrayada en ámbar, y a la derecha el lugar reservado para el control de pasaje, que sigue siendo fijo y del layout pero ahora se centra en esa misma fila (`top` calculado desde `--n-head`). En el teléfono la marca y el pasaje comparten la primera fila y las secciones bajan a una fila que scrollea. El índice de proyectos pasa de tira a **hoja de contactos**: la misma película, pero en grilla de columnas de 300px, con el nombre en Fraunces a 26px debajo de cada fotograma; la tira chica sigue bajo la obra. Es el mismo componente (`ProyectosTira.vue`) con dos tamaños.
+
 **Cohesión por instrumento, material y variable.**
 El scrubber reaparece con distintos trabajos (construcción en proyectos, tiempo en experiencia), el material es papel sobre oscuro, y los ejes de Fraunces atraviesan todo. Si los tratamientos cambian, que compartan algo equivalente.
 

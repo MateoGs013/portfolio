@@ -62,10 +62,16 @@ html[data-mundo="datos"] .pasaje {
 }
 html[data-mundo="datos"] .pasaje a { padding: 8px 12px; }
 html[data-mundo="diseno"] .pasaje {
+  /* En la fila de la cabecera de DISEÑO, centrado en su altura. */
+  top: calc((var(--n-head) - 32px) / 2);
+  right: var(--n-frame);
   --pasaje-line: #4a4032;
   --pasaje-off: #7d7160;
   --pasaje-on-bg: var(--n-ember);
   --pasaje-on-fg: #fff;
   --pasaje-dur: var(--n-dur-ui);
+}
+@media (max-width: 900px) {
+  html[data-mundo="diseno"] .pasaje { top: calc((var(--n-head-sm) - 32px) / 2); }
 }
 </style>

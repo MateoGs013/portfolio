@@ -1,7 +1,7 @@
 <script setup lang="ts">
-// La tira de película: un fotograma por proyecto, retroiluminado cuando está
-// elegido o bajo el cursor. Grande, es el índice de la sección; chica, queda
-// bajo la obra para pasar de proyecto. El fotograma sin portada es una placa
+// La película: un fotograma por proyecto, retroiluminado cuando está elegido
+// o bajo el cursor. Grande es la hoja de contactos, el índice de la sección;
+// chica es la tira que queda bajo la obra para pasar de proyecto. El fotograma sin portada es una placa
 // oscura con la inicial del nombre en Fraunces.
 import type { RouteLocationRaw } from 'vue-router'
 
@@ -59,7 +59,12 @@ function onClick(e: MouseEvent, slug: string) {
   grid-auto-columns: minmax(0, 1fr);
   gap: var(--n-gap);
 }
-.tira.grande { --n-gap: clamp(10px, 1.4vw, 22px); }
+/* Grande: hoja de contactos, tantas columnas como entren de 300px. */
+.tira.grande { --n-gap: clamp(18px, 2.6vw, 36px); }
+.grande .carrete {
+  grid-auto-flow: row;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr));
+}
 .tira.chica { --n-gap: 8px; }
 
 .fotograma {
@@ -121,29 +126,32 @@ function onClick(e: MouseEvent, slug: string) {
 }
 .fotograma:hover .nombre, .fotograma:focus-visible .nombre, .fotograma[aria-current] .nombre { color: var(--n-paper); }
 
-/* Grande: el índice. El nombre en Fraunces, con aire. */
+/* El nombre en Fraunces, con aire. */
 .grande .nombre {
+  margin-top: 14px;
   font-family: var(--font-display);
-  font-size: clamp(17px, 1.7vw, 24px);
+  font-size: clamp(19px, 1.8vw, 26px);
   letter-spacing: -0.02em;
   line-height: 1.1;
   font-variation-settings: 'opsz' 60, 'wght' 520, 'SOFT' 30, 'WONK' 1;
 }
-.grande .inicial { font-size: clamp(44px, 6vw, 96px); }
+.grande .inicial { font-size: clamp(64px, 8vw, 120px); }
 
 /* Chica: bajo la obra, para pasar de proyecto. */
 .chica .nombre { font-size: 11px; margin-top: 7px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .chica .inicial { font-size: 22px; }
 
 @media (max-width: 900px) {
-  .carrete {
-    grid-auto-columns: minmax(150px, 60vw);
+  .grande .carrete { grid-template-columns: repeat(auto-fill, minmax(min(100%, 150px), 1fr)); }
+  .grande .nombre { font-size: 17px; margin-top: 10px; }
+  .grande .inicial { font-size: 48px; }
+  .chica .carrete {
+    grid-auto-columns: 96px;
     overflow-x: auto;
     scroll-snap-type: x proximity;
     padding-bottom: 6px;
     scrollbar-width: none;
   }
-  .carrete li { scroll-snap-align: start; }
-  .chica .carrete { grid-auto-columns: 96px; }
+  .chica .carrete li { scroll-snap-align: start; }
 }
 </style>

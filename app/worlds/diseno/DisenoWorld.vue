@@ -29,6 +29,12 @@ watch(path, (p) => {
 })
 
 const section = computed(() => path.value[0])
+
+/** La marca de la cabecera: el nombre, leído del documento `about` como todo lo demás. */
+const { data: marca } = await useAsyncData('diseno-marca', async () => {
+  const { data } = await api.doc('about')
+  return data.fields.find(f => f.name === 'name')?.value ?? data.title
+})
 /** Las secciones que ya tienen forma propia no pasan por el armazón. */
 const propia = computed(() => section.value === 'projects')
 
@@ -85,16 +91,19 @@ if (import.meta.server && error.value) {
 
 <template>
   <div class="diseno">
-    <nav class="secciones" aria-label="Secciones">
-      <NuxtLink
-        v-for="s in sections"
-        :key="s"
-        :to="routeFor('diseno', [s], query)"
-        :aria-current="s === section ? 'page' : undefined"
-      >
-        {{ s }}
-      </NuxtLink>
-    </nav>
+    <header class="cabecera">
+      <NuxtLink :to="routeFor('diseno', ['projects'], query)" class="marca">{{ marca }}</NuxtLink>
+      <nav class="secciones" aria-label="Secciones">
+        <NuxtLink
+          v-for="s in sections"
+          :key="s"
+          :to="routeFor('diseno', [s], query)"
+          :aria-current="s === section ? 'page' : undefined"
+        >
+          {{ s }}
+        </NuxtLink>
+      </nav>
+    </header>
 
     <main id="contenido" class="cuerpo" :class="{ propia }" tabindex="-1">
       <p v-if="error" class="k">{{ error.statusCode ?? 500 }} · {{ error.statusMessage ?? error.message }}</p>
@@ -135,25 +144,40 @@ if (import.meta.server && error.value) {
   font-size: var(--n-fs);
   line-height: var(--n-lh);
 }
-.secciones {
+/* La cabecera: la marca, las secciones y, a la derecha, el lugar del control de
+   pasaje (que es fijo y vive en el layout, alineado a esta misma fila). */
+.cabecera {
   flex: none;
-  display: flex;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) 150px;
+  align-items: center;
+  gap: clamp(24px, 4vw, 56px);
+  height: var(--n-head);
+  padding: 0 var(--n-frame);
   border-bottom: 1px solid var(--n-edge);
-  padding-right: 150px;
 }
-.secciones a {
-  flex: 1;
-  padding: 14px 6px;
-  border-right: 1px solid var(--n-edge);
-  color: var(--n-faint);
-  font-size: 12px;
-  font-weight: 500;
-  text-align: center;
+.marca {
+  font-family: var(--font-display);
+  font-size: 19px;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  color: var(--n-paper);
   text-decoration: none;
-  transition: color var(--n-dur-ui);
+  white-space: nowrap;
+  font-variation-settings: 'opsz' 48, 'wght' 560, 'SOFT' 30, 'WONK' 1;
 }
-.secciones a:hover, .secciones a[aria-current] { color: var(--n-bone); }
-.secciones a[aria-current] { box-shadow: inset 0 -2px 0 var(--n-ember); }
+.secciones { display: flex; gap: 4px; min-width: 0; }
+.secciones a {
+  padding: 10px 12px;
+  color: var(--n-dim);
+  font-size: 13px;
+  font-weight: 500;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: color var(--n-dur-ui), box-shadow var(--n-dur-ui);
+}
+.secciones a:hover { color: var(--n-bone); }
+.secciones a[aria-current] { color: var(--n-paper); box-shadow: inset 0 -2px 0 var(--n-ember); }
 
 .cuerpo {
   flex: 1;
@@ -207,8 +231,22 @@ if (import.meta.server && error.value) {
 }
 
 @media (max-width: 900px) {
-  /* El control de pasaje ocupa la esquina: las secciones van en dos filas y le dejan el lugar. */
-  .secciones { padding-right: 140px; flex-wrap: wrap; }
-  .secciones a { flex: 1 1 33%; }
+  /* La marca arriba con el control de pasaje a su derecha; las secciones debajo, en una fila que scrollea. */
+  .cabecera {
+    grid-template-columns: minmax(0, 1fr) 130px;
+    grid-template-rows: var(--n-head-sm) auto;
+    height: auto;
+    gap: 0;
+  }
+  .marca { font-size: 17px; }
+  .secciones {
+    grid-column: 1 / -1;
+    margin: 0 calc(-1 * var(--n-frame));
+    padding: 0 calc(var(--n-frame) - 12px);
+    overflow-x: auto;
+    scrollbar-width: none;
+    border-top: 1px solid var(--n-edge);
+  }
+  .secciones a { padding: 12px 12px; }
 }
 </style>
