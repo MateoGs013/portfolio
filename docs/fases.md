@@ -46,26 +46,25 @@ Lo que dejó para la Fase 3: DATOS ya resuelve todos los niveles en una sola col
 
 ---
 
-## Fase 3 — DATOS completo ✅ cerrada el 5-sep-2026
+## Fase 3 — DATOS completo ✅ cerrada el 5-sep-2026 (revisada el 6-sep)
 
-- [x] Explorador de columnas en perspectiva CSS — `app/worlds/datos/DatosWorld.vue` + `DatosColumn.vue`; `explorer.ts` resuelve el path en columnas
+- [x] Ventana de explorador de archivos — `app/worlds/datos/DatosWorld.vue`: barra con historial, subir, ruta como barra de dirección e "ir a"; contenido; barra de estado con el request real
 - [x] Endpoint de `orgs` por relación — `GET /api/orgs/:slug` con proyectos y experiencias
-- [x] Tabla por colección — `DatosTable.vue`: una fila por record, columnas declaradas en `fieldMeta[...].list`, tipo en el encabezado, valores filtrables como links
-- [x] Hoja del record con campos y tipos — `DatosDetail.vue`; la raíz es la persona; las relaciones se leen en la hoja y cada item es un link
-- [x] Profundidad: docs y records son hoja; no hay sub-nivel (`depth` de DATOS es 2)
-- [x] Teclado completo — `↑↓` mover, `→`/Enter entrar, `←`/Esc volver, `/` o Ctrl+K ir a
+- [x] Carpeta en vista de íconos — `DatosFolder.vue` + `DatosIcono.vue`: la base (carpeta por tabla, archivo por documento) y cada colección (un archivo por record con el dato dominante adentro)
+- [x] Archivo abierto — `DatosDetail.vue`: campos con tipos, relaciones a la vista, vecinos anterior y siguiente
+- [x] Cabecera única para los tres niveles — `DatosCabecera.vue`: ícono, nombre, línea de tipo, filtros activos o vecinos
+- [x] Profundidad: docs y records son archivo; no hay sub-nivel (`depth` de DATOS es 2)
+- [x] Teclado de carpeta — flechas en cuatro direcciones, Enter abre, Backspace/Esc suben con el foco en la baldosa de origen, `/` o Ctrl+K ir a; mover el foco no navega
 - [x] Command palette — `DatosGoto.vue`: índice de schema, proyectos, experiencia y stack
-- [x] Filtros como facetas — tocar un valor filtrable en la hoja agrega `?campo=valor`; chips con `×` en la columna
+- [x] Filtros como facetas — tocar un valor filtrable en el archivo agrega `?campo=valor`; chips con `×` en la cabecera de la carpeta
 - [x] SSR — todo se resuelve en el servidor; el 404 sale con status 404
-- [x] Mobile: una columna — bajo 900px, la última columna o la hoja
+- [x] Mobile — la misma ventana con marco angosto, baldosas chicas, tres por fila
 
-**Terminado cuando:** todo el contenido es alcanzable sin mouse y con JS apagado. ✅ Verificado el 5-sep-2026: 29 chequeos en Chrome headless (teclado, ir a, facetas, salto proyecto → org → experiencia, pasaje con sub y query) y todos los niveles renderizan en SSR como links.
+**Terminado cuando:** todo el contenido es alcanzable sin mouse y con JS apagado. ✅ Verificado el 5-sep-2026 (29 chequeos en Chrome headless) y de nuevo el 6-sep tras la revisión: recorrido completo por teclado y por clicks vía CDP sin errores de consola, diez rutas en SSR, capturas a 1440, 1024, 768 y 390px.
 
-**Dirección de arte:** hoja técnica (ver `docs/decisiones.md`). La Fase 2 se había construido copiando los prototipos y se rehízo.
+**Cómo llegó hasta acá.** La Fase 2 copiaba los prototipos y se rehízo como "hoja técnica" con columnas en perspectiva. El 5-sep, con capturas, se vio que la navegación directa se había perdido y la colección pasó a tabla. La misma noche Mateo pidió algo más mínimo y "como un explorador de archivos": salieron las columnas, después la tabla, después la lista, y quedó una ventana con carpetas en grilla de íconos, una sola cosa por pantalla. El 6-sep se unificó la cabecera de los tres niveles y los márgenes. Cada paso, con lo descartado y el porqué, está en `docs/decisiones.md`.
 
-**Revisión de UX (5-sep-2026):** con capturas del recorrido completo se vio que la navegación directa se había perdido (nombres truncados en columnas angostas, stack escondido detrás de un tercer nivel, metadata del schema en el panel grande). La colección pasó a ser una tabla, el record una hoja plana con las relaciones a la vista, y el sub-nivel desapareció. **Segunda revisión, la misma noche:** las columnas en perspectiva y la tabla abrumaban; DATOS pasó a ser un explorador de archivos en vista de íconos (`DatosFolder.vue` para la base y para cada colección, `DatosDetail.vue` para la hoja con vecinos), con la ruta como barra de dirección y teclado de foco itinerante. Detalle en `docs/decisiones.md`.
-
-**Auditoría del 5-sep-2026** (`/piso-calidad`, `/revision-mundos`, guidelines de interfaz web, build de producción): CLS 0 · LCP 192 ms · JS 241 KB transferidos · CSS 24 KB · sin JS todo navegable por links · primer Tab cae en "saltar al contenido" · el foco sigue a la navegación por teclado · 320px sin desborde · reduced motion corta las animaciones. Pendiente para la Fase 7: medir con datos reales de producción y exponer esas cifras como contenido.
+**Auditoría del 5-sep-2026** (`/piso-calidad`, `/revision-mundos`, guidelines de interfaz web, build de producción): CLS 0 · LCP 192 ms · JS 241 KB transferidos · CSS 24 KB · sin JS todo navegable por links · primer Tab cae en "saltar al contenido" · el foco sigue a la navegación por teclado · 320px sin desborde · reduced motion corta las animaciones. Las cifras son de antes de la revisión: volver a medir en la Fase 7 con datos reales de producción y exponerlas como contenido.
 
 **El sitio puede salir acá.** DISEÑO es la parte cara y va segunda. Falta la Fase 7 antes de publicar.
 
