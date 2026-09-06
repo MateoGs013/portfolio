@@ -73,4 +73,4 @@ Este archivo solo tiene lo que aplica siempre. Lo específico se carga solo cuan
 
 ## Estado
 
-Fases 0 a 3 cerradas (5-sep-2026): schema, siete endpoints, admin en `/admin`, shell (ruta como estado, truncado, cookie, umbral) y DATOS completo (explorador de archivos en vista de íconos: carpeta de la base, carpeta por colección, hoja del record con vecinos, teclado de carpeta, ir a, facetas). Sigue la Fase 4 (DISEÑO: proyectos), con `/nueva-seccion`. Cambiar el schema implica migración nueva y revisar `app/lib/fieldMeta.ts`.
+Fases 0 a 3 cerradas (5-sep-2026): schema, siete endpoints, admin en `/admin`, shell (ruta como estado, truncado, cookie, umbral) y DATOS completo (ventana de explorador de archivos en vista de íconos: carpeta de la base, carpeta por colección, hoja del record con vecinos, teclado de carpeta, ir a, facetas). Sigue la Fase 4 (DISEÑO: proyectos), con `/nueva-seccion`. Cambiar el schema implica migración nueva y revisar `app/lib/fieldMeta.ts`.

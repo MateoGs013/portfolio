@@ -6,7 +6,7 @@ paths:
 
 # Mundo DATOS
 
-Un explorador de archivos en vista de íconos, tinta sobre papel: claro, frío, plano. Una carpeta muestra solo sus items como baldosas; recién al abrir uno aparece su contenido. Se vuelve por la ruta.
+Una ventana de explorador de archivos apoyada sobre el papel, tinta sobre papel: claro, frío, plano. La ventana tiene barra de herramientas (atrás, adelante, subir, la ruta como barra de dirección, el "ir a"), el contenido en vista de íconos, y barra de estado (conteo, request, teclas). Una carpeta muestra solo sus items como baldosas; recién al abrir uno aparece su contenido. Se vuelve por la ruta o con los botones de la barra.
 
 ## Reglas
 
@@ -17,7 +17,7 @@ Un explorador de archivos en vista de íconos, tinta sobre papel: claro, frío, 
 
 ## Dirección (Fase 3, ver `docs/decisiones.md`)
 
-Hoja técnica, no Finder ni terminal. Identificadores en minúscula y sin espaciado, tal como están en el schema. Filas numeradas de 44px. **Una sola cosa por pantalla: una carpeta o una hoja.** La ruta del riel superior es la barra de dirección: cada segmento es una carpeta a la que se vuelve. **La raíz es la carpeta de la base** (`DatosFolder.vue`): una grilla de baldosas, carpeta para cada tabla y archivo para cada documento, con el conteo dibujado adentro del ícono y el nombre debajo; la persona está en `about` y `contact`. **Una colección es la carpeta de sus records** (el mismo `DatosFolder.vue`): una baldosa de archivo por record, con el dato dominante adentro del ícono (año, `since`, año de inicio) y el nombre debajo, más los filtros activos como chips con `×`. Nada más: el stack, el rol y los links se leen al abrir. Los íconos son trazos de tinta de 1.5px en SVG inline, sin relleno ni sombra: el dato adentro es la única decoración. **El record es una hoja plana** (`DatosDetail.vue`): nombre grande, línea `record · Model · updatedAt`, vecinos anterior y siguiente debajo, campos en orden de lectura con el tipo al lado, relaciones a la vista con un link por item; los valores filtrables son links que dejan la carpeta filtrada. No hay sub-nivel: `depth` es 2. El pie muestra el request real con sus milisegundos. Todo esto vive en `app/worlds/datos/` (`explorer.ts` resuelve, los componentes dibujan).
+Hoja técnica, no Finder ni terminal. Identificadores en minúscula y sin espaciado, tal como están en el schema. Filas numeradas de 44px. **Una sola cosa dentro de la ventana: una carpeta o una hoja.** La ventana (`DatosWorld.vue`, `.ventana`) es un recuadro de tinta de hasta 1320px centrado en el papel, con el control de pasaje en la franja de arriba al ras de su borde derecho. Su barra lleva `←` `→` (historial del navegador), `↑` (subir un nivel, un link real) y la ruta como barra de dirección: cada segmento es una carpeta a la que se vuelve. **La raíz es la carpeta de la base** (`DatosFolder.vue`): una grilla de baldosas, carpeta para cada tabla y archivo para cada documento, con el conteo dibujado adentro del ícono y el nombre debajo; la persona está en `about` y `contact`. **Una colección es la carpeta de sus records** (el mismo `DatosFolder.vue`): una baldosa de archivo por record, con el dato dominante adentro del ícono (año, `since`, año de inicio) y el nombre debajo, más los filtros activos como chips con `×`. Nada más: el stack, el rol y los links se leen al abrir. Los íconos son trazos de tinta de 1.5px en SVG inline, sin relleno ni sombra: el dato adentro es la única decoración. **El record es una hoja plana** (`DatosDetail.vue`): nombre grande, línea `record · Model · updatedAt`, vecinos anterior y siguiente debajo, campos en orden de lectura con el tipo al lado, relaciones a la vista con un link por item; los valores filtrables son links que dejan la carpeta filtrada. No hay sub-nivel: `depth` es 2. El pie muestra el request real con sus milisegundos. Todo esto vive en `app/worlds/datos/` (`explorer.ts` resuelve, los componentes dibujan).
 
 La prueba de cada pantalla es un recruiter apurado: tiene que entender dónde está sin leer nada, ver los nombres enteros, y poder correr su pregunta ("qué hizo con React") tocando un valor en la hoja o entrando a `stack`.
 
@@ -34,7 +34,7 @@ Todo el contenido tiene que ser alcanzable sin mouse y con JS apagado.
 
 ## Mobile
 
-Por debajo de ~900px la estructura es exactamente la misma: la grilla pasa a dos columnas y las hojas se apilan. Solo se apagan la perspectiva y las ayudas de teclado.
+Por debajo de ~900px la ventana es la pantalla (sin borde ni márgenes, el pasaje entra en su barra), la grilla pasa a dos columnas y las hojas se apilan. Solo se apagan la perspectiva y las ayudas de teclado.
 
 ## Defaults a evitar
 

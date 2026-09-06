@@ -51,9 +51,9 @@ function to(w: (typeof worlds)[number]) {
 
 /* Toma la temperatura del mundo activo. */
 html[data-mundo="datos"] .pasaje {
-  /* Dentro del riel superior de DATOS, alineado con su altura de 48px. */
+  /* En la franja de arriba de la ventana del explorador; en el teléfono, dentro de su barra. */
   top: 8px;
-  right: var(--d-frame);
+  right: max(var(--d-frame), calc((100vw - 1320px) / 2)); /* al ras del borde derecho de la ventana del explorador */
   --pasaje-line: var(--d-ink);
   --pasaje-off: var(--d-dim);
   --pasaje-on-bg: var(--d-ink);

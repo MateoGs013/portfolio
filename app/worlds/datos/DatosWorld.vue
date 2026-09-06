@@ -13,6 +13,7 @@ import { routeFor } from '~/lib/path'
 
 const api = useApi()
 const route = useRoute()
+const router = useRouter()
 const { path, query } = useMundo()
 
 useHead({
@@ -144,63 +145,74 @@ onBeforeUnmount(() => removeEventListener('keydown', onKey))
 
 <template>
   <div class="datos">
-    <header class="rail top">
-      <nav class="ruta" aria-label="Ruta">
-        <template v-for="(seg, i) in segments" :key="seg.label + i">
-          <span v-if="i" class="sep" aria-hidden="true">/</span>
-          <NuxtLink v-if="i < segments.length - 1" :to="seg.to">{{ seg.label }}</NuxtLink>
-          <span v-else class="here" aria-current="page">{{ seg.label }}</span>
-        </template>
-      </nav>
-      <button class="goto-btn" type="button" @click="gotoOpen = true">
-        <span class="goto-k">ir a</span>
-        <span class="goto-ph">proyecto, tecnología, etapa…</span>
-        <kbd>/</kbd>
-      </button>
-    </header>
+    <div class="ventana">
+      <header class="barra">
+        <nav class="historia" aria-label="Historial">
+          <button type="button" class="nav-btn" aria-label="atrás" @click="router.back()">←</button>
+          <button type="button" class="nav-btn" aria-label="adelante" @click="router.forward()">→</button>
+          <NuxtLink v-if="ex?.up" :to="ex.up" class="nav-btn" aria-label="subir un nivel">↑</NuxtLink>
+          <span v-else class="nav-btn off" aria-hidden="true">↑</span>
+        </nav>
+        <nav class="ruta" aria-label="Ruta">
+          <template v-for="(seg, i) in segments" :key="seg.label + i">
+            <span v-if="i" class="sep" aria-hidden="true">/</span>
+            <NuxtLink v-if="i < segments.length - 1" :to="seg.to">{{ seg.label }}</NuxtLink>
+            <span v-else class="here" aria-current="page">{{ seg.label }}</span>
+          </template>
+        </nav>
+        <button class="goto-btn" type="button" @click="gotoOpen = true">
+          <span class="goto-k">ir a</span>
+          <span class="goto-ph">proyecto, tecnología, etapa…</span>
+          <kbd>/</kbd>
+        </button>
+      </header>
 
-    <main id="contenido" class="exp" tabindex="-1">
-      <div v-if="error" class="pane">
-        <DatosDetail
-          :detail="{
-            kind: 'document',
-            name: `error ${error.statusCode ?? 500}`,
-            type: 'response',
-            updated: null,
-            rows: [
-              { name: 'status', type: 'int', value: String(error.statusCode ?? 500) },
-              { name: 'message', type: 'string', value: error.statusMessage ?? error.message },
-              { name: 'request', type: 'string', value: (error.data as { request?: string } | undefined)?.request ?? null },
-            ],
-          }"
-        />
-      </div>
-      <div v-else-if="ex" ref="pane" :key="route.fullPath" class="pane" :class="dir">
-        <DatosFolder v-if="folder" :folder="folder" />
-        <DatosDetail v-else-if="detail" :detail="detail" :prev="ex.prev" :next="ex.next" />
-      </div>
-    </main>
+      <main id="contenido" class="exp" tabindex="-1">
+        <div v-if="error" class="pane">
+          <DatosDetail
+            :detail="{
+              kind: 'document',
+              name: `error ${error.statusCode ?? 500}`,
+              type: 'response',
+              updated: null,
+              rows: [
+                { name: 'status', type: 'int', value: String(error.statusCode ?? 500) },
+                { name: 'message', type: 'string', value: error.statusMessage ?? error.message },
+                { name: 'request', type: 'string', value: (error.data as { request?: string } | undefined)?.request ?? null },
+              ],
+            }"
+          />
+        </div>
+        <div v-else-if="ex" ref="pane" :key="route.fullPath" class="pane" :class="dir">
+          <DatosFolder v-if="folder" :folder="folder" />
+          <DatosDetail v-else-if="detail" :detail="detail" :prev="ex.prev" :next="ex.next" />
+        </div>
+      </main>
 
-    <footer class="rail bot">
-      <span v-if="ex" class="req">{{ ex.request.line }}</span>
-      <span v-if="ex" class="medida">{{ ex.request.status }} · {{ ex.request.ms }} ms · {{ pad(ex.request.count) }} {{ ex.request.count === 1 ? 'record' : 'records' }}</span>
-      <span class="keys" aria-hidden="true">
-        <template v-if="hoja && (ex?.prev || ex?.next)"><kbd>←</kbd><kbd>→</kbd> vecino</template>
-        <template v-else-if="!hoja"><kbd>←</kbd><kbd>↑</kbd><kbd>↓</kbd><kbd>→</kbd> mover <kbd>↵</kbd> abrir</template>
-        <template v-if="ex?.up"><kbd>⌫</kbd> volver</template>
-        <kbd>/</kbd> ir a
-      </span>
-    </footer>
+      <footer class="estado">
+        <span v-if="ex" class="medida">{{ pad(ex.request.count) }} {{ ex.request.count === 1 ? 'record' : 'records' }}</span>
+        <span v-if="ex" class="req">{{ ex.request.line }} · {{ ex.request.status }} · {{ ex.request.ms }} ms</span>
+        <span class="keys" aria-hidden="true">
+          <template v-if="hoja && (ex?.prev || ex?.next)"><kbd>←</kbd><kbd>→</kbd> vecino</template>
+          <template v-else-if="!hoja"><kbd>←</kbd><kbd>↑</kbd><kbd>↓</kbd><kbd>→</kbd> mover <kbd>↵</kbd> abrir</template>
+          <template v-if="ex?.up"><kbd>⌫</kbd> volver</template>
+          <kbd>/</kbd> ir a
+        </span>
+      </footer>
+    </div>
 
     <DatosGoto v-if="gotoOpen" @close="gotoOpen = false" />
   </div>
 </template>
 
 <style scoped>
+/* El escritorio: papel, con la ventana del explorador apoyada encima y el
+   control de pasaje en la franja de arriba. */
 .datos {
   display: flex;
   flex-direction: column;
   height: 100dvh;
+  padding: 56px var(--d-frame) var(--d-frame);
   color: var(--d-ink);
   font-family: var(--font-text);
   font-size: var(--d-fs-ui);
@@ -209,20 +221,61 @@ onBeforeUnmount(() => removeEventListener('keydown', onKey))
 }
 .ruta, .req, kbd { font-family: var(--font-mono); font-size: var(--d-fs-mono); }
 
-.rail {
+/* La ventana: un recuadro de tinta con barra de herramientas, contenido y barra de estado. */
+.ventana {
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  max-width: 1320px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--d-ink);
+  background: var(--d-paper);
+}
+
+.barra {
   flex: none;
   display: flex;
   align-items: center;
-  gap: 24px;
-  height: 48px;
-  padding: 0 var(--d-frame);
+  gap: 12px;
+  height: 52px;
+  padding: 0 12px;
+  border-bottom: 1px solid var(--d-ink);
 }
-.rail.top { border-bottom: 1px solid var(--d-rule); padding-right: calc(var(--d-frame) + 150px); }
-.exp:focus { outline: none; }
-.rail.bot { height: 40px; border-top: 1px solid var(--d-rule); color: var(--d-dim); }
+.historia { display: flex; gap: 4px; }
+.nav-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border: 1px solid var(--d-rule);
+  background: var(--d-paper);
+  color: var(--d-ink);
+  font: inherit;
+  font-size: 14px;
+  line-height: 1;
+  text-decoration: none;
+  cursor: pointer;
+}
+.nav-btn:hover { border-color: var(--d-ink); background: var(--d-hover); }
+.nav-btn.off { color: var(--d-faint); cursor: default; }
+.nav-btn.off:hover { border-color: var(--d-rule); background: var(--d-paper); }
 
 /* La ruta es la barra de dirección: cada segmento es una carpeta a la que se vuelve. */
-.ruta { display: flex; align-items: center; min-width: 0; white-space: nowrap; overflow: hidden; font-size: 12.5px; }
+.ruta {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  height: 30px;
+  padding: 0 10px;
+  border: 1px solid var(--d-rule);
+  white-space: nowrap;
+  overflow: hidden;
+  font-size: 12.5px;
+}
 .ruta a { color: var(--d-sig); text-decoration: none; padding: 6px 0; }
 .ruta a:hover { text-decoration: underline; }
 .sep { color: var(--d-faint); padding: 0 9px; }
@@ -233,9 +286,8 @@ onBeforeUnmount(() => removeEventListener('keydown', onKey))
   display: flex;
   align-items: center;
   gap: 10px;
-  width: 300px;
+  width: 280px;
   height: 30px;
-  margin-left: auto;
   padding: 0 4px 0 10px;
   border: 1px solid var(--d-rule);
   background: var(--d-paper);
@@ -262,7 +314,7 @@ kbd {
 .exp {
   flex: 1;
   min-height: 0;
-  padding: var(--d-frame);
+  padding: 20px 24px 28px;
   overflow-y: auto;
   scrollbar-width: thin;
   scrollbar-color: var(--d-rule) transparent;
@@ -270,6 +322,7 @@ kbd {
   perspective: 1200px;
   perspective-origin: 50% 40%;
 }
+.exp:focus { outline: none; }
 .pane { animation: var(--d-dur) var(--d-ease) both; }
 .pane.deeper { animation-name: acercar; }
 .pane.up { animation-name: alejar; }
@@ -278,15 +331,28 @@ kbd {
 @keyframes alejar { from { transform: translateZ(var(--d-z)); opacity: 0; } }
 @keyframes correr { from { transform: translateX(12px); opacity: 0; } }
 
-.req { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* La barra de estado: cuántos items hay, el request que los trajo, y las teclas. */
+.estado {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  height: 34px;
+  padding: 0 12px;
+  border-top: 1px solid var(--d-rule);
+  color: var(--d-dim);
+}
 .medida { flex: none; }
+.req { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .keys { flex: none; margin-left: auto; display: flex; gap: 10px; align-items: center; }
 
 @media (max-width: 900px) {
-  .datos { height: auto; min-height: 100dvh; }
-  .rail.top { padding-right: calc(var(--d-frame) + 130px); }
+  /* En el teléfono la ventana es la pantalla. */
+  .datos { height: auto; min-height: 100dvh; padding: 0; }
+  .ventana { max-width: none; border: 0; }
+  .barra { padding-right: calc(12px + 130px); }
   .goto-btn { display: none; }
-  .exp { overflow: visible; perspective: none; }
+  .exp { overflow: visible; perspective: none; padding: 16px var(--d-frame) 28px; }
   .keys { display: none; }
 }
 </style>
