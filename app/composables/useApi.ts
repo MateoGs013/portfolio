@@ -70,7 +70,7 @@ export function useApi() {
       const status = (err as { statusCode?: number, status?: number }).statusCode ?? (err as { status?: number }).status
       throw createError({
         statusCode: status === 404 ? 404 : 502,
-        statusMessage: status === 404 ? 'no existe' : 'el API no respondió',
+        statusMessage: status === 404 ? 'no existe' : 'el API no respondio',
         data: { request },
       })
     }
@@ -80,7 +80,7 @@ export function useApi() {
 
   function list<K extends CollectionKey>(collection: K, query: ListQuery = {}) {
     const path = listEndpoint[collection]
-    if (!path) throw createError({ statusCode: 404, statusMessage: `${collection} no tiene lista: se llega por relación` })
+    if (!path) throw createError({ statusCode: 404, statusMessage: `${collection} no tiene lista: se llega desde un record` })
     return get<ListOf<K>>(path, filtersFor(collection, query))
   }
 

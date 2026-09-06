@@ -1,9 +1,9 @@
 <script setup lang="ts">
-// La hoja del record, compuesta como hoja de especificaciones: el título en
-// una columna propia a la izquierda, los campos en una columna de lectura a
-// la derecha. El tipo va pegado al valor, en su propia columna angosta, para
-// que el ojo no cruce toda la pantalla. Los valores que son filtros válidos
-// se tocan y facetan la colección.
+// La hoja del record, compuesta como hoja de especificaciones: el título
+// arriba, los campos debajo con el tipo en su propia columna angosta, pegado
+// al valor. Las relaciones están a la vista y cada una es un link; no hay
+// nada escondido en un nivel más abajo.
+import DatosValor from './DatosValor.vue'
 import { pad, type Detail } from './explorer'
 
 defineProps<{ detail: Detail }>()
@@ -21,35 +21,13 @@ const uid = useId()
       </p>
     </header>
 
-    <div class="cuerpo">
-      <dl class="campos">
-        <div v-for="row in detail.rows" :key="row.name" class="campo" :class="{ wide: row.wide }">
-          <dt class="nombre">{{ row.name }}</dt>
-          <dd class="valor">
-            <NuxtLink v-if="row.to" :to="row.to" class="rel">{{ row.value }} <span aria-hidden="true">›</span></NuxtLink>
-            <a v-else-if="row.href" :href="row.href" rel="noopener" class="ext">{{ row.value }}</a>
-            <NuxtLink v-else-if="row.facet" :to="row.facet" class="facet" :title="`filtrar ${row.name} = ${row.value}`">{{ row.value }}</NuxtLink>
-            <span v-else-if="row.value === null" class="nul">NULL</span>
-            <template v-else>{{ row.value }}</template>
-          </dd>
-          <dd class="tipo">{{ row.type }}</dd>
-        </div>
-      </dl>
-
-      <section v-for="g in detail.groups" :key="g.head" class="grupo" :aria-label="g.head">
-        <h2 class="grupo-head">{{ g.head }} <span>{{ pad(g.rows.length) }}</span></h2>
-        <dl class="campos">
-          <div v-for="row in g.rows" :key="row.name" class="campo">
-            <dt class="nombre">{{ row.name }}</dt>
-            <dd class="valor">
-              <NuxtLink v-if="row.to" :to="row.to" class="rel">{{ row.value }} <span aria-hidden="true">›</span></NuxtLink>
-              <template v-else>{{ row.value }}</template>
-            </dd>
-            <dd class="tipo">{{ row.type }}</dd>
-          </div>
-        </dl>
-      </section>
-    </div>
+    <dl class="campos">
+      <div v-for="row in detail.rows" :key="row.name" class="campo" :class="{ wide: row.wide || row.items }">
+        <dt class="nombre">{{ row.name }}</dt>
+        <dd class="valor"><DatosValor :cell="row" :name="row.name" /></dd>
+        <dd class="tipo">{{ row.type }}</dd>
+      </div>
+    </dl>
   </article>
 </template>
 
@@ -106,8 +84,7 @@ const uid = useId()
   font-variant-numeric: tabular-nums;
 }
 
-.cuerpo { border-top: 1px solid var(--d-ink); }
-.campos { margin: 0; }
+.campos { margin: 0; border-top: 1px solid var(--d-ink); }
 .campo {
   display: grid;
   grid-template-columns: minmax(120px, 160px) minmax(0, 56ch) minmax(0, 180px);
@@ -143,28 +120,8 @@ const uid = useId()
   line-height: var(--d-lh);
   overflow-wrap: anywhere;
 }
-.campo.wide .valor { max-width: 62ch; font-size: var(--d-fs-read); line-height: 1.5; }
-
-.valor a { color: var(--d-sig); text-decoration: none; }
-.valor a:hover { text-decoration: underline; }
-.valor .facet { color: var(--d-ink); border-bottom: 1px dotted var(--d-sig); }
-.valor .facet:hover { color: var(--d-sig); text-decoration: none; }
-.valor .ext { text-decoration: underline; text-decoration-color: var(--d-rule); }
-.nul { font-family: var(--font-mono); font-size: var(--d-fs-mono); color: var(--d-dim); }
-
-.grupo { margin-top: 36px; }
-.grupo-head {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  margin: 0;
-  padding-bottom: 8px;
-  border-bottom: 1px solid var(--d-ink);
-  font-family: var(--font-mono);
-  font-size: var(--d-fs-mono);
-  font-weight: 400;
-  color: var(--d-dim);
-}
+.campo.wide .valor { max-width: 62ch; }
+.campo.wide:not(:has(.items)) .valor { font-size: var(--d-fs-read); line-height: 1.5; }
 
 @media (max-width: 640px) {
   .campo, .campo.wide {

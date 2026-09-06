@@ -8,6 +8,9 @@
  *
  * `type` es lo que DATOS imprime al lado del valor. Se escribe como lo
  * leería alguien que mira un schema, no como lo nombra Prisma.
+ *
+ * El orden de los campos es el orden de lectura de la hoja en DATOS: primero
+ * lo que responde "qué es esto", después los links, al final la metadata.
  */
 
 export type World = 'datos' | 'diseno'
@@ -35,6 +38,8 @@ export interface CollectionMeta {
   kind: 'collection'
   /** Campo que hace de nombre del record. Vive en los dos mundos: es lo que viaja en el pasaje. */
   nameField: string
+  /** Columnas de la tabla de la colección en DATOS: lo que se compara de un vistazo. */
+  list: string[]
   fields: Record<string, FieldMeta>
 }
 
@@ -43,24 +48,25 @@ export const fieldMeta: Record<CollectionKey, CollectionMeta> = {
     label: 'projects',
     kind: 'collection',
     nameField: 'title',
+    list: ['title', 'year', 'role', 'techs', 'status', 'url'],
     fields: {
       // Compartidos, con motivo: el slug es la ruta, el título es el ancla del pasaje.
-      slug: { type: 'string', worlds: ['datos', 'diseno'] },
       title: { type: 'string', worlds: ['datos', 'diseno'] },
       // Hechos sobre el trabajo → DATOS.
+      summary: { type: 'string', worlds: ['datos'], wide: true },
       year: { type: 'int', worlds: ['datos'] },
       role: { type: 'string', worlds: ['datos'] },
       status: { type: 'enum ProjectStatus', worlds: ['datos'] },
-      featured: { type: 'bool', worlds: ['datos'] },
-      summary: { type: 'string', worlds: ['datos'], wide: true },
-      url: { type: 'url', worlds: ['datos'], nullable: true },
-      repo: { type: 'url', worlds: ['datos'], nullable: true },
-      metrics: { type: 'json', worlds: ['datos'], nullable: true },
       org: { type: 'relation → Org', worlds: ['datos'], nullable: true },
       techs: { type: 'relation[] → Tech', worlds: ['datos'] },
+      url: { type: 'url', worlds: ['datos'], nullable: true },
+      repo: { type: 'url', worlds: ['datos'], nullable: true },
       links: { type: 'relation[] → Link', worlds: ['datos'] },
+      metrics: { type: 'json', worlds: ['datos'], nullable: true },
+      featured: { type: 'bool', worlds: ['datos'] },
       publishedAt: { type: 'datetime', worlds: ['datos'], nullable: true },
       updatedAt: { type: 'datetime', worlds: ['datos'] },
+      slug: { type: 'string', worlds: ['datos', 'diseno'] },
       // El trabajo → DISEÑO.
       brief: { type: 'text', worlds: ['diseno'], nullable: true },
       outcome: { type: 'text', worlds: ['diseno'], nullable: true },
@@ -75,8 +81,8 @@ export const fieldMeta: Record<CollectionKey, CollectionMeta> = {
     // El nombre es el rol, no la organización: la experiencia es freelance y
     // propia, y varias etapas no tienen organización detrás.
     nameField: 'role',
+    list: ['role', 'org', 'startedAt', 'endedAt', 'techs'],
     fields: {
-      slug: { type: 'string', worlds: ['datos', 'diseno'] },
       role: { type: 'string', worlds: ['datos', 'diseno'] }, // es el nombre del record
       org: { type: 'relation → Org', worlds: ['datos', 'diseno'], nullable: true }, // rotula la banda en DISEÑO
       // Compartidas porque el tiempo es la dimensión dominante de esta colección:
@@ -85,6 +91,7 @@ export const fieldMeta: Record<CollectionKey, CollectionMeta> = {
       endedAt: { type: 'date', worlds: ['datos', 'diseno'], nullable: true },
       summary: { type: 'string', worlds: ['datos'], wide: true },
       techs: { type: 'relation[] → Tech', worlds: ['datos'] },
+      slug: { type: 'string', worlds: ['datos', 'diseno'] },
       story: { type: 'text', worlds: ['diseno'], nullable: true },
     },
   },
@@ -93,15 +100,16 @@ export const fieldMeta: Record<CollectionKey, CollectionMeta> = {
     label: 'stack',
     kind: 'collection',
     nameField: 'name',
+    list: ['name', 'category', 'since', 'projects', 'experiences'],
     fields: {
-      slug: { type: 'string', worlds: ['datos', 'diseno'] },
       name: { type: 'string', worlds: ['datos', 'diseno'] },
+      category: { type: 'enum TechCategory', worlds: ['datos'] },
       // Compartido: DATOS lo imprime, DISEÑO lo lee como tamaño del chip.
       since: { type: 'int', worlds: ['datos', 'diseno'] },
-      category: { type: 'enum TechCategory', worlds: ['datos'] },
       note: { type: 'string', worlds: ['datos'], wide: true, nullable: true },
       projects: { type: 'relation[] → Project', worlds: ['datos'] },
       experiences: { type: 'relation[] → Experience', worlds: ['datos'] },
+      slug: { type: 'string', worlds: ['datos', 'diseno'] },
       color: { type: 'string', worlds: ['diseno'], nullable: true },
     },
   },
@@ -110,13 +118,14 @@ export const fieldMeta: Record<CollectionKey, CollectionMeta> = {
     label: 'orgs',
     kind: 'collection',
     nameField: 'name',
+    list: ['name', 'city', 'projects', 'experiences'],
     fields: {
-      slug: { type: 'string', worlds: ['datos'] },
       name: { type: 'string', worlds: ['datos', 'diseno'] },
-      url: { type: 'url', worlds: ['datos'], nullable: true },
       city: { type: 'string', worlds: ['datos'], nullable: true },
+      url: { type: 'url', worlds: ['datos'], nullable: true },
       projects: { type: 'relation[] → Project', worlds: ['datos'] },
       experiences: { type: 'relation[] → Experience', worlds: ['datos'] },
+      slug: { type: 'string', worlds: ['datos'] },
     },
   },
 }

@@ -53,6 +53,15 @@ El referente es el documento técnico bien compuesto (spec sheet, plano, tabla d
 - **Perspectiva casi nula** (56px en Z, opacidad que cae hasta 0.55) y una sola transición: la columna nueva entra 12px desde la derecha en 160ms. Todo lo demás es instantáneo.
 - **"Ir a" con `/`:** una línea de texto sobre el papel, resultados como filas `projects / La Rúcula Gastrobar`. Sin prompt, sin cursor parpadeando: no es una consola, es un índice.
 
+**Revisión de UX del 5-sep-2026: la colección es una tabla y el record una hoja plana.**
+Descartado: la colección como columna angosta de 256px con la "definición de la tabla" (nameField, filters, schema) ocupando el panel grande; las relaciones de un record como columna aparte (`techs 05 items ›`) que abría un tercer nivel; el "ir a" como texto suelto en el riel.
+Mateo lo revisó con capturas y el diagnóstico fue que la navegación directa se había perdido: quien entra buscando algo concreto (un recruiter con "React, 3 años" en la cabeza) veía los nombres truncados en una columna, el stack escondido detrás de un click más, y metadata del schema donde esperaba los datos. El sistema era coherente pero no servía para ir directo a lo que se busca. Lo que cambió:
+- **Una colección es una tabla.** `/datos/projects` muestra los records como filas anchas, con las columnas que se comparan de un vistazo (`fieldMeta[...].list`: título, año, rol, stack, estado, url) y el tipo de cada una en el encabezado. Cada valor filtrable es un link con subrayado punteado que corre la query: tocar "Vue 3" en la tabla es `?stack=vue`. Los filtros disponibles se leen en la línea bajo el título. Un solo componente (`DatosTable.vue`) para todas las colecciones: el invariante 6 sigue en pie.
+- **El record es una hoja plana, sin sub-nivel.** Las relaciones se leen en la hoja y cada item es un link: `techs` lista las tecnologías con link a su record, `links` las URLs, y una tech lista los proyectos y experiencias que la usan (el mismo request que el filtro). `depth` de DATOS baja a 2. Tres niveles para llegar al stack de un proyecto era demasiado.
+- **Orden de lectura, no orden de schema.** El orden de campos en `fieldMeta` es el orden de la hoja: primero lo que dice qué es (summary, año, rol, estado), después relaciones y links, al final la metadata (`publishedAt`, `updatedAt`, `slug`). El nombre del record es el título de la hoja y no se repite como fila.
+- **La escalera queda en dos peldaños.** En una colección: `db` y la tabla. En un record: `db`, la columna de la colección y la hoja. Con eso tres superficies entran en 1024px sin recortar ninguna, y el desvanecido de la izquierda deja de verse como un error. Las columnas miden `clamp(224px, 20vw, 288px)`.
+- **"Ir a" parece lo que es.** Un campo con borde, `ir a` en mono, el placeholder `proyecto, tecnología, etapa…` y la tecla `/`. El control de mundo entra en el riel superior de 48px en vez de flotar sobre su línea.
+
 ---
 
 ## Mundo DISEÑO

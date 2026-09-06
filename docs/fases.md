@@ -50,8 +50,9 @@ Lo que dejó para la Fase 3: DATOS ya resuelve todos los niveles en una sola col
 
 - [x] Explorador de columnas en perspectiva CSS — `app/worlds/datos/DatosWorld.vue` + `DatosColumn.vue`; `explorer.ts` resuelve el path en columnas
 - [x] Endpoint de `orgs` por relación — `GET /api/orgs/:slug` con proyectos y experiencias
-- [x] Panel de detalle con campos y tipos — `DatosDetail.vue`; la raíz muestra la base (motor, tablas, records) y cada colección su definición
-- [x] Profundidad variable por rama — docs son hoja; records abren sus relaciones; las relaciones abren sus items
+- [x] Tabla por colección — `DatosTable.vue`: una fila por record, columnas declaradas en `fieldMeta[...].list`, tipo en el encabezado, valores filtrables como links
+- [x] Hoja del record con campos y tipos — `DatosDetail.vue`; la raíz es la persona; las relaciones se leen en la hoja y cada item es un link
+- [x] Profundidad: docs y records son hoja; no hay sub-nivel (`depth` de DATOS es 2)
 - [x] Teclado completo — `↑↓` mover, `→`/Enter entrar, `←`/Esc volver, `/` o Ctrl+K ir a
 - [x] Command palette — `DatosGoto.vue`: índice de schema, proyectos, experiencia y stack
 - [x] Filtros como facetas — tocar un valor filtrable en la hoja agrega `?campo=valor`; chips con `×` en la columna
@@ -61,6 +62,8 @@ Lo que dejó para la Fase 3: DATOS ya resuelve todos los niveles en una sola col
 **Terminado cuando:** todo el contenido es alcanzable sin mouse y con JS apagado. ✅ Verificado el 5-sep-2026: 29 chequeos en Chrome headless (teclado, ir a, facetas, salto proyecto → org → experiencia, pasaje con sub y query) y todos los niveles renderizan en SSR como links.
 
 **Dirección de arte:** hoja técnica (ver `docs/decisiones.md`). La Fase 2 se había construido copiando los prototipos y se rehízo.
+
+**Revisión de UX (5-sep-2026):** con capturas del recorrido completo se vio que la navegación directa se había perdido (nombres truncados en columnas angostas, stack escondido detrás de un tercer nivel, metadata del schema en el panel grande). La colección pasó a ser una tabla, el record una hoja plana con las relaciones a la vista, y el sub-nivel desapareció. Detalle en `docs/decisiones.md`.
 
 **Auditoría del 5-sep-2026** (`/piso-calidad`, `/revision-mundos`, guidelines de interfaz web, build de producción): CLS 0 · LCP 192 ms · JS 241 KB transferidos · CSS 24 KB · sin JS todo navegable por links · primer Tab cae en "saltar al contenido" · el foco sigue a la navegación por teclado · 320px sin desborde · reduced motion corta las animaciones. Pendiente para la Fase 7: medir con datos reales de producción y exponer esas cifras como contenido.
 

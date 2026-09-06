@@ -15,7 +15,7 @@
 
   /* densidad */
   --d-frame: clamp(20px, 3vw, 56px);
-  --d-col: 256px;
+  --d-col: clamp(224px, 20vw, 288px); /* dos columnas más la hoja entran en 1024px */
   --d-pane-min: 480px;
   --d-row: 44px;
   --d-z: 56px; /* profundidad entre columnas, casi imperceptible a propósito */

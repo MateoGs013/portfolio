@@ -1,9 +1,9 @@
 /**
  * La ruta es el estado y el estado es un request.
  *
- *   /<mundo>/<raíz>/<slug>/<sub>?filtros
+ *   /<mundo>/<raíz>/<slug>?filtros
  *
- * `path = [raíz, slug, sub]` es lo único que los dos mundos comparten como
+ * `path = [raíz, slug]` es lo único que los dos mundos comparten como
  * posición. Al cambiar de mundo se conserva hasta donde el mundo destino la
  * entiende (`truncate`), y la query viaja intacta: DISEÑO no filtra, pero
  * tampoco olvida los filtros para que la vuelta a DATOS los encuentre.
@@ -44,13 +44,13 @@ export function isDoc(root: Root): root is DocKey {
 
 /**
  * Hasta qué profundidad llega cada mundo en cada raíz. Decide el truncado.
- * DATOS baja hasta la subvista (`projects/la-rucula/techs`): es un explorador.
- * DISEÑO se detiene en el record: cada sección tiene una sola forma y el
- * record es su unidad. No tiene `orgs`: saltar por relación es un gesto de DATOS.
- * Los docs (`about`, `contact`) son una hoja en los dos.
+ * Los dos se detienen en el record: en DATOS las relaciones se leen en la
+ * hoja y cada una es un link, no un nivel más. DISEÑO no tiene `orgs`:
+ * saltar por relación es un gesto de DATOS. Los docs (`about`, `contact`)
+ * son una hoja en los dos.
  */
 export const depth: Record<World, Partial<Record<Root, number>>> = {
-  datos: { projects: 3, experience: 3, stack: 3, orgs: 3, about: 1, contact: 1 },
+  datos: { projects: 2, experience: 2, stack: 2, orgs: 2, about: 1, contact: 1 },
   diseno: { projects: 2, experience: 2, stack: 2, about: 1, contact: 1 },
 }
 

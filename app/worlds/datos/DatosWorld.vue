@@ -1,10 +1,12 @@
 <script setup lang="ts">
-// Renderer DATOS: explorador de columnas en perspectiva CSS, con la hoja del
-// record al final. Un solo renderer para todas las colecciones. La ruta es
-// el estado: el teclado y el "ir a" solo navegan; no hay selección en memoria.
+// Renderer DATOS: explorador de columnas en perspectiva CSS, con la tabla de
+// la colección o la hoja del record al final. Un solo renderer para todas las
+// colecciones. La ruta es el estado: el teclado y el "ir a" solo navegan; no
+// hay selección en memoria.
 import DatosColumn from './DatosColumn.vue'
 import DatosDetail from './DatosDetail.vue'
 import DatosGoto from './DatosGoto.vue'
+import DatosTable from './DatosTable.vue'
 import { pad, resolveExplorer, type Explorer, type Item } from './explorer'
 import { isDoc, routeFor, type Root } from '~/lib/path'
 
@@ -31,7 +33,10 @@ if (import.meta.server && error.value) {
 }
 
 const columns = computed(() => ex.value?.columns ?? [])
+const table = computed(() => ex.value?.table ?? null)
 const detail = computed(() => ex.value?.detail ?? null)
+/** La tabla reemplaza a la última columna: son los mismos records, con ancho. */
+const visible = computed(() => table.value ? columns.value.slice(0, -1) : columns.value)
 
 const segments = computed(() => [
   { label: 'db', to: routeFor('datos', []) },
@@ -41,11 +46,12 @@ const segments = computed(() => [
 /** La columna cuya elección es el último segmento del path. */
 const focus = computed(() => Math.max(0, path.value.length - 1))
 
-/** Distancia en Z: la última superficie (la hoja, si hay) está a 0. */
-const dist = (i: number) => columns.value.length - 1 - i + (detail.value ? 1 : 0)
+/** Distancia en Z: la última superficie (la tabla o la hoja, si hay) está a 0. */
+const dist = (i: number) => visible.value.length - 1 - i + (detail.value || table.value ? 1 : 0)
 
-/** Mobile muestra una sola cosa: la hoja si se llegó a un record o a un doc, si no la última columna. */
+/** Mobile muestra una sola cosa: la tabla en una colección, la hoja en un record o un doc, si no la última columna. */
 const mobile = computed(() => {
+  if (table.value) return 'tabla'
   const root = path.value[0]
   const leaf = path.value.length === 2 || (path.value.length === 1 && isDoc(root as Root))
   return detail.value && leaf ? 'hoja' : 'columna'
@@ -62,7 +68,7 @@ watch(ex, async () => {
   await nextTick()
   const root = document.querySelector<HTMLElement>('.datos')
   const target = root?.querySelector<HTMLElement>('.col.live .row[aria-current]')
-    ?? root?.querySelector<HTMLElement>('.hoja .titulo')
+    ?? root?.querySelector<HTMLElement>('[data-anchor]')
   target?.focus({ preventScroll: false })
 }, { flush: 'post' })
 
@@ -128,7 +134,9 @@ onBeforeUnmount(() => removeEventListener('keydown', onKey))
         </template>
       </nav>
       <button class="goto-btn" type="button" @click="gotoOpen = true">
-        ir a <kbd>/</kbd>
+        <span class="goto-k">ir a</span>
+        <span class="goto-ph">proyecto, tecnología, etapa…</span>
+        <kbd>/</kbd>
       </button>
     </header>
 
@@ -150,12 +158,13 @@ onBeforeUnmount(() => removeEventListener('keydown', onKey))
       </div>
       <div v-else class="track">
         <DatosColumn
-          v-for="(c, i) in columns"
+          v-for="(c, i) in visible"
           :key="`${i}:${c.head}`"
           :column="c"
           :dist="dist(i)"
-          :class="{ last: i === columns.length - 1, live: i === focus }"
+          :class="{ last: i === visible.length - 1, live: i === focus }"
         />
+        <DatosTable v-if="table" :table="table" />
         <DatosDetail v-if="detail" :detail="detail" />
       </div>
     </main>
@@ -191,7 +200,7 @@ onBeforeUnmount(() => removeEventListener('keydown', onKey))
   height: 48px;
   padding: 0 var(--d-frame);
 }
-.rail.top { border-bottom: 1px solid var(--d-rule); padding-right: 172px; }
+.rail.top { border-bottom: 1px solid var(--d-rule); padding-right: calc(var(--d-frame) + 150px); }
 .exp:focus { outline: none; }
 .rail.bot { height: 40px; border-top: 1px solid var(--d-rule); color: var(--d-dim); }
 
@@ -202,16 +211,24 @@ onBeforeUnmount(() => removeEventListener('keydown', onKey))
 .here { color: var(--d-ink); }
 
 .goto-btn {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 300px;
+  height: 30px;
   margin-left: auto;
-  border: 0;
-  background: none;
-  padding: 6px 0;
+  padding: 0 4px 0 10px;
+  border: 1px solid var(--d-rule);
+  background: var(--d-paper);
   font: inherit;
-  font-weight: 500;
   color: var(--d-dim);
+  text-align: left;
   cursor: pointer;
 }
-.goto-btn:hover { color: var(--d-ink); }
+.goto-btn:hover { border-color: var(--d-ink); color: var(--d-ink); }
+.goto-k { font-family: var(--font-mono); font-size: var(--d-fs-mono); color: var(--d-ink); }
+.goto-ph { flex: 1; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; color: var(--d-faint); }
 kbd {
   display: inline-block;
   min-width: 18px;
@@ -261,7 +278,7 @@ kbd {
 
 @media (max-width: 900px) {
   .datos { height: auto; min-height: 100dvh; }
-  .rail.top { padding-right: 150px; }
+  .rail.top { padding-right: calc(var(--d-frame) + 130px); }
   .goto-btn { display: none; }
   .exp { perspective: none; overflow: visible; display: block; mask-image: none; }
   .track, .track:has(.col:nth-child(3)) { display: block; width: auto; min-width: 0; transform: none; margin: 0; }
@@ -270,7 +287,7 @@ kbd {
   .track > :deep(.hoja) { min-width: 0; padding-right: 0; }
   /* Una sola cosa por pantalla. */
   .m-columna .track > :deep(.col:not(.last)), .m-columna .track > :deep(.hoja) { display: none; }
-  .m-hoja .track > :deep(.col) { display: none; }
+  .m-hoja .track > :deep(.col), .m-tabla .track > :deep(.col) { display: none; }
   .keys { display: none; }
 }
 </style>

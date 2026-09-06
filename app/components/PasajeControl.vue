@@ -51,12 +51,16 @@ function to(w: (typeof worlds)[number]) {
 
 /* Toma la temperatura del mundo activo. */
 html[data-mundo="datos"] .pasaje {
+  /* Dentro del riel superior de DATOS, alineado con su altura de 48px. */
+  top: 8px;
+  right: var(--d-frame);
   --pasaje-line: var(--d-ink);
   --pasaje-off: var(--d-dim);
   --pasaje-on-bg: var(--d-ink);
   --pasaje-on-fg: var(--d-paper);
   --pasaje-dur: var(--d-dur);
 }
+html[data-mundo="datos"] .pasaje a { padding: 8px 12px; }
 html[data-mundo="diseno"] .pasaje {
   --pasaje-line: #4a4032;
   --pasaje-off: #7d7160;

@@ -17,7 +17,9 @@ Explorador de columnas tipo Finder en perspectiva CSS. Tinta sobre papel: claro,
 
 ## Dirección (Fase 3, ver `docs/decisiones.md`)
 
-Hoja técnica, no Finder ni terminal. Identificadores en minúscula y sin espaciado, tal como están en el schema. Filas numeradas de 44px. La ruta se ve como escalera: fila elegida invertida y el encabezado de la columna siguiente repite ese nombre, invertido. La hoja del record es una spec sheet: nombre grande, línea `record · Model · updatedAt`, tabla con el tipo a la derecha. Facetar es tocar un valor. El pie muestra el request real con sus milisegundos. Todo esto vive en `app/worlds/datos/` (`explorer.ts` resuelve, los componentes dibujan).
+Hoja técnica, no Finder ni terminal. Identificadores en minúscula y sin espaciado, tal como están en el schema. Filas numeradas de 44px. La ruta se ve como escalera: fila elegida invertida y el encabezado de la columna siguiente repite ese nombre, invertido. **Una colección es una tabla** (`DatosTable.vue`): filas anchas, columnas de `fieldMeta[...].list`, tipo en el encabezado, cada valor filtrable es un link que corre la query. **El record es una hoja plana** (`DatosDetail.vue`): nombre grande, línea `record · Model · updatedAt`, campos en orden de lectura con el tipo al lado, relaciones a la vista con un link por item. No hay sub-nivel: `depth` es 2. El pie muestra el request real con sus milisegundos. Todo esto vive en `app/worlds/datos/` (`explorer.ts` resuelve, los componentes dibujan).
+
+La prueba de cada pantalla es un recruiter apurado: tiene que ver los nombres enteros, el stack sin un click más, y poder correr su pregunta ("qué hizo con React") tocando un valor.
 
 ## Trampa conocida
 
@@ -36,7 +38,7 @@ Todo el contenido tiene que ser alcanzable sin mouse y con JS apagado.
 
 ## Mobile
 
-Por debajo de ~900px se apaga la perspectiva y se muestra una columna sola. Un explorador de columnas en un teléfono no funciona, y fingir que sí es peor que no tenerlo.
+Por debajo de ~900px se apaga la perspectiva y se muestra una sola cosa: la lista en la raíz, la tabla apilada (cada record como bloque con sus campos rotulados) en una colección, la hoja en un record. Un explorador de columnas en un teléfono no funciona, y fingir que sí es peor que no tenerlo.
 
 ## Defaults a evitar
 
