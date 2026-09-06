@@ -347,12 +347,14 @@ kbd {
 .keys { flex: none; margin-left: auto; display: flex; gap: 10px; align-items: center; }
 
 @media (max-width: 900px) {
-  /* En el teléfono la ventana es la pantalla. */
-  .datos { height: auto; min-height: 100dvh; padding: 0; }
-  .ventana { max-width: none; border: 0; }
-  .barra { padding-right: calc(12px + 130px); }
+  /* En el teléfono la ventana sigue siendo una ventana, con un marco angosto y el
+     pasaje en la franja de arriba; crece con el contenido en vez de scrollear adentro. */
+  .datos { height: auto; min-height: 100dvh; padding: 48px 10px 10px; }
+  .ventana { max-width: none; }
+  .barra { gap: 8px; padding: 0 8px; }
   .goto-btn { display: none; }
-  .exp { overflow: visible; perspective: none; padding: 16px var(--d-frame) 28px; }
+  .exp { overflow: visible; perspective: none; padding: 16px 14px 24px; }
+  .estado { padding: 0 8px; }
   .keys { display: none; }
 }
 </style>

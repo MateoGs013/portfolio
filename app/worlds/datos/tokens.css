@@ -18,6 +18,7 @@
   --d-pane-max: 1120px; /* la hoja no se estira más que un ancho de lectura */
   --d-row: 44px;
   --d-tile: 184px; /* ancho mínimo de una baldosa en la vista de íconos */
+  --d-tile-sm: 128px; /* lo mismo, en el teléfono */
   --d-z: 56px; /* lo que se acerca o aleja el panel al entrar o salir de una carpeta, casi imperceptible a propósito */
   --d-fs-mono: 11.5px;
   --d-fs-ui: 12.5px; /* rieles y ayudas, en General Sans: el mono es solo para identificadores */

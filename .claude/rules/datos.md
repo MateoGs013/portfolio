@@ -34,7 +34,7 @@ Todo el contenido tiene que ser alcanzable sin mouse y con JS apagado.
 
 ## Mobile
 
-Por debajo de ~900px la ventana es la pantalla (sin borde ni márgenes, el pasaje entra en su barra), la grilla pasa a dos columnas y las hojas se apilan. Solo se apagan la perspectiva y las ayudas de teclado.
+Por debajo de ~900px la ventana sigue siendo una ventana: marco de 10px, el pasaje en la franja de arriba, y crece con el contenido en vez de scrollear adentro. Bajo 640px las baldosas se achican (`--d-tile-sm`) para que entren tres por fila. Solo se apagan la perspectiva, el "ir a" de la barra y las ayudas de teclado. El encabezado de la carpeta es una línea discreta en mono (`db · 05 tables`): el nombre ya está en la barra de dirección, no se repite en grande.
 
 ## Defaults a evitar
 

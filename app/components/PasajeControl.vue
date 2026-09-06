@@ -61,6 +61,9 @@ html[data-mundo="datos"] .pasaje {
   --pasaje-dur: var(--d-dur);
 }
 html[data-mundo="datos"] .pasaje a { padding: 8px 12px; }
+@media (max-width: 900px) {
+  html[data-mundo="datos"] .pasaje { top: 8px; right: 10px; }
+}
 html[data-mundo="diseno"] .pasaje {
   --pasaje-line: #4a4032;
   --pasaje-off: #7d7160;

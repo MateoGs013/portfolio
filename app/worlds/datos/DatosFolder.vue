@@ -49,24 +49,21 @@ const uid = useId()
 </template>
 
 <style scoped>
+/* El encabezado es una línea discreta: el nombre ya está en la barra de dirección. */
 .head {
   display: flex;
   justify-content: space-between;
   align-items: baseline;
   margin: 0;
-  padding: 12px 0 12px;
-  border-top: 1px solid var(--d-ink);
-  border-bottom: 1px solid var(--d-ink);
+  padding: 0 0 10px;
+  border-bottom: 1px solid var(--d-rule);
+  font-family: var(--font-mono);
+  font-size: var(--d-fs-mono);
   font-weight: 400;
+  color: var(--d-dim);
   outline: none;
 }
-.head-name {
-  font-family: var(--font-text);
-  font-size: var(--d-fs-name);
-  font-weight: 500;
-  letter-spacing: -0.01em;
-}
-.head-count { font-family: var(--font-mono); font-size: var(--d-fs-mono); color: var(--d-dim); font-variant-numeric: tabular-nums; }
+.head-count { font-variant-numeric: tabular-nums; }
 
 .facets {
   list-style: none;
@@ -145,4 +142,16 @@ const uid = useId()
 }
 .meta { font-family: var(--font-text); font-size: var(--d-fs-ui); color: var(--d-dim); font-variant-numeric: tabular-nums; white-space: nowrap; }
 .vacio { margin: 0; padding: 14px 0; font-family: var(--font-mono); font-size: var(--d-fs-mono); color: var(--d-faint); }
+
+/* Con poco ancho las baldosas y los íconos se achican para que entren tres o cuatro por fila. */
+@media (max-width: 640px) {
+  .grid { grid-template-columns: repeat(auto-fill, minmax(var(--d-tile-sm), 1fr)); gap: 6px; }
+  .tile { padding: 22px 8px 14px; }
+  .icon { width: 72px; height: 64px; margin-bottom: 10px; }
+  .tile.folder .icon svg { top: 4px; height: 56px; }
+  .tile.file .icon { width: 52px; }
+  .badge { font-size: var(--d-fs-mono); bottom: 9px; }
+  .tile.folder .badge { bottom: 10px; }
+  .name { font-size: 14px; }
+}
 </style>
