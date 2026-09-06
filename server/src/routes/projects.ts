@@ -30,6 +30,8 @@ projects.get('/projects', async (req, res) => {
       org: orgSelect,
       techs: techSelect,
       links: { select: { label: true, url: true } },
+      // La portada viaja en la lista: DISEÑO arma su tira de fotogramas con ella.
+      media: { where: { role: 'COVER' }, orderBy: { order: 'asc' }, take: 1 },
       _count: { select: { media: true, steps: true } },
     },
   })

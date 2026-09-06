@@ -67,7 +67,7 @@ export interface Project {
   links: LinkRef[]
   /** Solo en la lista. */
   _count?: { media: number, steps: number }
-  /** Solo en el detalle. */
+  /** En la lista viene solo la portada (`role: COVER`); en el detalle, toda la media. */
   media?: Media[]
   steps?: ProcessStep[]
 }

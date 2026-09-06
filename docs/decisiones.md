@@ -112,6 +112,23 @@ Lo probado, con el razonamiento —**referencia, no norma**:
 | `about` | Specimen tipográfico con los ejes de Fraunces manipulables | Muestra criterio tipográfico haciéndolo en vez de declarándolo. |
 | `contact` | La tinta baja sobre el papel, links como sellos | Un formulario es una barrera con buena prensa. |
 
+**Fase 4 (6-sep-2026): `projects` es una tira de película y el proyecto se pinta mientras se cuenta.**
+
+Lo que hay en la base al empezar la fase: seis proyectos, tres con portada, tres con etapas (título y cuerpo, sin media), tres con brief y resultado, **ninguno con capas** (`Media.layer` vacío en todos). La forma tenía que salir de eso y no de lo que se prometió en el prototipo.
+
+Se pesaron tres formas:
+1. *La pieza se construye en capas con scrubber* (la del prototipo). Deja ver el oficio capa por capa; cuesta que no hay una sola capa cargada y la mecánica degradaría en los seis proyectos a "aparece la portada". Descartada como eje: queda como enriquecimiento cuando un proyecto traiga capas.
+2. *Pliegos que se desenrollan al scrollear*: la portada adelante y cada etapa como una hoja que baja. Deja leer con calma; cuesta que el scroll como instrumento no es de nadie (funciona igual en cualquier sitio, criterio 4) y que en DISEÑO el tiempo lo tiene que manejar un instrumento a la vista.
+3. **Tira de película y pintado por etapas** (elegida). El índice es una tira de fotogramas retroiluminados, uno por proyecto, con el nombre en Fraunces debajo; los que no tienen portada son un fotograma oscuro con su inicial. Tocar uno lo agranda (FLIP del fotograma a la obra) y el proyecto se cuenta con un scrubber: la obra empieza apagada y se va pintando a medida que pasan el encargo, las etapas y el resultado, y el texto de cada etapa se enciende cuando le toca. La tira queda abajo, chica, para pasar de proyecto. Deja ver la pieza y el proceso en un solo gesto y con un solo instrumento; cuesta que la obra sea una sola imagen por proyecto (por ahora).
+
+Por qué pasa los criterios: **1** un carrete retroiluminado con la obra pintándose no tiene sentido en el explorador de archivos de DATOS; **2** sale de lo que un proyecto es acá (una pieza y cómo se llegó a ella), no de un layout; **3** una tira de fotogramas y un slider se entienden sin leer nada; **4** la película viene de la referencia visual del concepto ("película sobre luz"), no de un generador; **5** el índice es barato (seis fotogramas), lo caro (pintado, FLIP) pasa una vez por proyecto.
+
+Cohesión: el **instrumento** es el scrubber (reaparece en `experience` con el tiempo), el **material** es la película retroiluminada sobre oscuro, la **variable** son los ejes de Fraunces: el título entra fino y blando (`wght` 300, `SOFT` 100) y llega a su peso con la obra.
+
+Degradación, por si faltan cosas: sin portada, la obra es una placa oscura con la inicial en Fraunces que se entinta con el scrubber; sin etapas, el scrubber tiene dos paradas (encargo y resultado, o solo la pieza); sin brief ni resultado, se cuenta lo que hay. Sin JS: todo renderizado en su estado final, el scrubber no aparece. `prefers-reduced-motion`: la línea de tiempo arranca en el final y el scrubber sigue funcionando porque lo maneja el visitante.
+
+Descartado dentro de la forma elegida: perforaciones en la tira (ornamento), autoplay en loop (criterio 5), mostrar año, rol o stack en la tarjeta (son de DATOS; acá la tarjeta es solo la obra y el nombre), y etiquetas mono en mayúsculas para las etapas (los títulos de las etapas ya vienen del contenido).
+
 **Cohesión por instrumento, material y variable.**
 El scrubber reaparece con distintos trabajos (construcción en proyectos, tiempo en experiencia), el material es papel sobre oscuro, y los ejes de Fraunces atraviesan todo. Si los tratamientos cambian, que compartan algo equivalente.
 

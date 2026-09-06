@@ -1,8 +1,8 @@
 <script setup lang="ts">
-// Renderer DISEÑO, versión Fase 2: el armazón. Secciones arriba, y de cada
-// record solo lo que este mundo tiene derecho a mostrar: el nombre y la obra.
-// La forma propia de cada sección llega en las Fases 4 y 5 (`/nueva-seccion`).
-import type { Project } from '~/lib/api'
+// Renderer DISEÑO: secciones arriba, y cada sección con su propia forma.
+// `projects` ya tiene la suya (Fase 4, `sections/SeccionProyectos.vue`); el resto
+// sigue con el armazón de la Fase 2 hasta que le llegue su turno.
+import SeccionProyectos from './sections/SeccionProyectos.vue'
 import { collectionOrder, docOrder, fieldMeta, type CollectionKey, type DocKey } from '~/lib/fieldMeta'
 import { isDoc, isRoot, routeFor } from '~/lib/path'
 
@@ -29,8 +29,11 @@ watch(path, (p) => {
 })
 
 const section = computed(() => path.value[0])
+/** Las secciones que ya tienen forma propia no pasan por el armazón. */
+const propia = computed(() => section.value === 'projects')
 
 type View =
+  | { kind: 'section' }
   | { kind: 'list', items: { slug: string, name: string }[] }
   | { kind: 'record', name: string, rotulo: string | null, cover: { src: string, alt: string, width: number, height: number } | null }
   | { kind: 'doc', title: string, prose: string[] }
@@ -40,6 +43,7 @@ const { data: view, error } = await useAsyncData<View>(
   async () => {
     const [root, slug] = path.value
     if (!isRoot(root) || root === 'orgs') throw createError({ statusCode: 404, statusMessage: 'no existe' })
+    if (root === 'projects') return { kind: 'section' }
 
     if (isDoc(root)) {
       const { data } = await api.doc(root)
@@ -53,7 +57,6 @@ const { data: view, error } = await useAsyncData<View>(
     const nameField = fieldMeta[root].nameField
     if (slug) {
       const r = (await api.record(root, slug)).data as unknown as Record<string, unknown>
-      const cover = root === 'projects' ? ((r as unknown as Project).media ?? []).find(m => m.role === 'COVER') ?? null : null
       // Lo compartido con motivo: la org rotula la banda, los años son la dimensión de la experiencia.
       const rotulo = root === 'experience'
         ? [(r.org as { name: string } | null)?.name, `${String(r.startedAt).slice(0, 4)}–${r.endedAt ? String(r.endedAt).slice(0, 4) : ''}`].filter(Boolean).join(' · ')
@@ -62,7 +65,7 @@ const { data: view, error } = await useAsyncData<View>(
         kind: 'record',
         name: String(r[nameField]),
         rotulo,
-        cover: cover ? { src: cover.src, alt: cover.alt, width: cover.width, height: cover.height } : null,
+        cover: null, // la obra de un proyecto la muestra su propia sección
       }
     }
 
@@ -93,8 +96,10 @@ if (import.meta.server && error.value) {
       </NuxtLink>
     </nav>
 
-    <main id="contenido" class="cuerpo" tabindex="-1">
+    <main id="contenido" class="cuerpo" :class="{ propia }" tabindex="-1">
       <p v-if="error" class="k">{{ error.statusCode ?? 500 }} · {{ error.statusMessage ?? error.message }}</p>
+
+      <SeccionProyectos v-else-if="propia" />
 
       <template v-else-if="view?.kind === 'list'">
         <ol class="indice">
@@ -158,6 +163,7 @@ if (import.meta.server && error.value) {
   gap: 18px;
   padding: var(--n-frame);
 }
+.cuerpo.propia { justify-content: stretch; }
 .k {
   margin: 0;
   font-size: 12px;
@@ -201,7 +207,8 @@ if (import.meta.server && error.value) {
 }
 
 @media (max-width: 900px) {
-  .secciones { padding-right: 0; flex-wrap: wrap; }
+  /* El control de pasaje ocupa la esquina: las secciones van en dos filas y le dejan el lugar. */
+  .secciones { padding-right: 140px; flex-wrap: wrap; }
   .secciones a { flex: 1 1 33%; }
 }
 </style>

@@ -70,13 +70,19 @@ Lo que dejó para la Fase 3: DATOS ya resuelve todos los niveles en una sola col
 
 ---
 
-## Fase 4 — DISEÑO: proyectos
+## Fase 4 — DISEÑO: proyectos ✅ cerrada el 6-sep-2026
 
-- [ ] Visor con obra y tira de miniaturas
-- [ ] Construcción por capas desde `Media.layer`
-- [ ] Scrubber
-- [ ] FLIP de miniatura a obra
-- [ ] Degradación si el proyecto no viene descompuesto
+- [x] Tira de película como índice y como pie del visor — `app/worlds/diseno/sections/ProyectosTira.vue`: un fotograma retroiluminado por proyecto; sin portada, una placa oscura con la inicial
+- [x] La obra se pinta mientras se cuenta — `SeccionProyectos.vue`: línea de tiempo GSAP con una parada por pedido, etapa y resultado; la portada pasa de apagada a pintada, el título entra fino y blando y toma cuerpo con la obra, cada bloque de texto se enciende cuando le toca
+- [x] Construcción por capas desde `Media.layer` — cada capa aparece en su turno sobre la anterior. Implementado sin datos: ningún proyecto trae capas todavía; probar en cuanto uno las tenga
+- [x] Scrubber — un `range` nativo con las paradas debajo; arrastrar pausa, tocar una parada salta
+- [x] FLIP de fotograma a obra — el fotograma tocado vuela hasta convertirse en la placa, sin plugin
+- [x] Degradación — sin portada, sin etapas, sin brief o sin resultado, la sección cuenta lo que hay; sin JS todo está en el estado final y el scrubber no aparece; `prefers-reduced-motion` arranca en el final y el scrubber sigue en manos del visitante
+- [x] La portada viaja en la lista — `GET /api/projects` incluye la media `COVER` de cada proyecto
+
+**Terminado cuando:** un proyecto sin capas, sin portada o sin etapas se muestra sin romperse, y todo se entiende con la animación apagada. ✅ Verificado el 6-sep por CDP: índice, vuelo, línea de tiempo completa, scrubber, salto por parada, cambio de proyecto desde la tira (con y sin portada), reduced motion; cero errores de consola; capturas a 1440 y 390.
+
+**Dirección:** ver `docs/decisiones.md` → "Fase 4". Tres formas pesadas, elegida la tira de película con pintado por etapas. Lo que dejó para la Fase 5: el scrubber como instrumento a reusar en `experience`, la película retroiluminada como material, los ejes de Fraunces como variable.
 
 ---
 
