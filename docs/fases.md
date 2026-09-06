@@ -89,7 +89,7 @@ Lo que dejó para la Fase 3: DATOS ya resuelve todos los niveles en una sola col
 ## Fase 5 — DISEÑO: el resto
 
 - [x] `experience` — exposición larga (6-sep-2026): bandas sobre el eje de los años, el scrubber mueve una fecha y enciende lo que corría entonces; abrir una etapa la deja encendida con su relato. `sections/SeccionExperiencia.vue`; el scrubber compartido pasa a `DisenoRango.vue`. Verificado por CDP: viaje, scrub, abrir y volver, reduced motion, móvil; sin errores de consola
-- [ ] `stack`
+- [x] `stack` — la caja por año (6-sep-2026): los nombres en Fraunces tan grandes como años llevan; el scrubber mueve un año y enciende lo que ya había entrado. `sections/SeccionStack.vue`. Verificado por CDP: viaje, scrub por año, abrir y volver, reduced motion, móvil; sin errores
 - [ ] `about`
 - [ ] `contact`
 

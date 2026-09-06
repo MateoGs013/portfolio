@@ -148,6 +148,21 @@ Degradación: sin JS, las bandas y los años se ven en su estado final, con hoy 
 
 Descartado dentro de la forma: mostrar el stack de cada etapa (es de DATOS), contar meses o años de duración (métrica inventada, criterio 4), y un título aparte para la etapa abierta (repetía la lectura grande; el rol *es* el h1).
 
+**Fase 5 (6-sep-2026): `stack` es la caja de herramientas por año.**
+
+El dato para este mundo es mínimo: veintidós nombres, el año en que entró cada uno (`since`) y un `color` vacío en todos. La dimensión es la antigüedad; la pregunta es "con qué trabaja y desde cuándo".
+
+Se pesaron tres formas:
+1. *Muestrario de chips abanicados con el tamaño por antigüedad* (la del prototipo). Deja tocar; cuesta que sin color son veintidós chips iguales y que el abanico es una mecánica que hay que descifrar (criterio 3).
+2. *Afiche de palabras a distinto tamaño*. Los años leídos en el cuerpo, como pedía el prototipo; cuesta que una nube de palabras es la primera respuesta (criterio 4) y no dice cuándo entró nada.
+3. **La caja por año** (elegida). Los nombres en Fraunces, tan grandes y pesados como años llevan en uso (`--fs` y `--wght` salen de `hoy − since`), y el mismo scrubber moviendo un año: lo que ya había entrado se enciende, lo que no queda apagado y fino. Nada sale: la caja solo se llena, y eso es exactamente lo que `since` dice. Al llegar, el año viaja del primero a hoy. Abrir una herramienta la deja en ámbar, lleva el año a su entrada y muestra "desde 2025". Deja ver la antigüedad y el orden de llegada en un solo gesto; cuesta que con cinco años de rango el scrubber tiene cinco paradas nada más.
+
+Cohesión: el mismo `DisenoRango.vue` (acá con `max` de cuatro y paradas enteras: un año no es continuo), la misma película (nombres apagados que se encienden con halo), y Fraunces con dos ejes trabajando a la vez: el peso por antigüedad y `SOFT` 100 → 30 al encenderse.
+
+Degradación: sin JS, todo encendido con hoy como año, cada nombre un link; sin scrubber. `prefers-reduced-motion`: sin viaje. Sin `color` (hoy, todos) no pasa nada porque el color no se usa: si algún día llega, es el acento del halo, no la identidad del chip.
+
+Descartado: la categoría como agrupación (es de DATOS y convertiría la caja en una tabla), los conteos de proyectos por herramienta (métrica, DATOS), y el texto "N años" al lado de cada nombre (el tamaño ya lo dice; el año de entrada es más honesto).
+
 **Cohesión por instrumento, material y variable.**
 El scrubber reaparece con distintos trabajos (construcción en proyectos, tiempo en experiencia), el material es papel sobre oscuro, y los ejes de Fraunces atraviesan todo. Si los tratamientos cambian, que compartan algo equivalente.
 

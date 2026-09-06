@@ -1,10 +1,11 @@
 <script setup lang="ts">
 // Renderer DISEÑO: secciones arriba, y cada sección con su propia forma.
-// `projects` y `experience` ya tienen la suya (`sections/`); el resto sigue
-// con el armazón de la Fase 2 hasta que le llegue su turno.
+// Las colecciones ya tienen la suya (`sections/`); los documentos siguen
+// con el armazón de la Fase 2 hasta que les llegue su turno.
 import SeccionExperiencia from './sections/SeccionExperiencia.vue'
 import SeccionProyectos from './sections/SeccionProyectos.vue'
-import { collectionOrder, docOrder, fieldMeta, type CollectionKey, type DocKey } from '~/lib/fieldMeta'
+import SeccionStack from './sections/SeccionStack.vue'
+import { collectionOrder, docOrder, type CollectionKey, type DocKey } from '~/lib/fieldMeta'
 import { isDoc, isRoot, routeFor } from '~/lib/path'
 
 const api = useApi()
@@ -37,12 +38,10 @@ const { data: marca } = await useAsyncData('diseno-marca', async () => {
   return data.fields.find(f => f.name === 'name')?.value ?? data.title
 })
 /** Las secciones que ya tienen forma propia no pasan por el armazón. */
-const propia = computed(() => section.value === 'projects' || section.value === 'experience')
+const propia = computed(() => section.value === 'projects' || section.value === 'experience' || section.value === 'stack')
 
 type View =
   | { kind: 'section' }
-  | { kind: 'list', items: { slug: string, name: string }[] }
-  | { kind: 'record', name: string, rotulo: string | null, cover: { src: string, alt: string, width: number, height: number } | null }
   | { kind: 'doc', title: string, prose: string[] }
 
 const { data: view, error } = await useAsyncData<View>(
@@ -50,34 +49,14 @@ const { data: view, error } = await useAsyncData<View>(
   async () => {
     const [root, slug] = path.value
     if (!isRoot(root) || root === 'orgs') throw createError({ statusCode: 404, statusMessage: 'no existe' })
-    if (root === 'projects' || root === 'experience') return { kind: 'section' }
+    if (root === 'projects' || root === 'experience' || root === 'stack') return { kind: 'section' }
 
-    if (isDoc(root)) {
-      const { data } = await api.doc(root)
-      return {
-        kind: 'doc',
-        title: data.title,
-        prose: data.fields.filter(f => (!f.worlds || f.worlds.includes('diseno')) && f.type === 'text').map(f => f.value),
-      }
-    }
-
-    const nameField = fieldMeta[root].nameField
-    if (slug) {
-      const r = (await api.record(root, slug)).data as unknown as Record<string, unknown>
-      // Lo compartido con motivo: `since` es el tamaño del chip en stack.
-      const rotulo = root === 'stack' ? `desde ${r.since}` : null
-      return {
-        kind: 'record',
-        name: String(r[nameField]),
-        rotulo,
-        cover: null, // la obra de un proyecto la muestra su propia sección
-      }
-    }
-
-    const { data } = await api.list(root, query.value)
+    if (!isDoc(root) || slug) throw createError({ statusCode: 404, statusMessage: 'no existe' })
+    const { data } = await api.doc(root)
     return {
-      kind: 'list',
-      items: (data as unknown as Record<string, unknown>[]).map(r => ({ slug: String(r.slug), name: String(r[nameField]) })),
+      kind: 'doc',
+      title: data.title,
+      prose: data.fields.filter(f => (!f.worlds || f.worlds.includes('diseno')) && f.type === 'text').map(f => f.value),
     }
   },
 )
@@ -109,22 +88,7 @@ if (import.meta.server && error.value) {
 
       <SeccionProyectos v-else-if="section === 'projects'" />
       <SeccionExperiencia v-else-if="section === 'experience'" />
-
-      <template v-else-if="view?.kind === 'list'">
-        <ol class="indice">
-          <li v-for="it in view.items" :key="it.slug">
-            <NuxtLink :to="routeFor('diseno', [section!, it.slug], query)" class="nombre">{{ it.name }}</NuxtLink>
-          </li>
-        </ol>
-      </template>
-
-      <template v-else-if="view?.kind === 'record'">
-        <figure v-if="view.cover" class="obra">
-          <img :src="view.cover.src" :alt="view.cover.alt" :width="view.cover.width" :height="view.cover.height">
-        </figure>
-        <h1 class="titulo" data-anchor>{{ view.name }}</h1>
-        <p v-if="view.rotulo" class="k">{{ view.rotulo }}</p>
-      </template>
+      <SeccionStack v-else-if="section === 'stack'" />
 
       <template v-else-if="view?.kind === 'doc'">
         <h1 class="titulo">{{ view.title }}</h1>
@@ -194,8 +158,7 @@ if (import.meta.server && error.value) {
   color: var(--n-faint);
 }
 
-.indice { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.15em; }
-.nombre, .titulo {
+.titulo {
   font-family: var(--font-display);
   color: var(--n-paper);
   letter-spacing: -0.035em;
@@ -203,23 +166,8 @@ if (import.meta.server && error.value) {
   text-decoration: none;
   font-variation-settings: 'opsz' 120, 'wght' 620, 'SOFT' 30, 'WONK' 1;
 }
-.nombre {
-  font-size: clamp(30px, 5.2vw, 68px);
-  color: var(--n-dim);
-  transition: color var(--n-dur-ui), font-variation-settings var(--n-dur-ui);
-}
-.nombre:hover, .nombre:focus-visible {
-  color: var(--n-paper);
-  font-variation-settings: 'opsz' 144, 'wght' 720, 'SOFT' 60, 'WONK' 1;
-}
 .titulo { margin: 0; font-size: clamp(34px, 6vw, 84px); }
 
-.obra { margin: 0; max-width: min(100%, 960px); }
-.obra img {
-  width: 100%;
-  height: auto;
-  box-shadow: 0 36px 80px -28px rgba(0, 0, 0, 0.95), 0 0 0 1px rgba(255, 240, 210, 0.07);
-}
 
 .prosa {
   margin: 0;
