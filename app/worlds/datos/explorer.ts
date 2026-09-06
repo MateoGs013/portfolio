@@ -4,16 +4,16 @@
  * puede pasar de lado, y el request que lo produjo. Un solo resolutor para
  * todas las colecciones: una base de datos trata a todos los records igual.
  *
- *   []                       hoja: la persona · índice: las tablas de la base
+ *   []                       carpeta: las tablas y documentos de la base
  *   [about]                  hoja: los campos del documento
- *   [projects]               tabla: los records, con las facetas de la query
+ *   [projects]               carpeta: los records, con las facetas de la query
  *   [projects, la-rucula]    hoja: el record, relaciones incluidas · prev/next: los records vecinos
  *   [orgs, pegasuz]          orgs no tiene lista: la hoja de la org alcanzada, sin vecinos
  *
- * Es una carpeta por pantalla: se ve un nivel, se entra a un item, se vuelve
- * por la ruta. No hay sub-nivel: las relaciones de un record se leen en su
- * hoja y cada una es un link. Quien busca "qué hizo con Vue" filtra la tabla
- * tocando el valor; no baja tres niveles.
+ * Es un explorador de archivos: una carpeta muestra solo sus items, y recién
+ * al abrir uno aparece su contenido. No hay sub-nivel: las relaciones de un
+ * record se leen en su hoja y cada una es un link. Quien busca "qué hizo con
+ * Vue" toca el valor en la hoja y la carpeta queda filtrada.
  */
 import type { LocationQuery, RouteLocationRaw } from 'vue-router'
 import type { AnyRecord, LinkRef, Org, TechRef } from '~/lib/api'
@@ -26,7 +26,7 @@ type Api = ReturnType<typeof useApi>
 export interface Item {
   key: string
   label: string
-  /** El dato dominante, alineado a la derecha: cuántos records tiene la tabla. */
+  /** El dato dominante, a la derecha del nombre: el conteo de una tabla, el año de un record. */
   meta: string
   to: RouteLocationRaw
 }
@@ -37,10 +37,13 @@ export interface Facet {
   remove: RouteLocationRaw
 }
 
-/** El índice de la base: una fila por tabla o documento. Solo existe en la raíz. */
-export interface Index {
+/** Una carpeta: la base (sus tablas y documentos) o una colección (sus records). */
+export interface Folder {
+  /** `db` en la raíz; el nombre de la colección adentro. */
+  head: string
   count: number
   items: Item[]
+  facets: Facet[]
 }
 
 /** Un record vecino en la lista de la colección: a dónde se pasa de lado. */
@@ -78,30 +81,18 @@ export interface Row extends Cell {
 }
 
 export interface Detail {
-  kind: 'root' | 'record' | 'document'
+  kind: 'record' | 'document'
   name: string
   type: string
   updated: string | null
   rows: Row[]
 }
 
-/** La colección como tabla: una columna por campo declarado en `fieldMeta[...].list`. */
-export interface Table {
-  collection: CollectionKey
-  model: string
-  count: number
-  head: { name: string, type: string }[]
-  rows: { key: string, to: RouteLocationRaw, cells: Cell[] }[]
-  facets: Facet[]
-  /** Por qué campos se puede filtrar: la query que el visitante puede correr. */
-  filters: readonly string[]
-}
-
 export interface Explorer {
   /** Profundidad del path: 0 raíz, 1 colección o documento, 2 record. */
   level: number
-  index: Index | null
-  table: Table | null
+  /** Lo que se ve es una carpeta o una hoja, nunca las dos. */
+  folder: Folder | null
   detail: Detail | null
   /** La carpeta de arriba. `null` en la raíz. */
   up: RouteLocationRaw | null
@@ -174,33 +165,22 @@ function inverse(collection: CollectionKey, name: string): { target: CollectionK
 const canFilter = (collection: CollectionKey, key: string) => (listFilters[collection] as readonly string[]).includes(key)
 
 /**
- * Un valor como celda. En la tabla las relaciones se vuelven filtros de la misma
- * colección (tocar "Vue 3" en projects es preguntar qué se hizo con Vue); en la
- * hoja son links al record relacionado. `extra` trae las listas inversas ya pedidas.
+ * Un valor de la hoja como celda. Las relaciones son links al record
+ * relacionado; los valores que el endpoint acepta como filtro llevan a la
+ * carpeta filtrada. `extra` trae las listas inversas ya pedidas.
  */
-function cellFor(
-  collection: CollectionKey,
-  record: AnyRecord,
-  name: string,
-  where: 'table' | 'sheet',
-  extra: Record<string, AnyRecord[]> = {},
-): Cell {
+function cellFor(collection: CollectionKey, record: AnyRecord, name: string, extra: Record<string, AnyRecord[]> = {}): Cell {
   const meta = fieldMeta[collection].fields[name]
   if (!meta) throw new Error(`${collection}.${name} no está en fieldMeta`)
   const value = field(record, name)
   const cell: Cell = { value: fmt(meta, value) }
 
-  if (name === fieldMeta[collection].nameField && where === 'table') {
-    cell.to = routeFor('datos', [collection, record.slug])
-  }
-  else if (meta.type.startsWith('relation[]')) {
+  if (meta.type.startsWith('relation[]')) {
     const inv = inverse(collection, name)
     if (name === 'techs') {
       const techs = (field(record, 'techs') as TechRef[] | undefined) ?? []
       cell.value = techs.length ? null : '—'
-      cell.items = techs.map(t => where === 'table' && canFilter(collection, 'stack')
-        ? { label: t.name, facet: routeFor('datos', [collection], { stack: t.slug }) }
-        : { label: t.name, to: routeFor('datos', ['stack', t.slug]) })
+      cell.items = techs.map(t => ({ label: t.name, to: routeFor('datos', ['stack', t.slug]) }))
     }
     else if (name === 'links') {
       const links = (field(record, 'links') as LinkRef[] | undefined) ?? []
@@ -212,7 +192,7 @@ function cellFor(
       const count = list ? list.length : countOf(record, name)
       cell.value = `${pad(count)} ${count === 1 ? 'record' : 'records'}`
       if (count && canFilter(inv.target, inv.filter)) cell.to = routeFor('datos', [inv.target], { [inv.filter]: record.slug })
-      if (where === 'sheet' && list?.length) {
+      if (list?.length) {
         cell.value = null
         cell.items = list.map(r => ({ label: nameOf(inv.target, r), meta: metaOf(inv.target, r), to: routeFor('datos', [inv.target, r.slug]) }))
       }
@@ -221,17 +201,13 @@ function cellFor(
   else if (meta.type.startsWith('relation')) {
     const ref = value as { slug?: string, name?: string } | null
     cell.value = ref?.name ?? null
-    if (ref?.slug) {
-      if (where === 'table' && canFilter(collection, name)) cell.facet = routeFor('datos', [collection], { [name]: ref.slug })
-      else cell.to = routeFor('datos', [meta.type.endsWith('Org') ? 'orgs' : collection, ref.slug])
-    }
+    if (ref?.slug) cell.to = routeFor('datos', [meta.type.endsWith('Org') ? 'orgs' : collection, ref.slug])
   }
   else if (meta.type === 'url' && typeof value === 'string') {
     cell.href = value
-    if (where === 'table') cell.value = host(value)
   }
   else if (value !== null && value !== undefined && canFilter(collection, name)) {
-    // year, role, featured, category: filtros del endpoint. Tocar el valor faceta la colección.
+    // year, role, featured, category: filtros del endpoint. Tocar el valor filtra la carpeta.
     cell.facet = routeFor('datos', [collection], { [name]: String(value) })
   }
   return cell
@@ -255,8 +231,7 @@ function facetsOf(collection: CollectionKey, query: LocationQuery): Facet[] {
 
 export async function resolveExplorer(api: Api, path: Path, query: LocationQuery): Promise<Explorer> {
   const [root, slug, sub] = path
-  let index: Index | null = null
-  let table: Table | null = null
+  let folder: Folder | null = null
   let detail: Detail | null = null
   let up: RouteLocationRaw | null = null
   let prev: Vecino | null = null
@@ -264,33 +239,20 @@ export async function resolveExplorer(api: Api, path: Path, query: LocationQuery
   let last: Answer<unknown>
 
   if (!root) {
-    // La raíz es la ficha de la persona, no la base: quien entra por /datos ve a Mateo
-    // como registro y, debajo del nombre, las tablas. El motor y el request van al pie.
-    const [schema, about, contact] = await Promise.all([api.schema(), api.doc('about'), api.doc('contact')])
+    // La raíz es la carpeta de arriba de todo: solo las tablas y los documentos,
+    // con su conteo. La persona está en `about` y `contact`, como todo lo demás.
+    const schema = await api.schema()
     last = schema
-    index = {
+    folder = {
+      head: 'db',
       count: schema.meta.count,
+      facets: [],
       items: schema.data.map(e => ({
         key: e.key,
         label: e.label,
         meta: `${pad(e.count)} ${e.kind === 'collection' ? 'records' : 'fields'}`,
         to: routeFor('datos', [e.key]),
       })),
-    }
-    const pick = (doc: typeof about, names: string[]): Row[] => names
-      .map(n => doc.data.fields.find(f => f.name === n && (!f.worlds || f.worlds.includes('datos'))))
-      .filter((f): f is NonNullable<typeof f> => !!f)
-      .map(f => docRow(f))
-    const name = about.data.fields.find(f => f.name === 'name')?.value ?? about.data.title
-    detail = {
-      kind: 'root',
-      name,
-      type: 'record · about + contact',
-      updated: about.data.updatedAt.slice(0, 10),
-      rows: [
-        ...pick(about, ['role', 'from', 'available', 'availability', 'languages', 'freelance_since']),
-        ...pick(contact, contact.data.fields.map(f => f.name)),
-      ],
     }
     return done()
   }
@@ -324,23 +286,21 @@ export async function resolveExplorer(api: Api, path: Path, query: LocationQuery
     last = answer
     const records = answer.data as AnyRecord[]
     if (!slug) {
-      // La colección es una tabla: una fila por record, una columna por campo de lista.
-      table = {
-        collection,
-        model: modelName[collection],
+      // La colección es una carpeta: una fila por record, con su nombre y su dato dominante.
+      folder = {
+        head: collection,
         count: answer.meta.count,
-        head: meta.list.map(name => ({ name, type: meta.fields[name]!.type })),
-        rows: records.map(r => ({
-          key: r.slug,
-          to: routeFor('datos', [collection, r.slug], query),
-          cells: meta.list.map(name => cellFor(collection, r, name, 'table')),
-        })),
         facets: facetsOf(collection, query),
-        filters: listFilters[collection],
+        items: records.map(r => ({
+          key: r.slug,
+          label: nameOf(collection, r),
+          meta: metaOf(collection, r),
+          to: routeFor('datos', [collection, r.slug], query),
+        })),
       }
       return done()
     }
-    // Se sube a la tabla con los mismos filtros, y los vecinos son los de esa
+    // Se sube a la carpeta con los mismos filtros, y los vecinos son los de esa
     // misma lista filtrada: con ?stack=vue, ↑↓ pasa entre los proyectos con Vue.
     up = routeFor('datos', [collection], query)
     const at = records.findIndex(r => r.slug === slug)
@@ -391,15 +351,14 @@ export async function resolveExplorer(api: Api, path: Path, query: LocationQuery
     updated: 'updatedAt' in record ? String(record.updatedAt).slice(0, 10) : null,
     rows: fieldsFor(collection, 'datos')
       .filter(name => name !== meta.nameField)
-      .map(name => ({ name, type: meta.fields[name]!.type, wide: meta.fields[name]!.wide, ...cellFor(collection, record!, name, 'sheet', extra) })),
+      .map(name => ({ name, type: meta.fields[name]!.type, wide: meta.fields[name]!.wide, ...cellFor(collection, record!, name, extra) })),
   }
   return done()
 
   function done(): Explorer {
     return {
       level: path.length,
-      index,
-      table,
+      folder,
       detail,
       up,
       prev,

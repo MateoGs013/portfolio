@@ -6,7 +6,7 @@ paths:
 
 # Mundo DATOS
 
-Una carpeta por pantalla, tinta sobre papel: claro, frío, plano. Se ve un nivel, se entra a un item, se vuelve por la ruta.
+Un explorador de archivos, tinta sobre papel: claro, frío, plano. Una carpeta muestra solo sus items; recién al abrir uno aparece su contenido. Se vuelve por la ruta.
 
 ## Reglas
 
@@ -17,9 +17,9 @@ Una carpeta por pantalla, tinta sobre papel: claro, frío, plano. Se ve un nivel
 
 ## Dirección (Fase 3, ver `docs/decisiones.md`)
 
-Hoja técnica, no Finder ni terminal. Identificadores en minúscula y sin espaciado, tal como están en el schema. Filas numeradas de 44px. **Un solo panel por nivel**, y la ruta del riel superior es la barra de dirección: cada segmento es una carpeta a la que se vuelve. **La raíz es la persona** (`DatosDetail.vue` con el índice de la base debajo del nombre, `DatosIndex.vue`). **Una colección es una tabla** (`DatosTable.vue`): filas anchas y clickeables enteras, columnas de `fieldMeta[...].list`, tipo en el encabezado, cada valor filtrable es un link que corre la query. **El record es una hoja plana** (`DatosDetail.vue`): nombre grande, línea `record · Model · updatedAt`, vecinos anterior y siguiente al lado, campos en orden de lectura con el tipo al lado, relaciones a la vista con un link por item. No hay sub-nivel: `depth` es 2. El pie muestra el request real con sus milisegundos. Todo esto vive en `app/worlds/datos/` (`explorer.ts` resuelve, los componentes dibujan).
+Hoja técnica, no Finder ni terminal. Identificadores en minúscula y sin espaciado, tal como están en el schema. Filas numeradas de 44px. **Una sola cosa por pantalla: una carpeta o una hoja.** La ruta del riel superior es la barra de dirección: cada segmento es una carpeta a la que se vuelve. **La raíz es la carpeta de la base** (`DatosFolder.vue`): solo las tablas y los documentos con su conteo; la persona está en `about` y `contact`. **Una colección es la carpeta de sus records** (el mismo `DatosFolder.vue`): una fila por record con el nombre y el dato dominante (año, período, `since`), más los filtros activos como chips con `×`. Nada más: el stack, el rol y los links se leen al abrir. **El record es una hoja plana** (`DatosDetail.vue`): nombre grande, línea `record · Model · updatedAt`, vecinos anterior y siguiente debajo, campos en orden de lectura con el tipo al lado, relaciones a la vista con un link por item; los valores filtrables son links que dejan la carpeta filtrada. No hay sub-nivel: `depth` es 2. El pie muestra el request real con sus milisegundos. Todo esto vive en `app/worlds/datos/` (`explorer.ts` resuelve, los componentes dibujan).
 
-La prueba de cada pantalla es un recruiter apurado: tiene que ver los nombres enteros, el stack sin un click más, y poder correr su pregunta ("qué hizo con React") tocando un valor.
+La prueba de cada pantalla es un recruiter apurado: tiene que entender dónde está sin leer nada, ver los nombres enteros, y poder correr su pregunta ("qué hizo con React") tocando un valor en la hoja o entrando a `stack`.
 
 ## Vocabulario como sistema de diseño
 
@@ -29,12 +29,12 @@ Tipos declarados (`string`, `int`, `relation → Client`) · `NULL` a la vista, 
 
 ## Teclado y mouse
 
-El teclado es el de una carpeta: `↑↓` mueven el foco por las filas del panel (en una hoja, pasan al record vecino) · `→` / `Enter` abren la fila con foco · `←` / `Backspace` / `Esc` suben un nivel y dejan el foco en la fila de la que se venía · `/` o `Cmd+K` abren el "ir a". El mouse hace lo mismo de la forma tradicional: click en una fila entera, click en un segmento de la ruta para volver. Mover el foco no navega: la ruta sigue siendo el único estado.
+El teclado es el de una carpeta: `↑↓` mueven el foco por las filas del panel (en una hoja, pasan al record vecino) · `→` / `Enter` abren la fila con foco · `←` / `Backspace` / `Esc` suben un nivel y dejan el foco en la fila de la que se venía · `/` o `Cmd+K` abren el "ir a". El mouse hace lo mismo de la forma tradicional: click en una fila, click en un segmento de la ruta para volver. Mover el foco no navega: la ruta sigue siendo el único estado.
 Todo el contenido tiene que ser alcanzable sin mouse y con JS apagado.
 
 ## Mobile
 
-Por debajo de ~900px la estructura es la misma (un panel por nivel), solo que la tabla se apila: cada record es un bloque con sus campos rotulados. No hay perspectiva ni ayudas de teclado.
+Por debajo de ~900px la estructura es exactamente la misma: carpetas y hojas. Solo se apagan la perspectiva y las ayudas de teclado.
 
 ## Defaults a evitar
 

@@ -2,9 +2,8 @@
 // La hoja del record, compuesta como hoja de especificaciones: el título
 // arriba, los campos debajo con el tipo en su propia columna angosta, pegado
 // al valor. Las relaciones están a la vista y cada una es un link; no hay
-// nada escondido en un nivel más abajo. En la raíz, el índice de la base
-// entra entre el nombre y los campos (slot `index`); en un record, los
-// vecinos de la lista van al lado del título.
+// nada escondido en un nivel más abajo. En un record, los vecinos de la
+// carpeta van debajo del título.
 import DatosValor from './DatosValor.vue'
 import { pad, type Detail, type Vecino } from './explorer'
 
@@ -17,7 +16,7 @@ const uid = useId()
 </script>
 
 <template>
-  <article class="hoja" :class="{ portada: detail.kind === 'root' }" :aria-labelledby="uid">
+  <article class="hoja" :aria-labelledby="uid">
     <header class="cabecera">
       <h1 :id="uid" class="titulo" tabindex="-1" data-anchor>{{ detail.name }}</h1>
       <p class="linea">
@@ -30,10 +29,6 @@ const uid = useId()
         <NuxtLink v-if="next" :to="next.to" class="vecino" rel="next">{{ next.label }} <span aria-hidden="true">›</span></NuxtLink>
       </nav>
     </header>
-
-    <div v-if="$slots.index" class="indice">
-      <slot name="index" />
-    </div>
 
     <dl class="campos">
       <div v-for="row in detail.rows" :key="row.name" class="campo" :class="{ wide: row.wide || row.items }">
@@ -57,7 +52,6 @@ const uid = useId()
 @media (min-width: 1700px) {
   .hoja { max-width: none; grid-template-columns: minmax(240px, 2fr) minmax(0, 5fr); }
   .cabecera { position: sticky; top: 0; }
-  .indice { grid-column: 2; }
 }
 
 .cabecera {
@@ -75,7 +69,6 @@ const uid = useId()
 .vecino { color: var(--d-dim); text-decoration: none; }
 .vecino:hover { color: var(--d-ink); text-decoration: underline; }
 .vecino[rel="next"] { margin-left: auto; }
-.indice { margin-top: -4px; }
 .titulo {
   margin: 14px 0 12px;
   font-family: var(--font-text);
@@ -86,12 +79,6 @@ const uid = useId()
   text-wrap: balance;
   overflow-wrap: anywhere;
   outline: none;
-}
-.portada .titulo {
-  margin: 16px 0 18px;
-  font-size: var(--d-fs-portada);
-  letter-spacing: -0.045em;
-  line-height: 0.92;
 }
 .linea {
   display: flex;

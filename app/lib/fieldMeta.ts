@@ -38,8 +38,6 @@ export interface CollectionMeta {
   kind: 'collection'
   /** Campo que hace de nombre del record. Vive en los dos mundos: es lo que viaja en el pasaje. */
   nameField: string
-  /** Columnas de la tabla de la colección en DATOS: lo que se compara de un vistazo. */
-  list: string[]
   fields: Record<string, FieldMeta>
 }
 
@@ -48,7 +46,6 @@ export const fieldMeta: Record<CollectionKey, CollectionMeta> = {
     label: 'projects',
     kind: 'collection',
     nameField: 'title',
-    list: ['title', 'year', 'role', 'techs', 'status', 'url'],
     fields: {
       // Compartidos, con motivo: el slug es la ruta, el título es el ancla del pasaje.
       title: { type: 'string', worlds: ['datos', 'diseno'] },
@@ -81,7 +78,6 @@ export const fieldMeta: Record<CollectionKey, CollectionMeta> = {
     // El nombre es el rol, no la organización: la experiencia es freelance y
     // propia, y varias etapas no tienen organización detrás.
     nameField: 'role',
-    list: ['role', 'org', 'startedAt', 'endedAt', 'techs'],
     fields: {
       role: { type: 'string', worlds: ['datos', 'diseno'] }, // es el nombre del record
       org: { type: 'relation → Org', worlds: ['datos', 'diseno'], nullable: true }, // rotula la banda en DISEÑO
@@ -100,7 +96,6 @@ export const fieldMeta: Record<CollectionKey, CollectionMeta> = {
     label: 'stack',
     kind: 'collection',
     nameField: 'name',
-    list: ['name', 'category', 'since', 'projects', 'experiences'],
     fields: {
       name: { type: 'string', worlds: ['datos', 'diseno'] },
       category: { type: 'enum TechCategory', worlds: ['datos'] },
@@ -118,7 +113,6 @@ export const fieldMeta: Record<CollectionKey, CollectionMeta> = {
     label: 'orgs',
     kind: 'collection',
     nameField: 'name',
-    list: ['name', 'city', 'projects', 'experiences'],
     fields: {
       name: { type: 'string', worlds: ['datos', 'diseno'] },
       city: { type: 'string', worlds: ['datos'], nullable: true },

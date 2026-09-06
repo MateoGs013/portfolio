@@ -1,14 +1,13 @@
 <script setup lang="ts">
-// Renderer DATOS: una carpeta por pantalla. La raíz es la persona con el
-// índice de la base debajo; una colección es una tabla; un record es una
-// hoja. Un solo panel por nivel, la ruta arriba para volver, y los vecinos
-// a los lados. Un solo renderer para todas las colecciones. La ruta es el
-// estado: el teclado mueve el foco por las filas y navega; no hay selección
-// en memoria.
+// Renderer DATOS: un explorador de archivos. La raíz es la carpeta de la
+// base con sus tablas; una colección es la carpeta con sus records; un
+// record es la hoja abierta. Una sola cosa por pantalla, la ruta arriba
+// para volver, y los vecinos a los lados de la hoja. Un solo renderer para
+// todas las colecciones. La ruta es el estado: el teclado mueve el foco por
+// las filas y navega; no hay selección en memoria.
 import DatosDetail from './DatosDetail.vue'
+import DatosFolder from './DatosFolder.vue'
 import DatosGoto from './DatosGoto.vue'
-import DatosIndex from './DatosIndex.vue'
-import DatosTable from './DatosTable.vue'
 import { pad, resolveExplorer, type Explorer } from './explorer'
 import { routeFor } from '~/lib/path'
 
@@ -34,11 +33,10 @@ if (import.meta.server && error.value) {
   if (event) setResponseStatus(event, error.value.statusCode ?? 500)
 }
 
-const index = computed(() => ex.value?.index ?? null)
-const table = computed(() => ex.value?.table ?? null)
+const folder = computed(() => ex.value?.folder ?? null)
 const detail = computed(() => ex.value?.detail ?? null)
 /** Un record o un documento: la hoja sola, sin filas que recorrer. */
-const hoja = computed(() => !!detail.value && !index.value && !table.value)
+const hoja = computed(() => !!detail.value && !folder.value)
 
 const segments = computed(() => [
   { label: 'db', to: routeFor('datos', []) },
@@ -113,14 +111,14 @@ function onKey(e: KeyboardEvent) {
 
     case 'ArrowRight':
     case 'Enter': {
-      // Abrir la fila que tiene el foco. Un link con Enter ya navega solo.
-      if (e.key === 'Enter' && t?.tagName === 'A') return
+      // Abrir la fila que tiene el foco. Un link con Enter ya navega solo;
+      // solo hay que avisar que fue con teclado para que el foco siga.
       const row = t?.closest<HTMLElement>('[data-row]')
-      const link = row && (row.tagName === 'A' ? row : row.querySelector('a'))
-      if (!link) return
-      e.preventDefault()
+      if (!row) return
       viaTeclado.value = true
-      link.click()
+      if (e.key === 'Enter' && t?.tagName === 'A') return
+      e.preventDefault()
+      ;(row.tagName === 'A' ? row : row.querySelector('a'))?.click()
       break
     }
 
@@ -173,12 +171,7 @@ onBeforeUnmount(() => removeEventListener('keydown', onKey))
         />
       </div>
       <div v-else-if="ex" ref="pane" :key="route.fullPath" class="pane" :class="dir">
-        <DatosDetail v-if="detail && index" :detail="detail">
-          <template #index>
-            <DatosIndex :index="index" />
-          </template>
-        </DatosDetail>
-        <DatosTable v-else-if="table" :table="table" />
+        <DatosFolder v-if="folder" :folder="folder" />
         <DatosDetail v-else-if="detail" :detail="detail" :prev="ex.prev" :next="ex.next" />
       </div>
     </main>

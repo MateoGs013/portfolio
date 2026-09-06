@@ -15,7 +15,7 @@
 
   /* densidad */
   --d-frame: clamp(20px, 3vw, 56px);
-  --d-pane-max: 1120px; /* la hoja no se estira más que un ancho de lectura; la tabla sí */
+  --d-pane-max: 1120px; /* la hoja no se estira más que un ancho de lectura */
   --d-row: 44px;
   --d-z: 56px; /* lo que se acerca o aleja el panel al entrar o salir de una carpeta, casi imperceptible a propósito */
   --d-fs-mono: 11.5px;
@@ -24,7 +24,6 @@
   --d-fs-value: 16px;
   --d-fs-read: 18px;
   --d-fs-title: clamp(30px, 3.2vw, 44px);
-  --d-fs-portada: clamp(44px, 5vw, 80px);
   --d-lh: 1.45;
 
   /* ritmo: acá el movimiento es latencia */
