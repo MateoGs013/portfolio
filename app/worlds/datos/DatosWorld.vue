@@ -92,37 +92,42 @@ function onKey(e: KeyboardEvent) {
       break
 
     case 'ArrowDown':
-    case 'ArrowUp': {
-      const down = e.key === 'ArrowDown'
+    case 'ArrowUp':
+    case 'ArrowLeft':
+    case 'ArrowRight': {
+      const forward = e.key === 'ArrowDown' || e.key === 'ArrowRight'
+      const vertical = e.key === 'ArrowDown' || e.key === 'ArrowUp'
       if (hoja.value) {
-        // En la hoja no hay lista: ↑↓ pasan al record vecino.
-        const vecino = down ? ex.value.next : ex.value.prev
+        // En la hoja no hay grilla: ←→ y ↑↓ pasan al record vecino.
+        const vecino = forward ? ex.value.next : ex.value.prev
         if (vecino) { e.preventDefault(); go(vecino.to) }
         return
       }
+      // En la grilla las flechas se mueven en las cuatro direcciones. Las columnas
+      // se leen del layout: cuántas baldosas comparten la altura de la primera.
       const list = rows()
       if (!list.length) return
       e.preventDefault()
+      const cols = Math.max(1, list.filter(r => r.offsetTop === list[0]!.offsetTop).length)
+      const step = vertical ? cols : 1
       const at = list.findIndex(r => r === t || r.contains(t))
-      const to = at < 0 ? (down ? 0 : list.length - 1) : Math.min(Math.max(at + (down ? 1 : -1), 0), list.length - 1)
+      const to = at < 0 ? (forward ? 0 : list.length - 1) : Math.min(Math.max(at + (forward ? step : -step), 0), list.length - 1)
       list[to]?.focus()
       break
     }
 
-    case 'ArrowRight':
     case 'Enter': {
-      // Abrir la fila que tiene el foco. Un link con Enter ya navega solo;
+      // Abrir la baldosa que tiene el foco. Un link con Enter ya navega solo;
       // solo hay que avisar que fue con teclado para que el foco siga.
       const row = t?.closest<HTMLElement>('[data-row]')
       if (!row) return
       viaTeclado.value = true
-      if (e.key === 'Enter' && t?.tagName === 'A') return
+      if (t?.tagName === 'A') return
       e.preventDefault()
       ;(row.tagName === 'A' ? row : row.querySelector('a'))?.click()
       break
     }
 
-    case 'ArrowLeft':
     case 'Backspace':
     case 'Escape':
       if (ex.value.up) {
@@ -180,9 +185,9 @@ onBeforeUnmount(() => removeEventListener('keydown', onKey))
       <span v-if="ex" class="req">{{ ex.request.line }}</span>
       <span v-if="ex" class="medida">{{ ex.request.status }} · {{ ex.request.ms }} ms · {{ pad(ex.request.count) }} {{ ex.request.count === 1 ? 'record' : 'records' }}</span>
       <span class="keys" aria-hidden="true">
-        <template v-if="hoja && (ex?.prev || ex?.next)"><kbd>↑</kbd><kbd>↓</kbd> vecino</template>
-        <template v-else-if="!hoja"><kbd>↑</kbd><kbd>↓</kbd> mover <kbd>↵</kbd> abrir</template>
-        <template v-if="ex?.up"><kbd>←</kbd> volver</template>
+        <template v-if="hoja && (ex?.prev || ex?.next)"><kbd>←</kbd><kbd>→</kbd> vecino</template>
+        <template v-else-if="!hoja"><kbd>←</kbd><kbd>↑</kbd><kbd>↓</kbd><kbd>→</kbd> mover <kbd>↵</kbd> abrir</template>
+        <template v-if="ex?.up"><kbd>⌫</kbd> volver</template>
         <kbd>/</kbd> ir a
       </span>
     </footer>

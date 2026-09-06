@@ -26,8 +26,12 @@ type Api = ReturnType<typeof useApi>
 export interface Item {
   key: string
   label: string
-  /** El dato dominante, a la derecha del nombre: el conteo de una tabla, el año de un record. */
+  /** El dato dominante, debajo del nombre: el conteo de una tabla, el año de un record. */
   meta: string
+  /** Lo que se ve en el ícono: `06` en una carpeta, `2026` en un archivo. */
+  badge: string
+  /** Una tabla es una carpeta; un record o un documento es un archivo. */
+  kind: 'folder' | 'file'
   to: RouteLocationRaw
 }
 
@@ -251,6 +255,8 @@ export async function resolveExplorer(api: Api, path: Path, query: LocationQuery
         key: e.key,
         label: e.label,
         meta: `${pad(e.count)} ${e.kind === 'collection' ? 'records' : 'fields'}`,
+        badge: pad(e.count),
+        kind: e.kind === 'collection' ? 'folder' : 'file',
         to: routeFor('datos', [e.key]),
       })),
     }
@@ -295,6 +301,8 @@ export async function resolveExplorer(api: Api, path: Path, query: LocationQuery
           key: r.slug,
           label: nameOf(collection, r),
           meta: metaOf(collection, r),
+          badge: metaOf(collection, r).slice(0, 4),
+          kind: 'file',
           to: routeFor('datos', [collection, r.slug], query),
         })),
       }

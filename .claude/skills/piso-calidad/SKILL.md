@@ -30,7 +30,7 @@ Desenchufar el mouse y recorrer el sitio entero.
 
 ## 3 · Lector de pantalla
 
-- DATOS muestra una carpeta o una hoja; la carpeta es una `section` con su encabezado y los vecinos de la hoja son un `nav` con `aria-label`. Las filas son links comunes: el foco itinerante de `↑↓` se mueve entre ellos y el Tab también los recorre.
+- DATOS muestra una carpeta o una hoja; la carpeta es una `section` con su encabezado y los vecinos de la hoja son un `nav` con `aria-label`. Las baldosas son links comunes con el ícono en `aria-hidden`: el foco itinerante de las flechas se mueve entre ellos y el Tab también los recorre.
 - Las capas del mundo DISEÑO fuera de la vista activa, igual.
 - Los SVG decorativos con `aria-hidden="true"`.
 - Las imágenes con `alt` real, no el filename.
@@ -52,7 +52,7 @@ Activar `prefers-reduced-motion: reduce`.
 
 ## 6 · Responsive
 
-- DATOS por debajo de ~900px: carpetas y hojas iguales que en desktop, sin perspectiva ni ayudas de teclado.
+- DATOS por debajo de ~900px: la grilla a dos columnas, las hojas apiladas, sin perspectiva ni ayudas de teclado.
 - DISEÑO: verificar que cada sección tenga una versión mobile pensada, no solo apretada.
 - Probar a 320px de ancho.
 
