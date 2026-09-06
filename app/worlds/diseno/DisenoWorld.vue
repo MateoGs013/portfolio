@@ -1,7 +1,9 @@
 <script setup lang="ts">
-// Renderer DISEÑO: secciones arriba, y cada sección con su propia forma.
-// Las colecciones ya tienen la suya (`sections/`); los documentos siguen
-// con el armazón de la Fase 2 hasta que les llegue su turno.
+// Renderer DISEÑO: la cabecera con la marca y las secciones, y cada sección
+// con su propia forma (`sections/`). Acá no se dibuja contenido: se decide
+// qué sección responde a la ruta y se le cede el cuerpo.
+import SeccionAbout from './sections/SeccionAbout.vue'
+import SeccionContact from './sections/SeccionContact.vue'
 import SeccionExperiencia from './sections/SeccionExperiencia.vue'
 import SeccionProyectos from './sections/SeccionProyectos.vue'
 import SeccionStack from './sections/SeccionStack.vue'
@@ -9,7 +11,6 @@ import { collectionOrder, docOrder, type CollectionKey, type DocKey } from '~/li
 import { isDoc, isRoot, routeFor } from '~/lib/path'
 
 const api = useApi()
-const route = useRoute()
 const { path, query } = useMundo()
 
 useHead({
@@ -37,33 +38,16 @@ const { data: marca } = await useAsyncData('diseno-marca', async () => {
   const { data } = await api.doc('about')
   return data.fields.find(f => f.name === 'name')?.value ?? data.title
 })
-/** Las secciones que ya tienen forma propia no pasan por el armazón. */
-const propia = computed(() => section.value === 'projects' || section.value === 'experience' || section.value === 'stack')
-
-type View =
-  | { kind: 'section' }
-  | { kind: 'doc', title: string, prose: string[] }
-
-const { data: view, error } = await useAsyncData<View>(
-  computed(() => `diseno${route.fullPath}`),
-  async () => {
-    const [root, slug] = path.value
-    if (!isRoot(root) || root === 'orgs') throw createError({ statusCode: 404, statusMessage: 'no existe' })
-    if (root === 'projects' || root === 'experience' || root === 'stack') return { kind: 'section' }
-
-    if (!isDoc(root) || slug) throw createError({ statusCode: 404, statusMessage: 'no existe' })
-    const { data } = await api.doc(root)
-    return {
-      kind: 'doc',
-      title: data.title,
-      prose: data.fields.filter(f => (!f.worlds || f.worlds.includes('diseno')) && f.type === 'text').map(f => f.value),
-    }
-  },
-)
-
+/** La ruta tiene que ser una sección de este mundo; los documentos no tienen sub-ruta. */
+const error = computed(() => {
+  const [root, slug] = path.value
+  if (!root) return null
+  if (!isRoot(root) || root === 'orgs' || (isDoc(root) && slug)) return { statusCode: 404, statusMessage: 'no existe' }
+  return null
+})
 if (import.meta.server && error.value) {
   const event = useRequestEvent()
-  if (event) setResponseStatus(event, error.value.statusCode ?? 500)
+  if (event) setResponseStatus(event, error.value.statusCode)
 }
 </script>
 
@@ -83,17 +67,15 @@ if (import.meta.server && error.value) {
       </nav>
     </header>
 
-    <main id="contenido" class="cuerpo" :class="{ propia }" tabindex="-1">
-      <p v-if="error" class="k">{{ error.statusCode ?? 500 }} · {{ error.statusMessage ?? error.message }}</p>
+    <main id="contenido" class="cuerpo" tabindex="-1">
+      <p v-if="error" class="k">{{ error.statusCode }} · {{ error.statusMessage }}</p>
 
       <SeccionProyectos v-else-if="section === 'projects'" />
       <SeccionExperiencia v-else-if="section === 'experience'" />
       <SeccionStack v-else-if="section === 'stack'" />
+      <SeccionAbout v-else-if="section === 'about'" />
+      <SeccionContact v-else-if="section === 'contact'" />
 
-      <template v-else-if="view?.kind === 'doc'">
-        <h1 class="titulo">{{ view.title }}</h1>
-        <p v-for="(p, i) in view.prose" :key="i" class="prosa">{{ p }}</p>
-      </template>
     </main>
   </div>
 </template>
@@ -147,36 +129,16 @@ if (import.meta.server && error.value) {
   flex: 1;
   display: flex;
   flex-direction: column;
-  justify-content: flex-end;
-  gap: 18px;
   padding: var(--n-frame);
 }
-.cuerpo.propia { justify-content: stretch; }
 .k {
   margin: 0;
   font-size: 12px;
   color: var(--n-faint);
 }
 
-.titulo {
-  font-family: var(--font-display);
-  color: var(--n-paper);
-  letter-spacing: -0.035em;
-  line-height: 0.9;
-  text-decoration: none;
-  font-variation-settings: 'opsz' 120, 'wght' 620, 'SOFT' 30, 'WONK' 1;
-}
-.titulo { margin: 0; font-size: clamp(34px, 6vw, 84px); }
 
 
-.prosa {
-  margin: 0;
-  max-width: 44ch;
-  font-family: var(--font-display);
-  font-size: clamp(15px, 1.5vw, 19px);
-  color: #c2b69d;
-  font-variation-settings: 'opsz' 18, 'wght' 420, 'SOFT' 20;
-}
 
 @media (max-width: 900px) {
   /* La marca arriba con el control de pasaje a su derecha; las secciones debajo, en una fila que scrollea. */

@@ -163,6 +163,36 @@ Degradación: sin JS, todo encendido con hoy como año, cada nombre un link; sin
 
 Descartado: la categoría como agrupación (es de DATOS y convertiría la caja en una tabla), los conteos de proyectos por herramienta (métrica, DATOS), y el texto "N años" al lado de cada nombre (el tamaño ya lo dice; el año de entrada es más honesto).
 
+**Fase 5 (6-sep-2026): `about` es un specimen de blando a firme.**
+
+El documento trae trece campos, casi todos hechos cortos que DATOS ya muestra como registro (origen, idiomas, disponibilidad). Para este mundo cuentan el nombre, el rol y los dos textos largos (`bio`, `goal`). La pregunta es "quién es y cómo piensa", y la respuesta que este mundo puede dar sin repetir a DATOS es mostrar criterio haciéndolo.
+
+Se pesaron tres formas:
+1. *Specimen con los cuatro ejes de Fraunces en cuatro sliders* (la del prototipo). Deja jugar con la tipografía; cuesta que cuatro controles son una mecánica para descifrar (criterio 3) y que un specimen de fundición es un género.
+2. *Carta que se escribe sola*. Cuesta que el texto que se tipea es el tell de terminal que ya está prohibido en el otro mundo, y acá tampoco es una decisión.
+3. **Un solo recorrido de blando a firme** (elegida). El nombre, el rol y la prosa leen los mismos cuatro ejes, y el mismo scrubber los lleva por un camino diseñado: `opsz` 9 → 144, `wght` 320 → 600, `SOFT` 100 → 0, `WONK` 1 → 0. Un extremo es óptico chico, blando y torcido; el otro, óptico grande, firme y recto. Al llegar, el recorrido se hace solo en 3 s (`expo.inOut`: se ve el cambio en el medio) y queda en firme, que es la composición elegida. Deja mostrar criterio tipográfico sin declararlo y sin cuatro controles; cuesta que el camino es uno solo y no se puede explorar el espacio entero (a propósito: una decisión, no un panel).
+
+Cohesión: el mismo `DisenoRango.vue` (acá mueve los ejes), Fraunces como variable en su máxima expresión (es la sección donde los ejes *son* el contenido), y el material aparece como aire y oscuridad alrededor de la letra. Con ancho, el nombre y el scrubber quedan fijos a la izquierda y la prosa corre a la derecha.
+
+Degradación: sin JS, todo en firme y sin scrubber. `prefers-reduced-motion`: sin recorrido, en firme; el scrubber sigue en manos del visitante.
+
+Descartado: mostrar los hechos cortos (son de DATOS y lo dirían igual), una foto (no hay campo y no hace falta: la letra es el retrato).
+
+**Fase 5 (6-sep-2026): `contact` son los créditos.**
+
+Tres campos: email, github y el estado ("buscando mi primer equipo"). Es la última sección.
+
+Se pesaron tres formas:
+1. *Sellos de tinta sobre papel* (la del prototipo). Cuesta que el material de este mundo terminó siendo película retroiluminada, no papel: los sellos serían una metáfora importada del prototipo.
+2. *Una tarjeta de contacto*. La primera respuesta (criterio 4).
+3. **Los créditos** (elegida). Como el final de una película: las líneas suben desde abajo, una por vez, y quedan quietas; cada campo es una línea (el nombre del campo chico arriba, el valor grande en Fraunces), los links son links y el estado cierra. Deja terminar el recorrido con el mismo material y sin inventar nada; cuesta que es corto, y eso está bien.
+
+Cohesión: material (película: los créditos son *el* momento de la película), Fraunces. No hay scrubber: los créditos pasan una vez y no se manejan (criterio 5: lo caro se gasta donde pasa una sola vez).
+
+Degradación: sin JS los créditos ya están quietos. `prefers-reduced-motion`: sin subida.
+
+Descartado: un formulario (una barrera con buena prensa, ya dicho en el prototipo), íconos de redes (no hay campo para eso), y hacer subir los créditos en loop.
+
 **Cohesión por instrumento, material y variable.**
 El scrubber reaparece con distintos trabajos (construcción en proyectos, tiempo en experiencia), el material es papel sobre oscuro, y los ejes de Fraunces atraviesan todo. Si los tratamientos cambian, que compartan algo equivalente.
 

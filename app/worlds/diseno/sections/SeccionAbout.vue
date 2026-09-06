@@ -53,28 +53,34 @@ onBeforeUnmount(() => viaje?.kill())
     <p v-if="error" class="k">{{ error.statusCode ?? 500 }} · {{ error.statusMessage ?? error.message }}</p>
     <template v-else-if="data">
       <article class="specimen">
-        <h1 class="nombre" data-anchor>{{ data.name }}</h1>
-        <p v-if="data.role" class="rol">{{ data.role }}</p>
-        <p v-if="data.bio" class="bio">{{ data.bio }}</p>
-        <p v-if="data.goal" class="goal">{{ data.goal }}</p>
-      </article>
-
-      <section class="eje" aria-label="Los ejes de la tipografía">
-        <p class="eje-l" aria-hidden="true"><span>blando</span><span class="eje-v">{{ lectura }}</span><span>firme</span></p>
-        <div class="scrub">
-          <DisenoRango v-model="progreso" label="Llevar la tipografía de blando a firme" :valuetext="lectura" @agarrar="agarrar" @soltar="arrastrando = false" />
+        <div class="quien">
+          <h1 class="nombre" data-anchor>{{ data.name }}</h1>
+          <p v-if="data.role" class="rol">{{ data.role }}</p>
+          <section class="eje" aria-label="Los ejes de la tipografía">
+            <p class="eje-l" aria-hidden="true"><span>blando</span><span class="eje-v">{{ lectura }}</span><span>firme</span></p>
+            <div class="scrub">
+              <DisenoRango v-model="progreso" label="Llevar la tipografía de blando a firme" :valuetext="lectura" @agarrar="agarrar" @soltar="arrastrando = false" />
+            </div>
+          </section>
         </div>
-      </section>
+        <div class="prosa">
+          <p v-if="data.bio" class="bio">{{ data.bio }}</p>
+          <p v-if="data.goal" class="goal">{{ data.goal }}</p>
+        </div>
+      </article>
     </template>
   </div>
 </template>
 
 <style scoped>
-.about { display: flex; flex-direction: column; flex: 1; justify-content: center; gap: clamp(28px, 5vh, 56px); padding-bottom: 4vh; }
+.about { display: flex; flex-direction: column; flex: 1; justify-content: center; padding-bottom: 4vh; }
 .k { margin: 0; font-size: 12px; color: var(--n-faint); }
 
-/* Todo el specimen lee los mismos ejes: un solo recorrido cambia el nombre, el rol y la prosa. */
-.specimen { display: flex; flex-direction: column; gap: 22px; max-width: 62ch; font-family: var(--font-display); }
+/* Todo el specimen lee los mismos ejes: un solo recorrido cambia el nombre, el rol y la prosa.
+   Con ancho, el nombre y el scrubber a la izquierda, fijos; la prosa a la derecha. */
+.specimen { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 32px clamp(32px, 5vw, 96px); align-items: start; font-family: var(--font-display); }
+.quien { position: sticky; top: var(--n-frame); display: flex; flex-direction: column; gap: 22px; }
+.prosa { display: flex; flex-direction: column; gap: 22px; max-width: 58ch; }
 .nombre {
   margin: 0;
   font-size: clamp(40px, 6.4vw, 96px);
@@ -99,13 +105,15 @@ onBeforeUnmount(() => viaje?.kill())
 }
 .goal { color: var(--n-dim); font-size: clamp(15px, 1.35vw, 18px); }
 
-.eje { max-width: 520px; }
+.eje { max-width: 420px; margin-top: 10px; }
 .eje-l { display: flex; justify-content: space-between; margin: 0 0 2px; font-size: 11px; color: var(--n-faint); }
 .eje-v { color: var(--n-paper); }
 .scrub { display: none; }
 .js .scrub { display: block; }
 
 @media (max-width: 900px) {
+  .specimen { grid-template-columns: minmax(0, 1fr); }
+  .quien { position: static; }
   .nombre { font-size: clamp(34px, 11vw, 56px); }
 }
 </style>

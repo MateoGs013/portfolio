@@ -86,14 +86,14 @@ Lo que dejó para la Fase 3: DATOS ya resuelve todos los niveles en una sola col
 
 ---
 
-## Fase 5 — DISEÑO: el resto
+## Fase 5 — DISEÑO: el resto ✅ cerrada el 6-sep-2026
 
 - [x] `experience` — exposición larga (6-sep-2026): bandas sobre el eje de los años, el scrubber mueve una fecha y enciende lo que corría entonces; abrir una etapa la deja encendida con su relato. `sections/SeccionExperiencia.vue`; el scrubber compartido pasa a `DisenoRango.vue`. Verificado por CDP: viaje, scrub, abrir y volver, reduced motion, móvil; sin errores de consola
 - [x] `stack` — la caja por año (6-sep-2026): los nombres en Fraunces tan grandes como años llevan; el scrubber mueve un año y enciende lo que ya había entrado. `sections/SeccionStack.vue`. Verificado por CDP: viaje, scrub por año, abrir y volver, reduced motion, móvil; sin errores
-- [ ] `about`
-- [ ] `contact`
+- [x] `about` — specimen de blando a firme (6-sep-2026): nombre, rol y prosa leen los mismos cuatro ejes de Fraunces y el scrubber los recorre; con ancho, el nombre y el scrubber fijos a la izquierda. `sections/SeccionAbout.vue`
+- [x] `contact` — los créditos (6-sep-2026): las líneas suben una por vez y quedan quietas; sin scrubber. `sections/SeccionContact.vue`
 
-Usar `/nueva-seccion` para cada una. Tres propuestas mínimo por sección.
+**Fase cerrada el 6-sep-2026.** Las cinco secciones tienen forma propia y `DisenoWorld.vue` ya no dibuja contenido: decide qué sección responde a la ruta. Tres propuestas por sección, con lo descartado, en `docs/decisiones.md`. Verificado por CDP sección por sección (viajes, scrub, abrir y volver, 404 de sub-ruta en documentos, reduced motion, móvil) sin errores de consola.
 
 ---
 
