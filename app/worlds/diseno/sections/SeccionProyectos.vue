@@ -10,6 +10,7 @@
 // visitante. La dirección está en docs/decisiones.md → "Fase 4".
 import { gsap } from 'gsap'
 import ProyectosTira, { type Fotograma } from './ProyectosTira.vue'
+import DisenoRango from '../DisenoRango.vue'
 import type { Media, Project } from '~/lib/api'
 import { routeFor } from '~/lib/path'
 
@@ -164,8 +165,7 @@ function onPick(_slug: string, rect: DOMRect) {
   fromRect = rect
 }
 
-function onScrub(e: Event) {
-  const v = Number((e.target as HTMLInputElement).value)
+function onScrub(v: number) {
   progreso.value = v
   tl?.progress(v / 1000).pause()
 }
@@ -224,18 +224,7 @@ onBeforeUnmount(() => tl?.kill())
           </figure>
 
           <div class="scrub" :aria-hidden="!conJs">
-            <input
-              type="range"
-              class="rango"
-              min="0"
-              max="1000"
-              :value="progreso"
-              :aria-valuetext="paradas[paradaActiva]?.label"
-              aria-label="Recorrer el proyecto"
-              @input="onScrub"
-              @pointerdown="agarrar"
-              @pointerup="soltar"
-            >
+            <DisenoRango :model-value="progreso" label="Recorrer el proyecto" :valuetext="paradas[paradaActiva]?.label" @update:model-value="onScrub" @agarrar="agarrar" @soltar="soltar" />
             <ol class="paradas" aria-hidden="true">
               <li v-for="(p, i) in paradas" :key="p.key" :class="{ on: i === paradaActiva }">
                 <button type="button" tabindex="-1" @click="saltar(i)">{{ p.label }}</button>
@@ -309,19 +298,6 @@ onBeforeUnmount(() => tl?.kill())
 /* El scrubber: una línea con las paradas del relato. Solo con JS. */
 .scrub { display: none; flex-direction: column; gap: 8px; }
 .js .scrub { display: flex; }
-.rango {
-  -webkit-appearance: none;
-  appearance: none;
-  width: 100%;
-  height: 22px;
-  margin: 0;
-  background: transparent;
-  cursor: pointer;
-}
-.rango::-webkit-slider-runnable-track { height: 2px; background: var(--n-edge); }
-.rango::-moz-range-track { height: 2px; background: var(--n-edge); }
-.rango::-webkit-slider-thumb { -webkit-appearance: none; width: 12px; height: 12px; margin-top: -5px; background: var(--n-ember); border: 0; border-radius: 0; }
-.rango::-moz-range-thumb { width: 12px; height: 12px; background: var(--n-ember); border: 0; border-radius: 0; }
 .paradas {
   list-style: none;
   margin: 0;

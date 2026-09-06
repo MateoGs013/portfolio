@@ -133,6 +133,21 @@ Descartado dentro de la forma elegida: perforaciones en la tira (ornamento), aut
 Descartado: la barra de secciones de la Fase 2 (cinco celdas iguales a todo el ancho, con el control de pasaje flotando encima y pisándola) y el índice de proyectos como una tira sola centrada en el vacío. Mateo: "la navegación se superpone con el cambiador de mundos, y me gustaría un mínimo de front más aceptable y desarrollado".
 La cabecera es una fila de 72px (`--n-head`) con tres cosas: la marca (el nombre, leído del documento `about`, en Fraunces a 19px), las secciones como links de texto con la activa subrayada en ámbar, y a la derecha el lugar reservado para el control de pasaje, que sigue siendo fijo y del layout pero ahora se centra en esa misma fila (`top` calculado desde `--n-head`). En el teléfono la marca y el pasaje comparten la primera fila y las secciones bajan a una fila que scrollea. El índice de proyectos pasa de tira a **hoja de contactos**: la misma película, pero en grilla de columnas de 300px, con el nombre en Fraunces a 26px debajo de cada fotograma; la tira chica sigue bajo la obra. Es el mismo componente (`ProyectosTira.vue`) con dos tamaños.
 
+**Fase 5 (6-sep-2026): `experience` es una exposición larga.**
+
+El dato: siete etapas entre 2017 y hoy, superpuestas de verdad (desde 2024 corren tres a la vez), con organización en seis y relato en dos. La dimensión es el tiempo y la pregunta de quien entra es "qué estaba haciendo y cuándo".
+
+Se pesaron tres formas:
+1. *Bandas sobre el eje de los años con cabezal arrastrable* (la del prototipo). Muestra la simultaneidad, que es lo que un CV en lista esconde; cuesta que un gantt es la primera respuesta (criterio 4) y que las bandas solas no dicen nada hasta que se las lee.
+2. *Un rollo de fotogramas, una etapa por cuadro*. Reusa la película de `projects` tal cual; cuesta que es un trasplante (criterio 2): la experiencia no es una pieza que se mira, es tiempo que pasa.
+3. **Exposición larga** (elegida). Las bandas del prototipo, pero el instrumento es el mismo scrubber de `projects` y lo que mueve es una fecha: el cabezal recorre los años y donde está se encienden las etapas que corrían entonces, y arriba se lee en grande "en junio 2021" con los roles encendidos debajo. Al llegar, el cabezal viaja del primer día a hoy en 2,6 s (`expo.out`: rápido al principio, lento al final, como una exposición larga que revela). Abrir una etapa la deja encendida en ámbar, lleva el cabezal a su mitad y muestra su relato. Deja ver a la vez la simultaneidad y una respuesta concreta por fecha; cuesta que en el teléfono las etapas cortas quedan chicas.
+
+Cohesión: el **instrumento** es el mismo `DisenoRango.vue` que en `projects` (ahí mueve el relato, acá el tiempo); el **material** sigue siendo película retroiluminada (bandas apagadas que se encienden, un cabezal ámbar con halo); la **variable** son los ejes de Fraunces: "en" va en `wght` 380 / `SOFT` 100 y la fecha en 560 / 40.
+
+Degradación: sin JS, las bandas y los años se ven en su estado final, con hoy como fecha, y cada banda es un link; el cabezal y el scrubber no aparecen. Con `prefers-reduced-motion` no hay viaje: el cabezal aparece en hoy o en la etapa abierta. Una etapa sin organización no muestra organización; sin relato, solo su tiempo. Las bandas cortas (menos del 16% del eje) llevan el nombre afuera, a su izquierda, en vez de truncarlo.
+
+Descartado dentro de la forma: mostrar el stack de cada etapa (es de DATOS), contar meses o años de duración (métrica inventada, criterio 4), y un título aparte para la etapa abierta (repetía la lectura grande; el rol *es* el h1).
+
 **Cohesión por instrumento, material y variable.**
 El scrubber reaparece con distintos trabajos (construcción en proyectos, tiempo en experiencia), el material es papel sobre oscuro, y los ejes de Fraunces atraviesan todo. Si los tratamientos cambian, que compartan algo equivalente.
 

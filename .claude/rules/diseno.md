@@ -24,7 +24,7 @@ El criterio 5 ya rindió tres veces: el viaje en Z quedó para el umbral, la con
 
 ## Cohesión
 
-Los tratamientos pueden cambiar, pero tienen que compartir **instrumento, material y variable**. En lo construido (Fase 4, `projects`): el **instrumento** es el scrubber (un `range` nativo con paradas; en `experience` tiene que reaparecer moviendo el tiempo), el **material** es la película retroiluminada sobre oscuro (fotogramas apagados que se encienden, la obra que se pinta), y la **variable** son los ejes de Fraunces (el título entra en `wght` 300 / `SOFT` 100 y llega a 620 / 30 con la obra). Si los tratamientos cambian, que compartan algo equivalente — si no, son ideas sueltas pegadas con cinta.
+Los tratamientos pueden cambiar, pero tienen que compartir **instrumento, material y variable**. En lo construido: el **instrumento** es el scrubber (`DisenoRango.vue`, un `range` nativo; en `projects` mueve el relato y pinta la obra, en `experience` mueve una fecha y enciende las etapas), el **material** es la película retroiluminada sobre oscuro (fotogramas y bandas apagados que se encienden, la obra que se pinta, el cabezal ámbar), y la **variable** son los ejes de Fraunces (lo que entra o acompaña va fino y blando, `wght` 300–380 / `SOFT` 100; lo que llega o manda, 560–620 / 30–40). Si los tratamientos cambian, que compartan algo equivalente — si no, son ideas sueltas pegadas con cinta.
 
 Las secciones con forma propia viven en `app/worlds/diseno/sections/` y `DisenoWorld.vue` les cede el cuerpo; las que todavía no la tienen pasan por su armazón (nombres en Fraunces, obra, prosa). GSAP se importa en el componente y solo corre en el cliente: el servidor renderiza el estado final.
 

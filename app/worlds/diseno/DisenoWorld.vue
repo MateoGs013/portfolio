@@ -1,7 +1,8 @@
 <script setup lang="ts">
 // Renderer DISEÑO: secciones arriba, y cada sección con su propia forma.
-// `projects` ya tiene la suya (Fase 4, `sections/SeccionProyectos.vue`); el resto
-// sigue con el armazón de la Fase 2 hasta que le llegue su turno.
+// `projects` y `experience` ya tienen la suya (`sections/`); el resto sigue
+// con el armazón de la Fase 2 hasta que le llegue su turno.
+import SeccionExperiencia from './sections/SeccionExperiencia.vue'
 import SeccionProyectos from './sections/SeccionProyectos.vue'
 import { collectionOrder, docOrder, fieldMeta, type CollectionKey, type DocKey } from '~/lib/fieldMeta'
 import { isDoc, isRoot, routeFor } from '~/lib/path'
@@ -36,7 +37,7 @@ const { data: marca } = await useAsyncData('diseno-marca', async () => {
   return data.fields.find(f => f.name === 'name')?.value ?? data.title
 })
 /** Las secciones que ya tienen forma propia no pasan por el armazón. */
-const propia = computed(() => section.value === 'projects')
+const propia = computed(() => section.value === 'projects' || section.value === 'experience')
 
 type View =
   | { kind: 'section' }
@@ -49,7 +50,7 @@ const { data: view, error } = await useAsyncData<View>(
   async () => {
     const [root, slug] = path.value
     if (!isRoot(root) || root === 'orgs') throw createError({ statusCode: 404, statusMessage: 'no existe' })
-    if (root === 'projects') return { kind: 'section' }
+    if (root === 'projects' || root === 'experience') return { kind: 'section' }
 
     if (isDoc(root)) {
       const { data } = await api.doc(root)
@@ -63,10 +64,8 @@ const { data: view, error } = await useAsyncData<View>(
     const nameField = fieldMeta[root].nameField
     if (slug) {
       const r = (await api.record(root, slug)).data as unknown as Record<string, unknown>
-      // Lo compartido con motivo: la org rotula la banda, los años son la dimensión de la experiencia.
-      const rotulo = root === 'experience'
-        ? [(r.org as { name: string } | null)?.name, `${String(r.startedAt).slice(0, 4)}–${r.endedAt ? String(r.endedAt).slice(0, 4) : ''}`].filter(Boolean).join(' · ')
-        : root === 'stack' ? `desde ${r.since}` : null
+      // Lo compartido con motivo: `since` es el tamaño del chip en stack.
+      const rotulo = root === 'stack' ? `desde ${r.since}` : null
       return {
         kind: 'record',
         name: String(r[nameField]),
@@ -108,7 +107,8 @@ if (import.meta.server && error.value) {
     <main id="contenido" class="cuerpo" :class="{ propia }" tabindex="-1">
       <p v-if="error" class="k">{{ error.statusCode ?? 500 }} · {{ error.statusMessage ?? error.message }}</p>
 
-      <SeccionProyectos v-else-if="propia" />
+      <SeccionProyectos v-else-if="section === 'projects'" />
+      <SeccionExperiencia v-else-if="section === 'experience'" />
 
       <template v-else-if="view?.kind === 'list'">
         <ol class="indice">
