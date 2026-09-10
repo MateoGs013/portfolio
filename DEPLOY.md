@@ -54,7 +54,7 @@ Seguí este orden para que cada servicio tenga los datos y URLs que necesita del
    - **Runtime**: `Node`.
    - **Build Command**: 
      ```bash
-     corepack enable && pnpm install && pnpm build:api
+     corepack enable && pnpm install --no-frozen-lockfile && pnpm build:api
      ```
    - **Start Command**: 
      ```bash
