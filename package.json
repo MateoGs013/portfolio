@@ -19,9 +19,11 @@
     "lint": "eslint .",
     "db:up": "docker compose up -d",
     "db:down": "docker compose down",
-    "db:migrate:deploy": "prisma migrate deploy",
-    "db:seed": "prisma db seed",
+    "db:seed": "tsx server/src/seed.ts",
     "postinstall": "prisma generate && nuxt prepare"
+  },
+  "prisma": {
+    "seed": "tsx server/src/seed.ts"
   },
   "dependencies": {
     "@fontsource-variable/martian-mono": "^5.3.0",
