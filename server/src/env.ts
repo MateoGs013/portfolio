@@ -6,6 +6,6 @@ function required(name: string): string {
 
 export const env = {
   databaseUrl: required('DATABASE_URL'),
-  port: Number(process.env['API_PORT'] ?? 3001),
+  port: Number(process.env['PORT'] ?? process.env['API_PORT'] ?? 3001),
   corsOrigin: process.env['CORS_ORIGIN'] ?? 'http://localhost:3000',
 }

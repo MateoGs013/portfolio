@@ -1,19 +1,15 @@
 /**
- * Qué campo ve cada mundo, y con qué tipo.
+ * Metadatos de campos del esquema técnico.
  *
- * Es el único lugar donde se declara esto. Antes de agregar un campo,
- * decidir a qué mundo pertenece. Si la respuesta es "a los dos", justificarlo
- * en el comentario: que los dos mundos muestren lo mismo es la falla más
- * fácil del proyecto. `/revision-mundos` cuenta los compartidos.
+ * Cada campo declara su tipo visible en pantalla (`type`), si requiere ancho completo
+ * de lectura (`wide`) y si admite valores nulos (`nullable`).
  *
- * `type` es lo que DATOS imprime al lado del valor. Se escribe como lo
- * leería alguien que mira un schema, no como lo nombra Prisma.
- *
- * El orden de los campos es el orden de lectura de la hoja en DATOS: primero
- * lo que responde "qué es esto", después los links, al final la metadata.
+ * El orden de los campos es el orden de lectura de la hoja técnica:
+ * primero la identidad y síntesis, luego enlaces y métricas, y finalmente
+ * el dossier profundo (brief, outcome, steps, media).
  */
 
-export type World = 'datos' | 'diseno'
+export type World = 'datos'
 
 export type FieldType =
   | 'string' | 'text' | 'int' | 'bool' | 'date' | 'datetime' | 'url' | 'json'
@@ -23,10 +19,8 @@ export type FieldType =
 
 export interface FieldMeta {
   type: FieldType
-  worlds: World[]
-  /** Saca al campo de la grilla angosta y le da ancho de lectura. Solo importa en DATOS. */
+  label?: string
   wide?: boolean
-  /** Puede ser NULL. DATOS lo muestra como NULL, no lo esconde. */
   nullable?: boolean
 }
 
@@ -36,7 +30,6 @@ export type DocKey = 'about' | 'contact'
 export interface CollectionMeta {
   label: string
   kind: 'collection'
-  /** Campo que hace de nombre del record. Vive en los dos mundos: es lo que viaja en el pasaje. */
   nameField: string
   fields: Record<string, FieldMeta>
 }
@@ -47,48 +40,40 @@ export const fieldMeta: Record<CollectionKey, CollectionMeta> = {
     kind: 'collection',
     nameField: 'title',
     fields: {
-      // Compartidos, con motivo: el slug es la ruta, el título es el ancla del pasaje.
-      title: { type: 'string', worlds: ['datos', 'diseno'] },
-      // Hechos sobre el trabajo → DATOS.
-      summary: { type: 'string', worlds: ['datos'], wide: true },
-      year: { type: 'int', worlds: ['datos'] },
-      role: { type: 'string', worlds: ['datos'] },
-      status: { type: 'enum ProjectStatus', worlds: ['datos'] },
-      org: { type: 'relation → Org', worlds: ['datos'], nullable: true },
-      techs: { type: 'relation[] → Tech', worlds: ['datos'] },
-      url: { type: 'url', worlds: ['datos'], nullable: true },
-      repo: { type: 'url', worlds: ['datos'], nullable: true },
-      links: { type: 'relation[] → Link', worlds: ['datos'] },
-      metrics: { type: 'json', worlds: ['datos'], nullable: true },
-      featured: { type: 'bool', worlds: ['datos'] },
-      publishedAt: { type: 'datetime', worlds: ['datos'], nullable: true },
-      updatedAt: { type: 'datetime', worlds: ['datos'] },
-      slug: { type: 'string', worlds: ['datos', 'diseno'] },
-      // El trabajo → DISEÑO.
-      brief: { type: 'text', worlds: ['diseno'], nullable: true },
-      outcome: { type: 'text', worlds: ['diseno'], nullable: true },
-      media: { type: 'relation[] → Media', worlds: ['diseno'] },
-      steps: { type: 'relation[] → ProcessStep', worlds: ['diseno'] },
+      summary: { type: 'string', label: 'síntesis ejecutiva', wide: true },
+      media: { type: 'relation[] → Media', label: 'capturas & piezas multimedia', wide: true },
+      brief: { type: 'text', label: 'encargo / brief', wide: true, nullable: true },
+      outcome: { type: 'text', label: 'resultado en producción', wide: true, nullable: true },
+      steps: { type: 'relation[] → ProcessStep', label: 'proceso de ingeniería (taller)', wide: true },
+      metrics: { type: 'json', label: 'telemetría & métricas lighthouse', wide: true, nullable: true },
+      techs: { type: 'relation[] → Tech', label: 'arsenal tecnológico' },
+      links: { type: 'relation[] → Link', label: 'enlaces directos' },
+      url: { type: 'url', label: 'sitio en vivo', nullable: true },
+      repo: { type: 'url', label: 'código en github', nullable: true },
+      year: { type: 'int', label: 'año de entrega' },
+      role: { type: 'string', label: 'rol desempeñado' },
+      status: { type: 'enum ProjectStatus', label: 'estado de producción' },
+      org: { type: 'relation → Org', label: 'cliente / organización', nullable: true },
+      featured: { type: 'bool', label: 'proyecto destacado' },
+      publishedAt: { type: 'datetime', label: 'publicado en', nullable: true },
+      updatedAt: { type: 'datetime', label: 'última actualización' },
+      slug: { type: 'string', label: 'identificador' },
     },
   },
 
   experience: {
     label: 'experience',
     kind: 'collection',
-    // El nombre es el rol, no la organización: la experiencia es freelance y
-    // propia, y varias etapas no tienen organización detrás.
     nameField: 'role',
     fields: {
-      role: { type: 'string', worlds: ['datos', 'diseno'] }, // es el nombre del record
-      org: { type: 'relation → Org', worlds: ['datos', 'diseno'], nullable: true }, // rotula la banda en DISEÑO
-      // Compartidas porque el tiempo es la dimensión dominante de esta colección:
-      // DATOS las lista como fechas, DISEÑO las dibuja como bandas.
-      startedAt: { type: 'date', worlds: ['datos', 'diseno'] },
-      endedAt: { type: 'date', worlds: ['datos', 'diseno'], nullable: true },
-      summary: { type: 'string', worlds: ['datos'], wide: true },
-      techs: { type: 'relation[] → Tech', worlds: ['datos'] },
-      slug: { type: 'string', worlds: ['datos', 'diseno'] },
-      story: { type: 'text', worlds: ['diseno'], nullable: true },
+      role: { type: 'string', label: 'rol / cargo' },
+      org: { type: 'relation → Org', label: 'institución / empresa', nullable: true },
+      startedAt: { type: 'date', label: 'fecha de inicio' },
+      endedAt: { type: 'date', label: 'fecha de culminación', nullable: true },
+      summary: { type: 'string', label: 'síntesis de desempeño', wide: true },
+      story: { type: 'text', label: 'relato de aprendizajes e impacto', wide: true, nullable: true },
+      techs: { type: 'relation[] → Tech', label: 'tecnologías aplicadas' },
+      slug: { type: 'string', label: 'identificador' },
     },
   },
 
@@ -97,15 +82,14 @@ export const fieldMeta: Record<CollectionKey, CollectionMeta> = {
     kind: 'collection',
     nameField: 'name',
     fields: {
-      name: { type: 'string', worlds: ['datos', 'diseno'] },
-      category: { type: 'enum TechCategory', worlds: ['datos'] },
-      // Compartido: DATOS lo imprime, DISEÑO lo lee como tamaño del chip.
-      since: { type: 'int', worlds: ['datos', 'diseno'] },
-      note: { type: 'string', worlds: ['datos'], wide: true, nullable: true },
-      projects: { type: 'relation[] → Project', worlds: ['datos'] },
-      experiences: { type: 'relation[] → Experience', worlds: ['datos'] },
-      slug: { type: 'string', worlds: ['datos', 'diseno'] },
-      color: { type: 'string', worlds: ['diseno'], nullable: true },
+      name: { type: 'string', label: 'tecnología' },
+      category: { type: 'enum TechCategory', label: 'categoría' },
+      since: { type: 'int', label: 'año de adopción' },
+      note: { type: 'string', label: 'criterio técnico de uso', wide: true, nullable: true },
+      projects: { type: 'relation[] → Project', label: 'proyectos en que se usó' },
+      experiences: { type: 'relation[] → Experience', label: 'etapas en que se usó' },
+      color: { type: 'string', label: 'color distintivo', nullable: true },
+      slug: { type: 'string', label: 'identificador' },
     },
   },
 
@@ -114,32 +98,29 @@ export const fieldMeta: Record<CollectionKey, CollectionMeta> = {
     kind: 'collection',
     nameField: 'name',
     fields: {
-      name: { type: 'string', worlds: ['datos', 'diseno'] },
-      city: { type: 'string', worlds: ['datos'], nullable: true },
-      url: { type: 'url', worlds: ['datos'], nullable: true },
-      projects: { type: 'relation[] → Project', worlds: ['datos'] },
-      experiences: { type: 'relation[] → Experience', worlds: ['datos'] },
-      slug: { type: 'string', worlds: ['datos'] },
+      name: { type: 'string', label: 'nombre' },
+      city: { type: 'string', label: 'ubicación / sede', nullable: true },
+      url: { type: 'url', label: 'sitio oficial', nullable: true },
+      projects: { type: 'relation[] → Project', label: 'proyectos asociados' },
+      experiences: { type: 'relation[] → Experience', label: 'experiencias asociadas' },
+      slug: { type: 'string', label: 'identificador' },
     },
   },
 }
 
-/** Forma de cada item de `Doc.fields`. `worlds` ausente = los dos.
- *  Es un `type` y no una `interface` para que sea asignable al Json de Prisma. */
+/** Forma de cada item de `Doc.fields`. */
 export type DocField = {
   name: string
   type: FieldType
   value: string
   wide?: boolean
-  worlds?: World[]
+  worlds?: string[]
 }
 
-/** Orden de navegación en DATOS. `orgs` no está: se llega por relación. */
+/** Orden de navegación en el explorador. */
 export const collectionOrder: CollectionKey[] = ['projects', 'experience', 'stack']
 export const docOrder: DocKey[] = ['about', 'contact']
 
-export function fieldsFor(collection: CollectionKey, world: World): string[] {
-  return Object.entries(fieldMeta[collection].fields)
-    .filter(([, meta]) => meta.worlds.includes(world))
-    .map(([name]) => name)
+export function fieldsFor(collection: CollectionKey, _world?: string): string[] {
+  return Object.keys(fieldMeta[collection].fields)
 }

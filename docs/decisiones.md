@@ -248,12 +248,22 @@ Descartado: copiar las fuentes a `public/` para tener rutas fijas, o el módulo 
 
 ## El pasaje
 
-**Ancla FLIP sobre el nombre del record.**
-Descartado: cross-fade entre los dos mundos.
-El nombre existe en los dos lados, así que se clona y vuela de una posición a la otra cambiando de tipografía y tamaño. Lo único que sobrevive intacto es el dato, y verlo viajar es la tesis hecha animación. Una transición completa entre dos DOMs distintos es cara; una sola ancla más una cortina alcanza.
+**Metamorfosis In-Situ estilo "Transformers" (sin telón ni cortinas).**
+Descartado: cortinas, telones, barridos láser cubrientes o compuertas blindadas que tapen la pantalla.
+Mateo: *"No me estás entendiendo, no quiero un telón, quiero que los elementos del sitio se transformen"*.
+Un telón (sea un fade, un láser o placas mecánicas de overlay) oculta el sitio web en lugar de transformarlo. La verdadera tesis del portafolio dual exige que la mutación ocurra **a la vista**, en el espacio tridimensional de la ventana `.ventana` (1320px):
+- **Las filas de DATOS se convierten en las tarjetas de DISEÑO:** Cada fila de la base de datos se desacopla, gana volumen tridimensional (`translateZ`, `rotateX`), bisela sus esquinas con cortes chamfer a 45°, expande su miniatura a fotografía 16:10 y aterriza transformada en la tarjeta de diseño correspondiente (`data-row` mapeado 1:1).
+- **Las tarjetas de DISEÑO se repliegan en las filas de DATOS:** En sentido inverso, las tarjetas monumentales pliegan sus aristas, comprimen su profundidad y se encastran como filas planas de la tabla de la base de datos.
+- **La cabecera y el pie transmutan sobre sus rieles:** Las rutas `db / ...` se fragmentan mecánicamente en las pestañas tabulares numeradas `00–05`.
+- **Cero telones:** El chasis de la ventana nunca se cubre; el visitante presencia la ingeniería cinemática de la transformación en tiempo real.
 
-**Ida y vuelta no son la misma animación al revés.**
-`render → source`: DISEÑO despinta y deja ver su estructura, DATOS pinta hacia el otro lado.
+**Ancla FLIP con encaje mecánico en el nombre del record.**
+Descartado: cross-fade entre los dos mundos.
+El nombre existe en los dos lados (`data-anchor`), así que vuela con aceleración y desaceleración de precisión física, cambiando de escala tipográfica y aterrizando con corchetes de bloqueo `[ + ]`.
+
+**Ida y vuelta son simétricas pero con polaridad invertida.**
+`DATOS ➔ DISEÑO`: Desacople desde la matriz plana hacia el volumen y color neón.
+`DISEÑO ➔ DATOS`: Compresión desde el volumen gráfico hacia la sobriedad relacional.
 
 ---
 

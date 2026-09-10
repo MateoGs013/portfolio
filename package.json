@@ -11,14 +11,17 @@
     "dev:api": "tsx watch --env-file=.env server/src/index.ts",
     "build": "nuxt build",
     "preview": "nuxt preview",
+    "start": "node .output/server/index.mjs",
+    "start:api": "tsx server/src/index.ts",
     "typecheck": "nuxt typecheck && tsc -p server/tsconfig.json --noEmit",
     "lint": "eslint .",
     "db:up": "docker compose up -d",
     "db:down": "docker compose down",
-    "postinstall": "nuxt prepare"
+    "db:migrate:deploy": "prisma migrate deploy",
+    "db:seed": "prisma db seed",
+    "postinstall": "prisma generate && nuxt prepare"
   },
   "dependencies": {
-    "@fontsource-variable/fraunces": "^5.3.0",
     "@fontsource-variable/martian-mono": "^5.3.0",
     "@prisma/adapter-pg": "7.10.0",
     "@prisma/client": "7.10.0",
@@ -28,6 +31,7 @@
     "multer": "^2.3.0",
     "nuxt": "^4.5.2",
     "pg": "^8.23.0",
+    "tsx": "^4.23.13",
     "vue": "^3.5.42",
     "vue-router": "^5.3.0"
   },
@@ -40,7 +44,6 @@
     "@types/pg": "^8.15.0",
     "eslint": "^10.10.0",
     "prisma": "7.10.0",
-    "tsx": "^4.23.13",
     "typescript": "^5.9.0",
     "vue-tsc": "^3.3.11"
   },

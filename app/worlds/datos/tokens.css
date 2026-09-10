@@ -1,44 +1,79 @@
-/* Mundo DATOS. Hoja técnica: papel frío, tinta, una sola señal de color.
-   Prefijo --d-. Se declara en :root porque el umbral y el control de pasaje
-   necesitan las dos paletas a la vez; el mundo activo se marca en html[data-mundo].
-   Dirección en docs/decisiones.md → "Dirección de la Fase 3". */
+/* Mundo DATOS — Portafolio Técnico Mateo Sonzogni
+   Paleta de alta precisión técnica: Obsidian Dark (por defecto) y Technical Paper (modo claro).
+   Tokens unificados con prefijo --d-. */
+
 :root {
-  /* temperatura */
-  --d-paper: #eef0f2;
-  --d-ink: #0b0d10;
-  --d-rule: #c3c8ce;
-  --d-dim: #51575e; /* 6.9:1 sobre papel: sirve para tipos y etiquetas, que son contenido */
-  --d-faint: #737a82; /* 4.6:1: solo números de fila y chevrones */
-  --d-hover: #e2e5e9;
-  --d-sig: #1b3fd9; /* solo relaciones, links y facetas; el estado se marca por inversión */
-  --d-inv-dim: #a6acb4; /* texto secundario dentro de un bloque invertido */
+  /* Tipografías del Sistema DATOS */
+  --font-mono: 'Martian Mono Variable', ui-monospace, monospace;
+  --font-text: 'General Sans Variable', system-ui, -apple-system, sans-serif;
+  --font-display: 'General Sans Variable', system-ui, -apple-system, sans-serif;
 
-  /* densidad */
-  --d-frame: clamp(16px, 3vw, 48px); /* el marco alrededor de la ventana, igual a los lados y abajo */
-  --d-inset: clamp(14px, 1.6vw, 22px); /* el margen interno de la ventana: barra, contenido y barra de estado alineados */
+  /* Obsidian Dark (Tema Principal) */
+  --d-paper: #090a0f;
+  --d-surface: #10121a;
+  --d-surface-raised: #171b26;
+  --d-ink: #f0f3f8;
+  --d-rule: #1e2433;
+  --d-rule-strong: #2d364d;
+  --d-dim: #8491a5;
+  --d-faint: #475366;
+  --d-hover: #151924;
+  --d-sig: #3b82f6;
+  --d-sig-hover: #60a5fa;
+  --d-sig-glow: rgba(59, 130, 246, 0.25);
+  --d-accent: #00d2ff;
+  --d-amber: #f59e0b;
+  --d-green: #10b981;
+  --d-inv-dim: #94a3b8;
+
+  /* Densidad y marco de ventana */
+  --d-frame: clamp(14px, 2.5vw, 36px);
+  --d-inset: clamp(14px, 1.6vw, 22px);
   --d-row: 44px;
-  --d-tile: 184px; /* ancho mínimo de una baldosa en la vista de íconos */
-  --d-tile-sm: 128px; /* lo mismo, en el teléfono */
-  --d-z: 56px; /* lo que se acerca o aleja el panel al entrar o salir de una carpeta, casi imperceptible a propósito */
-  --d-fs-mono: 11.5px;
-  --d-fs-ui: 12.5px; /* rieles y ayudas, en General Sans: el mono es solo para identificadores */
+  --d-tile: 184px;
+  --d-tile-sm: 128px;
+  --d-z: 40px;
+  --d-fs-mono: 12px;
+  --d-fs-ui: 13px;
   --d-fs-name: 15px;
-  --d-fs-value: 16px;
-  --d-fs-read: 18px;
-  --d-fs-title: 22px; /* el nombre de un archivo abierto, a escala de interfaz */
-  --d-lh: 1.45;
+  --d-fs-value: 15px;
+  --d-fs-read: 17px;
+  --d-fs-title: 24px;
+  --d-lh: 1.5;
 
-  /* ritmo: acá el movimiento es latencia */
-  --d-dur: 160ms;
+  /* Ritmo y transiciones */
+  --d-dur: 150ms;
   --d-ease: cubic-bezier(0.2, 0, 0, 1);
 }
 
-html[data-mundo="datos"] {
+html[data-theme="light"] {
+  --d-paper: #f1f3f5;
+  --d-surface: #ffffff;
+  --d-surface-raised: #e9ecef;
+  --d-ink: #0b0d11;
+  --d-rule: #ced4da;
+  --d-rule-strong: #adb5bd;
+  --d-dim: #495057;
+  --d-faint: #6c757d;
+  --d-hover: #e9ecef;
+  --d-sig: #1d4ed8;
+  --d-sig-hover: #1e40af;
+  --d-sig-glow: rgba(29, 78, 216, 0.2);
+  --d-accent: #0284c7;
+  --d-amber: #d97706;
+  --d-green: #059669;
+  --d-inv-dim: #868e96;
   color-scheme: light;
-  background: var(--d-paper);
-  color: var(--d-ink);
 }
-html[data-mundo="datos"] :focus-visible {
+
+html {
+  color-scheme: dark;
+  background-color: var(--d-paper);
+  color: var(--d-ink);
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+:focus-visible {
   outline: 2px solid var(--d-sig);
   outline-offset: -2px;
 }

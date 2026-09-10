@@ -4,128 +4,448 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="robots" content="noindex">
-  <title>admin · portfolio</title>
+  <title>Admin Console · Mateo Sonzogni</title>
   <link rel="stylesheet" href="/admin/admin.css">
 </head>
 <body>
   <div id="app" v-cloak>
+    <!-- Topbar de la Consola OS -->
     <header class="top">
-      <strong>admin</strong>
-      <nav>
-        <button v-for="(m, key) in models" :key="key" :class="{ on: section === key }" @click="open(key)">{{ m.label }}</button>
-      </nav>
-      <span class="spacer"></span>
-      <span class="status" :class="status.kind">{{ status.text }}</span>
-      <button class="ghost" @click="logout">salir</button>
+      <div class="top-brand">
+        <div class="traffic-lights" aria-hidden="true">
+          <span class="t-dot red"></span>
+          <span class="t-dot yellow"></span>
+          <span class="t-dot green"></span>
+        </div>
+        <div class="top-title">PORTFOLIO // <span>ADMIN CONSOLE</span></div>
+      </div>
+
+      <div class="top-telemetry">
+        <span class="pulse-dot" aria-hidden="true"></span>
+        <span>POSTGRESQL 17 ACID // ENGINE ONLINE</span>
+      </div>
+
+      <div class="top-right">
+        <span v-if="status.text" class="status-toast" :class="status.kind">{{ status.text }}</span>
+        <a href="/" target="_blank" class="link-site">↗ Ver Portafolio</a>
+        <button v-if="token" class="ghost" @click="logout" title="Cerrar sesión">Salir ⎋</button>
+      </div>
     </header>
 
-    <main v-if="!token" class="login">
-      <form @submit.prevent="login">
-        <label>ADMIN_TOKEN <input v-model="tokenInput" type="password" autocomplete="off" autofocus></label>
-        <button>entrar</button>
-      </form>
+    <!-- Pantalla de Login (Terminal Shell) -->
+    <main v-if="!token" class="login-wrap">
+      <div class="login-box">
+        <div class="login-header">
+          <span class="mono">root@portfolio: /admin/auth</span>
+          <div class="traffic-lights" aria-hidden="true">
+            <span class="t-dot red"></span>
+            <span class="t-dot yellow"></span>
+            <span class="t-dot green"></span>
+          </div>
+        </div>
+        <div class="login-body">
+          <div class="terminal-prompt">
+            <div><span class="prompt-accent">MATEO GABRIEL SONZOGNI</span> // PORTFOLIO CMS</div>
+            <div>DATABASE: PostgreSQL 17 ACID · PRISMA CLIENT</div>
+            <div style="margin-top: 4px; color: var(--d-text);">Acceso restringido a la consola de administración técnica. Ingrese su token autorizado para continuar.</div>
+          </div>
+
+          <form class="login-form" @submit.prevent="login">
+            <label>
+              <span>ADMIN_TOKEN</span>
+              <input v-model="tokenInput" type="password" placeholder="••••••••••••••••" autocomplete="off" autofocus required>
+            </label>
+            <div class="login-actions">
+              <button type="submit" class="primary">Autenticar en Consola ›</button>
+              <button type="button" class="btn-dev" @click="useDevToken">⚡ Usar token local (dev-token-12345)</button>
+            </div>
+          </form>
+        </div>
+      </div>
     </main>
 
+    <!-- Espacio de Trabajo Técnico (3 Columnas) -->
     <main v-else class="work">
-      <aside class="list">
-        <div class="list-head">
-          <span>{{ rows.length }} records</span>
-          <button v-if="model.creatable !== false" @click="startNew">+ nuevo</button>
+      <!-- Columna 1: Sidebar de Modelos -->
+      <aside class="models-sidebar">
+        <div>
+          <div class="nav-header">Colecciones</div>
+          <nav class="models-nav" aria-label="Modelos de datos">
+            <button
+              v-for="(m, key) in models"
+              :key="key"
+              class="nav-item"
+              :class="{ on: section === key }"
+              @click="open(key)"
+            >
+              <span class="nav-label">
+                <span class="mono">{{ m.icon }}</span>
+                <span>{{ m.label }}</span>
+              </span>
+              <span class="nav-badge">{{ counts[key] !== undefined ? counts[key] : (section === key ? rows.length : '·') }}</span>
+            </button>
+          </nav>
         </div>
-        <button v-for="r in rows" :key="rowKey(r)" class="row" :class="{ on: current && rowKey(current) === rowKey(r) }" @click="edit(r)">
-          <span class="row-name">{{ model.name(r) }}</span>
-          <span class="row-meta">{{ model.meta ? model.meta(r) : '' }}</span>
-        </button>
+
+        <div class="models-footer">
+          <div><span class="mf-tag">MOTOR:</span> PG-17 ACID</div>
+          <div><span class="mf-tag">API:</span> Express / Port 3001</div>
+          <div><span class="mf-tag">AUTH:</span> Token Activo</div>
+        </div>
       </aside>
 
-      <section v-if="form" class="form">
-        <h2>{{ isNew ? 'nuevo' : model.name(form) }} <small>{{ model.label }}</small></h2>
-
-        <div v-for="f in model.fields" :key="f.name" class="field" :class="{ wide: f.type === 'text' || f.type === 'json' }">
-          <label :for="'f-' + f.name">{{ f.name }} <small>{{ f.type }}</small></label>
-
-          <input v-if="f.type === 'string' || f.type === 'url'" :id="'f-' + f.name" v-model="form[f.name]" type="text">
-          <input v-else-if="f.type === 'int'" :id="'f-' + f.name" v-model.number="form[f.name]" type="number" step="1">
-          <input v-else-if="f.type === 'bool'" :id="'f-' + f.name" v-model="form[f.name]" type="checkbox">
-          <input v-else-if="f.type === 'date'" :id="'f-' + f.name" v-model="form[f.name]" type="date">
-          <input v-else-if="f.type === 'datetime'" :id="'f-' + f.name" v-model="form[f.name]" type="datetime-local">
-          <textarea v-else-if="f.type === 'text'" :id="'f-' + f.name" v-model="form[f.name]" rows="5"></textarea>
-          <textarea v-else-if="f.type === 'json'" :id="'f-' + f.name" v-model="form[f.name]" rows="4" spellcheck="false" class="mono"></textarea>
-          <select v-else-if="f.type.startsWith('enum:')" :id="'f-' + f.name" v-model="form[f.name]">
-            <option v-for="v in meta.enums[f.type.slice(5)]" :key="v" :value="v">{{ v }}</option>
-          </select>
-          <select v-else-if="f.type.startsWith('rel:')" :id="'f-' + f.name" v-model="form[f.name]">
-            <option :value="null">NULL</option>
-            <option v-for="o in meta.options[f.type.slice(4)]" :key="o.id" :value="o.id">{{ o.name || o.title }}</option>
-          </select>
-          <div v-else-if="f.type.startsWith('rels:')" class="checks">
-            <label v-for="o in meta.options[f.type.slice(5)]" :key="o.id">
-              <input v-model="form[f.name]" type="checkbox" :value="o.id"> {{ o.name || o.title }}
-            </label>
+      <!-- Columna 2: Lista de Registros con Buscador -->
+      <section class="records-list">
+        <div class="list-topbar">
+          <div class="search-wrap">
+            <input
+              v-model="searchQuery"
+              type="text"
+              placeholder="🔍 Filtrar registros..."
+              class="search-input"
+            >
+          </div>
+          <div class="list-actions">
+            <span class="records-count">{{ filteredRows.length }} / {{ rows.length }} records</span>
+            <button v-if="model.creatable !== false" class="btn-create" @click="startNew">+ Nuevo</button>
           </div>
         </div>
 
-        <div v-for="(cols, sub) in model.sub || {}" :key="sub" class="sub">
-          <h3>{{ sub }} <small>{{ form[sub].length }}</small> <button class="ghost" @click="form[sub].push(blankRow(cols))">+ fila</button></h3>
-          <table v-if="form[sub].length">
-            <thead><tr><th v-for="c in cols" :key="c.name">{{ c.name }}</th><th></th></tr></thead>
-            <tbody>
-              <tr v-for="(row, i) in form[sub]" :key="i">
-                <td v-for="c in cols" :key="c.name">
-                  <input v-if="c.type === 'bool'" v-model="row[c.name]" type="checkbox">
-                  <input v-else-if="c.type === 'int'" v-model.number="row[c.name]" type="number">
-                  <select v-else-if="c.type.startsWith('rel:')" v-model="row[c.name]">
-                    <option :value="null">NULL</option>
-                    <option v-for="o in relOptions(c.type.slice(4))" :key="o.id" :value="o.id">{{ o.alt || o.name || o.title }}</option>
-                  </select>
-                  <select v-else-if="c.type.startsWith('enum:')" v-model="row[c.name]">
-                    <option v-for="v in meta.enums[c.type.slice(5)]" :key="v" :value="v">{{ v }}</option>
-                  </select>
-                  <input v-else-if="c.type === 'worlds'" v-model="row[c.name]" type="text" placeholder="datos,diseno">
-                  <textarea v-else-if="c.type === 'text'" v-model="row[c.name]" rows="2"></textarea>
-                  <input v-else v-model="row[c.name]" type="text">
-                </td>
-                <td><button class="ghost danger" @click="form[sub].splice(i, 1)">×</button></td>
-              </tr>
-            </tbody>
-          </table>
+        <div class="records-scroll">
+          <button
+            v-for="r in filteredRows"
+            :key="rowKey(r)"
+            class="row-card"
+            :class="{ on: current && rowKey(current) === rowKey(r) }"
+            @click="edit(r)"
+          >
+            <span class="row-title">{{ model.name(r) }}</span>
+            <div class="row-meta-line">
+              <span>{{ model.meta ? model.meta(r) : '' }}</span>
+            </div>
+          </button>
+          <div v-if="!filteredRows.length" class="empty-text" style="padding: 24px 16px; color: var(--d-text-dim);">
+            Sin coincidencias para "{{ searchQuery }}"
+          </div>
+        </div>
+      </section>
+
+      <!-- Columna 3: Editor de Formulario Estructurado -->
+      <section v-if="form" class="editor-wrap">
+        <div class="editor-form">
+          <!-- Cabecera del Editor -->
+          <div class="editor-header">
+            <div class="editor-path mono">{{ canonicalFilePath }}</div>
+            <div class="editor-title-row">
+              <h2>{{ isNew ? '+ NUEVO REGISTRO' : model.name(form) }}</h2>
+              <span class="badge-tag" :class="{ new: isNew }">{{ isNew ? 'CREACIÓN' : model.label }}</span>
+              <span v-if="!isNew" class="badge-tag mono">ID: {{ rowKey(form) }}</span>
+            </div>
+          </div>
+
+          <!-- Tarjeta 1: Metadatos e Identificación -->
+          <div class="form-card">
+            <div class="form-card-title">
+              <span>01 · IDENTIFICACIÓN Y CONFIGURACIÓN</span>
+              <small>{{ model.fields.filter(f => f.type !== 'text' && f.type !== 'json').length }} campos</small>
+            </div>
+
+            <div class="fields-grid">
+              <div
+                v-for="f in model.fields.filter(f => f.type !== 'text' && f.type !== 'json' && !f.type.startsWith('rels:'))"
+                :key="f.name"
+                class="field"
+                :class="{ wide: f.type === 'url' }"
+              >
+                <label :for="'f-' + f.name">
+                  <span>{{ f.name }}</span>
+                  <small>{{ f.type }}</small>
+                </label>
+
+                <!-- String / URL -->
+                <input
+                  v-if="f.type === 'string' || f.type === 'url'"
+                  :id="'f-' + f.name"
+                  v-model="form[f.name]"
+                  type="text"
+                >
+
+                <!-- Entero -->
+                <input
+                  v-else-if="f.type === 'int'"
+                  :id="'f-' + f.name"
+                  v-model.number="form[f.name]"
+                  type="number"
+                  step="1"
+                >
+
+                <!-- Booleano (Checkbox styled) -->
+                <label v-else-if="f.type === 'bool'" class="checkbox-field">
+                  <input :id="'f-' + f.name" v-model="form[f.name]" type="checkbox">
+                  <span>Activo / Habilitado ({{ form[f.name] ? 'TRUE' : 'FALSE' }})</span>
+                </label>
+
+                <!-- Fecha / Datetime -->
+                <input
+                  v-else-if="f.type === 'date'"
+                  :id="'f-' + f.name"
+                  v-model="form[f.name]"
+                  type="date"
+                >
+                <input
+                  v-else-if="f.type === 'datetime'"
+                  :id="'f-' + f.name"
+                  v-model="form[f.name]"
+                  type="datetime-local"
+                >
+
+                <!-- Enum (Select) -->
+                <select
+                  v-else-if="f.type.startsWith('enum:')"
+                  :id="'f-' + f.name"
+                  v-model="form[f.name]"
+                >
+                  <option v-for="v in meta.enums[f.type.slice(5)]" :key="v" :value="v">{{ v }}</option>
+                </select>
+
+                <!-- Relación Simple (Select Org / etc) -->
+                <select
+                  v-else-if="f.type.startsWith('rel:')"
+                  :id="'f-' + f.name"
+                  v-model="form[f.name]"
+                >
+                  <option :value="null">-- NINGUNA (NULL) --</option>
+                  <option v-for="o in meta.options[f.type.slice(4)]" :key="o.id" :value="o.id">
+                    {{ o.name || o.title }}
+                  </option>
+                </select>
+              </div>
+
+              <!-- Selector de Chips de Tecnologías (rels:techs) -->
+              <div
+                v-for="f in model.fields.filter(f => f.type.startsWith('rels:'))"
+                :key="f.name"
+                class="field wide"
+              >
+                <label>
+                  <span>{{ f.name }} (Arsenal Tecnológico Relacionado)</span>
+                  <small>{{ (form[f.name] || []).length }} seleccionadas</small>
+                </label>
+                <div class="techs-chips-wrap">
+                  <button
+                    v-for="o in meta.options[f.type.slice(5)]"
+                    :key="o.id"
+                    type="button"
+                    class="chip-btn"
+                    :class="{ selected: isTechSelected(o.id) }"
+                    @click="toggleTech(o.id)"
+                  >
+                    <span v-if="isTechSelected(o.id)">✓ </span>
+                    <span>{{ o.name || o.title }}</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tarjeta 2: Campos Narrativos y Textos Largos -->
+          <div v-if="model.fields.some(f => f.type === 'text')" class="form-card">
+            <div class="form-card-title">
+              <span>02 · CONTENIDO Y NARRATIVA TÉCNICA</span>
+              <small>Texto y descripciones</small>
+            </div>
+
+            <div class="fields-grid">
+              <div
+                v-for="f in model.fields.filter(f => f.type === 'text')"
+                :key="f.name"
+                class="field wide"
+              >
+                <label :for="'f-' + f.name">
+                  <span>{{ f.name }}</span>
+                  <small>string / text</small>
+                </label>
+                <textarea
+                  :id="'f-' + f.name"
+                  v-model="form[f.name]"
+                  :rows="f.name === 'summary' ? 3 : 5"
+                ></textarea>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tarjeta 3: Métricas y Telemetría JSON (si aplica) -->
+          <div v-if="model.fields.some(f => f.type === 'json')" class="form-card">
+            <div class="form-card-title">
+              <span>03 · TELEMETRÍA & MÉTRICAS (JSON)</span>
+              <button type="button" class="ghost" @click="formatMetricsJson">⚡ Formatear JSON</button>
+            </div>
+
+            <div v-for="f in model.fields.filter(f => f.type === 'json')" :key="f.name" class="field wide">
+              <label :for="'f-' + f.name">
+                <span>{{ f.name }}</span>
+                <small>json / object</small>
+              </label>
+              <textarea
+                :id="'f-' + f.name"
+                v-model="form[f.name]"
+                rows="6"
+                spellcheck="false"
+                class="mono"
+                placeholder='{ "lcp": "0.8s", "performanceScore": 99 }'
+              ></textarea>
+            </div>
+          </div>
+
+          <!-- Tarjeta 4: Sub-registros (Links, Steps, Fields de Doc) -->
+          <div v-for="(cols, sub) in model.sub || {}" :key="sub" class="form-card">
+            <div class="form-card-title">
+              <span>SUB-TABLA: {{ sub }}</span>
+              <div>
+                <small style="margin-right: 12px;">{{ form[sub].length }} items</small>
+                <button type="button" class="ghost" @click="form[sub].push(blankRow(cols))">+ Agregar fila</button>
+              </div>
+            </div>
+
+            <div v-if="form[sub].length" class="sub-table-wrap">
+              <table class="admin-table">
+                <thead>
+                  <tr>
+                    <th v-for="c in cols" :key="c.name">{{ c.name }}</th>
+                    <th style="width: 40px;"></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="(row, i) in form[sub]" :key="i">
+                    <td v-for="c in cols" :key="c.name">
+                      <input v-if="c.type === 'bool'" v-model="row[c.name]" type="checkbox">
+                      <input v-else-if="c.type === 'int'" v-model.number="row[c.name]" type="number" class="short">
+                      <select v-else-if="c.type.startsWith('rel:')" v-model="row[c.name]">
+                        <option :value="null">NULL</option>
+                        <option v-for="o in relOptions(c.type.slice(4))" :key="o.id" :value="o.id">
+                          {{ o.alt || o.name || o.title }}
+                        </option>
+                      </select>
+                      <select v-else-if="c.type.startsWith('enum:')" v-model="row[c.name]">
+                        <option v-for="v in meta.enums[c.type.slice(5)]" :key="v" :value="v">{{ v }}</option>
+                      </select>
+                      <textarea v-else-if="c.type === 'text'" v-model="row[c.name]" rows="2"></textarea>
+                      <input v-else v-model="row[c.name]" type="text">
+                    </td>
+                    <td>
+                      <button type="button" class="ghost danger" title="Eliminar fila" @click="form[sub].splice(i, 1)">×</button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div v-else class="empty-text" style="color: var(--d-text-dim);">
+              No hay elementos en {{ sub }}. Hacé clic en "+ Agregar fila" para añadir uno.
+            </div>
+          </div>
+
+          <!-- Tarjeta 5: Gestor Multimedia (Media) -->
+          <div v-if="model.media && !isNew" class="form-card">
+            <div class="form-card-title">
+              <span>PIEZAS MULTIMEDIA & CAPTURAS</span>
+              <small>{{ form.media.length }} archivos</small>
+            </div>
+
+            <div v-if="form.media.length" class="sub-table-wrap">
+              <table class="admin-table">
+                <thead>
+                  <tr>
+                    <th style="width: 60px;">Vista</th>
+                    <th>Ruta / Src</th>
+                    <th>Texto Alt</th>
+                    <th>Rol</th>
+                    <th>Layer</th>
+                    <th>Orden</th>
+                    <th>Resolución</th>
+                    <th style="width: 40px;"></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="m in form.media" :key="m.id">
+                    <td><img :src="m.src" :alt="m.alt" class="media-thumb"></td>
+                    <td class="mono" style="font-size: 11px;">{{ m.src }}</td>
+                    <td><input v-model="m.alt" type="text" @change="saveMedia(m)"></td>
+                    <td>
+                      <select v-model="m.role" @change="saveMedia(m)">
+                        <option v-for="v in meta.enums.MediaRole" :key="v" :value="v">{{ v }}</option>
+                      </select>
+                    </td>
+                    <td><input v-model.number="m.layer" type="number" class="short" @change="saveMedia(m)"></td>
+                    <td><input v-model.number="m.order" type="number" class="short" @change="saveMedia(m)"></td>
+                    <td class="mono" style="font-size: 11px; color: var(--d-text-muted);">
+                      {{ m.width }}×{{ m.height }} · {{ (m.bytes / 1024).toFixed(0) }} KB
+                    </td>
+                    <td>
+                      <button type="button" class="ghost danger" title="Borrar imagen" @click="deleteMedia(m)">×</button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Zona de Subida de Medios -->
+            <form class="upload-card" @submit.prevent="uploadMedia">
+              <div>
+                <label style="font-size: 10px; color: var(--d-text-muted); display: block; margin-bottom: 4px;">Archivo de imagen</label>
+                <input ref="file" type="file" accept="image/png,image/jpeg,image/webp" required>
+              </div>
+              <div>
+                <label style="font-size: 10px; color: var(--d-text-muted); display: block; margin-bottom: 4px;">Descripción alt (obligatorio)</label>
+                <input v-model="uploadForm.alt" type="text" placeholder="Ej: Captura de pantalla del Home" required>
+              </div>
+              <div>
+                <label style="font-size: 10px; color: var(--d-text-muted); display: block; margin-bottom: 4px;">Rol</label>
+                <select v-model="uploadForm.role">
+                  <option v-for="v in meta.enums.MediaRole" :key="v" :value="v">{{ v }}</option>
+                </select>
+              </div>
+              <div>
+                <label style="font-size: 10px; color: var(--d-text-muted); display: block; margin-bottom: 4px;">Layer</label>
+                <input v-model.number="uploadForm.layer" type="number" placeholder="NULL" class="short">
+              </div>
+              <div>
+                <label style="font-size: 10px; color: var(--d-text-muted); display: block; margin-bottom: 4px;">Orden</label>
+                <input v-model.number="uploadForm.order" type="number" placeholder="0" class="short">
+              </div>
+              <div>
+                <button type="submit" class="primary" style="width: 100%;">Subir Pieza</button>
+              </div>
+            </form>
+          </div>
         </div>
 
-        <div v-if="model.media && !isNew" class="sub">
-          <h3>media <small>{{ form.media.length }}</small></h3>
-          <table v-if="form.media.length">
-            <thead><tr><th></th><th>src</th><th>alt</th><th>role</th><th>layer</th><th>order</th><th>size</th><th></th></tr></thead>
-            <tbody>
-              <tr v-for="m in form.media" :key="m.id">
-                <td><img :src="m.src" :alt="m.alt" class="thumb"></td>
-                <td class="mono">{{ m.src }}</td>
-                <td><input v-model="m.alt" type="text" @change="saveMedia(m)"></td>
-                <td><select v-model="m.role" @change="saveMedia(m)"><option v-for="v in meta.enums.MediaRole" :key="v" :value="v">{{ v }}</option></select></td>
-                <td><input v-model.number="m.layer" type="number" class="short" @change="saveMedia(m)"></td>
-                <td><input v-model.number="m.order" type="number" class="short" @change="saveMedia(m)"></td>
-                <td class="mono">{{ m.width }}×{{ m.height }} · {{ (m.bytes / 1024).toFixed(0) }} KB</td>
-                <td><button class="ghost danger" @click="deleteMedia(m)">×</button></td>
-              </tr>
-            </tbody>
-          </table>
-          <form class="upload" @submit.prevent="uploadMedia">
-            <input ref="file" type="file" accept="image/png,image/jpeg,image/webp" required>
-            <input v-model="uploadForm.alt" type="text" placeholder="alt (obligatorio)" required>
-            <select v-model="uploadForm.role"><option v-for="v in meta.enums.MediaRole" :key="v" :value="v">{{ v }}</option></select>
-            <input v-model.number="uploadForm.layer" type="number" placeholder="layer" class="short">
-            <input v-model.number="uploadForm.order" type="number" placeholder="order" class="short">
-            <button>subir</button>
-          </form>
-        </div>
+        <!-- Sticky Footer de Acciones -->
+        <footer class="actions-footer">
+          <div class="af-left">
+            <span class="key-tip"><kbd>Ctrl</kbd> + <kbd>S</kbd> para guardar rápido</span>
+            <span v-if="error" class="status-toast err">{{ error }}</span>
+            <span v-else-if="status.text" class="status-toast" :class="status.kind">{{ status.text }}</span>
+          </div>
 
-        <footer class="actions">
-          <button class="primary" @click="save">{{ isNew ? 'crear' : 'guardar' }}</button>
-          <button v-if="!isNew && model.deletable !== false" class="ghost danger" @click="remove">borrar</button>
-          <span v-if="error" class="error">{{ error }}</span>
+          <div class="af-right">
+            <button v-if="!isNew && model.deletable !== false" type="button" class="danger" @click="remove">
+              🗑 Borrar Registro
+            </button>
+            <button type="button" class="ghost" @click="cancelEdit">Cancelar</button>
+            <button type="button" class="primary" :disabled="isSaving" @click="save">
+              {{ isSaving ? 'Guardando...' : (isNew ? '💾 Crear Registro' : '💾 Guardar Cambios') }}
+            </button>
+          </div>
         </footer>
       </section>
 
-      <section v-else class="form empty">elegí un record o creá uno nuevo</section>
+      <!-- Estado Vacío del Editor -->
+      <section v-else class="editor-empty">
+        <div class="empty-icon">⛁</div>
+        <div class="empty-text">
+          Seleccioná un registro de la lista izquierda para editar sus campos técnicos o hacé clic en "+ Nuevo" para dar de alta uno.
+        </div>
+      </section>
     </main>
   </div>
 
@@ -133,3 +453,4 @@
   <script src="/admin/admin.js"></script>
 </body>
 </html>
+

@@ -1,7 +1,5 @@
-/* Fraunces y Martian Mono vienen de fontsource (variables, subset latin).
-   General Sans se aloja acá: Fontshare, ITF Free Font License (ver assets/fonts). */
-@import '@fontsource-variable/fraunces/full.css';
-@import '@fontsource-variable/fraunces/full-italic.css';
+/* Martian Mono viene de fontsource (variable, subset latin).
+   General Sans se aloja localmente: Fontshare, ITF Free Font License (ver assets/fonts). */
 @import '@fontsource-variable/martian-mono/index.css';
 
 @font-face {

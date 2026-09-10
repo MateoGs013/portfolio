@@ -1,37 +1,23 @@
 /**
  * La ruta es el estado y el estado es un request.
+ * Portafolio Técnico Unificado Mateo Sonzogni.
  *
- *   /<mundo>/<raíz>/<slug>?filtros
+ *   /<colección>/<slug>?filtros
  *
- * `path = [raíz, slug]` es lo único que los dos mundos comparten como
- * posición. Al cambiar de mundo se conserva hasta donde el mundo destino la
- * entiende (`truncate`), y la query viaja intacta: DISEÑO no filtra, pero
- * tampoco olvida los filtros para que la vuelta a DATOS los encuentre.
+ *   []                       -> / (directorio raíz / base de datos)
+ *   ['projects']             -> /projects (colección de proyectos)
+ *   ['projects', 'la-rucula']-> /projects/la-rucula (hoja del proyecto)
+ *   ['about']                -> /about (documento de especificación)
  */
 import type { LocationQueryRaw, RouteLocationRaw } from 'vue-router'
-import type { CollectionKey, DocKey, World } from './fieldMeta'
+import type { CollectionKey, DocKey } from './fieldMeta'
 import { collectionOrder, docOrder } from './fieldMeta'
 
-export type { World }
-
-export const worlds = ['datos', 'diseno'] as const
-
-export function isWorld(value: unknown): value is World {
-  return value === 'datos' || value === 'diseno'
-}
-
-export function otherWorld(world: World): World {
-  return world === 'datos' ? 'diseno' : 'datos'
-}
-
-/** Cómo se escribe cada mundo cuando se lo nombra en pantalla. */
-export const worldLabel: Record<World, string> = { datos: 'datos', diseno: 'diseño' }
-
-/** Segmentos después del mundo. `[]` es la raíz. */
+/** Segmentos del path. `[]` es la raíz. */
 export type Path = string[]
 
-/** Lo que puede ir en el primer segmento. `orgs` solo por relación y solo en DATOS. */
-export type Root = CollectionKey | DocKey
+/** Lo que puede ir en el primer segmento. */
+export type Root = CollectionKey | DocKey | 'orgs'
 export const roots: readonly Root[] = [...collectionOrder, ...docOrder, 'orgs']
 
 export function isRoot(value: unknown): value is Root {
@@ -39,19 +25,7 @@ export function isRoot(value: unknown): value is Root {
 }
 
 export function isDoc(root: Root): root is DocKey {
-  return (docOrder as readonly string[]).includes(root)
-}
-
-/**
- * Hasta qué profundidad llega cada mundo en cada raíz. Decide el truncado.
- * Los dos se detienen en el record: en DATOS las relaciones se leen en la
- * hoja y cada una es un link, no un nivel más. DISEÑO no tiene `orgs`:
- * saltar por relación es un gesto de DATOS. Los docs (`about`, `contact`)
- * son una hoja en los dos.
- */
-export const depth: Record<World, Partial<Record<Root, number>>> = {
-  datos: { projects: 2, experience: 2, stack: 2, orgs: 2, about: 1, contact: 1 },
-  diseno: { projects: 2, experience: 2, stack: 2, about: 1, contact: 1 },
+  return (docOrder as readonly string[]).includes(root as DocKey)
 }
 
 /** Del param catch-all de Nuxt (`string | string[] | undefined`) al path limpio. */
@@ -60,25 +34,38 @@ export function parsePath(param: unknown): Path {
   return raw.map(s => String(s).trim()).filter(Boolean)
 }
 
-/** Recorta el path a lo que `world` puede mostrar. Raíz desconocida → raíz. */
-export function truncate(world: World, path: Path): Path {
-  const root = path[0]
-  if (!isRoot(root)) return []
-  const max = depth[world][root]
-  if (max === undefined) return []
-  return path.slice(0, max)
+export function pathString(path: Path): string {
+  return path.length ? `/${path.map(encodeURIComponent).join('/')}` : '/'
 }
 
-export function pathString(world: World, path: Path): string {
-  return `/${[world, ...path.map(encodeURIComponent)].join('/')}`
+/**
+ * Genera la ruta para un path y query opcional.
+ * Soporta sobrecarga tanto para la firma directa `routeFor(path, query)`
+ * como para compatibilidad `routeFor('datos', path, query)`.
+ */
+export function routeFor(pathOrWorld: string | Path, maybePathOrQuery?: Path | LocationQueryRaw, maybeQuery?: LocationQueryRaw): RouteLocationRaw {
+  let path: Path
+  let query: LocationQueryRaw | undefined
+
+  if (typeof pathOrWorld === 'string') {
+    path = Array.isArray(maybePathOrQuery) ? maybePathOrQuery : []
+    query = maybeQuery
+  }
+  else {
+    path = pathOrWorld
+    query = maybePathOrQuery as LocationQueryRaw | undefined
+  }
+
+  return { path: pathString(path), query }
 }
 
-export function routeFor(world: World, path: Path, query?: LocationQueryRaw): RouteLocationRaw {
-  return { path: pathString(world, path), query }
-}
-
-/** La misma posición, vista desde el otro mundo. */
-export function acrossWorlds(from: World, path: Path, query?: LocationQueryRaw): RouteLocationRaw {
-  const to = otherWorld(from)
-  return routeFor(to, truncate(to, path), query)
+// Stubs de compatibilidad transitoria para evitar errores durante refactor
+export type World = 'datos'
+export const worlds = ['datos'] as const
+export function isWorld(value: unknown): value is World { return value === 'datos' }
+export function otherWorld(_world: World): World { return 'datos' }
+export const worldLabel: Record<string, string> = { datos: 'datos' }
+export function truncate(_world: World, path: Path): Path { return path }
+export function acrossWorlds(_from: World, path: Path, query?: LocationQueryRaw): RouteLocationRaw {
+  return routeFor(path, query)
 }

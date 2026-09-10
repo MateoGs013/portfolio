@@ -1,6 +1,6 @@
 <script setup lang="ts">
-// "Ir a": un índice de todo lo que hay, filtrado mientras se escribe.
-// No es una consola: es una línea sobre el papel y filas de resultados.
+// Paleta de comandos "Ir a": búsqueda difusa instantánea en todo el portafolio.
+// Indexa tablas, proyectos, etapas de experiencia y tecnologías.
 import type { RouteLocationRaw } from 'vue-router'
 import { routeFor } from '~/lib/path'
 
@@ -14,10 +14,10 @@ const { data: entries } = await useAsyncData<Entry[]>('datos-goto', async () => 
     api.schema(), api.list('projects'), api.list('experience'), api.list('stack'),
   ])
   return [
-    ...schema.data.map(e => ({ label: e.key, where: 'db', to: routeFor('datos', [e.key]) })),
-    ...projects.data.map(p => ({ label: p.title, where: 'projects', to: routeFor('datos', ['projects', p.slug]) })),
-    ...experience.data.map(e => ({ label: e.org ? `${e.role} · ${e.org.name}` : e.role, where: 'experience', to: routeFor('datos', ['experience', e.slug]) })),
-    ...stack.data.map(t => ({ label: t.name, where: 'stack', to: routeFor('datos', ['stack', t.slug]) })),
+    ...schema.data.map(e => ({ label: e.key, where: 'db', to: routeFor([e.key]) })),
+    ...projects.data.map(p => ({ label: p.title, where: 'projects', to: routeFor(['projects', p.slug]) })),
+    ...experience.data.map(e => ({ label: e.org ? `${e.role} · ${e.org.name}` : e.role, where: 'experience', to: routeFor(['experience', e.slug]) })),
+    ...stack.data.map(t => ({ label: t.name, where: 'stack', to: routeFor(['stack', t.slug]) })),
   ]
 }, { server: false })
 
@@ -62,11 +62,12 @@ onMounted(() => input.value?.focus())
           type="text"
           autocomplete="off"
           spellcheck="false"
-          placeholder="proyecto, tecnología, etapa…"
+          placeholder="buscar proyecto, tecnología, etapa…"
           aria-label="Buscar en todo"
           :aria-activedescendant="results[sel] ? `goto-${sel}` : undefined"
           aria-controls="goto-lista"
         >
+        <span class="esc-badge">ESC</span>
       </label>
       <ol id="goto-lista" class="lista" role="listbox">
         <li
@@ -82,9 +83,10 @@ onMounted(() => input.value?.focus())
         >
           <span class="where">{{ r.where }} /</span>
           <span class="label">{{ r.label }}</span>
+          <span v-if="i === sel" class="enter-icon">↵</span>
         </li>
-        <li v-if="entries && !results.length" class="fila vacia">00 resultados</li>
-        <li v-if="!entries" class="fila vacia">cargando el índice…</li>
+        <li v-if="entries && !results.length" class="fila vacia">00 resultados para "{{ q }}"</li>
+        <li v-if="!entries" class="fila vacia">cargando índice de la base de datos…</li>
       </ol>
     </div>
   </div>
@@ -94,28 +96,32 @@ onMounted(() => input.value?.focus())
 .velo {
   position: fixed;
   inset: 0;
-  z-index: 70;
-  background: rgba(16, 18, 20, 0.14);
+  z-index: 120;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(4px);
   display: flex;
   justify-content: center;
   align-items: flex-start;
   padding-top: clamp(48px, 12vh, 140px);
 }
 .goto {
-  width: min(560px, calc(100vw - 32px));
-  background: var(--d-paper);
-  border: 1px solid var(--d-ink);
-  box-shadow: 0 24px 60px -30px rgba(16, 18, 20, 0.5);
+  width: min(580px, calc(100vw - 32px));
+  background: var(--d-surface);
+  border: 1px solid var(--d-rule-strong);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.6);
+  border-radius: 2px;
+  overflow: hidden;
 }
 .linea {
   display: grid;
-  grid-template-columns: auto 1fr;
-  gap: 14px;
-  align-items: baseline;
+  grid-template-columns: auto 1fr auto;
+  gap: 12px;
+  align-items: center;
   padding: 14px 16px;
-  border-bottom: 1px solid var(--d-ink);
+  border-bottom: 1px solid var(--d-rule);
+  background: var(--d-surface-raised);
 }
-.k { font-family: var(--font-mono); font-size: var(--d-fs-mono); color: var(--d-dim); }
+.k { font-family: var(--font-mono); font-size: var(--d-fs-mono); color: var(--d-sig); font-weight: 700; }
 input {
   width: 100%;
   border: 0;
@@ -123,26 +129,35 @@ input {
   background: transparent;
   color: var(--d-ink);
   font-family: var(--font-text);
-  font-size: 18px;
+  font-size: 16px;
   font-weight: 500;
   outline: none;
 }
-input::placeholder { color: var(--d-faint); }
-.lista { list-style: none; margin: 0; padding: 0; max-height: 60vh; overflow: auto; }
+input::placeholder { color: var(--d-faint); font-size: 14px; }
+.esc-badge {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--d-dim);
+  border: 1px solid var(--d-rule);
+  padding: 2px 6px;
+}
+.lista { list-style: none; margin: 0; padding: 0; max-height: 55vh; overflow: auto; }
 .fila {
   display: grid;
-  grid-template-columns: 96px 1fr;
+  grid-template-columns: 100px 1fr auto;
   gap: 12px;
-  align-items: baseline;
-  height: var(--d-row);
+  align-items: center;
+  height: 42px;
   padding: 0 16px;
   border-bottom: 1px solid var(--d-rule);
   cursor: pointer;
+  transition: all var(--d-dur) ease;
 }
 .fila:last-child { border-bottom: 0; }
-.fila.on { background: var(--d-ink); color: var(--d-paper); }
-.where { font-family: var(--font-mono); font-size: var(--d-fs-mono); color: var(--d-dim); text-align: right; }
-.fila.on .where { color: var(--d-inv-dim); }
-.label { font-family: var(--font-text); font-size: var(--d-fs-name); font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.fila.on { background: var(--d-sig); color: #ffffff; }
+.where { font-family: var(--font-mono); font-size: 11px; color: var(--d-dim); text-align: right; }
+.fila.on .where { color: rgba(255, 255, 255, 0.75); }
+.label { font-family: var(--font-text); font-size: 14px; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.enter-icon { font-family: var(--font-mono); font-size: 12px; color: #ffffff; opacity: 0.8; }
 .vacia { grid-template-columns: 1fr; color: var(--d-faint); font-family: var(--font-mono); font-size: var(--d-fs-mono); cursor: default; }
 </style>

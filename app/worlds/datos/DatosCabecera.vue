@@ -33,18 +33,19 @@ defineProps<{
 .cabecera {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto;
-  gap: 0 18px;
+  gap: 12px 20px;
   align-items: center;
   padding: 2px 0 18px;
   border-bottom: 1px solid var(--d-rule);
+  width: 100%;
 }
-.icono { width: 48px; height: 54px; }
+.icono { width: 48px; height: 54px; flex-shrink: 0; }
 .quien { min-width: 0; }
 .titulo {
   margin: 0 0 4px;
   font-family: var(--font-text);
-  font-size: var(--d-fs-title);
-  font-weight: 500;
+  font-size: clamp(20px, 2.2vw, 28px);
+  font-weight: 600;
   letter-spacing: -0.015em;
   line-height: 1.2;
   overflow-wrap: anywhere;
@@ -60,10 +61,16 @@ defineProps<{
   color: var(--d-dim);
   font-variant-numeric: tabular-nums;
 }
-.lado { display: flex; align-items: center; gap: 4px; }
+.lado {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
 
-@media (max-width: 640px) {
+@media (max-width: 768px) {
   .cabecera { grid-template-columns: auto minmax(0, 1fr); }
-  .lado { grid-column: 1 / -1; margin-top: 12px; flex-wrap: wrap; }
+  .lado { grid-column: 1 / -1; margin-top: 10px; justify-content: flex-start; }
 }
 </style>

@@ -97,12 +97,16 @@ Lo que dejó para la Fase 3: DATOS ya resuelve todos los niveles en una sola col
 
 ---
 
-## Fase 6 — El pasaje
+## Fase 6 — Metamorfosis In-Situ (Transformers sin telón)
+- [x] Mapeo 1:1 de identificadores de filas (`data-row`) y anclas (`data-anchor`) entre DATOS y DISEÑO
+- [x] Descarte de cortinas, telones u overlays que tapen la pantalla
+- [x] Desacople mecánico de elementos en perspectiva 3D a la vista del usuario
+- [x] Transmutación física de filas de base de datos en tarjetas volumétricas chamfered y viceversa
+- [x] Transición del fondo y chasis de la ventana (`--d-paper` ↔ `--n-bg`) sin romper los 1320px
+- [x] Ancla FLIP con encaje magnético en el nombre del registro
+- [x] Degradación instantánea con `prefers-reduced-motion`
 
-- [ ] Ancla FLIP sobre el nombre del record
-- [ ] Cortina con el color del mundo destino
-- [ ] Transición del fondo
-- [ ] Ida y vuelta con animaciones distintas
+**Terminado cuando:** al pulsar el selector de mundo, los elementos visibles del sitio se transforman mecánicamente in-situ sin telones ni pantallas de cobertura intermedias.
 
 ---
 

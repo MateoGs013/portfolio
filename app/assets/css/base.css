@@ -1,8 +1,9 @@
-/* Base común a los dos mundos. Los tokens de temperatura, densidad y ritmo
-   de cada mundo van en app/worlds/<mundo>/ (Fase 2), no acá. */
+/* Tipografías del Portafolio Técnico Mateo Sonzogni (Mundo DATOS)
+   --font-mono: Martian Mono (claves, metadatos, tablas, telemetría, código)
+   --font-text / --font-display: General Sans (títulos, etiquetas, lectura, UI) */
 :root {
-  --font-display: 'Fraunces Variable', Georgia, serif;
-  --font-text: 'General Sans Variable', system-ui, sans-serif;
+  --font-display: 'General Sans Variable', system-ui, -apple-system, sans-serif;
+  --font-text: 'General Sans Variable', system-ui, -apple-system, sans-serif;
   --font-mono: 'Martian Mono Variable', ui-monospace, monospace;
 }
 

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-// Layout principal del portafolio técnico Mateo Sonzogni
+// Layout por defecto del portafolio técnico Mateo Sonzogni
 </script>
 
 <template>
@@ -14,7 +14,6 @@
   min-height: 100dvh;
 }
 
-/* Accesibilidad por teclado: primer Tab de la página */
 .saltar {
   position: fixed;
   z-index: 999;

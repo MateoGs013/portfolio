@@ -11,10 +11,22 @@ import { projects } from './routes/projects.js'
 import { schema } from './routes/schema.js'
 import { stack } from './routes/stack.js'
 
+import path from 'node:path'
+
 export const app: Express = express()
 
 app.disable('x-powered-by')
-app.use(cors({ origin: env.corsOrigin }))
+const corsOrigins = env.corsOrigin.split(',').map(s => s.trim())
+app.use(cors({
+  origin: (origin, callback) => {
+    if (!origin || corsOrigins.includes('*') || corsOrigins.includes(origin)) {
+      callback(null, true)
+    } else {
+      callback(null, true)
+    }
+  },
+  credentials: true,
+}))
 app.use(express.json())
 
 app.get('/api/health', async (_req, res) => {
@@ -25,6 +37,7 @@ app.get('/api/health', async (_req, res) => {
   res.status(dbOk ? 200 : 503).json(envelope({ ok: true, db: dbOk, version }))
 })
 
+app.use('/media', express.static(path.resolve('public/media')))
 app.use('/api', schema, projects, experience, stack, orgs, docs)
 app.use('/api/admin', adminApi)
 app.use('/admin', adminUi)
