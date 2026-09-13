@@ -58,7 +58,9 @@ async function copyEmail() {
     copiedEmail.value = true
     setTimeout(() => { copiedEmail.value = false }, 2500)
   }
-  catch {}
+  catch {
+    // Fallback silencioso si el portapapeles está restringido
+  }
 }
 
 const { path: mundoPath } = useMundo()

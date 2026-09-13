@@ -214,6 +214,7 @@ const currentRoot = computed(() => path.value[0] ?? '')
           <button
             type="button"
             class="theme-btn"
+            :aria-label="theme === 'dark' ? 'Cambiar a modo claro (papel técnico)' : 'Cambiar a modo oscuro (obsidiana)'"
             :title="`Cambiar a modo ${theme === 'dark' ? 'claro (papel)' : 'oscuro (obsidiana)'}`"
             @click="toggleTheme"
           >
@@ -649,8 +650,19 @@ kbd {
 @media (max-width: 900px) {
   .datos { height: auto; min-height: 100dvh; padding: 0; }
   .ventana { border-left: none; border-right: none; }
-  .barra { gap: 8px; }
-  .goto-btn { display: none; }
+  .goto-btn {
+    padding: 3px 8px;
+    gap: 4px;
+    font-size: 11px;
+    min-width: 0;
+  }
+  .goto-btn .goto-ph,
+  .goto-btn kbd {
+    display: none;
+  }
+  .goto-btn .goto-k::after {
+    content: ' ⌕';
+  }
   .cuerpo-ventana {
     flex-direction: column;
     overflow: visible;

@@ -19,7 +19,7 @@
     "lint": "eslint .",
     "db:up": "docker compose up -d",
     "db:down": "docker compose down",
-    "db:seed": "tsx server/src/seed.ts",
+    "db:seed": "tsx --env-file=.env server/src/seed.ts",
     "postinstall": "prisma generate && nuxt prepare"
   },
   "prisma": {

@@ -27,7 +27,7 @@ export default defineNuxtConfig({
 
   runtimeConfig: {
     public: {
-      apiBase: 'http://localhost:3001/api', // NUXT_PUBLIC_API_BASE
+      apiBase, // NUXT_PUBLIC_API_BASE dinámico con fallback a localhost
     },
   },
 

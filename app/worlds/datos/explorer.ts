@@ -283,8 +283,7 @@ function docRow(f: { name: string, type: string, value: string, wide?: boolean }
 function facetsOf(collection: CollectionKey, query: LocationQuery): Facet[] {
   const active = filtersFor(collection, query)
   return Object.entries(active).map(([key, value]) => {
-    const next = { ...query }
-    delete next[key]
+    const { [key]: _removed, ...next } = query
     return { key, value: String(value), remove: routeFor([collection], next) }
   })
 }

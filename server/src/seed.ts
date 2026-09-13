@@ -215,7 +215,7 @@ const projects: SeedProject[] = [
       { title: '02 · arquitectura', body: 'Monorepo con FastAPI para orquestación de embeddings y llamadas a Ollama; PostgreSQL 17 con pgvector para búsqueda por similitud coseno; Next.js 14 en frontend web y Expo para móvil.' },
       { title: '03 · resultado', body: 'Respuestas contextualizadas en dialecto rioplatense con menos de 50ms de latencia de consulta interna y almacenamiento local 100% cifrado.' },
     ],
-    cover: null,
+    cover: { src: '/media/projects/ynara-mtucqc2j.png', alt: 'Ynara asistente de IA adaptativo on-premise', width: 1280, height: 720, bytes: 394847 },
   },
   {
     slug: 'barberpole',
@@ -409,10 +409,11 @@ const aboutFields: DocField[] = [
 const contactFields: DocField[] = [
   { name: 'email', type: 'url', value: 'mateogabus@gmail.com' },
   { name: 'github', type: 'url', value: 'https://github.com/MateoGs013' },
+  { name: 'linkedin', type: 'url', value: 'https://www.linkedin.com/in/mateo-sonzogni' },
   { name: 'availability', type: 'string', value: 'Inmediata · Contratación directa, contractor o freelance' },
   { name: 'location', type: 'string', value: 'Río Negro, AR (Disponible para relocalización o remoto)' },
   { name: 'timezone', type: 'string', value: 'UTC-3' },
-  { name: 'preferred_contact', type: 'string', value: 'Email directo o mensaje vía GitHub' },
+  { name: 'preferred_contact', type: 'string', value: 'Email directo, LinkedIn o mensaje vía GitHub' },
 ]
 
 // ─── carga ──────────────────────────────────────────────────────────────────

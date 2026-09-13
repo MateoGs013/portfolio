@@ -135,9 +135,7 @@ const viewMode = ref<'grid' | 'table'>('grid')
           <!-- 3. Ynara -->
           <NuxtLink to="/projects/ynara" class="project-card" data-row="ynara">
             <div class="project-thumb-wrap">
-              <div class="project-thumb-fallback">
-                <DatosIcono kind="file" badge="2026" />
-              </div>
+              <img src="/media/projects/ynara-mtucqc2j.png" alt="Ynara Asistente de IA" class="project-thumb" loading="lazy">
               <div class="project-status-bar">
                 <span class="project-status-badge">● WIP</span>
                 <span class="project-year-badge">2026</span>

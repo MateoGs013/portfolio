@@ -22,7 +22,7 @@ app.use(cors({
     if (!origin || corsOrigins.includes('*') || corsOrigins.includes(origin)) {
       callback(null, true)
     } else {
-      callback(null, true)
+      callback(new Error(`Origen ${origin} no permitido por política CORS`))
     }
   },
   credentials: true,

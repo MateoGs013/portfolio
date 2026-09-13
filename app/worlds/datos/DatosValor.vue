@@ -4,7 +4,7 @@
 // pasos de proceso de ingeniería y métricas de rendimiento.
 import type { Cell, MediaItem } from './explorer'
 
-const props = defineProps<{
+defineProps<{
   cell: Cell
   /** Nombre del campo, para el título del filtro. */
   name?: string

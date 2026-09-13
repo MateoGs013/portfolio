@@ -68,6 +68,8 @@ function printCV() {
           <span class="h-sep">|</span>
           <a href="https://github.com/MateoGs013" target="_blank" rel="noopener noreferrer">github.com/MateoGs013</a>
           <span class="h-sep">|</span>
+          <a href="https://www.linkedin.com/in/mateo-sonzogni" target="_blank" rel="noopener noreferrer">linkedin.com/in/mateo-sonzogni</a>
+          <span class="h-sep">|</span>
           <span>Disponibilidad Inmediata · Remoto / Híbrido</span>
         </div>
       </header>
@@ -226,6 +228,10 @@ function printCV() {
             <li>
               <span class="m-icon">‹/›</span>
               <a href="https://github.com/MateoGs013" target="_blank" rel="noopener noreferrer">github.com/MateoGs013</a>
+            </li>
+            <li>
+              <span class="m-icon">💼</span>
+              <a href="https://www.linkedin.com/in/mateo-sonzogni" target="_blank" rel="noopener noreferrer">linkedin.com/in/mateo-sonzogni</a>
             </li>
             <li>
               <span class="m-icon">📍</span>
