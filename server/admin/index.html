@@ -27,8 +27,14 @@
 
       <div class="top-right">
         <span v-if="status.text" class="status-toast" :class="status.kind">{{ status.text }}</span>
-        <a href="/" target="_blank" class="link-site">↗ Ver Portafolio</a>
-        <button v-if="token" class="ghost" @click="logout" title="Cerrar sesión">Salir ⎋</button>
+        <a href="/" target="_blank" class="link-site">
+          <span>PORTAFOLIO</span>
+          <svg class="adm-icon sm" viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+        </a>
+        <button v-if="token" class="ghost" @click="logout" title="Cerrar sesión">
+          <span>SALIR</span>
+          <svg class="adm-icon sm" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        </button>
       </div>
     </header>
 
@@ -56,8 +62,14 @@
               <input v-model="tokenInput" type="password" placeholder="••••••••••••••••" autocomplete="off" autofocus required>
             </label>
             <div class="login-actions">
-              <button type="submit" class="primary">Autenticar en Consola ›</button>
-              <button type="button" class="btn-dev" @click="useDevToken">⚡ Usar token local (dev-token-12345)</button>
+              <button type="submit" class="primary">
+                <span>Autenticar en Consola</span>
+                <svg class="adm-icon sm" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+              </button>
+              <button type="button" class="btn-dev" @click="useDevToken">
+                <svg class="adm-icon sm" viewBox="0 0 24 24"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+                <span>DEV_TOKEN (Local Dev Auto-fill)</span>
+              </button>
             </div>
           </form>
         </div>
@@ -79,7 +91,7 @@
               @click="open(key)"
             >
               <span class="nav-label">
-                <span class="mono">{{ m.icon }}</span>
+                <span class="nav-icon" v-html="m.icon"></span>
                 <span>{{ m.label }}</span>
               </span>
               <span class="nav-badge">{{ counts[key] !== undefined ? counts[key] : (section === key ? rows.length : '·') }}</span>
@@ -98,16 +110,22 @@
       <section class="records-list">
         <div class="list-topbar">
           <div class="search-wrap">
+            <span class="search-icon-slot" aria-hidden="true">
+              <svg class="adm-icon sm" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            </span>
             <input
               v-model="searchQuery"
               type="text"
-              placeholder="🔍 Filtrar registros..."
+              placeholder="Filtrar registros..."
               class="search-input"
             >
           </div>
           <div class="list-actions">
             <span class="records-count">{{ filteredRows.length }} / {{ rows.length }} records</span>
-            <button v-if="model.creatable !== false" class="btn-create" @click="startNew">+ Nuevo</button>
+            <button v-if="model.creatable !== false" class="btn-create" @click="startNew">
+              <svg class="adm-icon sm" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              <span>Nuevo</span>
+            </button>
           </div>
         </div>
 
@@ -135,7 +153,9 @@
         <div class="editor-form">
           <!-- Cabecera del Editor -->
           <div class="editor-header">
-            <div class="editor-path mono">{{ canonicalFilePath }}</div>
+            <div class="editor-path mono">
+              <span>PATH:</span> {{ canonicalFilePath }}
+            </div>
             <div class="editor-title-row">
               <h2>{{ isNew ? '+ NUEVO REGISTRO' : model.name(form) }}</h2>
               <span class="badge-tag" :class="{ new: isNew }">{{ isNew ? 'CREACIÓN' : model.label }}</span>
@@ -240,7 +260,7 @@
                     :class="{ selected: isTechSelected(o.id) }"
                     @click="toggleTech(o.id)"
                   >
-                    <span v-if="isTechSelected(o.id)">✓ </span>
+                    <svg v-if="isTechSelected(o.id)" class="adm-icon sm" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
                     <span>{{ o.name || o.title }}</span>
                   </button>
                 </div>
@@ -278,7 +298,10 @@
           <div v-if="model.fields.some(f => f.type === 'json')" class="form-card">
             <div class="form-card-title">
               <span>03 · TELEMETRÍA & MÉTRICAS (JSON)</span>
-              <button type="button" class="ghost" @click="formatMetricsJson">⚡ Formatear JSON</button>
+              <button type="button" class="ghost" @click="formatMetricsJson">
+                <svg class="adm-icon sm" viewBox="0 0 24 24"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+                <span>Formatear JSON</span>
+              </button>
             </div>
 
             <div v-for="f in model.fields.filter(f => f.type === 'json')" :key="f.name" class="field wide">
@@ -303,7 +326,10 @@
               <span>SUB-TABLA: {{ sub }}</span>
               <div>
                 <small style="margin-right: 12px;">{{ form[sub].length }} items</small>
-                <button type="button" class="ghost" @click="form[sub].push(blankRow(cols))">+ Agregar fila</button>
+                <button type="button" class="ghost" @click="form[sub].push(blankRow(cols))">
+                  <svg class="adm-icon sm" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                  <span>Agregar fila</span>
+                </button>
               </div>
             </div>
 
@@ -333,14 +359,16 @@
                       <input v-else v-model="row[c.name]" type="text">
                     </td>
                     <td>
-                      <button type="button" class="ghost danger" title="Eliminar fila" @click="form[sub].splice(i, 1)">×</button>
+                      <button type="button" class="ghost danger" title="Eliminar fila" @click="form[sub].splice(i, 1)">
+                        <svg class="adm-icon sm" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                      </button>
                     </td>
                   </tr>
                 </tbody>
               </table>
             </div>
             <div v-else class="empty-text" style="color: var(--d-text-dim);">
-              No hay elementos en {{ sub }}. Hacé clic en "+ Agregar fila" para añadir uno.
+              No hay elementos en {{ sub }}. Hacé clic en "Agregar fila" para añadir uno.
             </div>
           </div>
 
@@ -381,7 +409,9 @@
                       {{ m.width }}×{{ m.height }} · {{ (m.bytes / 1024).toFixed(0) }} KB
                     </td>
                     <td>
-                      <button type="button" class="ghost danger" title="Borrar imagen" @click="deleteMedia(m)">×</button>
+                      <button type="button" class="ghost danger" title="Borrar imagen" @click="deleteMedia(m)">
+                        <svg class="adm-icon sm" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                      </button>
                     </td>
                   </tr>
                 </tbody>
@@ -413,7 +443,10 @@
                 <input v-model.number="uploadForm.order" type="number" placeholder="0" class="short">
               </div>
               <div>
-                <button type="submit" class="primary" style="width: 100%;">Subir Pieza</button>
+                <button type="submit" class="primary" style="width: 100%;">
+                  <svg class="adm-icon sm" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                  <span>Subir Pieza</span>
+                </button>
               </div>
             </form>
           </div>
@@ -429,11 +462,13 @@
 
           <div class="af-right">
             <button v-if="!isNew && model.deletable !== false" type="button" class="danger" @click="remove">
-              🗑 Borrar Registro
+              <svg class="adm-icon sm" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+              <span>Borrar Registro</span>
             </button>
             <button type="button" class="ghost" @click="cancelEdit">Cancelar</button>
             <button type="button" class="primary" :disabled="isSaving" @click="save">
-              {{ isSaving ? 'Guardando...' : (isNew ? '💾 Crear Registro' : '💾 Guardar Cambios') }}
+              <svg class="adm-icon sm" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+              <span>{{ isSaving ? 'Guardando...' : (isNew ? 'Crear Registro' : 'Guardar Cambios') }}</span>
             </button>
           </div>
         </footer>
@@ -441,9 +476,13 @@
 
       <!-- Estado Vacío del Editor -->
       <section v-else class="editor-empty">
-        <div class="empty-icon">⛁</div>
+        <svg class="empty-icon-svg" viewBox="0 0 24 24">
+          <ellipse cx="12" cy="5" rx="9" ry="3"/>
+          <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/>
+          <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/>
+        </svg>
         <div class="empty-text">
-          Seleccioná un registro de la lista izquierda para editar sus campos técnicos o hacé clic en "+ Nuevo" para dar de alta uno.
+          Seleccioná un registro de la lista izquierda para editar sus campos técnicos o hacé clic en "Nuevo" para dar de alta uno.
         </div>
       </section>
     </main>
@@ -453,4 +492,3 @@
   <script src="/admin/admin.js"></script>
 </body>
 </html>
-

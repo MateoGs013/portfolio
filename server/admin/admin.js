@@ -14,10 +14,18 @@ const toLocalDatetime = (iso) => {
 }
 const toDateOnly = iso => (iso ? String(iso).slice(0, 10) : '')
 
+const ICONS = {
+  projects: '<svg class="adm-icon" viewBox="0 0 24 24"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z"/></svg>',
+  experience: '<svg class="adm-icon" viewBox="0 0 24 24"><rect width="20" height="14" x="2" y="7" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>',
+  stack: '<svg class="adm-icon" viewBox="0 0 24 24"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>',
+  orgs: '<svg class="adm-icon" viewBox="0 0 24 24"><path d="M3 21h18"/><path d="M5 21V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16"/><path d="M9 9h1"/><path d="M9 13h1"/><path d="M9 17h1"/><path d="M14 9h1"/><path d="M14 13h1"/><path d="M14 17h1"/></svg>',
+  docs: '<svg class="adm-icon" viewBox="0 0 24 24"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>',
+}
+
 const MODELS = {
   projects: {
     label: 'projects',
-    icon: '📁',
+    icon: ICONS.projects,
     path: 'projects',
     name: r => r.title || '(sin título)',
     meta: r => `${r.year} · ${r.status}${r.featured ? ' · featured' : ''}`,
@@ -57,7 +65,7 @@ const MODELS = {
 
   experience: {
     label: 'experience',
-    icon: '📁',
+    icon: ICONS.experience,
     path: 'experience',
     name: r => (r.org ? `${r.role} · ${r.org.name}` : r.role),
     meta: r => `${toDateOnly(r.startedAt)} → ${r.endedAt ? toDateOnly(r.endedAt) : 'actual'}`,
@@ -77,7 +85,7 @@ const MODELS = {
 
   stack: {
     label: 'stack',
-    icon: '📁',
+    icon: ICONS.stack,
     path: 'techs',
     name: r => r.name,
     meta: r => `${r.category} · desde ${r.since}${r._count ? ` · ${r._count.projects} projects` : ''}`,
@@ -89,7 +97,7 @@ const MODELS = {
 
   orgs: {
     label: 'orgs',
-    icon: '📁',
+    icon: ICONS.orgs,
     path: 'orgs',
     name: r => r.name,
     meta: r => (r._count ? `${r._count.projects} projects · ${r._count.experiences} experience` : ''),
@@ -101,7 +109,7 @@ const MODELS = {
 
   docs: {
     label: 'docs',
-    icon: '📄',
+    icon: ICONS.docs,
     path: 'docs',
     idKey: 'key',
     name: r => r.key,
@@ -207,7 +215,7 @@ createApp({
       return body
     },
     useDevToken() {
-      this.tokenInput = 'dev-token-12345'
+      this.tokenInput = 'eYqFZFx0mqFXT6L2hFlTrUvYAfB-4ZU5'
       this.login()
     },
     login() {
@@ -300,9 +308,9 @@ createApp({
       try {
         const parsed = typeof this.form.metrics === 'string' ? JSON.parse(this.form.metrics) : this.form.metrics
         this.form.metrics = JSON.stringify(parsed, null, 2)
-        this.say('ok', '✓ JSON formateado')
+        this.say('ok', 'JSON formateado correctamente')
       } catch {
-        this.say('err', '✕ Sintaxis JSON inválida')
+        this.say('err', 'Sintaxis JSON inválida')
       }
     },
     async save() {
@@ -314,7 +322,7 @@ createApp({
       const method = m.saveMethod ? m.saveMethod(this.isNew) : this.isNew ? 'POST' : 'PUT'
       try {
         const saved = await this.api(url, { method, body: payload })
-        this.say('ok', this.isNew ? '✓ Registro creado en base de datos' : '✓ Cambios guardados en PostgreSQL')
+        this.say('ok', this.isNew ? 'Registro creado en base de datos' : 'Cambios guardados en PostgreSQL')
         await this.reload(saved ? saved[m.idKey || 'id'] : null)
       }
       catch (e) {
@@ -330,7 +338,7 @@ createApp({
       if (!confirm(`¿Confirmás borrar "${name}" de la base de datos? Esta acción es irreversible.`)) return
       try {
         await this.api(`${this.model.path}/${this.rowKey(this.current)}`, { method: 'DELETE' })
-        this.say('ok', '✓ Registro eliminado')
+        this.say('ok', 'Registro eliminado')
         this.form = null
         this.current = null
         await this.reload()
@@ -353,7 +361,7 @@ createApp({
       fd.append('order', String(this.uploadForm.order || 0))
       try {
         await this.api('media', { method: 'POST', body: fd })
-        this.say('ok', '✓ Pieza multimedia subida con éxito')
+        this.say('ok', 'Pieza multimedia subida con éxito')
         input.value = ''
         this.uploadForm = { alt: '', role: 'GALLERY', layer: null, order: 0 }
         await this.reload(this.current.id)
@@ -366,7 +374,7 @@ createApp({
     async saveMedia(m) {
       try {
         await this.api(`media/${m.id}`, { method: 'PUT', body: { alt: m.alt, role: m.role, layer: m.layer === '' ? null : m.layer, order: m.order || 0 } })
-        this.say('ok', '✓ Metadatos de media guardados')
+        this.say('ok', 'Metadatos de media guardados')
       }
       catch (e) {
         this.error = e.message
@@ -377,7 +385,7 @@ createApp({
       if (!confirm(`¿Borrar imagen ${m.src}? También se eliminará el archivo del servidor.`)) return
       try {
         await this.api(`media/${m.id}`, { method: 'DELETE' })
-        this.say('ok', '✓ Imagen eliminada')
+        this.say('ok', 'Imagen eliminada')
         await this.reload(this.current.id)
       }
       catch (e) {
