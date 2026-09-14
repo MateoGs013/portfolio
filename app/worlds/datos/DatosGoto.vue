@@ -6,6 +6,17 @@ import { routeFor } from '~/lib/path'
 
 const emit = defineEmits<{ close: [] }>()
 const api = useApi()
+const { isEs } = usePortfolioLocale()
+
+function formatWhere(w: string) {
+  if (isEs.value) {
+    if (w === 'projects') return 'proyectos'
+    if (w === 'experience') return 'experiencia'
+    if (w === 'stack') return 'stack'
+    if (w === 'db') return 'db'
+  }
+  return w
+}
 
 interface Entry { label: string, where: string, to: RouteLocationRaw }
 
@@ -53,17 +64,17 @@ onMounted(() => input.value?.focus())
 
 <template>
   <div class="velo" @click.self="emit('close')">
-    <div class="goto" role="dialog" aria-label="Ir a" @keydown="onKey">
+    <div class="goto" role="dialog" :aria-label="isEs ? 'Ir a' : 'Goto'" @keydown="onKey">
       <label class="linea">
-        <span class="k">ir a</span>
+        <span class="k">{{ isEs ? 'ir a' : 'goto' }}</span>
         <input
           ref="input"
           v-model="q"
           type="text"
           autocomplete="off"
           spellcheck="false"
-          placeholder="buscar proyecto, tecnología, etapa…"
-          aria-label="Buscar en todo"
+          :placeholder="isEs ? 'buscar proyecto, tecnología, etapa…' : 'search project, tech, stage…'"
+          :aria-label="isEs ? 'Buscar en todo el portafolio' : 'Search whole portfolio'"
           :aria-activedescendant="results[sel] ? `goto-${sel}` : undefined"
           aria-controls="goto-lista"
         >
@@ -81,12 +92,16 @@ onMounted(() => input.value?.focus())
           @mouseenter="sel = i"
           @click="go(r)"
         >
-          <span class="where">{{ r.where }} /</span>
+          <span class="where">{{ formatWhere(r.where) }} /</span>
           <span class="label">{{ r.label }}</span>
           <span v-if="i === sel" class="enter-icon">↵</span>
         </li>
-        <li v-if="entries && !results.length" class="fila vacia">00 resultados para "{{ q }}"</li>
-        <li v-if="!entries" class="fila vacia">cargando índice de la base de datos…</li>
+        <li v-if="entries && !results.length" class="fila vacia">
+          {{ isEs ? `00 resultados para "${q}"` : `00 results for "${q}"` }}
+        </li>
+        <li v-if="!entries" class="fila vacia">
+          {{ isEs ? 'cargando índice de la base de datos…' : 'loading database index…' }}
+        </li>
       </ol>
     </div>
   </div>

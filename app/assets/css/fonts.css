@@ -1,6 +1,7 @@
 /* Martian Mono viene de fontsource (variable, subset latin).
    General Sans se aloja localmente: Fontshare, ITF Free Font License (ver assets/fonts). */
 @import '@fontsource-variable/martian-mono/index.css';
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Grotesk:wght@500;700&display=swap');
 
 @font-face {
   font-family: 'General Sans Variable';

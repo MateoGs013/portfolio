@@ -1,8 +1,10 @@
 <script setup lang="ts">
 // Renderizador de valores para hojas técnicas y tablas.
 // Soporta relaciones, filtros, links externos, activos multimedia (con visor lightbox),
-// pasos de proceso de ingeniería y métricas de rendimiento.
+import DatosIcon from './DatosIcon.vue'
 import type { Cell, MediaItem } from './explorer'
+
+const { isEs } = usePortfolioLocale()
 
 defineProps<{
   cell: Cell
@@ -44,14 +46,14 @@ function formatBytes(bytes?: number | null): string {
         class="media-card"
         tabindex="0"
         role="button"
-        :aria-label="`Inspeccionar captura: ${m.alt}`"
+        :aria-label="isEs ? `Inspeccionar captura: ${m.alt}` : `Inspect screenshot: ${m.alt}`"
         @click="activeMedia = m"
         @keydown.enter="activeMedia = m"
       >
         <div class="media-thumb-wrap">
           <img :src="m.src" :alt="m.alt" class="media-thumb" loading="lazy">
           <div class="media-overlay">
-            <span class="zoom-icon">⊕ EXPANDIR</span>
+            <span class="zoom-icon">⊕ {{ isEs ? 'EXPANDIR' : 'EXPAND' }}</span>
           </div>
         </div>
         <figcaption class="media-meta">
@@ -83,10 +85,11 @@ function formatBytes(bytes?: number | null): string {
               <button
                 type="button"
                 class="lightbox-close"
-                aria-label="Cerrar visor"
+                :aria-label="isEs ? 'Cerrar visor' : 'Close viewer'"
                 @click="activeMedia = null"
               >
-                ✕ ESC
+                <DatosIcon name="close" :size="12" />
+                <span>ESC</span>
               </button>
             </div>
           </header>
@@ -153,10 +156,11 @@ function formatBytes(bytes?: number | null): string {
     <button
       type="button"
       class="quick-copy-btn"
-      :title="`Copiar ${cell.value} al portapapeles`"
+      :title="isEs ? `Copiar ${cell.value} al portapapeles` : `Copy ${cell.value} to clipboard`"
       @click="copyInline(String(cell.value))"
     >
-      {{ copiedInline ? '✓ COPIADO' : '📋 COPIAR' }}
+      <DatosIcon :name="copiedInline ? 'check' : 'copy'" :size="11" />
+      <span>{{ copiedInline ? (isEs ? 'COPIADO' : 'COPIED') : (isEs ? 'COPIAR' : 'COPY') }}</span>
     </button>
   </span>
   <a v-else-if="cell.href" :href="cell.href" target="_blank" rel="noopener noreferrer" class="ext">
