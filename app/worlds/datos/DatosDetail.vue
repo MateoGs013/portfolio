@@ -4,6 +4,7 @@
 // campos estructurados con tipos de datos a la vista y visor colapsable de JSON crudo de la API.
 import DatosCabecera from './DatosCabecera.vue'
 import DatosCV from './DatosCV.vue'
+import DatosIcon from './DatosIcon.vue'
 import DatosValor from './DatosValor.vue'
 import DatosVentanaArchivo from './DatosVentanaArchivo.vue'
 import { pad, type Detail, type Vecino } from './explorer'
@@ -15,6 +16,8 @@ const props = defineProps<{
   next?: Vecino | null
 }>()
 
+const { isEs, isEn, localizeFieldLabel, getProjectLocalization, getExperienceLocalization } = usePortfolioLocale()
+
 const uid = useId()
 const showRawJson = ref(false)
 const showRawFields = ref(false)
@@ -22,6 +25,7 @@ const copied = ref(false)
 
 const isAbout = computed(() => props.detail.name.toLowerCase() === 'about' || props.detail.type.includes('about'))
 const isProject = computed(() => props.detail.type.includes('projects') || props.detail.type.includes('Project'))
+const isExperience = computed(() => props.detail.type.includes('experience') || props.detail.type.includes('Experience'))
 const isContact = computed(() => props.detail.name.toLowerCase() === 'contact' || props.detail.type.includes('contact'))
 
 const canonicalFilePath = computed(() => {
@@ -40,13 +44,56 @@ const projectUrl = computed(() => typeof raw.value.url === 'string' && raw.value
 const projectRepo = computed(() => typeof raw.value.repo === 'string' && raw.value.repo ? raw.value.repo : null)
 const projectStatus = computed(() => typeof raw.value.status === 'string' ? raw.value.status : 'LIVE')
 const projectYear = computed(() => raw.value.year ? String(raw.value.year) : null)
-const projectRole = computed(() => typeof raw.value.role === 'string' ? raw.value.role : null)
+
+const projectSlug = computed(() => {
+  if (typeof raw.value.slug === 'string') return raw.value.slug
+  return props.detail.name.toLowerCase().replace(/\s+/g, '-')
+})
+const projectLoc = computed(() => getProjectLocalization(projectSlug.value))
+const expLoc = computed(() => getExperienceLocalization(projectSlug.value))
+
+const projectRole = computed(() => {
+  if (typeof raw.value.role === 'string') {
+    if (isEn.value) {
+      if (raw.value.role.includes('diseño y desarrollo')) return raw.value.role.replace('diseño y desarrollo', 'design & engineering')
+      if (raw.value.role.includes('front y back a medida')) return raw.value.role.replace('front y back a medida', 'custom full stack')
+      if (raw.value.role.includes('Landing inmersiva')) return raw.value.role.replace('Landing inmersiva · diseño y desarrollo', 'Immersive landing · design & dev')
+      if (raw.value.role.includes('Producto propio')) return raw.value.role.replace('Producto propio · diseño y desarrollo', 'Proprietary product · design & dev')
+    }
+    return raw.value.role
+  }
+  return null
+})
+
 const projectOrg = computed(() => {
   if (raw.value.org && typeof raw.value.org === 'object' && 'name' in raw.value.org) {
     return String((raw.value.org as { name?: unknown }).name)
   }
   return null
 })
+
+function getLocalizedRow(row: Detail['rows'][number]) {
+  if (isProject.value && projectLoc.value) {
+    if (row.name === 'summary' && projectLoc.value.summary) {
+      return { ...row, value: projectLoc.value.summary }
+    }
+    if (row.name === 'brief' && projectLoc.value.brief) {
+      return { ...row, value: projectLoc.value.brief }
+    }
+    if (row.name === 'outcome' && projectLoc.value.outcome) {
+      return { ...row, value: projectLoc.value.outcome }
+    }
+  }
+  if (isExperience.value && expLoc.value) {
+    if (row.name === 'summary' && expLoc.value.summary) {
+      return { ...row, value: expLoc.value.summary }
+    }
+    if (row.name === 'role' && expLoc.value.role) {
+      return { ...row, value: expLoc.value.role }
+    }
+  }
+  return row
+}
 
 const emailRow = computed(() => props.detail.rows.find(r => r.name === 'email'))
 const copiedEmail = ref(false)
@@ -69,7 +116,7 @@ const parentRoute = computed(() => routeFor(mundoPath.value.slice(0, -1)))
 const line = computed(() => [
   ...props.detail.type.split(' · '),
   ...(props.detail.updated ? [`updatedAt ${props.detail.updated}`] : []),
-  `${pad(props.detail.rows.length)} campos`,
+  `${pad(props.detail.rows.length)} ${isEs.value ? 'campos' : 'fields'}`,
 ])
 
 const jsonContent = computed(() => {
@@ -104,10 +151,12 @@ async function copyJson() {
             type="button"
             class="raw-btn"
             :class="{ active: showRawFields }"
-            title="Alternar entre la vista de CV y la tabla de campos técnicos"
+            :title="isEs ? 'Alternar entre la vista de CV y la tabla de campos técnicos' : 'Toggle between CV view and technical fields table'"
             @click="showRawFields = !showRawFields"
           >
-            <span>{{ showRawFields ? '📄 VISTA CV' : '☰ ESQUEMA CAMPOS' }}</span>
+            <DatosIcon v-if="showRawFields" name="file" :size="12" />
+            <DatosIcon v-else name="table" :size="12" />
+            <span>{{ showRawFields ? (isEs ? 'VISTA CV' : 'CV VIEW') : (isEs ? 'ESQUEMA CAMPOS' : 'SCHEMA FIELDS') }}</span>
           </button>
 
           <!-- Botón de Inspección de JSON Crudo -->
@@ -115,24 +164,30 @@ async function copyJson() {
             type="button"
             class="raw-btn"
             :class="{ active: showRawJson }"
-            title="Inspeccionar respuesta cruda de la API REST"
+            :title="isEs ? 'Inspeccionar respuesta cruda de la API REST' : 'Inspect raw REST API response'"
             @click="showRawJson = !showRawJson"
           >
             <span class="raw-icon">{ }</span>
-            <span>{{ showRawJson ? 'CERRAR JSON' : 'RAW JSON' }}</span>
+            <span>{{ showRawJson ? (isEs ? 'CERRAR JSON' : 'CLOSE JSON') : 'RAW JSON' }}</span>
           </button>
 
           <!-- Navegación entre vecinos -->
-          <nav v-if="prev || next" class="vecinos" aria-label="Registros vecinos">
-            <NuxtLink v-if="prev" :to="prev.to" class="vecino" rel="prev" title="Registro anterior">
-              <span aria-hidden="true">‹</span> {{ prev.label }}
+          <nav v-if="prev || next" class="vecinos" :aria-label="isEs ? 'Registros vecinos' : 'Adjacent records'">
+            <NuxtLink v-if="prev" :to="prev.to" class="vecino" rel="prev" :title="isEs ? 'Registro anterior' : 'Previous record'">
+              <DatosIcon name="chevron-left" :size="11" />
+              <span>{{ prev.label }}</span>
             </NuxtLink>
-            <span v-else class="vecino off" aria-hidden="true">‹</span>
+            <span v-else class="vecino off" aria-hidden="true">
+              <DatosIcon name="chevron-left" :size="11" />
+            </span>
 
-            <NuxtLink v-if="next" :to="next.to" class="vecino" rel="next" title="Registro siguiente">
-              {{ next.label }} <span aria-hidden="true">›</span>
+            <NuxtLink v-if="next" :to="next.to" class="vecino" rel="next" :title="isEs ? 'Registro siguiente' : 'Next record'">
+              <span>{{ next.label }}</span>
+              <DatosIcon name="chevron-right" :size="11" />
             </NuxtLink>
-            <span v-else class="vecino off" aria-hidden="true">›</span>
+            <span v-else class="vecino off" aria-hidden="true">
+              <DatosIcon name="chevron-right" :size="11" />
+            </span>
           </nav>
         </div>
       </DatosCabecera>
@@ -159,7 +214,8 @@ async function copyJson() {
               rel="noopener noreferrer"
               class="ph-btn primary"
             >
-              <span>↗ VISITAR SITIO EN VIVO</span>
+              <DatosIcon name="external" :size="12" />
+              <span>{{ isEs ? 'VISITAR SITIO EN VIVO' : 'VISIT LIVE SITE' }}</span>
             </a>
             <a
               v-if="projectRepo"
@@ -168,7 +224,8 @@ async function copyJson() {
               rel="noopener noreferrer"
               class="ph-btn secondary"
             >
-              <span>‹/› CÓDIGO FUENTE EN GITHUB</span>
+              <DatosIcon name="code" :size="12" />
+              <span>{{ isEs ? 'CÓDIGO FUENTE EN GITHUB' : 'SOURCE CODE ON GITHUB' }}</span>
             </a>
           </div>
         </div>
@@ -176,19 +233,22 @@ async function copyJson() {
         <!-- Barra de Acción Rápida de Contacto -->
         <div v-if="isContact" class="contact-hero-bar">
           <div class="ch-info">
-            <span class="ch-badge">● DISPONIBLE // CONTRATACIÓN DIRECTA</span>
-            <span class="ch-desc">Respondo habitualmente en menos de 24 horas laborables.</span>
+            <span class="ch-badge">● {{ isEs ? 'DISPONIBLE // CONTRATACIÓN DIRECTA' : 'AVAILABLE // DIRECT HIRE' }}</span>
+            <span class="ch-desc">{{ isEs ? 'Respondo habitualmente en menos de 24 horas laborables.' : 'I usually respond in less than 24 business hours.' }}</span>
           </div>
           <div class="ch-actions">
-            <button type="button" class="ch-btn copy" @click="copyEmail">
-              <span>{{ copiedEmail ? '✓ ¡EMAIL COPIADO!' : '📋 COPIAR EMAIL DIRECTO' }}</span>
+            <button type="button" class="ch-btn copy" :class="{ 'copy-active': copiedEmail }" @click="copyEmail">
+              <DatosIcon :name="copiedEmail ? 'check' : 'copy'" :size="12" />
+              <span>{{ copiedEmail ? (isEs ? '¡EMAIL COPIADO!' : 'EMAIL COPIED!') : (isEs ? 'COPIAR EMAIL DIRECTO' : 'COPY DIRECT EMAIL') }}</span>
             </button>
             <a
               v-if="emailRow?.value"
               :href="`mailto:${emailRow.value}`"
               class="ch-btn primary"
             >
-              <span>✉ ENVIAR CORREO ↗</span>
+              <DatosIcon name="mail" :size="12" />
+              <span>{{ isEs ? 'ENVIAR CORREO' : 'SEND EMAIL' }}</span>
+              <DatosIcon name="external" :size="11" />
             </a>
           </div>
         </div>
@@ -197,8 +257,9 @@ async function copyJson() {
         <div v-if="showRawJson" class="raw-drawer">
           <div class="raw-toolbar">
             <span class="raw-endpoint">GET /api/{{ detail.name.toLowerCase().replace(/\s+/g, '-') }}</span>
-            <button type="button" class="copy-btn" @click="copyJson">
-              {{ copied ? '¡COPIADO AL PORTAPAPELES! ✓' : 'COPIAR PAYLOAD JSON' }}
+            <button type="button" class="copy-btn" :class="{ 'copy-active': copied }" @click="copyJson">
+              <DatosIcon :name="copied ? 'check' : 'copy'" :size="12" />
+              <span>{{ copied ? (isEs ? '¡COPIADO AL PORTAPAPELES!' : 'COPIED TO CLIPBOARD!') : (isEs ? 'COPIAR PAYLOAD JSON' : 'COPY JSON PAYLOAD') }}</span>
             </button>
           </div>
           <pre class="raw-code"><code>{{ jsonContent }}</code></pre>
@@ -216,11 +277,11 @@ async function copyJson() {
             }"
           >
             <dt class="nombre" :title="row.label ? `campo: ${row.name}` : undefined">
-              <span class="nombre-label">{{ row.label ?? row.name }}</span>
+              <span class="nombre-label">{{ localizeFieldLabel(row.name, row.label) }}</span>
               <span v-if="row.label && row.label !== row.name" class="nombre-key"> · {{ row.name }}</span>
             </dt>
             <dd class="valor">
-              <DatosValor :cell="row" :name="row.name" />
+              <DatosValor :cell="getLocalizedRow(row)" :name="row.name" />
             </dd>
             <dd class="tipo">{{ row.type }}</dd>
           </div>
@@ -518,6 +579,13 @@ async function copyJson() {
   color: var(--d-sig);
   background: var(--d-hover);
 }
+.ch-btn.copy.copy-active,
+.copy-btn.copy-active {
+  animation: copy-pulse 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+  border-color: var(--d-sig) !important;
+  color: var(--d-sig) !important;
+  background: var(--d-hover) !important;
+}
 .ch-btn.primary {
   background: var(--d-green);
   color: #ffffff;
@@ -541,7 +609,10 @@ async function copyJson() {
   .hoja-acciones { flex-wrap: wrap; width: 100%; gap: 8px; }
   .vecinos { width: 100%; justify-content: space-between; }
   .vecino { max-width: none; flex: 1 1 auto; }
-  .project-hero-bar, .contact-hero-bar { flex-direction: column; align-items: flex-start; }
+  .project-hero-bar, .contact-hero-bar { flex-direction: column; align-items: flex-start; gap: 12px; padding: 12px; }
+  .ph-actions, .ch-actions { width: 100%; flex-direction: column; }
+  .ph-btn, .ch-btn { width: 100%; justify-content: center; min-height: 42px; }
+  .raw-code { max-height: 260px; font-size: 11px; }
   .campo, .campo.wide {
     grid-template-columns: minmax(0, 1fr) auto;
     grid-template-areas: "nombre tipo" "valor valor";

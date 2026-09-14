@@ -3,9 +3,19 @@
 // Soporta conmutación reactiva entre:
 // 1. Modo Harvard ATS (académico, blanco y negro, sin foto, máxima legibilidad para reclutadores y sistemas ATS)
 // 2. Modo Moderno (diseño tecnológico contemporáneo con fotografía de perfil, dos columnas y chips técnicos)
-// Incluye botón de exportación/impresión a PDF con estilos @media print.
+// Incluye botón de exportación/impresión a PDF con estilos @media print y localización completa (ES / EN).
 
+import DatosIcon from './DatosIcon.vue'
+
+const { isEs } = usePortfolioLocale()
+const { isHyperfocus } = useHyperfocus()
 const mode = ref<'harvard' | 'modern'>('modern')
+
+watch(isHyperfocus, (val) => {
+  if (val) {
+    mode.value = 'harvard'
+  }
+}, { immediate: true })
 
 function printCV() {
   if (import.meta.client) {
@@ -18,25 +28,25 @@ function printCV() {
   <section class="cv-wrapper" :class="`mode-${mode}`">
     <!-- Barra de Herramientas del CV -->
     <header class="cv-toolbar no-print">
-      <div class="cv-selector" role="group" aria-label="Estilo de Currículum Vitae">
+      <div class="cv-selector" role="group" :aria-label="isEs ? 'Estilo de Currículum Vitae' : 'Resume format style'">
         <button
           type="button"
           class="cv-btn"
           :class="{ active: mode === 'modern' }"
-          title="Ver CV moderno en dos columnas con fotografía técnica"
+          :title="isEs ? 'Ver CV moderno en dos columnas con fotografía técnica' : 'View modern two-column tech resume with photo'"
           @click="mode = 'modern'"
         >
-          <span class="cv-btn-icon">👤</span>
-          <span>MODERNO + FOTO</span>
+          <DatosIcon name="user" :size="13" class="cv-btn-icon" />
+          <span>{{ isEs ? 'MODERNO + FOTO' : 'MODERN + PHOTO' }}</span>
         </button>
         <button
           type="button"
           class="cv-btn"
           :class="{ active: mode === 'harvard' }"
-          title="Ver CV formato clásico Harvard ATS en blanco y negro"
+          :title="isEs ? 'Ver CV formato clásico Harvard ATS en blanco y negro' : 'View classic black & white Harvard ATS resume'"
           @click="mode = 'harvard'"
         >
-          <span class="cv-btn-icon">🏛️</span>
+          <DatosIcon name="academic" :size="13" class="cv-btn-icon" />
           <span>HARVARD ATS</span>
         </button>
       </div>
@@ -45,10 +55,11 @@ function printCV() {
         <button
           type="button"
           class="cv-print-btn"
-          title="Imprimir o guardar como PDF (Ctrl+P)"
+          :title="isEs ? 'Imprimir o guardar como PDF (Ctrl+P)' : 'Print or save as PDF (Ctrl+P)'"
           @click="printCV"
         >
-          <span>🖨️ IMPRIMIR / PDF</span>
+          <DatosIcon name="printer" :size="13" />
+          <span>{{ isEs ? 'IMPRIMIR / PDF' : 'PRINT / PDF' }}</span>
         </button>
       </div>
     </header>
@@ -60,7 +71,7 @@ function printCV() {
       <!-- Encabezado Harvard -->
       <header class="h-header">
         <h1 class="h-name">MATEO GABRIEL SONZOGNI</h1>
-        <p class="h-role">Desarrollador Frontend &amp; Full Stack · Creative Developer</p>
+        <p class="h-role">{{ isEs ? 'Desarrollador Frontend & Full Stack · Creative Developer' : 'Frontend & Full Stack Developer · Creative Developer' }}</p>
         <div class="h-contact">
           <span>Río Negro, Argentina</span>
           <span class="h-sep">|</span>
@@ -70,34 +81,41 @@ function printCV() {
           <span class="h-sep">|</span>
           <a href="https://www.linkedin.com/in/mateo-sonzogni" target="_blank" rel="noopener noreferrer">linkedin.com/in/mateo-sonzogni</a>
           <span class="h-sep">|</span>
-          <span>Disponibilidad Inmediata · Remoto / Híbrido</span>
+          <span>{{ isEs ? 'Disponibilidad Inmediata · Remoto / Híbrido' : 'Immediate Availability · Remote / Hybrid' }}</span>
         </div>
       </header>
 
       <!-- Resumen Profesional -->
       <section class="h-section">
-        <h2 class="h-title">PROFESSIONAL SUMMARY</h2>
+        <h2 class="h-title">{{ isEs ? 'RESUMEN PROFESIONAL' : 'PROFESSIONAL SUMMARY' }}</h2>
         <p class="h-summary">
-          Desarrollador de software especializado en frontend reactivo, arquitectura de APIs y experiencia de usuario. Tesis de grado preaprobada en Escuela Da Vinci con 382 commits liderando la arquitectura de un asistente de inteligencia artificial on-premise. Experiencia comprobable en producción con más de 10 proyectos entregados para clientes en España y Argentina (La Rúcula Gastrobar, ARG Piscinas). Dominio de TypeScript, Vue 3, Nuxt 4, React, Next.js, Node.js, FastAPI y PostgreSQL. Criterio de diseño orientado a producto de punta a punta.
+          <template v-if="isEs">
+            Desarrollador de software especializado en frontend reactivo, arquitectura de APIs y experiencia de usuario. Tesis de grado preaprobada en Escuela Da Vinci con 382 commits liderando la arquitectura de un asistente de inteligencia artificial on-premise. Experiencia comprobable en producción con más de 10 proyectos entregados para clientes en España y Argentina (La Rúcula Gastrobar, ARG Piscinas). Dominio de TypeScript, Vue 3, Nuxt 4, React, Next.js, Node.js, FastAPI y PostgreSQL. Criterio de diseño orientado a producto de punta a punta.
+          </template>
+          <template v-else>
+            Software engineer specialized in reactive frontend engineering, API architecture, and user experience. Pre-approved degree thesis at Da Vinci School with 382 commits leading system architecture for an on-premise AI assistant. Verifiable production track record with 10+ deliverables for clients across Spain and Argentina (La Rúcula Gastrobar, ARG Piscinas). Proficient in TypeScript, Vue 3, Nuxt 4, React, Next.js, Node.js, FastAPI, and PostgreSQL. End-to-end product design mindset.
+          </template>
         </p>
       </section>
 
       <!-- Educación -->
       <section class="h-section">
-        <h2 class="h-title">EDUCATION</h2>
+        <h2 class="h-title">{{ isEs ? 'EDUCACIÓN' : 'EDUCATION' }}</h2>
 
         <div class="h-entry">
           <div class="h-entry-header">
             <span class="h-org">ESCUELA DA VINCI</span>
-            <span class="h-date">2024 – 2026 (En curso)</span>
+            <span class="h-date">{{ isEs ? '2024 – 2026 (En curso)' : '2024 – 2026 (In progress)' }}</span>
           </div>
           <div class="h-entry-sub">
-            <span class="h-degree">Tecnicatura Superior en Diseño y Desarrollo Web</span>
+            <span class="h-degree">{{ isEs ? 'Tecnicatura Superior en Diseño y Desarrollo Web' : 'Associate Degree in Web Design & Development' }}</span>
             <span class="h-loc">Buenos Aires, Argentina</span>
           </div>
           <ul class="h-bullets">
-            <li>Tesis de graduación preaprobada: <em>Ynara</em> (Asistente de IA adaptativo on-premise con memoria vectorial).</li>
-            <li>Formación intensiva en arquitecturas web modernas, patrones de concurrencia, bases de datos relacionales y diseño UI/UX.</li>
+            <li v-if="isEs">Tesis de graduación preaprobada: <em>Ynara</em> (Asistente de IA adaptativo on-premise con memoria vectorial).</li>
+            <li v-else>Pre-approved degree thesis: <em>Ynara</em> (Adaptive on-premise AI assistant with vector memory).</li>
+            <li v-if="isEs">Formación intensiva en arquitecturas web modernas, patrones de concurrencia, bases de datos relacionales y diseño UI/UX.</li>
+            <li v-else>Intensive training in modern web architectures, concurrency patterns, relational databases, and UI/UX design.</li>
           </ul>
         </div>
 
@@ -107,32 +125,36 @@ function printCV() {
             <span class="h-date">2017 – 2023</span>
           </div>
           <div class="h-entry-sub">
-            <span class="h-degree">Técnico en Programación</span>
+            <span class="h-degree">{{ isEs ? 'Técnico en Programación' : 'Computer Programming Technician (7-Year Technical Program)' }}</span>
             <span class="h-loc">Cipolletti, Río Negro, Argentina</span>
           </div>
           <ul class="h-bullets">
-            <li>Formación técnica de 7 años en lógica algorítmica, estructuras de datos, redes, sistemas operativos y desarrollo de software.</li>
+            <li v-if="isEs">Formación técnica de 7 años en lógica algorítmica, estructuras de datos, redes, sistemas operativos y desarrollo de software.</li>
+            <li v-else>7-year comprehensive technical training in algorithmic logic, data structures, networking, operating systems, and software engineering.</li>
           </ul>
         </div>
       </section>
 
       <!-- Experiencia Profesional -->
       <section class="h-section">
-        <h2 class="h-title">PROFESSIONAL EXPERIENCE</h2>
+        <h2 class="h-title">{{ isEs ? 'EXPERIENCIA PROFESIONAL & PROYECTOS' : 'PROFESSIONAL EXPERIENCE & PROJECTS' }}</h2>
 
         <div class="h-entry">
           <div class="h-entry-header">
-            <span class="h-org">YNARA AI ASSISTANT (TESIS DA VINCI)</span>
+            <span class="h-org">YNARA AI ASSISTANT {{ isEs ? '(TESIS DA VINCI)' : '(DA VINCI THESIS)' }}</span>
             <span class="h-date">05/2026 – 07/2026</span>
           </div>
           <div class="h-entry-sub">
-            <span class="h-degree">Arquitecto de Software &amp; Lead Frontend</span>
+            <span class="h-degree">{{ isEs ? 'Arquitecto de Software & Lead Frontend' : 'Software Architect & Lead Frontend' }}</span>
             <span class="h-loc">Buenos Aires, Argentina</span>
           </div>
           <ul class="h-bullets">
-            <li>Lideré la arquitectura técnica y el frontend con 382 commits a lo largo de 6 semanas de desarrollo intensivo.</li>
-            <li>Diseñé pipelines de inferencia y memoria vectorial persistente con PostgreSQL, pgvector y FastAPI.</li>
-            <li>Construí la aplicación web con Next.js y TypeScript, logrando tiempos de respuesta inferiores a 100ms en local.</li>
+            <li v-if="isEs">Lideré la arquitectura técnica y el frontend con 382 commits a lo largo de 6 semanas de desarrollo intensivo.</li>
+            <li v-else>Led system architecture and reactive frontend with 382 commits over 6 weeks of intensive engineering.</li>
+            <li v-if="isEs">Diseñé pipelines de inferencia y memoria vectorial persistente con PostgreSQL, pgvector y FastAPI.</li>
+            <li v-else>Engineered inference pipelines and persistent vector memory with PostgreSQL, pgvector, and FastAPI.</li>
+            <li v-if="isEs">Construí la aplicación web con Next.js y TypeScript, logrando tiempos de respuesta inferiores a 100ms en local.</li>
+            <li v-else>Built the web client with Next.js and TypeScript, achieving sub-100ms response times in local environments.</li>
           </ul>
         </div>
 
@@ -142,13 +164,16 @@ function printCV() {
             <span class="h-date">03/2026 – 07/2026</span>
           </div>
           <div class="h-entry-sub">
-            <span class="h-degree">Desarrollador Full Stack &amp; Diseñador UI</span>
-            <span class="h-loc">Chiclana de la Frontera, España</span>
+            <span class="h-degree">{{ isEs ? 'Desarrollador Full Stack & Diseñador UI' : 'Full Stack Developer & UI Designer' }}</span>
+            <span class="h-loc">Chiclana de la Frontera, {{ isEs ? 'España' : 'Spain' }}</span>
           </div>
           <ul class="h-bullets">
-            <li>Diseñé y programé un sitio editorial menu-first optimizado para escaneo QR de clientes en mesa.</li>
-            <li>Integré arquitectura con fallback offline en cache para garantizar servicio continuo ante caídas de conectividad.</li>
-            <li>Puntuación Lighthouse de 99 en Performance y 100 en SEO y Accesibilidad con bundle final de apenas 42 KB.</li>
+            <li v-if="isEs">Diseñé y programé un sitio editorial menu-first optimizado para escaneo QR de clientes en mesa.</li>
+            <li v-else>Designed and engineered an editorial menu-first web app optimized for table-side QR scanning.</li>
+            <li v-if="isEs">Integré arquitectura con fallback offline en cache para garantizar servicio continuo ante caídas de conectividad.</li>
+            <li v-else>Integrated cached offline fallbacks ensuring seamless continuous service during connectivity drops.</li>
+            <li v-if="isEs">Puntuación Lighthouse de 99 en Performance y 100 en SEO y Accesibilidad con bundle final de apenas 42 KB.</li>
+            <li v-else>Achieved 99 Performance and 100 SEO &amp; Accessibility Lighthouse scores with a compact 42 KB production bundle.</li>
           </ul>
         </div>
 
@@ -158,41 +183,45 @@ function printCV() {
             <span class="h-date">01/2026 – 07/2026</span>
           </div>
           <div class="h-entry-sub">
-            <span class="h-degree">Desarrollador Full Stack</span>
-            <span class="h-loc">Andalucía, España</span>
+            <span class="h-degree">{{ isEs ? 'Desarrollador Full Stack' : 'Full Stack Developer' }}</span>
+            <span class="h-loc">Andalucía, {{ isEs ? 'España' : 'Spain' }}</span>
           </div>
           <ul class="h-bullets">
-            <li>Desarrollé una plataforma corporativa multi-idioma (Español, Inglés y Alemán) con panel de control a medida.</li>
-            <li>Modelé esquemas relacionales y tipado estricto de punta a punta con Prisma ORM y Node.js.</li>
+            <li v-if="isEs">Desarrollé una plataforma corporativa multi-idioma (Español, Inglés y Alemán) con panel de control a medida.</li>
+            <li v-else>Engineered a multilingual corporate web platform (Spanish, English, German) with custom administrative CMS.</li>
+            <li v-if="isEs">Modelé esquemas relacionales y tipado estricto de punta a punta con Prisma ORM y Node.js.</li>
+            <li v-else>Modeled relational schemas and end-to-end type safety using Prisma ORM and Node.js.</li>
           </ul>
         </div>
 
         <div class="h-entry">
           <div class="h-entry-header">
             <span class="h-org">PEGASUZ &amp; FREELANCE</span>
-            <span class="h-date">2023 – Presente</span>
+            <span class="h-date">{{ isEs ? '2023 – Presente' : '2023 – Present' }}</span>
           </div>
           <div class="h-entry-sub">
-            <span class="h-degree">Fundador &amp; Consultor de Software</span>
-            <span class="h-loc">Remoto</span>
+            <span class="h-degree">{{ isEs ? 'Fundador & Consultor de Software' : 'Founder & Software Consultant' }}</span>
+            <span class="h-loc">{{ isEs ? 'Remoto' : 'Remote' }}</span>
           </div>
           <ul class="h-bullets">
-            <li>Diseño e implementación de CMS multi-tenant propio con APIs REST desacopladas.</li>
-            <li>Entrega exitosa de aproximadamente 10 proyectos web llave en mano para clientes de diversos rubros.</li>
+            <li v-if="isEs">Diseño e implementación de CMS multi-tenant propio con APIs REST desacopladas.</li>
+            <li v-else>Designed and implemented proprietary multi-tenant headless CMS with decoupled REST APIs.</li>
+            <li v-if="isEs">Entrega exitosa de aproximadamente 10 proyectos web llave en mano para clientes de diversos rubros.</li>
+            <li v-else>Successful delivery of ~10 turnkey web solutions for clients across commercial and enterprise sectors.</li>
           </ul>
         </div>
       </section>
 
       <!-- Habilidades Técnicas -->
       <section class="h-section">
-        <h2 class="h-title">TECHNICAL SKILLS</h2>
+        <h2 class="h-title">{{ isEs ? 'HABILIDADES TÉCNICAS' : 'TECHNICAL SKILLS' }}</h2>
         <div class="h-skills">
-          <p><strong>Lenguajes:</strong> TypeScript, JavaScript (ESNext), Python, PHP, SQL, HTML5, CSS3.</p>
-          <p><strong>Frontend &amp; Frameworks:</strong> Vue 3, Nuxt 4, React, Next.js, Tailwind CSS, GSAP, Lenis, Three.js.</p>
-          <p><strong>Backend &amp; APIs:</strong> Node.js, Express, FastAPI, Laravel, RESTful APIs, Middleware Pipelines.</p>
-          <p><strong>Bases de Datos &amp; Cloud:</strong> PostgreSQL (pgvector), Prisma ORM, MongoDB, Firebase, Supabase, Docker.</p>
-          <p><strong>Herramientas &amp; Metodologías:</strong> Git/GitHub, Vite, Figma UI/UX, Vitest, Playwright, CI/CD, Accesibilidad WCAG.</p>
-          <p><strong>Idiomas:</strong> Español (Nativo), Inglés (B2 Profesional / Técnico).</p>
+          <p><strong>{{ isEs ? 'Lenguajes' : 'Languages' }}:</strong> TypeScript, JavaScript (ESNext), Python, PHP, SQL, HTML5, CSS3.</p>
+          <p><strong>{{ isEs ? 'Frontend & Frameworks' : 'Frontend & Frameworks' }}:</strong> Vue 3, Nuxt 4, React, Next.js, Tailwind CSS, GSAP, Lenis, Three.js.</p>
+          <p><strong>{{ isEs ? 'Backend & APIs' : 'Backend & APIs' }}:</strong> Node.js, Express, FastAPI, Laravel, RESTful APIs, Middleware Pipelines.</p>
+          <p><strong>{{ isEs ? 'Bases de Datos & Cloud' : 'Databases & Cloud' }}:</strong> PostgreSQL (pgvector), Prisma ORM, MongoDB, Firebase, Supabase, Docker.</p>
+          <p><strong>{{ isEs ? 'Herramientas & Metodologías' : 'Tools & Methodologies' }}:</strong> Git/GitHub, Vite, Figma UI/UX, Vitest, Playwright, CI/CD, {{ isEs ? 'Accesibilidad WCAG' : 'WCAG Accessibility' }}.</p>
+          <p><strong>{{ isEs ? 'Idiomas' : 'Languages' }}:</strong> {{ isEs ? 'Español (Nativo), Inglés (B2 Profesional / Técnico).' : 'Spanish (Native), English (B2 Professional / Technical).' }}</p>
         </div>
       </section>
     </article>
@@ -201,9 +230,8 @@ function printCV() {
     <!-- ESTILO 2: MODERNO CON FOTO (TECH & CREATIVE PROFILE)                  -->
     <!-- ═══════════════════════════════════════════════════════════════════════ -->
     <article v-else class="cv-modern">
-      <!-- Columna Lateral (Sidebar del CV) -->
       <aside class="m-sidebar">
-        <!-- Foto de Perfil de Mateo -->
+        <!-- Foto de Perfil de Mateo (Sin efectos 3D) -->
         <div class="m-photo-container">
           <img
             src="/media/profile/mateo-front.png"
@@ -213,47 +241,47 @@ function printCV() {
           >
           <div class="m-status-pill">
             <span class="m-status-dot" />
-            <span>DISPONIBLE // 2026</span>
+            <span>{{ isEs ? 'DISPONIBLE // 2026' : 'AVAILABLE // 2026' }}</span>
           </div>
         </div>
 
         <!-- Contacto Directo -->
         <div class="m-block">
-          <h3 class="m-heading">CONTACTO</h3>
+          <h3 class="m-heading">{{ isEs ? 'CONTACTO' : 'CONTACT' }}</h3>
           <ul class="m-contact-list">
             <li>
-              <span class="m-icon">✉</span>
+              <span class="m-icon"><DatosIcon name="mail" :size="13" /></span>
               <a href="mailto:mateogabus@gmail.com">mateogabus@gmail.com</a>
             </li>
             <li>
-              <span class="m-icon">‹/›</span>
+              <span class="m-icon"><DatosIcon name="code" :size="13" /></span>
               <a href="https://github.com/MateoGs013" target="_blank" rel="noopener noreferrer">github.com/MateoGs013</a>
             </li>
             <li>
-              <span class="m-icon">💼</span>
+              <span class="m-icon"><DatosIcon name="briefcase" :size="13" /></span>
               <a href="https://www.linkedin.com/in/mateo-sonzogni" target="_blank" rel="noopener noreferrer">linkedin.com/in/mateo-sonzogni</a>
             </li>
             <li>
-              <span class="m-icon">📍</span>
+              <span class="m-icon"><DatosIcon name="pin" :size="13" /></span>
               <span>Río Negro, Patagonia Argentina</span>
             </li>
             <li>
-              <span class="m-icon">🕒</span>
-              <span>UTC-3 (Disponible Remoto / Híbrido)</span>
+              <span class="m-icon"><DatosIcon name="clock" :size="13" /></span>
+              <span>UTC-3 ({{ isEs ? 'Disponible Remoto / Híbrido' : 'Available Remote / Hybrid' }})</span>
             </li>
           </ul>
         </div>
 
         <!-- Idiomas -->
         <div class="m-block">
-          <h3 class="m-heading">IDIOMAS</h3>
+          <h3 class="m-heading">{{ isEs ? 'IDIOMAS' : 'LANGUAGES' }}</h3>
           <div class="m-lang-row">
-            <span class="m-lang-name">Español</span>
-            <span class="m-lang-level">Nativo</span>
+            <span class="m-lang-name">{{ isEs ? 'Español' : 'Spanish' }}</span>
+            <span class="m-lang-level">{{ isEs ? 'Nativo' : 'Native' }}</span>
           </div>
           <div class="m-lang-row">
-            <span class="m-lang-name">Inglés</span>
-            <span class="m-lang-level">B2 Profesional Técnico</span>
+            <span class="m-lang-name">{{ isEs ? 'Inglés' : 'English' }}</span>
+            <span class="m-lang-level">{{ isEs ? 'B2 Profesional Técnico' : 'B2 Professional Technical' }}</span>
           </div>
         </div>
 
@@ -279,13 +307,13 @@ function printCV() {
 
         <!-- Competencias Nucleares -->
         <div class="m-block">
-          <h3 class="m-heading">COMPETENCIAS</h3>
+          <h3 class="m-heading">{{ isEs ? 'COMPETENCIAS' : 'KEY SKILLS' }}</h3>
           <ul class="m-list">
             <li>Full-Cycle Engineering</li>
-            <li>Arquitectura de Datos Relacional</li>
-            <li>Diseño UI/UX de Alta Fidelidad</li>
-            <li>Optimización de Rendimiento &amp; SEO</li>
-            <li>Desarrollo de APIs REST Tipadas</li>
+            <li>{{ isEs ? 'Arquitectura de Datos Relacional' : 'Relational Data Architecture' }}</li>
+            <li>{{ isEs ? 'Diseño UI/UX de Alta Fidelidad' : 'High-Fidelity UI/UX Design' }}</li>
+            <li>{{ isEs ? 'Optimización de Rendimiento & SEO' : 'Performance & SEO Optimization' }}</li>
+            <li>{{ isEs ? 'Desarrollo de APIs REST Tipadas' : 'Type-Safe REST API Engineering' }}</li>
           </ul>
         </div>
       </aside>
@@ -294,11 +322,16 @@ function printCV() {
       <main class="m-content">
         <!-- Encabezado Principal -->
         <header class="m-header">
-          <span class="m-tag">PROFILE DOSSIER // CURRICULUM VITAE</span>
+          <span class="m-tag">{{ isEs ? 'EXPEDIENTE // CURRÍCULUM VITAE' : 'PROFILE DOSSIER // CURRICULUM VITAE' }}</span>
           <h1 class="m-name">Mateo Gabriel Sonzogni</h1>
-          <p class="m-subtitle">Desarrollador Frontend &amp; Full Stack · Creative Developer</p>
+          <p class="m-subtitle">{{ isEs ? 'Desarrollador Frontend & Full Stack · Creative Developer' : 'Frontend & Full Stack Developer · Creative Developer' }}</p>
           <p class="m-bio">
-            Desarrollo con criterio de diseño y foco en el producto entero: qué problema resuelve, cómo debería verse, cómo debería sentirse, cómo se construye y cómo llega a producción. No me posiciono solo como programador ni solo como diseñador; trabajo en la costura donde la arquitectura técnica se encuentra con la experiencia de usuario.
+            <template v-if="isEs">
+              Desarrollo con criterio de diseño y foco en el producto entero: qué problema resuelve, cómo debería verse, cómo debería sentirse, cómo se construye y cómo llega a producción. No me posiciono solo como programador ni solo como diseñador; trabajo en la costura donde la arquitectura técnica se encuentra con la experiencia de usuario.
+            </template>
+            <template v-else>
+              I build software with sharp design judgment and end-to-end product vision: what challenge it solves, how it should look and feel, how it gets architected, and how it reaches production. I don't position myself merely as a coder or designer; I operate right where technical infrastructure meets human experience.
+            </template>
           </p>
         </header>
 
@@ -306,17 +339,22 @@ function printCV() {
         <section class="m-section">
           <div class="m-sec-title">
             <span class="m-sec-num">01</span>
-            <h2>EXPERIENCIA PROFESIONAL &amp; PROYECTOS</h2>
+            <h2>{{ isEs ? 'EXPERIENCIA PROFESIONAL & PROYECTOS' : 'PROFESSIONAL EXPERIENCE & PROJECTS' }}</h2>
           </div>
 
           <div class="m-card">
             <div class="m-card-top">
-              <span class="m-card-role">Tesis en equipo · Contribuidor Principal (382 commits)</span>
+              <span class="m-card-role">{{ isEs ? 'Tesis en equipo · Contribuidor Principal (382 commits)' : 'Team Degree Thesis · Lead Contributor (382 commits)' }}</span>
               <span class="m-card-date">2026</span>
             </div>
-            <h3 class="m-card-org">Ynara — Asistente de IA Adaptativo con Memoria Vectorial</h3>
+            <h3 class="m-card-org">{{ isEs ? 'Ynara — Asistente de IA Adaptativo con Memoria Vectorial' : 'Ynara — Adaptive AI Assistant with Vector Memory' }}</h3>
             <p class="m-card-desc">
-              Tesis preaprobada en Escuela Da Vinci. Asistente on-premise con inferencia local, embeddings y base de conocimiento relacional sobre PostgreSQL + pgvector. Lideré el desarrollo del frontend en Next.js y el pipeline de backend en FastAPI.
+              <template v-if="isEs">
+                Tesis preaprobada en Escuela Da Vinci. Asistente on-premise con inferencia local, embeddings y base de conocimiento relacional sobre PostgreSQL + pgvector. Lideré el desarrollo del frontend en Next.js y el pipeline de backend en FastAPI.
+              </template>
+              <template v-else>
+                Pre-approved degree thesis at Da Vinci School. On-premise assistant featuring local inference, embeddings, and relational knowledge graph over PostgreSQL + pgvector. Led frontend development in Next.js and backend pipeline in FastAPI.
+              </template>
             </p>
             <div class="m-card-tags">
               <span class="m-tag-sm">FastAPI</span>
@@ -329,12 +367,17 @@ function printCV() {
 
           <div class="m-card">
             <div class="m-card-top">
-              <span class="m-card-role">Freelance · Diseño y Desarrollo Web</span>
+              <span class="m-card-role">{{ isEs ? 'Freelance · Diseño y Desarrollo Web' : 'Freelance · Web Design & Engineering' }}</span>
               <span class="m-card-date">2026</span>
             </div>
-            <h3 class="m-card-org">La Rúcula Gastrobar (Cádiz, España)</h3>
+            <h3 class="m-card-org">La Rúcula Gastrobar (Cádiz, {{ isEs ? 'España' : 'Spain' }})</h3>
             <p class="m-card-desc">
-              Web menu-first para comensales en mesa por código QR. Integrada con el CMS Pegasuz propio y fallback local. Puntuación Lighthouse 99 en Performance y 100 en SEO. En producción.
+              <template v-if="isEs">
+                Web menu-first para comensales en mesa por código QR. Integrada con el CMS Pegasuz propio y fallback local. Puntuación Lighthouse 99 en Performance y 100 en SEO. En producción.
+              </template>
+              <template v-else>
+                Menu-first web app for restaurant dining via table-side QR codes. Integrated with proprietary Pegasuz CMS and local cache fallback. Lighthouse 99 Performance and 100 SEO scores. In production.
+              </template>
             </p>
             <div class="m-card-tags">
               <span class="m-tag-sm">Vue 3</span>
@@ -347,12 +390,17 @@ function printCV() {
 
           <div class="m-card">
             <div class="m-card-top">
-              <span class="m-card-role">Freelance · Frontend y Backend a Medida</span>
+              <span class="m-card-role">{{ isEs ? 'Freelance · Frontend y Backend a Medida' : 'Freelance · Custom Frontend & Backend' }}</span>
               <span class="m-card-date">2026</span>
             </div>
-            <h3 class="m-card-org">ARG Piscinas (Andalucía, España)</h3>
+            <h3 class="m-card-org">ARG Piscinas (Andalucía, {{ isEs ? 'España' : 'Spain' }})</h3>
             <p class="m-card-desc">
-              Sitio corporativo multi-idioma con panel de administración propio para edición autónoma de proyectos y blog. Tipado de extremo a extremo con Prisma y Node.js.
+              <template v-if="isEs">
+                Sitio corporativo multi-idioma con panel de administración propio para edición autónoma de proyectos y blog. Tipado de extremo a extremo con Prisma y Node.js.
+              </template>
+              <template v-else>
+                Multilingual corporate web platform with dedicated admin dashboard for autonomous project management and blog. End-to-end type safety with Prisma and Node.js.
+              </template>
             </p>
             <div class="m-card-tags">
               <span class="m-tag-sm">Vue 3</span>
@@ -364,12 +412,17 @@ function printCV() {
 
           <div class="m-card">
             <div class="m-card-top">
-              <span class="m-card-role">Fundador &amp; Desarrollador</span>
-              <span class="m-card-date">2024 – Act.</span>
+              <span class="m-card-role">{{ isEs ? 'Fundador & Desarrollador' : 'Founder & Developer' }}</span>
+              <span class="m-card-date">{{ isEs ? '2024 – Act.' : '2024 – Present' }}</span>
             </div>
-            <h3 class="m-card-org">Pegasuz — CMS Multi-tenant Propio</h3>
+            <h3 class="m-card-org">{{ isEs ? 'Pegasuz — CMS Multi-tenant Propio' : 'Pegasuz — Proprietary Multi-Tenant CMS' }}</h3>
             <p class="m-card-desc">
-              Infraestructura de contenidos API-first que alimenta los sitios de clientes en producción con contratos de datos blindados.
+              <template v-if="isEs">
+                Infraestructura de contenidos API-first que alimenta los sitios de clientes en producción con contratos de datos blindados.
+              </template>
+              <template v-else>
+                API-first headless content infrastructure powering production client platforms with bulletproof data contracts.
+              </template>
             </p>
           </div>
         </section>
@@ -378,25 +431,35 @@ function printCV() {
         <section class="m-section">
           <div class="m-sec-title">
             <span class="m-sec-num">02</span>
-            <h2>FORMACIÓN ACADÉMICA</h2>
+            <h2>{{ isEs ? 'FORMACIÓN ACADÉMICA' : 'EDUCATION & DEGREES' }}</h2>
           </div>
 
           <div class="m-edu-grid">
             <div class="m-card">
-              <span class="m-card-date">2024 – 2026 (Promoción 2026)</span>
-              <h3 class="m-card-org">Diseño y Desarrollo Web</h3>
+              <span class="m-card-date">{{ isEs ? '2024 – 2026 (Promoción 2026)' : '2024 – 2026 (Class of 2026)' }}</span>
+              <h3 class="m-card-org">{{ isEs ? 'Diseño y Desarrollo Web' : 'Web Design & Development' }}</h3>
               <p class="m-edu-sub">Escuela Da Vinci · Buenos Aires</p>
               <p class="m-card-desc">
-                UI/UX, tipografía, dirección de arte digital, patrones de frontend reactivo, arquitecturas cliente-servidor y bases de datos. Tesis preaprobada: Ynara.
+                <template v-if="isEs">
+                  UI/UX, tipografía, dirección de arte digital, patrones de frontend reactivo, arquitecturas cliente-servidor y bases de datos. Tesis preaprobada: Ynara.
+                </template>
+                <template v-else>
+                  UI/UX, typography, digital art direction, reactive frontend patterns, client-server architectures, and relational databases. Pre-approved thesis: Ynara.
+                </template>
               </p>
             </div>
 
             <div class="m-card">
-              <span class="m-card-date">2017 – 2023 (Graduado)</span>
-              <h3 class="m-card-org">Técnico en Programación</h3>
+              <span class="m-card-date">{{ isEs ? '2017 – 2023 (Graduado)' : '2017 – 2023 (Graduated)' }}</span>
+              <h3 class="m-card-org">{{ isEs ? 'Técnico en Programación' : 'Computer Programming Technician' }}</h3>
               <p class="m-edu-sub">CET N.º 30 · Río Negro</p>
               <p class="m-card-desc">
-                Formación técnica de 7 años en algoritmos, estructuras de datos, lógica de bajo nivel, redes y metodologías de ingeniería.
+                <template v-if="isEs">
+                  Formación técnica de 7 años en algoritmos, estructuras de datos, lógica de bajo nivel, redes y metodologías de ingeniería.
+                </template>
+                <template v-else>
+                  7-year technical education covering algorithms, data structures, low-level logic, networking, and software engineering methodologies.
+                </template>
               </p>
             </div>
           </div>
@@ -406,11 +469,16 @@ function printCV() {
         <section class="m-section">
           <div class="m-sec-title">
             <span class="m-sec-num">03</span>
-            <h2>OBJETIVO PROFESIONAL</h2>
+            <h2>{{ isEs ? 'OBJETIVO PROFESIONAL' : 'CAREER OBJECTIVE' }}</h2>
           </div>
           <div class="m-card highlight">
             <p class="m-card-desc">
-              Consolidarme como desarrollador en un equipo con proyectos reales de mayor escala. A mediano plazo, liderazgo técnico: coordinar, organizar, comunicar y conectar perfiles de distintas áreas (diseño, producto, frontend y backend).
+              <template v-if="isEs">
+                Consolidarme como desarrollador en un equipo con proyectos reales de mayor escala. A mediano plazo, liderazgo técnico: coordinar, organizar, comunicar y conectar perfiles de distintas áreas (diseño, producto, frontend y backend).
+              </template>
+              <template v-else>
+                Consolidate my impact as an engineer within a high-caliber team shipping large-scale production software. In the medium term, technical leadership: coordinating, organizing, and bridging disciplines across product, UI/UX, frontend, and backend architectures.
+              </template>
             </p>
           </div>
         </section>
@@ -633,6 +701,7 @@ function printCV() {
 }
 .m-photo {
   width: 100%;
+  max-width: 220px;
   aspect-ratio: 1 / 1;
   object-fit: cover;
   border: 1px solid var(--d-rule-strong);
@@ -687,7 +756,7 @@ function printCV() {
 }
 .m-contact-list li {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   gap: 8px;
   color: var(--d-dim);
   overflow-wrap: anywhere;
@@ -695,6 +764,9 @@ function printCV() {
 .m-icon {
   color: var(--d-sig);
   flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 .m-contact-list a {
   color: var(--d-ink);
@@ -901,6 +973,36 @@ function printCV() {
 @media (max-width: 860px) {
   .cv-modern {
     grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  .cv-harvard {
+    padding: 16px 14px;
+    box-shadow: none;
+  }
+  .h-entry-header,
+  .h-entry-sub {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+  }
+  .h-bullets {
+    padding-left: 14px;
+  }
+  .cv-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+  .cv-tabs {
+    width: 100%;
+  }
+  .cv-tab {
+    flex: 1;
+    justify-content: center;
+  }
+  .cv-print-btn {
+    width: 100%;
+    justify-content: center;
   }
 }
 

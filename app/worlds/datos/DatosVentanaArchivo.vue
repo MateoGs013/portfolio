@@ -7,6 +7,9 @@
 // - Cierre interactivo con Esc o clic en ✕ que retorna al explorador.
 
 import type { RouteLocationRaw } from 'vue-router'
+import DatosIcon from './DatosIcon.vue'
+
+const { isEs } = usePortfolioLocale()
 
 const props = defineProps<{
   title: string
@@ -56,39 +59,39 @@ onBeforeUnmount(() => {
     <!-- Barra Superior de la Ventana OS -->
     <header class="va-titlebar">
       <!-- Controles de Ventana (Semáforo / OS buttons) -->
-      <div class="va-controls" role="group" aria-label="Controles de ventana">
+      <div class="va-controls" role="group" :aria-label="isEs ? 'Controles de ventana' : 'Window controls'">
         <button
           type="button"
           class="va-btn close"
-          title="Cerrar archivo (Esc)"
-          aria-label="Cerrar"
+          :title="isEs ? 'Cerrar archivo (Esc)' : 'Close file (Esc)'"
+          :aria-label="isEs ? 'Cerrar' : 'Close'"
           @click="onClose"
         >
-          <span class="va-btn-glyph">✕</span>
+          <DatosIcon name="close" :size="9" />
         </button>
         <button
           type="button"
           class="va-btn minimize"
-          title="Minimizar archivo"
-          aria-label="Minimizar"
+          :title="isEs ? 'Minimizar archivo' : 'Minimize file'"
+          :aria-label="isEs ? 'Minimizar' : 'Minimize'"
           @click="onClose"
         >
-          <span class="va-btn-glyph">—</span>
+          <DatosIcon name="minimize" :size="9" />
         </button>
         <button
           type="button"
           class="va-btn maximize"
-          :title="isMaximized ? 'Restaurar tamaño normal' : 'Maximizar ventana'"
-          aria-label="Maximizar"
+          :title="isMaximized ? (isEs ? 'Restaurar tamaño normal' : 'Restore normal size') : (isEs ? 'Maximizar ventana' : 'Maximize window')"
+          :aria-label="isEs ? 'Maximizar' : 'Maximize'"
           @click="isMaximized = !isMaximized"
         >
-          <span class="va-btn-glyph">□</span>
+          <DatosIcon name="maximize" :size="9" />
         </button>
       </div>
 
       <!-- Título y Ruta del Archivo -->
       <div class="va-path-info">
-        <span class="va-file-icon" aria-hidden="true">📄</span>
+        <DatosIcon name="file" :size="13" class="va-file-icon" />
         <span class="va-filename">{{ title }}</span>
         <span v-if="path" class="va-canonical-path">{{ path }}</span>
       </div>
@@ -171,14 +174,11 @@ onBeforeUnmount(() => {
   padding: 0;
   transition: all 0.15s ease;
 }
-.va-btn-glyph {
-  font-size: 8.5px;
-  font-weight: 900;
-  line-height: 1;
+.va-btn :deep(.d-icon) {
   opacity: 0;
   transition: opacity 0.15s ease;
 }
-.va-controls:hover .va-btn-glyph {
+.va-controls:hover .va-btn :deep(.d-icon) {
   opacity: 1;
 }
 
@@ -209,7 +209,7 @@ onBeforeUnmount(() => {
   font-size: 11.5px;
 }
 .va-file-icon {
-  font-size: 13px;
+  color: var(--d-sig);
   flex-shrink: 0;
 }
 .va-filename {

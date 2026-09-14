@@ -7,28 +7,37 @@
   --font-mono: 'Martian Mono Variable', ui-monospace, monospace;
   --font-text: 'General Sans Variable', system-ui, -apple-system, sans-serif;
   --font-display: 'General Sans Variable', system-ui, -apple-system, sans-serif;
+  --font-poster: 'Bebas Neue', Impact, 'General Sans Variable', sans-serif;
 
-  /* Obsidian Dark (Tema Principal) */
-  --d-paper: #090a0f;
-  --d-surface: #10121a;
-  --d-surface-raised: #171b26;
-  --d-ink: #f0f3f8;
-  --d-rule: #1e2433;
-  --d-rule-strong: #2d364d;
-  --d-dim: #8491a5;
-  --d-faint: #475366;
-  --d-hover: #151924;
-  --d-sig: #3b82f6;
-  --d-sig-hover: #60a5fa;
-  --d-sig-glow: rgba(59, 130, 246, 0.25);
-  --d-accent: #00d2ff;
-  --d-amber: #f59e0b;
-  --d-green: #10b981;
-  --d-inv-dim: #94a3b8;
+  /* Acento Constructivista Internacional */
+  --d-orange: #ff3e00;
+  --d-orange-deep: #e03600;
+  --d-orange-glow: rgba(255, 62, 0, 0.28);
+  --d-orange-bg: rgba(255, 62, 0, 0.09);
 
-  /* Densidad y marco de ventana */
-  --d-frame: clamp(14px, 2.5vw, 36px);
-  --d-inset: clamp(14px, 1.6vw, 22px);
+  /* Obsidian Dark (Tema Nocturno Monocromático de Alta Precisión) */
+  --d-paper: #080808;
+  --d-surface: #111111;
+  --d-surface-raised: #181818;
+  --d-ink: #f4f4f4;
+  --d-rule: #222222;
+  --d-rule-strong: #333333;
+  --d-dim: #888888;
+  --d-faint: #686868;
+  --d-hover: #1c1c1c;
+  --d-sig: #ff3e00;
+  --d-sig-hover: #ff551c;
+  --d-sig-glow: rgba(255, 62, 0, 0.28);
+  --d-accent: #ff3e00;
+  --d-amber: #e5a00d;
+  --d-green: #22c55e;
+  --d-inv-dim: #888888;
+
+  --d-grid-cross: rgba(255, 255, 255, 0.035);
+
+  /* Densidad y marco de ventana (Full-bleed sin márgenes muertos) */
+  --d-frame: 0px;
+  --d-inset: clamp(12px, 1.4vw, 18px);
   --d-row: 44px;
   --d-tile: 184px;
   --d-tile-sm: 128px;
@@ -47,22 +56,24 @@
 }
 
 html[data-theme="light"] {
-  --d-paper: #f1f3f5;
-  --d-surface: #ffffff;
-  --d-surface-raised: #e9ecef;
-  --d-ink: #0b0d11;
-  --d-rule: #ced4da;
-  --d-rule-strong: #adb5bd;
-  --d-dim: #495057;
-  --d-faint: #6c757d;
-  --d-hover: #e9ecef;
-  --d-sig: #1d4ed8;
-  --d-sig-hover: #1e40af;
-  --d-sig-glow: rgba(29, 78, 216, 0.2);
-  --d-accent: #0284c7;
+  /* Technical Poster Paper (Inspirado en papel cálido de imprenta suizo) */
+  --d-paper: #f7f6f2;
+  --d-surface: #eeeeea;
+  --d-surface-raised: #e2ded5;
+  --d-ink: #0f0f0f;
+  --d-rule: #ded9cf;
+  --d-rule-strong: #bbb4a5;
+  --d-dim: #5c5c5c;
+  --d-faint: #828282;
+  --d-hover: #e6e2d8;
+  --d-sig: #ff3e00;
+  --d-sig-hover: #e03600;
+  --d-sig-glow: rgba(255, 62, 0, 0.25);
+  --d-accent: #ff3e00;
   --d-amber: #d97706;
   --d-green: #059669;
   --d-inv-dim: #868e96;
+  --d-grid-cross: rgba(0, 0, 0, 0.045);
   color-scheme: light;
 }
 
@@ -77,3 +88,209 @@ html {
   outline: 2px solid var(--d-sig);
   outline-offset: -2px;
 }
+
+/* Animaciones globales del sistema DATOS */
+@keyframes copy-pulse {
+  0% { box-shadow: 0 0 0 0 var(--d-sig-glow); }
+  70% { box-shadow: 0 0 0 7px rgba(255, 62, 0, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(255, 62, 0, 0); }
+}
+
+@keyframes ticker-slide {
+  0% { transform: translate3d(0, 0, 0); }
+  100% { transform: translate3d(-50%, 0, 0); }
+}
+
+/* ─── Modo Hiperfoco Radical (Monocromo Total, Cero Marcos, Centrado) ─────── */
+html[data-hyperfocus="true"] {
+  /* Cero Colores — Monocromatismo Absoluto */
+  --d-orange: var(--d-ink) !important;
+  --d-orange-deep: var(--d-ink) !important;
+  --d-orange-glow: transparent !important;
+  --d-orange-bg: transparent !important;
+  --d-sig: var(--d-ink) !important;
+  --d-sig-hover: var(--d-dim) !important;
+  --d-sig-glow: transparent !important;
+  --d-accent: var(--d-ink) !important;
+  --d-amber: var(--d-dim) !important;
+  --d-green: var(--d-dim) !important;
+
+  /* Cero Marcos y Líneas */
+  --d-rule: transparent !important;
+  --d-rule-strong: transparent !important;
+  --d-grid-cross: transparent !important;
+
+  /* Fondos Puros */
+  --d-paper: #000000 !important;
+  --d-surface: #000000 !important;
+  --d-surface-raised: #060606 !important;
+  --d-hover: #0d0d0d !important;
+}
+
+html[data-theme="light"][data-hyperfocus="true"] {
+  --d-paper: #ffffff !important;
+  --d-surface: #ffffff !important;
+  --d-surface-raised: #fbfbfb !important;
+  --d-hover: #f3f3f3 !important;
+  --d-ink: #000000 !important;
+  --d-dim: #555555 !important;
+  --d-faint: #777777 !important;
+}
+
+/* Ocultar Barra Lateral en Hiperfoco (Zen / Reader Mode) */
+html[data-hyperfocus="true"] .sidebar {
+  display: none !important;
+}
+html[data-hyperfocus="true"] .cuerpo-ventana {
+  grid-template-columns: 1fr !important;
+  display: flex !important;
+  justify-content: center !important;
+}
+html[data-hyperfocus="true"] .exp {
+  max-width: 840px !important;
+  width: 100% !important;
+  margin: 0 auto !important;
+  padding: 24px 16px !important;
+  border: none !important;
+}
+
+/* Supresión de Todos los Marcos, Bordes y Cajas */
+html[data-hyperfocus="true"] .ventana,
+html[data-hyperfocus="true"] .barra,
+html[data-hyperfocus="true"] .estado,
+html[data-hyperfocus="true"] .table-container,
+html[data-hyperfocus="true"] .data-table,
+html[data-hyperfocus="true"] .data-table th,
+html[data-hyperfocus="true"] .data-table td,
+html[data-hyperfocus="true"] .hd-table-wrap,
+html[data-hyperfocus="true"] .hd-table,
+html[data-hyperfocus="true"] .hd-table th,
+html[data-hyperfocus="true"] .hd-table td,
+html[data-hyperfocus="true"] .ventana-archivo-chassis,
+html[data-hyperfocus="true"] .va-titlebar,
+html[data-hyperfocus="true"] .campo,
+html[data-hyperfocus="true"] .project-hero-bar,
+html[data-hyperfocus="true"] .contact-hero-bar,
+html[data-hyperfocus="true"] .ph-btn,
+html[data-hyperfocus="true"] .ch-btn,
+html[data-hyperfocus="true"] .raw-btn,
+html[data-hyperfocus="true"] .vecino,
+html[data-hyperfocus="true"] .btn-open,
+html[data-hyperfocus="true"] .hd-btn-xs,
+html[data-hyperfocus="true"] .hd-header,
+html[data-hyperfocus="true"] .hd-list li,
+html[data-hyperfocus="true"] .hd-nav-card,
+html[data-hyperfocus="true"] .view-toggle,
+html[data-hyperfocus="true"] .v-btn,
+html[data-hyperfocus="true"] .badge-kind,
+html[data-hyperfocus="true"] .t-badge,
+html[data-hyperfocus="true"] .facet,
+html[data-hyperfocus="true"] .cabecera {
+  border: none !important;
+  border-top: none !important;
+  border-bottom: none !important;
+  border-left: none !important;
+  border-right: none !important;
+  box-shadow: none !important;
+  background: transparent !important;
+}
+
+/* Contenedores Centrados con Texto al Margen Izquierdo en Hiperfoco */
+html[data-hyperfocus="true"] .cabecera {
+  text-align: left !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: flex-start !important;
+  gap: 8px !important;
+  max-width: 760px !important;
+  margin: 0 auto !important;
+  width: 100% !important;
+}
+html[data-hyperfocus="true"] .cabecera .icono {
+  display: none !important;
+}
+html[data-hyperfocus="true"] .cabecera .linea,
+html[data-hyperfocus="true"] .cabecera .lado {
+  justify-content: flex-start !important;
+}
+html[data-hyperfocus="true"] .data-table {
+  margin: 0 auto !important;
+  max-width: 800px !important;
+  text-align: left !important;
+}
+html[data-hyperfocus="true"] .hoja {
+  max-width: 760px !important;
+  margin: 0 auto !important;
+  text-align: left !important;
+}
+html[data-hyperfocus="true"] .project-hero-bar,
+html[data-hyperfocus="true"] .contact-hero-bar {
+  justify-content: flex-start !important;
+  text-align: left !important;
+  border: none !important;
+  padding: 12px 0 !important;
+}
+html[data-hyperfocus="true"] .ph-meta,
+html[data-hyperfocus="true"] .ph-actions,
+html[data-hyperfocus="true"] .ch-actions {
+  justify-content: flex-start !important;
+}
+html[data-hyperfocus="true"] .ph-pill,
+html[data-hyperfocus="true"] .ph-btn,
+html[data-hyperfocus="true"] .ch-btn {
+  border: none !important;
+  background: transparent !important;
+  text-decoration: underline !important;
+  color: var(--d-ink) !important;
+}
+html[data-hyperfocus="true"] .campos {
+  border: none !important;
+  max-width: 760px !important;
+  margin: 0 auto !important;
+  text-align: left !important;
+}
+html[data-hyperfocus="true"] .campo {
+  border-bottom: 1px solid rgba(128, 128, 128, 0.12) !important;
+  padding: 12px 0 !important;
+  text-align: left !important;
+}
+
+
+
+/* Ocultar Elementos Decorativos y Ruido Visual */
+html[data-hyperfocus="true"] .ventana {
+  background-image: none !important;
+}
+html[data-hyperfocus="true"] .corner-bracket,
+html[data-hyperfocus="true"] .avatar-crosshair,
+html[data-hyperfocus="true"] .bento-cross,
+html[data-hyperfocus="true"] .pt-grid-coords,
+html[data-hyperfocus="true"] .pt-crosses,
+html[data-hyperfocus="true"] .pf-stamp-zone,
+html[data-hyperfocus="true"] .poster-ticker,
+html[data-hyperfocus="true"] .sw-ribbon,
+html[data-hyperfocus="true"] .pf-ribbon,
+html[data-hyperfocus="true"] .va-controls,
+html[data-hyperfocus="true"] .va-status-tag,
+html[data-hyperfocus="true"] .telemetria-badge,
+html[data-hyperfocus="true"] .clock-badge,
+html[data-hyperfocus="true"] .goto-btn kbd,
+html[data-hyperfocus="true"] .spotlight::after {
+  display: none !important;
+}
+
+/* 100% Escala de Grises en Multimedia */
+html[data-hyperfocus="true"] img,
+html[data-hyperfocus="true"] video {
+  filter: grayscale(100%) contrast(1.1) !important;
+}
+
+/* Puntos e Indicadores Monocromáticos */
+html[data-hyperfocus="true"] .tele-dot,
+html[data-hyperfocus="true"] .sf-dot,
+html[data-hyperfocus="true"] .hb-dot {
+  background: var(--d-ink) !important;
+  box-shadow: none !important;
+}
+
+
