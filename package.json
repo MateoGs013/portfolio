@@ -8,7 +8,7 @@
   },
   "scripts": {
     "dev": "nuxt dev",
-    "dev:api": "tsx watch --env-file=.env server/src/index.ts",
+    "dev:api": "tsx watch server/src/index.ts",
     "build": "nuxt build",
     "build:api": "prisma generate && prisma migrate deploy",
     "prisma": "prisma",
@@ -19,7 +19,7 @@
     "lint": "eslint .",
     "db:up": "docker compose up -d",
     "db:down": "docker compose down",
-    "db:seed": "tsx --env-file=.env server/src/seed.ts",
+    "db:seed": "tsx server/src/seed.ts",
     "postinstall": "prisma generate && nuxt prepare"
   },
   "prisma": {
