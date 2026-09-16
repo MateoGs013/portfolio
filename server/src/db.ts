@@ -3,10 +3,14 @@ import { PrismaPg } from '@prisma/adapter-pg'
 import { PrismaClient } from '../generated/prisma/client.js'
 import { env } from './env.js'
 
-const isLocal = env.databaseUrl.includes('localhost') || env.databaseUrl.includes('127.0.0.1')
+const needsSsl = env.databaseUrl.includes('sslmode=require')
+  || env.databaseUrl.includes('supabase.com')
+  || env.databaseUrl.includes('neon.tech')
+  || process.env['DATABASE_SSL'] === 'true'
+
 const pool = new pg.Pool({
   connectionString: env.databaseUrl,
-  ssl: isLocal ? false : { rejectUnauthorized: false },
+  ssl: needsSsl ? { rejectUnauthorized: false } : false,
 })
 
 const adapter = new PrismaPg(pool)
