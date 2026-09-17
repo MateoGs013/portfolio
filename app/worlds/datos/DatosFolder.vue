@@ -34,8 +34,20 @@ function scrambleHeadline() {
 onMounted(() => {
   if (import.meta.client) {
     setTimeout(scrambleHeadline, 150)
+    const dismissed = localStorage.getItem('portfolio-inline-tip-dismissed')
+    if (!dismissed) {
+      showInlineTip.value = true
+    }
   }
 })
+
+const showInlineTip = ref(false)
+function dismissInlineTip() {
+  showInlineTip.value = false
+  if (import.meta.client) {
+    localStorage.setItem('portfolio-inline-tip-dismissed', 'true')
+  }
+}
 
 // 2. Matriz maestra de proyectos para vista hiperfoco
 const masterProjects = computed(() => [
@@ -307,12 +319,10 @@ function onCardMousemove(e: MouseEvent) {
           <span class="pt-role">{{ tr.home.roleTop }}</span>
         </div>
         <div class="pt-item pt-center">
-          <span class="pt-grid-coords" aria-hidden="true">+ 01 02 03 04 05 06 +</span>
           <span class="pt-loc">PATAGONIA, AR · UTC-3</span>
         </div>
         <div class="pt-item pt-right">
           <span class="pt-avail">{{ tr.home.availTop }}</span>
-          <span class="pt-crosses" aria-hidden="true">+ + + +</span>
         </div>
       </header>
 
@@ -333,7 +343,6 @@ function onCardMousemove(e: MouseEvent) {
           <div class="poster-about">
             <div class="pa-tag-row">
               <span class="pa-tag">{{ tr.home.aboutTag }}</span>
-              <span class="pa-hash" aria-hidden="true">/////</span>
             </div>
             <p class="pa-text">
               {{ tr.home.aboutText }}
@@ -401,6 +410,26 @@ function onCardMousemove(e: MouseEvent) {
         </div>
       </div>
 
+      <!-- 1.28 GUÍA CONTEXTUAL INLINE (NO INVASIVA / DISMISSIBLE) -->
+      <div v-if="showInlineTip" class="contextual-guide-bar" role="note">
+        <div class="cgb-left">
+          <span class="cgb-pulse" />
+          <span class="cgb-label">{{ isEs ? 'GUÍA RÁPIDA:' : 'QUICK GUIDE:' }}</span>
+          <span class="cgb-text">
+            {{ isEs ? 'Navega con clics o teclado: [0-5] secciones · [↑↓ + ↵] abrir hojas · [/] buscar' : 'Navigate with clicks or keyboard: [0-5] sections · [↑↓ + ↵] open sheets · [/] search' }}
+          </span>
+        </div>
+        <button
+          type="button"
+          class="cgb-dismiss"
+          :title="isEs ? 'Ocultar sugerencia' : 'Dismiss tip'"
+          @click="dismissInlineTip"
+        >
+          <span>{{ isEs ? 'Entendido' : 'Dismiss' }}</span>
+          <DatosIcon name="close" :size="10" />
+        </button>
+      </div>
+
       <!-- 1.3 SELECTED WORK / PRODUCCIÓN REAL CON RIBBON VERTICAL NARANJA -->
       <section class="selected-work-wrapper" aria-label="Producción destacada">
         <div class="sw-shell">
@@ -414,6 +443,9 @@ function onCardMousemove(e: MouseEvent) {
               <div class="sw-h-left">
                 <span class="sw-h-num">01/</span>
                 <h2 class="sw-h-title">{{ tr.home.swTitle }}</h2>
+                <span class="sw-h-hint" aria-hidden="true">
+                  <kbd>↵</kbd> {{ isEs ? 'clic o enter para abrir' : 'click or enter to open' }}
+                </span>
               </div>
               <NuxtLink to="/projects" class="sw-h-link">
                 <span>{{ tr.home.swViewAll }}</span>
@@ -661,6 +693,11 @@ function onCardMousemove(e: MouseEvent) {
             </NuxtLink>
           </template>
 
+          <!-- Hint de navegación por teclado -->
+          <span class="folder-header-hint" aria-hidden="true">
+            <kbd>↵</kbd> {{ isEs ? 'enter / clic abre hoja' : 'enter / click opens sheet' }}
+          </span>
+
           <!-- Selector de Vista (Baldosas vs Tabla) -->
           <div v-if="folder.items.length" class="view-toggle" role="group" aria-label="Modo de visualización">
             <button
@@ -827,6 +864,115 @@ function onCardMousemove(e: MouseEvent) {
 </template>
 
 <style scoped>
+/* Hints de Navegación y Guía Contextual */
+.folder-header-hint {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  color: var(--d-dim);
+}
+.folder-header-hint kbd {
+  font-size: 9.5px;
+  padding: 1px 4px;
+  border: 1px solid var(--d-rule);
+  background: var(--d-paper);
+  border-radius: 2px;
+  color: var(--d-sig);
+}
+
+.contextual-guide-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 14px 0 18px;
+  padding: 8px 14px;
+  background: var(--d-surface);
+  border: 1px solid var(--d-rule);
+  border-left: 3px solid var(--d-sig);
+  border-radius: 2px;
+  font-family: var(--font-mono);
+  transition: all var(--d-dur) ease;
+}
+
+.cgb-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+  font-size: 11px;
+  line-height: 1.4;
+  color: var(--d-dim);
+}
+
+.cgb-pulse {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--d-sig);
+  box-shadow: 0 0 6px var(--d-sig);
+  flex-shrink: 0;
+}
+
+.cgb-label {
+  font-weight: 800;
+  color: var(--d-sig);
+  letter-spacing: 0.04em;
+  font-size: 10px;
+  white-space: nowrap;
+}
+
+.cgb-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.cgb-dismiss {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  flex-shrink: 0;
+  background: transparent;
+  border: 1px solid var(--d-rule);
+  border-radius: 2px;
+  padding: 3px 8px;
+  font-family: inherit;
+  font-size: 10px;
+  color: var(--d-dim);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s ease;
+}
+
+.cgb-dismiss:hover {
+  border-color: var(--d-rule-strong);
+  color: var(--d-ink);
+  background: var(--d-hover);
+}
+
+.sw-h-hint {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  color: var(--d-dim);
+  font-weight: 400;
+  margin-left: 8px;
+}
+
+.sw-h-hint kbd {
+  font-size: 9.5px;
+  padding: 1px 4px;
+  border: 1px solid var(--d-rule);
+  background: var(--d-paper);
+  border-radius: 2px;
+  color: var(--d-sig);
+}
+
 .folder-header-actions {
   display: flex;
   align-items: center;
@@ -1416,7 +1562,7 @@ function onCardMousemove(e: MouseEvent) {
   align-items: center;
   gap: 24px;
   will-change: transform;
-  animation: ticker-slide 28s linear infinite;
+  animation: ticker-slide 55s linear infinite;
 }
 .poster-ticker:hover .ticker-track {
   animation-play-state: paused;
@@ -1424,44 +1570,44 @@ function onCardMousemove(e: MouseEvent) {
 .ticker-item {
   font-family: var(--font-mono);
   font-size: 11px;
-  font-weight: 800;
+  font-weight: 600;
   color: var(--d-dim);
-  letter-spacing: 0.08em;
+  letter-spacing: 0.05em;
 }
 .ticker-dot {
   color: var(--d-orange);
-  font-size: 8px;
+  font-size: 7px;
 }
 
-/* Precision Corner Crop Marks (┌ ┐ └ ┘) */
+/* Precision Corner Crop Marks (┌ ┐ └ ┘) — Calma Visual */
 .corner-bracket {
   position: absolute;
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: 10px;
   line-height: 1;
   color: var(--d-faint);
-  opacity: 0.6;
+  opacity: 0.25;
   transition: color var(--d-dur) ease, opacity var(--d-dur) ease;
   z-index: 5;
   pointer-events: none;
   user-select: none;
 }
-.corner-bracket.tl { top: 4px; left: 4px; }
-.corner-bracket.tr { top: 4px; right: 4px; }
-.corner-bracket.bl { bottom: 4px; left: 4px; }
-.corner-bracket.br { bottom: 4px; right: 4px; }
+.corner-bracket.tl { top: 5px; left: 5px; }
+.corner-bracket.tr { top: 5px; right: 5px; }
+.corner-bracket.bl { bottom: 5px; left: 5px; }
+.corner-bracket.br { bottom: 5px; right: 5px; }
 .sw-card:hover .corner-bracket,
 .bento-col:hover .corner-bracket {
   color: var(--d-orange);
-  opacity: 1;
+  opacity: 0.85;
 }
 .bento-manifesto .corner-bracket {
-  color: #000000;
-  opacity: 0.45;
+  color: var(--d-faint);
+  opacity: 0.25;
 }
 .bento-manifesto:hover .corner-bracket {
-  color: #000000;
-  opacity: 0.95;
+  color: var(--d-orange);
+  opacity: 0.85;
 }
 
 /* Spotlight Cursor Effect */
@@ -1746,9 +1892,9 @@ function onCardMousemove(e: MouseEvent) {
   margin: 0;
   font-family: var(--font-mono);
   font-size: 12.5px;
-  font-weight: 900;
+  font-weight: 800;
   letter-spacing: 0.08em;
-  color: #000000;
+  color: var(--d-orange);
 }
 .bento-cross {
   font-family: var(--font-mono);
@@ -1790,14 +1936,20 @@ function onCardMousemove(e: MouseEvent) {
   color: var(--d-faint);
 }
 
-/* Columna 2: Manifiesto Constructivista en Naranja Puro */
+/* Columna 2: Manifiesto Constructivista Técnico (Base Grafito con Acentos Naranja Luminoso) */
 .bento-manifesto {
-  background: var(--d-orange);
-  color: #000000;
-  border-color: var(--d-orange);
+  background: var(--d-surface);
+  color: var(--d-ink);
+  border: 1px solid var(--d-rule);
+  position: relative;
+  transition: all var(--d-dur) ease;
+}
+.bento-manifesto:hover {
+  border-color: rgba(255, 62, 0, 0.45);
+  box-shadow: 0 4px 24px rgba(255, 62, 0, 0.08);
 }
 .bento-manifesto .bento-col-head {
-  border-bottom: 2px solid #000000;
+  border-bottom: 1px solid var(--d-rule);
 }
 .manifesto-content {
   display: flex;
@@ -1809,18 +1961,18 @@ function onCardMousemove(e: MouseEvent) {
 .manifesto-quote {
   margin: 0;
   font-family: var(--font-poster);
-  font-size: clamp(21px, 2vw, 26px);
-  line-height: 1.08;
+  font-size: clamp(22px, 2.2vw, 28px);
+  line-height: 1.1;
   letter-spacing: 0.02em;
-  color: #000000;
+  color: var(--d-ink);
 }
 .manifesto-lead {
   margin: 0;
   font-family: var(--font-text);
-  font-size: 12.5px;
-  font-weight: 800;
+  font-size: 13px;
+  font-weight: 500;
   line-height: 1.5;
-  color: #000000;
+  color: var(--d-dim);
 }
 .manifesto-footer {
   margin-top: 10px;
@@ -1828,10 +1980,10 @@ function onCardMousemove(e: MouseEvent) {
   justify-content: space-between;
   font-family: var(--font-mono);
   font-size: 10.5px;
-  font-weight: 900;
-  color: #000000;
-  letter-spacing: 0.08em;
-  border-top: 1px solid #000000;
+  font-weight: 700;
+  color: var(--d-orange);
+  letter-spacing: 0.06em;
+  border-top: 1px solid var(--d-rule);
   padding-top: 8px;
 }
 .manifesto-notch {

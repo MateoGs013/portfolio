@@ -695,12 +695,71 @@ input[type="text"].search-input {
   color: var(--d-sig);
 }
 
+/* ── Pestañas de Navegación del Editor (Calm Tech / One-Mission Focus) ────── */
+.editor-tabs {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  border-bottom: 1px solid var(--d-line);
+  padding-bottom: 0;
+  overflow-x: auto;
+}
+
+.tab-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  border-radius: 0;
+  color: var(--d-text-muted);
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  margin-bottom: -1px;
+}
+
+.tab-btn:hover {
+  color: var(--d-text);
+  background: var(--d-panel-elevated);
+  border-bottom-color: var(--d-text-dim);
+}
+
+.tab-btn.active {
+  color: var(--d-sig);
+  border-bottom-color: var(--d-sig);
+  background: transparent;
+  font-weight: 700;
+}
+
+.tab-badge {
+  font-family: var(--mono);
+  font-size: 10px;
+  padding: 1px 6px;
+  border-radius: 10px;
+  background: var(--d-bg);
+  border: 1px solid var(--d-line);
+  color: var(--d-text-dim);
+}
+
+.tab-btn.active .tab-badge {
+  background: var(--d-sig-bg);
+  border-color: rgba(255, 62, 0, 0.4);
+  color: var(--d-sig);
+}
+
 /* Tarjetas de Sección en el Formulario */
 .form-card {
   background: var(--d-panel);
   border: 1px solid var(--d-line);
   border-radius: var(--radius-md);
-  padding: 16px 20px;
+  padding: 18px 22px;
   display: flex;
   flex-direction: column;
   gap: 16px;

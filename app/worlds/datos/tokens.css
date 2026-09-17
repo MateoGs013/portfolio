@@ -15,25 +15,25 @@
   --d-orange-glow: rgba(255, 62, 0, 0.28);
   --d-orange-bg: rgba(255, 62, 0, 0.09);
 
-  /* Obsidian Dark (Tema Nocturno Monocromático de Alta Precisión) */
-  --d-paper: #080808;
-  --d-surface: #111111;
-  --d-surface-raised: #181818;
-  --d-ink: #f4f4f4;
-  --d-rule: #222222;
-  --d-rule-strong: #333333;
-  --d-dim: #888888;
-  --d-faint: #686868;
-  --d-hover: #1c1c1c;
+  /* Obsidian Dark (Tema Nocturno Monocromático de Alta Precisión y Calma Visual) */
+  --d-paper: #09090b;
+  --d-surface: #121215;
+  --d-surface-raised: #19191e;
+  --d-ink: #f4f4f5;
+  --d-rule: rgba(255, 255, 255, 0.08);
+  --d-rule-strong: rgba(255, 255, 255, 0.15);
+  --d-dim: #929298;
+  --d-faint: #606066;
+  --d-hover: #1c1c22;
   --d-sig: #ff3e00;
   --d-sig-hover: #ff551c;
   --d-sig-glow: rgba(255, 62, 0, 0.28);
   --d-accent: #ff3e00;
   --d-amber: #e5a00d;
   --d-green: #22c55e;
-  --d-inv-dim: #888888;
+  --d-inv-dim: #929298;
 
-  --d-grid-cross: rgba(255, 255, 255, 0.035);
+  --d-grid-cross: rgba(255, 255, 255, 0.022);
 
   /* Densidad y marco de ventana (Full-bleed sin márgenes muertos) */
   --d-frame: 0px;
@@ -57,23 +57,23 @@
 
 html[data-theme="light"] {
   /* Technical Poster Paper (Inspirado en papel cálido de imprenta suizo) */
-  --d-paper: #f7f6f2;
-  --d-surface: #eeeeea;
-  --d-surface-raised: #e2ded5;
-  --d-ink: #0f0f0f;
-  --d-rule: #ded9cf;
-  --d-rule-strong: #bbb4a5;
-  --d-dim: #5c5c5c;
-  --d-faint: #828282;
-  --d-hover: #e6e2d8;
+  --d-paper: #f8f7f4;
+  --d-surface: #efeee9;
+  --d-surface-raised: #e5e3dc;
+  --d-ink: #111113;
+  --d-rule: rgba(0, 0, 0, 0.08);
+  --d-rule-strong: rgba(0, 0, 0, 0.16);
+  --d-dim: #55555c;
+  --d-faint: #787882;
+  --d-hover: #e6e4dc;
   --d-sig: #ff3e00;
   --d-sig-hover: #e03600;
   --d-sig-glow: rgba(255, 62, 0, 0.25);
   --d-accent: #ff3e00;
   --d-amber: #d97706;
   --d-green: #059669;
-  --d-inv-dim: #868e96;
-  --d-grid-cross: rgba(0, 0, 0, 0.045);
+  --d-inv-dim: #80808a;
+  --d-grid-cross: rgba(0, 0, 0, 0.026);
   color-scheme: light;
 }
 

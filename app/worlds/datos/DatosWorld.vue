@@ -5,6 +5,7 @@
 import DatosDetail from './DatosDetail.vue'
 import DatosFolder from './DatosFolder.vue'
 import DatosGoto from './DatosGoto.vue'
+import DatosGuia from './DatosGuia.vue'
 import DatosIcon, { type IconName } from './DatosIcon.vue'
 import { pad, resolveExplorer, type Explorer } from './explorer'
 import { routeFor } from '~/lib/path'
@@ -16,6 +17,7 @@ const { path, query } = useMundo()
 
 // Selector reactivo de Tema (Obsidian Dark / Technical Paper)
 const theme = ref<'dark' | 'light'>('dark')
+const guideOpen = ref(false)
 
 function toggleTheme() {
   theme.value = theme.value === 'dark' ? 'light' : 'dark'
@@ -57,6 +59,14 @@ onMounted(() => {
     }
     else {
       document.documentElement.setAttribute('data-theme', 'dark')
+    }
+
+    // Orientación inicial no invasiva: abrir tras 1.2s únicamente si es la primera visita
+    const guideSeen = localStorage.getItem('portfolio-guide-seen')
+    if (!guideSeen) {
+      setTimeout(() => {
+        guideOpen.value = true
+      }, 1200)
     }
   }
 })
@@ -208,8 +218,17 @@ function onKey(e: KeyboardEvent) {
       }
       break
 
+    case '?':
+      e.preventDefault()
+      guideOpen.value = !guideOpen.value
+      break
+
     case 'Escape':
-      if (gotoOpen.value) {
+      if (guideOpen.value) {
+        e.preventDefault()
+        guideOpen.value = false
+      }
+      else if (gotoOpen.value) {
         e.preventDefault()
         gotoOpen.value = false
       }
@@ -314,15 +333,29 @@ const currentRoot = computed(() => path.value[0] ?? '')
             <DatosIcon name="zap" :size="13" />
           </button>
 
-          <div class="clock-badge" title="Hora local Patagonia, Argentina (UTC-3)">
-            <DatosIcon name="clock" :size="12" class="clock-icon" />
-            <span class="clock-time">{{ utcTime || '12:00:00 UTC-3' }}</span>
-          </div>
+          <!-- Botón de Guía y Orientación Rápida -->
+          <button
+            type="button"
+            class="tool-btn help-btn"
+            :class="{ active: guideOpen }"
+            :title="guideOpen ? (isEs ? 'Cerrar guía (?)' : 'Close guide (?)') : (isEs ? 'Guía rápida y atajos (?)' : 'Quick guide & shortcuts (?)')"
+            :aria-label="isEs ? 'Guía rápida' : 'Quick guide'"
+            @click="guideOpen = !guideOpen"
+          >
+            <DatosIcon name="help" :size="13" />
+          </button>
 
-          <div class="telemetria-badge" title="Conexión activa a base de datos PostgreSQL 17">
-            <span class="tele-dot" />
-            <span class="tele-text">PG-17</span>
-            <span class="tele-ms">{{ ex?.request.ms ?? 0 }}ms</span>
+          <!-- Estado del Sistema Consolidado (PG-17 + Latencia + Hora Patagonia UTC-3) -->
+          <div
+            class="sys-status-badge"
+            :title="`PostgreSQL 17 ACID (${ex?.request.ms ?? 0}ms) · Hora local: ${utcTime || 'UTC-3'} (Patagonia, Argentina)`"
+          >
+            <span class="sys-dot" />
+            <span class="sys-engine">PG-17</span>
+            <span class="sys-sep">·</span>
+            <span class="sys-ms">{{ ex?.request.ms ?? 0 }}ms</span>
+            <span class="sys-sep">·</span>
+            <span class="sys-time">{{ utcTime?.split(' ')[0] || '12:00:00' }}</span>
           </div>
 
           <button
@@ -386,6 +419,14 @@ const currentRoot = computed(() => path.value[0] ?? '')
             </div>
             <div class="sf-info">
               <span>{{ isEs ? 'MOTOR: POSTGRESQL 17' : 'ENGINE: POSTGRESQL 17' }}</span>
+              <button
+                type="button"
+                class="sf-guide-btn"
+                :title="isEs ? 'Abrir guía rápida de navegación (?)' : 'Open quick navigation guide (?)'"
+                @click="guideOpen = !guideOpen"
+              >
+                {{ isEs ? 'GUÍA RÁPIDA (?)' : 'QUICK GUIDE (?)' }}
+              </button>
               <a href="/admin" target="_blank" class="sf-admin-link" :title="isEs ? 'Abrir Consola de Administración Técnica' : 'Open Technical Admin Console'">{{ isEs ? 'CONSOLA ADMIN ↗' : 'ADMIN CONSOLE ↗' }}</a>
             </div>
           </div>
@@ -425,6 +466,14 @@ const currentRoot = computed(() => path.value[0] ?? '')
           <kbd>0-5</kbd> {{ isEs ? 'secciones' : 'sections' }}
           <kbd>/</kbd> {{ isEs ? 'ir a' : 'goto' }}
           <kbd>H</kbd> {{ isEs ? 'hiperfoco' : 'hyperfocus' }}
+          <button
+            type="button"
+            class="keys-guide-btn"
+            :title="isEs ? 'Abrir guía rápida (?)' : 'Open quick guide (?)'"
+            @click="guideOpen = !guideOpen"
+          >
+            <kbd>?</kbd> {{ isEs ? 'guía' : 'guide' }}
+          </button>
         </span>
       </footer>
 
@@ -446,6 +495,9 @@ const currentRoot = computed(() => path.value[0] ?? '')
 
     <!-- Modal de Búsqueda Rápida / Goto -->
     <DatosGoto v-if="gotoOpen" @close="gotoOpen = false" />
+
+    <!-- Guía de Orientación Rápida Flotante (No Invasiva) -->
+    <DatosGuia :open="guideOpen" @close="guideOpen = false" />
   </div>
 </template>
 
@@ -555,7 +607,7 @@ const currentRoot = computed(() => path.value[0] ?? '')
   flex-shrink: 0;
 }
 
-.clock-badge {
+.sys-status-badge {
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -565,40 +617,37 @@ const currentRoot = computed(() => path.value[0] ?? '')
   border: 1px solid var(--d-rule);
   font-family: var(--font-mono);
   font-size: 11px;
+  color: var(--d-dim);
+  user-select: none;
+  transition: all var(--d-dur) ease;
 }
-.clock-icon {
-  color: var(--d-sig);
-}
-.clock-time {
-  font-variant-numeric: tabular-nums;
-  font-weight: 700;
+.sys-status-badge:hover {
+  border-color: var(--d-rule-strong);
   color: var(--d-ink);
 }
-
-.telemetria-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  height: 30px;
-  padding: 0 10px;
-  background: var(--d-paper);
-  border: 1px solid var(--d-rule);
-  font-family: var(--font-mono);
-  font-size: 11px;
-}
-.tele-dot {
+.sys-dot {
   width: 6px;
   height: 6px;
   border-radius: 50%;
   background: var(--d-green);
   box-shadow: 0 0 6px var(--d-green);
+  flex-shrink: 0;
 }
-.tele-text {
+.sys-engine {
   font-weight: 800;
   color: var(--d-ink);
 }
-.tele-ms {
+.sys-sep {
+  color: var(--d-faint);
+  font-size: 10px;
+}
+.sys-ms {
   color: var(--d-dim);
+}
+.sys-time {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  color: var(--d-ink);
 }
 
 .tool-btn {
@@ -620,6 +669,13 @@ const currentRoot = computed(() => path.value[0] ?? '')
 }
 
 .focus-btn.active {
+  border-color: var(--d-sig);
+  color: var(--d-sig);
+  background: var(--d-hover);
+  box-shadow: 0 0 8px var(--d-sig-glow);
+}
+
+.help-btn.active {
   border-color: var(--d-sig);
   color: var(--d-sig);
   background: var(--d-hover);
@@ -875,6 +931,25 @@ kbd {
   color: var(--d-sig);
 }
 
+.sf-guide-btn {
+  background: transparent;
+  border: 1px solid var(--d-rule);
+  border-radius: 2px;
+  color: var(--d-sig);
+  font-family: inherit;
+  font-size: 9.5px;
+  font-weight: 700;
+  padding: 3px 6px;
+  cursor: pointer;
+  text-align: left;
+  transition: all var(--d-dur) ease;
+  margin-top: 2px;
+}
+.sf-guide-btn:hover {
+  background: var(--d-hover);
+  border-color: var(--d-sig);
+}
+
 /* Barra de estado */
 .estado {
   flex: none;
@@ -890,6 +965,28 @@ kbd {
 .medida { flex: none; font-family: var(--font-mono); font-size: 11px; white-space: nowrap; }
 .req { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 11px; }
 .keys { flex: none; margin-left: auto; display: flex; gap: 10px; align-items: center; flex-shrink: 0; }
+
+.keys-guide-btn {
+  background: transparent;
+  border: none;
+  font-family: inherit;
+  font-size: 11px;
+  color: var(--d-dim);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 4px;
+  cursor: pointer;
+  border-radius: 2px;
+  transition: color var(--d-dur) ease;
+}
+.keys-guide-btn:hover {
+  color: var(--d-sig);
+}
+.keys-guide-btn:hover kbd {
+  border-color: var(--d-sig);
+  color: var(--d-sig);
+}
 
 /* Mobile Bottom App Navigation (Oculto en Desktop) */
 .mobile-nav {

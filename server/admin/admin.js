@@ -153,6 +153,7 @@ createApp({
     searchQuery: '',
     isSaving: false,
     counts: { projects: 0, experience: 0, stack: 0, orgs: 0, docs: 0 },
+    activeTab: 'general',
   }),
   computed: {
     model() { return this.models[this.section] },
@@ -173,6 +174,28 @@ createApp({
     },
     availableTechs() {
       return this.meta.options.techs || []
+    },
+    tabs() {
+      if (!this.model || !this.form) return []
+      const list = []
+      const genCount = this.model.fields.filter(f => f.type !== 'text' && f.type !== 'json').length
+      list.push({ id: 'general', label: '01 · General', count: genCount })
+
+      const textFields = this.model.fields.filter(f => f.type === 'text')
+      if (textFields.length) {
+        list.push({ id: 'narrative', label: '02 · Narrativa', count: textFields.length })
+      }
+      if (this.model.media && !this.isNew) {
+        list.push({ id: 'media', label: '03 · Multimedia', count: (this.form.media || []).length })
+      }
+      if (this.model.sub && Object.keys(this.model.sub).length) {
+        const subCount = Object.keys(this.model.sub).reduce((acc, k) => acc + (this.form[k] ? this.form[k].length : 0), 0)
+        list.push({ id: 'sub', label: '04 · Sub-tablas', count: subCount })
+      }
+      if (this.model.fields.some(f => f.type === 'json')) {
+        list.push({ id: 'telemetry', label: '05 · Telemetría JSON', count: null })
+      }
+      return list
     },
   },
   created() {
@@ -275,12 +298,14 @@ createApp({
       this.current = r
       this.isNew = false
       this.error = ''
+      this.activeTab = 'general'
       this.form = this.model.toForm(JSON.parse(JSON.stringify(r)))
     },
     startNew() {
       this.current = null
       this.isNew = true
       this.error = ''
+      this.activeTab = 'general'
       this.form = this.model.blank()
     },
     cancelEdit() {

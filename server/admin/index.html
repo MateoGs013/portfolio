@@ -165,8 +165,23 @@
             </div>
           </div>
 
+          <!-- Barra de Pestañas del Formulario (Linear / Calm Tech UI) -->
+          <nav v-if="tabs.length > 1" class="editor-tabs" aria-label="Secciones del editor">
+            <button
+              v-for="t in tabs"
+              :key="t.id"
+              type="button"
+              class="tab-btn"
+              :class="{ active: activeTab === t.id }"
+              @click="activeTab = t.id"
+            >
+              <span>{{ t.label }}</span>
+              <span v-if="t.count !== null" class="tab-badge">{{ t.count }}</span>
+            </button>
+          </nav>
+
           <!-- Tarjeta 1: Metadatos e Identificación -->
-          <div class="form-card">
+          <div v-show="activeTab === 'general'" class="form-card">
             <div class="form-card-title">
               <span>01 · IDENTIFICACIÓN Y CONFIGURACIÓN</span>
               <small>{{ model.fields.filter(f => f.type !== 'text' && f.type !== 'json').length }} campos</small>
@@ -271,7 +286,7 @@
           </div>
 
           <!-- Tarjeta 2: Campos Narrativos y Textos Largos -->
-          <div v-if="model.fields.some(f => f.type === 'text')" class="form-card">
+          <div v-if="model.fields.some(f => f.type === 'text')" v-show="activeTab === 'narrative'" class="form-card">
             <div class="form-card-title">
               <span>02 · CONTENIDO Y NARRATIVA TÉCNICA</span>
               <small>Texto y descripciones</small>
@@ -297,7 +312,7 @@
           </div>
 
           <!-- Tarjeta 3: Métricas y Telemetría JSON (si aplica) -->
-          <div v-if="model.fields.some(f => f.type === 'json')" class="form-card">
+          <div v-if="model.fields.some(f => f.type === 'json')" v-show="activeTab === 'telemetry'" class="form-card">
             <div class="form-card-title">
               <span>03 · TELEMETRÍA & MÉTRICAS (JSON)</span>
               <button type="button" class="ghost" @click="formatMetricsJson">
@@ -323,7 +338,7 @@
           </div>
 
           <!-- Tarjeta 4: Sub-registros (Links, Steps, Fields de Doc) -->
-          <div v-for="(cols, sub) in model.sub || {}" :key="sub" class="form-card">
+          <div v-for="(cols, sub) in model.sub || {}" :key="sub" v-show="activeTab === 'sub'" class="form-card">
             <div class="form-card-title">
               <span>SUB-TABLA: {{ sub }}</span>
               <div>
@@ -375,7 +390,7 @@
           </div>
 
           <!-- Tarjeta 5: Gestor Multimedia (Media) -->
-          <div v-if="model.media && !isNew" class="form-card">
+          <div v-if="model.media && !isNew" v-show="activeTab === 'media'" class="form-card">
             <div class="form-card-title">
               <span>PIEZAS MULTIMEDIA & CAPTURAS</span>
               <small>{{ form.media.length }} archivos</small>
