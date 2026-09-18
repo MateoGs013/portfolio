@@ -17,6 +17,16 @@ watch(isHyperfocus, (val) => {
   }
 }, { immediate: true })
 
+const cvDownloadFileName = computed(() => {
+  const lang = isEs.value ? 'ES' : 'EN'
+  const style = mode.value === 'harvard' ? 'Harvard_ATS' : 'Moderno'
+  return `Mateo_Sonzogni_CV_${style}_${lang}.pdf`
+})
+
+const cvDownloadHref = computed(() => {
+  return `/cv/${cvDownloadFileName.value}`
+})
+
 function printCV() {
   if (import.meta.client) {
     window.print()
@@ -52,14 +62,26 @@ function printCV() {
       </div>
 
       <div class="cv-actions">
+        <!-- Botón de Descarga Directa PDF -->
+        <a
+          :href="cvDownloadHref"
+          :download="cvDownloadFileName"
+          class="cv-action-btn cv-download-btn"
+          :title="isEs ? `Descargar archivo PDF oficial (${cvDownloadFileName})` : `Download official PDF file (${cvDownloadFileName})`"
+        >
+          <DatosIcon name="download" :size="13" />
+          <span>{{ isEs ? 'DESCARGAR PDF' : 'DOWNLOAD PDF' }}</span>
+        </a>
+
+        <!-- Botón de Impresión / Guardado Navegador -->
         <button
           type="button"
-          class="cv-print-btn"
-          :title="isEs ? 'Imprimir o guardar como PDF (Ctrl+P)' : 'Print or save as PDF (Ctrl+P)'"
+          class="cv-action-btn cv-print-btn"
+          :title="isEs ? 'Imprimir en papel o guardar como PDF desde el navegador (Ctrl+P)' : 'Print to paper or save as PDF via browser (Ctrl+P)'"
           @click="printCV"
         >
           <DatosIcon name="printer" :size="13" />
-          <span>{{ isEs ? 'IMPRIMIR / PDF' : 'PRINT / PDF' }}</span>
+          <span>{{ isEs ? 'IMPRIMIR' : 'PRINT' }}</span>
         </button>
       </div>
     </header>
@@ -530,27 +552,41 @@ function printCV() {
   background: var(--d-sig);
   color: #ffffff;
 }
-.cv-btn-icon {
-  font-size: 12px;
+.cv-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
-.cv-print-btn {
+.cv-action-btn {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 6px 14px;
+  padding: 6px 12px;
   background: var(--d-paper);
   border: 1px solid var(--d-rule-strong);
   color: var(--d-ink);
   font-family: var(--font-mono);
-  font-size: 11.5px;
+  font-size: 11px;
   font-weight: 700;
+  text-decoration: none;
   cursor: pointer;
   transition: all var(--d-dur) ease;
+  white-space: nowrap;
 }
-.cv-print-btn:hover {
+.cv-action-btn:hover {
   border-color: var(--d-sig);
   color: var(--d-sig);
   background: var(--d-hover);
+}
+.cv-download-btn {
+  background: var(--d-surface-raised);
+  border-color: var(--d-sig);
+  color: var(--d-sig);
+}
+.cv-download-btn:hover {
+  background: var(--d-sig);
+  color: #000000;
+  border-color: var(--d-sig);
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════ */
@@ -988,52 +1024,165 @@ function printCV() {
   .h-bullets {
     padding-left: 14px;
   }
-  .cv-toolbar {
-    flex-direction: column;
-    align-items: stretch;
+  .cv-actions {
+    width: 100%;
+    display: flex;
     gap: 8px;
   }
-  .cv-tabs {
-    width: 100%;
-  }
-  .cv-tab {
+  .cv-action-btn {
     flex: 1;
-    justify-content: center;
-  }
-  .cv-print-btn {
-    width: 100%;
     justify-content: center;
   }
 }
 
 @media print {
-  .no-print, .barra, .sidebar, .estado, .historia, .theme-btn, .telemetria-badge {
+  .cv-toolbar {
     display: none !important;
-  }
-  body, html, .datos, .ventana, .cuerpo-ventana, .exp {
-    background: #ffffff !important;
-    color: #000000 !important;
-    padding: 0 !important;
-    margin: 0 !important;
-    height: auto !important;
-    overflow: visible !important;
-    border: none !important;
-    box-shadow: none !important;
   }
   .cv-wrapper {
     max-width: 100% !important;
     margin: 0 !important;
     padding: 0 !important;
+    background: transparent !important;
   }
+
+  /* Harvard ATS print */
   .cv-harvard {
     border: none !important;
     box-shadow: none !important;
     padding: 0 !important;
+    margin: 0 !important;
     max-width: 100% !important;
-  }
-  .cv-modern {
     background: #ffffff !important;
     color: #000000 !important;
+  }
+  .cv-harvard * {
+    color: #000000 !important;
+  }
+  .cv-harvard .h-header {
+    border-bottom: 1.5pt solid #000000 !important;
+    padding-bottom: 6pt !important;
+    margin-bottom: 10pt !important;
+  }
+  .cv-harvard .h-title {
+    border-bottom: 1pt solid #000000 !important;
+    color: #000000 !important;
+  }
+  .cv-harvard .h-entry,
+  .cv-harvard .h-section {
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+  }
+
+  /* Modern print */
+  .cv-modern {
+    display: grid !important;
+    grid-template-columns: 210px 1fr !important;
+    gap: 16px !important;
+    background: #ffffff !important;
+    color: #111827 !important;
+    border: none !important;
+    box-shadow: none !important;
+  }
+  .cv-modern .m-sidebar {
+    gap: 12px !important;
+  }
+  .cv-modern .m-photo-container {
+    background: #f8f9fa !important;
+    border: 1px solid #e5e7eb !important;
+    padding: 10px !important;
+  }
+  .cv-modern .m-photo {
+    width: 110px !important;
+    height: 110px !important;
+    max-width: 110px !important;
+    border: 1px solid #d1d5db !important;
+  }
+  .cv-modern .m-status-pill {
+    background: #ffffff !important;
+    border: 1px solid #16a34a !important;
+    color: #16a34a !important;
+  }
+  .cv-modern .m-block {
+    background: #f8f9fa !important;
+    border: 1px solid #e5e7eb !important;
+    padding: 10px !important;
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+  }
+  .cv-modern .m-heading {
+    color: #e03600 !important;
+    border-bottom: 1px solid #e5e7eb !important;
+  }
+  .cv-modern .m-contact-list li {
+    color: #374151 !important;
+  }
+  .cv-modern .m-contact-list a {
+    color: #111827 !important;
+  }
+  .cv-modern .m-icon {
+    color: #e03600 !important;
+  }
+  .cv-modern .m-chip {
+    background: #ffffff !important;
+    border: 1px solid #d1d5db !important;
+    color: #111827 !important;
+  }
+  .cv-modern .m-list {
+    color: #374151 !important;
+  }
+  .cv-modern .m-header {
+    background: #f8f9fa !important;
+    border: 1px solid #e5e7eb !important;
+    border-left: 4px solid #e03600 !important;
+    padding: 12px 16px !important;
+  }
+  .cv-modern .m-name {
+    color: #111827 !important;
+  }
+  .cv-modern .m-subtitle {
+    color: #e03600 !important;
+  }
+  .cv-modern .m-bio {
+    color: #374151 !important;
+  }
+  .cv-modern .m-sec-title {
+    border-bottom: 1px solid #e5e7eb !important;
+  }
+  .cv-modern .m-sec-title h2 {
+    color: #111827 !important;
+  }
+  .cv-modern .m-sec-num {
+    color: #e03600 !important;
+  }
+  .cv-modern .m-card {
+    background: #ffffff !important;
+    border: 1px solid #e5e7eb !important;
+    border-left: 3px solid #cbd5e1 !important;
+    padding: 10px 12px !important;
+    margin-bottom: 8px !important;
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+  }
+  .cv-modern .m-card.highlight {
+    border-left-color: #16a34a !important;
+  }
+  .cv-modern .m-card-role {
+    color: #e03600 !important;
+  }
+  .cv-modern .m-card-date {
+    color: #6b7280 !important;
+  }
+  .cv-modern .m-card-org {
+    color: #111827 !important;
+  }
+  .cv-modern .m-card-desc {
+    color: #374151 !important;
+  }
+  .cv-modern .m-tag-sm {
+    background: #f3f4f6 !important;
+    border: 1px solid #e5e7eb !important;
+    color: #374151 !important;
   }
 }
 </style>

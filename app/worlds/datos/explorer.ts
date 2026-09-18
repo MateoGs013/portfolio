@@ -340,7 +340,7 @@ export async function resolveExplorer(api: Api, path: Path, query: LocationQuery
       kind: 'document',
       name: answer.data.title,
       type: `document · ${root}`,
-      updated: answer.data.updatedAt.slice(0, 10),
+      updated: answer.data.updatedAt ? String(answer.data.updatedAt).slice(0, 10) : null,
       rawRecord: answer.data,
       rows: answer.data.fields.map(f => docRow(f)),
     }

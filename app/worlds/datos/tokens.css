@@ -293,4 +293,343 @@ html[data-hyperfocus="true"] .hb-dot {
   box-shadow: none !important;
 }
 
+/* ═══════════════════════════════════════════════════════════════════════════ */
+/* REGLAS GLOBALES DE IMPRESIÓN Y EXPORTACIÓN A PDF (A4 ATS & WHITE PAPER)     */
+/* ═══════════════════════════════════════════════════════════════════════════ */
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 8mm 10mm;
+  }
+
+  /* 1. Sobrescribir variables de tema para forzar modo papel blanco puro y alto contraste */
+  :root,
+  html,
+  body {
+    --d-paper: #ffffff;
+    --d-surface: #f9f9fb;
+    --d-surface-raised: #f3f4f6;
+    --d-ink: #111827;
+    --d-rule: #e5e7eb;
+    --d-rule-strong: #cbd5e1;
+    --d-dim: #374151;
+    --d-faint: #6b7280;
+    --d-hover: #f3f4f6;
+    --d-sig: #e03600;
+    color-scheme: light;
+  }
+
+  /* 2. Ocultar el 100% de la interfaz de la aplicación, chrome, ventanas y navegación */
+  .no-print,
+  .barra,
+  .sidebar,
+  .estado,
+  .mobile-nav,
+  .datos-guia,
+  .cabecera-documento,
+  .va-titlebar,
+  .va-controls,
+  .va-header,
+  .cabecera,
+  .hoja-acciones,
+  .vecinos,
+  .raw-btn,
+  .raw-json-btn,
+  .raw-json-panel,
+  .btn-toggle-cv,
+  .cv-toolbar,
+  .hiperfoco-banner,
+  .poster-topbar,
+  .corner-bracket,
+  .sw-ribbon,
+  .pf-ribbon,
+  .pf-stamp-zone,
+  .poster-ticker,
+  .contextual-guide-bar,
+  .sw-h-hint,
+  .folder-header-hint,
+  .keys-guide-btn {
+    display: none !important;
+  }
+
+  /* 3. Resetear contenedores raíz para permitir flujo multipágina en blanco y eliminar bordes */
+  html,
+  body,
+  #__nuxt,
+  .datos,
+  .ventana,
+  .cuerpo-ventana,
+  .exp,
+  .pane,
+  .hoja,
+  .ventana-archivo-chassis,
+  .va-body {
+    background: #ffffff !important;
+    color: #111827 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    height: auto !important;
+    min-height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+    border: none !important;
+    box-shadow: none !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    animation: none !important;
+  }
+
+  /* 4. Ajustes de renderizado para color y fidelidad en imprenta */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* 5. Contenedor de CV */
+  .cv-wrapper {
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: transparent !important;
+  }
+
+  /* 6. Modo Harvard ATS en Impresión (100% B&W Académico, Sin Fondos, Serif Puro) */
+  .cv-harvard {
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    max-width: 100% !important;
+    background: #ffffff !important;
+    color: #000000 !important;
+    font-family: 'Times New Roman', Times, Garamond, Georgia, serif !important;
+  }
+  .cv-harvard * {
+    color: #000000 !important;
+  }
+  .cv-harvard .h-header {
+    border-bottom: 1.5pt solid #000000 !important;
+    padding-bottom: 6pt !important;
+    margin-bottom: 10pt !important;
+    text-align: center !important;
+  }
+  .cv-harvard .h-name {
+    font-size: 22pt !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.04em !important;
+    margin-bottom: 3pt !important;
+    color: #000000 !important;
+  }
+  .cv-harvard .h-role {
+    font-size: 11pt !important;
+    font-style: italic !important;
+    margin-bottom: 4pt !important;
+    color: #222222 !important;
+  }
+  .cv-harvard .h-contact {
+    font-size: 9.5pt !important;
+    gap: 6pt !important;
+  }
+  .cv-harvard .h-contact a {
+    color: #000000 !important;
+    text-decoration: underline !important;
+  }
+  .cv-harvard .h-title {
+    font-size: 11pt !important;
+    border-bottom: 1pt solid #000000 !important;
+    color: #000000 !important;
+    padding-bottom: 2pt !important;
+    margin-top: 10pt !important;
+    margin-bottom: 6pt !important;
+  }
+  .cv-harvard .h-summary {
+    font-size: 9.5pt !important;
+    line-height: 1.45 !important;
+  }
+  .cv-harvard .h-entry-header {
+    font-size: 10pt !important;
+  }
+  .cv-harvard .h-entry-sub {
+    font-size: 9.5pt !important;
+  }
+  .cv-harvard .h-bullets {
+    font-size: 9.5pt !important;
+    margin-top: 2pt !important;
+  }
+  .cv-harvard .h-entry,
+  .cv-harvard .h-section {
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+  }
+
+  /* 7. Modo Moderno en Impresión (Contemporáneo Tech, 2 Columnas Limpias, Alto Contraste) */
+  .cv-modern {
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    background: #ffffff !important;
+    color: #111827 !important;
+    display: grid !important;
+    grid-template-columns: 210px 1fr !important;
+    gap: 16px !important;
+  }
+  .cv-modern .m-sidebar {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 12px !important;
+  }
+  .cv-modern .m-photo-container {
+    background: #f8f9fa !important;
+    border: 1px solid #e5e7eb !important;
+    padding: 10px !important;
+    text-align: center !important;
+  }
+  .cv-modern .m-photo {
+    width: 110px !important;
+    height: 110px !important;
+    max-width: 110px !important;
+    margin: 0 auto 8px !important;
+    border: 1px solid #d1d5db !important;
+  }
+  .cv-modern .m-status-pill {
+    background: #ffffff !important;
+    border: 1px solid #16a34a !important;
+    color: #16a34a !important;
+    font-size: 9px !important;
+    padding: 2px 8px !important;
+  }
+  .cv-modern .m-block {
+    background: #f8f9fa !important;
+    border: 1px solid #e5e7eb !important;
+    padding: 10px !important;
+    color: #111827 !important;
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+  }
+  .cv-modern .m-heading {
+    color: #e03600 !important;
+    border-bottom: 1px solid #e5e7eb !important;
+    font-size: 10px !important;
+    margin-bottom: 8px !important;
+    padding-bottom: 4px !important;
+  }
+  .cv-modern .m-contact-list {
+    font-size: 10px !important;
+    gap: 6px !important;
+  }
+  .cv-modern .m-contact-list li {
+    color: #374151 !important;
+  }
+  .cv-modern .m-contact-list a {
+    color: #111827 !important;
+  }
+  .cv-modern .m-icon {
+    color: #e03600 !important;
+  }
+  .cv-modern .m-lang-row {
+    font-size: 10.5px !important;
+  }
+  .cv-modern .m-lang-name {
+    color: #111827 !important;
+  }
+  .cv-modern .m-lang-level {
+    color: #6b7280 !important;
+  }
+  .cv-modern .m-chips {
+    gap: 4px !important;
+  }
+  .cv-modern .m-chip {
+    background: #ffffff !important;
+    border: 1px solid #d1d5db !important;
+    color: #111827 !important;
+    font-size: 9px !important;
+    padding: 2px 5px !important;
+  }
+  .cv-modern .m-list {
+    font-size: 10px !important;
+    color: #374151 !important;
+  }
+  .cv-modern .m-header {
+    background: #f8f9fa !important;
+    border: 1px solid #e5e7eb !important;
+    border-left: 4px solid #e03600 !important;
+    padding: 12px 16px !important;
+    margin-bottom: 14px !important;
+  }
+  .cv-modern .m-tag {
+    color: #e03600 !important;
+    font-size: 9px !important;
+  }
+  .cv-modern .m-name {
+    color: #111827 !important;
+    font-size: 20px !important;
+    margin: 2px 0 4px !important;
+  }
+  .cv-modern .m-subtitle {
+    color: #e03600 !important;
+    font-size: 11px !important;
+    margin: 0 0 6px !important;
+  }
+  .cv-modern .m-bio {
+    color: #374151 !important;
+    font-size: 11px !important;
+    line-height: 1.45 !important;
+    margin: 0 !important;
+  }
+  .cv-modern .m-sec-title {
+    border-bottom: 1px solid #e5e7eb !important;
+    padding-bottom: 4px !important;
+    margin-bottom: 8px !important;
+  }
+  .cv-modern .m-sec-title h2 {
+    color: #111827 !important;
+    font-size: 11px !important;
+  }
+  .cv-modern .m-sec-num {
+    color: #e03600 !important;
+    font-size: 10px !important;
+  }
+  .cv-modern .m-card {
+    background: #ffffff !important;
+    border: 1px solid #e5e7eb !important;
+    border-left: 3px solid #cbd5e1 !important;
+    padding: 10px 12px !important;
+    margin-bottom: 8px !important;
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+  }
+  .cv-modern .m-card.highlight {
+    border-left-color: #16a34a !important;
+  }
+  .cv-modern .m-card-role {
+    color: #e03600 !important;
+    font-size: 10px !important;
+  }
+  .cv-modern .m-card-date {
+    color: #6b7280 !important;
+    font-size: 10px !important;
+  }
+  .cv-modern .m-card-org {
+    color: #111827 !important;
+    font-size: 12.5px !important;
+    margin: 0 0 4px !important;
+  }
+  .cv-modern .m-card-desc {
+    color: #374151 !important;
+    font-size: 11px !important;
+    line-height: 1.4 !important;
+  }
+  .cv-modern .m-tag-sm {
+    background: #f3f4f6 !important;
+    border: 1px solid #e5e7eb !important;
+    color: #374151 !important;
+    font-size: 9px !important;
+  }
+  .cv-modern .m-section {
+    gap: 8px !important;
+    margin-bottom: 14px !important;
+  }
+}
+
 
