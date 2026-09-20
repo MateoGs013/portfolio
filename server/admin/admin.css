@@ -1026,3 +1026,267 @@ kbd {
     padding: 16px;
   }
 }
+
+/* ==========================================================================
+   MODAL DE CONFIRMACIÓN OS TÉCNICO
+   ========================================================================== */
+
+/* Botones con fondo sólido para confirmaciones destructivas o de advertencia */
+button.danger-solid {
+  background: var(--d-danger);
+  color: #ffffff;
+  border-color: var(--d-danger);
+  box-shadow: 0 1px 8px rgba(239, 68, 68, 0.35);
+  font-weight: 600;
+}
+button.danger-solid:hover {
+  background: #dc2626;
+  border-color: #dc2626;
+  box-shadow: 0 2px 12px rgba(239, 68, 68, 0.5);
+}
+
+button.warning-solid {
+  background: var(--d-amber);
+  color: #080808;
+  border-color: var(--d-amber);
+  box-shadow: 0 1px 8px rgba(229, 160, 13, 0.35);
+  font-weight: 600;
+}
+button.warning-solid:hover {
+  background: #d97706;
+  border-color: #d97706;
+  box-shadow: 0 2px 12px rgba(229, 160, 13, 0.5);
+}
+
+/* Backdrop */
+.adm-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: rgba(8, 8, 8, 0.82);
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+/* Diálogo Ventana OS */
+.adm-modal-dialog {
+  width: 100%;
+  max-width: 480px;
+  background: var(--d-panel);
+  border: 1px solid var(--d-line);
+  border-radius: var(--radius-md);
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.85), 0 0 0 1px rgba(255, 255, 255, 0.06);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  position: relative;
+}
+
+.adm-modal-dialog.kind-danger {
+  border-top: 3px solid var(--d-danger);
+}
+
+.adm-modal-dialog.kind-warning {
+  border-top: 3px solid var(--d-amber);
+}
+
+/* Header del Modal */
+.adm-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 14px;
+  background: var(--d-bg-subtle);
+  border-bottom: 1px solid var(--d-line);
+  user-select: none;
+}
+
+.adm-modal-header-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.adm-modal-terminal-tag {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  font-weight: 600;
+  color: var(--d-text-muted);
+  letter-spacing: 0.06em;
+}
+
+.adm-modal-close {
+  background: transparent;
+  border: none;
+  padding: 4px;
+  color: var(--d-text-dim);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+
+.adm-modal-close:hover {
+  color: var(--d-text);
+  background: var(--d-card-hover);
+}
+
+/* Cuerpo del Diálogo */
+.adm-modal-body {
+  display: flex;
+  gap: 16px;
+  padding: 22px 20px;
+  align-items: flex-start;
+}
+
+.adm-modal-icon-badge {
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.adm-modal-icon-badge.badge-danger {
+  background: rgba(239, 68, 68, 0.12);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: var(--d-danger);
+}
+
+.adm-modal-icon-badge.badge-warning {
+  background: rgba(229, 160, 13, 0.12);
+  border: 1px solid rgba(229, 160, 13, 0.3);
+  color: var(--d-amber);
+}
+
+.adm-modal-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.adm-modal-title {
+  font-family: var(--mono);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--d-text);
+  margin: 0 0 6px 0;
+  line-height: 1.35;
+  letter-spacing: -0.01em;
+}
+
+.adm-modal-desc {
+  font-size: 13px;
+  color: var(--d-text-muted);
+  line-height: 1.5;
+  margin: 0 0 12px 0;
+}
+
+/* Target callout */
+.adm-modal-target {
+  background: var(--d-bg);
+  border: 1px solid var(--d-line);
+  border-radius: var(--radius-sm);
+  padding: 8px 12px;
+  margin-bottom: 12px;
+}
+
+.adm-modal-target-label {
+  display: block;
+  font-family: var(--mono);
+  font-size: 9.5px;
+  font-weight: 600;
+  color: var(--d-text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 3px;
+}
+
+.adm-modal-target-value {
+  display: block;
+  font-family: var(--mono);
+  font-size: 11.5px;
+  color: var(--d-text);
+  word-break: break-all;
+  white-space: pre-wrap;
+}
+
+/* Detalle / Disclaimer */
+.adm-modal-detail {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 11.5px;
+  line-height: 1.45;
+  color: var(--d-text-dim);
+  padding: 8px 10px;
+  background: rgba(255, 255, 255, 0.02);
+  border-left: 2px solid var(--d-text-dim);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+}
+
+.adm-modal-detail svg {
+  flex-shrink: 0;
+  margin-top: 1px;
+  color: var(--d-text-muted);
+}
+
+/* Footer con Acciones */
+.adm-modal-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 18px;
+  background: var(--d-bg-subtle);
+  border-top: 1px solid var(--d-line);
+}
+
+.adm-modal-footer-tip {
+  display: flex;
+  gap: 8px;
+}
+
+.adm-modal-footer-tip .key-tip {
+  font-size: 10px;
+}
+
+.adm-modal-footer-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Animación y Transición Vue */
+.adm-modal-enter-active,
+.adm-modal-leave-active {
+  transition: opacity 0.18s ease;
+}
+
+.adm-modal-enter-active .adm-modal-dialog,
+.adm-modal-leave-active .adm-modal-dialog {
+  transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.18s ease;
+}
+
+.adm-modal-enter-from,
+.adm-modal-leave-to {
+  opacity: 0;
+}
+
+.adm-modal-enter-from .adm-modal-dialog {
+  transform: scale(0.95) translateY(6px);
+  opacity: 0;
+}
+
+.adm-modal-leave-to .adm-modal-dialog {
+  transform: scale(0.97) translateY(-4px);
+  opacity: 0;
+}
+

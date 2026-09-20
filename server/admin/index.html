@@ -33,7 +33,7 @@
           <span>PORTAFOLIO</span>
           <svg class="adm-icon sm" viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
         </a>
-        <button v-if="token" class="ghost" @click="logout" title="Cerrar sesión">
+        <button v-if="token" class="ghost" @click="handleLogoutClick" title="Cerrar sesión">
           <span>SALIR</span>
           <svg class="adm-icon sm" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
         </button>
@@ -503,6 +503,103 @@
         </div>
       </section>
     </main>
+
+    <!-- Modal de Confirmación OS Técnico -->
+    <transition name="adm-modal">
+      <div
+        v-if="dialog.open"
+        class="adm-modal-backdrop"
+        @click.self="onDialogCancel"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="dialog-title"
+        aria-describedby="dialog-desc"
+      >
+        <div class="adm-modal-dialog" :class="`kind-${dialog.kind}`">
+          <!-- Barra Superior del Modal estilo Ventana OS -->
+          <div class="adm-modal-header">
+            <div class="adm-modal-header-left">
+              <div class="traffic-lights" aria-hidden="true">
+                <span class="t-dot red"></span>
+                <span class="t-dot yellow"></span>
+                <span class="t-dot green"></span>
+              </div>
+              <span class="adm-modal-terminal-tag">SECURITY // CONFIRMATION_PROMPT</span>
+            </div>
+            <button
+              type="button"
+              class="adm-modal-close"
+              @click="onDialogCancel"
+              aria-label="Cerrar diálogo"
+              title="Cerrar (Esc)"
+            >
+              <svg class="adm-icon sm" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+          </div>
+
+          <!-- Cuerpo Principal -->
+          <div class="adm-modal-body">
+            <!-- Icono / Badge de advertencia técnica -->
+            <div class="adm-modal-icon-badge" :class="`badge-${dialog.kind}`" aria-hidden="true">
+              <svg v-if="dialog.kind === 'danger'" class="adm-icon lg" viewBox="0 0 24 24">
+                <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/>
+                <line x1="12" y1="9" x2="12" y2="13"/>
+                <line x1="12" y1="17" x2="12.01" y2="17"/>
+              </svg>
+              <svg v-else class="adm-icon lg" viewBox="0 0 24 24">
+                <circle cx="12" cy="12" r="10"/>
+                <line x1="12" y1="8" x2="12" y2="12"/>
+                <line x1="12" y1="16" x2="12.01" y2="16"/>
+              </svg>
+            </div>
+
+            <!-- Textos y Target -->
+            <div class="adm-modal-content">
+              <h2 id="dialog-title" class="adm-modal-title">{{ dialog.title }}</h2>
+              <p id="dialog-desc" class="adm-modal-desc">{{ dialog.message }}</p>
+
+              <!-- Callout del Objeto Afectado -->
+              <div v-if="dialog.targetName" class="adm-modal-target">
+                <span class="adm-modal-target-label">OBJETO AFECTADO:</span>
+                <code class="adm-modal-target-value">{{ dialog.targetName }}</code>
+              </div>
+
+              <!-- Detalle Técnico / Disclaimer -->
+              <div v-if="dialog.detail" class="adm-modal-detail">
+                <svg class="adm-icon sm" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+                <span>{{ dialog.detail }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Pie con Atajos y Acciones -->
+          <div class="adm-modal-footer">
+            <div class="adm-modal-footer-tip">
+              <span class="key-tip"><kbd>Esc</kbd> cancelar</span>
+              <span class="key-tip"><kbd>↵ Enter</kbd> confirmar</span>
+            </div>
+            <div class="adm-modal-footer-actions">
+              <button
+                type="button"
+                class="ghost"
+                @click="onDialogCancel"
+              >
+                {{ dialog.cancelText || 'Cancelar' }}
+              </button>
+              <button
+                type="button"
+                :class="dialog.kind === 'danger' ? 'danger-solid' : 'warning-solid'"
+                @click="onDialogConfirm"
+                ref="dialogConfirmBtn"
+              >
+                <span>{{ dialog.confirmText || 'Confirmar' }}</span>
+                <svg class="adm-icon sm" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </transition>
   </div>
 
   <script src="/admin/vendor/vue.js"></script>

@@ -2,6 +2,22 @@
 // Admin Console // Sistema Operativo de Gestión de Datos
 // Habla con /api/admin/* con el ADMIN_TOKEN guardado en sessionStorage.
 
+// Safeguard: Override native browser dialogs so native confirm(), alert() and prompt() never execute in Admin
+window.confirm = (msg) => {
+  console.warn('[Admin Security Safeguard] Native window.confirm() was blocked:', msg)
+  return false
+}
+window.alert = (msg) => {
+  console.warn('[Admin Security Safeguard] Native window.alert() was intercepted:', msg)
+  if (window.__adminApp && window.__adminApp.say) {
+    window.__adminApp.say('err', String(msg))
+  }
+}
+window.prompt = (msg) => {
+  console.warn('[Admin Security Safeguard] Native window.prompt() was blocked:', msg)
+  return null
+}
+
 const { createApp } = Vue
 
 const F = (name, type) => ({ name, type })
@@ -154,6 +170,17 @@ createApp({
     isSaving: false,
     counts: { projects: 0, experience: 0, stack: 0, orgs: 0, docs: 0 },
     activeTab: 'general',
+    dialog: {
+      open: false,
+      title: '',
+      message: '',
+      targetName: '',
+      detail: '',
+      confirmText: 'Confirmar',
+      cancelText: 'Cancelar',
+      kind: 'danger',
+      resolve: null,
+    },
   }),
   computed: {
     model() { return this.models[this.section] },
@@ -202,19 +229,80 @@ createApp({
     if (this.token) this.open(this.section)
   },
   mounted() {
+    window.__adminApp = this
     window.addEventListener('keydown', this.handleKeydown)
   },
   beforeUnmount() {
+    if (window.__adminApp === this) window.__adminApp = null
     window.removeEventListener('keydown', this.handleKeydown)
   },
   methods: {
     handleKeydown(e) {
+      if (this.dialog.open) {
+        if (e.key === 'Escape') {
+          e.preventDefault()
+          this.onDialogCancel()
+          return
+        }
+        if (e.key === 'Enter') {
+          e.preventDefault()
+          this.onDialogConfirm()
+          return
+        }
+      }
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
         e.preventDefault()
         if (this.form && !this.isSaving) {
           this.save()
         }
       }
+    },
+    askConfirm(options = {}) {
+      return new Promise((resolve) => {
+        this.dialog = {
+          open: true,
+          title: options.title || 'Confirmar Acción',
+          message: options.message || '¿Confirmás que deseas continuar con esta operación?',
+          targetName: options.targetName || '',
+          detail: options.detail || '',
+          confirmText: options.confirmText || 'Confirmar',
+          cancelText: options.cancelText || 'Cancelar',
+          kind: options.kind || 'danger',
+          resolve,
+        }
+        this.$nextTick(() => {
+          if (this.$refs.dialogConfirmBtn) {
+            this.$refs.dialogConfirmBtn.focus()
+          }
+        })
+      })
+    },
+    onDialogConfirm() {
+      if (this.dialog.resolve) {
+        this.dialog.resolve(true)
+      }
+      this.dialog.open = false
+      this.dialog.resolve = null
+    },
+    onDialogCancel() {
+      if (this.dialog.resolve) {
+        this.dialog.resolve(false)
+      }
+      this.dialog.open = false
+      this.dialog.resolve = null
+    },
+    async handleLogoutClick() {
+      const confirmed = await this.askConfirm({
+        title: 'Cerrar Sesión de Consola',
+        message: '¿Deseas finalizar la sesión actual en la consola técnica de administración?',
+        targetName: 'sessionStorage :: admin-token',
+        detail: 'Tu token de autorización será destruido de forma segura. Tendrás que autenticarte nuevamente para acceder al panel de control.',
+        confirmText: 'Cerrar Sesión',
+        cancelText: 'Permanecer Conectado',
+        kind: 'warning',
+      })
+      if (!confirmed) return
+      this.logout()
     },
     say(kind, text) {
       this.status = { kind, text }
@@ -360,7 +448,16 @@ createApp({
     },
     async remove() {
       const name = this.model.name(this.current)
-      if (!confirm(`¿Confirmás borrar "${name}" de la base de datos? Esta acción es irreversible.`)) return
+      const confirmed = await this.askConfirm({
+        title: 'Eliminar Registro de Base de Datos',
+        message: '¿Confirmás la eliminación permanente de este registro?',
+        targetName: `[${this.section}] ${name}`,
+        detail: 'Esta acción ejecutará una mutación destructiva DELETE en PostgreSQL 17 ACID y es completamente irreversible.',
+        confirmText: 'Sí, Borrar Registro',
+        cancelText: 'Cancelar',
+        kind: 'danger',
+      })
+      if (!confirmed) return
       try {
         await this.api(`${this.model.path}/${this.rowKey(this.current)}`, { method: 'DELETE' })
         this.say('ok', 'Registro eliminado')
@@ -407,7 +504,16 @@ createApp({
       }
     },
     async deleteMedia(m) {
-      if (!confirm(`¿Borrar imagen ${m.src}? También se eliminará el archivo del servidor.`)) return
+      const confirmed = await this.askConfirm({
+        title: 'Eliminar Archivo Multimedia',
+        message: '¿Confirmás la eliminación permanente de esta pieza multimedia?',
+        targetName: m.src,
+        detail: 'Se desvinculará del proyecto y el archivo físico en el disco del servidor (/uploads) será destruido de forma irreversible.',
+        confirmText: 'Sí, Borrar Archivo',
+        cancelText: 'Cancelar',
+        kind: 'danger',
+      })
+      if (!confirmed) return
       try {
         await this.api(`media/${m.id}`, { method: 'DELETE' })
         this.say('ok', 'Imagen eliminada')
