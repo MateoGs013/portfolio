@@ -8,6 +8,7 @@ interface FallbackField {
   name: string
   type: string
   value: string
+  wide?: boolean
 }
 
 const fallbackDocs: Record<string, { key: string, title: string, updatedAt: string, fields: FallbackField[] }> = {

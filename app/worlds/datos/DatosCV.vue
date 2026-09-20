@@ -1046,7 +1046,7 @@ function printCV() {
     background: transparent !important;
   }
 
-  /* Harvard ATS print */
+  /* Harvard ATS print (1 Página Exacta) */
   .cv-harvard {
     border: none !important;
     box-shadow: none !important;
@@ -1060,59 +1060,121 @@ function printCV() {
     color: #000000 !important;
   }
   .cv-harvard .h-header {
-    border-bottom: 1.5pt solid #000000 !important;
-    padding-bottom: 6pt !important;
-    margin-bottom: 10pt !important;
+    border-bottom: 1.25pt solid #000000 !important;
+    padding-bottom: 4pt !important;
+    margin-bottom: 6pt !important;
+    text-align: center !important;
   }
-  .cv-harvard .h-title {
-    border-bottom: 1pt solid #000000 !important;
-    color: #000000 !important;
+  .cv-harvard .h-name {
+    font-size: 18pt !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.03em !important;
+    margin-bottom: 2pt !important;
   }
-  .cv-harvard .h-entry,
+  .cv-harvard .h-role {
+    font-size: 9.5pt !important;
+    margin-bottom: 2pt !important;
+  }
+  .cv-harvard .h-contact {
+    font-size: 8.5pt !important;
+    gap: 5pt !important;
+  }
   .cv-harvard .h-section {
+    margin-bottom: 5pt !important;
     break-inside: avoid !important;
     page-break-inside: avoid !important;
   }
+  .cv-harvard .h-title {
+    font-size: 9.5pt !important;
+    border-bottom: 0.75pt solid #000000 !important;
+    padding-bottom: 1.5pt !important;
+    margin-top: 5pt !important;
+    margin-bottom: 3pt !important;
+  }
+  .cv-harvard .h-summary {
+    font-size: 8.25pt !important;
+    line-height: 1.35 !important;
+    margin: 0 !important;
+  }
+  .cv-harvard .h-entry {
+    margin-bottom: 3.5pt !important;
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+  }
+  .cv-harvard .h-entry-header {
+    font-size: 8.5pt !important;
+    line-height: 1.3 !important;
+  }
+  .cv-harvard .h-entry-sub {
+    font-size: 8pt !important;
+    margin-bottom: 1pt !important;
+    line-height: 1.25 !important;
+  }
+  .cv-harvard .h-bullets {
+    font-size: 8pt !important;
+    line-height: 1.3 !important;
+    margin-top: 1pt !important;
+    margin-bottom: 0 !important;
+    padding-left: 12pt !important;
+  }
+  .cv-harvard .h-bullets li {
+    margin-bottom: 1pt !important;
+  }
+  .cv-harvard .h-skills p {
+    font-size: 8pt !important;
+    line-height: 1.3 !important;
+    margin: 0 0 2pt !important;
+  }
 
-  /* Modern print */
+  /* Modern print (1 Página Exacta) */
   .cv-modern {
     display: grid !important;
-    grid-template-columns: 210px 1fr !important;
-    gap: 16px !important;
+    grid-template-columns: 195px 1fr !important;
+    gap: 12px !important;
     background: #ffffff !important;
     color: #111827 !important;
     border: none !important;
     box-shadow: none !important;
   }
   .cv-modern .m-sidebar {
-    gap: 12px !important;
+    gap: 8px !important;
   }
   .cv-modern .m-photo-container {
     background: #f8f9fa !important;
     border: 1px solid #e5e7eb !important;
-    padding: 10px !important;
+    padding: 8px !important;
   }
   .cv-modern .m-photo {
-    width: 110px !important;
-    height: 110px !important;
-    max-width: 110px !important;
+    width: 85px !important;
+    height: 85px !important;
+    max-width: 85px !important;
+    margin: 0 auto 4px !important;
     border: 1px solid #d1d5db !important;
   }
   .cv-modern .m-status-pill {
     background: #ffffff !important;
     border: 1px solid #16a34a !important;
     color: #16a34a !important;
+    font-size: 8px !important;
+    padding: 1.5px 6px !important;
   }
   .cv-modern .m-block {
     background: #f8f9fa !important;
     border: 1px solid #e5e7eb !important;
-    padding: 10px !important;
+    padding: 7px 9px !important;
     break-inside: avoid !important;
     page-break-inside: avoid !important;
   }
   .cv-modern .m-heading {
     color: #e03600 !important;
     border-bottom: 1px solid #e5e7eb !important;
+    font-size: 9px !important;
+    margin-bottom: 4px !important;
+    padding-bottom: 2px !important;
+  }
+  .cv-modern .m-contact-list {
+    font-size: 8.5px !important;
+    gap: 3.5px !important;
   }
   .cv-modern .m-contact-list li {
     color: #374151 !important;
@@ -1123,44 +1185,69 @@ function printCV() {
   .cv-modern .m-icon {
     color: #e03600 !important;
   }
+  .cv-modern .m-lang-row {
+    font-size: 8.5px !important;
+  }
+  .cv-modern .m-chips {
+    gap: 3px !important;
+  }
   .cv-modern .m-chip {
     background: #ffffff !important;
     border: 1px solid #d1d5db !important;
     color: #111827 !important;
+    font-size: 8px !important;
+    padding: 1.5px 4px !important;
   }
   .cv-modern .m-list {
     color: #374151 !important;
+    font-size: 8.5px !important;
+    padding-left: 11px !important;
   }
   .cv-modern .m-header {
     background: #f8f9fa !important;
     border: 1px solid #e5e7eb !important;
-    border-left: 4px solid #e03600 !important;
-    padding: 12px 16px !important;
+    border-left: 3.5px solid #e03600 !important;
+    padding: 8px 12px !important;
+    margin-bottom: 8px !important;
+  }
+  .cv-modern .m-tag {
+    font-size: 8px !important;
   }
   .cv-modern .m-name {
     color: #111827 !important;
+    font-size: 17px !important;
+    margin: 1px 0 2px !important;
   }
   .cv-modern .m-subtitle {
     color: #e03600 !important;
+    font-size: 9.5px !important;
+    margin: 0 0 4px !important;
   }
   .cv-modern .m-bio {
     color: #374151 !important;
+    font-size: 8.5px !important;
+    line-height: 1.3 !important;
+    margin: 0 !important;
   }
   .cv-modern .m-sec-title {
     border-bottom: 1px solid #e5e7eb !important;
+    padding-bottom: 2px !important;
+    margin-bottom: 4px !important;
   }
   .cv-modern .m-sec-title h2 {
     color: #111827 !important;
+    font-size: 9px !important;
   }
   .cv-modern .m-sec-num {
     color: #e03600 !important;
+    font-size: 8.5px !important;
   }
   .cv-modern .m-card {
     background: #ffffff !important;
     border: 1px solid #e5e7eb !important;
-    border-left: 3px solid #cbd5e1 !important;
-    padding: 10px 12px !important;
-    margin-bottom: 8px !important;
+    border-left: 2.5px solid #cbd5e1 !important;
+    padding: 5px 9px !important;
+    margin-bottom: 4px !important;
     break-inside: avoid !important;
     page-break-inside: avoid !important;
   }
@@ -1169,20 +1256,44 @@ function printCV() {
   }
   .cv-modern .m-card-role {
     color: #e03600 !important;
+    font-size: 8px !important;
   }
   .cv-modern .m-card-date {
     color: #6b7280 !important;
+    font-size: 8px !important;
   }
   .cv-modern .m-card-org {
     color: #111827 !important;
+    font-size: 10.5px !important;
+    margin: 0 0 2px !important;
   }
   .cv-modern .m-card-desc {
     color: #374151 !important;
+    font-size: 8.5px !important;
+    line-height: 1.3 !important;
+  }
+  .cv-modern .m-card-tags {
+    margin-top: 3px !important;
+    gap: 2.5px !important;
   }
   .cv-modern .m-tag-sm {
     background: #f3f4f6 !important;
     border: 1px solid #e5e7eb !important;
     color: #374151 !important;
+    font-size: 7.5px !important;
+    padding: 1px 3px !important;
+  }
+  .cv-modern .m-section {
+    gap: 4px !important;
+    margin-bottom: 7px !important;
+  }
+  .cv-modern .m-edu-grid {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 6px !important;
+  }
+  .cv-modern .m-edu-grid .m-card {
+    margin-bottom: 0 !important;
   }
 }
 </style>
