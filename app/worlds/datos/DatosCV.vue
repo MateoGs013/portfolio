@@ -338,6 +338,17 @@ function printCV() {
             <li>{{ isEs ? 'Desarrollo de APIs REST Tipadas' : 'Type-Safe REST API Engineering' }}</li>
           </ul>
         </div>
+
+        <!-- Metodologías y Prácticas de Ingeniería -->
+        <div class="m-block">
+          <h3 class="m-heading">{{ isEs ? 'METODOLOGÍAS & PRÁCTICAS' : 'ENGINEERING PRACTICES' }}</h3>
+          <ul class="m-list">
+            <li>{{ isEs ? 'CI/CD & Flujo Git Colaborativo' : 'CI/CD & Git Team Workflow' }}</li>
+            <li>{{ isEs ? 'Arquitectura Limpia & Modular' : 'Clean & Modular Architecture' }}</li>
+            <li>{{ isEs ? 'Contratos Tipados (TS + Prisma)' : 'End-to-End Type Safety (TS + Prisma)' }}</li>
+            <li>{{ isEs ? 'Optimización Web (Lighthouse 95+)' : 'Web Performance (Lighthouse 95+)' }}</li>
+          </ul>
+        </div>
       </aside>
 
       <!-- Columna Principal -->
@@ -378,6 +389,10 @@ function printCV() {
                 Pre-approved degree thesis at Da Vinci School. On-premise assistant featuring local inference, embeddings, and relational knowledge graph over PostgreSQL + pgvector. Led frontend development in Next.js and backend pipeline in FastAPI.
               </template>
             </p>
+            <ul class="m-card-bullets">
+              <li v-if="isEs">Inferencia local y persistencia vectorial con PostgreSQL + pgvector; latencia semántica &lt; 100ms.</li>
+              <li v-else>Local inference &amp; vector persistence with PostgreSQL + pgvector; sub-100ms semantic query latency.</li>
+            </ul>
             <div class="m-card-tags">
               <span class="m-tag-sm">FastAPI</span>
               <span class="m-tag-sm">Next.js</span>
@@ -401,6 +416,10 @@ function printCV() {
                 Menu-first web app for restaurant dining via table-side QR codes. Integrated with proprietary Pegasuz CMS and local cache fallback. Lighthouse 99 Performance and 100 SEO scores. In production.
               </template>
             </p>
+            <ul class="m-card-bullets">
+              <li v-if="isEs">Fallback offline en caché para operación continua ante cortes de red; bundle de producción optimizado a 42 KB.</li>
+              <li v-else>Cached offline fallback architecture ensuring uninterrupted dining service; lean 42 KB bundle.</li>
+            </ul>
             <div class="m-card-tags">
               <span class="m-tag-sm">Vue 3</span>
               <span class="m-tag-sm">Vite</span>
@@ -424,6 +443,10 @@ function printCV() {
                 Multilingual corporate web platform with dedicated admin dashboard for autonomous project management and blog. End-to-end type safety with Prisma and Node.js.
               </template>
             </p>
+            <ul class="m-card-bullets">
+              <li v-if="isEs">Esquema relacional y contratos tipados de punta a punta con Prisma ORM y TypeScript.</li>
+              <li v-else>Relational data schema and strict end-to-end type safety with Prisma ORM and TypeScript.</li>
+            </ul>
             <div class="m-card-tags">
               <span class="m-tag-sm">Vue 3</span>
               <span class="m-tag-sm">Node.js</span>
@@ -446,6 +469,10 @@ function printCV() {
                 API-first headless content infrastructure powering production client platforms with bulletproof data contracts.
               </template>
             </p>
+            <ul class="m-card-bullets">
+              <li v-if="isEs">Motor desacoplado que centraliza contenidos para múltiples clientes en producción con contratos blindados.</li>
+              <li v-else>Decoupled multi-tenant engine centralizing production client delivery with rigid schema contracts.</li>
+            </ul>
           </div>
         </section>
 
@@ -844,6 +871,25 @@ function printCV() {
   color: var(--d-ink);
 }
 
+.m-lang-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 12.5px;
+  margin-bottom: 4px;
+}
+.m-lang-name {
+  font-family: var(--font-text);
+  font-weight: 600;
+  color: var(--d-ink);
+}
+.m-lang-level {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  color: var(--d-dim);
+}
+
 .m-list {
   list-style: none;
   padding: 0;
@@ -983,6 +1029,22 @@ function printCV() {
   font-size: 13.5px;
   line-height: 1.5;
   color: var(--d-dim);
+}
+.m-card-bullets {
+  list-style: none;
+  padding: 0;
+  margin: 6px 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  font-family: var(--font-text);
+  font-size: 13px;
+  color: var(--d-dim);
+}
+.m-card-bullets li::before {
+  content: '▸ ';
+  color: var(--d-sig);
+  font-weight: bold;
 }
 .m-card-tags {
   display: flex;
@@ -1126,11 +1188,11 @@ function printCV() {
     margin: 0 0 2pt !important;
   }
 
-  /* Modern print (1 Página Exacta) */
+  /* Modern print (1 Página Exacta y Equilibrada) */
   .cv-modern {
     display: grid !important;
-    grid-template-columns: 195px 1fr !important;
-    gap: 12px !important;
+    grid-template-columns: 215px 1fr !important;
+    gap: 15px !important;
     background: #ffffff !important;
     color: #111827 !important;
     border: none !important;
@@ -1145,36 +1207,39 @@ function printCV() {
     padding: 8px !important;
   }
   .cv-modern .m-photo {
-    width: 85px !important;
-    height: 85px !important;
-    max-width: 85px !important;
-    margin: 0 auto 4px !important;
+    width: 96px !important;
+    height: 96px !important;
+    max-width: 96px !important;
+    margin: 0 auto 5px !important;
     border: 1px solid #d1d5db !important;
   }
   .cv-modern .m-status-pill {
     background: #ffffff !important;
     border: 1px solid #16a34a !important;
     color: #16a34a !important;
-    font-size: 8px !important;
-    padding: 1.5px 6px !important;
+    font-size: 8.5px !important;
+    padding: 2px 8px !important;
   }
   .cv-modern .m-block {
     background: #f8f9fa !important;
     border: 1px solid #e5e7eb !important;
-    padding: 7px 9px !important;
+    padding: 8.5px 11px !important;
     break-inside: avoid !important;
     page-break-inside: avoid !important;
   }
   .cv-modern .m-heading {
     color: #e03600 !important;
     border-bottom: 1px solid #e5e7eb !important;
-    font-size: 9px !important;
-    margin-bottom: 4px !important;
-    padding-bottom: 2px !important;
+    font-size: 10px !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.05em !important;
+    margin-bottom: 5px !important;
+    padding-bottom: 2.5px !important;
   }
   .cv-modern .m-contact-list {
-    font-size: 8.5px !important;
-    gap: 3.5px !important;
+    font-size: 9.5px !important;
+    gap: 4.5px !important;
+    line-height: 1.35 !important;
   }
   .cv-modern .m-contact-list li {
     color: #374151 !important;
@@ -1186,68 +1251,85 @@ function printCV() {
     color: #e03600 !important;
   }
   .cv-modern .m-lang-row {
-    font-size: 8.5px !important;
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: baseline !important;
+    font-size: 9.5px !important;
+    margin-bottom: 3px !important;
+  }
+  .cv-modern .m-lang-name {
+    font-weight: 600 !important;
+    color: #111827 !important;
+  }
+  .cv-modern .m-lang-level {
+    color: #4b5563 !important;
   }
   .cv-modern .m-chips {
-    gap: 3px !important;
+    gap: 3.5px !important;
   }
   .cv-modern .m-chip {
     background: #ffffff !important;
     border: 1px solid #d1d5db !important;
     color: #111827 !important;
-    font-size: 8px !important;
-    padding: 1.5px 4px !important;
+    font-size: 8.5px !important;
+    padding: 2px 5.5px !important;
   }
   .cv-modern .m-list {
     color: #374151 !important;
-    font-size: 8.5px !important;
+    font-size: 9.5px !important;
+    line-height: 1.38 !important;
     padding-left: 11px !important;
+  }
+  .cv-modern .m-content {
+    gap: 6px !important;
   }
   .cv-modern .m-header {
     background: #f8f9fa !important;
     border: 1px solid #e5e7eb !important;
     border-left: 3.5px solid #e03600 !important;
-    padding: 8px 12px !important;
-    margin-bottom: 8px !important;
+    padding: 10px 14px !important;
+    margin-bottom: 0 !important;
   }
   .cv-modern .m-tag {
-    font-size: 8px !important;
+    font-size: 8.5px !important;
+    letter-spacing: 0.08em !important;
   }
   .cv-modern .m-name {
     color: #111827 !important;
-    font-size: 17px !important;
-    margin: 1px 0 2px !important;
+    font-size: 20px !important;
+    margin: 2px 0 3px !important;
   }
   .cv-modern .m-subtitle {
     color: #e03600 !important;
-    font-size: 9.5px !important;
+    font-size: 10.5px !important;
     margin: 0 0 4px !important;
   }
   .cv-modern .m-bio {
     color: #374151 !important;
-    font-size: 8.5px !important;
-    line-height: 1.3 !important;
+    font-size: 10px !important;
+    line-height: 1.38 !important;
     margin: 0 !important;
   }
   .cv-modern .m-sec-title {
     border-bottom: 1px solid #e5e7eb !important;
-    padding-bottom: 2px !important;
-    margin-bottom: 4px !important;
+    padding-bottom: 2.5px !important;
+    margin-bottom: 4.5px !important;
   }
   .cv-modern .m-sec-title h2 {
     color: #111827 !important;
-    font-size: 9px !important;
+    font-size: 10px !important;
+    letter-spacing: 0.05em !important;
   }
   .cv-modern .m-sec-num {
     color: #e03600 !important;
-    font-size: 8.5px !important;
+    font-size: 9.5px !important;
   }
   .cv-modern .m-card {
     background: #ffffff !important;
     border: 1px solid #e5e7eb !important;
     border-left: 2.5px solid #cbd5e1 !important;
-    padding: 5px 9px !important;
-    margin-bottom: 4px !important;
+    padding: 7px 11px !important;
+    margin-bottom: 4.5px !important;
     break-inside: avoid !important;
     page-break-inside: avoid !important;
   }
@@ -1256,41 +1338,57 @@ function printCV() {
   }
   .cv-modern .m-card-role {
     color: #e03600 !important;
-    font-size: 8px !important;
+    font-size: 9px !important;
   }
   .cv-modern .m-card-date {
     color: #6b7280 !important;
-    font-size: 8px !important;
+    font-size: 8.5px !important;
   }
   .cv-modern .m-card-org {
     color: #111827 !important;
-    font-size: 10.5px !important;
+    font-size: 12px !important;
     margin: 0 0 2px !important;
   }
   .cv-modern .m-card-desc {
     color: #374151 !important;
+    font-size: 10px !important;
+    line-height: 1.38 !important;
+  }
+  .cv-modern .m-card-bullets {
+    list-style: none !important;
+    padding: 0 !important;
+    margin: 2.5px 0 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 1.5px !important;
     font-size: 8.5px !important;
-    line-height: 1.3 !important;
+    line-height: 1.28 !important;
+    color: #374151 !important;
+  }
+  .cv-modern .m-card-bullets li::before {
+    content: '▸ ' !important;
+    color: #e03600 !important;
+    font-weight: bold !important;
   }
   .cv-modern .m-card-tags {
-    margin-top: 3px !important;
-    gap: 2.5px !important;
+    margin-top: 4px !important;
+    gap: 3px !important;
   }
   .cv-modern .m-tag-sm {
     background: #f3f4f6 !important;
     border: 1px solid #e5e7eb !important;
     color: #374151 !important;
-    font-size: 7.5px !important;
-    padding: 1px 3px !important;
+    font-size: 8px !important;
+    padding: 1px 4px !important;
   }
   .cv-modern .m-section {
     gap: 4px !important;
-    margin-bottom: 7px !important;
+    margin-bottom: 0 !important;
   }
   .cv-modern .m-edu-grid {
     display: grid !important;
     grid-template-columns: 1fr 1fr !important;
-    gap: 6px !important;
+    gap: 7px !important;
   }
   .cv-modern .m-edu-grid .m-card {
     margin-bottom: 0 !important;

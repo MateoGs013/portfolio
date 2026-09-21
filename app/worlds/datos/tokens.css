@@ -348,7 +348,8 @@ html[data-hyperfocus="true"] .hb-dot {
   .contextual-guide-bar,
   .sw-h-hint,
   .folder-header-hint,
-  .keys-guide-btn {
+  .keys-guide-btn,
+  .saltar {
     display: none !important;
   }
 
@@ -356,6 +357,7 @@ html[data-hyperfocus="true"] .hb-dot {
   html,
   body,
   #__nuxt,
+  .portafolio-layout,
   .datos,
   .ventana,
   .cuerpo-ventana,
