@@ -256,12 +256,24 @@ onBeforeUnmount(() => {
   overflow-y: auto;
 }
 
-@media (max-width: 600px) {
+@media screen and (max-width: 600px) {
   .va-canonical-path, .va-status-tag {
     display: none;
   }
   .va-body {
     padding: 12px;
+  }
+}
+
+@media print {
+  .ventana-archivo-chassis,
+  .va-body {
+    padding: 0 !important;
+    margin: 0 !important;
+    border: none !important;
+    background: transparent !important;
+    overflow: visible !important;
+    box-shadow: none !important;
   }
 }
 </style>

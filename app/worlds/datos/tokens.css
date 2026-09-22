@@ -302,21 +302,29 @@ html[data-hyperfocus="true"] .hb-dot {
     margin: 0;
   }
 
-  /* 1. Sobrescribir variables de tema para forzar modo papel blanco puro y alto contraste */
-  :root,
+  /* 1. Configuración del lienzo A4 y fondos contextuales según modo */
   html,
   body {
-    --d-paper: #ffffff;
-    --d-surface: #f9f9fb;
-    --d-surface-raised: #f3f4f6;
-    --d-ink: #111827;
-    --d-rule: #e5e7eb;
-    --d-rule-strong: #cbd5e1;
-    --d-dim: #374151;
-    --d-faint: #6b7280;
-    --d-hover: #f3f4f6;
-    --d-sig: #e03600;
-    color-scheme: light;
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 210mm !important;
+    min-height: 297mm !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  html:has(.cv-harvard),
+  body:has(.cv-harvard) {
+    background: #ffffff !important;
+    color: #000000 !important;
+    color-scheme: light !important;
+  }
+
+  html:has(.cv-modern),
+  body:has(.cv-modern) {
+    background: #09090b !important;
+    color: #f4f4f5 !important;
+    color-scheme: dark !important;
   }
 
   /* 2. Ocultar el 100% de la interfaz de la aplicación, chrome, ventanas y navegación */
@@ -357,9 +365,7 @@ html[data-hyperfocus="true"] .hb-dot {
     display: none !important;
   }
 
-  /* 3. Resetear contenedores raíz para permitir flujo multipágina en blanco y eliminar bordes */
-  html,
-  body,
+  /* 3. Resetear contenedores intermediarios sin forzar fondos opacos */
   #__nuxt,
   .portafolio-layout,
   .datos,
@@ -370,12 +376,12 @@ html[data-hyperfocus="true"] .hb-dot {
   .hoja,
   .ventana-archivo-chassis,
   .va-body {
-    background: #ffffff !important;
-    color: #111827 !important;
+    background: transparent !important;
+    color: inherit !important;
     padding: 0 !important;
     margin: 0 !important;
     height: auto !important;
-    min-height: auto !important;
+    min-height: 0 !important;
     max-height: none !important;
     overflow: visible !important;
     border: none !important;

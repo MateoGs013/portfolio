@@ -36,17 +36,9 @@ const cvLocation = computed(() => isEs.value
   ? (getDocField('location') || 'Río Negro, Patagonia Argentina')
   : 'Río Negro, Patagonia, Argentina',
 )
-const cvAvailability = computed(() => isEs.value
-  ? (getDocField('availability_status') || 'DISPONIBLE // CONTRATACIÓN DIRECTA 2026')
-  : 'AVAILABLE // DIRECT HIRE 2026',
-)
 const cvBio = computed(() => isEs.value
   ? (getDocField('engineering_philosophy') || 'Desarrollo con criterio de diseño y foco en el producto entero: qué problema resuelve, cómo debería verse, cómo debería sentirse, cómo se construye y cómo llega a producción. No me posiciono solo como programador ni solo como diseñador; trabajo en la costura donde la arquitectura técnica se encuentra con la experiencia de usuario.')
   : 'Software engineer specialized in reactive frontend engineering, API architecture, and user experience. Pre-approved degree thesis at Da Vinci School with 382 commits leading system architecture for an on-premise AI assistant. Verifiable production track record with 10+ deliverables for clients across Spain and Argentina (La Rúcula Gastrobar, ARG Piscinas). Proficient in TypeScript, Vue 3, Nuxt 4, React, Next.js, Node.js, FastAPI, and PostgreSQL. End-to-end product design mindset.',
-)
-const cvGoal = computed(() => isEs.value
-  ? (getDocField('professional_goal') || 'Consolidarme como desarrollador en un equipo con proyectos reales de mayor escala. A mediano plazo, liderazgo técnico: coordinar, organizar, comunicar y conectar perfiles de distintas áreas (diseño, producto, frontend y backend).')
-  : 'Consolidate my impact as an engineer within a high-caliber team shipping large-scale production software. In the medium term, technical leadership: coordinating, organizing, and bridging disciplines across product, UI/UX, frontend, and backend architectures.',
 )
 
 const cvEmail = computed(() => props.detail?.contact?.email || 'mateogabus@gmail.com')
@@ -416,9 +408,9 @@ function printCV() {
         <!-- Sidebar -->
         <aside class="ide-sidebar">
           <div class="ide-window-controls">
-            <span class="ide-dot red" aria-hidden="true"></span>
-            <span class="ide-dot yellow" aria-hidden="true"></span>
-            <span class="ide-dot green" aria-hidden="true"></span>
+            <span class="ide-dot red" aria-hidden="true" />
+            <span class="ide-dot yellow" aria-hidden="true" />
+            <span class="ide-dot green" aria-hidden="true" />
             <span class="ide-file-title">package.json</span>
           </div>
 
@@ -452,7 +444,7 @@ function printCV() {
               </div>
             </div>
 
-            <div class="ide-divider"></div>
+            <div class="ide-divider" />
 
             <div class="ide-photo-wrap">
               <img
@@ -463,7 +455,7 @@ function printCV() {
               >
             </div>
 
-            <div class="ide-divider"></div>
+            <div class="ide-divider" />
 
             <!-- Formación / Education -->
             <div class="ide-sidebar-section">
@@ -480,7 +472,7 @@ function printCV() {
               </div>
             </div>
 
-            <div class="ide-divider"></div>
+            <div class="ide-divider" />
 
             <!-- Stats & Idiomas -->
             <div class="ide-sidebar-section">
@@ -495,7 +487,7 @@ function printCV() {
               </ul>
             </div>
 
-            <div class="ide-divider"></div>
+            <div class="ide-divider" />
 
             <!-- Contact -->
             <div class="ide-sidebar-section">
@@ -524,7 +516,7 @@ function printCV() {
               <p class="ide-role">{{ cvRole }}</p>
             </header>
 
-            <div class="ide-hr"></div>
+            <div class="ide-hr" />
 
             <!-- Profile -->
             <div class="ide-section">
@@ -532,7 +524,7 @@ function printCV() {
               <p class="ide-text">{{ cvBio }}</p>
             </div>
 
-            <div class="ide-hr"></div>
+            <div class="ide-hr" />
 
             <!-- Experience & Projects -->
             <div class="ide-section">
@@ -560,7 +552,7 @@ function printCV() {
               </div>
             </div>
 
-            <div class="ide-hr"></div>
+            <div class="ide-hr" />
 
             <!-- Stack -->
             <div class="ide-section">
@@ -1388,10 +1380,10 @@ function printCV() {
     margin: 0 0 2pt !important;
   }
 
-  /* Modern print (1 Página Completa A4 - 210mm x 297mm Exactos, Sin Recortes, Distribución Total de Alto y Ancho) */
+  /* Modern print (1 Página Completa A4 - 210mm x 297mm Exactos, Full-bleed, Estética IDE Terminal Dark) */
   .cv-modern {
-    background: #ffffff !important;
-    color: #111827 !important;
+    background: #09090b !important;
+    color: #f4f4f5 !important;
     border: none !important;
     box-shadow: none !important;
     width: 210mm !important;
@@ -1400,36 +1392,36 @@ function printCV() {
     padding: 0 !important;
     margin: 0 !important;
     box-sizing: border-box !important;
-    overflow: visible !important;
+    overflow: hidden !important;
   }
   .cv-modern .ide-container {
-    background: #ffffff !important;
+    background: #09090b !important;
     border: none !important;
-    color: #111827 !important;
+    color: #f4f4f5 !important;
     display: grid !important;
     grid-template-columns: 66mm 144mm !important;
     width: 210mm !important;
     height: 297mm !important;
     max-height: 297mm !important;
     box-sizing: border-box !important;
-    overflow: visible !important;
+    overflow: hidden !important;
     break-inside: avoid !important;
     page-break-inside: avoid !important;
   }
   .cv-modern .ide-sidebar {
-    background: #f8f9fa !important;
-    border-right: 0.75pt solid #cbd5e1 !important;
+    background: #121215 !important;
+    border-right: 0.75pt solid rgba(255, 255, 255, 0.15) !important;
     width: 66mm !important;
     height: 297mm !important;
     max-height: 297mm !important;
     display: flex !important;
     flex-direction: column !important;
     box-sizing: border-box !important;
-    overflow: visible !important;
+    overflow: hidden !important;
   }
   .cv-modern .ide-window-controls {
-    background: #f1f3f5 !important;
-    border-bottom: 0.5pt solid #cbd5e1 !important;
+    background: #19191e !important;
+    border-bottom: 0.5pt solid rgba(255, 255, 255, 0.15) !important;
     height: 9.5mm !important;
     padding: 0 7mm !important;
     display: flex !important;
@@ -1440,9 +1432,13 @@ function printCV() {
   .cv-modern .ide-dot {
     width: 5.5pt !important;
     height: 5.5pt !important;
+    border-radius: 50% !important;
   }
+  .cv-modern .ide-dot.red { background: #ff5f56 !important; }
+  .cv-modern .ide-dot.yellow { background: #ffbd2e !important; }
+  .cv-modern .ide-dot.green { background: #27c93f !important; }
   .cv-modern .ide-file-title {
-    color: #e03600 !important;
+    color: #ff3e00 !important;
     font-weight: 700 !important;
     font-size: 7.5pt !important;
     margin-left: auto !important;
@@ -1455,7 +1451,7 @@ function printCV() {
     justify-content: space-between !important;
     flex: 1 !important;
     box-sizing: border-box !important;
-    overflow: visible !important;
+    overflow: hidden !important;
   }
   .cv-modern .ide-tree-block {
     display: flex !important;
@@ -1463,7 +1459,7 @@ function printCV() {
     gap: 2pt !important;
   }
   .cv-modern .ide-sidebar-header {
-    color: #e03600 !important;
+    color: #ff3e00 !important;
     font-weight: 700 !important;
     font-size: 7.8pt !important;
     margin-bottom: 2pt !important;
@@ -1479,9 +1475,12 @@ function printCV() {
     gap: 1pt !important;
   }
   .cv-modern .ide-tree-folder {
-    color: #e03600 !important;
+    color: #ff3e00 !important;
     font-size: 7.4pt !important;
     font-weight: 700 !important;
+  }
+  .cv-modern .ide-tree-bullet {
+    color: #929298 !important;
   }
   .cv-modern .ide-tree-files {
     font-size: 6.9pt !important;
@@ -1491,22 +1490,26 @@ function printCV() {
     list-style: none !important;
     display: flex !important;
     flex-direction: column !important;
-    color: #4b5563 !important;
+    color: #929298 !important;
   }
   .cv-modern .ide-divider {
-    background: #e2e8f0 !important;
+    background: rgba(255, 255, 255, 0.15) !important;
     height: 0.5pt !important;
     margin: 0 !important;
   }
   .cv-modern .ide-photo-wrap {
-    width: 92px !important;
-    margin: 0 auto !important;
+    width: 100% !important;
+    margin: 0 !important;
   }
   .cv-modern .ide-photo {
-    width: 92px !important;
-    height: 92px !important;
+    width: 100% !important;
+    aspect-ratio: 1 !important;
+    height: auto !important;
     object-fit: cover !important;
-    border: 0.75pt solid #cbd5e1 !important;
+    object-position: center top !important;
+    filter: grayscale(20%) !important;
+    border: none !important;
+    display: block !important;
   }
   .cv-modern .ide-sidebar-section {
     display: flex !important;
@@ -1520,20 +1523,20 @@ function printCV() {
     margin-bottom: 1.5pt !important;
   }
   .cv-modern .ide-edu-school {
-    color: #111827 !important;
+    color: #f4f4f5 !important;
     font-weight: 700 !important;
     font-size: 7.4pt !important;
   }
   .cv-modern .ide-edu-degree {
-    color: #e03600 !important;
+    color: #ff3e00 !important;
     font-size: 6.9pt !important;
   }
   .cv-modern .ide-edu-sub {
-    color: #6b7280 !important;
+    color: #929298 !important;
     font-size: 6.5pt !important;
   }
   .cv-modern .ide-comment {
-    color: #6b7280 !important;
+    color: #929298 !important;
     font-size: 6.9pt !important;
     margin-bottom: 1pt !important;
     font-style: italic !important;
@@ -1552,10 +1555,10 @@ function printCV() {
     justify-content: space-between !important;
   }
   .cv-modern .ide-key-val li span {
-    color: #4b5563 !important;
+    color: #929298 !important;
   }
   .cv-modern .ide-highlight {
-    color: #111827 !important;
+    color: #ff3e00 !important;
     font-weight: 700 !important;
   }
   .cv-modern .ide-contact-list {
@@ -1569,13 +1572,13 @@ function printCV() {
   }
   .cv-modern .ide-contact-list a,
   .cv-modern .ide-loc {
-    color: #4b5563 !important;
+    color: #929298 !important;
     text-decoration: none !important;
   }
 
   /* Main Editor */
   .cv-modern .ide-main {
-    background: #ffffff !important;
+    background: #09090b !important;
     padding: 0 !important;
     display: flex !important;
     flex-direction: column !important;
@@ -1583,18 +1586,18 @@ function printCV() {
     height: 297mm !important;
     max-height: 297mm !important;
     box-sizing: border-box !important;
-    overflow: visible !important;
+    overflow: hidden !important;
   }
   .cv-modern .ide-tabs {
-    background: #f8f9fa !important;
-    border-bottom: 0.5pt solid #cbd5e1 !important;
+    background: #121215 !important;
+    border-bottom: 0.5pt solid rgba(255, 255, 255, 0.15) !important;
     display: flex !important;
     height: 9.5mm !important;
     box-sizing: border-box !important;
   }
   .cv-modern .ide-tab {
-    color: #6b7280 !important;
-    border-right: 0.5pt solid #cbd5e1 !important;
+    color: #929298 !important;
+    border-right: 0.5pt solid rgba(255, 255, 255, 0.15) !important;
     padding: 0 10pt !important;
     height: 9.5mm !important;
     display: flex !important;
@@ -1603,9 +1606,9 @@ function printCV() {
     box-sizing: border-box !important;
   }
   .cv-modern .ide-tab.active {
-    background: #ffffff !important;
-    color: #e03600 !important;
-    border-top: 1.5pt solid #e03600 !important;
+    background: #09090b !important;
+    color: #ff3e00 !important;
+    border-top: 1.5pt solid #ff3e00 !important;
     font-weight: 700 !important;
   }
   .cv-modern .ide-editor-content {
@@ -1616,7 +1619,7 @@ function printCV() {
     justify-content: space-between !important;
     flex: 1 !important;
     box-sizing: border-box !important;
-    overflow: visible !important;
+    overflow: hidden !important;
   }
   .cv-modern .ide-header {
     display: flex !important;
@@ -1624,23 +1627,25 @@ function printCV() {
     gap: 1pt !important;
   }
   .cv-modern .ide-name {
-    color: #111827 !important;
+    color: #f4f4f5 !important;
     font-size: 19pt !important;
     margin: 1.5pt 0 1pt !important;
     line-height: 1.15 !important;
     font-weight: 700 !important;
   }
   .cv-modern .ide-name::after {
-    display: none !important;
+    content: ' _' !important;
+    color: #ff3e00 !important;
+    display: inline !important;
   }
   .cv-modern .ide-role {
-    color: #e03600 !important;
+    color: #ff3e00 !important;
     font-size: 9pt !important;
     font-weight: 700 !important;
     margin: 0 !important;
   }
   .cv-modern .ide-hr {
-    background: #e2e8f0 !important;
+    background: rgba(255, 255, 255, 0.15) !important;
     height: 0.5pt !important;
     margin: 0 !important;
   }
@@ -1650,7 +1655,7 @@ function printCV() {
     gap: 2pt !important;
   }
   .cv-modern .ide-text {
-    color: #374151 !important;
+    color: #929298 !important;
     font-size: 7.9pt !important;
     line-height: 1.38 !important;
     margin: 0 !important;
@@ -1661,7 +1666,7 @@ function printCV() {
     gap: 1.5pt !important;
     margin-bottom: 4pt !important;
     padding-bottom: 3.5pt !important;
-    border-bottom: 0.5pt dashed #cbd5e1 !important;
+    border-bottom: 0.5pt dashed rgba(255, 255, 255, 0.12) !important;
     break-inside: avoid !important;
   }
   .cv-modern .ide-exp-item:last-child {
@@ -1677,34 +1682,34 @@ function printCV() {
     gap: 6pt !important;
   }
   .cv-modern .ide-exp-title {
-    color: #111827 !important;
+    color: #f4f4f5 !important;
     font-weight: 700 !important;
     font-size: 9.1pt !important;
   }
   .cv-modern .ide-exp-badge {
-    color: #e03600 !important;
+    color: #ff3e00 !important;
     font-size: 6.6pt !important;
-    border: 0.5pt solid #cbd5e1 !important;
-    background: #f8fafc !important;
+    border: 0.5pt solid rgba(255, 255, 255, 0.15) !important;
+    background: #19191e !important;
     padding: 0.5pt 3pt !important;
     border-radius: 2px !important;
     margin-left: 4pt !important;
   }
   .cv-modern .ide-exp-date {
-    color: #6b7280 !important;
+    color: #929298 !important;
     font-size: 7.3pt !important;
   }
   .cv-modern .ide-exp-role {
-    color: #e03600 !important;
+    color: #ff3e00 !important;
     font-size: 8.1pt !important;
     font-weight: 600 !important;
   }
   .cv-modern .ide-exp-loc {
-    color: #6b7280 !important;
+    color: #929298 !important;
     font-size: 7.3pt !important;
   }
   .cv-modern .ide-exp-desc {
-    color: #374151 !important;
+    color: #929298 !important;
     font-size: 7.6pt !important;
     line-height: 1.34 !important;
     margin: 0 !important;
@@ -1720,14 +1725,14 @@ function printCV() {
   .cv-modern .ide-exp-bullets li {
     font-size: 7.4pt !important;
     line-height: 1.3 !important;
-    color: #374151 !important;
+    color: #929298 !important;
     position: relative !important;
   }
   .cv-modern .ide-exp-bullets li::before {
     content: '·' !important;
     position: absolute !important;
     left: -8pt !important;
-    color: #e03600 !important;
+    color: #ff3e00 !important;
     font-weight: bold !important;
     font-size: 9pt !important;
   }
@@ -1740,9 +1745,9 @@ function printCV() {
   .cv-modern .ide-tag {
     font-size: 6.6pt !important;
     padding: 0.75pt 3pt !important;
-    background: #f1f5f9 !important;
-    border: 0.5pt solid #cbd5e1 !important;
-    color: #334155 !important;
+    background: #19191e !important;
+    border: 0.5pt solid rgba(255, 255, 255, 0.1) !important;
+    color: #929298 !important;
     border-radius: 2px !important;
   }
   .cv-modern .ide-stack-group {
@@ -1752,13 +1757,13 @@ function printCV() {
     line-height: 1.35 !important;
   }
   .cv-modern .ide-stack-label {
-    color: #e03600 !important;
+    color: #ff3e00 !important;
     font-weight: 700 !important;
     width: 58px !important;
     flex-shrink: 0 !important;
   }
   .cv-modern .ide-stack-val {
-    color: #374151 !important;
+    color: #929298 !important;
   }
 }
 </style>

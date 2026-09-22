@@ -608,7 +608,7 @@ async function copyJson() {
   font-weight: 400;
 }
 
-@media (max-width: 768px) {
+@media screen and (max-width: 768px) {
   .hoja-acciones { flex-wrap: wrap; width: 100%; gap: 8px; }
   .vecinos { width: 100%; justify-content: space-between; }
   .vecino { max-width: none; flex: 1 1 auto; }

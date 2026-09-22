@@ -999,7 +999,7 @@ kbd {
   display: none;
 }
 
-@media (max-width: 900px) {
+@media screen and (max-width: 900px) {
   .datos { height: auto; min-height: 100dvh; padding: 0; }
   .ventana { border-left: none; border-right: none; }
   .goto-btn {
@@ -1017,7 +1017,7 @@ kbd {
 /* ═══════════════════════════════════════════════════════════════════════════ */
 /* NATIVE MOBILE SMARTPHONE EXPERIENCE (<= 768px)                              */
 /* ═══════════════════════════════════════════════════════════════════════════ */
-@media (max-width: 768px) {
+@media screen and (max-width: 768px) {
   .sidebar {
     display: none !important;
   }
@@ -1191,5 +1191,23 @@ kbd {
   border: none;
   font-size: 10px;
   color: var(--d-dim);
+}
+
+@media print {
+  .datos,
+  .ventana,
+  .cuerpo-ventana,
+  .exp,
+  .pane {
+    padding: 0 !important;
+    margin: 0 !important;
+    border: none !important;
+    background: transparent !important;
+    overflow: visible !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    box-shadow: none !important;
+  }
 }
 </style>
