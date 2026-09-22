@@ -281,9 +281,6 @@ function printCV() {
     <!-- ═══════════════════════════════════════════════════════════════════════ -->
     <!-- ESTILO 2: IDE / TERMINAL (MODERNO CODE EDITOR) -->
     <!-- ═══════════════════════════════════════════════════════════════════════ -->
-    <!-- ═══════════════════════════════════════════════════════════════════════ -->
-    <!-- ESTILO 2: IDE / TERMINAL (MODERNO CODE EDITOR) -->
-    <!-- ═══════════════════════════════════════════════════════════════════════ -->
     <article v-else class="cv-modern">
       <div class="ide-container">
         <!-- Sidebar -->
@@ -292,7 +289,7 @@ function printCV() {
             <span class="ide-dot red" aria-hidden="true"></span>
             <span class="ide-dot yellow" aria-hidden="true"></span>
             <span class="ide-dot green" aria-hidden="true"></span>
-            <span class="ide-file-title">profile.json</span>
+            <span class="ide-file-title">package.json</span>
           </div>
 
           <div class="ide-sidebar-inner">
@@ -303,22 +300,22 @@ function printCV() {
             <div class="ide-tree">
               <div class="ide-tree-group">
                 <div class="ide-tree-folder">
-                  <span class="ide-tree-bullet">•</span> src/
+                  <span class="ide-tree-bullet">▼</span> src/
                 </div>
                 <ul class="ide-tree-files">
-                  <li><span class="ide-tree-bullet">•</span> profile.go</li>
-                  <li><span class="ide-tree-bullet">•</span> experience.go</li>
-                  <li><span class="ide-tree-bullet">•</span> stack.go</li>
-                  <li><span class="ide-tree-bullet">•</span> education.go</li>
+                  <li><span class="ide-tree-bullet">·</span> profile.ts</li>
+                  <li><span class="ide-tree-bullet">·</span> experience.vue</li>
+                  <li><span class="ide-tree-bullet">·</span> stack.py</li>
+                  <li><span class="ide-tree-bullet">·</span> education.sql</li>
                 </ul>
               </div>
               <div class="ide-tree-group">
                 <div class="ide-tree-folder">
-                  <span class="ide-tree-bullet">•</span> config/
+                  <span class="ide-tree-bullet">▼</span> config/
                 </div>
                 <ul class="ide-tree-files">
-                  <li><span class="ide-tree-bullet">•</span> contact.env</li>
-                  <li><span class="ide-tree-bullet">•</span> links.toml</li>
+                  <li><span class="ide-tree-bullet">·</span> contact.env</li>
+                  <li><span class="ide-tree-bullet">·</span> nuxt.config.ts</li>
                 </ul>
               </div>
             </div>
@@ -363,7 +360,7 @@ function printCV() {
         <!-- Main Editor -->
         <main class="ide-main">
           <div class="ide-tabs">
-            <div class="ide-tab active">cv.go</div>
+            <div class="ide-tab active">cv.ts</div>
             <div class="ide-tab">README.md</div>
           </div>
 
@@ -684,7 +681,7 @@ function printCV() {
 
 .ide-file-title {
   margin-left: auto;
-  color: var(--d-amber);
+  color: var(--d-sig);
   font-size: 11px;
 }
 
@@ -696,7 +693,7 @@ function printCV() {
 }
 
 .ide-sidebar-header {
-  color: var(--d-amber);
+  color: var(--d-sig);
   font-size: 11.5px;
 }
 
@@ -713,7 +710,7 @@ function printCV() {
 }
 
 .ide-tree-folder {
-  color: var(--d-amber);
+  color: var(--d-sig);
 }
 
 .ide-tree-bullet {
@@ -781,7 +778,7 @@ function printCV() {
 }
 
 .ide-highlight {
-  color: var(--d-amber);
+  color: var(--d-sig);
 }
 
 .ide-contact-list {
@@ -823,8 +820,8 @@ function printCV() {
 }
 .ide-tab.active {
   background: var(--d-paper);
-  color: var(--d-amber);
-  border-top: 2px solid var(--d-amber);
+  color: var(--d-sig);
+  border-top: 2px solid var(--d-sig);
   margin-top: -1px;
 }
 
@@ -844,7 +841,7 @@ function printCV() {
 
 .ide-name::after {
   content: ' _';
-  color: var(--d-amber);
+  color: var(--d-sig);
   animation: blink 1s step-end infinite;
 }
 
@@ -854,7 +851,7 @@ function printCV() {
 
 .ide-role {
   margin: 0;
-  color: var(--d-amber);
+  color: var(--d-sig);
   font-size: 12.5px;
 }
 
@@ -886,7 +883,7 @@ function printCV() {
 
 .ide-exp-role {
   margin: 0;
-  color: var(--d-amber);
+  color: var(--d-sig);
   font-size: 13px;
   font-weight: normal;
 }
@@ -910,7 +907,7 @@ function printCV() {
 }
 
 .ide-stack-label {
-  color: var(--d-amber);
+  color: var(--d-sig);
   width: 65px;
 }
 .ide-stack-val {
