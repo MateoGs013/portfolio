@@ -349,7 +349,10 @@ html[data-hyperfocus="true"] .hb-dot {
   .sw-h-hint,
   .folder-header-hint,
   .keys-guide-btn,
-  .saltar {
+  .saltar,
+  #vue-tracer-overlay,
+  nuxt-devtools-inspect-panel,
+  [id^="__nuxt-devtools"] {
     display: none !important;
   }
 

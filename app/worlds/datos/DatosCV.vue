@@ -805,8 +805,8 @@ function printCV() {
 /* Retrato Editorial con Marcadores de Esquina */
 .m-portrait-wrap {
   position: relative;
-  width: 86px;
-  height: 86px;
+  width: 135px;
+  height: 135px;
   flex-shrink: 0;
   padding: 4px;
   border: 1px solid var(--d-rule-strong);
@@ -817,27 +817,28 @@ function printCV() {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  object-position: center top;
   display: block;
 }
 
 .m-portrait-corner {
   position: absolute;
   font-family: var(--font-mono);
-  font-size: 9px;
+  font-size: 11px;
   line-height: 1;
   color: var(--d-sig);
   pointer-events: none;
 }
-.m-portrait-corner.tl { top: -4px; left: -3px; }
-.m-portrait-corner.tr { top: -4px; right: -3px; }
-.m-portrait-corner.bl { bottom: -4px; left: -3px; }
-.m-portrait-corner.br { bottom: -4px; right: -3px; }
+.m-portrait-corner.tl { top: -4px; left: -4px; }
+.m-portrait-corner.tr { top: -4px; right: -4px; }
+.m-portrait-corner.bl { bottom: -4px; left: -4px; }
+.m-portrait-corner.br { bottom: -4px; right: -4px; }
 
 /* Rejilla Asimétrica */
 .m-body-grid {
   display: grid;
-  grid-template-columns: 270px 1fr;
-  gap: 26px;
+  grid-template-columns: 280px 1fr;
+  gap: 28px;
   align-items: start;
 }
 
@@ -845,7 +846,7 @@ function printCV() {
 .m-side-col {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 18px;
 }
 
 .m-panel {
@@ -857,7 +858,7 @@ function printCV() {
 .m-panel-title {
   margin: 0;
   font-family: var(--font-mono);
-  font-size: 10.5px;
+  font-size: 11px;
   font-weight: 800;
   letter-spacing: 0.08em;
   color: var(--d-sig);
@@ -903,12 +904,12 @@ function printCV() {
   display: flex;
   flex-direction: column;
   gap: 2px;
-  margin-bottom: 4px;
+  margin-bottom: 6px;
 }
 
 .m-sg-label {
   font-family: var(--font-mono);
-  font-size: 9.5px;
+  font-size: 10px;
   font-weight: 800;
   color: var(--d-faint);
   letter-spacing: 0.04em;
@@ -916,8 +917,8 @@ function printCV() {
 
 .m-sg-val {
   font-family: var(--font-text);
-  font-size: 12px;
-  line-height: 1.35;
+  font-size: 12.5px;
+  line-height: 1.4;
   color: var(--d-ink);
 }
 
@@ -925,7 +926,7 @@ function printCV() {
   display: flex;
   flex-direction: column;
   gap: 2px;
-  margin-bottom: 6px;
+  margin-bottom: 8px;
 }
 
 .m-ei-top {
@@ -937,21 +938,21 @@ function printCV() {
 
 .m-ei-school {
   font-family: var(--font-mono);
-  font-size: 10.5px;
+  font-size: 11px;
   font-weight: 800;
   color: var(--d-ink);
 }
 
 .m-ei-year {
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: 10.5px;
   color: var(--d-dim);
 }
 
 .m-ei-degree {
   margin: 0;
   font-family: var(--font-text);
-  font-size: 12px;
+  font-size: 12.5px;
   font-weight: 600;
   color: var(--d-sig);
 }
@@ -959,9 +960,9 @@ function printCV() {
 .m-ei-note {
   margin: 0;
   font-family: var(--font-text);
-  font-size: 11px;
+  font-size: 11.5px;
   color: var(--d-dim);
-  line-height: 1.3;
+  line-height: 1.35;
 }
 
 .m-lang-row {
@@ -969,7 +970,8 @@ function printCV() {
   justify-content: space-between;
   align-items: baseline;
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: 11.5px;
+  margin-bottom: 2px;
 }
 
 .m-lr-lang {
@@ -979,14 +981,14 @@ function printCV() {
 
 .m-lr-level {
   color: var(--d-dim);
-  font-size: 10px;
+  font-size: 10.5px;
 }
 
 /* Columna Principal */
 .m-main-col {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 18px;
 }
 
 .m-main-head {
@@ -1001,7 +1003,7 @@ function printCV() {
 .m-main-title {
   margin: 0;
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: 11.5px;
   font-weight: 800;
   letter-spacing: 0.08em;
   color: var(--d-ink);
@@ -1009,7 +1011,7 @@ function printCV() {
 
 .m-main-count {
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: 10.5px;
   font-weight: 700;
   color: var(--d-sig);
 }
@@ -1017,14 +1019,14 @@ function printCV() {
 .m-exp-list {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 16px;
 }
 
 .m-exp-entry {
   display: flex;
   flex-direction: column;
   gap: 3px;
-  padding-bottom: 12px;
+  padding-bottom: 14px;
   border-bottom: 1px dashed var(--d-rule);
 }
 .m-exp-entry:last-child {
@@ -1048,19 +1050,19 @@ function printCV() {
 .m-ee-org {
   margin: 0;
   font-family: var(--font-text);
-  font-size: 14.5px;
+  font-size: 15px;
   font-weight: 700;
   color: var(--d-ink);
 }
 
 .m-ee-badge {
   font-family: var(--font-mono);
-  font-size: 9.5px;
+  font-size: 10px;
   font-weight: 700;
   color: var(--d-sig);
   background: var(--d-surface);
   border: 1px solid var(--d-rule);
-  padding: 1px 5px;
+  padding: 1px 6px;
 }
 
 .m-ee-sub-row {
@@ -1073,41 +1075,41 @@ function printCV() {
 
 .m-ee-role {
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: 11.5px;
   font-weight: 700;
   color: var(--d-sig);
 }
 
 .m-ee-loc {
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: 10.5px;
   color: var(--d-faint);
 }
 
 .m-ee-date {
   font-family: var(--font-mono);
-  font-size: 10.5px;
+  font-size: 11px;
   color: var(--d-faint);
 }
 
 .m-ee-desc {
   margin: 0;
   font-family: var(--font-text);
-  font-size: 12.5px;
-  line-height: 1.45;
+  font-size: 13px;
+  line-height: 1.48;
   color: var(--d-dim);
 }
 
 .m-ee-bullets {
   list-style: none;
   padding: 0;
-  margin: 3px 0 0;
+  margin: 4px 0 0;
   display: flex;
   flex-direction: column;
-  gap: 2.5px;
+  gap: 3px;
   font-family: var(--font-text);
-  font-size: 12px;
-  line-height: 1.4;
+  font-size: 12.5px;
+  line-height: 1.42;
   color: var(--d-ink);
 }
 
@@ -1128,13 +1130,13 @@ function printCV() {
   display: flex;
   flex-wrap: wrap;
   gap: 4px;
-  margin-top: 5px;
+  margin-top: 6px;
 }
 
 .m-ee-chips span {
   font-family: var(--font-mono);
-  font-size: 9.5px;
-  padding: 1px 5px;
+  font-size: 10px;
+  padding: 1.5px 6px;
   background: var(--d-surface);
   border: 1px solid var(--d-rule);
   color: var(--d-dim);
@@ -1143,15 +1145,15 @@ function printCV() {
 /* Objetivo Profesional */
 .m-goal-box {
   border-left: 2px solid var(--d-sig);
-  padding: 8px 14px;
+  padding: 10px 16px;
   background: var(--d-surface);
-  margin-top: 6px;
+  margin-top: 8px;
 }
 
 .m-gb-title {
-  margin: 0 0 3px;
+  margin: 0 0 4px;
   font-family: var(--font-mono);
-  font-size: 9.5px;
+  font-size: 10px;
   font-weight: 800;
   letter-spacing: 0.08em;
   color: var(--d-sig);
@@ -1160,7 +1162,7 @@ function printCV() {
 .m-gb-text {
   margin: 0;
   font-family: var(--font-text);
-  font-size: 12.5px;
+  font-size: 13px;
   line-height: 1.5;
   color: var(--d-ink);
 }
@@ -1294,7 +1296,7 @@ function printCV() {
   .cv-modern {
     display: flex !important;
     flex-direction: column !important;
-    gap: 8pt !important;
+    gap: 7.5pt !important;
     background: #ffffff !important;
     color: #111827 !important;
     border: none !important;
@@ -1308,10 +1310,10 @@ function printCV() {
     flex-direction: row !important;
     align-items: flex-start !important;
     justify-content: space-between !important;
-    gap: 16pt !important;
-    padding-bottom: 6pt !important;
-    margin-bottom: 5pt !important;
-    border-bottom: 1.2pt solid #111827 !important;
+    gap: 18pt !important;
+    padding-bottom: 8pt !important;
+    margin-bottom: 6pt !important;
+    border-bottom: 1.5pt solid #111827 !important;
   }
   .cv-modern .m-masthead-main {
     flex: 1 !important;
@@ -1319,24 +1321,25 @@ function printCV() {
   }
   .cv-modern .m-name {
     color: #111827 !important;
-    font-size: 16.5pt !important;
+    font-size: 21.5pt !important;
     font-weight: 800 !important;
-    margin: 0 0 1pt !important;
+    margin: 0 0 2pt !important;
+    line-height: 1.15 !important;
   }
   .cv-modern .m-role {
     color: #e03600 !important;
-    font-size: 8.5pt !important;
+    font-size: 10.2pt !important;
     font-weight: 700 !important;
-    margin: 0 0 3pt !important;
+    margin: 0 0 4pt !important;
   }
   .cv-modern .m-bio {
     color: #374151 !important;
-    font-size: 8pt !important;
-    line-height: 1.35 !important;
+    font-size: 9.1pt !important;
+    line-height: 1.48 !important;
   }
   .cv-modern .m-meta-strip {
-    font-size: 7.2pt !important;
-    margin-bottom: 2pt !important;
+    font-size: 7.8pt !important;
+    margin-bottom: 3.5pt !important;
   }
   .cv-modern .m-kicker {
     color: #e03600 !important;
@@ -1345,20 +1348,20 @@ function printCV() {
     color: #16a34a !important;
   }
   .cv-modern .m-portrait-wrap {
-    width: 66px !important;
-    height: 66px !important;
+    width: 135px !important;
+    height: 135px !important;
     flex-shrink: 0 !important;
-    padding: 2px !important;
+    padding: 3.5px !important;
     border: 1px solid #d1d5db !important;
     background: #ffffff !important;
   }
   .cv-modern .m-body-grid {
     display: grid !important;
-    grid-template-columns: 195px 1fr !important;
-    gap: 13pt !important;
+    grid-template-columns: 218px 1fr !important;
+    gap: 16pt !important;
   }
   .cv-modern .m-side-col {
-    gap: 8pt !important;
+    gap: 9pt !important;
   }
   .cv-modern .m-panel {
     gap: 3.5pt !important;
@@ -1368,13 +1371,13 @@ function printCV() {
   .cv-modern .m-panel-title {
     color: #e03600 !important;
     border-bottom: 0.75pt solid #d1d5db !important;
-    font-size: 7.8pt !important;
-    padding-bottom: 1.5pt !important;
+    font-size: 8.8pt !important;
+    padding-bottom: 2pt !important;
   }
   .cv-modern .m-contact-list {
-    font-size: 7.5pt !important;
-    gap: 2.5pt !important;
-    line-height: 1.25 !important;
+    font-size: 8.5pt !important;
+    gap: 4pt !important;
+    line-height: 1.32 !important;
   }
   .cv-modern .m-contact-list li {
     color: #374151 !important;
@@ -1386,69 +1389,70 @@ function printCV() {
     color: #e03600 !important;
   }
   .cv-modern .m-stack-group {
-    gap: 1pt !important;
-    margin-bottom: 2pt !important;
+    gap: 1.5pt !important;
+    margin-bottom: 3.5pt !important;
   }
   .cv-modern .m-sg-label {
-    font-size: 6.8pt !important;
+    font-size: 7.6pt !important;
     color: #6b7280 !important;
   }
   .cv-modern .m-sg-val {
-    font-size: 7.5pt !important;
-    line-height: 1.22 !important;
+    font-size: 8.5pt !important;
+    line-height: 1.32 !important;
     color: #111827 !important;
   }
   .cv-modern .m-edu-item {
-    gap: 1pt !important;
-    margin-bottom: 2.5pt !important;
+    gap: 1.5pt !important;
+    margin-bottom: 4.5pt !important;
   }
   .cv-modern .m-ei-school {
-    font-size: 7.5pt !important;
+    font-size: 8.8pt !important;
     color: #111827 !important;
   }
   .cv-modern .m-ei-year {
-    font-size: 6.8pt !important;
+    font-size: 7.6pt !important;
     color: #6b7280 !important;
   }
   .cv-modern .m-ei-degree {
-    font-size: 7.5pt !important;
+    font-size: 8.8pt !important;
     color: #e03600 !important;
   }
   .cv-modern .m-ei-note {
-    font-size: 6.8pt !important;
+    font-size: 7.6pt !important;
     color: #4b5563 !important;
   }
   .cv-modern .m-lang-row {
-    font-size: 7.5pt !important;
+    font-size: 8.5pt !important;
+    margin-bottom: 2pt !important;
   }
   .cv-modern .m-lr-lang {
     color: #111827 !important;
   }
   .cv-modern .m-lr-level {
     color: #6b7280 !important;
-    font-size: 6.8pt !important;
+    font-size: 7.6pt !important;
   }
   .cv-modern .m-main-col {
-    gap: 6pt !important;
+    gap: 8pt !important;
   }
   .cv-modern .m-main-head {
     border-bottom: 0.75pt solid #d1d5db !important;
-    padding-bottom: 1.5pt !important;
+    padding-bottom: 2pt !important;
   }
   .cv-modern .m-main-title {
     color: #111827 !important;
-    font-size: 7.8pt !important;
+    font-size: 8.8pt !important;
   }
   .cv-modern .m-main-count {
     color: #e03600 !important;
-    font-size: 6.8pt !important;
+    font-size: 7.8pt !important;
   }
   .cv-modern .m-exp-list {
-    gap: 5pt !important;
+    gap: 7pt !important;
   }
   .cv-modern .m-exp-entry {
-    gap: 1.5pt !important;
-    padding-bottom: 4pt !important;
+    gap: 2pt !important;
+    padding-bottom: 6.5pt !important;
     border-bottom: 0.5pt dashed #e5e7eb !important;
     break-inside: avoid !important;
     page-break-inside: avoid !important;
@@ -1462,66 +1466,69 @@ function printCV() {
   }
   .cv-modern .m-ee-org {
     color: #111827 !important;
-    font-size: 8.8pt !important;
+    font-size: 10.2pt !important;
   }
   .cv-modern .m-ee-badge {
     color: #e03600 !important;
-    font-size: 6.5pt !important;
+    font-size: 7.2pt !important;
     border: 0.5pt solid #e5e7eb !important;
     background: #f9fafb !important;
+    padding: 1pt 4pt !important;
   }
   .cv-modern .m-ee-loc {
     color: #6b7280 !important;
-    font-size: 6.8pt !important;
+    font-size: 7.8pt !important;
   }
   .cv-modern .m-ee-role {
     color: #e03600 !important;
-    font-size: 7.5pt !important;
+    font-size: 8.8pt !important;
   }
   .cv-modern .m-ee-date {
     color: #6b7280 !important;
-    font-size: 6.8pt !important;
+    font-size: 7.8pt !important;
   }
   .cv-modern .m-ee-desc {
     color: #374151 !important;
-    font-size: 7.5pt !important;
-    line-height: 1.25 !important;
+    font-size: 8.6pt !important;
+    line-height: 1.34 !important;
   }
   .cv-modern .m-ee-bullets {
-    font-size: 7.2pt !important;
-    line-height: 1.22 !important;
+    font-size: 8.3pt !important;
+    line-height: 1.32 !important;
     color: #1f2937 !important;
-    gap: 1pt !important;
+    gap: 2pt !important;
+    margin-top: 2.5pt !important;
   }
   .cv-modern .m-ee-bullets li::before {
     color: #e03600 !important;
   }
   .cv-modern .m-ee-chips {
-    gap: 2pt !important;
-    margin-top: 1pt !important;
+    gap: 2.5pt !important;
+    margin-top: 3pt !important;
   }
   .cv-modern .m-ee-chips span {
-    font-size: 6.5pt !important;
-    padding: 0.5pt 2.5pt !important;
+    font-size: 7pt !important;
+    padding: 1pt 4pt !important;
     background: #f3f4f6 !important;
     border: 0.5pt solid #e5e7eb !important;
     color: #374151 !important;
   }
   .cv-modern .m-goal-box {
-    border-left: 1.5pt solid #e03600 !important;
+    border-left: 2.5pt solid #e03600 !important;
     background: #f9fafb !important;
-    padding: 3pt 5pt !important;
-    margin-top: 2pt !important;
+    padding: 6pt 9pt !important;
+    margin-top: 4pt !important;
     break-inside: avoid !important;
     page-break-inside: avoid !important;
   }
   .cv-modern .m-gb-title {
-    font-size: 6.8pt !important;
+    font-size: 7.8pt !important;
     color: #e03600 !important;
+    margin-bottom: 2pt !important;
   }
   .cv-modern .m-gb-text {
-    font-size: 7.2pt !important;
-    line-height: 1.22 !important;
+    font-size: 8.3pt !important;
+    line-height: 1.32 !important;
     color: #1f2937 !important;
   }
 }
