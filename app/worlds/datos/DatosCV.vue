@@ -49,6 +49,13 @@ const cvGoal = computed(() => isEs.value
   : 'Consolidate my impact as an engineer within a high-caliber team shipping large-scale production software. In the medium term, technical leadership: coordinating, organizing, and bridging disciplines across product, UI/UX, frontend, and backend architectures.',
 )
 
+const cvEmail = computed(() => props.detail?.contact?.email || 'mateogabus@gmail.com')
+const cvGithub = computed(() => props.detail?.contact?.github || 'https://github.com/MateoGs013')
+const cvGithubText = computed(() => cvGithub.value.replace(/^https?:\/\/(www\.)?/, ''))
+const cvLinkedin = computed(() => props.detail?.contact?.linkedin || 'https://www.linkedin.com/in/mateo-sonzogni')
+const cvLinkedinText = computed(() => cvLinkedin.value.replace(/^https?:\/\/(www\.)?/, ''))
+const cvTimezone = computed(() => props.detail?.contact?.timezone || 'UTC-3')
+
 const cvDownloadFileName = computed(() => {
   const lang = isEs.value ? 'ES' : 'EN'
   const style = mode.value === 'harvard' ? 'Harvard_ATS' : 'Moderno'
@@ -125,11 +132,11 @@ function printCV() {
         <div class="h-contact">
           <span>{{ cvLocation }}</span>
           <span class="h-sep">|</span>
-          <a href="mailto:mateogabus@gmail.com">mateogabus@gmail.com</a>
+          <a :href="`mailto:${cvEmail}`">{{ cvEmail }}</a>
           <span class="h-sep">|</span>
-          <a href="https://github.com/MateoGs013" target="_blank" rel="noopener noreferrer">github.com/MateoGs013</a>
+          <a :href="cvGithub" target="_blank" rel="noopener noreferrer">{{ cvGithubText }}</a>
           <span class="h-sep">|</span>
-          <a href="https://www.linkedin.com/in/mateo-sonzogni" target="_blank" rel="noopener noreferrer">linkedin.com/in/mateo-sonzogni</a>
+          <a :href="cvLinkedin" target="_blank" rel="noopener noreferrer">{{ cvLinkedinText }}</a>
           <span class="h-sep">|</span>
           <span>{{ isEs ? 'Disponibilidad Inmediata · Remoto / Híbrido' : 'Immediate Availability · Remote / Hybrid' }}</span>
         </div>
@@ -314,15 +321,15 @@ function printCV() {
             <ul class="m-contact-list">
               <li>
                 <DatosIcon name="mail" :size="12" class="m-icon" />
-                <a href="mailto:mateogabus@gmail.com">mateogabus@gmail.com</a>
+                <a :href="`mailto:${cvEmail}`">{{ cvEmail }}</a>
               </li>
               <li>
                 <DatosIcon name="code" :size="12" class="m-icon" />
-                <a href="https://github.com/MateoGs013" target="_blank" rel="noopener noreferrer">github.com/MateoGs013</a>
+                <a :href="cvGithub" target="_blank" rel="noopener noreferrer">{{ cvGithubText }}</a>
               </li>
               <li>
                 <DatosIcon name="briefcase" :size="12" class="m-icon" />
-                <a href="https://www.linkedin.com/in/mateo-sonzogni" target="_blank" rel="noopener noreferrer">linkedin.com/in/mateo-sonzogni</a>
+                <a :href="cvLinkedin" target="_blank" rel="noopener noreferrer">{{ cvLinkedinText }}</a>
               </li>
               <li>
                 <DatosIcon name="pin" :size="12" class="m-icon" />
@@ -330,7 +337,7 @@ function printCV() {
               </li>
               <li>
                 <DatosIcon name="clock" :size="12" class="m-icon" />
-                <span>UTC-3 ({{ isEs ? 'Remoto / Híbrido' : 'Remote / Hybrid' }})</span>
+                <span>{{ cvTimezone }} ({{ isEs ? 'Remoto / Híbrido' : 'Remote / Hybrid' }})</span>
               </li>
             </ul>
           </div>

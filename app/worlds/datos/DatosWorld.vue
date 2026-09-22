@@ -82,9 +82,15 @@ useHead({
 })
 usePreloadFonts('datos')
 
+const nuxtApp = useNuxtApp()
 const { data: ex, error } = await useAsyncData<Explorer>(
   computed(() => `explorer${route.fullPath}`),
   () => resolveExplorer(api, path.value, route.query),
+  {
+    getCachedData(key) {
+      return nuxtApp.isHydrating ? nuxtApp.payload.data[key] : nuxtApp.static.data[key]
+    }
+  }
 )
 
 // Manejo de errores HTTP

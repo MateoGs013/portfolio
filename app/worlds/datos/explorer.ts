@@ -130,6 +130,7 @@ export interface Detail {
   rawRecord?: unknown
   projects?: Project[]
   experience?: Experience[]
+  contact?: Record<string, string>
 }
 
 export interface Explorer {
@@ -345,12 +346,21 @@ export async function resolveExplorer(api: Api, path: Path, query: LocationQuery
   if (isDoc(root)) {
     if (slug) throw notFound()
     if (root === 'about') {
-      const [answer, expRes, projRes] = await Promise.all([
+      const [answer, expRes, projRes, contactRes] = await Promise.all([
         api.doc(root),
         api.list('experience').catch(() => null),
         api.list('projects').catch(() => null),
+        api.doc('contact').catch(() => null),
       ])
       last = answer
+      
+      const contactData: Record<string, string> = {}
+      if (contactRes?.data?.fields) {
+        for (const f of contactRes.data.fields) {
+          contactData[f.name] = String(f.value)
+        }
+      }
+
       detail = {
         kind: 'document',
         name: answer.data.title,
@@ -360,6 +370,7 @@ export async function resolveExplorer(api: Api, path: Path, query: LocationQuery
         rows: answer.data.fields.map(f => docRow(f)),
         experience: expRes?.data ?? [],
         projects: projRes?.data ?? [],
+        contact: contactData,
       }
       return done()
     }
