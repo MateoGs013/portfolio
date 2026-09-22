@@ -423,30 +423,32 @@ function printCV() {
           </div>
 
           <div class="ide-sidebar-inner">
-            <div class="ide-sidebar-header">
-              <span class="ide-tree-root">~/curriculum</span>
-            </div>
-            
-            <div class="ide-tree">
-              <div class="ide-tree-group">
-                <div class="ide-tree-folder">
-                  <span class="ide-tree-bullet">▼</span> src/
-                </div>
-                <ul class="ide-tree-files">
-                  <li><span class="ide-tree-bullet">·</span> profile.ts</li>
-                  <li><span class="ide-tree-bullet">·</span> experience.vue</li>
-                  <li><span class="ide-tree-bullet">·</span> stack.py</li>
-                  <li><span class="ide-tree-bullet">·</span> education.sql</li>
-                </ul>
+            <div class="ide-tree-block">
+              <div class="ide-sidebar-header">
+                <span class="ide-tree-root">~/curriculum</span>
               </div>
-              <div class="ide-tree-group">
-                <div class="ide-tree-folder">
-                  <span class="ide-tree-bullet">▼</span> config/
+              
+              <div class="ide-tree">
+                <div class="ide-tree-group">
+                  <div class="ide-tree-folder">
+                    <span class="ide-tree-bullet">▼</span> src/
+                  </div>
+                  <ul class="ide-tree-files">
+                    <li><span class="ide-tree-bullet">·</span> profile.ts</li>
+                    <li><span class="ide-tree-bullet">·</span> experience.vue</li>
+                    <li><span class="ide-tree-bullet">·</span> stack.py</li>
+                    <li><span class="ide-tree-bullet">·</span> education.sql</li>
+                  </ul>
                 </div>
-                <ul class="ide-tree-files">
-                  <li><span class="ide-tree-bullet">·</span> contact.env</li>
-                  <li><span class="ide-tree-bullet">·</span> nuxt.config.ts</li>
-                </ul>
+                <div class="ide-tree-group">
+                  <div class="ide-tree-folder">
+                    <span class="ide-tree-bullet">▼</span> config/
+                  </div>
+                  <ul class="ide-tree-files">
+                    <li><span class="ide-tree-bullet">·</span> contact.env</li>
+                    <li><span class="ide-tree-bullet">·</span> nuxt.config.ts</li>
+                  </ul>
+                </div>
               </div>
             </div>
 
@@ -516,9 +518,11 @@ function printCV() {
           </div>
 
           <div class="ide-editor-content">
-            <div class="ide-comment">// curriculum vitae — mateo sonzogni, 2026</div>
-            <h1 class="ide-name">{{ cvName }}</h1>
-            <p class="ide-role">{{ cvRole }}</p>
+            <header class="ide-header">
+              <div class="ide-comment">// curriculum vitae — mateo sonzogni, 2026</div>
+              <h1 class="ide-name">{{ cvName }}</h1>
+              <p class="ide-role">{{ cvRole }}</p>
+            </header>
 
             <div class="ide-hr"></div>
 
@@ -837,6 +841,12 @@ function printCV() {
   gap: 16px;
 }
 
+.ide-tree-block {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
 .ide-sidebar-header {
   color: var(--d-sig);
   font-size: 11.5px;
@@ -993,6 +1003,11 @@ function printCV() {
 .ide-editor-content {
   padding: 24px 32px;
   flex: 1;
+}
+
+.ide-header {
+  display: flex;
+  flex-direction: column;
 }
 
 .ide-name {
@@ -1291,13 +1306,15 @@ function printCV() {
     background: transparent !important;
   }
 
-  /* Harvard ATS print (1 Página Exacta) */
+  /* Harvard ATS print (1 Página Exacta con márgenes A4) */
   .cv-harvard {
     border: none !important;
     box-shadow: none !important;
-    padding: 0 !important;
+    width: 210mm !important;
+    min-height: 297mm !important;
+    padding: 12mm 16mm !important;
     margin: 0 !important;
-    max-width: 100% !important;
+    box-sizing: border-box !important;
     background: #ffffff !important;
     color: #000000 !important;
   }
@@ -1371,48 +1388,54 @@ function printCV() {
     margin: 0 0 2pt !important;
   }
 
-  /* Modern print (1 Página Completa A4 - Máximo aprovechamiento de ancho y alto) */
+  /* Modern print (1 Página Completa A4 - 210mm x 297mm Exactos, Sin Recortes, Distribución Total de Alto y Ancho) */
   .cv-modern {
     background: #ffffff !important;
     color: #111827 !important;
     border: none !important;
     box-shadow: none !important;
-    width: 100% !important;
-    max-width: 100% !important;
-    height: 100% !important;
+    width: 210mm !important;
+    height: 297mm !important;
+    max-height: 297mm !important;
     padding: 0 !important;
     margin: 0 !important;
+    box-sizing: border-box !important;
+    overflow: visible !important;
   }
   .cv-modern .ide-container {
     background: #ffffff !important;
-    border: 0.75pt solid #cbd5e1 !important;
+    border: none !important;
     color: #111827 !important;
-    font-size: 7.7pt !important;
     display: grid !important;
-    grid-template-columns: 205px 1fr !important;
-    min-height: 260mm !important;
-    height: 264mm !important;
+    grid-template-columns: 66mm 144mm !important;
+    width: 210mm !important;
+    height: 297mm !important;
+    max-height: 297mm !important;
     box-sizing: border-box !important;
-    overflow: hidden !important;
+    overflow: visible !important;
     break-inside: avoid !important;
     page-break-inside: avoid !important;
   }
   .cv-modern .ide-sidebar {
     background: #f8f9fa !important;
     border-right: 0.75pt solid #cbd5e1 !important;
-    width: 205px !important;
+    width: 66mm !important;
+    height: 297mm !important;
+    max-height: 297mm !important;
     display: flex !important;
     flex-direction: column !important;
-    height: 100% !important;
     box-sizing: border-box !important;
+    overflow: visible !important;
   }
   .cv-modern .ide-window-controls {
     background: #f1f3f5 !important;
     border-bottom: 0.5pt solid #cbd5e1 !important;
-    padding: 5pt 9pt !important;
+    height: 9.5mm !important;
+    padding: 0 7mm !important;
     display: flex !important;
     align-items: center !important;
-    gap: 4pt !important;
+    gap: 4.5pt !important;
+    box-sizing: border-box !important;
   }
   .cv-modern .ide-dot {
     width: 5.5pt !important;
@@ -1425,22 +1448,30 @@ function printCV() {
     margin-left: auto !important;
   }
   .cv-modern .ide-sidebar-inner {
-    padding: 6pt 9pt 8pt !important;
+    height: calc(297mm - 9.5mm) !important;
+    padding: 6.5mm 7mm 7mm !important;
     display: flex !important;
     flex-direction: column !important;
     justify-content: space-between !important;
     flex: 1 !important;
     box-sizing: border-box !important;
+    overflow: visible !important;
+  }
+  .cv-modern .ide-tree-block {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 2pt !important;
   }
   .cv-modern .ide-sidebar-header {
     color: #e03600 !important;
     font-weight: 700 !important;
-    font-size: 8pt !important;
+    font-size: 7.8pt !important;
+    margin-bottom: 2pt !important;
   }
   .cv-modern .ide-tree {
     display: flex !important;
     flex-direction: column !important;
-    gap: 3pt !important;
+    gap: 2pt !important;
   }
   .cv-modern .ide-tree-group {
     display: flex !important;
@@ -1449,13 +1480,13 @@ function printCV() {
   }
   .cv-modern .ide-tree-folder {
     color: #e03600 !important;
-    font-size: 7.6pt !important;
+    font-size: 7.4pt !important;
     font-weight: 700 !important;
   }
   .cv-modern .ide-tree-files {
-    font-size: 7pt !important;
+    font-size: 6.9pt !important;
     gap: 1pt !important;
-    padding-left: 8pt !important;
+    padding-left: 7pt !important;
     margin: 0 !important;
     list-style: none !important;
     display: flex !important;
@@ -1465,50 +1496,51 @@ function printCV() {
   .cv-modern .ide-divider {
     background: #e2e8f0 !important;
     height: 0.5pt !important;
+    margin: 0 !important;
   }
   .cv-modern .ide-photo-wrap {
-    width: 95px !important;
+    width: 92px !important;
     margin: 0 auto !important;
   }
   .cv-modern .ide-photo {
-    width: 95px !important;
-    height: 95px !important;
+    width: 92px !important;
+    height: 92px !important;
     object-fit: cover !important;
     border: 0.75pt solid #cbd5e1 !important;
   }
   .cv-modern .ide-sidebar-section {
     display: flex !important;
     flex-direction: column !important;
-    gap: 2.5pt !important;
+    gap: 1.8pt !important;
   }
   .cv-modern .ide-edu-item {
     display: flex !important;
     flex-direction: column !important;
-    gap: 1pt !important;
+    gap: 0.8pt !important;
     margin-bottom: 1.5pt !important;
   }
   .cv-modern .ide-edu-school {
     color: #111827 !important;
     font-weight: 700 !important;
-    font-size: 7.5pt !important;
+    font-size: 7.4pt !important;
   }
   .cv-modern .ide-edu-degree {
     color: #e03600 !important;
-    font-size: 7pt !important;
+    font-size: 6.9pt !important;
   }
   .cv-modern .ide-edu-sub {
     color: #6b7280 !important;
-    font-size: 6.6pt !important;
+    font-size: 6.5pt !important;
   }
   .cv-modern .ide-comment {
     color: #6b7280 !important;
-    font-size: 7pt !important;
+    font-size: 6.9pt !important;
     margin-bottom: 1pt !important;
     font-style: italic !important;
   }
   .cv-modern .ide-key-val {
-    gap: 2pt !important;
-    font-size: 7pt !important;
+    gap: 1.8pt !important;
+    font-size: 6.9pt !important;
     display: flex !important;
     flex-direction: column !important;
     padding: 0 !important;
@@ -1527,8 +1559,8 @@ function printCV() {
     font-weight: 700 !important;
   }
   .cv-modern .ide-contact-list {
-    gap: 2pt !important;
-    font-size: 7pt !important;
+    gap: 1.8pt !important;
+    font-size: 6.8pt !important;
     display: flex !important;
     flex-direction: column !important;
     padding: 0 !important;
@@ -1540,24 +1572,35 @@ function printCV() {
     color: #4b5563 !important;
     text-decoration: none !important;
   }
+
+  /* Main Editor */
   .cv-modern .ide-main {
     background: #ffffff !important;
     padding: 0 !important;
     display: flex !important;
     flex-direction: column !important;
-    height: 100% !important;
+    width: 144mm !important;
+    height: 297mm !important;
+    max-height: 297mm !important;
     box-sizing: border-box !important;
+    overflow: visible !important;
   }
   .cv-modern .ide-tabs {
     background: #f8f9fa !important;
     border-bottom: 0.5pt solid #cbd5e1 !important;
     display: flex !important;
+    height: 9.5mm !important;
+    box-sizing: border-box !important;
   }
   .cv-modern .ide-tab {
     color: #6b7280 !important;
     border-right: 0.5pt solid #cbd5e1 !important;
-    padding: 4.5pt 10pt !important;
+    padding: 0 10pt !important;
+    height: 9.5mm !important;
+    display: flex !important;
+    align-items: center !important;
     font-size: 7.5pt !important;
+    box-sizing: border-box !important;
   }
   .cv-modern .ide-tab.active {
     background: #ffffff !important;
@@ -1566,50 +1609,58 @@ function printCV() {
     font-weight: 700 !important;
   }
   .cv-modern .ide-editor-content {
-    padding: 8pt 14pt 10pt !important;
+    height: calc(297mm - 9.5mm) !important;
+    padding: 6.5mm 11mm 7.5mm !important;
     display: flex !important;
     flex-direction: column !important;
     justify-content: space-between !important;
     flex: 1 !important;
     box-sizing: border-box !important;
+    overflow: visible !important;
+  }
+  .cv-modern .ide-header {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 1pt !important;
   }
   .cv-modern .ide-name {
     color: #111827 !important;
-    font-size: 19.5pt !important;
-    margin: 2pt 0 1.5pt !important;
+    font-size: 19pt !important;
+    margin: 1.5pt 0 1pt !important;
     line-height: 1.15 !important;
+    font-weight: 700 !important;
   }
   .cv-modern .ide-name::after {
     display: none !important;
   }
   .cv-modern .ide-role {
     color: #e03600 !important;
-    font-size: 9.2pt !important;
+    font-size: 9pt !important;
     font-weight: 700 !important;
     margin: 0 !important;
   }
   .cv-modern .ide-hr {
     background: #e2e8f0 !important;
     height: 0.5pt !important;
-    margin: 5.5pt 0 !important;
+    margin: 0 !important;
   }
   .cv-modern .ide-section {
     display: flex !important;
     flex-direction: column !important;
-    gap: 3pt !important;
+    gap: 2pt !important;
   }
   .cv-modern .ide-text {
     color: #374151 !important;
-    font-size: 8.1pt !important;
-    line-height: 1.42 !important;
+    font-size: 7.9pt !important;
+    line-height: 1.38 !important;
     margin: 0 !important;
   }
   .cv-modern .ide-exp-item {
     display: flex !important;
     flex-direction: column !important;
-    gap: 2pt !important;
-    margin-bottom: 5.5pt !important;
-    padding-bottom: 5pt !important;
+    gap: 1.5pt !important;
+    margin-bottom: 4pt !important;
+    padding-bottom: 3.5pt !important;
     border-bottom: 0.5pt dashed #cbd5e1 !important;
     break-inside: avoid !important;
   }
@@ -1623,51 +1674,52 @@ function printCV() {
     display: flex !important;
     justify-content: space-between !important;
     align-items: baseline !important;
-    gap: 8pt !important;
+    gap: 6pt !important;
   }
   .cv-modern .ide-exp-title {
     color: #111827 !important;
     font-weight: 700 !important;
-    font-size: 9.3pt !important;
+    font-size: 9.1pt !important;
   }
   .cv-modern .ide-exp-badge {
     color: #e03600 !important;
-    font-size: 6.8pt !important;
+    font-size: 6.6pt !important;
     border: 0.5pt solid #cbd5e1 !important;
     background: #f8fafc !important;
-    padding: 0.75pt 3.5pt !important;
+    padding: 0.5pt 3pt !important;
     border-radius: 2px !important;
+    margin-left: 4pt !important;
   }
   .cv-modern .ide-exp-date {
     color: #6b7280 !important;
-    font-size: 7.5pt !important;
+    font-size: 7.3pt !important;
   }
   .cv-modern .ide-exp-role {
     color: #e03600 !important;
-    font-size: 8.3pt !important;
+    font-size: 8.1pt !important;
     font-weight: 600 !important;
   }
   .cv-modern .ide-exp-loc {
     color: #6b7280 !important;
-    font-size: 7.5pt !important;
+    font-size: 7.3pt !important;
   }
   .cv-modern .ide-exp-desc {
     color: #374151 !important;
-    font-size: 7.8pt !important;
-    line-height: 1.36 !important;
+    font-size: 7.6pt !important;
+    line-height: 1.34 !important;
     margin: 0 !important;
   }
   .cv-modern .ide-exp-bullets {
     padding-left: 10pt !important;
-    gap: 1.5pt !important;
-    margin: 2pt 0 0 !important;
+    gap: 1pt !important;
+    margin: 1.5pt 0 0 !important;
     list-style: none !important;
     display: flex !important;
     flex-direction: column !important;
   }
   .cv-modern .ide-exp-bullets li {
-    font-size: 7.6pt !important;
-    line-height: 1.32 !important;
+    font-size: 7.4pt !important;
+    line-height: 1.3 !important;
     color: #374151 !important;
     position: relative !important;
   }
@@ -1682,12 +1734,12 @@ function printCV() {
   .cv-modern .ide-exp-tags {
     display: flex !important;
     flex-wrap: wrap !important;
-    gap: 3pt !important;
-    margin-top: 2.5pt !important;
+    gap: 2.5pt !important;
+    margin-top: 1.5pt !important;
   }
   .cv-modern .ide-tag {
-    font-size: 6.8pt !important;
-    padding: 1pt 3.5pt !important;
+    font-size: 6.6pt !important;
+    padding: 0.75pt 3pt !important;
     background: #f1f5f9 !important;
     border: 0.5pt solid #cbd5e1 !important;
     color: #334155 !important;
@@ -1696,7 +1748,8 @@ function printCV() {
   .cv-modern .ide-stack-group {
     display: flex !important;
     gap: 6pt !important;
-    font-size: 7.7pt !important;
+    font-size: 7.3pt !important;
+    line-height: 1.35 !important;
   }
   .cv-modern .ide-stack-label {
     color: #e03600 !important;
