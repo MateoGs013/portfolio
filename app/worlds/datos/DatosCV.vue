@@ -178,14 +178,45 @@ const cvDeliverables = computed<CVDeliverable[]>(() => {
   ]
 })
 
-const cvDownloadFileName = computed(() => {
+const cvDownloadBaseName = computed(() => {
   const lang = isEs.value ? 'ES' : 'EN'
-  const style = mode.value === 'harvard' ? 'Harvard_ATS' : 'Moderno'
-  return `Mateo_Sonzogni_CV_${style}_${lang}.pdf`
+  if (mode.value === 'harvard') {
+    return `CV-${lang}-Mateo-Sonzogni-ATS`
+  }
+  return `CV-${lang}-Mateo-Sonzogni`
+})
+
+const cvDownloadFileName = computed(() => `${cvDownloadBaseName.value}.pdf`)
+const cvPdfUrl = computed(() => `/cv/${cvDownloadFileName.value}`)
+
+let originalDocTitle = ''
+
+function handleBeforePrint() {
+  if (import.meta.client) {
+    originalDocTitle = document.title
+    document.title = cvDownloadBaseName.value
+  }
+}
+
+function handleAfterPrint() {
+  if (import.meta.client && originalDocTitle) {
+    document.title = originalDocTitle
+  }
+}
+
+onMounted(() => {
+  window.addEventListener('beforeprint', handleBeforePrint)
+  window.addEventListener('afterprint', handleAfterPrint)
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('beforeprint', handleBeforePrint)
+  window.removeEventListener('afterprint', handleAfterPrint)
 })
 
 function printCV() {
   if (import.meta.client) {
+    handleBeforePrint()
     window.print()
   }
 }
@@ -219,16 +250,16 @@ function printCV() {
       </div>
 
       <div class="cv-actions">
-        <!-- Botón de Descarga Directa PDF (Invoca el print calibrado a PDF para datos en vivo) -->
-        <button
-          type="button"
+        <!-- Botón de Descarga Directa PDF -->
+        <a
+          :href="cvPdfUrl"
+          :download="cvDownloadFileName"
           class="cv-action-btn cv-download-btn"
-          :title="isEs ? `Guardar o descargar PDF (${cvDownloadFileName})` : `Save or download PDF (${cvDownloadFileName})`"
-          @click="printCV"
+          :title="isEs ? `Descargar archivo PDF (${cvDownloadFileName})` : `Download PDF file (${cvDownloadFileName})`"
         >
           <DatosIcon name="download" :size="13" />
           <span>{{ isEs ? 'DESCARGAR PDF' : 'DOWNLOAD PDF' }}</span>
-        </button>
+        </a>
 
         <!-- Botón de Impresión Navegador -->
         <button
