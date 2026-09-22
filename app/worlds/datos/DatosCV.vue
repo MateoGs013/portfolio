@@ -56,20 +56,135 @@ const cvLinkedin = computed(() => props.detail?.contact?.linkedin || 'https://ww
 const cvLinkedinText = computed(() => cvLinkedin.value.replace(/^https?:\/\/(www\.)?/, ''))
 const cvTimezone = computed(() => props.detail?.contact?.timezone || 'UTC-3')
 
-// Compute sorted experience from props
-const cvExperience = computed(() => {
-  if (!props.detail?.experience) return []
-  return [...props.detail.experience].sort((a, b) => {
-    if (!a.start || !b.start) return 0
-    return new Date(b.start).getTime() - new Date(a.start).getTime()
-  })
-})
-
-function formatMonthYear(dateStr: string) {
-  if (!dateStr) return ''
-  const [year, month] = dateStr.split('-')
-  return `${month}/${year}`
+interface CVDeliverable {
+  slug: string
+  title: string
+  badge?: string
+  date: string
+  role: string
+  location: string
+  description: string
+  bullets: string[]
+  tags: string[]
 }
+
+const cvDeliverables = computed<CVDeliverable[]>(() => {
+  if (isEs.value) {
+    return [
+      {
+        slug: 'ynara',
+        title: 'Ynara AI Assistant',
+        badge: 'Tesis Da Vinci',
+        date: '05/2026 – 07/2026',
+        role: 'Arquitecto de Software & Lead Frontend',
+        location: 'Buenos Aires, Argentina',
+        description: 'Asistente de IA on-premise adaptativo en rioplatense con inferencia local y persistencia vectorial sobre PostgreSQL + pgvector.',
+        bullets: [
+          'Lideré la arquitectura técnica y el frontend reactivo con 382 commits en 6 semanas.',
+          'Diseñé pipelines de inferencia y memoria vectorial en Next.js y FastAPI con latencia sub-100ms.',
+        ],
+        tags: ['FastAPI', 'Next.js', 'PostgreSQL', 'pgvector', 'TypeScript', 'Python'],
+      },
+      {
+        slug: 'la-rucula',
+        title: 'La Rúcula Gastrobar',
+        badge: 'Freelance',
+        date: '03/2026 – 07/2026',
+        role: 'Desarrollador Full Stack & Diseñador UI',
+        location: 'Cádiz, España',
+        description: 'Sitio editorial menu-first optimizado para escaneo QR de clientes en mesa con arquitectura de caché offline.',
+        bullets: [
+          'Puntuación Lighthouse de 99 en Performance y 100 en SEO y Accesibilidad con bundle de 42 KB.',
+          'Integración con CMS propio y fallback en caché para operación continua ante caídas de red.',
+        ],
+        tags: ['Vue 3', 'Vite', 'Tailwind CSS', 'GSAP', 'Lenis'],
+      },
+      {
+        slug: 'arg-piscinas',
+        title: 'ARG Piscinas',
+        badge: 'Freelance',
+        date: '01/2026 – 07/2026',
+        role: 'Desarrollador Full Stack',
+        location: 'Andalucía, España',
+        description: 'Plataforma corporativa multi-idioma (ES/EN/DE) con panel de control autónomo para carga de obras y blog.',
+        bullets: [
+          'Modelado relacional y tipado estricto de extremo a extremo con Prisma ORM, Node.js y TypeScript.',
+        ],
+        tags: ['Vue 3', 'Node.js', 'Prisma', 'Tailwind CSS', 'TypeScript'],
+      },
+      {
+        slug: 'pegasuz',
+        title: 'Pegasuz & Freelance',
+        badge: 'Consultoría',
+        date: '2023 – Presente',
+        role: 'Fundador & Consultor de Software',
+        location: 'Remoto',
+        description: 'Diseño de CMS multi-tenant propio con APIs REST y entrega exitosa de aproximadamente 10 proyectos web llave en mano.',
+        bullets: [
+          'Desarrollo de punta a punta: arquitectura de sistemas, diseño en Figma y despliegue a producción.',
+        ],
+        tags: ['TypeScript', 'Vue 3', 'Node.js', 'PostgreSQL', 'Docker'],
+      },
+    ]
+  }
+
+  return [
+    {
+      slug: 'ynara',
+      title: 'Ynara AI Assistant',
+      badge: 'Da Vinci Thesis',
+      date: '05/2026 – 07/2026',
+      role: 'Software Architect & Lead Frontend',
+      location: 'Buenos Aires, Argentina',
+      description: 'Adaptive on-premise AI assistant with local inference and persistent vector memory over PostgreSQL + pgvector.',
+      bullets: [
+        'Led technical architecture and reactive frontend with 382 commits across 6 weeks of engineering.',
+        'Engineered Next.js client and FastAPI pipeline achieving sub-100ms semantic response times locally.',
+      ],
+      tags: ['FastAPI', 'Next.js', 'PostgreSQL', 'pgvector', 'TypeScript', 'Python'],
+    },
+    {
+      slug: 'la-rucula',
+      title: 'La Rúcula Gastrobar',
+      badge: 'Freelance',
+      date: '03/2026 – 07/2026',
+      role: 'Full Stack Developer & UI Designer',
+      location: 'Cadiz, Spain',
+      description: 'Editorial menu-first web app optimized for table-side QR scanning with cached offline resilience.',
+      bullets: [
+        'Achieved 99 Performance and 100 SEO & Accessibility Lighthouse scores with a compact 42 KB bundle.',
+        'Integrated proprietary CMS and cached offline fallbacks ensuring uninterrupted service during outages.',
+      ],
+      tags: ['Vue 3', 'Vite', 'Tailwind CSS', 'GSAP', 'Lenis'],
+    },
+    {
+      slug: 'arg-piscinas',
+      title: 'ARG Piscinas',
+      badge: 'Freelance',
+      date: '01/2026 – 07/2026',
+      role: 'Full Stack Developer',
+      location: 'Andalucia, Spain',
+      description: 'Multilingual corporate web platform (ES/EN/DE) with custom CMS dashboard for projects and blog.',
+      bullets: [
+        'Modeled relational schemas and end-to-end type safety using Prisma ORM, Node.js, and TypeScript.',
+      ],
+      tags: ['Vue 3', 'Node.js', 'Prisma', 'Tailwind CSS', 'TypeScript'],
+    },
+    {
+      slug: 'pegasuz',
+      title: 'Pegasuz & Freelance',
+      badge: 'Consultancy',
+      date: '2023 – Present',
+      role: 'Founder & Software Consultant',
+      location: 'Remote',
+      description: 'Proprietary multi-tenant headless CMS and successful delivery of ~10 turnkey web solutions for diverse clients.',
+      bullets: [
+        'End-to-end turnkey web solutions combining Figma UI design and production-ready full-stack software.',
+      ],
+      tags: ['TypeScript', 'Vue 3', 'Node.js', 'PostgreSQL', 'Docker'],
+    },
+  ]
+})
 
 const cvDownloadFileName = computed(() => {
   const lang = isEs.value ? 'ES' : 'EN'
@@ -348,11 +463,31 @@ function printCV() {
 
             <div class="ide-divider"></div>
 
+            <!-- Formación / Education -->
             <div class="ide-sidebar-section">
-              <div class="ide-comment">// stats</div>
+              <div class="ide-comment">// {{ isEs ? 'formación técnica' : 'education' }}</div>
+              <div class="ide-edu-item">
+                <div class="ide-edu-school">ESCUELA DA VINCI</div>
+                <div class="ide-edu-degree">{{ isEs ? 'Diseño y Desarrollo Web' : 'Web Design & Dev' }} (2024–2026)</div>
+                <div class="ide-edu-sub">{{ isEs ? 'Tesis: Ynara (Lead Front & Arq.)' : 'Thesis: Ynara (Lead Front & Arch)' }}</div>
+              </div>
+              <div class="ide-edu-item">
+                <div class="ide-edu-school">CET N.º 30</div>
+                <div class="ide-edu-degree">{{ isEs ? 'Técnico en Programación' : 'Programming Tech' }} (2017–2023)</div>
+                <div class="ide-edu-sub">{{ isEs ? 'Plan integral de 7 años' : '7-year technical program' }}</div>
+              </div>
+            </div>
+
+            <div class="ide-divider"></div>
+
+            <!-- Stats & Idiomas -->
+            <div class="ide-sidebar-section">
+              <div class="ide-comment">// {{ isEs ? 'métricas & idiomas' : 'metrics & languages' }}</div>
               <ul class="ide-key-val">
-                <li><span>{{ isEs ? 'Idiomas' : 'Languages' }}</span> <span class="ide-highlight">{{ isEs ? '2' : '2' }}</span></li>
+                <li><span>{{ isEs ? 'Español' : 'Spanish' }}</span> <span class="ide-highlight">{{ isEs ? 'Nativo' : 'Native' }}</span></li>
+                <li><span>{{ isEs ? 'Inglés' : 'English' }}</span> <span class="ide-highlight">{{ isEs ? 'B2 Profesional' : 'B2 Professional' }}</span></li>
                 <li><span>{{ isEs ? 'Experiencia' : 'Experience' }}</span> <span class="ide-highlight">{{ isEs ? '+3 años' : '3+ yrs' }}</span></li>
+                <li><span>{{ isEs ? 'Proyectos' : 'Projects' }}</span> <span class="ide-highlight">~10 apps</span></li>
                 <li><span>{{ isEs ? 'Disponibilidad' : 'Availability' }}</span> <span class="ide-highlight">{{ isEs ? 'Inmediata' : 'Immediate' }}</span></li>
                 <li><span>{{ isEs ? 'Zona Horaria' : 'Timezone' }}</span> <span class="ide-highlight">{{ cvTimezone }}</span></li>
               </ul>
@@ -360,8 +495,9 @@ function printCV() {
 
             <div class="ide-divider"></div>
 
+            <!-- Contact -->
             <div class="ide-sidebar-section">
-              <div class="ide-comment">// contact</div>
+              <div class="ide-comment">// {{ isEs ? 'contacto' : 'contact' }}</div>
               <ul class="ide-contact-list">
                 <li><a :href="`mailto:${cvEmail}`">{{ cvEmail }}</a></li>
                 <li><a :href="cvGithub" target="_blank" rel="noopener noreferrer">@{{ cvGithubText.replace('github.com/', '') }}</a></li>
@@ -382,7 +518,7 @@ function printCV() {
           <div class="ide-editor-content">
             <div class="ide-comment">// curriculum vitae — mateo sonzogni, 2026</div>
             <h1 class="ide-name">{{ cvName }}</h1>
-            <p class="ide-role">{{ isEs ? 'Arquitecto Backend & Frontend Reactivo' : 'Backend & Reactive Frontend Architect' }}</p>
+            <p class="ide-role">{{ cvRole }}</p>
 
             <div class="ide-hr"></div>
 
@@ -394,17 +530,29 @@ function printCV() {
 
             <div class="ide-hr"></div>
 
-            <!-- Experience -->
+            <!-- Experience & Projects -->
             <div class="ide-section">
-              <div class="ide-comment">// experience</div>
+              <div class="ide-comment">// {{ isEs ? 'experiencia profesional & proyectos en producción' : 'professional experience & shipped projects' }}</div>
               
-              <div v-for="exp in cvExperience" :key="exp.slug" class="ide-exp-item">
-                <h3 class="ide-exp-role">{{ isEs && exp.role_es ? exp.role_es : exp.role }}</h3>
-                <div class="ide-exp-meta">
-                  <span class="ide-exp-org"><span class="ide-bullet">·</span> {{ exp.org?.name || 'Freelance' }}</span>
-                  <span class="ide-exp-date">{{ formatMonthYear(exp.start) }} – {{ exp.end ? formatMonthYear(exp.end) : (isEs ? 'now' : 'now') }}</span>
+              <div v-for="item in cvDeliverables" :key="item.slug" class="ide-exp-item">
+                <div class="ide-exp-top-row">
+                  <div class="ide-exp-title-wrap">
+                    <span class="ide-exp-title">{{ item.title }}</span>
+                    <span v-if="item.badge" class="ide-exp-badge">{{ item.badge }}</span>
+                  </div>
+                  <span class="ide-exp-date">{{ item.date }}</span>
                 </div>
-                <p class="ide-text">{{ isEs && exp.description_es ? exp.description_es : exp.description }}</p>
+                <div class="ide-exp-sub-row">
+                  <span class="ide-exp-role">{{ item.role }}</span>
+                  <span class="ide-exp-loc">{{ item.location }}</span>
+                </div>
+                <p class="ide-exp-desc">{{ item.description }}</p>
+                <ul v-if="item.bullets?.length" class="ide-exp-bullets">
+                  <li v-for="(bullet, bIdx) in item.bullets" :key="bIdx">{{ bullet }}</li>
+                </ul>
+                <div v-if="item.tags?.length" class="ide-exp-tags">
+                  <span v-for="tag in item.tags" :key="tag" class="ide-tag">#{{ tag }}</span>
+                </div>
               </div>
             </div>
 
@@ -412,18 +560,18 @@ function printCV() {
 
             <!-- Stack -->
             <div class="ide-section">
-              <div class="ide-comment">// stack</div>
+              <div class="ide-comment">// {{ isEs ? 'stack tecnológico' : 'tech stack' }}</div>
               <div class="ide-stack-group">
                 <span class="ide-stack-label">frontend</span>
-                <span class="ide-stack-val">: "Vue 3 - Nuxt 4 - React - TS"</span>
+                <span class="ide-stack-val">: "Vue 3 · Nuxt 4 · React · Next.js · TypeScript · Tailwind · GSAP"</span>
               </div>
               <div class="ide-stack-group">
                 <span class="ide-stack-label">backend </span>
-                <span class="ide-stack-val">: "Node.js - Python - PostgreSQL"</span>
+                <span class="ide-stack-val">: "Node.js · Express · FastAPI · Python · PostgreSQL (pgvector) · Prisma"</span>
               </div>
               <div class="ide-stack-group">
-                <span class="ide-stack-label">infra   </span>
-                <span class="ide-stack-val">: "Docker - Coolify VPS - Linux"</span>
+                <span class="ide-stack-label">cloud/ops</span>
+                <span class="ide-stack-val">: "Docker · Coolify VPS · Linux · CI/CD · Git · Figma UI/UX · Vitest"</span>
               </div>
             </div>
 
@@ -753,6 +901,26 @@ function printCV() {
   gap: 8px;
 }
 
+.ide-edu-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-bottom: 6px;
+}
+.ide-edu-school {
+  color: var(--d-ink);
+  font-weight: 700;
+  font-size: 11px;
+}
+.ide-edu-degree {
+  color: var(--d-sig);
+  font-size: 10.5px;
+}
+.ide-edu-sub {
+  color: var(--d-dim);
+  font-size: 10px;
+}
+
 .ide-comment {
   color: var(--d-dim);
   font-style: italic;
@@ -829,7 +997,7 @@ function printCV() {
 
 .ide-name {
   margin: 12px 0 4px;
-  font-size: 28px;
+  font-size: 26px;
   font-weight: 700;
   color: var(--d-ink);
   font-family: var(--font-mono);
@@ -850,6 +1018,7 @@ function printCV() {
   margin: 0;
   color: var(--d-sig);
   font-size: 12.5px;
+  font-weight: 600;
 }
 
 .ide-section {
@@ -861,40 +1030,121 @@ function printCV() {
 .ide-text {
   margin: 0;
   color: var(--d-dim);
-  font-size: 12.5px;
-  line-height: 1.6;
-}
-
-.ide-exp-list {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
+  font-size: 12px;
+  line-height: 1.55;
 }
 
 .ide-exp-item {
   display: flex;
   flex-direction: column;
   gap: 4px;
-  margin-bottom: 4px;
+  margin-bottom: 14px;
+  padding-bottom: 12px;
+  border-bottom: 1px dashed var(--d-rule);
+}
+.ide-exp-item:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
+.ide-exp-top-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.ide-exp-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ide-exp-title {
+  color: var(--d-ink);
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.ide-exp-badge {
+  color: var(--d-sig);
+  border: 1px solid var(--d-rule-strong);
+  background: var(--d-surface-raised);
+  padding: 1px 6px;
+  font-size: 9.5px;
+  border-radius: 2px;
+}
+
+.ide-exp-date {
+  color: var(--d-dim);
+  font-size: 11px;
+  flex-shrink: 0;
+}
+
+.ide-exp-sub-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
 }
 
 .ide-exp-role {
-  margin: 0;
   color: var(--d-sig);
-  font-size: 13px;
-  font-weight: normal;
+  font-size: 12px;
+  font-weight: 500;
 }
 
-.ide-exp-meta {
-  display: flex;
-  justify-content: space-between;
+.ide-exp-loc {
+  color: var(--d-dim);
+  font-size: 10.5px;
+}
+
+.ide-exp-desc {
+  margin: 2px 0 0;
   color: var(--d-dim);
   font-size: 11.5px;
-  margin-bottom: 2px;
+  line-height: 1.5;
 }
 
-.ide-bullet {
-  color: var(--d-rule-strong);
+.ide-exp-bullets {
+  margin: 4px 0 0;
+  padding-left: 14px;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.ide-exp-bullets li {
+  position: relative;
+  color: var(--d-dim);
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+.ide-exp-bullets li::before {
+  content: '·';
+  position: absolute;
+  left: -10px;
+  color: var(--d-sig);
+  font-weight: bold;
+}
+
+.ide-exp-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-top: 4px;
+}
+
+.ide-tag {
+  color: var(--d-dim);
+  background: var(--d-surface-raised);
+  border: 1px solid var(--d-rule);
+  padding: 1px 6px;
+  font-size: 10px;
+  border-radius: 2px;
 }
 
 .ide-stack-group {
@@ -1048,145 +1298,304 @@ function printCV() {
   }
   .cv-modern .ide-container {
     background: #ffffff !important;
-    border: none !important;
+    border: 0.5pt solid #d1d5db !important;
     color: #111827 !important;
-    font-size: 8pt !important;
-    display: flex !important;
-    flex-direction: row !important;
-    height: 100% !important;
+    font-size: 7.5pt !important;
+    display: grid !important;
+    grid-template-columns: 185px 1fr !important;
+    height: auto !important;
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
   }
   .cv-modern .ide-sidebar {
     background: #f8f9fa !important;
     border-right: 0.5pt solid #d1d5db !important;
-    width: 210px !important;
-    flex-shrink: 0 !important;
+    width: 185px !important;
   }
   .cv-modern .ide-window-controls {
     background: #f3f4f6 !important;
     border-bottom: 0.5pt solid #d1d5db !important;
-    padding: 8pt 10pt !important;
+    padding: 4pt 7pt !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 4pt !important;
+  }
+  .cv-modern .ide-dot {
+    width: 5pt !important;
+    height: 5pt !important;
   }
   .cv-modern .ide-file-title {
-    color: #111827 !important;
+    color: #e03600 !important;
     font-weight: 700 !important;
+    font-size: 7pt !important;
+    margin-left: auto !important;
   }
   .cv-modern .ide-sidebar-inner {
-    padding: 10pt !important;
-    gap: 12pt !important;
+    padding: 6pt !important;
+    gap: 6pt !important;
+    display: flex !important;
+    flex-direction: column !important;
   }
   .cv-modern .ide-sidebar-header {
-    color: #111827 !important;
+    color: #e03600 !important;
     font-weight: 700 !important;
+    font-size: 7.5pt !important;
+  }
+  .cv-modern .ide-tree {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 4pt !important;
+  }
+  .cv-modern .ide-tree-group {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 1.5pt !important;
   }
   .cv-modern .ide-tree-folder {
-    color: #111827 !important;
+    color: #e03600 !important;
+    font-size: 7.2pt !important;
     font-weight: 700 !important;
   }
-  .cv-modern .ide-tree-files,
-  .cv-modern .ide-tree-bullet {
-    color: #4b5563 !important;
+  .cv-modern .ide-tree-files {
+    font-size: 6.8pt !important;
+    gap: 1pt !important;
+    padding-left: 6pt !important;
+    margin: 0 !important;
+    list-style: none !important;
+    display: flex !important;
+    flex-direction: column !important;
   }
   .cv-modern .ide-divider {
     background: #e5e7eb !important;
+    height: 0.5pt !important;
   }
   .cv-modern .ide-photo-wrap {
-    width: 135px !important;
+    width: 85px !important;
     margin: 0 auto !important;
   }
   .cv-modern .ide-photo {
-    width: 135px !important;
-    height: 135px !important;
+    width: 85px !important;
+    height: 85px !important;
     object-fit: cover !important;
     border: 0.5pt solid #d1d5db !important;
   }
-  .cv-modern .ide-comment {
-    color: #6b7280 !important;
+  .cv-modern .ide-sidebar-section {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 3pt !important;
+  }
+  .cv-modern .ide-edu-item {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 1pt !important;
     margin-bottom: 2pt !important;
   }
+  .cv-modern .ide-edu-school {
+    color: #111827 !important;
+    font-weight: 700 !important;
+    font-size: 7.2pt !important;
+  }
+  .cv-modern .ide-edu-degree {
+    color: #e03600 !important;
+    font-size: 6.8pt !important;
+  }
+  .cv-modern .ide-edu-sub {
+    color: #6b7280 !important;
+    font-size: 6.4pt !important;
+  }
+  .cv-modern .ide-comment {
+    color: #6b7280 !important;
+    font-size: 6.8pt !important;
+    margin-bottom: 1pt !important;
+    font-style: italic !important;
+  }
   .cv-modern .ide-key-val {
+    gap: 2pt !important;
+    font-size: 6.8pt !important;
+    display: flex !important;
+    flex-direction: column !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    list-style: none !important;
+  }
+  .cv-modern .ide-key-val li {
+    display: flex !important;
+    justify-content: space-between !important;
+  }
+  .cv-modern .ide-key-val li span {
     color: #4b5563 !important;
-    gap: 4pt !important;
   }
   .cv-modern .ide-highlight {
     color: #111827 !important;
     font-weight: 700 !important;
   }
   .cv-modern .ide-contact-list {
-    gap: 4pt !important;
+    gap: 2pt !important;
+    font-size: 6.8pt !important;
+    display: flex !important;
+    flex-direction: column !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    list-style: none !important;
   }
   .cv-modern .ide-contact-list a,
   .cv-modern .ide-loc {
     color: #4b5563 !important;
+    text-decoration: none !important;
   }
   .cv-modern .ide-main {
     background: #ffffff !important;
-    flex: 1 !important;
     padding: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
   }
   .cv-modern .ide-tabs {
     background: #f8f9fa !important;
     border-bottom: 0.5pt solid #d1d5db !important;
+    display: flex !important;
   }
   .cv-modern .ide-tab {
     color: #6b7280 !important;
     border-right: 0.5pt solid #d1d5db !important;
-    padding: 8pt 12pt !important;
+    padding: 4pt 8pt !important;
+    font-size: 7.2pt !important;
   }
   .cv-modern .ide-tab.active {
     background: #ffffff !important;
-    color: #111827 !important;
-    border-top: 1.5pt solid #111827 !important;
+    color: #e03600 !important;
+    border-top: 1.5pt solid #e03600 !important;
     font-weight: 700 !important;
   }
   .cv-modern .ide-editor-content {
-    padding: 16pt 24pt !important;
+    padding: 8pt 14pt !important;
   }
   .cv-modern .ide-name {
     color: #111827 !important;
-    font-size: 21pt !important;
-    margin: 6pt 0 2pt !important;
+    font-size: 16pt !important;
+    margin: 1pt 0 1pt !important;
+    line-height: 1.15 !important;
+  }
+  .cv-modern .ide-name::after {
+    display: none !important;
   }
   .cv-modern .ide-role {
-    color: #111827 !important;
-    font-size: 9.5pt !important;
+    color: #e03600 !important;
+    font-size: 8.2pt !important;
     font-weight: 700 !important;
+    margin: 0 !important;
   }
   .cv-modern .ide-hr {
     background: #e5e7eb !important;
-    margin: 12pt 0 !important;
+    height: 0.5pt !important;
+    margin: 5pt 0 !important;
   }
   .cv-modern .ide-section {
-    gap: 4pt !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 2pt !important;
   }
   .cv-modern .ide-text {
     color: #374151 !important;
-    font-size: 9.5pt !important;
-    line-height: 1.45 !important;
-  }
-  .cv-modern .ide-exp-list {
-    gap: 12pt !important;
-  }
-  .cv-modern .ide-exp-item {
-    gap: 2pt !important;
-    margin-bottom: 6pt !important;
-  }
-  .cv-modern .ide-exp-role {
-    color: #111827 !important;
-    font-weight: 700 !important;
-    font-size: 10pt !important;
+    font-size: 7.4pt !important;
+    line-height: 1.34 !important;
     margin: 0 !important;
   }
-  .cv-modern .ide-exp-meta {
-    color: #4b5563 !important;
-    font-size: 8.5pt !important;
+  .cv-modern .ide-exp-item {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 1.5pt !important;
+    margin-bottom: 4pt !important;
+    padding-bottom: 3.5pt !important;
+    border-bottom: 0.5pt dashed #e5e7eb !important;
+    break-inside: avoid !important;
   }
-  .cv-modern .ide-stack-group {
-    gap: 8pt !important;
+  .cv-modern .ide-exp-item:last-child {
+    border-bottom: none !important;
+    margin-bottom: 0 !important;
+    padding-bottom: 0 !important;
   }
-  .cv-modern .ide-stack-label {
+  .cv-modern .ide-exp-top-row,
+  .cv-modern .ide-exp-sub-row {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: baseline !important;
+    gap: 6pt !important;
+  }
+  .cv-modern .ide-exp-title {
     color: #111827 !important;
     font-weight: 700 !important;
-    width: 65px !important;
+    font-size: 8.2pt !important;
+  }
+  .cv-modern .ide-exp-badge {
+    color: #e03600 !important;
+    font-size: 6.2pt !important;
+    border: 0.5pt solid #e5e7eb !important;
+    background: #f9fafb !important;
+    padding: 0.5pt 3pt !important;
+  }
+  .cv-modern .ide-exp-date {
+    color: #6b7280 !important;
+    font-size: 6.8pt !important;
+  }
+  .cv-modern .ide-exp-role {
+    color: #e03600 !important;
+    font-size: 7.4pt !important;
+    font-weight: 600 !important;
+  }
+  .cv-modern .ide-exp-loc {
+    color: #6b7280 !important;
+    font-size: 6.8pt !important;
+  }
+  .cv-modern .ide-exp-desc {
+    color: #374151 !important;
+    font-size: 7.2pt !important;
+    line-height: 1.3 !important;
+    margin: 0 !important;
+  }
+  .cv-modern .ide-exp-bullets {
+    padding-left: 9pt !important;
+    gap: 1pt !important;
+    margin: 1pt 0 0 !important;
+    list-style: none !important;
+    display: flex !important;
+    flex-direction: column !important;
+  }
+  .cv-modern .ide-exp-bullets li {
+    font-size: 7pt !important;
+    line-height: 1.28 !important;
+    color: #374151 !important;
+    position: relative !important;
+  }
+  .cv-modern .ide-exp-bullets li::before {
+    content: '·' !important;
+    position: absolute !important;
+    left: -7pt !important;
+    color: #e03600 !important;
+    font-weight: bold !important;
+  }
+  .cv-modern .ide-exp-tags {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 2pt !important;
+    margin-top: 1.5pt !important;
+  }
+  .cv-modern .ide-tag {
+    font-size: 6.2pt !important;
+    padding: 0.5pt 2.5pt !important;
+    background: #f3f4f6 !important;
+    border: 0.5pt solid #e5e7eb !important;
+    color: #4b5563 !important;
+  }
+  .cv-modern .ide-stack-group {
+    display: flex !important;
+    gap: 5pt !important;
+    font-size: 7.2pt !important;
+  }
+  .cv-modern .ide-stack-label {
+    color: #e03600 !important;
+    font-weight: 700 !important;
+    width: 52px !important;
+    flex-shrink: 0 !important;
   }
   .cv-modern .ide-stack-val {
     color: #374151 !important;
