@@ -56,6 +56,21 @@ const cvLinkedin = computed(() => props.detail?.contact?.linkedin || 'https://ww
 const cvLinkedinText = computed(() => cvLinkedin.value.replace(/^https?:\/\/(www\.)?/, ''))
 const cvTimezone = computed(() => props.detail?.contact?.timezone || 'UTC-3')
 
+// Compute sorted experience from props
+const cvExperience = computed(() => {
+  if (!props.detail?.experience) return []
+  return [...props.detail.experience].sort((a, b) => {
+    if (!a.start || !b.start) return 0
+    return new Date(b.start).getTime() - new Date(a.start).getTime()
+  })
+})
+
+function formatMonthYear(dateStr: string) {
+  if (!dateStr) return ''
+  const [year, month] = dateStr.split('-')
+  return `${month}/${year}`
+}
+
 const cvDownloadFileName = computed(() => {
   const lang = isEs.value ? 'ES' : 'EN'
   const style = mode.value === 'harvard' ? 'Harvard_ATS' : 'Moderno'
@@ -336,10 +351,10 @@ function printCV() {
             <div class="ide-sidebar-section">
               <div class="ide-comment">// stats</div>
               <ul class="ide-key-val">
-                <li><span>Languages</span> <span class="ide-highlight">4</span></li>
-                <li><span>Experience</span> <span class="ide-highlight">3+ yrs</span></li>
-                <li><span>Availability</span> <span class="ide-highlight">Immediate</span></li>
-                <li><span>Timezone</span> <span class="ide-highlight">{{ cvTimezone }}</span></li>
+                <li><span>{{ isEs ? 'Idiomas' : 'Languages' }}</span> <span class="ide-highlight">{{ isEs ? '2' : '2' }}</span></li>
+                <li><span>{{ isEs ? 'Experiencia' : 'Experience' }}</span> <span class="ide-highlight">{{ isEs ? '+3 años' : '3+ yrs' }}</span></li>
+                <li><span>{{ isEs ? 'Disponibilidad' : 'Availability' }}</span> <span class="ide-highlight">{{ isEs ? 'Inmediata' : 'Immediate' }}</span></li>
+                <li><span>{{ isEs ? 'Zona Horaria' : 'Timezone' }}</span> <span class="ide-highlight">{{ cvTimezone }}</span></li>
               </ul>
             </div>
 
@@ -383,31 +398,13 @@ function printCV() {
             <div class="ide-section">
               <div class="ide-comment">// experience</div>
               
-              <div class="ide-exp-item">
-                <h3 class="ide-exp-role">{{ isEs ? 'Arquitecto de Software & Lead Frontend' : 'Software Architect & Lead Frontend' }}</h3>
+              <div v-for="exp in cvExperience" :key="exp.slug" class="ide-exp-item">
+                <h3 class="ide-exp-role">{{ isEs && exp.role_es ? exp.role_es : exp.role }}</h3>
                 <div class="ide-exp-meta">
-                  <span class="ide-exp-org"><span class="ide-bullet">•</span> Ynara AI Assistant (Tesis)</span>
-                  <span class="ide-exp-date">2026</span>
+                  <span class="ide-exp-org"><span class="ide-bullet">·</span> {{ exp.org?.name || 'Freelance' }}</span>
+                  <span class="ide-exp-date">{{ formatMonthYear(exp.start) }} – {{ exp.end ? formatMonthYear(exp.end) : (isEs ? 'now' : 'now') }}</span>
                 </div>
-                <p class="ide-text">{{ isEs ? 'Asistente de IA on-premise adaptativo con memoria vectorial persistente y tiempos de respuesta sub-100ms. Construido con FastAPI, Next.js y PostgreSQL + pgvector.' : 'Adaptive on-premise AI assistant with persistent vector memory and sub-100ms response times. Built with FastAPI, Next.js, and PostgreSQL + pgvector.' }}</p>
-              </div>
-
-              <div class="ide-exp-item">
-                <h3 class="ide-exp-role">{{ isEs ? 'Desarrollador Full Stack' : 'Full Stack Developer' }}</h3>
-                <div class="ide-exp-meta">
-                  <span class="ide-exp-org"><span class="ide-bullet">•</span> La Rúcula Gastrobar & ARG Piscinas</span>
-                  <span class="ide-exp-date">2026</span>
-                </div>
-                <p class="ide-text">{{ isEs ? 'Sitio editorial optimizado con caché offline y plataforma corporativa multi-idioma. 99 Lighthouse Performance. Tech stack: Vue 3, Prisma ORM, Node.js.' : 'Editorial web app with offline cache and multilingual corporate platform. 99 Lighthouse Performance. Tech stack: Vue 3, Prisma ORM, Node.js.' }}</p>
-              </div>
-
-              <div class="ide-exp-item">
-                <h3 class="ide-exp-role">{{ isEs ? 'Fundador & Consultor de Software' : 'Founder & Software Consultant' }}</h3>
-                <div class="ide-exp-meta">
-                  <span class="ide-exp-org"><span class="ide-bullet">•</span> Pegasuz & Freelance</span>
-                  <span class="ide-exp-date">2023 – {{ isEs ? 'now' : 'now' }}</span>
-                </div>
-                <p class="ide-text">{{ isEs ? 'Diseño de CMS multi-tenant propio y entrega de ~10 proyectos llave en mano.' : 'Proprietary multi-tenant CMS and successful delivery of ~10 turnkey web projects.' }}</p>
+                <p class="ide-text">{{ isEs && exp.description_es ? exp.description_es : exp.description }}</p>
               </div>
             </div>
 
