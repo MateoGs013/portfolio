@@ -784,7 +784,7 @@ function printCV() {
 /* ─── ESTILO 2: IDE / TERMINAL (MODERNO CODE EDITOR) ────────────────────────────── */
 .cv-modern {
   width: 100%;
-  max-width: 920px;
+  max-width: 1040px;
   margin: 0 auto;
 }
 
@@ -798,7 +798,7 @@ function printCV() {
 }
 
 .ide-sidebar {
-  width: 250px;
+  width: 260px;
   background: var(--d-surface);
   border-right: 1px solid var(--d-rule-strong);
   display: flex;
@@ -1286,132 +1286,144 @@ function printCV() {
     margin: 0 0 2pt !important;
   }
 
-  /* Modern print (1 Página Exacta y Equilibrada) */
+  /* Modern print (1 Página Completa A4 - Máximo aprovechamiento de ancho y alto) */
   .cv-modern {
     background: #ffffff !important;
     color: #111827 !important;
     border: none !important;
     box-shadow: none !important;
+    width: 100% !important;
     max-width: 100% !important;
+    height: 100% !important;
     padding: 0 !important;
     margin: 0 !important;
   }
   .cv-modern .ide-container {
     background: #ffffff !important;
-    border: 0.5pt solid #d1d5db !important;
+    border: 0.75pt solid #cbd5e1 !important;
     color: #111827 !important;
-    font-size: 7.5pt !important;
+    font-size: 7.7pt !important;
     display: grid !important;
-    grid-template-columns: 185px 1fr !important;
-    height: auto !important;
+    grid-template-columns: 205px 1fr !important;
+    min-height: 260mm !important;
+    height: 264mm !important;
+    box-sizing: border-box !important;
+    overflow: hidden !important;
     break-inside: avoid !important;
     page-break-inside: avoid !important;
   }
   .cv-modern .ide-sidebar {
     background: #f8f9fa !important;
-    border-right: 0.5pt solid #d1d5db !important;
-    width: 185px !important;
+    border-right: 0.75pt solid #cbd5e1 !important;
+    width: 205px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    height: 100% !important;
+    box-sizing: border-box !important;
   }
   .cv-modern .ide-window-controls {
-    background: #f3f4f6 !important;
-    border-bottom: 0.5pt solid #d1d5db !important;
-    padding: 4pt 7pt !important;
+    background: #f1f3f5 !important;
+    border-bottom: 0.5pt solid #cbd5e1 !important;
+    padding: 5pt 9pt !important;
     display: flex !important;
     align-items: center !important;
     gap: 4pt !important;
   }
   .cv-modern .ide-dot {
-    width: 5pt !important;
-    height: 5pt !important;
+    width: 5.5pt !important;
+    height: 5.5pt !important;
   }
   .cv-modern .ide-file-title {
     color: #e03600 !important;
     font-weight: 700 !important;
-    font-size: 7pt !important;
+    font-size: 7.5pt !important;
     margin-left: auto !important;
   }
   .cv-modern .ide-sidebar-inner {
-    padding: 6pt !important;
-    gap: 6pt !important;
+    padding: 6pt 9pt 8pt !important;
     display: flex !important;
     flex-direction: column !important;
+    justify-content: space-between !important;
+    flex: 1 !important;
+    box-sizing: border-box !important;
   }
   .cv-modern .ide-sidebar-header {
     color: #e03600 !important;
     font-weight: 700 !important;
-    font-size: 7.5pt !important;
+    font-size: 8pt !important;
   }
   .cv-modern .ide-tree {
     display: flex !important;
     flex-direction: column !important;
-    gap: 4pt !important;
+    gap: 3pt !important;
   }
   .cv-modern .ide-tree-group {
     display: flex !important;
     flex-direction: column !important;
-    gap: 1.5pt !important;
+    gap: 1pt !important;
   }
   .cv-modern .ide-tree-folder {
     color: #e03600 !important;
-    font-size: 7.2pt !important;
+    font-size: 7.6pt !important;
     font-weight: 700 !important;
   }
   .cv-modern .ide-tree-files {
-    font-size: 6.8pt !important;
+    font-size: 7pt !important;
     gap: 1pt !important;
-    padding-left: 6pt !important;
+    padding-left: 8pt !important;
     margin: 0 !important;
     list-style: none !important;
     display: flex !important;
     flex-direction: column !important;
+    color: #4b5563 !important;
   }
   .cv-modern .ide-divider {
-    background: #e5e7eb !important;
+    background: #e2e8f0 !important;
     height: 0.5pt !important;
   }
   .cv-modern .ide-photo-wrap {
-    width: 85px !important;
+    width: 95px !important;
     margin: 0 auto !important;
   }
   .cv-modern .ide-photo {
-    width: 85px !important;
-    height: 85px !important;
+    width: 95px !important;
+    height: 95px !important;
     object-fit: cover !important;
-    border: 0.5pt solid #d1d5db !important;
+    border: 0.75pt solid #cbd5e1 !important;
   }
   .cv-modern .ide-sidebar-section {
     display: flex !important;
     flex-direction: column !important;
-    gap: 3pt !important;
+    gap: 2.5pt !important;
   }
   .cv-modern .ide-edu-item {
     display: flex !important;
     flex-direction: column !important;
     gap: 1pt !important;
-    margin-bottom: 2pt !important;
+    margin-bottom: 1.5pt !important;
   }
   .cv-modern .ide-edu-school {
     color: #111827 !important;
     font-weight: 700 !important;
-    font-size: 7.2pt !important;
+    font-size: 7.5pt !important;
   }
   .cv-modern .ide-edu-degree {
     color: #e03600 !important;
-    font-size: 6.8pt !important;
+    font-size: 7pt !important;
   }
   .cv-modern .ide-edu-sub {
     color: #6b7280 !important;
-    font-size: 6.4pt !important;
+    font-size: 6.6pt !important;
   }
   .cv-modern .ide-comment {
     color: #6b7280 !important;
-    font-size: 6.8pt !important;
+    font-size: 7pt !important;
     margin-bottom: 1pt !important;
     font-style: italic !important;
   }
   .cv-modern .ide-key-val {
     gap: 2pt !important;
-    font-size: 6.8pt !important;
+    font-size: 7pt !important;
     display: flex !important;
     flex-direction: column !important;
     padding: 0 !important;
@@ -1431,7 +1443,7 @@ function printCV() {
   }
   .cv-modern .ide-contact-list {
     gap: 2pt !important;
-    font-size: 6.8pt !important;
+    font-size: 7pt !important;
     display: flex !important;
     flex-direction: column !important;
     padding: 0 !important;
@@ -1448,17 +1460,19 @@ function printCV() {
     padding: 0 !important;
     display: flex !important;
     flex-direction: column !important;
+    height: 100% !important;
+    box-sizing: border-box !important;
   }
   .cv-modern .ide-tabs {
     background: #f8f9fa !important;
-    border-bottom: 0.5pt solid #d1d5db !important;
+    border-bottom: 0.5pt solid #cbd5e1 !important;
     display: flex !important;
   }
   .cv-modern .ide-tab {
     color: #6b7280 !important;
-    border-right: 0.5pt solid #d1d5db !important;
-    padding: 4pt 8pt !important;
-    font-size: 7.2pt !important;
+    border-right: 0.5pt solid #cbd5e1 !important;
+    padding: 4.5pt 10pt !important;
+    font-size: 7.5pt !important;
   }
   .cv-modern .ide-tab.active {
     background: #ffffff !important;
@@ -1467,12 +1481,17 @@ function printCV() {
     font-weight: 700 !important;
   }
   .cv-modern .ide-editor-content {
-    padding: 8pt 14pt !important;
+    padding: 8pt 14pt 10pt !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: space-between !important;
+    flex: 1 !important;
+    box-sizing: border-box !important;
   }
   .cv-modern .ide-name {
     color: #111827 !important;
-    font-size: 16pt !important;
-    margin: 1pt 0 1pt !important;
+    font-size: 19.5pt !important;
+    margin: 2pt 0 1.5pt !important;
     line-height: 1.15 !important;
   }
   .cv-modern .ide-name::after {
@@ -1480,33 +1499,33 @@ function printCV() {
   }
   .cv-modern .ide-role {
     color: #e03600 !important;
-    font-size: 8.2pt !important;
+    font-size: 9.2pt !important;
     font-weight: 700 !important;
     margin: 0 !important;
   }
   .cv-modern .ide-hr {
-    background: #e5e7eb !important;
+    background: #e2e8f0 !important;
     height: 0.5pt !important;
-    margin: 5pt 0 !important;
+    margin: 5.5pt 0 !important;
   }
   .cv-modern .ide-section {
     display: flex !important;
     flex-direction: column !important;
-    gap: 2pt !important;
+    gap: 3pt !important;
   }
   .cv-modern .ide-text {
     color: #374151 !important;
-    font-size: 7.4pt !important;
-    line-height: 1.34 !important;
+    font-size: 8.1pt !important;
+    line-height: 1.42 !important;
     margin: 0 !important;
   }
   .cv-modern .ide-exp-item {
     display: flex !important;
     flex-direction: column !important;
-    gap: 1.5pt !important;
-    margin-bottom: 4pt !important;
-    padding-bottom: 3.5pt !important;
-    border-bottom: 0.5pt dashed #e5e7eb !important;
+    gap: 2pt !important;
+    margin-bottom: 5.5pt !important;
+    padding-bottom: 5pt !important;
+    border-bottom: 0.5pt dashed #cbd5e1 !important;
     break-inside: avoid !important;
   }
   .cv-modern .ide-exp-item:last-child {
@@ -1519,82 +1538,85 @@ function printCV() {
     display: flex !important;
     justify-content: space-between !important;
     align-items: baseline !important;
-    gap: 6pt !important;
+    gap: 8pt !important;
   }
   .cv-modern .ide-exp-title {
     color: #111827 !important;
     font-weight: 700 !important;
-    font-size: 8.2pt !important;
+    font-size: 9.3pt !important;
   }
   .cv-modern .ide-exp-badge {
     color: #e03600 !important;
-    font-size: 6.2pt !important;
-    border: 0.5pt solid #e5e7eb !important;
-    background: #f9fafb !important;
-    padding: 0.5pt 3pt !important;
+    font-size: 6.8pt !important;
+    border: 0.5pt solid #cbd5e1 !important;
+    background: #f8fafc !important;
+    padding: 0.75pt 3.5pt !important;
+    border-radius: 2px !important;
   }
   .cv-modern .ide-exp-date {
     color: #6b7280 !important;
-    font-size: 6.8pt !important;
+    font-size: 7.5pt !important;
   }
   .cv-modern .ide-exp-role {
     color: #e03600 !important;
-    font-size: 7.4pt !important;
+    font-size: 8.3pt !important;
     font-weight: 600 !important;
   }
   .cv-modern .ide-exp-loc {
     color: #6b7280 !important;
-    font-size: 6.8pt !important;
+    font-size: 7.5pt !important;
   }
   .cv-modern .ide-exp-desc {
     color: #374151 !important;
-    font-size: 7.2pt !important;
-    line-height: 1.3 !important;
+    font-size: 7.8pt !important;
+    line-height: 1.36 !important;
     margin: 0 !important;
   }
   .cv-modern .ide-exp-bullets {
-    padding-left: 9pt !important;
-    gap: 1pt !important;
-    margin: 1pt 0 0 !important;
+    padding-left: 10pt !important;
+    gap: 1.5pt !important;
+    margin: 2pt 0 0 !important;
     list-style: none !important;
     display: flex !important;
     flex-direction: column !important;
   }
   .cv-modern .ide-exp-bullets li {
-    font-size: 7pt !important;
-    line-height: 1.28 !important;
+    font-size: 7.6pt !important;
+    line-height: 1.32 !important;
     color: #374151 !important;
     position: relative !important;
   }
   .cv-modern .ide-exp-bullets li::before {
     content: '·' !important;
     position: absolute !important;
-    left: -7pt !important;
+    left: -8pt !important;
     color: #e03600 !important;
     font-weight: bold !important;
+    font-size: 9pt !important;
   }
   .cv-modern .ide-exp-tags {
     display: flex !important;
     flex-wrap: wrap !important;
-    gap: 2pt !important;
-    margin-top: 1.5pt !important;
+    gap: 3pt !important;
+    margin-top: 2.5pt !important;
   }
   .cv-modern .ide-tag {
-    font-size: 6.2pt !important;
-    padding: 0.5pt 2.5pt !important;
-    background: #f3f4f6 !important;
-    border: 0.5pt solid #e5e7eb !important;
-    color: #4b5563 !important;
+    font-size: 6.8pt !important;
+    padding: 1pt 3.5pt !important;
+    background: #f1f5f9 !important;
+    border: 0.5pt solid #cbd5e1 !important;
+    color: #334155 !important;
+    border-radius: 2px !important;
   }
   .cv-modern .ide-stack-group {
     display: flex !important;
-    gap: 5pt !important;
-    font-size: 7.2pt !important;
+    gap: 6pt !important;
+    font-size: 7.7pt !important;
   }
   .cv-modern .ide-stack-label {
     color: #e03600 !important;
     font-weight: 700 !important;
-    width: 52px !important;
+    width: 58px !important;
     flex-shrink: 0 !important;
   }
   .cv-modern .ide-stack-val {

@@ -299,7 +299,7 @@ html[data-hyperfocus="true"] .hb-dot {
 @media print {
   @page {
     size: A4 portrait;
-    margin: 6mm 8mm;
+    margin: 4mm 4mm;
   }
 
   /* 1. Sobrescribir variables de tema para forzar modo papel blanco puro y alto contraste */
