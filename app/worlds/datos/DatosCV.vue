@@ -1191,20 +1191,20 @@ function printCV() {
   /* Modern print (1 Página Exacta y Equilibrada) */
   .cv-modern {
     display: grid !important;
-    grid-template-columns: 215px 1fr !important;
-    gap: 15px !important;
+    grid-template-columns: 195px 1fr !important;
+    gap: 14px !important;
     background: #ffffff !important;
     color: #111827 !important;
     border: none !important;
     box-shadow: none !important;
   }
   .cv-modern .m-sidebar {
-    gap: 8px !important;
+    gap: 10.5px !important;
   }
   .cv-modern .m-photo-container {
     background: #f8f9fa !important;
     border: 1px solid #e5e7eb !important;
-    padding: 8px !important;
+    padding: 9px 8px !important;
   }
   .cv-modern .m-photo {
     width: 96px !important;
@@ -1218,12 +1218,12 @@ function printCV() {
     border: 1px solid #16a34a !important;
     color: #16a34a !important;
     font-size: 8.5px !important;
-    padding: 2px 8px !important;
+    padding: 2.5px 8px !important;
   }
   .cv-modern .m-block {
     background: #f8f9fa !important;
     border: 1px solid #e5e7eb !important;
-    padding: 8.5px 11px !important;
+    padding: 9.5px 11px !important;
     break-inside: avoid !important;
     page-break-inside: avoid !important;
   }
@@ -1238,8 +1238,8 @@ function printCV() {
   }
   .cv-modern .m-contact-list {
     font-size: 9.5px !important;
-    gap: 4.5px !important;
-    line-height: 1.35 !important;
+    gap: 5px !important;
+    line-height: 1.38 !important;
   }
   .cv-modern .m-contact-list li {
     color: #374151 !important;
@@ -1255,7 +1255,7 @@ function printCV() {
     justify-content: space-between !important;
     align-items: baseline !important;
     font-size: 9.5px !important;
-    margin-bottom: 3px !important;
+    margin-bottom: 3.5px !important;
   }
   .cv-modern .m-lang-name {
     font-weight: 600 !important;
@@ -1277,17 +1277,18 @@ function printCV() {
   .cv-modern .m-list {
     color: #374151 !important;
     font-size: 9.5px !important;
-    line-height: 1.38 !important;
+    line-height: 1.4 !important;
     padding-left: 11px !important;
+    gap: 3.5px !important;
   }
   .cv-modern .m-content {
-    gap: 6px !important;
+    gap: 9px !important;
   }
   .cv-modern .m-header {
     background: #f8f9fa !important;
     border: 1px solid #e5e7eb !important;
     border-left: 3.5px solid #e03600 !important;
-    padding: 10px 14px !important;
+    padding: 12px 14px !important;
     margin-bottom: 0 !important;
   }
   .cv-modern .m-tag {
@@ -1296,24 +1297,24 @@ function printCV() {
   }
   .cv-modern .m-name {
     color: #111827 !important;
-    font-size: 20px !important;
+    font-size: 21px !important;
     margin: 2px 0 3px !important;
   }
   .cv-modern .m-subtitle {
     color: #e03600 !important;
-    font-size: 10.5px !important;
+    font-size: 11px !important;
     margin: 0 0 4px !important;
   }
   .cv-modern .m-bio {
     color: #374151 !important;
-    font-size: 10px !important;
-    line-height: 1.38 !important;
+    font-size: 10.2px !important;
+    line-height: 1.42 !important;
     margin: 0 !important;
   }
   .cv-modern .m-sec-title {
     border-bottom: 1px solid #e5e7eb !important;
     padding-bottom: 2.5px !important;
-    margin-bottom: 4.5px !important;
+    margin-bottom: 5px !important;
   }
   .cv-modern .m-sec-title h2 {
     color: #111827 !important;
@@ -1328,7 +1329,7 @@ function printCV() {
     background: #ffffff !important;
     border: 1px solid #e5e7eb !important;
     border-left: 2.5px solid #cbd5e1 !important;
-    padding: 7px 11px !important;
+    padding: 8px 11.5px !important;
     margin-bottom: 4.5px !important;
     break-inside: avoid !important;
     page-break-inside: avoid !important;
@@ -1352,7 +1353,7 @@ function printCV() {
   .cv-modern .m-card-desc {
     color: #374151 !important;
     font-size: 10px !important;
-    line-height: 1.38 !important;
+    line-height: 1.4 !important;
   }
   .cv-modern .m-card-bullets {
     list-style: none !important;
@@ -1361,8 +1362,8 @@ function printCV() {
     display: flex !important;
     flex-direction: column !important;
     gap: 1.5px !important;
-    font-size: 8.5px !important;
-    line-height: 1.28 !important;
+    font-size: 8.8px !important;
+    line-height: 1.32 !important;
     color: #374151 !important;
   }
   .cv-modern .m-card-bullets li::before {
@@ -1379,11 +1380,15 @@ function printCV() {
     border: 1px solid #e5e7eb !important;
     color: #374151 !important;
     font-size: 8px !important;
-    padding: 1px 4px !important;
+    padding: 1px 4.5px !important;
   }
   .cv-modern .m-section {
     gap: 4px !important;
     margin-bottom: 0 !important;
+  }
+  .cv-modern .m-section:last-of-type {
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
   }
   .cv-modern .m-edu-grid {
     display: grid !important;
