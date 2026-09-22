@@ -279,249 +279,160 @@ function printCV() {
     </article>
 
     <!-- ═══════════════════════════════════════════════════════════════════════ -->
-    <!-- ESTILO 2: MODERNO EDITORIAL (SWISS TECH & CREATIVE DEVELOPER PROFILE)  -->
+    <!-- ESTILO 2: IDE / TERMINAL (MODERNO CODE EDITOR) -->
+    <!-- ═══════════════════════════════════════════════════════════════════════ -->
+    <!-- ═══════════════════════════════════════════════════════════════════════ -->
+    <!-- ESTILO 2: IDE / TERMINAL (MODERNO CODE EDITOR) -->
     <!-- ═══════════════════════════════════════════════════════════════════════ -->
     <article v-else class="cv-modern">
-      <!-- 1. Cabecera Editorial Integrada -->
-      <header class="m-masthead">
-        <div class="m-masthead-main">
-          <div class="m-meta-strip">
-            <span class="m-kicker">{{ isEs ? 'EXPEDIENTE // CURRÍCULUM VITAE 2026' : 'PROFILE DOSSIER // CURRICULUM VITAE 2026' }}</span>
-            <span class="m-sep-dot" aria-hidden="true">·</span>
-            <span class="m-status-text">● {{ cvAvailability }}</span>
+      <div class="ide-container">
+        <!-- Sidebar -->
+        <aside class="ide-sidebar">
+          <div class="ide-window-controls">
+            <span class="ide-dot red" aria-hidden="true"></span>
+            <span class="ide-dot yellow" aria-hidden="true"></span>
+            <span class="ide-dot green" aria-hidden="true"></span>
+            <span class="ide-file-title">profile.json</span>
           </div>
 
-          <h1 class="m-name">{{ cvName }}</h1>
-          <p class="m-role">{{ cvRole }}</p>
-
-          <p class="m-bio">{{ cvBio }}</p>
-        </div>
-
-        <div class="m-portrait-wrap">
-          <img
-            src="/media/profile/mateo-front.png"
-            alt="Mateo Gabriel Sonzogni"
-            class="m-portrait-img"
-            loading="eager"
-          >
-          <span class="m-portrait-corner tl" aria-hidden="true">┌</span>
-          <span class="m-portrait-corner tr" aria-hidden="true">┐</span>
-          <span class="m-portrait-corner bl" aria-hidden="true">└</span>
-          <span class="m-portrait-corner br" aria-hidden="true">┘</span>
-        </div>
-      </header>
-
-      <!-- 2. Rejilla Asimétrica Editorial (2 Columnas Limpias) -->
-      <div class="m-body-grid">
-        <!-- Columna Lateral (30%) -->
-        <aside class="m-side-col">
-          <!-- Contacto -->
-          <div class="m-panel">
-            <h2 class="m-panel-title">{{ isEs ? '01 / CONTACTO DIRECTO' : '01 / DIRECT CONTACT' }}</h2>
-            <ul class="m-contact-list">
-              <li>
-                <DatosIcon name="mail" :size="12" class="m-icon" />
-                <a :href="`mailto:${cvEmail}`">{{ cvEmail }}</a>
-              </li>
-              <li>
-                <DatosIcon name="code" :size="12" class="m-icon" />
-                <a :href="cvGithub" target="_blank" rel="noopener noreferrer">{{ cvGithubText }}</a>
-              </li>
-              <li>
-                <DatosIcon name="briefcase" :size="12" class="m-icon" />
-                <a :href="cvLinkedin" target="_blank" rel="noopener noreferrer">{{ cvLinkedinText }}</a>
-              </li>
-              <li>
-                <DatosIcon name="pin" :size="12" class="m-icon" />
-                <span>{{ cvLocation }}</span>
-              </li>
-              <li>
-                <DatosIcon name="clock" :size="12" class="m-icon" />
-                <span>{{ cvTimezone }} ({{ isEs ? 'Remoto / Híbrido' : 'Remote / Hybrid' }})</span>
-              </li>
-            </ul>
-          </div>
-
-          <!-- Stack Tecnológico -->
-          <div class="m-panel">
-            <h2 class="m-panel-title">{{ isEs ? '02 / ARSENAL TÉCNICO' : '02 / TECHNICAL STACK' }}</h2>
-            <div class="m-stack-group">
-              <span class="m-sg-label">FRONTEND:</span>
-              <span class="m-sg-val">Vue 3, Nuxt 4, React, Next.js, TypeScript, Tailwind, GSAP</span>
+          <div class="ide-sidebar-inner">
+            <div class="ide-sidebar-header">
+              <span class="ide-tree-root">~/curriculum</span>
             </div>
-            <div class="m-stack-group">
-              <span class="m-sg-label">BACKEND &amp; DATA:</span>
-              <span class="m-sg-val">Node.js, Express, FastAPI, Python, PostgreSQL 17, Prisma</span>
-            </div>
-            <div class="m-stack-group">
-              <span class="m-sg-label">CLOUD &amp; TOOLS:</span>
-              <span class="m-sg-val">Docker, CI/CD, Git, Linux, Figma UI/UX, Vitest, Lenis</span>
-            </div>
-          </div>
-
-          <!-- Formación Académica -->
-          <div class="m-panel">
-            <h2 class="m-panel-title">{{ isEs ? '03 / FORMACIÓN TÉCNICA' : '03 / EDUCATION' }}</h2>
-            <div class="m-edu-item">
-              <div class="m-ei-top">
-                <span class="m-ei-school">ESCUELA DA VINCI</span>
-                <span class="m-ei-year">2024–2026</span>
+            
+            <div class="ide-tree">
+              <div class="ide-tree-group">
+                <div class="ide-tree-folder">
+                  <span class="ide-tree-bullet">•</span> src/
+                </div>
+                <ul class="ide-tree-files">
+                  <li><span class="ide-tree-bullet">•</span> profile.go</li>
+                  <li><span class="ide-tree-bullet">•</span> experience.go</li>
+                  <li><span class="ide-tree-bullet">•</span> stack.go</li>
+                  <li><span class="ide-tree-bullet">•</span> education.go</li>
+                </ul>
               </div>
-              <p class="m-ei-degree">{{ isEs ? 'Diseño y Desarrollo Web' : 'Web Design & Development' }}</p>
-              <p class="m-ei-note">{{ isEs ? 'Tesis: Ynara (Lead Frontend & Arquitecto).' : 'Thesis: Ynara.' }}</p>
-            </div>
-
-            <div class="m-edu-item">
-              <div class="m-ei-top">
-                <span class="m-ei-school">CENTRO EDUCACIÓN TÉCNICA 30</span>
-                <span class="m-ei-year">2017–2023</span>
+              <div class="ide-tree-group">
+                <div class="ide-tree-folder">
+                  <span class="ide-tree-bullet">•</span> config/
+                </div>
+                <ul class="ide-tree-files">
+                  <li><span class="ide-tree-bullet">•</span> contact.env</li>
+                  <li><span class="ide-tree-bullet">•</span> links.toml</li>
+                </ul>
               </div>
-              <p class="m-ei-degree">{{ isEs ? 'Técnico en Programación (7 Años)' : 'Programming Technician (7 Years)' }}</p>
-              <p class="m-ei-note">{{ isEs ? 'Algoritmia, redes y sistemas de software.' : 'Algorithms, networking, systems.' }}</p>
             </div>
-          </div>
 
-          <!-- Idiomas -->
-          <div class="m-panel">
-            <h2 class="m-panel-title">{{ isEs ? '04 / IDIOMAS' : '04 / LANGUAGES' }}</h2>
-            <div class="m-lang-row">
-              <span class="m-lr-lang">{{ isEs ? 'Español' : 'Spanish' }}</span>
-              <span class="m-lr-level">{{ isEs ? 'Nativo' : 'Native' }}</span>
+            <div class="ide-divider"></div>
+
+            <div class="ide-photo-wrap">
+              <img
+                src="/media/profile/mateo-front.png"
+                alt="Mateo Gabriel Sonzogni"
+                class="ide-photo"
+                loading="eager"
+              >
             </div>
-            <div class="m-lang-row">
-              <span class="m-lr-lang">{{ isEs ? 'Inglés' : 'English' }}</span>
-              <span class="m-lr-level">{{ isEs ? 'B2 Profesional Técnico' : 'B2 Professional Technical' }}</span>
+
+            <div class="ide-divider"></div>
+
+            <div class="ide-sidebar-section">
+              <div class="ide-comment">// stats</div>
+              <ul class="ide-key-val">
+                <li><span>Languages</span> <span class="ide-highlight">4</span></li>
+                <li><span>Experience</span> <span class="ide-highlight">3+ yrs</span></li>
+                <li><span>Availability</span> <span class="ide-highlight">Immediate</span></li>
+                <li><span>Timezone</span> <span class="ide-highlight">{{ cvTimezone }}</span></li>
+              </ul>
+            </div>
+
+            <div class="ide-divider"></div>
+
+            <div class="ide-sidebar-section">
+              <div class="ide-comment">// contact</div>
+              <ul class="ide-contact-list">
+                <li><a :href="`mailto:${cvEmail}`">{{ cvEmail }}</a></li>
+                <li><a :href="cvGithub" target="_blank" rel="noopener noreferrer">@{{ cvGithubText.replace('github.com/', '') }}</a></li>
+                <li><a :href="cvLinkedin" target="_blank" rel="noopener noreferrer">in/mateo-sonzogni</a></li>
+                <li><span class="ide-loc">{{ cvLocation }}</span></li>
+              </ul>
             </div>
           </div>
         </aside>
 
-        <!-- Columna Principal (70%) -->
-        <main class="m-main-col">
-          <div class="m-main-head">
-            <h2 class="m-main-title">{{ isEs ? 'EXPERIENCIA PROFESIONAL & SISTEMAS EN PRODUCCIÓN' : 'PROFESSIONAL EXPERIENCE & SHIPPED SYSTEMS' }}</h2>
-            <span class="m-main-count">{{ isEs ? '04 ENTREGABLES' : '04 DELIVERABLES' }}</span>
+        <!-- Main Editor -->
+        <main class="ide-main">
+          <div class="ide-tabs">
+            <div class="ide-tab active">cv.go</div>
+            <div class="ide-tab">README.md</div>
           </div>
 
-          <div class="m-exp-list">
-            <!-- 01. Ynara -->
-            <article class="m-exp-entry">
-              <div class="m-ee-top-row">
-                <div class="m-ee-org-wrap">
-                  <h3 class="m-ee-org">Ynara AI Assistant</h3>
-                  <span class="m-ee-badge">{{ isEs ? 'Tesis Da Vinci' : 'Da Vinci Thesis' }}</span>
-                </div>
-                <span class="m-ee-date">05/2026 – 07/2026</span>
-              </div>
-              <div class="m-ee-sub-row">
-                <span class="m-ee-role">{{ isEs ? 'Arquitecto de Software & Lead Frontend' : 'Software Architect & Lead Frontend' }}</span>
-                <span class="m-ee-loc">Buenos Aires, Argentina</span>
-              </div>
-              <p class="m-ee-desc">
-                {{ isEs
-                  ? 'Asistente de IA on-premise adaptativo en rioplatense con inferencia local y persistencia vectorial sobre PostgreSQL + pgvector.'
-                  : 'On-premise adaptive AI assistant with local inference and persistent vector memory over PostgreSQL + pgvector.'
-                }}
-              </p>
-              <ul class="m-ee-bullets">
-                <li>{{ isEs ? 'Lideré la arquitectura técnica y el frontend con 382 commits en 6 semanas de desarrollo intensivo.' : 'Led system architecture and reactive frontend with 382 commits over 6 weeks of engineering.' }}</li>
-                <li>{{ isEs ? 'Construí la aplicación en Next.js y FastAPI logrando latencias semánticas sub-100ms en entornos locales.' : 'Engineered Next.js client and FastAPI pipeline achieving sub-100ms semantic response times.' }}</li>
-              </ul>
-              <div class="m-ee-chips">
-                <span>FastAPI</span>
-                <span>Next.js</span>
-                <span>PostgreSQL</span>
-                <span>pgvector</span>
-                <span>Python</span>
-                <span>TypeScript</span>
-              </div>
-            </article>
+          <div class="ide-editor-content">
+            <div class="ide-comment">// curriculum vitae — mateo sonzogni, 2026</div>
+            <h1 class="ide-name">{{ cvName }}</h1>
+            <p class="ide-role">{{ isEs ? 'Arquitecto Backend & Frontend Reactivo' : 'Backend & Reactive Frontend Architect' }}</p>
 
-            <!-- 02. La Rúcula -->
-            <article class="m-exp-entry">
-              <div class="m-ee-top-row">
-                <div class="m-ee-org-wrap">
-                  <h3 class="m-ee-org">La Rúcula Gastrobar</h3>
-                </div>
-                <span class="m-ee-date">03/2026 – 07/2026</span>
-              </div>
-              <div class="m-ee-sub-row">
-                <span class="m-ee-role">{{ isEs ? 'Freelance · Full Stack & Diseñador UI' : 'Freelance · Full Stack & UI Designer' }}</span>
-                <span class="m-ee-loc">Cádiz, {{ isEs ? 'España' : 'Spain' }}</span>
-              </div>
-              <p class="m-ee-desc">
-                {{ isEs
-                  ? 'Sitio web editorial menu-first optimizado para escaneo QR de comensales en mesa, con arquitectura de cache offline.'
-                  : 'Editorial menu-first web app optimized for table-side QR scanning with cached offline resilience.'
-                }}
-              </p>
-              <ul class="m-ee-bullets">
-                <li>{{ isEs ? 'Puntuación Lighthouse de 99 en Performance y 100 en SEO y Accesibilidad con bundle final de apenas 42 KB.' : 'Achieved 99 Performance and 100 SEO & Accessibility Lighthouse scores with a compact 42 KB bundle.' }}</li>
-                <li>{{ isEs ? 'Integración con CMS propio y fallback en cache para operación continua ante caídas de conectividad.' : 'Integrated offline caching fallbacks ensuring uninterrupted service during network outages.' }}</li>
-              </ul>
-              <div class="m-ee-chips">
-                <span>Vue 3</span>
-                <span>Vite</span>
-                <span>Tailwind CSS</span>
-                <span>GSAP</span>
-                <span>Lenis</span>
-              </div>
-            </article>
+            <div class="ide-hr"></div>
 
-            <!-- 03. ARG Piscinas -->
-            <article class="m-exp-entry">
-              <div class="m-ee-top-row">
-                <div class="m-ee-org-wrap">
-                  <h3 class="m-ee-org">ARG Piscinas</h3>
-                </div>
-                <span class="m-ee-date">01/2026 – 07/2026</span>
-              </div>
-              <div class="m-ee-sub-row">
-                <span class="m-ee-role">{{ isEs ? 'Freelance · Desarrollador Full Stack' : 'Freelance · Full Stack Developer' }}</span>
-                <span class="m-ee-loc">Andalucía, {{ isEs ? 'España' : 'Spain' }}</span>
-              </div>
-              <p class="m-ee-desc">
-                {{ isEs
-                  ? 'Plataforma corporativa multi-idioma (ES/EN/DE) con panel de control autónomo para carga de obras de arquitectura y blog.'
-                  : 'Multilingual corporate web platform (ES/EN/DE) with custom CMS dashboard for architectural projects and blog.'
-                }}
-              </p>
-              <ul class="m-ee-bullets">
-                <li>{{ isEs ? 'Modelado relacional y tipado estricto de extremo a extremo con Prisma ORM, Node.js y TypeScript.' : 'Modeled relational schema and end-to-end type safety with Prisma ORM, Node.js, and TypeScript.' }}</li>
-              </ul>
-              <div class="m-ee-chips">
-                <span>Vue 3</span>
-                <span>Node.js</span>
-                <span>Prisma</span>
-                <span>Tailwind CSS</span>
-                <span>TypeScript</span>
-              </div>
-            </article>
+            <!-- Profile -->
+            <div class="ide-section">
+              <div class="ide-comment">// profile</div>
+              <p class="ide-text">{{ cvBio }}</p>
+            </div>
 
-            <!-- 04. Pegasuz & Freelance -->
-            <article class="m-exp-entry">
-              <div class="m-ee-top-row">
-                <div class="m-ee-org-wrap">
-                  <h3 class="m-ee-org">Pegasuz &amp; Freelance</h3>
-                </div>
-                <span class="m-ee-date">2023 – {{ isEs ? 'Presente' : 'Present' }}</span>
-              </div>
-              <div class="m-ee-sub-row">
-                <span class="m-ee-role">{{ isEs ? 'Fundador & Consultor de Software' : 'Founder & Software Consultant' }}</span>
-                <span class="m-ee-loc">{{ isEs ? 'Remoto' : 'Remote' }}</span>
-              </div>
-              <p class="m-ee-desc">
-                {{ isEs
-                  ? 'Diseño de CMS multi-tenant propio y entrega exitosa de aproximadamente 10 proyectos web llave en mano para diversos rubros.'
-                  : 'Proprietary multi-tenant headless CMS and successful delivery of ~10 turnkey web solutions for diverse clients.'
-                }}
-              </p>
-            </article>
-          </div>
+            <div class="ide-hr"></div>
 
-          <!-- Objetivo Profesional -->
-          <div class="m-goal-box">
-            <h3 class="m-gb-title">{{ isEs ? 'OBJETIVO PROFESIONAL' : 'CAREER OBJECTIVE' }}</h3>
-            <p class="m-gb-text">{{ cvGoal }}</p>
+            <!-- Experience -->
+            <div class="ide-section">
+              <div class="ide-comment">// experience</div>
+              
+              <div class="ide-exp-item">
+                <h3 class="ide-exp-role">{{ isEs ? 'Arquitecto de Software & Lead Frontend' : 'Software Architect & Lead Frontend' }}</h3>
+                <div class="ide-exp-meta">
+                  <span class="ide-exp-org"><span class="ide-bullet">•</span> Ynara AI Assistant (Tesis)</span>
+                  <span class="ide-exp-date">2026</span>
+                </div>
+                <p class="ide-text">{{ isEs ? 'Asistente de IA on-premise adaptativo con memoria vectorial persistente y tiempos de respuesta sub-100ms. Construido con FastAPI, Next.js y PostgreSQL + pgvector.' : 'Adaptive on-premise AI assistant with persistent vector memory and sub-100ms response times. Built with FastAPI, Next.js, and PostgreSQL + pgvector.' }}</p>
+              </div>
+
+              <div class="ide-exp-item">
+                <h3 class="ide-exp-role">{{ isEs ? 'Desarrollador Full Stack' : 'Full Stack Developer' }}</h3>
+                <div class="ide-exp-meta">
+                  <span class="ide-exp-org"><span class="ide-bullet">•</span> La Rúcula Gastrobar & ARG Piscinas</span>
+                  <span class="ide-exp-date">2026</span>
+                </div>
+                <p class="ide-text">{{ isEs ? 'Sitio editorial optimizado con caché offline y plataforma corporativa multi-idioma. 99 Lighthouse Performance. Tech stack: Vue 3, Prisma ORM, Node.js.' : 'Editorial web app with offline cache and multilingual corporate platform. 99 Lighthouse Performance. Tech stack: Vue 3, Prisma ORM, Node.js.' }}</p>
+              </div>
+
+              <div class="ide-exp-item">
+                <h3 class="ide-exp-role">{{ isEs ? 'Fundador & Consultor de Software' : 'Founder & Software Consultant' }}</h3>
+                <div class="ide-exp-meta">
+                  <span class="ide-exp-org"><span class="ide-bullet">•</span> Pegasuz & Freelance</span>
+                  <span class="ide-exp-date">2023 – {{ isEs ? 'now' : 'now' }}</span>
+                </div>
+                <p class="ide-text">{{ isEs ? 'Diseño de CMS multi-tenant propio y entrega de ~10 proyectos llave en mano.' : 'Proprietary multi-tenant CMS and successful delivery of ~10 turnkey web projects.' }}</p>
+              </div>
+            </div>
+
+            <div class="ide-hr"></div>
+
+            <!-- Stack -->
+            <div class="ide-section">
+              <div class="ide-comment">// stack</div>
+              <div class="ide-stack-group">
+                <span class="ide-stack-label">frontend</span>
+                <span class="ide-stack-val">: "Vue 3 - Nuxt 4 - React - TS"</span>
+              </div>
+              <div class="ide-stack-group">
+                <span class="ide-stack-label">backend </span>
+                <span class="ide-stack-val">: "Node.js - Python - PostgreSQL"</span>
+              </div>
+              <div class="ide-stack-group">
+                <span class="ide-stack-label">infra   </span>
+                <span class="ide-stack-val">: "Docker - Coolify VPS - Linux"</span>
+              </div>
+            </div>
+
           </div>
         </main>
       </div>
@@ -728,450 +639,282 @@ function printCV() {
   font-weight: 700;
 }
 
-/* ─── ESTILO 2: MODERNO EDITORIAL (SWISS TECH) ────────────────────────────── */
+/* ─── ESTILO 2: IDE / TERMINAL (MODERNO CODE EDITOR) ────────────────────────────── */
 .cv-modern {
   width: 100%;
   max-width: 920px;
   margin: 0 auto;
+}
+
+.ide-container {
+  display: flex;
   background: var(--d-paper);
+  border: 1px solid var(--d-rule-strong);
   color: var(--d-ink);
+  font-family: var(--font-mono);
+  font-size: 11px;
+}
+
+.ide-sidebar {
+  width: 250px;
+  background: var(--d-surface);
+  border-right: 1px solid var(--d-rule-strong);
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  flex-shrink: 0;
 }
 
-/* Cabecera Editorial Integrada */
-.m-masthead {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 24px;
-  padding-bottom: 18px;
-  border-bottom: 1.5px solid var(--d-rule-strong);
-}
-
-.m-masthead-main {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-}
-
-.m-meta-strip {
+.ide-window-controls {
+  padding: 12px 14px;
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-family: var(--font-mono);
+  gap: 6px;
+  border-bottom: 1px solid var(--d-rule-strong);
+  background: var(--d-surface-raised);
+}
+
+.ide-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+.ide-dot.red { background: #ff5f56; }
+.ide-dot.yellow { background: #ffbd2e; }
+.ide-dot.green { background: #27c93f; }
+
+.ide-file-title {
+  margin-left: auto;
+  color: var(--d-amber);
   font-size: 11px;
-  margin-bottom: 6px;
 }
 
-.m-kicker {
-  font-weight: 800;
-  color: var(--d-sig);
-  letter-spacing: 0.08em;
-}
-
-.m-sep-dot {
-  color: var(--d-rule-strong);
-}
-
-.m-status-text {
-  font-weight: 700;
-  color: var(--d-green);
-  letter-spacing: 0.04em;
-}
-
-.m-name {
-  margin: 0 0 4px;
-  font-family: var(--font-text);
-  font-size: clamp(26px, 3vw, 34px);
-  font-weight: 800;
-  color: var(--d-ink);
-  letter-spacing: -0.025em;
-  line-height: 1.15;
-}
-
-.m-role {
-  margin: 0 0 10px;
-  font-family: var(--font-mono);
-  font-size: 12.5px;
-  font-weight: 700;
-  color: var(--d-dim);
-  letter-spacing: -0.01em;
-}
-
-.m-bio {
-  margin: 0;
-  font-family: var(--font-text);
-  font-size: 14px;
-  line-height: 1.6;
-  color: var(--d-ink);
-}
-
-/* Retrato Editorial con Marcadores de Esquina */
-.m-portrait-wrap {
-  position: relative;
-  width: 135px;
-  height: 135px;
-  flex-shrink: 0;
-  padding: 4px;
-  border: 1px solid var(--d-rule-strong);
-  background: var(--d-surface);
-}
-
-.m-portrait-img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  object-position: center top;
-  display: block;
-}
-
-.m-portrait-corner {
-  position: absolute;
-  font-family: var(--font-mono);
-  font-size: 11px;
-  line-height: 1;
-  color: var(--d-sig);
-  pointer-events: none;
-}
-.m-portrait-corner.tl { top: -4px; left: -4px; }
-.m-portrait-corner.tr { top: -4px; right: -4px; }
-.m-portrait-corner.bl { bottom: -4px; left: -4px; }
-.m-portrait-corner.br { bottom: -4px; right: -4px; }
-
-/* Rejilla Asimétrica */
-.m-body-grid {
-  display: grid;
-  grid-template-columns: 280px 1fr;
-  gap: 32px;
-  align-items: start;
-}
-
-/* Columna Lateral */
-.m-side-col {
+.ide-sidebar-inner {
+  padding: 14px;
   display: flex;
   flex-direction: column;
-  gap: 22px;
+  gap: 16px;
 }
 
-.m-panel {
+.ide-sidebar-header {
+  color: var(--d-amber);
+  font-size: 11.5px;
+}
+
+.ide-tree {
   display: flex;
   flex-direction: column;
   gap: 12px;
 }
 
-.m-panel-title {
-  margin: 0;
-  font-family: var(--font-mono);
-  font-size: 11px;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  color: var(--d-sig);
-  border-bottom: 1px solid var(--d-rule);
-  padding-bottom: 4px;
+.ide-tree-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
-.m-contact-list {
+.ide-tree-folder {
+  color: var(--d-amber);
+}
+
+.ide-tree-bullet {
+  color: var(--d-dim);
+  margin-right: 4px;
+}
+
+.ide-tree-files {
+  list-style: none;
+  padding: 0 0 0 14px;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  color: var(--d-dim);
+}
+
+.ide-divider {
+  height: 1px;
+  background: var(--d-rule-strong);
+}
+
+.ide-hr {
+  height: 1px;
+  background: var(--d-rule-strong);
+  margin: 18px 0;
+}
+
+.ide-photo-wrap {
+  width: 100%;
+}
+.ide-photo {
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+  object-position: center top;
+  filter: grayscale(20%);
+}
+
+.ide-sidebar-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ide-comment {
+  color: var(--d-dim);
+  font-style: italic;
+  margin-bottom: 4px;
+}
+
+.ide-key-val {
   list-style: none;
   padding: 0;
   margin: 0;
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  font-family: var(--font-mono);
-  font-size: 11px;
-  line-height: 1.4;
-}
-
-.m-contact-list li {
-  display: flex;
-  align-items: center;
-  gap: 8px;
+  gap: 6px;
   color: var(--d-dim);
 }
 
-.m-contact-list a {
-  color: var(--d-ink);
-  text-decoration: none;
+.ide-key-val li {
+  display: flex;
+  justify-content: space-between;
 }
 
-.m-contact-list a:hover {
-  color: var(--d-sig);
+.ide-highlight {
+  color: var(--d-amber);
+}
+
+.ide-contact-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.ide-contact-list a, .ide-loc {
+  color: var(--d-dim);
+  text-decoration: none;
+}
+.ide-contact-list a:hover {
+  color: var(--d-ink);
   text-decoration: underline;
 }
 
-.m-icon {
-  color: var(--d-sig);
-  flex-shrink: 0;
-}
-
-.m-stack-group {
+/* Editor Main */
+.ide-main {
+  flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  margin-bottom: 10px;
+  background: var(--d-paper);
 }
 
-.m-sg-label {
-  font-family: var(--font-mono);
-  font-size: 10px;
-  font-weight: 800;
-  color: var(--d-faint);
-  letter-spacing: 0.04em;
-}
-
-.m-sg-val {
-  font-family: var(--font-text);
-  font-size: 12.5px;
-  line-height: 1.4;
-  color: var(--d-ink);
-}
-
-.m-edu-item {
+.ide-tabs {
   display: flex;
-  flex-direction: column;
-  gap: 4px;
-  margin-bottom: 12px;
-}
-
-.m-ei-top {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  gap: 6px;
-}
-
-.m-ei-school {
-  font-family: var(--font-mono);
-  font-size: 11px;
-  font-weight: 800;
-  color: var(--d-ink);
-}
-
-.m-ei-year {
-  font-family: var(--font-mono);
-  font-size: 10.5px;
-  color: var(--d-dim);
-}
-
-.m-ei-degree {
-  margin: 0;
-  font-family: var(--font-text);
-  font-size: 12.5px;
-  font-weight: 600;
-  color: var(--d-sig);
-}
-
-.m-ei-note {
-  margin: 0;
-  font-family: var(--font-text);
-  font-size: 11.5px;
-  color: var(--d-dim);
-  line-height: 1.35;
-}
-
-.m-lang-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  font-family: var(--font-mono);
-  font-size: 11.5px;
-  margin-bottom: 2px;
-}
-
-.m-lr-lang {
-  font-weight: 700;
-  color: var(--d-ink);
-}
-
-.m-lr-level {
-  color: var(--d-dim);
-  font-size: 10.5px;
-}
-
-/* Columna Principal */
-.m-main-col {
-  display: flex;
-  flex-direction: column;
-  gap: 22px;
-}
-
-.m-main-head {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  gap: 12px;
-  border-bottom: 1px solid var(--d-rule);
-  padding-bottom: 4px;
-}
-
-.m-main-title {
-  margin: 0;
-  font-family: var(--font-mono);
-  font-size: 11.5px;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  color: var(--d-ink);
-}
-
-.m-main-count {
-  font-family: var(--font-mono);
-  font-size: 10.5px;
-  font-weight: 700;
-  color: var(--d-sig);
-}
-
-.m-exp-list {
-  display: flex;
-  flex-direction: column;
-  gap: 22px;
-}
-
-.m-exp-entry {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  padding-bottom: 18px;
-  border-bottom: 1px dashed var(--d-rule);
-}
-.m-exp-entry:last-child {
-  border-bottom: none;
-  padding-bottom: 0;
-}
-
-.m-ee-top-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  gap: 8px;
-}
-
-.m-ee-org-wrap {
-  display: flex;
-  align-items: baseline;
-  gap: 8px;
-}
-
-.m-ee-org {
-  margin: 0;
-  font-family: var(--font-text);
-  font-size: 15px;
-  font-weight: 700;
-  color: var(--d-ink);
-}
-
-.m-ee-badge {
-  font-family: var(--font-mono);
-  font-size: 10px;
-  font-weight: 700;
-  color: var(--d-sig);
+  border-bottom: 1px solid var(--d-rule-strong);
   background: var(--d-surface);
-  border: 1px solid var(--d-rule);
-  padding: 1px 6px;
 }
 
-.m-ee-sub-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  gap: 8px;
-  margin-bottom: 2px;
-}
-
-.m-ee-role {
-  font-family: var(--font-mono);
-  font-size: 11.5px;
-  font-weight: 700;
-  color: var(--d-sig);
-}
-
-.m-ee-loc {
-  font-family: var(--font-mono);
-  font-size: 10.5px;
-  color: var(--d-faint);
-}
-
-.m-ee-date {
-  font-family: var(--font-mono);
-  font-size: 11px;
-  color: var(--d-faint);
-}
-
-.m-ee-desc {
-  margin: 0;
-  font-family: var(--font-text);
-  font-size: 13.5px;
-  line-height: 1.55;
-  color: var(--d-dim);
-}
-
-.m-ee-bullets {
-  list-style: none;
-  padding: 0;
-  margin: 4px 0 0;
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-  font-family: var(--font-text);
-  font-size: 13px;
-  line-height: 1.5;
-  color: var(--d-ink);
-}
-
-.m-ee-bullets li {
-  position: relative;
-  padding-left: 12px;
-}
-
-.m-ee-bullets li::before {
-  content: '▪';
-  position: absolute;
-  left: 0;
-  color: var(--d-sig);
-  font-size: 10px;
-}
-
-.m-ee-chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
-  margin-top: 10px;
-}
-
-.m-ee-chips span {
-  font-family: var(--font-mono);
-  font-size: 10px;
-  padding: 1.5px 6px;
-  background: var(--d-surface);
-  border: 1px solid var(--d-rule);
-  color: var(--d-dim);
-}
-
-/* Objetivo Profesional */
-.m-goal-box {
-  border-left: 2px solid var(--d-sig);
+.ide-tab {
   padding: 10px 16px;
-  background: var(--d-surface);
-  margin-top: 8px;
+  color: var(--d-dim);
+  border-right: 1px solid var(--d-rule-strong);
+}
+.ide-tab.active {
+  background: var(--d-paper);
+  color: var(--d-amber);
+  border-top: 2px solid var(--d-amber);
+  margin-top: -1px;
 }
 
-.m-gb-title {
-  margin: 0 0 4px;
-  font-family: var(--font-mono);
-  font-size: 10px;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  color: var(--d-sig);
+.ide-editor-content {
+  padding: 24px 32px;
+  flex: 1;
 }
 
-.m-gb-text {
-  margin: 0;
-  font-family: var(--font-text);
-  font-size: 13px;
-  line-height: 1.5;
+.ide-name {
+  margin: 12px 0 4px;
+  font-size: 28px;
+  font-weight: 700;
   color: var(--d-ink);
+  font-family: var(--font-mono);
+  letter-spacing: -0.02em;
+}
+
+.ide-name::after {
+  content: ' _';
+  color: var(--d-amber);
+  animation: blink 1s step-end infinite;
+}
+
+@keyframes blink {
+  50% { opacity: 0; }
+}
+
+.ide-role {
+  margin: 0;
+  color: var(--d-amber);
+  font-size: 12.5px;
+}
+
+.ide-section {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.ide-text {
+  margin: 0;
+  color: var(--d-dim);
+  font-size: 12.5px;
+  line-height: 1.6;
+}
+
+.ide-exp-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.ide-exp-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 4px;
+}
+
+.ide-exp-role {
+  margin: 0;
+  color: var(--d-amber);
+  font-size: 13px;
+  font-weight: normal;
+}
+
+.ide-exp-meta {
+  display: flex;
+  justify-content: space-between;
+  color: var(--d-dim);
+  font-size: 11.5px;
+  margin-bottom: 2px;
+}
+
+.ide-bullet {
+  color: var(--d-rule-strong);
+}
+
+.ide-stack-group {
+  display: flex;
+  gap: 12px;
+  color: var(--d-dim);
+}
+
+.ide-stack-label {
+  color: var(--d-amber);
+  width: 65px;
+}
+.ide-stack-val {
+  color: var(--d-dim);
 }
 
 /* ─── Responsive & Print Rules ─────────────────────────────────────────────── */
@@ -1301,9 +1044,6 @@ function printCV() {
 
   /* Modern print (1 Página Exacta y Equilibrada) */
   .cv-modern {
-    display: flex !important;
-    flex-direction: column !important;
-    gap: 7.5pt !important;
     background: #ffffff !important;
     color: #111827 !important;
     border: none !important;
@@ -1312,231 +1052,150 @@ function printCV() {
     padding: 0 !important;
     margin: 0 !important;
   }
-  .cv-modern .m-masthead {
+  .cv-modern .ide-container {
+    background: #ffffff !important;
+    border: none !important;
+    color: #111827 !important;
+    font-size: 8pt !important;
     display: flex !important;
     flex-direction: row !important;
-    align-items: flex-start !important;
-    justify-content: space-between !important;
-    gap: 18pt !important;
-    padding-bottom: 8pt !important;
-    margin-bottom: 6pt !important;
-    border-bottom: 1.5pt solid #111827 !important;
+    height: 100% !important;
   }
-  .cv-modern .m-masthead-main {
-    flex: 1 !important;
-    min-width: 0 !important;
-  }
-  .cv-modern .m-name {
-    color: #111827 !important;
-    font-size: 21.5pt !important;
-    font-weight: 800 !important;
-    margin: 0 0 2pt !important;
-    line-height: 1.15 !important;
-  }
-  .cv-modern .m-role {
-    color: #e03600 !important;
-    font-size: 10.2pt !important;
-    font-weight: 700 !important;
-    margin: 0 0 4pt !important;
-  }
-  .cv-modern .m-bio {
-    color: #374151 !important;
-    font-size: 9.3pt !important;
-    line-height: 1.55 !important;
-  }
-  .cv-modern .m-meta-strip {
-    font-size: 7.8pt !important;
-    margin-bottom: 3.5pt !important;
-  }
-  .cv-modern .m-kicker {
-    color: #e03600 !important;
-  }
-  .cv-modern .m-status-text {
-    color: #16a34a !important;
-  }
-  .cv-modern .m-portrait-wrap {
-    width: 135px !important;
-    height: 135px !important;
+  .cv-modern .ide-sidebar {
+    background: #f8f9fa !important;
+    border-right: 0.5pt solid #d1d5db !important;
+    width: 210px !important;
     flex-shrink: 0 !important;
-    padding: 3.5px !important;
-    border: 1px solid #d1d5db !important;
-    background: #ffffff !important;
   }
-  .cv-modern .m-body-grid {
-    display: grid !important;
-    grid-template-columns: 218px 1fr !important;
-    gap: 20pt !important;
+  .cv-modern .ide-window-controls {
+    background: #f3f4f6 !important;
+    border-bottom: 0.5pt solid #d1d5db !important;
+    padding: 8pt 10pt !important;
   }
-  .cv-modern .m-side-col {
+  .cv-modern .ide-file-title {
+    color: #111827 !important;
+    font-weight: 700 !important;
+  }
+  .cv-modern .ide-sidebar-inner {
+    padding: 10pt !important;
     gap: 12pt !important;
   }
-  .cv-modern .m-panel {
-    gap: 4.5pt !important;
-    break-inside: avoid !important;
-    page-break-inside: avoid !important;
-  }
-  .cv-modern .m-panel-title {
-    color: #e03600 !important;
-    border-bottom: 0.75pt solid #d1d5db !important;
-    font-size: 8.8pt !important;
-    padding-bottom: 3pt !important;
-  }
-  .cv-modern .m-contact-list {
-    font-size: 8.5pt !important;
-    gap: 5.5pt !important;
-    line-height: 1.4 !important;
-  }
-  .cv-modern .m-contact-list li {
-    color: #374151 !important;
-  }
-  .cv-modern .m-contact-list a {
+  .cv-modern .ide-sidebar-header {
     color: #111827 !important;
+    font-weight: 700 !important;
   }
-  .cv-modern .m-icon {
-    color: #e03600 !important;
-  }
-  .cv-modern .m-stack-group {
-    gap: 2.5pt !important;
-    margin-bottom: 4.5pt !important;
-  }
-  .cv-modern .m-sg-label {
-    font-size: 7.6pt !important;
-    color: #6b7280 !important;
-  }
-  .cv-modern .m-sg-val {
-    font-size: 8.5pt !important;
-    line-height: 1.4 !important;
+  .cv-modern .ide-tree-folder {
     color: #111827 !important;
+    font-weight: 700 !important;
   }
-  .cv-modern .m-edu-item {
-    gap: 2.5pt !important;
-    margin-bottom: 6pt !important;
-  }
-  .cv-modern .m-ei-school {
-    font-size: 8.8pt !important;
-    color: #111827 !important;
-  }
-  .cv-modern .m-ei-year {
-    font-size: 7.6pt !important;
-    color: #6b7280 !important;
-  }
-  .cv-modern .m-ei-degree {
-    font-size: 8.8pt !important;
-    color: #e03600 !important;
-  }
-  .cv-modern .m-ei-note {
-    font-size: 7.6pt !important;
+  .cv-modern .ide-tree-files,
+  .cv-modern .ide-tree-bullet {
     color: #4b5563 !important;
   }
-  .cv-modern .m-lang-row {
-    font-size: 8.5pt !important;
+  .cv-modern .ide-divider {
+    background: #e5e7eb !important;
+  }
+  .cv-modern .ide-photo-wrap {
+    width: 135px !important;
+    margin: 0 auto !important;
+  }
+  .cv-modern .ide-photo {
+    width: 135px !important;
+    height: 135px !important;
+    object-fit: cover !important;
+    border: 0.5pt solid #d1d5db !important;
+  }
+  .cv-modern .ide-comment {
+    color: #6b7280 !important;
     margin-bottom: 2pt !important;
   }
-  .cv-modern .m-lr-lang {
-    color: #111827 !important;
+  .cv-modern .ide-key-val {
+    color: #4b5563 !important;
+    gap: 4pt !important;
   }
-  .cv-modern .m-lr-level {
+  .cv-modern .ide-highlight {
+    color: #111827 !important;
+    font-weight: 700 !important;
+  }
+  .cv-modern .ide-contact-list {
+    gap: 4pt !important;
+  }
+  .cv-modern .ide-contact-list a,
+  .cv-modern .ide-loc {
+    color: #4b5563 !important;
+  }
+  .cv-modern .ide-main {
+    background: #ffffff !important;
+    flex: 1 !important;
+    padding: 0 !important;
+  }
+  .cv-modern .ide-tabs {
+    background: #f8f9fa !important;
+    border-bottom: 0.5pt solid #d1d5db !important;
+  }
+  .cv-modern .ide-tab {
     color: #6b7280 !important;
-    font-size: 7.6pt !important;
+    border-right: 0.5pt solid #d1d5db !important;
+    padding: 8pt 12pt !important;
   }
-  .cv-modern .m-main-col {
-    gap: 11pt !important;
-  }
-  .cv-modern .m-main-head {
-    border-bottom: 0.75pt solid #d1d5db !important;
-    padding-bottom: 3pt !important;
-  }
-  .cv-modern .m-main-title {
+  .cv-modern .ide-tab.active {
+    background: #ffffff !important;
     color: #111827 !important;
-    font-size: 8.8pt !important;
+    border-top: 1.5pt solid #111827 !important;
+    font-weight: 700 !important;
   }
-  .cv-modern .m-main-count {
-    color: #e03600 !important;
-    font-size: 7.8pt !important;
+  .cv-modern .ide-editor-content {
+    padding: 16pt 24pt !important;
   }
-  .cv-modern .m-exp-list {
-    gap: 9.5pt !important;
+  .cv-modern .ide-name {
+    color: #111827 !important;
+    font-size: 21pt !important;
+    margin: 6pt 0 2pt !important;
   }
-  .cv-modern .m-exp-entry {
-    gap: 3pt !important;
-    padding-bottom: 8pt !important;
-    border-bottom: 0.5pt dashed #e5e7eb !important;
-    break-inside: avoid !important;
-    page-break-inside: avoid !important;
+  .cv-modern .ide-role {
+    color: #111827 !important;
+    font-size: 9.5pt !important;
+    font-weight: 700 !important;
   }
-  .cv-modern .m-ee-top-row,
-  .cv-modern .m-ee-sub-row {
-    display: flex !important;
-    justify-content: space-between !important;
-    align-items: baseline !important;
+  .cv-modern .ide-hr {
+    background: #e5e7eb !important;
+    margin: 12pt 0 !important;
+  }
+  .cv-modern .ide-section {
+    gap: 4pt !important;
+  }
+  .cv-modern .ide-text {
+    color: #374151 !important;
+    font-size: 9.5pt !important;
+    line-height: 1.45 !important;
+  }
+  .cv-modern .ide-exp-list {
+    gap: 12pt !important;
+  }
+  .cv-modern .ide-exp-item {
+    gap: 2pt !important;
+    margin-bottom: 6pt !important;
+  }
+  .cv-modern .ide-exp-role {
+    color: #111827 !important;
+    font-weight: 700 !important;
+    font-size: 10pt !important;
+    margin: 0 !important;
+  }
+  .cv-modern .ide-exp-meta {
+    color: #4b5563 !important;
+    font-size: 8.5pt !important;
+  }
+  .cv-modern .ide-stack-group {
     gap: 8pt !important;
   }
-  .cv-modern .m-ee-org {
+  .cv-modern .ide-stack-label {
     color: #111827 !important;
-    font-size: 10.2pt !important;
+    font-weight: 700 !important;
+    width: 65px !important;
   }
-  .cv-modern .m-ee-badge {
-    color: #e03600 !important;
-    font-size: 7.2pt !important;
-    border: 0.5pt solid #e5e7eb !important;
-    background: #f9fafb !important;
-    padding: 1pt 4pt !important;
-  }
-  .cv-modern .m-ee-loc {
-    color: #6b7280 !important;
-    font-size: 7.8pt !important;
-  }
-  .cv-modern .m-ee-role {
-    color: #e03600 !important;
-    font-size: 8.8pt !important;
-  }
-  .cv-modern .m-ee-date {
-    color: #6b7280 !important;
-    font-size: 7.8pt !important;
-  }
-  .cv-modern .m-ee-desc {
+  .cv-modern .ide-stack-val {
     color: #374151 !important;
-    font-size: 8.8pt !important;
-    line-height: 1.42 !important;
-  }
-  .cv-modern .m-ee-bullets {
-    font-size: 8.5pt !important;
-    line-height: 1.4 !important;
-    color: #1f2937 !important;
-    gap: 3pt !important;
-    margin-top: 3pt !important;
-  }
-  .cv-modern .m-ee-bullets li::before {
-    color: #e03600 !important;
-  }
-  .cv-modern .m-ee-chips {
-    gap: 2.5pt !important;
-    margin-top: 4.5pt !important;
-  }
-  .cv-modern .m-ee-chips span {
-    font-size: 7pt !important;
-    padding: 1pt 4pt !important;
-    background: #f3f4f6 !important;
-    border: 0.5pt solid #e5e7eb !important;
-    color: #374151 !important;
-  }
-  .cv-modern .m-goal-box {
-    border-left: 2.5pt solid #e03600 !important;
-    background: #f9fafb !important;
-    padding: 8pt 10pt !important;
-    margin-top: 6pt !important;
-    break-inside: avoid !important;
-    page-break-inside: avoid !important;
-  }
-  .cv-modern .m-gb-title {
-    font-size: 7.8pt !important;
-    color: #e03600 !important;
-    margin-bottom: 2pt !important;
-  }
-  .cv-modern .m-gb-text {
-    font-size: 8.3pt !important;
-    line-height: 1.4 !important;
-    color: #1f2937 !important;
   }
 }
 </style>
