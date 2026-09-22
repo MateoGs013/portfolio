@@ -804,8 +804,8 @@ function printCV() {
 .m-bio {
   margin: 0;
   font-family: var(--font-text);
-  font-size: 13.5px;
-  line-height: 1.55;
+  font-size: 14px;
+  line-height: 1.6;
   color: var(--d-ink);
 }
 
@@ -845,7 +845,7 @@ function printCV() {
 .m-body-grid {
   display: grid;
   grid-template-columns: 280px 1fr;
-  gap: 28px;
+  gap: 32px;
   align-items: start;
 }
 
@@ -853,13 +853,13 @@ function printCV() {
 .m-side-col {
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 22px;
 }
 
 .m-panel {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 12px;
 }
 
 .m-panel-title {
@@ -879,7 +879,7 @@ function printCV() {
   margin: 0;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
   font-family: var(--font-mono);
   font-size: 11px;
   line-height: 1.4;
@@ -910,8 +910,8 @@ function printCV() {
 .m-stack-group {
   display: flex;
   flex-direction: column;
-  gap: 2px;
-  margin-bottom: 6px;
+  gap: 4px;
+  margin-bottom: 10px;
 }
 
 .m-sg-label {
@@ -932,8 +932,8 @@ function printCV() {
 .m-edu-item {
   display: flex;
   flex-direction: column;
-  gap: 2px;
-  margin-bottom: 8px;
+  gap: 4px;
+  margin-bottom: 12px;
 }
 
 .m-ei-top {
@@ -995,7 +995,7 @@ function printCV() {
 .m-main-col {
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 22px;
 }
 
 .m-main-head {
@@ -1026,14 +1026,14 @@ function printCV() {
 .m-exp-list {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 22px;
 }
 
 .m-exp-entry {
   display: flex;
   flex-direction: column;
-  gap: 3px;
-  padding-bottom: 14px;
+  gap: 6px;
+  padding-bottom: 18px;
   border-bottom: 1px dashed var(--d-rule);
 }
 .m-exp-entry:last-child {
@@ -1102,8 +1102,8 @@ function printCV() {
 .m-ee-desc {
   margin: 0;
   font-family: var(--font-text);
-  font-size: 13px;
-  line-height: 1.48;
+  font-size: 13.5px;
+  line-height: 1.55;
   color: var(--d-dim);
 }
 
@@ -1113,10 +1113,10 @@ function printCV() {
   margin: 4px 0 0;
   display: flex;
   flex-direction: column;
-  gap: 3px;
+  gap: 5px;
   font-family: var(--font-text);
-  font-size: 12.5px;
-  line-height: 1.42;
+  font-size: 13px;
+  line-height: 1.5;
   color: var(--d-ink);
 }
 
@@ -1137,7 +1137,7 @@ function printCV() {
   display: flex;
   flex-wrap: wrap;
   gap: 4px;
-  margin-top: 6px;
+  margin-top: 10px;
 }
 
 .m-ee-chips span {
@@ -1341,8 +1341,8 @@ function printCV() {
   }
   .cv-modern .m-bio {
     color: #374151 !important;
-    font-size: 9.1pt !important;
-    line-height: 1.48 !important;
+    font-size: 9.3pt !important;
+    line-height: 1.55 !important;
   }
   .cv-modern .m-meta-strip {
     font-size: 7.8pt !important;
@@ -1365,13 +1365,13 @@ function printCV() {
   .cv-modern .m-body-grid {
     display: grid !important;
     grid-template-columns: 218px 1fr !important;
-    gap: 16pt !important;
+    gap: 20pt !important;
   }
   .cv-modern .m-side-col {
-    gap: 9pt !important;
+    gap: 12pt !important;
   }
   .cv-modern .m-panel {
-    gap: 3.5pt !important;
+    gap: 4.5pt !important;
     break-inside: avoid !important;
     page-break-inside: avoid !important;
   }
@@ -1379,12 +1379,12 @@ function printCV() {
     color: #e03600 !important;
     border-bottom: 0.75pt solid #d1d5db !important;
     font-size: 8.8pt !important;
-    padding-bottom: 2pt !important;
+    padding-bottom: 3pt !important;
   }
   .cv-modern .m-contact-list {
     font-size: 8.5pt !important;
-    gap: 4pt !important;
-    line-height: 1.32 !important;
+    gap: 5.5pt !important;
+    line-height: 1.4 !important;
   }
   .cv-modern .m-contact-list li {
     color: #374151 !important;
@@ -1396,8 +1396,8 @@ function printCV() {
     color: #e03600 !important;
   }
   .cv-modern .m-stack-group {
-    gap: 1.5pt !important;
-    margin-bottom: 3.5pt !important;
+    gap: 2.5pt !important;
+    margin-bottom: 4.5pt !important;
   }
   .cv-modern .m-sg-label {
     font-size: 7.6pt !important;
@@ -1405,12 +1405,12 @@ function printCV() {
   }
   .cv-modern .m-sg-val {
     font-size: 8.5pt !important;
-    line-height: 1.32 !important;
+    line-height: 1.4 !important;
     color: #111827 !important;
   }
   .cv-modern .m-edu-item {
-    gap: 1.5pt !important;
-    margin-bottom: 4.5pt !important;
+    gap: 2.5pt !important;
+    margin-bottom: 6pt !important;
   }
   .cv-modern .m-ei-school {
     font-size: 8.8pt !important;
@@ -1440,11 +1440,11 @@ function printCV() {
     font-size: 7.6pt !important;
   }
   .cv-modern .m-main-col {
-    gap: 8pt !important;
+    gap: 11pt !important;
   }
   .cv-modern .m-main-head {
     border-bottom: 0.75pt solid #d1d5db !important;
-    padding-bottom: 2pt !important;
+    padding-bottom: 3pt !important;
   }
   .cv-modern .m-main-title {
     color: #111827 !important;
@@ -1455,11 +1455,11 @@ function printCV() {
     font-size: 7.8pt !important;
   }
   .cv-modern .m-exp-list {
-    gap: 7pt !important;
+    gap: 9.5pt !important;
   }
   .cv-modern .m-exp-entry {
-    gap: 2pt !important;
-    padding-bottom: 6.5pt !important;
+    gap: 3pt !important;
+    padding-bottom: 8pt !important;
     border-bottom: 0.5pt dashed #e5e7eb !important;
     break-inside: avoid !important;
     page-break-inside: avoid !important;
@@ -1496,22 +1496,22 @@ function printCV() {
   }
   .cv-modern .m-ee-desc {
     color: #374151 !important;
-    font-size: 8.6pt !important;
-    line-height: 1.34 !important;
+    font-size: 8.8pt !important;
+    line-height: 1.42 !important;
   }
   .cv-modern .m-ee-bullets {
-    font-size: 8.3pt !important;
-    line-height: 1.32 !important;
+    font-size: 8.5pt !important;
+    line-height: 1.4 !important;
     color: #1f2937 !important;
-    gap: 2pt !important;
-    margin-top: 2.5pt !important;
+    gap: 3pt !important;
+    margin-top: 3pt !important;
   }
   .cv-modern .m-ee-bullets li::before {
     color: #e03600 !important;
   }
   .cv-modern .m-ee-chips {
     gap: 2.5pt !important;
-    margin-top: 3pt !important;
+    margin-top: 4.5pt !important;
   }
   .cv-modern .m-ee-chips span {
     font-size: 7pt !important;
@@ -1523,8 +1523,8 @@ function printCV() {
   .cv-modern .m-goal-box {
     border-left: 2.5pt solid #e03600 !important;
     background: #f9fafb !important;
-    padding: 6pt 9pt !important;
-    margin-top: 4pt !important;
+    padding: 8pt 10pt !important;
+    margin-top: 6pt !important;
     break-inside: avoid !important;
     page-break-inside: avoid !important;
   }
@@ -1535,7 +1535,7 @@ function printCV() {
   }
   .cv-modern .m-gb-text {
     font-size: 8.3pt !important;
-    line-height: 1.32 !important;
+    line-height: 1.4 !important;
     color: #1f2937 !important;
   }
 }
