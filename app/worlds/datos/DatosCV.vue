@@ -1161,28 +1161,24 @@ function printCV() {
   color: var(--d-dim);
 }
 
-/* ─── Responsive & Print Rules ─────────────────────────────────────────────── */
-@media screen and (max-width: 680px) {
-  .m-body-grid {
-    grid-template-columns: 1fr;
-    gap: 20px;
-  }
-  .m-masthead {
+/* ─── Responsive Screen Rules ─────────────────────────────────────────────── */
+@media screen and (max-width: 820px) {
+  /* Toolbar móvil y tablet */
+  .cv-toolbar {
     flex-direction: column;
-    gap: 16px;
+    align-items: stretch;
+    gap: 10px;
+    padding: 10px 12px;
   }
-  .cv-harvard {
-    padding: 20px 16px;
-    box-shadow: none;
+  .cv-selector {
+    width: 100%;
+    display: flex;
   }
-  .h-entry-header,
-  .h-entry-sub {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 2px;
-  }
-  .h-bullets {
-    padding-left: 14px;
+  .cv-btn {
+    flex: 1;
+    justify-content: center;
+    font-size: 11px;
+    padding: 7px 6px;
   }
   .cv-actions {
     width: 100%;
@@ -1192,6 +1188,95 @@ function printCV() {
   .cv-action-btn {
     flex: 1;
     justify-content: center;
+    font-size: 10.5px;
+    padding: 7px 6px;
+  }
+
+  /* Harvard ATS móvil */
+  .cv-harvard {
+    padding: 16px 14px;
+    box-shadow: none;
+  }
+  .h-contact {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 4px 6px;
+    font-size: 11.5px;
+  }
+  .h-entry-header,
+  .h-entry-sub {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+  }
+
+  /* Modern IDE móvil y tablet */
+  .ide-container {
+    flex-direction: column;
+  }
+  .ide-sidebar {
+    width: 100%;
+    border-right: none;
+    border-bottom: 1px solid var(--d-rule-strong);
+  }
+  .ide-photo-wrap {
+    width: 110px;
+    margin: 0 auto;
+  }
+  .ide-editor-content {
+    padding: 18px 16px;
+  }
+  .ide-name {
+    font-size: 22px;
+  }
+}
+
+@media screen and (max-width: 520px) {
+  .ide-editor-content {
+    padding: 14px 12px;
+  }
+  .ide-name {
+    font-size: 19px;
+  }
+  .ide-role {
+    font-size: 11.5px;
+  }
+  .ide-tabs {
+    overflow-x: auto;
+  }
+  .ide-tab {
+    padding: 8px 12px;
+    font-size: 11px;
+  }
+  .ide-exp-top-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+  }
+  .ide-exp-title {
+    font-size: 13px;
+  }
+  .ide-exp-title-wrap {
+    flex-wrap: wrap;
+  }
+  .ide-exp-sub-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1px;
+  }
+  .ide-exp-bullets {
+    padding-left: 12px;
+  }
+  .ide-stack-group {
+    flex-direction: column;
+    gap: 2px;
+  }
+  .ide-stack-label {
+    width: auto;
+  }
+  .ide-key-val li {
+    font-size: 11px;
   }
 }
 
