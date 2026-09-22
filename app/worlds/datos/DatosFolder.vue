@@ -365,11 +365,11 @@ function onCardMousemove(e: MouseEvent) {
             </li>
             <li>
               <div class="hd-cl-top">
-                <strong>Pegasuz &amp; Freelance</strong>
+                <strong>{{ isEs ? 'Desarrollo Freelance' : 'Freelance Development' }}</strong>
                 <span>2023 – {{ isEs ? 'Act.' : 'Present' }}</span>
               </div>
-              <p class="hd-cl-sub">{{ isEs ? 'Fundador & Consultor de Software' : 'Founder & Software Consultant' }}</p>
-              <p class="hd-cl-body">{{ isEs ? '~10 soluciones llave en mano entregadas y arquitectura de CMS multi-tenant propio.' : '~10 turnkey web deliverables shipped and proprietary multi-tenant CMS architecture.' }}</p>
+              <p class="hd-cl-sub">{{ isEs ? 'Desarrollador Full Stack' : 'Full Stack Developer' }}</p>
+              <p class="hd-cl-body">{{ isEs ? '~10 soluciones llave en mano entregadas con arquitectura de software integral.' : '~10 turnkey web deliverables shipped with end-to-end software architecture.' }}</p>
             </li>
           </ul>
         </div>

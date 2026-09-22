@@ -51,7 +51,7 @@ const techNotes: Record<TechSlug, string> = {
   prisma: 'ORM tipado de punta a punta: genera tipos TypeScript exactos directamente desde el esquema SQL.',
   tailwind: 'Sistema de diseño componible y utilitario con purga agresiva para bundles ultra ligeros.',
   vite: 'Tooling ultra veloz basado en Rollup y esbuild para HMR instantáneo en desarrollo.',
-  angular: 'Arquitectura corporativa basada en RxJS y Dependency Injection, base del primer stack de Pegasuz.',
+  angular: 'Arquitectura corporativa basada en RxJS y Dependency Injection.',
   react: 'Ecosistema masivo, React Server Components y rendering híbrido adoptado en la tesis Ynara.',
   next: 'Framework full-stack de React con optimización de assets, routing por sistema de archivos y SSR.',
   mongodb: 'Base NoSQL orientada a documentos para prototipado ágil y esquemas dinámicos en Barberpole.',
@@ -92,7 +92,6 @@ const techColors: Record<TechSlug, string> = {
 const orgs = [
   { slug: 'la-rucula-gastrobar', name: 'La Rúcula Gastrobar', url: 'https://laruculagastrobar.es/', city: 'Chiclana de la Frontera, ES' },
   { slug: 'arg-piscinas', name: 'ARG Piscinas', url: 'https://www.argpiscinas.es/', city: 'Andalucía, ES' },
-  { slug: 'pegasuz', name: 'Pegasuz', url: null, city: 'Buenos Aires, AR' },
   { slug: 'escuela-da-vinci', name: 'Escuela Da Vinci', url: 'https://www.davinci.edu.ar/', city: 'Buenos Aires, AR' },
   { slug: 'cet-30', name: 'CET N.º 30', url: null, city: 'Río Negro, AR' },
 ]
@@ -149,7 +148,7 @@ const projects: SeedProject[] = [
     ],
     steps: [
       { title: '01 · encargo', body: 'De un encargo de "página de restaurante" a una experiencia menu-first pensada para el QR en la mesa. La carta tenía que sentirse tan cuidada como el plato.' },
-      { title: '02 · taller', body: 'Arquitectura menu-first: el sitio se reduce a /, /menu y /menu/:slug. La mayoría del tráfico entra por QR, así que el menú es el producto. El contenido del shell vive en Pegasuz, el CMS multi-tenant propio, con fallback local: si la API duerme, el sitio no. Antes de cerrar una sección, review visual con Playwright en tres viewports y baseline de accesibilidad con axe.' },
+      { title: '02 · taller', body: 'Arquitectura menu-first: el sitio se reduce a /, /menu y /menu/:slug. La mayoría del tráfico entra por QR, así que el menú es el producto. El contenido del shell vive en un CMS propio con fallback local: si la API duerme, el sitio no. Antes de cerrar una sección, review visual con Playwright en tres viewports y baseline de accesibilidad con axe.' },
       { title: '03 · pieza', body: 'Home inmersiva de dirección de arte mediterránea: editorial, calma, lejos del layout genérico de restaurante. Motion con significado: reveals de línea, stagger tipográfico y acentos SVG de trazo manual. La regla del proyecto: cohesión sobre novedad.' },
     ],
     cover: { src: '/media/projects/la-rucula.jpg', alt: 'Home de La Rúcula Gastrobar: titular editorial sobre fotografía de la costa', width: 2880, height: 1800, bytes: 218308 },
@@ -327,16 +326,6 @@ const experience: SeedExperience[] = [
     techs: ['javascript', 'typescript', 'vue', 'react', 'node', 'laravel'],
   },
   {
-    slug: 'pegasuz',
-    org: 'pegasuz',
-    role: 'Fundador · CMS multi-tenant propio',
-    startedAt: '2024-05-20',
-    endedAt: null,
-    summary: 'Estudio y CMS propio que alimenta los sitios de clientes. Del sitio en Angular (2024) al core API-first con contratos por marca (2026).',
-    story: 'Pegasuz empezó como un sitio en Angular y terminó siendo la infraestructura de todo lo demás: un CMS multi-tenant al que se conectan La Rúcula y ARG Piscinas. Aprendí a cotizar, a decir que no, y a diseñar un contrato de datos que sobreviva a tres rediseños.',
-    techs: ['angular', 'vue', 'node', 'prisma', 'firebase', 'typescript'],
-  },
-  {
     slug: 'arg-piscinas',
     org: 'arg-piscinas',
     role: 'Freelance · front y back a medida',
@@ -352,8 +341,8 @@ const experience: SeedExperience[] = [
     role: 'Freelance · diseño y desarrollo',
     startedAt: '2026-03-17',
     endedAt: '2026-07-20',
-    summary: 'Sitio editorial menu-first integrado a Pegasuz. En producción.',
-    story: 'De un PDF escaneado a una web menu-first optimizada para comensales en mesa mediante QR. Integración con el CMS Pegasuz con fallback offline local: si la API externa entra en reposo, el menú sigue disponible sin degradación.',
+    summary: 'Sitio editorial menu-first con panel de gestión propio. En producción.',
+    story: 'De un PDF escaneado a una web menu-first optimizada para comensales en mesa mediante QR. Integración con panel de gestión propio y fallback offline local: si la API externa entra en reposo, el menú sigue disponible sin degradación.',
     techs: ['vue', 'gsap', 'lenis', 'tailwind'],
   },
   {

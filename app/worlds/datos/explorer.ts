@@ -6,7 +6,7 @@
  *   [about]                  hoja: campos del documento de especificación
  *   [projects]               carpeta: los records, con facetas de filtrado
  *   [projects, la-rucula]    hoja: el record completo con dossier de ingeniería
- *   [orgs, pegasuz]          hoja de organización o cliente
+ *   [orgs, la-rucula-gastrobar] hoja de organización o cliente
  *
  * Es un explorador de alta precisión: las relaciones son hipervínculos bidireccionales,
  * los filtros son facetas interactivas y los registros exponen el dossier completo

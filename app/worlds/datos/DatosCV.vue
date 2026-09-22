@@ -105,13 +105,13 @@ const cvDeliverables = computed<CVDeliverable[]>(() => {
         tags: ['Vue 3', 'Node.js', 'Prisma', 'Tailwind CSS', 'TypeScript'],
       },
       {
-        slug: 'pegasuz',
-        title: 'Pegasuz & Freelance',
-        badge: 'Consultoría',
+        slug: 'freelance',
+        title: 'Freelance',
+        badge: 'Freelance',
         date: '2023 – Presente',
-        role: 'Fundador & Consultor de Software',
+        role: 'Desarrollador Full Stack',
         location: 'Remoto',
-        description: 'Diseño de CMS multi-tenant propio con APIs REST y entrega exitosa de aproximadamente 10 proyectos web llave en mano.',
+        description: 'Desarrollo de software y soluciones web llave en mano para clientes de diversos rubros con arquitectura integral y APIs REST.',
         bullets: [
           'Desarrollo de punta a punta: arquitectura de sistemas, diseño en Figma y despliegue a producción.',
         ],
@@ -163,13 +163,13 @@ const cvDeliverables = computed<CVDeliverable[]>(() => {
       tags: ['Vue 3', 'Node.js', 'Prisma', 'Tailwind CSS', 'TypeScript'],
     },
     {
-      slug: 'pegasuz',
-      title: 'Pegasuz & Freelance',
-      badge: 'Consultancy',
+      slug: 'freelance',
+      title: 'Freelance',
+      badge: 'Freelance',
       date: '2023 – Present',
-      role: 'Founder & Software Consultant',
+      role: 'Full Stack Developer',
       location: 'Remote',
-      description: 'Proprietary multi-tenant headless CMS and successful delivery of ~10 turnkey web solutions for diverse clients.',
+      description: 'Full-stack software development and turnkey web solutions for diverse clients with end-to-end architecture and REST APIs.',
       bullets: [
         'End-to-end turnkey web solutions combining Figma UI design and production-ready full-stack software.',
       ],
@@ -370,18 +370,18 @@ function printCV() {
 
         <div class="h-entry">
           <div class="h-entry-header">
-            <span class="h-org">PEGASUZ &amp; FREELANCE</span>
+            <span class="h-org">{{ isEs ? 'DESARROLLO FREELANCE' : 'FREELANCE DEVELOPMENT' }}</span>
             <span class="h-date">{{ isEs ? '2023 – Presente' : '2023 – Present' }}</span>
           </div>
           <div class="h-entry-sub">
-            <span class="h-degree">{{ isEs ? 'Fundador & Consultor de Software' : 'Founder & Software Consultant' }}</span>
+            <span class="h-degree">{{ isEs ? 'Desarrollador Full Stack' : 'Full Stack Developer' }}</span>
             <span class="h-loc">{{ isEs ? 'Remoto' : 'Remote' }}</span>
           </div>
           <ul class="h-bullets">
-            <li v-if="isEs">Diseño e implementación de CMS multi-tenant propio con APIs REST desacopladas.</li>
-            <li v-else>Designed and implemented proprietary multi-tenant headless CMS with decoupled REST APIs.</li>
+            <li v-if="isEs">Desarrollo integral de soluciones de software a medida con APIs REST y arquitecturas modulares.</li>
+            <li v-else>End-to-end development of custom software solutions with decoupled REST APIs and scalable architectures.</li>
             <li v-if="isEs">Entrega exitosa de aproximadamente 10 proyectos web llave en mano para clientes de diversos rubros.</li>
-            <li v-else>Successful delivery of ~10 turnkey web solutions for clients across commercial and enterprise sectors.</li>
+            <li v-else>Successful delivery of ~10 turnkey web solutions for clients across diverse sectors.</li>
           </ul>
         </div>
       </section>

@@ -442,8 +442,8 @@ export const projectTranslations: Record<string, { summary: { es: string, en: st
       en: 'The restaurant operated with a scanned PDF that was cumbersome to read on mobile screens. The objective was to engineer a menu-first web experience optimized for in-table QR scanning, featuring instant category navigation and sub-second load times.',
     },
     outcome: {
-      es: 'En producción con más de 1.200 visitas mensuales por QR. Lighthouse 99 en Performance y 100 en SEO. Integración con Pegasuz CMS y sincronización local para funcionamiento offline si la red se interrumpe.',
-      en: 'In production with over 1,200 monthly QR visits. Lighthouse 99 Performance and 100 SEO. Integrated with Pegasuz CMS and local offline sync if mobile connectivity drops.',
+      es: 'En producción con más de 1.200 visitas mensuales por QR. Lighthouse 99 en Performance y 100 en SEO. Integración con panel de gestión propio y sincronización local para funcionamiento offline si la red se interrumpe.',
+      en: 'In production with over 1,200 monthly QR visits. Lighthouse 99 Performance and 100 SEO. Integrated with custom CMS dashboard and local offline sync if mobile connectivity drops.',
     },
   },
   'argpiscinas': {
@@ -522,16 +522,6 @@ export const experienceTranslations: Record<string, { role: { es: string, en: st
     summary: {
       es: 'Alrededor de diez proyectos reales para clientes desde 2023. El primero: la web de un estudio de arquitectura.',
       en: 'Approximately ten real client projects delivered since 2023. First project: an architecture studio website.',
-    },
-  },
-  pegasuz: {
-    role: {
-      es: 'Fundador · CMS multi-tenant propio',
-      en: 'Founder · Proprietary Multi-tenant CMS',
-    },
-    summary: {
-      es: 'Estudio y CMS propio que alimenta los sitios de clientes. Del sitio en Angular (2024) al core API-first con contratos por marca (2026).',
-      en: 'Proprietary studio & headless CMS powering client websites. From Angular site (2024) to API-first core with brand contracts (2026).',
     },
   },
   'arg-piscinas': {
