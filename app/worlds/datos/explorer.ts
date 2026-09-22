@@ -13,7 +13,7 @@
  * (brief, outcome, pasos de proceso, capturas técnicas y métricas).
  */
 import type { LocationQuery, RouteLocationRaw } from 'vue-router'
-import type { AnyRecord, LinkRef, Org, TechRef } from '~/lib/api'
+import type { AnyRecord, Experience, LinkRef, Org, Project, TechRef } from '~/lib/api'
 import { fieldMeta, fieldsFor, type CollectionKey, type FieldMeta } from '~/lib/fieldMeta'
 import { isDoc, isRoot, routeFor, type Path } from '~/lib/path'
 import { filtersFor, listEndpoint, listFilters, type Answer, type useApi } from '~/composables/useApi'
@@ -58,6 +58,8 @@ export interface Folder {
   count: number
   items: Item[]
   facets: Facet[]
+  projects?: Project[]
+  experience?: Experience[]
 }
 
 /** Un record vecino en la lista de la colección: a dónde se pasa de lado. */
@@ -126,6 +128,8 @@ export interface Detail {
   updated: string | null
   rows: Row[]
   rawRecord?: unknown
+  projects?: Project[]
+  experience?: Experience[]
 }
 
 export interface Explorer {
@@ -300,7 +304,11 @@ export async function resolveExplorer(api: Api, path: Path, query: LocationQuery
 
   if (!root) {
     // La raíz es la base de datos completa: sus colecciones y documentos
-    const schema = await api.schema()
+    const [schema, projectsRes, expRes] = await Promise.all([
+      api.schema(),
+      api.list('projects').catch(() => null),
+      api.list('experience').catch(() => null),
+    ])
     last = schema
     const rootInfo: Record<string, { label: string, desc: string }> = {
       projects: { label: 'proyectos', desc: '06 aplicaciones reales en producción' },
@@ -324,6 +332,8 @@ export async function resolveExplorer(api: Api, path: Path, query: LocationQuery
         kind: e.kind === 'collection' ? 'folder' : 'file',
         to: routeFor([e.key]),
       })),
+      projects: projectsRes?.data ?? [],
+      experience: expRes?.data ?? [],
     }
     return done()
   }
@@ -334,6 +344,26 @@ export async function resolveExplorer(api: Api, path: Path, query: LocationQuery
   // Documento: es una hoja directa
   if (isDoc(root)) {
     if (slug) throw notFound()
+    if (root === 'about') {
+      const [answer, expRes, projRes] = await Promise.all([
+        api.doc(root),
+        api.list('experience').catch(() => null),
+        api.list('projects').catch(() => null),
+      ])
+      last = answer
+      detail = {
+        kind: 'document',
+        name: answer.data.title,
+        type: `document · ${root}`,
+        updated: answer.data.updatedAt ? String(answer.data.updatedAt).slice(0, 10) : null,
+        rawRecord: answer.data,
+        rows: answer.data.fields.map(f => docRow(f)),
+        experience: expRes?.data ?? [],
+        projects: projRes?.data ?? [],
+      }
+      return done()
+    }
+
     const answer = await api.doc(root)
     last = answer
     detail = {

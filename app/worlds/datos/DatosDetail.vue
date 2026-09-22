@@ -74,22 +74,25 @@ const projectOrg = computed(() => {
 
 function getLocalizedRow(row: Detail['rows'][number]) {
   if (isProject.value && projectLoc.value) {
-    if (row.name === 'summary' && projectLoc.value.summary) {
-      return { ...row, value: projectLoc.value.summary }
+    if (isEn.value) {
+      if (row.name === 'summary' && projectLoc.value.summary) return { ...row, value: projectLoc.value.summary }
+      if (row.name === 'brief' && projectLoc.value.brief) return { ...row, value: projectLoc.value.brief }
+      if (row.name === 'outcome' && projectLoc.value.outcome) return { ...row, value: projectLoc.value.outcome }
     }
-    if (row.name === 'brief' && projectLoc.value.brief) {
-      return { ...row, value: projectLoc.value.brief }
-    }
-    if (row.name === 'outcome' && projectLoc.value.outcome) {
-      return { ...row, value: projectLoc.value.outcome }
+    else {
+      if (row.name === 'summary' && !row.value && projectLoc.value.summary) return { ...row, value: projectLoc.value.summary }
+      if (row.name === 'brief' && !row.value && projectLoc.value.brief) return { ...row, value: projectLoc.value.brief }
+      if (row.name === 'outcome' && !row.value && projectLoc.value.outcome) return { ...row, value: projectLoc.value.outcome }
     }
   }
   if (isExperience.value && expLoc.value) {
-    if (row.name === 'summary' && expLoc.value.summary) {
-      return { ...row, value: expLoc.value.summary }
+    if (isEn.value) {
+      if (row.name === 'summary' && expLoc.value.summary) return { ...row, value: expLoc.value.summary }
+      if (row.name === 'role' && expLoc.value.role) return { ...row, value: expLoc.value.role }
     }
-    if (row.name === 'role' && expLoc.value.role) {
-      return { ...row, value: expLoc.value.role }
+    else {
+      if (row.name === 'summary' && !row.value && expLoc.value.summary) return { ...row, value: expLoc.value.summary }
+      if (row.name === 'role' && !row.value && expLoc.value.role) return { ...row, value: expLoc.value.role }
     }
   }
   return row
@@ -193,7 +196,7 @@ async function copyJson() {
       </DatosCabecera>
 
       <!-- 1. Si es documento About y no está en modo campos: Renderizar DatosCV -->
-      <DatosCV v-if="isAbout && !showRawFields" />
+      <DatosCV v-if="isAbout && !showRawFields" :detail="detail" />
 
       <!-- De lo contrario, renderizar el flujo estándar -->
       <template v-else>

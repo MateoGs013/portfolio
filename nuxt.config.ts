@@ -16,6 +16,7 @@ export default defineNuxtConfig({
       '/admin': { proxy: `${apiOrigin}/admin/` },
       '/admin/**': { proxy: `${apiOrigin}/admin/**` },
       '/api/admin/**': { proxy: `${apiOrigin}/api/admin/**` },
+      '/api/**': { proxy: `${apiOrigin}/api/**` },
     },
   },
 

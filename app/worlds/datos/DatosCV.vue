@@ -1,11 +1,16 @@
 <script setup lang="ts">
 // Componente de Currículum Vitae Dual — Mateo Gabriel Sonzogni
-// Soporta conmutación reactiva entre:
-// 1. Modo Harvard ATS (académico, blanco y negro, sin foto, máxima legibilidad para reclutadores y sistemas ATS)
-// 2. Modo Moderno (diseño tecnológico contemporáneo con fotografía de perfil, dos columnas y chips técnicos)
-// Incluye botón de exportación/impresión a PDF con estilos @media print y localización completa (ES / EN).
+// 1. Modo Harvard ATS (académico, blanco y negro, sin foto, máxima legibilidad para ATS y reclutadores)
+// 2. Modo Moderno Editorial (estética suiza contemporánea de alta fidelidad con retrato integrado,
+//    retícula asimétrica limpia y jerarquía tipográfica sin marcos cerrados ni cajas fragmentadas)
+// Consumo dinámico de PostgreSQL (documento about, proyectos y experiencia) con descarga/impresión A4 en 1 página.
 
+import type { Detail } from './explorer'
 import DatosIcon from './DatosIcon.vue'
+
+const props = defineProps<{
+  detail?: Detail
+}>()
 
 const { isEs } = usePortfolioLocale()
 const { isHyperfocus } = useHyperfocus()
@@ -17,14 +22,37 @@ watch(isHyperfocus, (val) => {
   }
 }, { immediate: true })
 
+function getDocField(name: string): string | null {
+  const row = props.detail?.rows?.find(r => r.name === name)
+  return (row && typeof row.value === 'string' && row.value.trim()) ? row.value : null
+}
+
+const cvName = computed(() => getDocField('name') || 'MATEO GABRIEL SONZOGNI')
+const cvRole = computed(() => isEs.value
+  ? (getDocField('role') || 'Desarrollador Frontend & Full Stack · Creative Developer')
+  : 'Frontend & Full Stack Developer · Creative Developer',
+)
+const cvLocation = computed(() => isEs.value
+  ? (getDocField('location') || 'Río Negro, Patagonia Argentina')
+  : 'Río Negro, Patagonia, Argentina',
+)
+const cvAvailability = computed(() => isEs.value
+  ? (getDocField('availability_status') || 'DISPONIBLE // CONTRATACIÓN DIRECTA 2026')
+  : 'AVAILABLE // DIRECT HIRE 2026',
+)
+const cvBio = computed(() => isEs.value
+  ? (getDocField('engineering_philosophy') || 'Desarrollo con criterio de diseño y foco en el producto entero: qué problema resuelve, cómo debería verse, cómo debería sentirse, cómo se construye y cómo llega a producción. No me posiciono solo como programador ni solo como diseñador; trabajo en la costura donde la arquitectura técnica se encuentra con la experiencia de usuario.')
+  : 'Software engineer specialized in reactive frontend engineering, API architecture, and user experience. Pre-approved degree thesis at Da Vinci School with 382 commits leading system architecture for an on-premise AI assistant. Verifiable production track record with 10+ deliverables for clients across Spain and Argentina (La Rúcula Gastrobar, ARG Piscinas). Proficient in TypeScript, Vue 3, Nuxt 4, React, Next.js, Node.js, FastAPI, and PostgreSQL. End-to-end product design mindset.',
+)
+const cvGoal = computed(() => isEs.value
+  ? (getDocField('professional_goal') || 'Consolidarme como desarrollador en un equipo con proyectos reales de mayor escala. A mediano plazo, liderazgo técnico: coordinar, organizar, comunicar y conectar perfiles de distintas áreas (diseño, producto, frontend y backend).')
+  : 'Consolidate my impact as an engineer within a high-caliber team shipping large-scale production software. In the medium term, technical leadership: coordinating, organizing, and bridging disciplines across product, UI/UX, frontend, and backend architectures.',
+)
+
 const cvDownloadFileName = computed(() => {
   const lang = isEs.value ? 'ES' : 'EN'
   const style = mode.value === 'harvard' ? 'Harvard_ATS' : 'Moderno'
   return `Mateo_Sonzogni_CV_${style}_${lang}.pdf`
-})
-
-const cvDownloadHref = computed(() => {
-  return `/cv/${cvDownloadFileName.value}`
 })
 
 function printCV() {
@@ -43,7 +71,7 @@ function printCV() {
           type="button"
           class="cv-btn"
           :class="{ active: mode === 'modern' }"
-          :title="isEs ? 'Ver CV moderno en dos columnas con fotografía técnica' : 'View modern two-column tech resume with photo'"
+          :title="isEs ? 'Ver CV moderno editorial con fotografía técnica' : 'View modern editorial tech resume with photo'"
           @click="mode = 'modern'"
         >
           <DatosIcon name="user" :size="13" class="cv-btn-icon" />
@@ -62,18 +90,18 @@ function printCV() {
       </div>
 
       <div class="cv-actions">
-        <!-- Botón de Descarga Directa PDF -->
-        <a
-          :href="cvDownloadHref"
-          :download="cvDownloadFileName"
+        <!-- Botón de Descarga Directa PDF (Invoca el print calibrado a PDF para datos en vivo) -->
+        <button
+          type="button"
           class="cv-action-btn cv-download-btn"
-          :title="isEs ? `Descargar archivo PDF oficial (${cvDownloadFileName})` : `Download official PDF file (${cvDownloadFileName})`"
+          :title="isEs ? `Guardar o descargar PDF (${cvDownloadFileName})` : `Save or download PDF (${cvDownloadFileName})`"
+          @click="printCV"
         >
           <DatosIcon name="download" :size="13" />
           <span>{{ isEs ? 'DESCARGAR PDF' : 'DOWNLOAD PDF' }}</span>
-        </a>
+        </button>
 
-        <!-- Botón de Impresión / Guardado Navegador -->
+        <!-- Botón de Impresión Navegador -->
         <button
           type="button"
           class="cv-action-btn cv-print-btn"
@@ -92,10 +120,10 @@ function printCV() {
     <article v-if="mode === 'harvard'" class="cv-harvard">
       <!-- Encabezado Harvard -->
       <header class="h-header">
-        <h1 class="h-name">MATEO GABRIEL SONZOGNI</h1>
-        <p class="h-role">{{ isEs ? 'Desarrollador Frontend & Full Stack · Creative Developer' : 'Frontend & Full Stack Developer · Creative Developer' }}</p>
+        <h1 class="h-name">{{ cvName }}</h1>
+        <p class="h-role">{{ cvRole }}</p>
         <div class="h-contact">
-          <span>Río Negro, Argentina</span>
+          <span>{{ cvLocation }}</span>
           <span class="h-sep">|</span>
           <a href="mailto:mateogabus@gmail.com">mateogabus@gmail.com</a>
           <span class="h-sep">|</span>
@@ -111,12 +139,7 @@ function printCV() {
       <section class="h-section">
         <h2 class="h-title">{{ isEs ? 'RESUMEN PROFESIONAL' : 'PROFESSIONAL SUMMARY' }}</h2>
         <p class="h-summary">
-          <template v-if="isEs">
-            Desarrollador de software especializado en frontend reactivo, arquitectura de APIs y experiencia de usuario. Tesis de grado preaprobada en Escuela Da Vinci con 382 commits liderando la arquitectura de un asistente de inteligencia artificial on-premise. Experiencia comprobable en producción con más de 10 proyectos entregados para clientes en España y Argentina (La Rúcula Gastrobar, ARG Piscinas). Dominio de TypeScript, Vue 3, Nuxt 4, React, Next.js, Node.js, FastAPI y PostgreSQL. Criterio de diseño orientado a producto de punta a punta.
-          </template>
-          <template v-else>
-            Software engineer specialized in reactive frontend engineering, API architecture, and user experience. Pre-approved degree thesis at Da Vinci School with 382 commits leading system architecture for an on-premise AI assistant. Verifiable production track record with 10+ deliverables for clients across Spain and Argentina (La Rúcula Gastrobar, ARG Piscinas). Proficient in TypeScript, Vue 3, Nuxt 4, React, Next.js, Node.js, FastAPI, and PostgreSQL. End-to-end product design mindset.
-          </template>
+          {{ cvBio }}
         </p>
       </section>
 
@@ -249,289 +272,252 @@ function printCV() {
     </article>
 
     <!-- ═══════════════════════════════════════════════════════════════════════ -->
-    <!-- ESTILO 2: MODERNO CON FOTO (TECH & CREATIVE PROFILE)                  -->
+    <!-- ESTILO 2: MODERNO EDITORIAL (SWISS TECH & CREATIVE DEVELOPER PROFILE)  -->
     <!-- ═══════════════════════════════════════════════════════════════════════ -->
     <article v-else class="cv-modern">
-      <aside class="m-sidebar">
-        <!-- Foto de Perfil de Mateo (Sin efectos 3D) -->
-        <div class="m-photo-container">
+      <!-- 1. Cabecera Editorial Integrada -->
+      <header class="m-masthead">
+        <div class="m-masthead-main">
+          <div class="m-meta-strip">
+            <span class="m-kicker">{{ isEs ? 'EXPEDIENTE // CURRÍCULUM VITAE 2026' : 'PROFILE DOSSIER // CURRICULUM VITAE 2026' }}</span>
+            <span class="m-sep-dot" aria-hidden="true">·</span>
+            <span class="m-status-text">● {{ cvAvailability }}</span>
+          </div>
+
+          <h1 class="m-name">{{ cvName }}</h1>
+          <p class="m-role">{{ cvRole }}</p>
+
+          <p class="m-bio">{{ cvBio }}</p>
+        </div>
+
+        <div class="m-portrait-wrap">
           <img
             src="/media/profile/mateo-front.png"
             alt="Mateo Gabriel Sonzogni"
-            class="m-photo"
+            class="m-portrait-img"
             loading="eager"
           >
-          <div class="m-status-pill">
-            <span class="m-status-dot" />
-            <span>{{ isEs ? 'DISPONIBLE // 2026' : 'AVAILABLE // 2026' }}</span>
-          </div>
+          <span class="m-portrait-corner tl" aria-hidden="true">┌</span>
+          <span class="m-portrait-corner tr" aria-hidden="true">┐</span>
+          <span class="m-portrait-corner bl" aria-hidden="true">└</span>
+          <span class="m-portrait-corner br" aria-hidden="true">┘</span>
         </div>
+      </header>
 
-        <!-- Contacto Directo -->
-        <div class="m-block">
-          <h3 class="m-heading">{{ isEs ? 'CONTACTO' : 'CONTACT' }}</h3>
-          <ul class="m-contact-list">
-            <li>
-              <span class="m-icon"><DatosIcon name="mail" :size="13" /></span>
-              <a href="mailto:mateogabus@gmail.com">mateogabus@gmail.com</a>
-            </li>
-            <li>
-              <span class="m-icon"><DatosIcon name="code" :size="13" /></span>
-              <a href="https://github.com/MateoGs013" target="_blank" rel="noopener noreferrer">github.com/MateoGs013</a>
-            </li>
-            <li>
-              <span class="m-icon"><DatosIcon name="briefcase" :size="13" /></span>
-              <a href="https://www.linkedin.com/in/mateo-sonzogni" target="_blank" rel="noopener noreferrer">linkedin.com/in/mateo-sonzogni</a>
-            </li>
-            <li>
-              <span class="m-icon"><DatosIcon name="pin" :size="13" /></span>
-              <span>Río Negro, Patagonia Argentina</span>
-            </li>
-            <li>
-              <span class="m-icon"><DatosIcon name="clock" :size="13" /></span>
-              <span>UTC-3 ({{ isEs ? 'Disponible Remoto / Híbrido' : 'Available Remote / Hybrid' }})</span>
-            </li>
-          </ul>
-        </div>
-
-        <!-- Idiomas -->
-        <div class="m-block">
-          <h3 class="m-heading">{{ isEs ? 'IDIOMAS' : 'LANGUAGES' }}</h3>
-          <div class="m-lang-row">
-            <span class="m-lang-name">{{ isEs ? 'Español' : 'Spanish' }}</span>
-            <span class="m-lang-level">{{ isEs ? 'Nativo' : 'Native' }}</span>
-          </div>
-          <div class="m-lang-row">
-            <span class="m-lang-name">{{ isEs ? 'Inglés' : 'English' }}</span>
-            <span class="m-lang-level">{{ isEs ? 'B2 Profesional Técnico' : 'B2 Professional Technical' }}</span>
-          </div>
-        </div>
-
-        <!-- Arsenal Tecnológico -->
-        <div class="m-block">
-          <h3 class="m-heading">CORE STACK</h3>
-          <div class="m-chips">
-            <span class="m-chip">Vue 3</span>
-            <span class="m-chip">Nuxt 4</span>
-            <span class="m-chip">TypeScript</span>
-            <span class="m-chip">React</span>
-            <span class="m-chip">Next.js</span>
-            <span class="m-chip">FastAPI</span>
-            <span class="m-chip">Python</span>
-            <span class="m-chip">Node.js</span>
-            <span class="m-chip">PostgreSQL 17</span>
-            <span class="m-chip">Prisma</span>
-            <span class="m-chip">Tailwind CSS</span>
-            <span class="m-chip">GSAP</span>
-            <span class="m-chip">Figma</span>
-          </div>
-        </div>
-
-        <!-- Competencias Nucleares -->
-        <div class="m-block">
-          <h3 class="m-heading">{{ isEs ? 'COMPETENCIAS' : 'KEY SKILLS' }}</h3>
-          <ul class="m-list">
-            <li>Full-Cycle Engineering</li>
-            <li>{{ isEs ? 'Arquitectura de Datos Relacional' : 'Relational Data Architecture' }}</li>
-            <li>{{ isEs ? 'Diseño UI/UX de Alta Fidelidad' : 'High-Fidelity UI/UX Design' }}</li>
-            <li>{{ isEs ? 'Optimización de Rendimiento & SEO' : 'Performance & SEO Optimization' }}</li>
-            <li>{{ isEs ? 'Desarrollo de APIs REST Tipadas' : 'Type-Safe REST API Engineering' }}</li>
-          </ul>
-        </div>
-
-        <!-- Metodologías y Prácticas de Ingeniería -->
-        <div class="m-block">
-          <h3 class="m-heading">{{ isEs ? 'METODOLOGÍAS & PRÁCTICAS' : 'ENGINEERING PRACTICES' }}</h3>
-          <ul class="m-list">
-            <li>{{ isEs ? 'CI/CD & Flujo Git Colaborativo' : 'CI/CD & Git Team Workflow' }}</li>
-            <li>{{ isEs ? 'Arquitectura Limpia & Modular' : 'Clean & Modular Architecture' }}</li>
-            <li>{{ isEs ? 'Contratos Tipados (TS + Prisma)' : 'End-to-End Type Safety (TS + Prisma)' }}</li>
-            <li>{{ isEs ? 'Optimización Web (Lighthouse 95+)' : 'Web Performance (Lighthouse 95+)' }}</li>
-          </ul>
-        </div>
-      </aside>
-
-      <!-- Columna Principal -->
-      <main class="m-content">
-        <!-- Encabezado Principal -->
-        <header class="m-header">
-          <span class="m-tag">{{ isEs ? 'EXPEDIENTE // CURRÍCULUM VITAE' : 'PROFILE DOSSIER // CURRICULUM VITAE' }}</span>
-          <h1 class="m-name">Mateo Gabriel Sonzogni</h1>
-          <p class="m-subtitle">{{ isEs ? 'Desarrollador Frontend & Full Stack · Creative Developer' : 'Frontend & Full Stack Developer · Creative Developer' }}</p>
-          <p class="m-bio">
-            <template v-if="isEs">
-              Desarrollo con criterio de diseño y foco en el producto entero: qué problema resuelve, cómo debería verse, cómo debería sentirse, cómo se construye y cómo llega a producción. No me posiciono solo como programador ni solo como diseñador; trabajo en la costura donde la arquitectura técnica se encuentra con la experiencia de usuario.
-            </template>
-            <template v-else>
-              I build software with sharp design judgment and end-to-end product vision: what challenge it solves, how it should look and feel, how it gets architected, and how it reaches production. I don't position myself merely as a coder or designer; I operate right where technical infrastructure meets human experience.
-            </template>
-          </p>
-        </header>
-
-        <!-- Trayectoria Profesional -->
-        <section class="m-section">
-          <div class="m-sec-title">
-            <span class="m-sec-num">01</span>
-            <h2>{{ isEs ? 'EXPERIENCIA PROFESIONAL & PROYECTOS' : 'PROFESSIONAL EXPERIENCE & PROJECTS' }}</h2>
-          </div>
-
-          <div class="m-card">
-            <div class="m-card-top">
-              <span class="m-card-role">{{ isEs ? 'Tesis en equipo · Contribuidor Principal (382 commits)' : 'Team Degree Thesis · Lead Contributor (382 commits)' }}</span>
-              <span class="m-card-date">2026</span>
-            </div>
-            <h3 class="m-card-org">{{ isEs ? 'Ynara — Asistente de IA Adaptativo con Memoria Vectorial' : 'Ynara — Adaptive AI Assistant with Vector Memory' }}</h3>
-            <p class="m-card-desc">
-              <template v-if="isEs">
-                Tesis preaprobada en Escuela Da Vinci. Asistente on-premise con inferencia local, embeddings y base de conocimiento relacional sobre PostgreSQL + pgvector. Lideré el desarrollo del frontend en Next.js y el pipeline de backend en FastAPI.
-              </template>
-              <template v-else>
-                Pre-approved degree thesis at Da Vinci School. On-premise assistant featuring local inference, embeddings, and relational knowledge graph over PostgreSQL + pgvector. Led frontend development in Next.js and backend pipeline in FastAPI.
-              </template>
-            </p>
-            <ul class="m-card-bullets">
-              <li v-if="isEs">Inferencia local y persistencia vectorial con PostgreSQL + pgvector; latencia semántica &lt; 100ms.</li>
-              <li v-else>Local inference &amp; vector persistence with PostgreSQL + pgvector; sub-100ms semantic query latency.</li>
-            </ul>
-            <div class="m-card-tags">
-              <span class="m-tag-sm">FastAPI</span>
-              <span class="m-tag-sm">Next.js</span>
-              <span class="m-tag-sm">PostgreSQL</span>
-              <span class="m-tag-sm">Python</span>
-              <span class="m-tag-sm">TypeScript</span>
-            </div>
-          </div>
-
-          <div class="m-card">
-            <div class="m-card-top">
-              <span class="m-card-role">{{ isEs ? 'Freelance · Diseño y Desarrollo Web' : 'Freelance · Web Design & Engineering' }}</span>
-              <span class="m-card-date">2026</span>
-            </div>
-            <h3 class="m-card-org">La Rúcula Gastrobar (Cádiz, {{ isEs ? 'España' : 'Spain' }})</h3>
-            <p class="m-card-desc">
-              <template v-if="isEs">
-                Web menu-first para comensales en mesa por código QR. Integrada con el CMS Pegasuz propio y fallback local. Puntuación Lighthouse 99 en Performance y 100 en SEO. En producción.
-              </template>
-              <template v-else>
-                Menu-first web app for restaurant dining via table-side QR codes. Integrated with proprietary Pegasuz CMS and local cache fallback. Lighthouse 99 Performance and 100 SEO scores. In production.
-              </template>
-            </p>
-            <ul class="m-card-bullets">
-              <li v-if="isEs">Fallback offline en caché para operación continua ante cortes de red; bundle de producción optimizado a 42 KB.</li>
-              <li v-else>Cached offline fallback architecture ensuring uninterrupted dining service; lean 42 KB bundle.</li>
-            </ul>
-            <div class="m-card-tags">
-              <span class="m-tag-sm">Vue 3</span>
-              <span class="m-tag-sm">Vite</span>
-              <span class="m-tag-sm">Tailwind CSS</span>
-              <span class="m-tag-sm">GSAP</span>
-              <span class="m-tag-sm">Lenis</span>
-            </div>
-          </div>
-
-          <div class="m-card">
-            <div class="m-card-top">
-              <span class="m-card-role">{{ isEs ? 'Freelance · Frontend y Backend a Medida' : 'Freelance · Custom Frontend & Backend' }}</span>
-              <span class="m-card-date">2026</span>
-            </div>
-            <h3 class="m-card-org">ARG Piscinas (Andalucía, {{ isEs ? 'España' : 'Spain' }})</h3>
-            <p class="m-card-desc">
-              <template v-if="isEs">
-                Sitio corporativo multi-idioma con panel de administración propio para edición autónoma de proyectos y blog. Tipado de extremo a extremo con Prisma y Node.js.
-              </template>
-              <template v-else>
-                Multilingual corporate web platform with dedicated admin dashboard for autonomous project management and blog. End-to-end type safety with Prisma and Node.js.
-              </template>
-            </p>
-            <ul class="m-card-bullets">
-              <li v-if="isEs">Esquema relacional y contratos tipados de punta a punta con Prisma ORM y TypeScript.</li>
-              <li v-else>Relational data schema and strict end-to-end type safety with Prisma ORM and TypeScript.</li>
-            </ul>
-            <div class="m-card-tags">
-              <span class="m-tag-sm">Vue 3</span>
-              <span class="m-tag-sm">Node.js</span>
-              <span class="m-tag-sm">Prisma</span>
-              <span class="m-tag-sm">Tailwind</span>
-            </div>
-          </div>
-
-          <div class="m-card">
-            <div class="m-card-top">
-              <span class="m-card-role">{{ isEs ? 'Fundador & Desarrollador' : 'Founder & Developer' }}</span>
-              <span class="m-card-date">{{ isEs ? '2024 – Act.' : '2024 – Present' }}</span>
-            </div>
-            <h3 class="m-card-org">{{ isEs ? 'Pegasuz — CMS Multi-tenant Propio' : 'Pegasuz — Proprietary Multi-Tenant CMS' }}</h3>
-            <p class="m-card-desc">
-              <template v-if="isEs">
-                Infraestructura de contenidos API-first que alimenta los sitios de clientes en producción con contratos de datos blindados.
-              </template>
-              <template v-else>
-                API-first headless content infrastructure powering production client platforms with bulletproof data contracts.
-              </template>
-            </p>
-            <ul class="m-card-bullets">
-              <li v-if="isEs">Motor desacoplado que centraliza contenidos para múltiples clientes en producción con contratos blindados.</li>
-              <li v-else>Decoupled multi-tenant engine centralizing production client delivery with rigid schema contracts.</li>
+      <!-- 2. Rejilla Asimétrica Editorial (2 Columnas Limpias) -->
+      <div class="m-body-grid">
+        <!-- Columna Lateral (30%) -->
+        <aside class="m-side-col">
+          <!-- Contacto -->
+          <div class="m-panel">
+            <h2 class="m-panel-title">{{ isEs ? '01 / CONTACTO DIRECTO' : '01 / DIRECT CONTACT' }}</h2>
+            <ul class="m-contact-list">
+              <li>
+                <DatosIcon name="mail" :size="12" class="m-icon" />
+                <a href="mailto:mateogabus@gmail.com">mateogabus@gmail.com</a>
+              </li>
+              <li>
+                <DatosIcon name="code" :size="12" class="m-icon" />
+                <a href="https://github.com/MateoGs013" target="_blank" rel="noopener noreferrer">github.com/MateoGs013</a>
+              </li>
+              <li>
+                <DatosIcon name="briefcase" :size="12" class="m-icon" />
+                <a href="https://www.linkedin.com/in/mateo-sonzogni" target="_blank" rel="noopener noreferrer">linkedin.com/in/mateo-sonzogni</a>
+              </li>
+              <li>
+                <DatosIcon name="pin" :size="12" class="m-icon" />
+                <span>{{ cvLocation }}</span>
+              </li>
+              <li>
+                <DatosIcon name="clock" :size="12" class="m-icon" />
+                <span>UTC-3 ({{ isEs ? 'Remoto / Híbrido' : 'Remote / Hybrid' }})</span>
+              </li>
             </ul>
           </div>
-        </section>
 
-        <!-- Formación Académica -->
-        <section class="m-section">
-          <div class="m-sec-title">
-            <span class="m-sec-num">02</span>
-            <h2>{{ isEs ? 'FORMACIÓN ACADÉMICA' : 'EDUCATION & DEGREES' }}</h2>
+          <!-- Stack Tecnológico -->
+          <div class="m-panel">
+            <h2 class="m-panel-title">{{ isEs ? '02 / ARSENAL TÉCNICO' : '02 / TECHNICAL STACK' }}</h2>
+            <div class="m-stack-group">
+              <span class="m-sg-label">FRONTEND:</span>
+              <span class="m-sg-val">Vue 3, Nuxt 4, React, Next.js, TypeScript, Tailwind, GSAP</span>
+            </div>
+            <div class="m-stack-group">
+              <span class="m-sg-label">BACKEND &amp; DATA:</span>
+              <span class="m-sg-val">Node.js, Express, FastAPI, Python, PostgreSQL 17, Prisma</span>
+            </div>
+            <div class="m-stack-group">
+              <span class="m-sg-label">CLOUD &amp; TOOLS:</span>
+              <span class="m-sg-val">Docker, CI/CD, Git, Linux, Figma UI/UX, Vitest, Lenis</span>
+            </div>
           </div>
 
-          <div class="m-edu-grid">
-            <div class="m-card">
-              <span class="m-card-date">{{ isEs ? '2024 – 2026 (Promoción 2026)' : '2024 – 2026 (Class of 2026)' }}</span>
-              <h3 class="m-card-org">{{ isEs ? 'Diseño y Desarrollo Web' : 'Web Design & Development' }}</h3>
-              <p class="m-edu-sub">Escuela Da Vinci · Buenos Aires</p>
-              <p class="m-card-desc">
-                <template v-if="isEs">
-                  UI/UX, tipografía, dirección de arte digital, patrones de frontend reactivo, arquitecturas cliente-servidor y bases de datos. Tesis preaprobada: Ynara.
-                </template>
-                <template v-else>
-                  UI/UX, typography, digital art direction, reactive frontend patterns, client-server architectures, and relational databases. Pre-approved thesis: Ynara.
-                </template>
+          <!-- Formación Académica -->
+          <div class="m-panel">
+            <h2 class="m-panel-title">{{ isEs ? '03 / FORMACIÓN TÉCNICA' : '03 / EDUCATION' }}</h2>
+            <div class="m-edu-item">
+              <div class="m-ei-top">
+                <span class="m-ei-school">ESCUELA DA VINCI</span>
+                <span class="m-ei-year">2024–2026</span>
+              </div>
+              <p class="m-ei-degree">{{ isEs ? 'Diseño y Desarrollo Web' : 'Web Design & Development' }}</p>
+              <p class="m-ei-note">{{ isEs ? 'Tesis: Ynara (Lead Frontend & Arquitecto).' : 'Thesis: Ynara.' }}</p>
+            </div>
+
+            <div class="m-edu-item">
+              <div class="m-ei-top">
+                <span class="m-ei-school">CENTRO EDUCACIÓN TÉCNICA 30</span>
+                <span class="m-ei-year">2017–2023</span>
+              </div>
+              <p class="m-ei-degree">{{ isEs ? 'Técnico en Programación (7 Años)' : 'Programming Technician (7 Years)' }}</p>
+              <p class="m-ei-note">{{ isEs ? 'Algoritmia, redes y sistemas de software.' : 'Algorithms, networking, systems.' }}</p>
+            </div>
+          </div>
+
+          <!-- Idiomas -->
+          <div class="m-panel">
+            <h2 class="m-panel-title">{{ isEs ? '04 / IDIOMAS' : '04 / LANGUAGES' }}</h2>
+            <div class="m-lang-row">
+              <span class="m-lr-lang">{{ isEs ? 'Español' : 'Spanish' }}</span>
+              <span class="m-lr-level">{{ isEs ? 'Nativo' : 'Native' }}</span>
+            </div>
+            <div class="m-lang-row">
+              <span class="m-lr-lang">{{ isEs ? 'Inglés' : 'English' }}</span>
+              <span class="m-lr-level">{{ isEs ? 'B2 Profesional Técnico' : 'B2 Professional Technical' }}</span>
+            </div>
+          </div>
+        </aside>
+
+        <!-- Columna Principal (70%) -->
+        <main class="m-main-col">
+          <div class="m-main-head">
+            <h2 class="m-main-title">{{ isEs ? 'EXPERIENCIA PROFESIONAL & SISTEMAS EN PRODUCCIÓN' : 'PROFESSIONAL EXPERIENCE & SHIPPED SYSTEMS' }}</h2>
+            <span class="m-main-count">{{ isEs ? '04 ENTREGABLES' : '04 DELIVERABLES' }}</span>
+          </div>
+
+          <div class="m-exp-list">
+            <!-- 01. Ynara -->
+            <article class="m-exp-entry">
+              <div class="m-ee-top-row">
+                <div class="m-ee-org-wrap">
+                  <h3 class="m-ee-org">Ynara AI Assistant</h3>
+                  <span class="m-ee-badge">{{ isEs ? 'Tesis Da Vinci' : 'Da Vinci Thesis' }}</span>
+                </div>
+                <span class="m-ee-date">05/2026 – 07/2026</span>
+              </div>
+              <div class="m-ee-sub-row">
+                <span class="m-ee-role">{{ isEs ? 'Arquitecto de Software & Lead Frontend' : 'Software Architect & Lead Frontend' }}</span>
+                <span class="m-ee-loc">Buenos Aires, Argentina</span>
+              </div>
+              <p class="m-ee-desc">
+                {{ isEs
+                  ? 'Asistente de IA on-premise adaptativo en rioplatense con inferencia local y persistencia vectorial sobre PostgreSQL + pgvector.'
+                  : 'On-premise adaptive AI assistant with local inference and persistent vector memory over PostgreSQL + pgvector.'
+                }}
               </p>
-            </div>
+              <ul class="m-ee-bullets">
+                <li>{{ isEs ? 'Lideré la arquitectura técnica y el frontend con 382 commits en 6 semanas de desarrollo intensivo.' : 'Led system architecture and reactive frontend with 382 commits over 6 weeks of engineering.' }}</li>
+                <li>{{ isEs ? 'Construí la aplicación en Next.js y FastAPI logrando latencias semánticas sub-100ms en entornos locales.' : 'Engineered Next.js client and FastAPI pipeline achieving sub-100ms semantic response times.' }}</li>
+              </ul>
+              <div class="m-ee-chips">
+                <span>FastAPI</span>
+                <span>Next.js</span>
+                <span>PostgreSQL</span>
+                <span>pgvector</span>
+                <span>Python</span>
+                <span>TypeScript</span>
+              </div>
+            </article>
 
-            <div class="m-card">
-              <span class="m-card-date">{{ isEs ? '2017 – 2023 (Graduado)' : '2017 – 2023 (Graduated)' }}</span>
-              <h3 class="m-card-org">{{ isEs ? 'Técnico en Programación' : 'Computer Programming Technician' }}</h3>
-              <p class="m-edu-sub">CET N.º 30 · Río Negro</p>
-              <p class="m-card-desc">
-                <template v-if="isEs">
-                  Formación técnica de 7 años en algoritmos, estructuras de datos, lógica de bajo nivel, redes y metodologías de ingeniería.
-                </template>
-                <template v-else>
-                  7-year technical education covering algorithms, data structures, low-level logic, networking, and software engineering methodologies.
-                </template>
+            <!-- 02. La Rúcula -->
+            <article class="m-exp-entry">
+              <div class="m-ee-top-row">
+                <div class="m-ee-org-wrap">
+                  <h3 class="m-ee-org">La Rúcula Gastrobar</h3>
+                </div>
+                <span class="m-ee-date">03/2026 – 07/2026</span>
+              </div>
+              <div class="m-ee-sub-row">
+                <span class="m-ee-role">{{ isEs ? 'Freelance · Full Stack & Diseñador UI' : 'Freelance · Full Stack & UI Designer' }}</span>
+                <span class="m-ee-loc">Cádiz, {{ isEs ? 'España' : 'Spain' }}</span>
+              </div>
+              <p class="m-ee-desc">
+                {{ isEs
+                  ? 'Sitio web editorial menu-first optimizado para escaneo QR de comensales en mesa, con arquitectura de cache offline.'
+                  : 'Editorial menu-first web app optimized for table-side QR scanning with cached offline resilience.'
+                }}
               </p>
-            </div>
-          </div>
-        </section>
+              <ul class="m-ee-bullets">
+                <li>{{ isEs ? 'Puntuación Lighthouse de 99 en Performance y 100 en SEO y Accesibilidad con bundle final de apenas 42 KB.' : 'Achieved 99 Performance and 100 SEO & Accessibility Lighthouse scores with a compact 42 KB bundle.' }}</li>
+                <li>{{ isEs ? 'Integración con CMS propio y fallback en cache para operación continua ante caídas de conectividad.' : 'Integrated offline caching fallbacks ensuring uninterrupted service during network outages.' }}</li>
+              </ul>
+              <div class="m-ee-chips">
+                <span>Vue 3</span>
+                <span>Vite</span>
+                <span>Tailwind CSS</span>
+                <span>GSAP</span>
+                <span>Lenis</span>
+              </div>
+            </article>
 
-        <!-- Meta Profesional -->
-        <section class="m-section">
-          <div class="m-sec-title">
-            <span class="m-sec-num">03</span>
-            <h2>{{ isEs ? 'OBJETIVO PROFESIONAL' : 'CAREER OBJECTIVE' }}</h2>
+            <!-- 03. ARG Piscinas -->
+            <article class="m-exp-entry">
+              <div class="m-ee-top-row">
+                <div class="m-ee-org-wrap">
+                  <h3 class="m-ee-org">ARG Piscinas</h3>
+                </div>
+                <span class="m-ee-date">01/2026 – 07/2026</span>
+              </div>
+              <div class="m-ee-sub-row">
+                <span class="m-ee-role">{{ isEs ? 'Freelance · Desarrollador Full Stack' : 'Freelance · Full Stack Developer' }}</span>
+                <span class="m-ee-loc">Andalucía, {{ isEs ? 'España' : 'Spain' }}</span>
+              </div>
+              <p class="m-ee-desc">
+                {{ isEs
+                  ? 'Plataforma corporativa multi-idioma (ES/EN/DE) con panel de control autónomo para carga de obras de arquitectura y blog.'
+                  : 'Multilingual corporate web platform (ES/EN/DE) with custom CMS dashboard for architectural projects and blog.'
+                }}
+              </p>
+              <ul class="m-ee-bullets">
+                <li>{{ isEs ? 'Modelado relacional y tipado estricto de extremo a extremo con Prisma ORM, Node.js y TypeScript.' : 'Modeled relational schema and end-to-end type safety with Prisma ORM, Node.js, and TypeScript.' }}</li>
+              </ul>
+              <div class="m-ee-chips">
+                <span>Vue 3</span>
+                <span>Node.js</span>
+                <span>Prisma</span>
+                <span>Tailwind CSS</span>
+                <span>TypeScript</span>
+              </div>
+            </article>
+
+            <!-- 04. Pegasuz & Freelance -->
+            <article class="m-exp-entry">
+              <div class="m-ee-top-row">
+                <div class="m-ee-org-wrap">
+                  <h3 class="m-ee-org">Pegasuz &amp; Freelance</h3>
+                </div>
+                <span class="m-ee-date">2023 – {{ isEs ? 'Presente' : 'Present' }}</span>
+              </div>
+              <div class="m-ee-sub-row">
+                <span class="m-ee-role">{{ isEs ? 'Fundador & Consultor de Software' : 'Founder & Software Consultant' }}</span>
+                <span class="m-ee-loc">{{ isEs ? 'Remoto' : 'Remote' }}</span>
+              </div>
+              <p class="m-ee-desc">
+                {{ isEs
+                  ? 'Diseño de CMS multi-tenant propio y entrega exitosa de aproximadamente 10 proyectos web llave en mano para diversos rubros.'
+                  : 'Proprietary multi-tenant headless CMS and successful delivery of ~10 turnkey web solutions for diverse clients.'
+                }}
+              </p>
+            </article>
           </div>
-          <div class="m-card highlight">
-            <p class="m-card-desc">
-              <template v-if="isEs">
-                Consolidarme como desarrollador en un equipo con proyectos reales de mayor escala. A mediano plazo, liderazgo técnico: coordinar, organizar, comunicar y conectar perfiles de distintas áreas (diseño, producto, frontend y backend).
-              </template>
-              <template v-else>
-                Consolidate my impact as an engineer within a high-caliber team shipping large-scale production software. In the medium term, technical leadership: coordinating, organizing, and bridging disciplines across product, UI/UX, frontend, and backend architectures.
-              </template>
-            </p>
+
+          <!-- Objetivo Profesional -->
+          <div class="m-goal-box">
+            <h3 class="m-gb-title">{{ isEs ? 'OBJETIVO PROFESIONAL' : 'CAREER OBJECTIVE' }}</h3>
+            <p class="m-gb-text">{{ cvGoal }}</p>
           </div>
-        </section>
-      </main>
+        </main>
+      </div>
     </article>
   </section>
 </template>
@@ -598,128 +584,128 @@ function printCV() {
   text-decoration: none;
   cursor: pointer;
   transition: all var(--d-dur) ease;
-  white-space: nowrap;
 }
 .cv-action-btn:hover {
-  border-color: var(--d-sig);
-  color: var(--d-sig);
   background: var(--d-hover);
+  color: var(--d-sig);
+  border-color: var(--d-sig);
 }
 .cv-download-btn {
-  background: var(--d-surface-raised);
+  background: var(--d-sig);
+  color: #ffffff;
   border-color: var(--d-sig);
-  color: var(--d-sig);
 }
 .cv-download-btn:hover {
-  background: var(--d-sig);
-  color: #000000;
-  border-color: var(--d-sig);
+  background: #c53000;
+  color: #ffffff;
 }
 
-/* ═══════════════════════════════════════════════════════════════════════════ */
-/* ESTILOS HARVARD ATS (CLÁSICO ACADÉMICO / MONOCROMO)                       */
-/* ═══════════════════════════════════════════════════════════════════════════ */
+/* ─── ESTILO 1: HARVARD ATS ────────────────────────────────────────────────── */
 .cv-harvard {
-  background: #ffffff;
-  color: #111111;
-  padding: clamp(24px, 4vw, 48px);
-  border: 1px solid var(--d-rule);
-  font-family: Georgia, 'Times New Roman', Times, serif;
-  line-height: 1.45;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-  max-width: 900px;
+  width: 100%;
+  max-width: 820px;
   margin: 0 auto;
+  background: #ffffff;
+  color: #000000;
+  padding: 40px 48px;
+  font-family: 'Times New Roman', Times, Georgia, serif;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+}
+
+.cv-harvard a {
+  color: #000000;
+  text-decoration: underline;
 }
 
 .h-header {
   text-align: center;
-  margin-bottom: 20px;
-  border-bottom: 1.5px solid #111111;
-  padding-bottom: 14px;
+  border-bottom: 2px solid #000000;
+  padding-bottom: 12px;
+  margin-bottom: 16px;
 }
 .h-name {
   margin: 0 0 4px;
-  font-size: 26px;
+  font-size: 24px;
   font-weight: 700;
   letter-spacing: 0.05em;
-  color: #000000;
   text-transform: uppercase;
 }
 .h-role {
   margin: 0 0 6px;
-  font-size: 13.5px;
+  font-size: 14px;
   font-style: italic;
-  color: #333333;
+  font-family: 'Times New Roman', Times, Georgia, serif;
 }
 .h-contact {
-  font-size: 12px;
-  color: #222222;
   display: flex;
   flex-wrap: wrap;
-  align-items: center;
   justify-content: center;
-  gap: 6px;
-}
-.h-contact a {
-  color: #111111;
-  text-decoration: underline;
+  align-items: center;
+  gap: 8px;
+  font-size: 12.5px;
 }
 .h-sep {
-  color: #888888;
+  color: #666666;
+  user-select: none;
 }
 
 .h-section {
-  margin-bottom: 18px;
+  margin-bottom: 16px;
 }
 .h-title {
   margin: 0 0 8px;
   font-size: 13.5px;
   font-weight: 700;
-  letter-spacing: 0.06em;
   text-transform: uppercase;
-  border-bottom: 1px solid #222222;
+  letter-spacing: 0.06em;
+  border-bottom: 1px solid #000000;
   padding-bottom: 2px;
-  color: #000000;
 }
 .h-summary {
   margin: 0;
   font-size: 12.5px;
-  text-align: justify;
   line-height: 1.5;
-  color: #111111;
+  text-align: justify;
 }
 
 .h-entry {
-  margin-bottom: 12px;
+  margin-bottom: 10px;
 }
 .h-entry-header {
   display: flex;
-  align-items: baseline;
   justify-content: space-between;
-  gap: 8px;
-  font-weight: 700;
+  align-items: baseline;
   font-size: 13px;
-  color: #000000;
+  font-weight: 700;
+}
+.h-org {
+  text-transform: uppercase;
+}
+.h-date {
+  font-weight: 400;
+  font-size: 12px;
 }
 .h-entry-sub {
   display: flex;
-  align-items: baseline;
   justify-content: space-between;
-  gap: 8px;
+  align-items: baseline;
+  font-size: 12.5px;
   font-style: italic;
-  font-size: 12px;
-  color: #333333;
-  margin-bottom: 4px;
+  margin-bottom: 3px;
 }
-.h-date, .h-loc {
-  font-variant-numeric: tabular-nums;
-  white-space: nowrap;
+.h-degree {
+  font-weight: 400;
+}
+.h-loc {
+  font-style: normal;
+  font-size: 11.5px;
+  color: #333333;
 }
 .h-bullets {
   margin: 4px 0 0;
   padding-left: 18px;
   font-size: 12px;
-  color: #111111;
   line-height: 1.45;
 }
 .h-bullets li {
@@ -733,78 +719,150 @@ function printCV() {
 }
 .h-skills strong {
   font-weight: 700;
-  color: #000000;
 }
 
-/* ═══════════════════════════════════════════════════════════════════════════ */
-/* ESTILOS MODERNO (TECH + FOTOGRAFÍA + DOS COLUMNAS)                        */
-/* ═══════════════════════════════════════════════════════════════════════════ */
+/* ─── ESTILO 2: MODERNO EDITORIAL (SWISS TECH) ────────────────────────────── */
 .cv-modern {
-  display: grid;
-  grid-template-columns: minmax(260px, 300px) minmax(0, 1fr);
-  gap: 24px;
   width: 100%;
-}
-
-/* Sidebar Moderno */
-.m-sidebar {
+  max-width: 920px;
+  margin: 0 auto;
+  background: var(--d-paper);
+  color: var(--d-ink);
   display: flex;
   flex-direction: column;
   gap: 20px;
 }
 
-.m-photo-container {
+/* Cabecera Editorial Integrada */
+.m-masthead {
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  background: var(--d-surface);
-  border: 1px solid var(--d-rule);
-  padding: 16px;
-  text-align: center;
-}
-.m-photo {
-  width: 100%;
-  max-width: 220px;
-  aspect-ratio: 1 / 1;
-  object-fit: cover;
-  border: 1px solid var(--d-rule-strong);
-  margin-bottom: 12px;
-}
-.m-status-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 4px 10px;
-  background: var(--d-paper);
-  border: 1px solid var(--d-green);
-  color: var(--d-green);
-  font-family: var(--font-mono);
-  font-size: 10.5px;
-  font-weight: 800;
-  letter-spacing: 0.05em;
-}
-.m-status-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--d-green);
-  box-shadow: 0 0 6px var(--d-green);
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+  padding-bottom: 18px;
+  border-bottom: 1.5px solid var(--d-rule-strong);
 }
 
-.m-block {
-  padding: 16px;
-  background: var(--d-surface);
-  border: 1px solid var(--d-rule);
+.m-masthead-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
 }
-.m-heading {
-  margin: 0 0 12px;
+
+.m-meta-strip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   font-family: var(--font-mono);
   font-size: 11px;
+  margin-bottom: 6px;
+}
+
+.m-kicker {
+  font-weight: 800;
+  color: var(--d-sig);
+  letter-spacing: 0.08em;
+}
+
+.m-sep-dot {
+  color: var(--d-rule-strong);
+}
+
+.m-status-text {
+  font-weight: 700;
+  color: var(--d-green);
+  letter-spacing: 0.04em;
+}
+
+.m-name {
+  margin: 0 0 4px;
+  font-family: var(--font-text);
+  font-size: clamp(26px, 3vw, 34px);
+  font-weight: 800;
+  color: var(--d-ink);
+  letter-spacing: -0.025em;
+  line-height: 1.15;
+}
+
+.m-role {
+  margin: 0 0 10px;
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--d-dim);
+  letter-spacing: -0.01em;
+}
+
+.m-bio {
+  margin: 0;
+  font-family: var(--font-text);
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: var(--d-ink);
+}
+
+/* Retrato Editorial con Marcadores de Esquina */
+.m-portrait-wrap {
+  position: relative;
+  width: 86px;
+  height: 86px;
+  flex-shrink: 0;
+  padding: 4px;
+  border: 1px solid var(--d-rule-strong);
+  background: var(--d-surface);
+}
+
+.m-portrait-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.m-portrait-corner {
+  position: absolute;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  line-height: 1;
+  color: var(--d-sig);
+  pointer-events: none;
+}
+.m-portrait-corner.tl { top: -4px; left: -3px; }
+.m-portrait-corner.tr { top: -4px; right: -3px; }
+.m-portrait-corner.bl { bottom: -4px; left: -3px; }
+.m-portrait-corner.br { bottom: -4px; right: -3px; }
+
+/* Rejilla Asimétrica */
+.m-body-grid {
+  display: grid;
+  grid-template-columns: 270px 1fr;
+  gap: 26px;
+  align-items: start;
+}
+
+/* Columna Lateral */
+.m-side-col {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.m-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.m-panel-title {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
   font-weight: 800;
   letter-spacing: 0.08em;
   color: var(--d-sig);
   border-bottom: 1px solid var(--d-rule);
-  padding-bottom: 6px;
+  padding-bottom: 4px;
 }
 
 .m-contact-list {
@@ -813,268 +871,312 @@ function printCV() {
   margin: 0;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
   font-family: var(--font-mono);
-  font-size: 11.5px;
+  font-size: 11px;
+  line-height: 1.4;
 }
+
 .m-contact-list li {
   display: flex;
   align-items: center;
   gap: 8px;
   color: var(--d-dim);
-  overflow-wrap: anywhere;
 }
-.m-icon {
-  color: var(--d-sig);
-  flex-shrink: 0;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-}
+
 .m-contact-list a {
   color: var(--d-ink);
   text-decoration: none;
 }
+
 .m-contact-list a:hover {
   color: var(--d-sig);
   text-decoration: underline;
 }
 
-.m-lang-row {
+.m-icon {
+  color: var(--d-sig);
+  flex-shrink: 0;
+}
+
+.m-stack-group {
   display: flex;
-  justify-content: space-between;
-  align-items: baseline;
+  flex-direction: column;
+  gap: 2px;
+  margin-bottom: 4px;
+}
+
+.m-sg-label {
   font-family: var(--font-mono);
-  font-size: 11.5px;
+  font-size: 9.5px;
+  font-weight: 800;
+  color: var(--d-faint);
+  letter-spacing: 0.04em;
+}
+
+.m-sg-val {
+  font-family: var(--font-text);
+  font-size: 12px;
+  line-height: 1.35;
+  color: var(--d-ink);
+}
+
+.m-edu-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
   margin-bottom: 6px;
 }
-.m-lang-name {
-  color: var(--d-ink);
-  font-weight: 700;
-}
-.m-lang-level {
-  color: var(--d-dim);
-  font-size: 10.5px;
-}
 
-.m-chips {
+.m-ei-top {
   display: flex;
-  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: baseline;
   gap: 6px;
 }
-.m-chip {
-  padding: 3px 8px;
-  background: var(--d-paper);
-  border: 1px solid var(--d-rule);
+
+.m-ei-school {
   font-family: var(--font-mono);
   font-size: 10.5px;
+  font-weight: 800;
   color: var(--d-ink);
+}
+
+.m-ei-year {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--d-dim);
+}
+
+.m-ei-degree {
+  margin: 0;
+  font-family: var(--font-text);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--d-sig);
+}
+
+.m-ei-note {
+  margin: 0;
+  font-family: var(--font-text);
+  font-size: 11px;
+  color: var(--d-dim);
+  line-height: 1.3;
 }
 
 .m-lang-row {
   display: flex;
   justify-content: space-between;
   align-items: baseline;
-  gap: 8px;
-  font-size: 12.5px;
-  margin-bottom: 4px;
+  font-family: var(--font-mono);
+  font-size: 11px;
 }
-.m-lang-name {
-  font-family: var(--font-text);
-  font-weight: 600;
+
+.m-lr-lang {
+  font-weight: 700;
   color: var(--d-ink);
 }
-.m-lang-level {
-  font-family: var(--font-mono);
-  font-size: 11.5px;
+
+.m-lr-level {
   color: var(--d-dim);
+  font-size: 10px;
 }
 
-.m-list {
-  list-style: none;
-  padding: 0;
+/* Columna Principal */
+.m-main-col {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.m-main-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  border-bottom: 1px solid var(--d-rule);
+  padding-bottom: 4px;
+}
+
+.m-main-title {
   margin: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  font-family: var(--font-text);
-  font-size: 12.5px;
-  color: var(--d-dim);
-}
-.m-list li::before {
-  content: '▸ ';
-  color: var(--d-sig);
-  font-weight: bold;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: var(--d-ink);
 }
 
-/* Columna Principal Moderna */
-.m-content {
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
-}
-
-.m-header {
-  padding: 24px;
-  background: var(--d-surface);
-  border: 1px solid var(--d-rule);
-  border-left: 4px solid var(--d-sig);
-}
-.m-tag {
+.m-main-count {
   font-family: var(--font-mono);
   font-size: 10px;
-  font-weight: 800;
-  letter-spacing: 0.1em;
+  font-weight: 700;
   color: var(--d-sig);
 }
-.m-name {
-  margin: 6px 0 4px;
-  font-family: var(--font-text);
-  font-size: clamp(24px, 2.5vw, 34px);
-  font-weight: 700;
-  color: var(--d-ink);
-  letter-spacing: -0.02em;
-}
-.m-subtitle {
-  margin: 0 0 14px;
-  font-family: var(--font-mono);
-  font-size: 13px;
-  color: var(--d-dim);
-}
-.m-bio {
-  margin: 0;
-  font-family: var(--font-text);
-  font-size: 14.5px;
-  line-height: 1.6;
-  color: var(--d-ink);
-}
 
-.m-section {
+.m-exp-list {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-}
-.m-sec-title {
-  display: flex;
-  align-items: baseline;
-  gap: 8px;
-  border-bottom: 1px solid var(--d-rule);
-  padding-bottom: 6px;
-}
-.m-sec-num {
-  font-family: var(--font-mono);
-  font-size: 11px;
-  font-weight: 800;
-  color: var(--d-sig);
-}
-.m-sec-title h2 {
-  margin: 0;
-  font-family: var(--font-mono);
-  font-size: 12px;
-  font-weight: 800;
-  letter-spacing: 0.06em;
-  color: var(--d-ink);
-  text-transform: uppercase;
+  gap: 14px;
 }
 
-.m-card {
-  padding: 16px 18px;
-  background: var(--d-surface);
-  border: 1px solid var(--d-rule);
-  border-left: 3px solid var(--d-rule-strong);
-  transition: all var(--d-dur) ease;
-}
-.m-card:hover {
-  border-left-color: var(--d-sig);
-  background: var(--d-hover);
-}
-.m-card.highlight {
-  border-left-color: var(--d-green);
-}
-.m-card-top {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 8px;
-  margin-bottom: 4px;
-}
-.m-card-role {
-  font-family: var(--font-mono);
-  font-size: 11px;
-  font-weight: 700;
-  color: var(--d-sig);
-}
-.m-card-date {
-  font-family: var(--font-mono);
-  font-size: 11px;
-  color: var(--d-faint);
-  white-space: nowrap;
-}
-.m-card-org {
-  margin: 0 0 6px;
-  font-family: var(--font-text);
-  font-size: 15.5px;
-  font-weight: 700;
-  color: var(--d-ink);
-}
-.m-edu-sub {
-  margin: 0 0 6px;
-  font-family: var(--font-mono);
-  font-size: 11px;
-  color: var(--d-sig);
-}
-.m-card-desc {
-  margin: 0;
-  font-family: var(--font-text);
-  font-size: 13.5px;
-  line-height: 1.5;
-  color: var(--d-dim);
-}
-.m-card-bullets {
-  list-style: none;
-  padding: 0;
-  margin: 6px 0 0;
+.m-exp-entry {
   display: flex;
   flex-direction: column;
   gap: 3px;
-  font-family: var(--font-text);
-  font-size: 13px;
-  color: var(--d-dim);
+  padding-bottom: 12px;
+  border-bottom: 1px dashed var(--d-rule);
 }
-.m-card-bullets li::before {
-  content: '▸ ';
-  color: var(--d-sig);
-  font-weight: bold;
+.m-exp-entry:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
 }
-.m-card-tags {
+
+.m-ee-top-row {
   display: flex;
-  flex-wrap: wrap;
-  gap: 5px;
-  margin-top: 10px;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
 }
-.m-tag-sm {
-  padding: 2px 6px;
-  background: var(--d-paper);
-  border: 1px solid var(--d-rule);
-  font-family: var(--font-mono);
-  font-size: 9.5px;
+
+.m-ee-org-wrap {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.m-ee-org {
+  margin: 0;
+  font-family: var(--font-text);
+  font-size: 14.5px;
+  font-weight: 700;
   color: var(--d-ink);
 }
 
-.m-edu-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 12px;
+.m-ee-badge {
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  font-weight: 700;
+  color: var(--d-sig);
+  background: var(--d-surface);
+  border: 1px solid var(--d-rule);
+  padding: 1px 5px;
+}
+
+.m-ee-sub-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 2px;
+}
+
+.m-ee-role {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--d-sig);
+}
+
+.m-ee-loc {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--d-faint);
+}
+
+.m-ee-date {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  color: var(--d-faint);
+}
+
+.m-ee-desc {
+  margin: 0;
+  font-family: var(--font-text);
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: var(--d-dim);
+}
+
+.m-ee-bullets {
+  list-style: none;
+  padding: 0;
+  margin: 3px 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2.5px;
+  font-family: var(--font-text);
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--d-ink);
+}
+
+.m-ee-bullets li {
+  position: relative;
+  padding-left: 12px;
+}
+
+.m-ee-bullets li::before {
+  content: '▪';
+  position: absolute;
+  left: 0;
+  color: var(--d-sig);
+  font-size: 10px;
+}
+
+.m-ee-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 5px;
+}
+
+.m-ee-chips span {
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  padding: 1px 5px;
+  background: var(--d-surface);
+  border: 1px solid var(--d-rule);
+  color: var(--d-dim);
+}
+
+/* Objetivo Profesional */
+.m-goal-box {
+  border-left: 2px solid var(--d-sig);
+  padding: 8px 14px;
+  background: var(--d-surface);
+  margin-top: 6px;
+}
+
+.m-gb-title {
+  margin: 0 0 3px;
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: var(--d-sig);
+}
+
+.m-gb-text {
+  margin: 0;
+  font-family: var(--font-text);
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--d-ink);
 }
 
 /* ─── Responsive & Print Rules ─────────────────────────────────────────────── */
-@media (max-width: 860px) {
-  .cv-modern {
+@media screen and (max-width: 680px) {
+  .m-body-grid {
     grid-template-columns: 1fr;
+    gap: 20px;
+  }
+  .m-masthead {
+    flex-direction: column;
     gap: 16px;
   }
   .cv-harvard {
-    padding: 16px 14px;
+    padding: 20px 16px;
     box-shadow: none;
   }
   .h-entry-header,
@@ -1190,56 +1292,89 @@ function printCV() {
 
   /* Modern print (1 Página Exacta y Equilibrada) */
   .cv-modern {
-    display: grid !important;
-    grid-template-columns: 195px 1fr !important;
-    gap: 14px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 8pt !important;
     background: #ffffff !important;
     color: #111827 !important;
     border: none !important;
     box-shadow: none !important;
+    max-width: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
   }
-  .cv-modern .m-sidebar {
-    gap: 10.5px !important;
+  .cv-modern .m-masthead {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: flex-start !important;
+    justify-content: space-between !important;
+    gap: 16pt !important;
+    padding-bottom: 6pt !important;
+    margin-bottom: 5pt !important;
+    border-bottom: 1.2pt solid #111827 !important;
   }
-  .cv-modern .m-photo-container {
-    background: #f8f9fa !important;
-    border: 1px solid #e5e7eb !important;
-    padding: 9px 8px !important;
+  .cv-modern .m-masthead-main {
+    flex: 1 !important;
+    min-width: 0 !important;
   }
-  .cv-modern .m-photo {
-    width: 96px !important;
-    height: 96px !important;
-    max-width: 96px !important;
-    margin: 0 auto 5px !important;
-    border: 1px solid #d1d5db !important;
+  .cv-modern .m-name {
+    color: #111827 !important;
+    font-size: 16.5pt !important;
+    font-weight: 800 !important;
+    margin: 0 0 1pt !important;
   }
-  .cv-modern .m-status-pill {
-    background: #ffffff !important;
-    border: 1px solid #16a34a !important;
+  .cv-modern .m-role {
+    color: #e03600 !important;
+    font-size: 8.5pt !important;
+    font-weight: 700 !important;
+    margin: 0 0 3pt !important;
+  }
+  .cv-modern .m-bio {
+    color: #374151 !important;
+    font-size: 8pt !important;
+    line-height: 1.35 !important;
+  }
+  .cv-modern .m-meta-strip {
+    font-size: 7.2pt !important;
+    margin-bottom: 2pt !important;
+  }
+  .cv-modern .m-kicker {
+    color: #e03600 !important;
+  }
+  .cv-modern .m-status-text {
     color: #16a34a !important;
-    font-size: 8.5px !important;
-    padding: 2.5px 8px !important;
   }
-  .cv-modern .m-block {
-    background: #f8f9fa !important;
-    border: 1px solid #e5e7eb !important;
-    padding: 9.5px 11px !important;
+  .cv-modern .m-portrait-wrap {
+    width: 66px !important;
+    height: 66px !important;
+    flex-shrink: 0 !important;
+    padding: 2px !important;
+    border: 1px solid #d1d5db !important;
+    background: #ffffff !important;
+  }
+  .cv-modern .m-body-grid {
+    display: grid !important;
+    grid-template-columns: 195px 1fr !important;
+    gap: 13pt !important;
+  }
+  .cv-modern .m-side-col {
+    gap: 8pt !important;
+  }
+  .cv-modern .m-panel {
+    gap: 3.5pt !important;
     break-inside: avoid !important;
     page-break-inside: avoid !important;
   }
-  .cv-modern .m-heading {
+  .cv-modern .m-panel-title {
     color: #e03600 !important;
-    border-bottom: 1px solid #e5e7eb !important;
-    font-size: 10px !important;
-    font-weight: 700 !important;
-    letter-spacing: 0.05em !important;
-    margin-bottom: 5px !important;
-    padding-bottom: 2.5px !important;
+    border-bottom: 0.75pt solid #d1d5db !important;
+    font-size: 7.8pt !important;
+    padding-bottom: 1.5pt !important;
   }
   .cv-modern .m-contact-list {
-    font-size: 9.5px !important;
-    gap: 5px !important;
-    line-height: 1.38 !important;
+    font-size: 7.5pt !important;
+    gap: 2.5pt !important;
+    line-height: 1.25 !important;
   }
   .cv-modern .m-contact-list li {
     color: #374151 !important;
@@ -1250,153 +1385,144 @@ function printCV() {
   .cv-modern .m-icon {
     color: #e03600 !important;
   }
+  .cv-modern .m-stack-group {
+    gap: 1pt !important;
+    margin-bottom: 2pt !important;
+  }
+  .cv-modern .m-sg-label {
+    font-size: 6.8pt !important;
+    color: #6b7280 !important;
+  }
+  .cv-modern .m-sg-val {
+    font-size: 7.5pt !important;
+    line-height: 1.22 !important;
+    color: #111827 !important;
+  }
+  .cv-modern .m-edu-item {
+    gap: 1pt !important;
+    margin-bottom: 2.5pt !important;
+  }
+  .cv-modern .m-ei-school {
+    font-size: 7.5pt !important;
+    color: #111827 !important;
+  }
+  .cv-modern .m-ei-year {
+    font-size: 6.8pt !important;
+    color: #6b7280 !important;
+  }
+  .cv-modern .m-ei-degree {
+    font-size: 7.5pt !important;
+    color: #e03600 !important;
+  }
+  .cv-modern .m-ei-note {
+    font-size: 6.8pt !important;
+    color: #4b5563 !important;
+  }
   .cv-modern .m-lang-row {
+    font-size: 7.5pt !important;
+  }
+  .cv-modern .m-lr-lang {
+    color: #111827 !important;
+  }
+  .cv-modern .m-lr-level {
+    color: #6b7280 !important;
+    font-size: 6.8pt !important;
+  }
+  .cv-modern .m-main-col {
+    gap: 6pt !important;
+  }
+  .cv-modern .m-main-head {
+    border-bottom: 0.75pt solid #d1d5db !important;
+    padding-bottom: 1.5pt !important;
+  }
+  .cv-modern .m-main-title {
+    color: #111827 !important;
+    font-size: 7.8pt !important;
+  }
+  .cv-modern .m-main-count {
+    color: #e03600 !important;
+    font-size: 6.8pt !important;
+  }
+  .cv-modern .m-exp-list {
+    gap: 5pt !important;
+  }
+  .cv-modern .m-exp-entry {
+    gap: 1.5pt !important;
+    padding-bottom: 4pt !important;
+    border-bottom: 0.5pt dashed #e5e7eb !important;
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+  }
+  .cv-modern .m-ee-top-row,
+  .cv-modern .m-ee-sub-row {
     display: flex !important;
     justify-content: space-between !important;
     align-items: baseline !important;
-    font-size: 9.5px !important;
-    margin-bottom: 3.5px !important;
+    gap: 8pt !important;
   }
-  .cv-modern .m-lang-name {
-    font-weight: 600 !important;
+  .cv-modern .m-ee-org {
     color: #111827 !important;
+    font-size: 8.8pt !important;
   }
-  .cv-modern .m-lang-level {
-    color: #4b5563 !important;
-  }
-  .cv-modern .m-chips {
-    gap: 3.5px !important;
-  }
-  .cv-modern .m-chip {
-    background: #ffffff !important;
-    border: 1px solid #d1d5db !important;
-    color: #111827 !important;
-    font-size: 8.5px !important;
-    padding: 2px 5.5px !important;
-  }
-  .cv-modern .m-list {
-    color: #374151 !important;
-    font-size: 9.5px !important;
-    line-height: 1.4 !important;
-    padding-left: 11px !important;
-    gap: 3.5px !important;
-  }
-  .cv-modern .m-content {
-    gap: 9px !important;
-  }
-  .cv-modern .m-header {
-    background: #f8f9fa !important;
-    border: 1px solid #e5e7eb !important;
-    border-left: 3.5px solid #e03600 !important;
-    padding: 12px 14px !important;
-    margin-bottom: 0 !important;
-  }
-  .cv-modern .m-tag {
-    font-size: 8.5px !important;
-    letter-spacing: 0.08em !important;
-  }
-  .cv-modern .m-name {
-    color: #111827 !important;
-    font-size: 21px !important;
-    margin: 2px 0 3px !important;
-  }
-  .cv-modern .m-subtitle {
+  .cv-modern .m-ee-badge {
     color: #e03600 !important;
-    font-size: 11px !important;
-    margin: 0 0 4px !important;
+    font-size: 6.5pt !important;
+    border: 0.5pt solid #e5e7eb !important;
+    background: #f9fafb !important;
   }
-  .cv-modern .m-bio {
-    color: #374151 !important;
-    font-size: 10.2px !important;
-    line-height: 1.42 !important;
-    margin: 0 !important;
-  }
-  .cv-modern .m-sec-title {
-    border-bottom: 1px solid #e5e7eb !important;
-    padding-bottom: 2.5px !important;
-    margin-bottom: 5px !important;
-  }
-  .cv-modern .m-sec-title h2 {
-    color: #111827 !important;
-    font-size: 10px !important;
-    letter-spacing: 0.05em !important;
-  }
-  .cv-modern .m-sec-num {
-    color: #e03600 !important;
-    font-size: 9.5px !important;
-  }
-  .cv-modern .m-card {
-    background: #ffffff !important;
-    border: 1px solid #e5e7eb !important;
-    border-left: 2.5px solid #cbd5e1 !important;
-    padding: 8px 11.5px !important;
-    margin-bottom: 4.5px !important;
-    break-inside: avoid !important;
-    page-break-inside: avoid !important;
-  }
-  .cv-modern .m-card.highlight {
-    border-left-color: #16a34a !important;
-  }
-  .cv-modern .m-card-role {
-    color: #e03600 !important;
-    font-size: 9px !important;
-  }
-  .cv-modern .m-card-date {
+  .cv-modern .m-ee-loc {
     color: #6b7280 !important;
-    font-size: 8.5px !important;
+    font-size: 6.8pt !important;
   }
-  .cv-modern .m-card-org {
-    color: #111827 !important;
-    font-size: 12px !important;
-    margin: 0 0 2px !important;
-  }
-  .cv-modern .m-card-desc {
-    color: #374151 !important;
-    font-size: 10px !important;
-    line-height: 1.4 !important;
-  }
-  .cv-modern .m-card-bullets {
-    list-style: none !important;
-    padding: 0 !important;
-    margin: 2.5px 0 0 !important;
-    display: flex !important;
-    flex-direction: column !important;
-    gap: 1.5px !important;
-    font-size: 8.8px !important;
-    line-height: 1.32 !important;
-    color: #374151 !important;
-  }
-  .cv-modern .m-card-bullets li::before {
-    content: '▸ ' !important;
+  .cv-modern .m-ee-role {
     color: #e03600 !important;
-    font-weight: bold !important;
+    font-size: 7.5pt !important;
   }
-  .cv-modern .m-card-tags {
-    margin-top: 4px !important;
-    gap: 3px !important;
+  .cv-modern .m-ee-date {
+    color: #6b7280 !important;
+    font-size: 6.8pt !important;
   }
-  .cv-modern .m-tag-sm {
-    background: #f3f4f6 !important;
-    border: 1px solid #e5e7eb !important;
+  .cv-modern .m-ee-desc {
     color: #374151 !important;
-    font-size: 8px !important;
-    padding: 1px 4.5px !important;
+    font-size: 7.5pt !important;
+    line-height: 1.25 !important;
   }
-  .cv-modern .m-section {
-    gap: 4px !important;
-    margin-bottom: 0 !important;
+  .cv-modern .m-ee-bullets {
+    font-size: 7.2pt !important;
+    line-height: 1.22 !important;
+    color: #1f2937 !important;
+    gap: 1pt !important;
   }
-  .cv-modern .m-section:last-of-type {
+  .cv-modern .m-ee-bullets li::before {
+    color: #e03600 !important;
+  }
+  .cv-modern .m-ee-chips {
+    gap: 2pt !important;
+    margin-top: 1pt !important;
+  }
+  .cv-modern .m-ee-chips span {
+    font-size: 6.5pt !important;
+    padding: 0.5pt 2.5pt !important;
+    background: #f3f4f6 !important;
+    border: 0.5pt solid #e5e7eb !important;
+    color: #374151 !important;
+  }
+  .cv-modern .m-goal-box {
+    border-left: 1.5pt solid #e03600 !important;
+    background: #f9fafb !important;
+    padding: 3pt 5pt !important;
+    margin-top: 2pt !important;
     break-inside: avoid !important;
     page-break-inside: avoid !important;
   }
-  .cv-modern .m-edu-grid {
-    display: grid !important;
-    grid-template-columns: 1fr 1fr !important;
-    gap: 7px !important;
+  .cv-modern .m-gb-title {
+    font-size: 6.8pt !important;
+    color: #e03600 !important;
   }
-  .cv-modern .m-edu-grid .m-card {
-    margin-bottom: 0 !important;
+  .cv-modern .m-gb-text {
+    font-size: 7.2pt !important;
+    line-height: 1.22 !important;
+    color: #1f2937 !important;
   }
 }
 </style>

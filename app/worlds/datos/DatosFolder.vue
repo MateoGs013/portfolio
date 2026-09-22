@@ -6,8 +6,9 @@ import DatosCabecera from './DatosCabecera.vue'
 import DatosIcon from './DatosIcon.vue'
 import DatosIcono from './DatosIcono.vue'
 import { pad, type Folder } from './explorer'
+import type { Project } from '~/lib/api'
 
-defineProps<{ folder: Folder }>()
+const props = defineProps<{ folder: Folder }>()
 const uid = useId()
 
 const { isEs, tr, getProjectLocalization, getExperienceLocalization } = usePortfolioLocale()
@@ -50,86 +51,175 @@ function dismissInlineTip() {
 }
 
 // 2. Matriz maestra de proyectos para vista hiperfoco
-const masterProjects = computed(() => [
-  {
-    slug: 'la-rucula',
-    title: 'La Rúcula Gastrobar',
-    year: '2026',
-    status: 'LIVE',
-    role: isEs.value ? 'Freelance · Diseño y Desarrollo' : 'Freelance · Design & Engineering',
-    summary: getProjectLocalization('la-rucula')?.summary ?? (isEs.value ? 'Sitio editorial menu-first para restaurante frente al mar en Chiclana.' : 'Editorial menu-first website for a beachfront restaurant in Chiclana.'),
-    stack: ['Vue 3', 'Tailwind', 'GSAP', 'Vite'],
-    metrics: 'Lighthouse 99 · 42 KB',
-    url: 'https://laruculagastrobar.es/',
-    repo: 'https://github.com/MateoGs013/LaRucula',
-    to: '/projects/la-rucula',
-  },
-  {
-    slug: 'argpiscinas',
-    title: 'ARG Piscinas',
-    year: '2026',
-    status: 'LIVE',
-    role: isEs.value ? 'Freelance · Front y Back a Medida' : 'Freelance · Custom Full Stack',
-    summary: getProjectLocalization('argpiscinas')?.summary ?? (isEs.value ? 'Web corporativa multi-idioma con panel admin y blog para constructora de piscinas en Andalucía.' : 'Multilingual corporate website with admin panel and blog for a pool builder in Andalusia.'),
-    stack: ['Vue 3', 'Node.js', 'Prisma', 'Tailwind'],
-    metrics: 'Lighthouse 98 · ES/EN/DE',
-    url: 'https://www.argpiscinas.es/',
-    repo: 'https://github.com/MateoGs013/argpiscinas',
-    to: '/projects/argpiscinas',
-  },
-  {
-    slug: 'ynara',
-    title: 'Ynara AI Assistant',
-    year: '2026',
-    status: 'WIP',
-    role: isEs.value ? 'Tesis Da Vinci · Lead Frontend y Arquitecto' : 'Da Vinci Thesis · Lead Frontend & Architect',
-    summary: getProjectLocalization('ynara')?.summary ?? (isEs.value ? 'Asistente de IA adaptativo on-premise con memoria vectorial sobre Postgres y pgvector.' : 'Adaptive on-premise AI assistant with vector memory over Postgres and pgvector.'),
-    stack: ['FastAPI', 'Next.js', 'PostgreSQL', 'pgvector'],
-    metrics: '382 commits · <100ms local',
-    url: null,
-    repo: 'https://github.com/MateoGs013/Ynara-Web',
-    to: '/projects/ynara',
-  },
-  {
-    slug: 'barberpole',
-    title: 'Barberpole SaaS',
-    year: '2025',
-    status: 'LIVE',
-    role: isEs.value ? 'Producto propio · Diseño y desarrollo MERN' : 'Proprietary product · MERN design & dev',
-    summary: getProjectLocalization('barberpole')?.summary ?? (isEs.value ? 'SaaS de gestión para peluquerías y barberías: turnos, clientes y caja en tiempo real.' : 'Management SaaS for barbershops: bookings, clients, and revenue tracking in realtime.'),
-    stack: ['React', 'Node.js', 'Express', 'MongoDB'],
-    metrics: isEs.value ? 'Multi-negocio · Tiempo real' : 'Multi-tenant · Realtime',
-    url: null,
-    repo: 'https://github.com/MateoGs013/barberpole-saas',
-    to: '/projects/barberpole',
-  },
-  {
-    slug: 'ynara-web',
-    title: 'Ynara WebGL',
-    year: '2026',
-    status: 'WIP',
-    role: isEs.value ? 'Landing inmersiva · Diseño y shaders' : 'Immersive landing · Design & shaders',
-    summary: getProjectLocalization('ynara-web')?.summary ?? (isEs.value ? 'Landing inmersiva WebGL para Ynara con shader procedimental reactivo al scroll.' : 'Immersive WebGL landing page for Ynara with procedural shader reacting to scroll.'),
-    stack: ['Three.js', 'GSAP', 'Next.js', 'GLSL'],
-    metrics: '60 FPS · 4 Draw Calls',
-    url: null,
-    repo: 'https://github.com/MateoGs013/Ynara-Web',
-    to: '/projects/ynara-web',
-  },
-  {
-    slug: 'eros',
-    title: 'Eros Creative Engine',
-    year: '2026',
-    status: 'WIP',
-    role: isEs.value ? 'Arquitectura de Sistema · IA Asistida' : 'System Architecture · AI-assisted',
-    summary: getProjectLocalization('eros')?.summary ?? (isEs.value ? 'Director creativo asistido por IA con base de conocimiento en un vault de Obsidian.' : 'AI-assisted creative director with knowledge base rooted in an Obsidian vault.'),
-    stack: ['Python', 'Vue', 'Obsidian', 'LLM Agents'],
-    metrics: '1,420 Notes · 850 Nodes',
-    url: null,
-    repo: 'https://github.com/MateoGs013/eros',
-    to: '/projects/eros',
-  },
-])
+const masterProjects = computed(() => {
+  if (props.folder.projects && props.folder.projects.length > 0) {
+    return props.folder.projects.map((p: Project) => {
+      const loc = getProjectLocalization(p.slug)
+      return {
+        slug: p.slug,
+        title: p.title,
+        year: String(p.year),
+        status: p.status,
+        role: isEs.value ? p.role : (p.role.includes('diseño y desarrollo') ? 'Freelance · Design & Engineering' : p.role),
+        summary: isEs.value ? (p.summary || loc?.summary || '') : (loc?.summary || p.summary || ''),
+        stack: p.techs ? p.techs.map((t: { name: string }) => t.name) : [],
+        metrics: typeof p.metrics === 'object' && p.metrics
+          ? Object.entries(p.metrics).map(([k, v]) => `${k} ${v}`).join(' · ')
+          : (typeof p.metrics === 'string' ? p.metrics : (isEs.value ? 'Lighthouse 98+' : 'Lighthouse 98+')),
+        url: p.url,
+        repo: p.repo,
+        to: `/projects/${p.slug}`,
+      }
+    })
+  }
+
+  return [
+    {
+      slug: 'la-rucula',
+      title: 'La Rúcula Gastrobar',
+      year: '2026',
+      status: 'LIVE',
+      role: isEs.value ? 'Freelance · Diseño y Desarrollo' : 'Freelance · Design & Engineering',
+      summary: isEs.value ? 'Sitio editorial menu-first para restaurante frente al mar en Chiclana.' : (getProjectLocalization('la-rucula')?.summary ?? 'Editorial menu-first website for a beachfront restaurant in Chiclana.'),
+      stack: ['Vue 3', 'Tailwind', 'GSAP', 'Vite'],
+      metrics: 'Lighthouse 99 · 42 KB',
+      url: 'https://laruculagastrobar.es/',
+      repo: 'https://github.com/MateoGs013/LaRucula',
+      to: '/projects/la-rucula',
+    },
+    {
+      slug: 'argpiscinas',
+      title: 'ARG Piscinas',
+      year: '2026',
+      status: 'LIVE',
+      role: isEs.value ? 'Freelance · Front y Back a Medida' : 'Freelance · Custom Full Stack',
+      summary: isEs.value ? 'Web corporativa multi-idioma con panel admin y blog para constructora de piscinas en Andalucía.' : (getProjectLocalization('argpiscinas')?.summary ?? 'Multilingual corporate website with admin panel and blog for a pool builder in Andalusia.'),
+      stack: ['Vue 3', 'Node.js', 'Prisma', 'Tailwind'],
+      metrics: 'Lighthouse 98 · ES/EN/DE',
+      url: 'https://www.argpiscinas.es/',
+      repo: 'https://github.com/MateoGs013/argpiscinas',
+      to: '/projects/argpiscinas',
+    },
+    {
+      slug: 'ynara',
+      title: 'Ynara AI Assistant',
+      year: '2026',
+      status: 'WIP',
+      role: isEs.value ? 'Tesis Da Vinci · Lead Frontend y Arquitecto' : 'Da Vinci Thesis · Lead Frontend & Architect',
+      summary: isEs.value ? 'Asistente de IA adaptativo on-premise con memoria vectorial sobre Postgres y pgvector.' : (getProjectLocalization('ynara')?.summary ?? 'Adaptive on-premise AI assistant with vector memory over Postgres and pgvector.'),
+      stack: ['FastAPI', 'Next.js', 'PostgreSQL', 'pgvector'],
+      metrics: '382 commits · <100ms local',
+      url: null,
+      repo: 'https://github.com/MateoGs013/Ynara-Web',
+      to: '/projects/ynara',
+    },
+    {
+      slug: 'barberpole',
+      title: 'Barberpole SaaS',
+      year: '2025',
+      status: 'LIVE',
+      role: isEs.value ? 'Producto propio · Diseño y desarrollo MERN' : 'Proprietary product · MERN design & dev',
+      summary: isEs.value ? 'SaaS de gestión para peluquerías y barberías: turnos, clientes y caja en tiempo real.' : (getProjectLocalization('barberpole')?.summary ?? 'Management SaaS for barbershops: bookings, clients, and revenue tracking in realtime.'),
+      stack: ['React', 'Node.js', 'Express', 'MongoDB'],
+      metrics: isEs.value ? 'Multi-negocio · Tiempo real' : 'Multi-tenant · Realtime',
+      url: null,
+      repo: 'https://github.com/MateoGs013/barberpole-saas',
+      to: '/projects/barberpole',
+    },
+    {
+      slug: 'ynara-web',
+      title: 'Ynara WebGL',
+      year: '2026',
+      status: 'WIP',
+      role: isEs.value ? 'Landing inmersiva · Diseño y shaders' : 'Immersive landing · Design & shaders',
+      summary: isEs.value ? 'Landing inmersiva WebGL para Ynara con shader procedimental reactivo al scroll.' : (getProjectLocalization('ynara-web')?.summary ?? 'Immersive WebGL landing page for Ynara with procedural shader reacting to scroll.'),
+      stack: ['Three.js', 'GSAP', 'Next.js', 'GLSL'],
+      metrics: '60 FPS · 4 Draw Calls',
+      url: null,
+      repo: 'https://github.com/MateoGs013/Ynara-Web',
+      to: '/projects/ynara-web',
+    },
+    {
+      slug: 'eros',
+      title: 'Eros Creative Engine',
+      year: '2026',
+      status: 'WIP',
+      role: isEs.value ? 'Arquitectura de Sistema · IA Asistida' : 'System Architecture · AI-assisted',
+      summary: isEs.value ? 'Director creativo asistido por IA con base de conocimiento en un vault de Obsidian.' : (getProjectLocalization('eros')?.summary ?? 'AI-assisted creative director with knowledge base rooted in an Obsidian vault.'),
+      stack: ['Python', 'Vue', 'Obsidian', 'LLM Agents'],
+      metrics: '1,420 Notes · 850 Nodes',
+      url: null,
+      repo: 'https://github.com/MateoGs013/eros',
+      to: '/projects/eros',
+    },
+  ]
+})
+
+// 2.1 Proyectos destacados para Selected Work
+const selectedWorkProjects = computed(() => {
+  if (props.folder.projects && props.folder.projects.length > 0) {
+    const featured = props.folder.projects.filter((p: Project) => p.featured)
+    const list = featured.length ? featured : props.folder.projects.slice(0, 3)
+    return list.map((p: Project, idx: number) => {
+      const coverMedia = p.media?.find((m: { role: string, src: string }) => m.role === 'COVER')
+      const cover = coverMedia?.src ?? `/media/projects/${p.slug}.jpg`
+      const loc = getProjectLocalization(p.slug)
+      return {
+        idx: pad(idx + 1),
+        slug: p.slug,
+        title: p.title,
+        to: `/projects/${p.slug}`,
+        cover,
+        status: p.status,
+        year: String(p.year),
+        orgDesc: isEs.value
+          ? (p.org?.name ? `${p.org.name}${p.org.city ? ` · ${p.org.city}` : ''}` : (loc?.orgDesc ?? ''))
+          : (loc?.orgDesc ?? (p.org?.name ? `${p.org.name}${p.org.city ? ` · ${p.org.city}` : ''}` : '')),
+        summary: isEs.value ? (p.summary || loc?.summary || '') : (loc?.summary || p.summary || ''),
+        chips: p.techs ? p.techs.slice(0, 4).map((t: { name: string }) => t.name) : [],
+      }
+    })
+  }
+
+  return [
+    {
+      idx: '01',
+      slug: 'la-rucula',
+      title: 'La Rúcula Gastrobar',
+      to: '/projects/la-rucula',
+      cover: '/media/projects/la-rucula.jpg',
+      status: 'LIVE',
+      year: '2026',
+      orgDesc: isEs.value ? 'Restauración & Gastronomía · Chiclana de la Frontera, ES' : (getProjectLocalization('la-rucula')?.orgDesc ?? 'Dining & Hospitality · Spain'),
+      summary: isEs.value ? 'Sitio editorial menu-first optimizado para escaneo QR en mesa. Lighthouse 99 en Performance y 100 en SEO. En producción.' : (getProjectLocalization('la-rucula')?.summary ?? 'Editorial menu-first website optimized for QR scanning at tables.'),
+      chips: ['Vue 3', 'Vite', 'Tailwind CSS', 'GSAP'],
+    },
+    {
+      idx: '02',
+      slug: 'argpiscinas',
+      title: 'ARG Piscinas',
+      to: '/projects/argpiscinas',
+      cover: '/media/projects/argpiscinas.jpg',
+      status: 'LIVE',
+      year: '2026',
+      orgDesc: isEs.value ? 'Arquitectura & Construcción · Andalucía, ES' : (getProjectLocalization('argpiscinas')?.orgDesc ?? 'Architecture & Construction · Spain'),
+      summary: isEs.value ? 'Plataforma corporativa multi-idioma (ES/EN/DE) con panel autónomo para carga de obras. Tipado integral con Prisma y Node.js.' : (getProjectLocalization('argpiscinas')?.summary ?? 'Multilingual corporate platform with autonomous admin panel.'),
+      chips: ['Vue 3', 'Node.js', 'Prisma', 'Tailwind CSS'],
+    },
+    {
+      idx: '03',
+      slug: 'ynara',
+      title: 'Ynara',
+      to: '/projects/ynara',
+      cover: '/media/projects/ynara-mtucqc2j.png',
+      status: 'WIP',
+      year: '2026',
+      orgDesc: isEs.value ? 'Tesis Da Vinci (Preaprobada 2026) · 382 commits' : (getProjectLocalization('ynara')?.orgDesc ?? 'Da Vinci Thesis · 382 commits'),
+      summary: isEs.value ? 'Asistente de IA adaptativo on-premise en rioplatense, con memoria cifrada vectorial sobre Postgres y pgvector.' : (getProjectLocalization('ynara')?.summary ?? 'Adaptive on-premise AI assistant with encrypted vector memory.'),
+      chips: ['FastAPI', 'Next.js', 'PostgreSQL', 'Python'],
+    },
+  ]
+})
 
 // 3. Spotlight de cursor direccional en tarjetas
 function onCardMousemove(e: MouseEvent) {
@@ -454,106 +544,35 @@ function onCardMousemove(e: MouseEvent) {
             </div>
 
             <div class="sw-grid">
-              <!-- 01. La Rúcula -->
-              <NuxtLink to="/projects/la-rucula" class="sw-card spotlight" data-row="la-rucula" @mousemove="onCardMousemove">
+              <NuxtLink
+                v-for="p in selectedWorkProjects"
+                :key="p.slug"
+                :to="p.to"
+                class="sw-card spotlight"
+                :data-row="p.slug"
+                @mousemove="onCardMousemove"
+              >
                 <span class="corner-bracket tl" aria-hidden="true">┌</span>
                 <span class="corner-bracket tr" aria-hidden="true">┐</span>
                 <span class="corner-bracket bl" aria-hidden="true">└</span>
                 <span class="corner-bracket br" aria-hidden="true">┘</span>
                 <div class="sw-thumb-box">
-                  <img src="/media/projects/la-rucula.jpg" alt="La Rúcula Gastrobar" class="sw-img" loading="lazy">
+                  <img :src="p.cover" :alt="p.title" class="sw-img" loading="lazy">
                   <div class="sw-corner-notch" aria-hidden="true" />
                   <div class="sw-status-bar">
-                    <span class="sw-badge live">● LIVE</span>
-                    <span class="sw-year">2026</span>
+                    <span class="sw-badge" :class="p.status.toLowerCase()">● {{ p.status }}</span>
+                    <span class="sw-year">{{ p.year }}</span>
                   </div>
                 </div>
                 <div class="sw-meta">
                   <div class="sw-title-row">
-                    <span class="sw-idx">01/</span>
-                    <h3 class="sw-title">La Rúcula Gastrobar</h3>
+                    <span class="sw-idx">{{ p.idx }}/</span>
+                    <h3 class="sw-title">{{ p.title }}</h3>
                   </div>
-                  <p class="sw-org">{{ getProjectLocalization('la-rucula')?.orgDesc ?? 'Restauración & Gastronomía · Chiclana de la Frontera, ES' }}</p>
-                  <p class="sw-desc">
-                    {{ getProjectLocalization('la-rucula')?.summary ?? 'Sitio editorial menu-first optimizado para escaneo QR en mesa. Lighthouse 99 en Performance y 100 en SEO. En producción.' }}
-                  </p>
-                  <div class="sw-chips">
-                    <span class="sw-chip">Vue 3</span>
-                    <span class="sw-chip">Vite</span>
-                    <span class="sw-chip">Tailwind CSS</span>
-                    <span class="sw-chip">GSAP</span>
-                  </div>
-                  <div class="sw-cta">
-                    <span>{{ tr.home.openDossier }}</span>
-                    <DatosIcon name="chevron-right" :size="12" />
-                  </div>
-                </div>
-              </NuxtLink>
-
-              <!-- 02. ARG Piscinas -->
-              <NuxtLink to="/projects/argpiscinas" class="sw-card spotlight" data-row="argpiscinas" @mousemove="onCardMousemove">
-                <span class="corner-bracket tl" aria-hidden="true">┌</span>
-                <span class="corner-bracket tr" aria-hidden="true">┐</span>
-                <span class="corner-bracket bl" aria-hidden="true">└</span>
-                <span class="corner-bracket br" aria-hidden="true">┘</span>
-                <div class="sw-thumb-box">
-                  <img src="/media/projects/argpiscinas.jpg" alt="ARG Piscinas" class="sw-img" loading="lazy">
-                  <div class="sw-corner-notch" aria-hidden="true" />
-                  <div class="sw-status-bar">
-                    <span class="sw-badge live">● LIVE</span>
-                    <span class="sw-year">2026</span>
-                  </div>
-                </div>
-                <div class="sw-meta">
-                  <div class="sw-title-row">
-                    <span class="sw-idx">02/</span>
-                    <h3 class="sw-title">ARG Piscinas</h3>
-                  </div>
-                  <p class="sw-org">{{ getProjectLocalization('argpiscinas')?.orgDesc ?? 'Arquitectura & Construcción · Andalucía, ES' }}</p>
-                  <p class="sw-desc">
-                    {{ getProjectLocalization('argpiscinas')?.summary ?? 'Plataforma corporativa multi-idioma (ES/EN/DE) con panel autónomo para carga de obras. Tipado integral con Prisma y Node.js.' }}
-                  </p>
-                  <div class="sw-chips">
-                    <span class="sw-chip">Vue 3</span>
-                    <span class="sw-chip">Node.js</span>
-                    <span class="sw-chip">Prisma</span>
-                    <span class="sw-chip">Tailwind CSS</span>
-                  </div>
-                  <div class="sw-cta">
-                    <span>{{ tr.home.openDossier }}</span>
-                    <DatosIcon name="chevron-right" :size="12" />
-                  </div>
-                </div>
-              </NuxtLink>
-
-              <!-- 03. Ynara -->
-              <NuxtLink to="/projects/ynara" class="sw-card spotlight" data-row="ynara" @mousemove="onCardMousemove">
-                <span class="corner-bracket tl" aria-hidden="true">┌</span>
-                <span class="corner-bracket tr" aria-hidden="true">┐</span>
-                <span class="corner-bracket bl" aria-hidden="true">└</span>
-                <span class="corner-bracket br" aria-hidden="true">┘</span>
-                <div class="sw-thumb-box">
-                  <img src="/media/projects/ynara-mtucqc2j.png" alt="Ynara Asistente de IA" class="sw-img" loading="lazy">
-                  <div class="sw-corner-notch" aria-hidden="true" />
-                  <div class="sw-status-bar">
-                    <span class="sw-badge wip">● WIP</span>
-                    <span class="sw-year">2026</span>
-                  </div>
-                </div>
-                <div class="sw-meta">
-                  <div class="sw-title-row">
-                    <span class="sw-idx">03/</span>
-                    <h3 class="sw-title">Ynara</h3>
-                  </div>
-                  <p class="sw-org">{{ getProjectLocalization('ynara')?.orgDesc ?? 'Tesis Da Vinci (Preaprobada 2026) · 382 commits' }}</p>
-                  <p class="sw-desc">
-                    {{ getProjectLocalization('ynara')?.summary ?? 'Asistente de IA adaptativo on-premise en rioplatense, con memoria cifrada vectorial sobre Postgres y pgvector.' }}
-                  </p>
-                  <div class="sw-chips">
-                    <span class="sw-chip">FastAPI</span>
-                    <span class="sw-chip">Next.js</span>
-                    <span class="sw-chip">PostgreSQL</span>
-                    <span class="sw-chip">Python</span>
+                  <p v-if="p.orgDesc" class="sw-org">{{ p.orgDesc }}</p>
+                  <p v-if="p.summary" class="sw-desc">{{ p.summary }}</p>
+                  <div v-if="p.chips && p.chips.length" class="sw-chips">
+                    <span v-for="chip in p.chips" :key="chip" class="sw-chip">{{ chip }}</span>
                   </div>
                   <div class="sw-cta">
                     <span>{{ tr.home.openDossier }}</span>
@@ -757,8 +776,8 @@ function onCardMousemove(e: MouseEvent) {
                 <span class="p-num">{{ pad(n + 1) }}</span>
                 <h3 class="p-name">{{ it.label }}</h3>
               </div>
-              <p v-if="it.org && it.org.toLowerCase() !== it.label.toLowerCase()" class="p-org">{{ getProjectLocalization(it.key)?.orgDesc ?? it.org }}</p>
-              <p v-if="it.summary" class="p-summary">{{ getProjectLocalization(it.key)?.summary ?? it.summary }}</p>
+              <p v-if="it.org && it.org.toLowerCase() !== it.label.toLowerCase()" class="p-org">{{ isEs ? (it.org || getProjectLocalization(it.key)?.orgDesc) : (getProjectLocalization(it.key)?.orgDesc || it.org) }}</p>
+              <p v-if="it.summary" class="p-summary">{{ isEs ? (it.summary || getProjectLocalization(it.key)?.summary) : (getProjectLocalization(it.key)?.summary || it.summary) }}</p>
               <div v-if="it.techs && it.techs.length" class="p-techs">
                 <span v-for="t in it.techs.slice(0, 4)" :key="t.slug" class="p-tech-chip">{{ t.name }}</span>
                 <span v-if="it.techs.length > 4" class="p-tech-chip more">+{{ it.techs.length - 4 }}</span>
@@ -781,8 +800,8 @@ function onCardMousemove(e: MouseEvent) {
               <span class="exp-org">{{ it.org ?? it.label }}</span>
               <span class="exp-period">{{ it.meta }}</span>
             </div>
-            <h3 class="exp-role">{{ getExperienceLocalization(it.key)?.role ?? it.role ?? it.label }}</h3>
-            <p v-if="it.summary" class="exp-summary">{{ getExperienceLocalization(it.key)?.summary ?? it.summary }}</p>
+            <h3 class="exp-role">{{ isEs ? (it.role || getExperienceLocalization(it.key)?.role || it.label) : (getExperienceLocalization(it.key)?.role || it.role || it.label) }}</h3>
+            <p v-if="it.summary" class="exp-summary">{{ isEs ? (it.summary || getExperienceLocalization(it.key)?.summary) : (getExperienceLocalization(it.key)?.summary || it.summary) }}</p>
             <div v-if="it.techs && it.techs.length" class="exp-techs">
               <span v-for="t in it.techs.slice(0, 3)" :key="t.slug" class="p-tech-chip">{{ t.name }}</span>
             </div>
