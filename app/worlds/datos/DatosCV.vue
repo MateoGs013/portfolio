@@ -70,7 +70,7 @@ const cvDeliverables = computed<CVDeliverable[]>(() => {
         date: '05/2026 – 07/2026',
         role: 'Arquitecto de Software & Lead Frontend',
         location: 'Buenos Aires, Argentina',
-        description: 'Asistente de IA on-premise adaptativo en rioplatense con inferencia local y persistencia vectorial sobre PostgreSQL + pgvector.',
+        description: 'Asistente de IA on-premise adaptativo con inferencia local y persistencia vectorial sobre PostgreSQL + pgvector.',
         bullets: [
           'Lideré la arquitectura técnica y el frontend reactivo con 382 commits en 6 semanas.',
           'Diseñé pipelines de inferencia y memoria vectorial en Next.js y FastAPI con latencia sub-100ms.',

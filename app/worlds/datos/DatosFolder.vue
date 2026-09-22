@@ -215,7 +215,7 @@ const selectedWorkProjects = computed(() => {
       status: 'WIP',
       year: '2026',
       orgDesc: isEs.value ? 'Tesis Da Vinci (Preaprobada 2026) · 382 commits' : (getProjectLocalization('ynara')?.orgDesc ?? 'Da Vinci Thesis · 382 commits'),
-      summary: isEs.value ? 'Asistente de IA adaptativo on-premise en rioplatense, con memoria cifrada vectorial sobre Postgres y pgvector.' : (getProjectLocalization('ynara')?.summary ?? 'Adaptive on-premise AI assistant with encrypted vector memory.'),
+      summary: isEs.value ? 'Asistente de IA adaptativo on-premise, con memoria cifrada vectorial sobre Postgres y pgvector.' : (getProjectLocalization('ynara')?.summary ?? 'Adaptive on-premise AI assistant with encrypted vector memory.'),
       chips: ['FastAPI', 'Next.js', 'PostgreSQL', 'Python'],
     },
   ]

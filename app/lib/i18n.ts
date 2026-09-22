@@ -466,8 +466,8 @@ export const projectTranslations: Record<string, { summary: { es: string, en: st
   },
   'ynara': {
     summary: {
-      es: 'Asistente de IA adaptativo on-premise en rioplatense, con memoria cifrada vectorial sobre Postgres y pgvector. Tesis preaprobada.',
-      en: 'Adaptive on-premise AI assistant in Argentine Spanish, featuring encrypted vector memory over Postgres and pgvector. Pre-approved thesis.',
+      es: 'Asistente de IA adaptativo on-premise, con memoria cifrada vectorial sobre Postgres y pgvector. Tesis preaprobada.',
+      en: 'Adaptive on-premise AI assistant featuring encrypted vector memory over Postgres and pgvector. Pre-approved thesis.',
     },
     orgDesc: {
       es: 'Tesis Da Vinci (Preaprobada 2026) · 382 commits',

@@ -194,7 +194,7 @@ const projects: SeedProject[] = [
     role: 'Tesis Da Vinci 2026 · contribuidor principal, 382 commits',
     status: ProjectStatus.WIP,
     featured: true,
-    summary: 'Tesis en equipo, preaprobada. Asistente personal de IA adaptativo, on-prem y en rioplatense, con memoria cifrada semántica, episódica y procedural sobre Postgres y pgvector.',
+    summary: 'Tesis en equipo, preaprobada. Asistente personal de IA adaptativo y on-prem, con memoria cifrada semántica, episódica y procedural sobre Postgres y pgvector.',
     brief: 'Un asistente que corre en tu máquina, habla como vos y se acuerda. Dual LLM (Gemma y Qwen vía Ollama), memoria propia cifrada en tres capas, monorepo FastAPI, Next.js y Expo.',
     outcome: 'Tesis preaprobada con felicitaciones en Da Vinci. 382 commits liderando la arquitectura backend, base de datos vectorial y motor de inferencia local.',
     url: null,
@@ -212,7 +212,7 @@ const projects: SeedProject[] = [
     steps: [
       { title: '01 · hipótesis', body: 'Los asistentes en la nube sacrifican privacidad y contexto local. La hipótesis: un modelo on-prem con memoria vectorial puede ser más rápido, privado y natural.' },
       { title: '02 · arquitectura', body: 'Monorepo con FastAPI para orquestación de embeddings y llamadas a Ollama; PostgreSQL 17 con pgvector para búsqueda por similitud coseno; Next.js 14 en frontend web y Expo para móvil.' },
-      { title: '03 · resultado', body: 'Respuestas contextualizadas en dialecto rioplatense con menos de 50ms de latencia de consulta interna y almacenamiento local 100% cifrado.' },
+      { title: '03 · resultado', body: 'Respuestas contextualizadas con menos de 50ms de latencia de consulta interna y almacenamiento local 100% cifrado.' },
     ],
     cover: { src: '/media/projects/ynara-mtucqc2j.png', alt: 'Ynara asistente de IA adaptativo on-premise', width: 1280, height: 720, bytes: 394847 },
   },
