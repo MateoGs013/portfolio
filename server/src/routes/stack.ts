@@ -2,6 +2,7 @@ import { Router } from 'express'
 import { db } from '../db.js'
 import { envelope } from '../envelope.js'
 import { readFilters } from '../filters.js'
+import { fallbackStack } from '../fallbackData.js'
 import { TechCategory, type Prisma } from '../../generated/prisma/client.js'
 
 export const stack = Router()
@@ -16,17 +17,28 @@ function isCategory(value: string): value is TechCategory {
 stack.get('/stack', async (req, res) => {
   const filters = readFilters(req, FILTERS)
 
-  const where: Prisma.TechWhereInput = {}
-  const category = filters.category?.toUpperCase()
-  if (category && isCategory(category)) where.category = category
+  try {
+    const where: Prisma.TechWhereInput = {}
+    const category = filters.category?.toUpperCase()
+    if (category && isCategory(category)) where.category = category
 
-  const data = await db.tech.findMany({
-    where,
-    orderBy: [{ since: 'asc' }, { name: 'asc' }],
-    include: {
-      _count: { select: { projects: true, experiences: true } },
-    },
-  })
+    const data = await db.tech.findMany({
+      where,
+      orderBy: [{ since: 'asc' }, { name: 'asc' }],
+      include: {
+        _count: { select: { projects: true, experiences: true } },
+      },
+    })
 
-  res.json(envelope(data, { filters }))
+    res.json(envelope(data, { filters }))
+  } catch {
+    // Fallback resiliente en memoria
+    let data = [...fallbackStack]
+    const category = filters.category?.toUpperCase()
+    if (category && isCategory(category)) {
+      data = data.filter(t => t.category === category)
+    }
+
+    res.json(envelope(data, { filters }))
+  }
 })

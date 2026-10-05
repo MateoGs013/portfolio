@@ -31,10 +31,10 @@ schema.get('/schema', async (_req, res) => {
     // Fallback resiliente si la conexión a base de datos local está en reposo
     const fallback = [
       { key: 'projects', label: 'projects', kind: 'collection', count: 6 },
-      { key: 'experience', label: 'experience', kind: 'collection', count: 7 },
+      { key: 'experience', label: 'experience', kind: 'collection', count: 6 },
       { key: 'stack', label: 'stack', kind: 'collection', count: 22 },
       { key: 'about', label: 'about', kind: 'document', count: 13 },
-      { key: 'contact', label: 'contact', kind: 'document', count: 6 },
+      { key: 'contact', label: 'contact', kind: 'document', count: 7 },
     ]
     res.json(envelope(fallback))
   }

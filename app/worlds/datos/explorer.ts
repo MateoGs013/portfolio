@@ -13,8 +13,8 @@
  * (brief, outcome, pasos de proceso, capturas técnicas y métricas).
  */
 import type { LocationQuery, RouteLocationRaw } from 'vue-router'
-import type { AnyRecord, Experience, LinkRef, Org, Project, TechRef } from '~/lib/api'
-import { fieldMeta, fieldsFor, type CollectionKey, type FieldMeta } from '~/lib/fieldMeta'
+import type { AnyRecord, Doc, Experience, LinkRef, Org, Project, TechRef } from '~/lib/api'
+import { fieldMeta, fieldsFor, type CollectionKey, type DocField, type DocKey, type FieldMeta } from '~/lib/fieldMeta'
 import { isDoc, isRoot, routeFor, type Path } from '~/lib/path'
 import { filtersFor, listEndpoint, listFilters, type Answer, type useApi } from '~/composables/useApi'
 
@@ -278,7 +278,7 @@ function cellFor(collection: CollectionKey, record: AnyRecord, name: string, ext
 }
 
 /** Un campo de documento como fila: las urls y los mails se vuelven links. */
-function docRow(f: { name: string, type: string, value: string, wide?: boolean }): Row {
+function docRow(f: DocField): Row {
   const row: Row = { name: f.name, type: f.type, value: f.value, wide: f.wide }
   if (/^[^\s@]+@[^\s@]+$/.test(f.value)) row.href = `mailto:${f.value}`
   else if (f.type === 'url') row.href = f.value
@@ -291,6 +291,43 @@ function facetsOf(collection: CollectionKey, query: LocationQuery): Facet[] {
     const { [key]: _removed, ...next } = query
     return { key, value: String(value), remove: routeFor([collection], next) }
   })
+}
+
+const fallbackDocData: Record<DocKey, Doc> = {
+  about: {
+    key: 'about',
+    title: 'about',
+    updatedAt: new Date().toISOString(),
+    fields: [
+      { name: 'name', type: 'string', value: 'Mateo Gabriel Sonzogni' },
+      { name: 'role', type: 'string', value: 'Desarrollador Frontend & Full Stack · Creative Developer' },
+      { name: 'location', type: 'string', value: 'Río Negro, Patagonia Argentina' },
+      { name: 'technical_degree', type: 'string', value: 'Técnico en Programación · CET N.º 30 (2017–2023)' },
+      { name: 'higher_education', type: 'string', value: 'Diseño y Desarrollo Web · Escuela Da Vinci (2024–2026) · Tesis Preaprobada' },
+      { name: 'freelance_experience', type: 'string', value: 'Activo desde 2023 · ≈ 10 proyectos reales en producción' },
+      { name: 'availability_status', type: 'string', value: 'DISPONIBLE // Búsqueda de equipo o proyectos de alto impacto' },
+      { name: 'work_modalities', type: 'string', value: 'Remoto · Híbrido · Presencial' },
+      { name: 'timezone', type: 'string', value: 'UTC-3 (Argentina / Compatible con US & EU)' },
+      { name: 'languages', type: 'string', value: 'Español (Nativo) · Inglés (B2 Profesional Técnico)' },
+      { name: 'core_competencies', type: 'string', value: 'Full-Cycle Engineering: Figma UI/UX → Frontend Reactivo → APIs REST/Microservicios → Postgres ACID → Deploy & Monitoreo' },
+      { name: 'engineering_philosophy', type: 'text', wide: true, value: 'Desarrollo con criterio de diseño y foco en el producto entero: qué problema resuelve, cómo debería verse, cómo debería sentirse, cómo se construye y cómo llega a producción. No me posiciono solo como programador ni solo como diseñador; trabajo la costura donde la arquitectura técnica se encuentra con la experiencia de usuario.' },
+      { name: 'professional_goal', type: 'text', wide: true, value: 'Consolidarme como desarrollador en un equipo con proyectos reales de mayor escala. A mediano plazo, liderazgo técnico: coordinar, organizar, comunicar y conectar perfiles de distintas áreas (diseño, producto, frontend y backend).' },
+    ],
+  },
+  contact: {
+    key: 'contact',
+    title: 'contact',
+    updatedAt: new Date().toISOString(),
+    fields: [
+      { name: 'email', type: 'url', value: 'mateogabus@gmail.com' },
+      { name: 'github', type: 'url', value: 'https://github.com/MateoGs013' },
+      { name: 'linkedin', type: 'url', value: 'https://www.linkedin.com/in/mateo-sonzogni' },
+      { name: 'availability', type: 'string', value: 'Inmediata · Contratación directa, contractor o freelance' },
+      { name: 'location', type: 'string', value: 'Río Negro, AR (Disponible para relocalización o remoto)' },
+      { name: 'timezone', type: 'string', value: 'UTC-3' },
+      { name: 'preferred_contact', type: 'string', value: 'Email directo, LinkedIn o mensaje vía GitHub' },
+    ],
+  },
 }
 
 export async function resolveExplorer(api: Api, path: Path, query: LocationQuery): Promise<Explorer> {
@@ -313,11 +350,11 @@ export async function resolveExplorer(api: Api, path: Path, query: LocationQuery
     last = schema
     const rootInfo: Record<string, { label: string, desc: string }> = {
       projects: { label: 'proyectos', desc: '06 aplicaciones reales en producción' },
-      experience: { label: 'experiencia', desc: '07 etapas: freelance, Da Vinci y CET 30' },
+      experience: { label: 'experiencia', desc: '06 etapas: freelance, Da Vinci y CET 30' },
       stack: { label: 'stack', desc: '22 tecnologías con criterio técnico' },
       about: { label: 'sobre mí', desc: 'Perfil, formación técnica y visión' },
       contact: { label: 'contacto', desc: 'Email directo y disponibilidad inmediata' },
-      orgs: { label: 'organizaciones', desc: '05 empresas e instituciones' },
+      orgs: { label: 'organizaciones', desc: '04 empresas e instituciones' },
     }
     folder = {
       head: 'db',
@@ -346,19 +383,26 @@ export async function resolveExplorer(api: Api, path: Path, query: LocationQuery
   if (isDoc(root)) {
     if (slug) throw notFound()
     if (root === 'about') {
-      const [answer, expRes, projRes, contactRes] = await Promise.all([
-        api.doc(root),
+      const [answerRes, expRes, projRes, contactRes] = await Promise.all([
+        api.doc(root).catch(() => null),
         api.list('experience').catch(() => null),
         api.list('projects').catch(() => null),
         api.doc('contact').catch(() => null),
       ])
+      const fallbackAbout = fallbackDocData.about
+      const answer: Answer<Doc> = answerRes ?? {
+        data: fallbackAbout,
+        meta: { count: fallbackAbout.fields.length, filters: {} },
+        request: `GET /api/docs/${root}`,
+        status: 200,
+        ms: 0,
+      }
       last = answer
       
       const contactData: Record<string, string> = {}
-      if (contactRes?.data?.fields) {
-        for (const f of contactRes.data.fields) {
-          contactData[f.name] = String(f.value)
-        }
+      const contactFields = contactRes?.data?.fields ?? fallbackDocData.contact.fields
+      for (const f of contactFields) {
+        contactData[f.name] = String(f.value)
       }
 
       detail = {
@@ -367,7 +411,7 @@ export async function resolveExplorer(api: Api, path: Path, query: LocationQuery
         type: `document · ${root}`,
         updated: answer.data.updatedAt ? String(answer.data.updatedAt).slice(0, 10) : null,
         rawRecord: answer.data,
-        rows: answer.data.fields.map(f => docRow(f)),
+        rows: answer.data.fields.map((f: DocField) => docRow(f)),
         experience: expRes?.data ?? [],
         projects: projRes?.data ?? [],
         contact: contactData,
@@ -375,7 +419,16 @@ export async function resolveExplorer(api: Api, path: Path, query: LocationQuery
       return done()
     }
 
-    const answer = await api.doc(root)
+    const answerRes = await api.doc(root).catch(() => null)
+    const fallback = fallbackDocData[root]
+    const answer: Answer<Doc> | null = answerRes ?? (fallback ? {
+      data: fallback,
+      meta: { count: fallback.fields.length, filters: {} },
+      request: `GET /api/docs/${root}`,
+      status: 200,
+      ms: 0,
+    } : null)
+    if (!answer) throw notFound()
     last = answer
     detail = {
       kind: 'document',
@@ -383,7 +436,7 @@ export async function resolveExplorer(api: Api, path: Path, query: LocationQuery
       type: `document · ${root}`,
       updated: answer.data.updatedAt ? String(answer.data.updatedAt).slice(0, 10) : null,
       rawRecord: answer.data,
-      rows: answer.data.fields.map(f => docRow(f)),
+      rows: answer.data.fields.map((f: DocField) => docRow(f)),
     }
     return done()
   }
