@@ -61,12 +61,13 @@ onMounted(() => {
       document.documentElement.setAttribute('data-theme', 'dark')
     }
 
-    // Orientación inicial no invasiva: abrir tras 1.2s únicamente si es la primera visita
+    // Orientación inicial no invasiva: abrir tras 1.8s únicamente si es desktop amplio y primera visita
     const guideSeen = localStorage.getItem('portfolio-guide-seen')
-    if (!guideSeen) {
+    if (!guideSeen && typeof window !== 'undefined' && window.innerWidth >= 1024) {
       setTimeout(() => {
         guideOpen.value = true
-      }, 1200)
+        localStorage.setItem('portfolio-guide-seen', 'true')
+      }, 1800)
     }
   }
 })
@@ -268,7 +269,7 @@ const navSections = computed<NavSection[]>(() => [
   { root: 'projects', label: isEs.value ? '01 · proyectos' : '01 · projects', shortLabel: isEs.value ? 'Proyectos' : 'Projects', to: ['projects'], badge: '06', keyHint: '1', icon: 'folder', desc: isEs.value ? 'Aplicaciones en producción' : 'Production applications' },
   { root: 'experience', label: isEs.value ? '02 · experiencia' : '02 · experience', shortLabel: 'Exp', to: ['experience'], badge: '07', keyHint: '2', icon: 'briefcase', desc: isEs.value ? 'Trayectoria profesional y roles' : 'Career history & roles' },
   { root: 'stack', label: isEs.value ? '03 · stack' : '03 · stack', shortLabel: 'Stack', to: ['stack'], badge: '22', keyHint: '3', icon: 'code', desc: isEs.value ? 'Tecnologías y lenguajes' : 'Technologies & languages' },
-  { root: 'about', label: isEs.value ? '04 · sobre mí' : '04 · about me', shortLabel: isEs.value ? 'Sobre mí' : 'About', to: ['about'], badge: '13', keyHint: '4', icon: 'file', desc: isEs.value ? 'Perfil bio, formación y principios' : 'Bio, resume & principles' },
+  { root: 'about', label: isEs.value ? '04 · sobre mí' : '04 · about me', shortLabel: isEs.value ? 'CV' : 'About', to: ['about'], badge: '13', keyHint: '4', icon: 'file', desc: isEs.value ? 'Perfil bio, formación y principios' : 'Bio, resume & principles' },
   { root: 'contact', label: isEs.value ? '05 · contacto' : '05 · contact', shortLabel: isEs.value ? 'Contacto' : 'Contact', to: ['contact'], badge: '06', keyHint: '5', icon: 'mail', desc: isEs.value ? 'Canales y disponibilidad' : 'Channels & availability' },
 ])
 
@@ -433,7 +434,6 @@ const currentRoot = computed(() => path.value[0] ?? '')
               >
                 {{ isEs ? 'GUÍA RÁPIDA (?)' : 'QUICK GUIDE (?)' }}
               </button>
-              <a href="/admin" target="_blank" class="sf-admin-link" :title="isEs ? 'Abrir Consola de Administración Técnica' : 'Open Technical Admin Console'">{{ isEs ? 'CONSOLA ADMIN ↗' : 'ADMIN CONSOLE ↗' }}</a>
             </div>
           </div>
         </aside>
@@ -1024,50 +1024,69 @@ kbd {
 
   /* Barra Superior de Herramientas Compacta y Móvil */
   .barra {
-    padding: 0 10px;
-    gap: 8px;
-    min-height: 48px;
+    padding: 0 8px;
+    gap: 6px;
+    min-height: 44px;
+    max-width: 100vw;
+    box-sizing: border-box;
+    overflow: hidden;
   }
   .historia {
     gap: 3px;
   }
   .nav-btn {
-    width: 32px;
-    height: 32px;
+    width: 30px;
+    height: 30px;
   }
   .ruta {
-    height: 32px;
-    padding: 0 8px;
-    font-size: 11.5px;
+    height: 30px;
+    padding: 0 6px;
+    font-size: 11px;
+    min-width: 0;
+    max-width: 130px;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
   .goto-btn {
     flex: none;
-    height: 32px;
-    padding: 0 8px;
+    height: 30px;
+    padding: 0 6px;
+    min-width: 0;
+  }
+  .barra-derecha {
+    gap: 6px;
+    flex-shrink: 0;
   }
   .tool-btn,
   .lang-btn,
   .theme-btn {
-    height: 32px;
+    height: 30px;
   }
   .tool-btn,
   .theme-btn {
-    width: 32px;
+    width: 30px;
+  }
+  .lang-btn {
+    padding: 0 6px;
+    font-size: 10px;
   }
   .telemetria-badge,
-  .clock-badge {
-    display: none;
+  .clock-badge,
+  .sys-status-badge {
+    display: none !important;
   }
 
   .cuerpo-ventana {
     flex-direction: column;
     overflow: visible;
+    max-width: 100vw;
   }
 
   .exp {
-    padding: 10px 10px calc(68px + env(safe-area-inset-bottom, 0px)) !important;
+    padding: 8px 8px calc(76px + env(safe-area-inset-bottom, 0px)) !important;
     overflow: visible;
     perspective: none;
+    max-width: 100vw;
   }
 
   /* Barra de Estado inferior se oculta en mobile en favor del Tab Bar */
@@ -1140,6 +1159,23 @@ kbd {
     height: 2px;
     background: var(--d-sig);
     border-radius: 0 0 2px 2px;
+  }
+}
+
+@media screen and (max-width: 480px) {
+  .historia .nav-btn:nth-child(2),
+  .historia .nav-btn:nth-child(3) {
+    display: none;
+  }
+  .ruta {
+    max-width: 100px;
+  }
+  .focus-btn {
+    display: none !important;
+  }
+  .barra {
+    gap: 4px;
+    padding: 0 5px;
   }
 }
 

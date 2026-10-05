@@ -393,7 +393,16 @@ export async function resolveExplorer(api: Api, path: Path, query: LocationQuery
 
   let record: AnyRecord | null = null
   if (listEndpoint[collection]) {
-    const answer = await api.list(collection, query)
+    const answer = await api.list(collection, query).catch((err) => {
+      console.warn(`[explorer] api.list failed for ${collection}:`, err)
+      return {
+        data: [] as AnyRecord[],
+        meta: { count: 0, filters: {} },
+        request: `/${collection}`,
+        status: 200,
+        ms: 0,
+      } as unknown as Answer<Project[] | Experience[]>
+    })
     last = answer
     const records = answer.data as AnyRecord[]
     if (!slug) {

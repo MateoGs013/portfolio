@@ -145,7 +145,7 @@ async function copyJson() {
     :badge="detail.type"
     :parent-url="parentRoute"
   >
-    <article class="hoja" :aria-labelledby="uid">
+    <article class="hoja" :class="{ 'is-about-cv': isAbout && !showRawFields }" :aria-labelledby="uid">
       <DatosCabecera :id="uid" kind="file" :badge="pad(detail.rows.length)" :name="detail.name" :line="line">
         <div class="hoja-acciones">
           <!-- Toggle para ver CV vs Campos técnicos si es About -->
@@ -609,6 +609,7 @@ async function copyJson() {
 }
 
 @media screen and (max-width: 768px) {
+  .is-about-cv :deep(.cabecera) { display: none !important; }
   .hoja-acciones { flex-wrap: wrap; width: 100%; gap: 8px; }
   .vecinos { width: 100%; justify-content: space-between; }
   .vecino { max-width: none; flex: 1 1 auto; }

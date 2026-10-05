@@ -534,7 +534,8 @@ function onCardMousemove(e: MouseEvent) {
                 <span class="sw-h-num">01/</span>
                 <h2 class="sw-h-title">{{ tr.home.swTitle }}</h2>
                 <span class="sw-h-hint" aria-hidden="true">
-                  <kbd>↵</kbd> {{ isEs ? 'clic o enter para abrir' : 'click or enter to open' }}
+                  <span class="desktop-only"><kbd>↵</kbd> {{ isEs ? 'clic o enter para abrir' : 'click or enter to open' }}</span>
+                  <span class="mobile-only">{{ isEs ? 'toca para abrir' : 'tap to open' }}</span>
                 </span>
               </div>
               <NuxtLink to="/projects" class="sw-h-link">
@@ -714,7 +715,8 @@ function onCardMousemove(e: MouseEvent) {
 
           <!-- Hint de navegación por teclado -->
           <span class="folder-header-hint" aria-hidden="true">
-            <kbd>↵</kbd> {{ isEs ? 'enter / clic abre hoja' : 'enter / click opens sheet' }}
+            <span class="desktop-only"><kbd>↵</kbd> {{ isEs ? 'enter / clic abre hoja' : 'enter / click opens sheet' }}</span>
+            <span class="mobile-only">{{ isEs ? 'toca para abrir ficha' : 'tap to open sheet' }}</span>
           </span>
 
           <!-- Selector de Vista (Baldosas vs Tabla) -->
@@ -2042,6 +2044,10 @@ function onCardMousemove(e: MouseEvent) {
   font-size: 10px;
 }
 
+.mobile-only {
+  display: none;
+}
+
 /* 1.5 Footer de Impacto Editorial */
 .poster-footer {
   display: flex;
@@ -2623,9 +2629,17 @@ function onCardMousemove(e: MouseEvent) {
     font-size: clamp(19px, 5.5vw, 24px);
   }
 
+  .desktop-only {
+    display: none !important;
+  }
+  .mobile-only {
+    display: inline !important;
+  }
+
   /* Pie Editorial */
   .poster-footer {
     flex-direction: column;
+    margin-bottom: calc(48px + env(safe-area-inset-bottom, 0px));
   }
   .pf-ribbon {
     width: 100%;
