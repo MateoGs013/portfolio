@@ -37,7 +37,7 @@ const cvLocation = computed(() => isEs.value
   : 'Río Negro, Patagonia, Argentina',
 )
 const cvBio = computed(() => isEs.value
-  ? (getDocField('engineering_philosophy') || 'Desarrollo con criterio de diseño y foco en el producto entero: qué problema resuelve, cómo debería verse, cómo debería sentirse, cómo se construye y cómo llega a producción. No me posiciono solo como programador ni solo como diseñador; trabajo en la costura donde la arquitectura técnica se encuentra con la experiencia de usuario.')
+  ? 'Desarrollador de software especializado en ingeniería frontend reactiva, arquitectura de APIs y experiencia de usuario. Tesis de grado preaprobada en Escuela Da Vinci con 382 commits liderando la arquitectura de un asistente de IA on-premise. Trayectoria verificable en producción con más de 10 entregables para clientes en España y Argentina (La Rúcula Gastrobar, ARG Piscinas). Dominio de TypeScript, Vue 3, Nuxt 4, React, Next.js, Node.js, FastAPI y PostgreSQL. Criterio integral de producto y diseño de punta a punta.'
   : 'Software engineer specialized in reactive frontend engineering, API architecture, and user experience. Pre-approved degree thesis at Da Vinci School with 382 commits leading system architecture for an on-premise AI assistant. Verifiable production track record with 10+ deliverables for clients across Spain and Argentina (La Rúcula Gastrobar, ARG Piscinas). Proficient in TypeScript, Vue 3, Nuxt 4, React, Next.js, Node.js, FastAPI, and PostgreSQL. End-to-end product design mindset.',
 )
 
@@ -72,8 +72,8 @@ const cvDeliverables = computed<CVDeliverable[]>(() => {
         location: 'Buenos Aires, Argentina',
         description: 'Asistente de IA on-premise adaptativo con inferencia local y persistencia vectorial sobre PostgreSQL + pgvector.',
         bullets: [
-          'Lideré la arquitectura técnica y el frontend reactivo con 382 commits en 6 semanas.',
-          'Diseñé pipelines de inferencia y memoria vectorial en Next.js y FastAPI con latencia sub-100ms.',
+          'Lideré la arquitectura técnica y el frontend reactivo con 382 commits a lo largo de 6 semanas.',
+          'Diseñé pipelines de inferencia y memoria vectorial persistente en Next.js y FastAPI con latencia sub-100ms en local.',
         ],
         tags: ['FastAPI', 'Next.js', 'PostgreSQL', 'pgvector', 'TypeScript', 'Python'],
       },
@@ -113,7 +113,7 @@ const cvDeliverables = computed<CVDeliverable[]>(() => {
         location: 'Remoto',
         description: 'Desarrollo de software y soluciones web llave en mano para clientes de diversos rubros con arquitectura integral y APIs REST.',
         bullets: [
-          'Desarrollo de punta a punta: arquitectura de sistemas, diseño en Figma y despliegue a producción.',
+          'Desarrollo de punta a punta: arquitectura de sistemas, diseño en Figma y despliegue a producción en ~10 proyectos reales.',
         ],
         tags: ['TypeScript', 'Vue 3', 'Node.js', 'PostgreSQL', 'Docker'],
       },
@@ -131,7 +131,7 @@ const cvDeliverables = computed<CVDeliverable[]>(() => {
       description: 'Adaptive on-premise AI assistant with local inference and persistent vector memory over PostgreSQL + pgvector.',
       bullets: [
         'Led technical architecture and reactive frontend with 382 commits across 6 weeks of engineering.',
-        'Engineered Next.js client and FastAPI pipeline achieving sub-100ms semantic response times locally.',
+        'Engineered inference pipelines and persistent vector memory with Next.js and FastAPI achieving sub-100ms response times locally.',
       ],
       tags: ['FastAPI', 'Next.js', 'PostgreSQL', 'pgvector', 'TypeScript', 'Python'],
     },
@@ -171,7 +171,7 @@ const cvDeliverables = computed<CVDeliverable[]>(() => {
       location: 'Remote',
       description: 'Full-stack software development and turnkey web solutions for diverse clients with end-to-end architecture and REST APIs.',
       bullets: [
-        'End-to-end turnkey web solutions combining Figma UI design and production-ready full-stack software.',
+        'End-to-end turnkey web solutions combining Figma UI design and production deployments across ~10 real-world projects.',
       ],
       tags: ['TypeScript', 'Vue 3', 'Node.js', 'PostgreSQL', 'Docker'],
     },
@@ -354,7 +354,7 @@ function printCV() {
             <span class="h-loc">Buenos Aires, Argentina</span>
           </div>
           <ul class="h-bullets">
-            <li v-if="isEs">Lideré la arquitectura técnica y el frontend con 382 commits a lo largo de 6 semanas de desarrollo intensivo.</li>
+            <li v-if="isEs">Lideré la arquitectura técnica y el frontend reactivo con 382 commits a lo largo de 6 semanas de desarrollo intensivo.</li>
             <li v-else>Led system architecture and reactive frontend with 382 commits over 6 weeks of intensive engineering.</li>
             <li v-if="isEs">Diseñé pipelines de inferencia y memoria vectorial persistente con PostgreSQL, pgvector y FastAPI.</li>
             <li v-else>Engineered inference pipelines and persistent vector memory with PostgreSQL, pgvector, and FastAPI.</li>
@@ -370,12 +370,12 @@ function printCV() {
           </div>
           <div class="h-entry-sub">
             <span class="h-degree">{{ isEs ? 'Desarrollador Full Stack & Diseñador UI' : 'Full Stack Developer & UI Designer' }}</span>
-            <span class="h-loc">Chiclana de la Frontera, {{ isEs ? 'España' : 'Spain' }}</span>
+            <span class="h-loc">Cádiz, {{ isEs ? 'España' : 'Spain' }}</span>
           </div>
           <ul class="h-bullets">
             <li v-if="isEs">Diseñé y programé un sitio editorial menu-first optimizado para escaneo QR de clientes en mesa.</li>
             <li v-else>Designed and engineered an editorial menu-first web app optimized for table-side QR scanning.</li>
-            <li v-if="isEs">Integré arquitectura con fallback offline en cache para garantizar servicio continuo ante caídas de conectividad.</li>
+            <li v-if="isEs">Integré arquitectura con fallback offline en caché para garantizar servicio continuo ante caídas de conectividad.</li>
             <li v-else>Integrated cached offline fallbacks ensuring seamless continuous service during connectivity drops.</li>
             <li v-if="isEs">Puntuación Lighthouse de 99 en Performance y 100 en SEO y Accesibilidad con bundle final de apenas 42 KB.</li>
             <li v-else>Achieved 99 Performance and 100 SEO &amp; Accessibility Lighthouse scores with a compact 42 KB production bundle.</li>
@@ -394,8 +394,8 @@ function printCV() {
           <ul class="h-bullets">
             <li v-if="isEs">Desarrollé una plataforma corporativa multi-idioma (Español, Inglés y Alemán) con panel de control a medida.</li>
             <li v-else>Engineered a multilingual corporate web platform (Spanish, English, German) with custom administrative CMS.</li>
-            <li v-if="isEs">Modelé esquemas relacionales y tipado estricto de punta a punta con Prisma ORM y Node.js.</li>
-            <li v-else>Modeled relational schemas and end-to-end type safety using Prisma ORM and Node.js.</li>
+            <li v-if="isEs">Modelé esquemas relacionales y tipado estricto de extremo a extremo con Prisma ORM, Node.js y TypeScript.</li>
+            <li v-else>Modeled relational schemas and end-to-end type safety using Prisma ORM, Node.js, and TypeScript.</li>
           </ul>
         </div>
 
@@ -411,8 +411,8 @@ function printCV() {
           <ul class="h-bullets">
             <li v-if="isEs">Desarrollo integral de soluciones de software a medida con APIs REST y arquitecturas modulares.</li>
             <li v-else>End-to-end development of custom software solutions with decoupled REST APIs and scalable architectures.</li>
-            <li v-if="isEs">Entrega exitosa de aproximadamente 10 proyectos web llave en mano para clientes de diversos rubros.</li>
-            <li v-else>Successful delivery of ~10 turnkey web solutions for clients across diverse sectors.</li>
+            <li v-if="isEs">Entrega exitosa de aproximadamente 10 proyectos web llave en mano combinando diseño en Figma y despliegue a producción.</li>
+            <li v-else>Successful delivery of ~10 turnkey web solutions combining Figma UI design and production deployments.</li>
           </ul>
         </div>
       </section>
