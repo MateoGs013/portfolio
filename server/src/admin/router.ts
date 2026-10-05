@@ -8,6 +8,7 @@ import { MediaKind, MediaRole, Prisma, ProjectStatus, TechCategory } from '../..
 import { requireAdmin } from './auth.js'
 import { IMAGE_MIME, imageDims } from './image.js'
 import { HttpError, bool, date, enumOf, int, intList, json, list, optDate, optInt, optStr, str } from './input.js'
+import { hunterRouter } from './hunter.js'
 
 const require = createRequire(import.meta.url)
 const ADMIN_DIR = path.resolve('server/admin')
@@ -24,6 +25,7 @@ adminUi.use(express.static(ADMIN_DIR, { index: 'index.html' }))
 
 export const adminApi = Router()
 adminApi.use(requireAdmin)
+adminApi.use('/hunter', hunterRouter)
 
 const PROJECT_STATUS = Object.values(ProjectStatus)
 const TECH_CATEGORY = Object.values(TechCategory)

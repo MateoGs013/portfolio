@@ -1290,3 +1290,487 @@ button.warning-solid:hover {
   opacity: 0;
 }
 
+/* ==========================================================================
+   AUTONOMOUS JOB HUNTER AGENT (EROS) STYLES
+   ========================================================================== */
+
+/* Badge de notificación en sidebar */
+.badge-glow {
+  background: var(--d-sig-bg) !important;
+  color: var(--d-sig) !important;
+  border: 1px solid rgba(255, 62, 0, 0.4) !important;
+  box-shadow: 0 0 10px rgba(255, 62, 0, 0.2);
+}
+
+/* Botón de Escaneo en topbar */
+.btn-scan {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: var(--d-sig-bg);
+  border: 1px solid rgba(255, 62, 0, 0.35);
+  border-radius: var(--radius-sm);
+  color: var(--d-sig);
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-scan:hover:not(:disabled) {
+  background: var(--d-sig);
+  color: #fff;
+  box-shadow: 0 0 12px var(--d-sig-glow);
+}
+
+.btn-scan:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.scan-spinner {
+  display: inline-block;
+  animation: adm-spin 1s linear infinite;
+}
+
+@keyframes adm-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Barra de Filtros Rápidos (Pills) */
+.hunter-filter-pills {
+  display: flex;
+  gap: 6px;
+  padding: 8px 12px;
+  background: var(--d-panel);
+  border-bottom: 1px solid var(--d-line);
+  overflow-x: auto;
+}
+
+.filter-pill {
+  padding: 4px 9px;
+  background: var(--d-bg-subtle);
+  border: 1px solid var(--d-line);
+  border-radius: 12px;
+  color: var(--d-text-muted);
+  font-family: var(--mono);
+  font-size: 10px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s;
+}
+
+.filter-pill:hover {
+  color: var(--d-text);
+  border-color: var(--d-text-dim);
+}
+
+.filter-pill.active {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--d-text);
+  border-color: var(--d-sig);
+}
+
+/* Card de Oferta en la lista */
+.hunter-card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.hunter-card.is-applied {
+  border-left: 2px solid var(--d-emerald);
+}
+
+.hunter-card.is-discarded {
+  opacity: 0.45;
+}
+
+.hunter-card-badges {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 2px;
+}
+
+/* Badges de Score */
+.hunter-score-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.score-fire {
+  background: rgba(255, 62, 0, 0.16);
+  color: #ff551c;
+  border: 1px solid rgba(255, 62, 0, 0.45);
+}
+
+.score-good {
+  background: rgba(34, 197, 94, 0.14);
+  color: #22c55e;
+  border: 1px solid rgba(34, 197, 94, 0.4);
+}
+
+.score-mid {
+  background: rgba(229, 160, 13, 0.14);
+  color: #e5a00d;
+  border: 1px solid rgba(229, 160, 13, 0.4);
+}
+
+.score-low {
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--d-text-dim);
+  border: 1px solid var(--d-line);
+}
+
+.score-pending {
+  background: transparent;
+  color: var(--d-text-dim);
+  border: 1px dashed var(--d-line);
+}
+
+.hunter-source-badge {
+  padding: 2px 5px;
+  background: var(--d-bg);
+  border: 1px solid var(--d-line);
+  border-radius: var(--radius-sm);
+  color: var(--d-text-muted);
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.04em;
+}
+
+.hunter-status-badge {
+  padding: 2px 5px;
+  border-radius: var(--radius-sm);
+  font-family: var(--mono);
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+.hunter-status-badge.applied {
+  background: rgba(34, 197, 94, 0.12);
+  color: #22c55e;
+  border: 1px solid rgba(34, 197, 94, 0.3);
+}
+
+.hunter-status-badge.discarded {
+  background: rgba(239, 68, 68, 0.12);
+  color: #ef4444;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.hunter-company {
+  color: var(--d-text);
+  font-weight: 500;
+}
+
+.hunter-salary {
+  color: #22c55e;
+  font-family: var(--mono);
+  font-size: 11px;
+}
+
+.hunter-loc {
+  color: var(--d-text-muted);
+}
+
+/* Columna 3: Detalle de Oferta */
+.hunter-sub-meta {
+  margin-top: 6px;
+  color: var(--d-text-muted);
+  font-size: 13px;
+}
+
+.hunter-sub-meta strong {
+  color: var(--d-text);
+}
+
+/* Barra de Acciones de la Oferta */
+.hunter-action-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 14px 20px;
+  background: var(--d-panel-elevated);
+  border-bottom: 1px solid var(--d-line);
+}
+
+.btn-hunter-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  background: var(--d-card);
+  border: 1px solid var(--d-line);
+  border-radius: var(--radius-sm);
+  color: var(--d-text);
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 500;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-hunter-action:hover {
+  background: var(--d-card-hover);
+  border-color: var(--d-text-dim);
+}
+
+.btn-hunter-action.primary-accent {
+  background: var(--d-sig);
+  border-color: var(--d-sig);
+  color: #ffffff;
+}
+
+.btn-hunter-action.primary-accent:hover:not(:disabled) {
+  background: var(--d-sig-hover);
+  box-shadow: 0 0 14px var(--d-sig-glow);
+}
+
+.btn-hunter-action.primary-accent:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn-hunter-action.btn-success {
+  background: rgba(34, 197, 94, 0.14);
+  color: #22c55e;
+  border-color: rgba(34, 197, 94, 0.4);
+}
+
+.btn-hunter-action.btn-discarded {
+  background: rgba(239, 68, 68, 0.12);
+  color: #ef4444;
+  border-color: rgba(239, 68, 68, 0.35);
+}
+
+/* Tarjeta 1: Evaluación Agéntica */
+.hunter-analysis-card {
+  margin: 20px;
+  border-left: 3px solid var(--d-sig);
+}
+
+.hunter-analysis-body {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.hunter-verdict-box {
+  padding: 12px 14px;
+  background: rgba(255, 62, 0, 0.05);
+  border: 1px solid rgba(255, 62, 0, 0.2);
+  border-radius: var(--radius-sm);
+}
+
+.verdict-tag {
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--d-sig);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 4px;
+}
+
+.verdict-summary {
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--d-text);
+}
+
+.hunter-pros-cons-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+@media (max-width: 900px) {
+  .hunter-pros-cons-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.pros-column, .cons-column {
+  padding: 12px;
+  background: var(--d-bg);
+  border: 1px solid var(--d-line);
+  border-radius: var(--radius-sm);
+}
+
+.pros-column .column-title {
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 600;
+  color: #22c55e;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+.cons-column .column-title {
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 600;
+  color: #ef4444;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+.pros-column ul, .cons-column ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.pros-column li {
+  position: relative;
+  padding-left: 16px;
+  font-size: 12px;
+  color: var(--d-text);
+}
+
+.pros-column li::before {
+  content: '✓';
+  position: absolute;
+  left: 0;
+  color: #22c55e;
+  font-family: var(--mono);
+}
+
+.cons-column li {
+  position: relative;
+  padding-left: 16px;
+  font-size: 12px;
+  color: var(--d-text-muted);
+}
+
+.cons-column li::before {
+  content: '—';
+  position: absolute;
+  left: 0;
+  color: #ef4444;
+  font-family: var(--mono);
+}
+
+.suggested-projects-box {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 10px 12px;
+  background: var(--d-panel);
+  border: 1px solid var(--d-line);
+  border-radius: var(--radius-sm);
+}
+
+.mono-label {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--d-text-muted);
+  letter-spacing: 0.05em;
+}
+
+.project-pill {
+  padding: 3px 8px;
+  background: rgba(255, 62, 0, 0.12);
+  border: 1px solid rgba(255, 62, 0, 0.3);
+  border-radius: 10px;
+  color: var(--d-sig);
+  font-family: var(--mono);
+  font-size: 11px;
+}
+
+/* Tarjeta 2: Pitch con IA */
+.hunter-pitch-card {
+  margin: 20px;
+  border-left: 3px solid #22c55e;
+}
+
+.btn-copy-pitch {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  background: var(--d-bg);
+  border: 1px solid var(--d-line);
+  border-radius: var(--radius-sm);
+  color: var(--d-text);
+  font-family: var(--mono);
+  font-size: 11px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.btn-copy-pitch:hover {
+  background: var(--d-card-hover);
+  border-color: var(--d-emerald);
+  color: var(--d-emerald);
+}
+
+.hunter-pitch-content {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.pitch-subject {
+  padding: 10px 12px;
+  background: rgba(34, 197, 94, 0.06);
+  border: 1px solid rgba(34, 197, 94, 0.2);
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  color: var(--d-text);
+}
+
+.pitch-text {
+  padding: 16px;
+  background: var(--d-bg);
+  border: 1px solid var(--d-line);
+  border-radius: var(--radius-sm);
+  font-family: var(--mono);
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--d-text);
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-height: 480px;
+  overflow-y: auto;
+}
+
+/* Tarjeta 3: Descripción de la Vacante */
+.hunter-job-description {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.hunter-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.hunter-desc-text {
+  font-size: 13px;
+  line-height: 1.65;
+  color: var(--d-text);
+  white-space: pre-wrap;
+  word-break: break-word;
+  padding: 8px 0;
+}
+

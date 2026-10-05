@@ -101,57 +101,279 @@
           </nav>
         </div>
 
+        <div>
+          <div class="nav-header" style="margin-top: 24px;">Agente Autónomo</div>
+          <nav class="models-nav" aria-label="Agentes autónomos">
+            <button
+              class="nav-item"
+              :class="{ on: section === 'hunter' }"
+              @click="openHunter"
+            >
+              <span class="nav-label">
+                <span class="nav-icon" v-html="icons.hunter"></span>
+                <span>job hunter</span>
+              </span>
+              <span class="nav-badge" :class="{ 'badge-glow': hunterStats.high_match_count > 0 }">
+                {{ hunterStats.high_match_count > 0 ? hunterStats.high_match_count : (hunterJobs.length || '·') }}
+              </span>
+            </button>
+          </nav>
+        </div>
+
         <div class="models-footer">
           <div><span class="mf-tag">MOTOR:</span> PG-17 ACID</div>
-          <div><span class="mf-tag">API:</span> Express / Port 3001</div>
+          <div><span class="mf-tag">EROS:</span> Fast-Agent 8000</div>
           <div><span class="mf-tag">AUTH:</span> Token Activo</div>
         </div>
       </aside>
 
       <!-- Columna 2: Lista de Registros con Buscador -->
       <section class="records-list">
-        <div class="list-topbar">
-          <div class="search-wrap">
-            <span class="search-icon-slot" aria-hidden="true">
-              <svg class="adm-icon sm" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-            </span>
-            <input
-              v-model="searchQuery"
-              type="text"
-              placeholder="Filtrar registros..."
-              class="search-input"
-            >
+        <!-- VISTA HUNTER AGENT -->
+        <template v-if="section === 'hunter'">
+          <div class="list-topbar">
+            <div class="search-wrap">
+              <span class="search-icon-slot" aria-hidden="true">
+                <svg class="adm-icon sm" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              </span>
+              <input
+                v-model="searchQuery"
+                type="text"
+                placeholder="Buscar vacante o skill..."
+                class="search-input"
+              >
+            </div>
+            <div class="list-actions">
+              <button class="btn-scan" :disabled="hunterIsScanning" @click="triggerHunterScan" title="Escanear Get on Board, RemoteOK y HN">
+                <span class="scan-spinner" v-if="hunterIsScanning">⟳</span>
+                <svg v-else class="adm-icon sm" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                <span>{{ hunterIsScanning ? 'Escaneando...' : 'Escanear' }}</span>
+              </button>
+            </div>
           </div>
-          <div class="list-actions">
-            <span class="records-count">{{ filteredRows.length }} / {{ rows.length }} records</span>
-            <button v-if="model.creatable !== false" class="btn-create" @click="startNew">
-              <svg class="adm-icon sm" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-              <span>Nuevo</span>
+
+          <!-- Filtros de Job Hunter -->
+          <div class="hunter-filter-pills">
+            <button class="filter-pill" :class="{ active: hunterFilter === 'high' }" @click="hunterFilter = 'high'">
+              🔥 Match ≥ 70% ({{ hunterStats.high_match_count }})
+            </button>
+            <button class="filter-pill" :class="{ active: hunterFilter === 'all' }" @click="hunterFilter = 'all'">
+              Todas ({{ hunterJobs.length }})
+            </button>
+            <button class="filter-pill" :class="{ active: hunterFilter === 'applied' }" @click="hunterFilter = 'applied'">
+              ✓ Postuladas ({{ hunterStats.applied_count }})
+            </button>
+            <button class="filter-pill" :class="{ active: hunterFilter === 'discarded' }" @click="hunterFilter = 'discarded'">
+              Descartadas ({{ hunterStats.discarded_count }})
             </button>
           </div>
-        </div>
 
-        <div class="records-scroll">
-          <button
-            v-for="r in filteredRows"
-            :key="rowKey(r)"
-            class="row-card"
-            :class="{ on: current && rowKey(current) === rowKey(r) }"
-            @click="edit(r)"
-          >
-            <span class="row-title">{{ model.name(r) }}</span>
-            <div class="row-meta-line">
-              <span>{{ model.meta ? model.meta(r) : '' }}</span>
+          <div class="records-scroll">
+            <button
+              v-for="job in filteredHunterJobs"
+              :key="job.id"
+              class="row-card hunter-card"
+              :class="{
+                on: hunterSelected && hunterSelected.id === job.id,
+                'is-applied': job.status === 'applied',
+                'is-discarded': job.status === 'discarded'
+              }"
+              @click="selectHunterJob(job)"
+            >
+              <div class="hunter-card-badges">
+                <span class="hunter-score-badge" :class="getScoreClass(job.match_score)">
+                  {{ job.match_score != null ? job.match_score + '%' : '·' }}
+                </span>
+                <span class="hunter-source-badge">{{ job.source }}</span>
+                <span v-if="job.status === 'applied'" class="hunter-status-badge applied">POSTULADO</span>
+                <span v-else-if="job.status === 'discarded'" class="hunter-status-badge discarded">DESCARTADO</span>
+              </div>
+              <span class="row-title">{{ job.title }}</span>
+              <div class="row-meta-line">
+                <span class="hunter-company">{{ job.company || 'Confidencial' }}</span>
+                <span v-if="job.salary" class="hunter-salary">· {{ job.salary }}</span>
+                <span v-if="job.country" class="hunter-loc">· {{ job.country }}</span>
+              </div>
+            </button>
+            <div v-if="!filteredHunterJobs.length" class="empty-text" style="padding: 24px 16px; color: var(--d-text-dim);">
+              No se encontraron ofertas con el filtro actual.
             </div>
-          </button>
-          <div v-if="!filteredRows.length" class="empty-text" style="padding: 24px 16px; color: var(--d-text-dim);">
-            Sin coincidencias para "{{ searchQuery }}"
+          </div>
+        </template>
+
+        <!-- VISTA MODELOS ESTÁNDAR -->
+        <template v-else>
+          <div class="list-topbar">
+            <div class="search-wrap">
+              <span class="search-icon-slot" aria-hidden="true">
+                <svg class="adm-icon sm" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              </span>
+              <input
+                v-model="searchQuery"
+                type="text"
+                placeholder="Filtrar registros..."
+                class="search-input"
+              >
+            </div>
+            <div class="list-actions">
+              <span class="records-count">{{ filteredRows.length }} / {{ rows.length }} records</span>
+              <button v-if="model.creatable !== false" class="btn-create" @click="startNew">
+                <svg class="adm-icon sm" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                <span>Nuevo</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="records-scroll">
+            <button
+              v-for="r in filteredRows"
+              :key="rowKey(r)"
+              class="row-card"
+              :class="{ on: current && rowKey(current) === rowKey(r) }"
+              @click="edit(r)"
+            >
+              <span class="row-title">{{ model.name(r) }}</span>
+              <div class="row-meta-line">
+                <span>{{ model.meta ? model.meta(r) : '' }}</span>
+              </div>
+            </button>
+            <div v-if="!filteredRows.length" class="empty-text" style="padding: 24px 16px; color: var(--d-text-dim);">
+              Sin coincidencias para "{{ searchQuery }}"
+            </div>
+          </div>
+        </template>
+      </section>
+
+      <!-- Columna 3: Hunter Agent View -->
+      <section v-if="section === 'hunter' && hunterSelected" class="editor-wrap hunter-detail-wrap">
+        <div class="editor-form">
+          <!-- Cabecera de la Oferta -->
+          <div class="editor-header">
+            <div class="editor-path mono">
+              <span>PATH:</span> {{ canonicalFilePath }}
+            </div>
+            <div class="editor-title-row">
+              <h2>{{ hunterSelected.title }}</h2>
+              <span class="badge-tag" :class="getScoreClass(hunterSelected.match_score)">
+                {{ hunterSelected.match_score != null ? 'MATCH ' + hunterSelected.match_score + '%' : 'PENDIENTE' }}
+              </span>
+              <span class="badge-tag mono">{{ hunterSelected.source }}</span>
+              <span class="badge-tag" :class="hunterSelected.status">{{ hunterSelected.status.toUpperCase() }}</span>
+            </div>
+            <div class="hunter-sub-meta">
+              <strong>{{ hunterSelected.company }}</strong>
+              <span v-if="hunterSelected.location"> · {{ hunterSelected.location }}</span>
+              <span v-if="hunterSelected.remote_type"> · Remoto: {{ hunterSelected.remote_type }}</span>
+              <span v-if="hunterSelected.salary"> · Salario: {{ hunterSelected.salary }}</span>
+            </div>
+          </div>
+
+          <!-- Barra de Acciones de la Vacante -->
+          <div class="hunter-action-bar">
+            <a :href="hunterSelected.url" target="_blank" rel="noopener noreferrer" class="btn-hunter-action">
+              <svg class="adm-icon sm" viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+              <span>Abrir Oferta</span>
+            </a>
+            <button class="btn-hunter-action primary-accent" :disabled="hunterIsPitching" @click="generateHunterPitch(hunterSelected.id)">
+              <span v-if="hunterIsPitching" class="scan-spinner">⟳</span>
+              <svg v-else class="adm-icon sm" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              <span>{{ hunterIsPitching ? 'Redactando con Gemini...' : 'Generar Pitch con IA' }}</span>
+            </button>
+            <button
+              class="btn-hunter-action"
+              :class="{ 'btn-success': hunterSelected.status === 'applied' }"
+              @click="updateHunterJobStatus(hunterSelected.id, hunterSelected.status === 'applied' ? 'saved' : 'applied')"
+            >
+              <span>{{ hunterSelected.status === 'applied' ? '✓ Postulado' : 'Marcar Postulado' }}</span>
+            </button>
+            <button
+              class="btn-hunter-action"
+              :class="{ 'btn-discarded': hunterSelected.status === 'discarded' }"
+              @click="updateHunterJobStatus(hunterSelected.id, hunterSelected.status === 'discarded' ? 'saved' : 'discarded')"
+            >
+              <span>{{ hunterSelected.status === 'discarded' ? 'Restaurar' : 'Descartar' }}</span>
+            </button>
+          </div>
+
+          <!-- Tarjeta 1: Evaluación y Match con Gemini -->
+          <div v-if="hunterSelectedAnalysis" class="form-card hunter-analysis-card">
+            <div class="form-card-title">
+              <span>01 · EVALUACIÓN AGÉNTICA (GEMINI FLASH LITE)</span>
+              <small>{{ hunterSelectedAnalysis.verdict || 'Análisis completado' }}</small>
+            </div>
+            <div class="hunter-analysis-body">
+              <div class="hunter-verdict-box">
+                <div class="verdict-tag">{{ hunterSelectedAnalysis.verdict }}</div>
+                <div class="verdict-summary">{{ hunterSelectedAnalysis.summary }}</div>
+              </div>
+
+              <div class="hunter-pros-cons-grid">
+                <div class="pros-column">
+                  <div class="column-title">Puntos Fuertes (Match con Perfil)</div>
+                  <ul>
+                    <li v-for="(pro, i) in (hunterSelectedAnalysis.pros || [])" :key="i">{{ pro }}</li>
+                  </ul>
+                </div>
+                <div class="cons-column">
+                  <div class="column-title">Puntos Débiles / Gaps</div>
+                  <ul>
+                    <li v-for="(con, i) in (hunterSelectedAnalysis.cons || [])" :key="i">{{ con }}</li>
+                  </ul>
+                </div>
+              </div>
+
+              <div v-if="hunterSelectedAnalysis.suggested_projects && hunterSelectedAnalysis.suggested_projects.length" class="suggested-projects-box">
+                <span class="mono-label">PROYECTOS RECOMENDADOS:</span>
+                <span v-for="proj in hunterSelectedAnalysis.suggested_projects" :key="proj" class="project-pill">{{ proj }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tarjeta 2: Pitch Generado con IA -->
+          <div v-if="hunterPitch || hunterSelected.pitch_draft" class="form-card hunter-pitch-card">
+            <div class="form-card-title">
+              <span>02 · PITCH & COVER LETTER PERSONALIZADO</span>
+              <button type="button" class="btn-copy-pitch" @click="copyPitchToClipboard">
+                <svg class="adm-icon sm" viewBox="0 0 24 24"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
+                <span>Copiar al Portapapeles</span>
+              </button>
+            </div>
+            <div class="hunter-pitch-content">
+              <div v-if="currentPitchSubject" class="pitch-subject">
+                <strong>Asunto / Hook sugerido:</strong> {{ currentPitchSubject }}
+              </div>
+              <pre class="pitch-text">{{ currentPitchBody }}</pre>
+            </div>
+          </div>
+
+          <!-- Tarjeta 3: Descripción completa de la oferta -->
+          <div class="form-card">
+            <div class="form-card-title">
+              <span>03 · DESCRIPCIÓN COMPLETA DE LA VACANTE</span>
+              <small>{{ (hunterSelected.tags || []).join(', ') }}</small>
+            </div>
+            <div class="hunter-job-description">
+              <div v-if="hunterSelected.tags && hunterSelected.tags.length" class="hunter-tags">
+                <span v-for="tag in hunterSelected.tags" :key="tag" class="tech-badge">{{ tag }}</span>
+              </div>
+              <div class="hunter-desc-text">{{ hunterSelected.description }}</div>
+            </div>
           </div>
         </div>
       </section>
 
+      <!-- Estado vacío para hunter si no hay seleccionado -->
+      <section v-else-if="section === 'hunter' && !hunterSelected" class="editor-empty">
+        <svg class="empty-icon-svg" viewBox="0 0 24 24">
+          <circle cx="12" cy="12" r="10"/><line x1="22" y1="12" x2="18" y2="12"/><line x1="6" y1="12" x2="2" y2="12"/><line x1="12" y1="6" x2="12" y2="2"/><line x1="12" y1="22" x2="12" y2="18"/>
+        </svg>
+        <div class="empty-text">
+          Seleccioná una vacante de la lista para ver el análisis de Gemini, generar tu pitch personalizado y postularte.
+        </div>
+      </section>
+
       <!-- Columna 3: Editor de Formulario Estructurado -->
-      <section v-if="form" class="editor-wrap">
+      <section v-else-if="form" class="editor-wrap">
         <div class="editor-form">
           <!-- Cabecera del Editor -->
           <div class="editor-header">

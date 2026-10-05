@@ -36,6 +36,7 @@ const ICONS = {
   stack: '<svg class="adm-icon" viewBox="0 0 24 24"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>',
   orgs: '<svg class="adm-icon" viewBox="0 0 24 24"><path d="M3 21h18"/><path d="M5 21V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16"/><path d="M9 9h1"/><path d="M9 13h1"/><path d="M9 17h1"/><path d="M14 9h1"/><path d="M14 13h1"/><path d="M14 17h1"/></svg>',
   docs: '<svg class="adm-icon" viewBox="0 0 24 24"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>',
+  hunter: '<svg class="adm-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="22" y1="12" x2="18" y2="12"/><line x1="6" y1="12" x2="2" y2="12"/><line x1="12" y1="6" x2="12" y2="2"/><line x1="12" y1="22" x2="12" y2="18"/></svg>',
 }
 
 const MODELS = {
@@ -155,6 +156,7 @@ const MODELS = {
 createApp({
   data: () => ({
     models: MODELS,
+    icons: ICONS,
     token: sessionStorage.getItem('admin-token') || '',
     tokenInput: '',
     section: 'projects',
@@ -170,6 +172,14 @@ createApp({
     isSaving: false,
     counts: { projects: 0, experience: 0, stack: 0, orgs: 0, docs: 0 },
     activeTab: 'general',
+    // Job Hunter Agent State
+    hunterJobs: [],
+    hunterSelected: null,
+    hunterStats: { total: 0, high_match_count: 0, pending_eval_count: 0, applied_count: 0, discarded_count: 0 },
+    hunterFilter: 'high',
+    hunterIsScanning: false,
+    hunterIsPitching: false,
+    hunterPitch: null,
     dialog: {
       open: false,
       title: '',
@@ -183,8 +193,9 @@ createApp({
     },
   }),
   computed: {
-    model() { return this.models[this.section] },
+    model() { return this.models[this.section] || {} },
     filteredRows() {
+      if (!this.model || !this.model.name) return []
       if (!this.searchQuery.trim()) return this.rows
       const q = this.searchQuery.toLowerCase().trim()
       return this.rows.filter(r => {
@@ -194,7 +205,65 @@ createApp({
         return name.includes(q) || meta.includes(q) || slug.includes(q)
       })
     },
+    filteredHunterJobs() {
+      let list = this.hunterJobs || []
+      if (this.hunterFilter === 'high') {
+        list = list.filter(j => (j.match_score || 0) >= 70 && j.status !== 'discarded')
+      } else if (this.hunterFilter === 'applied') {
+        list = list.filter(j => j.status === 'applied')
+      } else if (this.hunterFilter === 'discarded') {
+        list = list.filter(j => j.status === 'discarded')
+      } else if (this.hunterFilter === 'saved') {
+        list = list.filter(j => j.status === 'saved')
+      }
+      if (!this.searchQuery.trim()) return list
+      const q = this.searchQuery.toLowerCase().trim()
+      return list.filter(j => {
+        const title = (j.title || '').toLowerCase()
+        const company = (j.company || '').toLowerCase()
+        const source = (j.source || '').toLowerCase()
+        const tags = (j.tags || []).join(' ').toLowerCase()
+        return title.includes(q) || company.includes(q) || source.includes(q) || tags.includes(q)
+      })
+    },
+    hunterSelectedAnalysis() {
+      if (!this.hunterSelected || !this.hunterSelected.match_analysis) return null
+      try {
+        return JSON.parse(this.hunterSelected.match_analysis)
+      } catch (e) {
+        return null
+      }
+    },
+    activePitch() {
+      if (this.hunterPitch) return this.hunterPitch
+      if (this.hunterSelected && this.hunterSelected.pitch_draft) {
+        try {
+          return JSON.parse(this.hunterSelected.pitch_draft)
+        } catch (e) {
+          return { elevator_pitch: this.hunterSelected.pitch_draft }
+        }
+      }
+      return null
+    },
+    currentPitchSubject() {
+      return this.activePitch ? (this.activePitch.subject_or_hook || '') : ''
+    },
+    currentPitchBody() {
+      if (!this.activePitch) return ''
+      const parts = []
+      if (this.activePitch.elevator_pitch) {
+        parts.push(this.activePitch.elevator_pitch)
+      }
+      if (this.activePitch.cover_letter) {
+        parts.push('\n--- COVER LETTER EXTENDIDA ---\n' + this.activePitch.cover_letter)
+      }
+      return parts.join('\n\n')
+    },
     canonicalFilePath() {
+      if (this.section === 'hunter') {
+        const id = this.hunterSelected ? this.hunterSelected.id : 'index'
+        return `file://eros-agent/jobs/${id}.json`
+      }
       if (!this.form) return `file://portfolio/admin/${this.section}`
       const id = this.rowKey(this.form) || (this.isNew ? 'nuevo' : 'item')
       return `file://portfolio/${this.section}/${id}.ts`
@@ -203,7 +272,7 @@ createApp({
       return this.meta.options.techs || []
     },
     tabs() {
-      if (!this.model || !this.form) return []
+      if (!this.model || !this.form || !this.model.fields) return []
       const list = []
       const genCount = this.model.fields.filter(f => f.type !== 'text' && f.type !== 'json').length
       list.push({ id: 'general', label: '01 · General', count: genCount })
@@ -226,7 +295,10 @@ createApp({
     },
   },
   created() {
-    if (this.token) this.open(this.section)
+    if (this.token) {
+      this.open(this.section)
+      this.fetchHunterStats()
+    }
   },
   mounted() {
     window.__adminApp = this
@@ -353,6 +425,9 @@ createApp({
       return row
     },
     async open(key) {
+      if (key === 'hunter') {
+        return this.openHunter()
+      }
       this.section = key
       this.form = null
       this.current = null
@@ -372,6 +447,121 @@ createApp({
       catch (e) {
         this.say('err', e.message)
       }
+    },
+    async openHunter() {
+      this.section = 'hunter'
+      this.form = null
+      this.current = null
+      this.error = ''
+      this.searchQuery = ''
+      this.hunterPitch = null
+      await Promise.all([
+        this.fetchHunterStats(),
+        this.fetchHunterJobs(),
+      ])
+    },
+    async fetchHunterStats() {
+      try {
+        const stats = await this.api('hunter/stats')
+        if (stats && typeof stats.total === 'number') {
+          this.hunterStats = stats
+        }
+      } catch (e) {
+        console.warn('[Eros Agent] Stats fetch error:', e.message)
+      }
+    },
+    async fetchHunterJobs() {
+      try {
+        const res = await this.api('hunter/jobs?limit=100')
+        const jobs = res && res.data ? res.data : []
+        this.hunterJobs = jobs
+        if (!this.hunterSelected && jobs.length > 0) {
+          this.selectHunterJob(jobs[0])
+        } else if (this.hunterSelected) {
+          const refreshed = jobs.find(j => j.id === this.hunterSelected.id)
+          if (refreshed) this.selectHunterJob(refreshed)
+        }
+      } catch (e) {
+        this.say('err', `Error cargando ofertas: ${e.message}`)
+      }
+    },
+    selectHunterJob(job) {
+      this.hunterSelected = job
+      this.hunterPitch = null
+      if (job && job.pitch_draft) {
+        try {
+          this.hunterPitch = JSON.parse(job.pitch_draft)
+        } catch {
+          this.hunterPitch = { elevator_pitch: job.pitch_draft }
+        }
+      }
+    },
+    async triggerHunterScan() {
+      this.hunterIsScanning = true
+      this.say('ok', 'Escaneando Get on Board, RemoteOK y HN en tiempo real...')
+      try {
+        const res = await this.api('hunter/scan', { method: 'POST' })
+        this.say('ok', `Escaneo finalizado: ${res.new_jobs || 0} nuevas ofertas detectadas`)
+        await this.fetchHunterStats()
+        await this.fetchHunterJobs()
+      } catch (e) {
+        this.say('err', `Error en escaneo: ${e.message}`)
+      } finally {
+        this.hunterIsScanning = false
+      }
+    },
+    async generateHunterPitch(jobId) {
+      this.hunterIsPitching = true
+      this.say('ok', 'Gemini está analizando la vacante y redactando tu pitch...')
+      try {
+        const res = await this.api(`hunter/pitch/${jobId}`, { method: 'POST' })
+        if (res && res.data) {
+          this.hunterPitch = res.data
+          if (this.hunterSelected && this.hunterSelected.id === jobId) {
+            this.hunterSelected.pitch_draft = JSON.stringify(res.data)
+          }
+          this.say('ok', 'Pitch y cover letter redactados con éxito')
+          await this.fetchHunterJobs()
+        }
+      } catch (e) {
+        this.say('err', `Error generando pitch: ${e.message}`)
+      } finally {
+        this.hunterIsPitching = false
+      }
+    },
+    async updateHunterJobStatus(jobId, status) {
+      try {
+        await this.api(`hunter/jobs/${jobId}/status`, {
+          method: 'PATCH',
+          body: { status },
+        })
+        if (this.hunterSelected && this.hunterSelected.id === jobId) {
+          this.hunterSelected.status = status
+        }
+        const target = this.hunterJobs.find(j => j.id === jobId)
+        if (target) target.status = status
+        await this.fetchHunterStats()
+        this.say('ok', `Estado actualizado a "${status}"`)
+      } catch (e) {
+        this.say('err', `Error actualizando estado: ${e.message}`)
+      }
+    },
+    async copyPitchToClipboard() {
+      const text = this.currentPitchBody
+      if (!text) return
+      try {
+        await navigator.clipboard.writeText(text)
+        this.say('ok', 'Pitch copiado al portapapeles')
+      } catch (err) {
+        this.say('err', 'No se pudo copiar al portapapeles')
+      }
+    },
+    getScoreClass(score) {
+      if (score == null) return 'score-pending'
+      if (score >= 80) return 'score-fire'
+      if (score >= 65) return 'score-good'
+      if (score >= 40) return 'score-mid'
+      return 'score-low'
     },
     async reload(keepKey) {
       this.rows = await this.api(this.model.path)
