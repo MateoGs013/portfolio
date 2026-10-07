@@ -2,12 +2,12 @@
 // Hoja técnica de especificación de un registro o documento.
 // Presenta cabecera unificada, navegación entre registros vecinos (prev/next),
 // campos estructurados con tipos de datos a la vista y visor colapsable de JSON crudo de la API.
-import DatosCabecera from './DatosCabecera.vue'
-import DatosCV from './DatosCV.vue'
-import DatosIcon from './DatosIcon.vue'
-import DatosValor from './DatosValor.vue'
-import DatosVentanaArchivo from './DatosVentanaArchivo.vue'
-import { pad, type Detail, type Vecino } from './explorer'
+import ExplorerHeader from './ExplorerHeader.vue'
+import CvContainer from '~/components/cv/CvContainer.vue'
+import AppIcon from '~/components/ui/AppIcon.vue'
+import ExplorerValue from './ExplorerValue.vue'
+import ExplorerFileWindow from './ExplorerFileWindow.vue'
+import { pad, type Detail, type Vecino } from '~/lib/explorer'
 import { routeFor } from '~/lib/path'
 
 const props = defineProps<{
@@ -113,8 +113,8 @@ async function copyEmail() {
   }
 }
 
-const { path: mundoPath } = useMundo()
-const parentRoute = computed(() => routeFor(mundoPath.value.slice(0, -1)))
+const { path: explorerPath } = useExplorerRoute()
+const parentRoute = computed(() => routeFor(explorerPath.value.slice(0, -1)))
 
 const line = computed(() => [
   ...props.detail.type.split(' · '),
@@ -139,14 +139,14 @@ async function copyJson() {
 </script>
 
 <template>
-  <DatosVentanaArchivo
+  <ExplorerFileWindow
     :title="detail.name"
     :path="canonicalFilePath"
     :badge="detail.type"
     :parent-url="parentRoute"
   >
     <article class="hoja" :class="{ 'is-about-cv': isAbout && !showRawFields }" :aria-labelledby="uid">
-      <DatosCabecera :id="uid" kind="file" :badge="pad(detail.rows.length)" :name="detail.name" :line="line">
+      <ExplorerHeader :id="uid" kind="file" :badge="pad(detail.rows.length)" :name="detail.name" :line="line">
         <div class="hoja-acciones">
           <!-- Toggle para ver CV vs Campos técnicos si es About -->
           <button
@@ -157,8 +157,8 @@ async function copyJson() {
             :title="isEs ? 'Alternar entre la vista de CV y la tabla de campos técnicos' : 'Toggle between CV view and technical fields table'"
             @click="showRawFields = !showRawFields"
           >
-            <DatosIcon v-if="showRawFields" name="file" :size="12" />
-            <DatosIcon v-else name="table" :size="12" />
+            <AppIcon v-if="showRawFields" name="file" :size="12" />
+            <AppIcon v-else name="table" :size="12" />
             <span>{{ showRawFields ? (isEs ? 'VISTA CV' : 'CV VIEW') : (isEs ? 'ESQUEMA CAMPOS' : 'SCHEMA FIELDS') }}</span>
           </button>
 
@@ -177,26 +177,26 @@ async function copyJson() {
           <!-- Navegación entre vecinos -->
           <nav v-if="prev || next" class="vecinos" :aria-label="isEs ? 'Registros vecinos' : 'Adjacent records'">
             <NuxtLink v-if="prev" :to="prev.to" class="vecino" rel="prev" :title="isEs ? 'Registro anterior' : 'Previous record'">
-              <DatosIcon name="chevron-left" :size="11" />
+              <AppIcon name="chevron-left" :size="11" />
               <span>{{ prev.label }}</span>
             </NuxtLink>
             <span v-else class="vecino off" aria-hidden="true">
-              <DatosIcon name="chevron-left" :size="11" />
+              <AppIcon name="chevron-left" :size="11" />
             </span>
 
             <NuxtLink v-if="next" :to="next.to" class="vecino" rel="next" :title="isEs ? 'Registro siguiente' : 'Next record'">
               <span>{{ next.label }}</span>
-              <DatosIcon name="chevron-right" :size="11" />
+              <AppIcon name="chevron-right" :size="11" />
             </NuxtLink>
             <span v-else class="vecino off" aria-hidden="true">
-              <DatosIcon name="chevron-right" :size="11" />
+              <AppIcon name="chevron-right" :size="11" />
             </span>
           </nav>
         </div>
-      </DatosCabecera>
+      </ExplorerHeader>
 
-      <!-- 1. Si es documento About y no está en modo campos: Renderizar DatosCV -->
-      <DatosCV v-if="isAbout && !showRawFields" :detail="detail" />
+      <!-- 1. Si es documento About y no está en modo campos: Renderizar CvContainer -->
+      <CvContainer v-if="isAbout && !showRawFields" :detail="detail" />
 
       <!-- De lo contrario, renderizar el flujo estándar -->
       <template v-else>
@@ -217,7 +217,7 @@ async function copyJson() {
               rel="noopener noreferrer"
               class="ph-btn primary"
             >
-              <DatosIcon name="external" :size="12" />
+              <AppIcon name="external" :size="12" />
               <span>{{ isEs ? 'VISITAR SITIO EN VIVO' : 'VISIT LIVE SITE' }}</span>
             </a>
             <a
@@ -227,7 +227,7 @@ async function copyJson() {
               rel="noopener noreferrer"
               class="ph-btn secondary"
             >
-              <DatosIcon name="code" :size="12" />
+              <AppIcon name="code" :size="12" />
               <span>{{ isEs ? 'CÓDIGO FUENTE EN GITHUB' : 'SOURCE CODE ON GITHUB' }}</span>
             </a>
           </div>
@@ -241,7 +241,7 @@ async function copyJson() {
           </div>
           <div class="ch-actions">
             <button type="button" class="ch-btn copy" :class="{ 'copy-active': copiedEmail }" @click="copyEmail">
-              <DatosIcon :name="copiedEmail ? 'check' : 'copy'" :size="12" />
+              <AppIcon :name="copiedEmail ? 'check' : 'copy'" :size="12" />
               <span>{{ copiedEmail ? (isEs ? '¡EMAIL COPIADO!' : 'EMAIL COPIED!') : (isEs ? 'COPIAR EMAIL DIRECTO' : 'COPY DIRECT EMAIL') }}</span>
             </button>
             <a
@@ -249,9 +249,9 @@ async function copyJson() {
               :href="`mailto:${emailRow.value}`"
               class="ch-btn primary"
             >
-              <DatosIcon name="mail" :size="12" />
+              <AppIcon name="mail" :size="12" />
               <span>{{ isEs ? 'ENVIAR CORREO' : 'SEND EMAIL' }}</span>
-              <DatosIcon name="external" :size="11" />
+              <AppIcon name="external" :size="11" />
             </a>
           </div>
         </div>
@@ -261,7 +261,7 @@ async function copyJson() {
           <div class="raw-toolbar">
             <span class="raw-endpoint">GET /api/{{ detail.name.toLowerCase().replace(/\s+/g, '-') }}</span>
             <button type="button" class="copy-btn" :class="{ 'copy-active': copied }" @click="copyJson">
-              <DatosIcon :name="copied ? 'check' : 'copy'" :size="12" />
+              <AppIcon :name="copied ? 'check' : 'copy'" :size="12" />
               <span>{{ copied ? (isEs ? '¡COPIADO AL PORTAPAPELES!' : 'COPIED TO CLIPBOARD!') : (isEs ? 'COPIAR PAYLOAD JSON' : 'COPY JSON PAYLOAD') }}</span>
             </button>
           </div>
@@ -284,14 +284,14 @@ async function copyJson() {
               <span v-if="row.label && row.label !== row.name" class="nombre-key"> · {{ row.name }}</span>
             </dt>
             <dd class="valor">
-              <DatosValor :cell="getLocalizedRow(row)" :name="row.name" />
+              <ExplorerValue :cell="getLocalizedRow(row)" :name="row.name" />
             </dd>
             <dd class="tipo">{{ row.type }}</dd>
           </div>
         </dl>
       </template>
     </article>
-  </DatosVentanaArchivo>
+  </ExplorerFileWindow>
 </template>
 
 <style scoped>

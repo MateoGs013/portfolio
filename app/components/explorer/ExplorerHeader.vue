@@ -3,7 +3,7 @@
 // (carpeta o archivo) con el dato dominante adentro, el nombre a escala de
 // interfaz y la línea de tipo debajo. A la derecha, lo que acompaña: los
 // filtros activos de una carpeta o los vecinos de un archivo.
-import DatosIcono from './DatosIcono.vue'
+import ExplorerBadge from './ExplorerBadge.vue'
 
 defineProps<{
   /** Id del h1, para el aria-labelledby del panel. */
@@ -18,7 +18,7 @@ defineProps<{
 
 <template>
   <header class="cabecera">
-    <DatosIcono :kind="kind" :badge="badge" class="icono" />
+    <ExplorerBadge :kind="kind" :badge="badge" class="icono" />
     <div class="quien">
       <h1 :id="id" class="titulo" tabindex="-1" data-anchor>{{ name }}</h1>
       <p class="linea"><span v-for="(part, i) in line" :key="i">{{ part }}</span></p>

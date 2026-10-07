@@ -7,7 +7,7 @@
 // - Cierre interactivo con Esc o clic en ✕ que retorna al explorador.
 
 import type { RouteLocationRaw } from 'vue-router'
-import DatosIcon from './DatosIcon.vue'
+import AppIcon from '~/components/ui/AppIcon.vue'
 
 const { isEs } = usePortfolioLocale()
 
@@ -67,7 +67,7 @@ onBeforeUnmount(() => {
           :aria-label="isEs ? 'Cerrar' : 'Close'"
           @click="onClose"
         >
-          <DatosIcon name="close" :size="9" />
+          <AppIcon name="close" :size="9" />
         </button>
         <button
           type="button"
@@ -76,7 +76,7 @@ onBeforeUnmount(() => {
           :aria-label="isEs ? 'Minimizar' : 'Minimize'"
           @click="onClose"
         >
-          <DatosIcon name="minimize" :size="9" />
+          <AppIcon name="minimize" :size="9" />
         </button>
         <button
           type="button"
@@ -85,13 +85,13 @@ onBeforeUnmount(() => {
           :aria-label="isEs ? 'Maximizar' : 'Maximize'"
           @click="isMaximized = !isMaximized"
         >
-          <DatosIcon name="maximize" :size="9" />
+          <AppIcon name="maximize" :size="9" />
         </button>
       </div>
 
       <!-- Título y Ruta del Archivo -->
       <div class="va-path-info">
-        <DatosIcon name="file" :size="13" class="va-file-icon" />
+        <AppIcon name="file" :size="13" class="va-file-icon" />
         <span class="va-filename">{{ title }}</span>
         <span v-if="path" class="va-canonical-path">{{ path }}</span>
       </div>

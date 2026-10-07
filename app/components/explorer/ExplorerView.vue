@@ -2,18 +2,18 @@
 // Portafolio Técnico Mateo Sonzogni — Explorador de Datos Relacionales
 // La raíz es la base de datos completa; las colecciones son carpetas; los registros son hojas técnicas.
 // Navegación por teclado continua (flechas, Enter, Backspace, Esc, /, Cmd+K).
-import DatosDetail from './DatosDetail.vue'
-import DatosFolder from './DatosFolder.vue'
-import DatosGoto from './DatosGoto.vue'
-import DatosGuia from './DatosGuia.vue'
-import DatosIcon, { type IconName } from './DatosIcon.vue'
-import { pad, resolveExplorer, type Explorer } from './explorer'
+import ExplorerDetail from './ExplorerDetail.vue'
+import ExplorerFolder from './ExplorerFolder.vue'
+import ExplorerGoto from './ExplorerGoto.vue'
+import ExplorerGuide from './ExplorerGuide.vue'
+import AppIcon, { type IconName } from '~/components/ui/AppIcon.vue'
+import { pad, resolveExplorer, type Explorer } from '~/lib/explorer'
 import { routeFor } from '~/lib/path'
 
 const api = useApi()
 const route = useRoute()
 const router = useRouter()
-const { path, query } = useMundo()
+const { path, query } = useExplorerRoute()
 
 // Selector reactivo de Tema (Obsidian Dark / Technical Paper)
 const theme = ref<'dark' | 'light'>('dark')
@@ -283,16 +283,16 @@ const currentRoot = computed(() => path.value[0] ?? '')
       <header class="barra">
         <nav class="historia" aria-label="Historial">
           <button type="button" class="nav-btn" aria-label="atrás" @click="router.back()">
-            <DatosIcon name="arrow-left" :size="13" />
+            <AppIcon name="arrow-left" :size="13" />
           </button>
           <button type="button" class="nav-btn" aria-label="adelante" @click="router.forward()">
-            <DatosIcon name="arrow-right" :size="13" />
+            <AppIcon name="arrow-right" :size="13" />
           </button>
           <NuxtLink v-if="ex?.up" :to="ex.up" class="nav-btn" aria-label="subir un nivel">
-            <DatosIcon name="arrow-up" :size="13" />
+            <AppIcon name="arrow-up" :size="13" />
           </NuxtLink>
           <span v-else class="nav-btn off" aria-hidden="true">
-            <DatosIcon name="arrow-up" :size="13" />
+            <AppIcon name="arrow-up" :size="13" />
           </span>
         </nav>
 
@@ -307,7 +307,7 @@ const currentRoot = computed(() => path.value[0] ?? '')
 
         <!-- Botón de Búsqueda Rápida / Goto -->
         <button class="goto-btn" type="button" :title="isEs ? 'Abrir paleta de comandos (⌘K o /)' : 'Open command palette (⌘K or /)'" @click="gotoOpen = true">
-          <DatosIcon name="search" :size="12" class="goto-search-icon" />
+          <AppIcon name="search" :size="12" class="goto-search-icon" />
           <span class="goto-k">{{ isEs ? 'ir a' : 'goto' }}</span>
           <span class="goto-ph">{{ isEs ? 'proyecto, tecnología, sección…' : 'project, tech, section…' }}</span>
           <kbd>/</kbd>
@@ -337,7 +337,7 @@ const currentRoot = computed(() => path.value[0] ?? '')
             :aria-label="isHyperfocus ? 'Desactivar hiperfoco' : 'Activar hiperfoco'"
             @click="toggleHyperfocus"
           >
-            <DatosIcon name="zap" :size="13" />
+            <AppIcon name="zap" :size="13" />
           </button>
 
           <!-- Botón de Guía y Orientación Rápida -->
@@ -349,7 +349,7 @@ const currentRoot = computed(() => path.value[0] ?? '')
             :aria-label="isEs ? 'Guía rápida' : 'Quick guide'"
             @click="guideOpen = !guideOpen"
           >
-            <DatosIcon name="help" :size="13" />
+            <AppIcon name="help" :size="13" />
           </button>
 
           <!-- Estado del Sistema Consolidado (PG-17 + Latencia + Hora Patagonia UTC-3) -->
@@ -372,8 +372,8 @@ const currentRoot = computed(() => path.value[0] ?? '')
             :title="`Cambiar a modo ${theme === 'dark' ? 'claro (papel)' : 'oscuro (obsidiana)'}`"
             @click="toggleTheme"
           >
-            <DatosIcon v-if="theme === 'dark'" name="sun" :size="14" />
-            <DatosIcon v-else name="moon" :size="14" />
+            <AppIcon v-if="theme === 'dark'" name="sun" :size="14" />
+            <AppIcon v-else name="moon" :size="14" />
           </button>
         </div>
       </header>
@@ -412,7 +412,7 @@ const currentRoot = computed(() => path.value[0] ?? '')
               :class="{ active: currentRoot === s.root }"
               :title="`${s.desc} — Atajo [${s.keyHint}]`"
             >
-              <DatosIcon :name="s.icon" :size="14" class="sidebar-icon" />
+              <AppIcon :name="s.icon" :size="14" class="sidebar-icon" />
               <span class="sidebar-label">{{ s.label }}</span>
               <kbd class="sidebar-k">{{ s.keyHint }}</kbd>
               <span class="sidebar-badge">{{ s.badge }}</span>
@@ -440,7 +440,7 @@ const currentRoot = computed(() => path.value[0] ?? '')
 
         <main id="contenido" class="exp" tabindex="-1">
           <div v-if="error" class="pane">
-            <DatosDetail
+            <ExplorerDetail
               :detail="{
                 kind: 'document',
                 name: `error ${error.statusCode ?? 500}`,
@@ -455,8 +455,8 @@ const currentRoot = computed(() => path.value[0] ?? '')
             />
           </div>
           <div v-else-if="ex" ref="pane" :key="route.fullPath" class="pane" :class="dir">
-            <DatosFolder v-if="folder" :folder="folder" />
-            <DatosDetail v-else-if="detail" :detail="detail" :prev="ex.prev" :next="ex.next" />
+            <ExplorerFolder v-if="folder" :folder="folder" />
+            <ExplorerDetail v-else-if="detail" :detail="detail" :prev="ex.prev" :next="ex.next" />
           </div>
         </main>
       </div>
@@ -492,7 +492,7 @@ const currentRoot = computed(() => path.value[0] ?? '')
           class="mobile-nav-item"
           :class="{ active: currentRoot === s.root }"
         >
-          <DatosIcon :name="s.icon" :size="18" class="mn-icon" />
+          <AppIcon :name="s.icon" :size="18" class="mn-icon" />
           <span class="mn-label">{{ s.shortLabel }}</span>
           <span v-if="currentRoot === s.root" class="mn-indicator" aria-hidden="true" />
         </NuxtLink>
@@ -500,10 +500,10 @@ const currentRoot = computed(() => path.value[0] ?? '')
     </div>
 
     <!-- Modal de Búsqueda Rápida / Goto -->
-    <DatosGoto v-if="gotoOpen" @close="gotoOpen = false" />
+    <ExplorerGoto v-if="gotoOpen" @close="gotoOpen = false" />
 
     <!-- Guía de Orientación Rápida Flotante (No Invasiva) -->
-    <DatosGuia :open="guideOpen" @close="guideOpen = false" />
+    <ExplorerGuide :open="guideOpen" @close="guideOpen = false" />
   </div>
 </template>
 

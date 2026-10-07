@@ -1,8 +1,8 @@
 <script setup lang="ts">
 // Renderizador de valores para hojas técnicas y tablas.
 // Soporta relaciones, filtros, links externos, activos multimedia (con visor lightbox),
-import DatosIcon from './DatosIcon.vue'
-import type { Cell, MediaItem } from './explorer'
+import AppIcon from '~/components/ui/AppIcon.vue'
+import type { Cell, MediaItem } from '~/lib/explorer'
 
 const { isEs } = usePortfolioLocale()
 
@@ -88,7 +88,7 @@ function formatBytes(bytes?: number | null): string {
                 :aria-label="isEs ? 'Cerrar visor' : 'Close viewer'"
                 @click="activeMedia = null"
               >
-                <DatosIcon name="close" :size="12" />
+                <AppIcon name="close" :size="12" />
                 <span>ESC</span>
               </button>
             </div>
@@ -159,7 +159,7 @@ function formatBytes(bytes?: number | null): string {
       :title="isEs ? `Copiar ${cell.value} al portapapeles` : `Copy ${cell.value} to clipboard`"
       @click="copyInline(String(cell.value))"
     >
-      <DatosIcon :name="copiedInline ? 'check' : 'copy'" :size="11" />
+      <AppIcon :name="copiedInline ? 'check' : 'copy'" :size="11" />
       <span>{{ copiedInline ? (isEs ? 'COPIADO' : 'COPIED') : (isEs ? 'COPIAR' : 'COPY') }}</span>
     </button>
   </span>

@@ -7,6 +7,12 @@ export default defineNuxtConfig({
   devtools: { enabled: true },
   modules: ['@nuxt/eslint'],
 
+  components: [
+    { path: '~/components/ui', pathPrefix: false },
+    { path: '~/components/cv', pathPrefix: false },
+    { path: '~/components/explorer', pathPrefix: false },
+  ],
+
   // El API es un proceso aparte (Express, `pnpm dev:api`). Nitro no sirve rutas propias.
   // `server/` es de Express; se lo saca del alcance de Nitro para que no lo escanee ni tipee.
   serverDir: 'app/nitro',
@@ -23,7 +29,7 @@ export default defineNuxtConfig({
   css: [
     '~/assets/css/fonts.css',
     '~/assets/css/base.css',
-    '~/worlds/datos/tokens.css',
+    '~/assets/css/tokens.css',
   ],
 
   runtimeConfig: {

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 // Guía de Orientación Rápida y Tutorial No Invasivo — Sistema DATOS
 // Brinda orientación contextual en 3 pasos clave sin bloquear la pantalla ni interrumpir la navegación.
-import DatosIcon from './DatosIcon.vue'
+import AppIcon from '~/components/ui/AppIcon.vue'
 
 defineProps<{
   open: boolean
@@ -98,7 +98,7 @@ function dismiss() {
           :aria-label="isEs ? 'Cerrar guía' : 'Close guide'"
           @click="dismiss"
         >
-          <DatosIcon name="close" :size="12" />
+          <AppIcon name="close" :size="12" />
         </button>
       </div>
 
@@ -110,7 +110,7 @@ function dismiss() {
         </div>
 
         <h4 class="guia-step-title">
-          <DatosIcon :name="steps[step]?.icon ?? 'db'" :size="14" class="guia-step-icon" />
+          <AppIcon :name="steps[step]?.icon ?? 'db'" :size="14" class="guia-step-icon" />
           {{ steps[step]?.title }}
         </h4>
 

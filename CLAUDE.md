@@ -5,7 +5,7 @@ Portafolio técnico y explorador relacional de proyectos, trayectoria y habilida
 El portafolio se estructura en torno a:
 - **Explorador Técnico:** Presenta los proyectos y el stack con metadatos, métricas cuantificables de rendimiento y relaciones directas en la base de datos.
 - **Modo Focus / Hiperfoco (`useHyperfocus.ts`):** Oculta elementos secundarios y decorativos para brindar una lectura clara, rápida y sin fricciones.
-- **CV Harvard ATS y Visualizador IDE (`DatosCV.vue`):** Visualización en `/about` y exportación lista para imprimir en una sola página A4 (`CV-{ES,EN}-Mateo-Sonzogni-ATS.pdf` y `CV-{ES,EN}-Mateo-Sonzogni.pdf`).
+- **CV Harvard ATS y Visualizador IDE (`CvContainer.vue`):** Visualización en `/about` y exportación lista para imprimir en una sola página A4 (`CV-{ES,EN}-Mateo-Sonzogni-ATS.pdf` y `CV-{ES,EN}-Mateo-Sonzogni.pdf`).
 - **Consola de Administración (`/admin`):** CMS interno y centro de operaciones del agente autónomo de empleo (**Job Hunter** / Eros), con generación de propuestas y CV Harvard ATS adaptado a cada vacante.
 
 ---
@@ -52,8 +52,11 @@ pnpm build:api          # Generar Prisma y ejecutar migraciones
 ## Estructura del Repositorio
 
 ```
-app/                    Frontend Nuxt 4 (composables, layouts, páginas, componentes)
-app/worlds/datos/       Explorador técnico, hojas de detalle y visor DatosCV.vue
+app/components/explorer/ Componentes del explorador técnico (ExplorerView, Folder, Detail, Header, etc.)
+app/components/cv/       Visor de CV Dual modular (CvContainer, CvHarvardAts, CvModernIde)
+app/components/ui/       Iconografía utilitaria lineal SVG (AppIcon)
+app/lib/                 Lógica del explorador y resolución de datos (explorer.ts)
+app/assets/css/          Tokens de diseño (tokens.css), tipografía y estilos base
 app/nitro/              Reservado; Nitro no sirve rutas propias (proxiadas a Express)
 server/src/             Backend Express 5 (rutas REST, admin, multer, cliente Prisma)
 server/admin/           Consola de administración propia (HTML/CSS/JS sin build) en /admin
@@ -69,7 +72,7 @@ docs/archive/           Histórico de prototipos, conceptos descartados ("Dos Mu
 
 Este archivo resume las directrices transversales. La documentación detallada se encuentra en:
 
-- `.claude/rules/datos.md` — Reglas al tocar `app/worlds/datos/**`
+- `.claude/rules/explorer.md` — Reglas al tocar `app/components/**` o `app/lib/explorer.ts`
 - `.claude/rules/backend.md` — Reglas al tocar `server/**` o `prisma/**`
 - `.claude/rules/admin.md` — Reglas de interfaz y UX al tocar `server/admin/**`
 - `DEPLOY.md` — Guía completa de despliegue en Hostinger VPS con Coolify

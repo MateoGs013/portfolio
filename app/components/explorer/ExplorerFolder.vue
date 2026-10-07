@@ -2,10 +2,10 @@
 // Una carpeta abierta: la base con sus tablas, o una colección con sus registros.
 // Ofrece selector de vista (Baldosas en cuadrícula ☷ vs. Tabla técnica ☰),
 // facets de filtrado activo y acceso directo por teclado.
-import DatosCabecera from './DatosCabecera.vue'
-import DatosIcon from './DatosIcon.vue'
-import DatosIcono from './DatosIcono.vue'
-import { pad, type Folder } from './explorer'
+import ExplorerHeader from './ExplorerHeader.vue'
+import AppIcon from '~/components/ui/AppIcon.vue'
+import ExplorerBadge from './ExplorerBadge.vue'
+import { pad, type Folder } from '~/lib/explorer'
 import type { Project } from '~/lib/api'
 
 const props = defineProps<{ folder: Folder }>()
@@ -251,13 +251,13 @@ function onCardMousemove(e: MouseEvent) {
         <p class="hd-role">{{ isEs ? 'Desarrollador Frontend & Full Stack · Creative Developer' : 'Frontend & Full Stack Developer · Creative Developer' }}</p>
 
         <nav class="hd-contact-bar" :aria-label="isEs ? 'Canales directos de contacto' : 'Direct contact channels'">
-          <a href="mailto:mateogabus@gmail.com" class="hd-link"><DatosIcon name="mail" :size="12" /> mateogabus@gmail.com</a>
+          <a href="mailto:mateogabus@gmail.com" class="hd-link"><AppIcon name="mail" :size="12" /> mateogabus@gmail.com</a>
           <span class="hd-sep">·</span>
-          <a href="https://github.com/MateoGs013" target="_blank" rel="noopener noreferrer" class="hd-link"><DatosIcon name="code" :size="12" /> github.com/MateoGs013</a>
+          <a href="https://github.com/MateoGs013" target="_blank" rel="noopener noreferrer" class="hd-link"><AppIcon name="code" :size="12" /> github.com/MateoGs013</a>
           <span class="hd-sep">·</span>
-          <a href="https://www.linkedin.com/in/mateo-sonzogni" target="_blank" rel="noopener noreferrer" class="hd-link"><DatosIcon name="briefcase" :size="12" /> linkedin.com/in/mateo-sonzogni</a>
+          <a href="https://www.linkedin.com/in/mateo-sonzogni" target="_blank" rel="noopener noreferrer" class="hd-link"><AppIcon name="briefcase" :size="12" /> linkedin.com/in/mateo-sonzogni</a>
           <span class="hd-sep">·</span>
-          <NuxtLink to="/about" class="hd-link"><DatosIcon name="file" :size="12" /> {{ isEs ? 'CV Harvard ATS' : 'Harvard ATS Resume' }} ↗</NuxtLink>
+          <NuxtLink to="/about" class="hd-link"><AppIcon name="file" :size="12" /> {{ isEs ? 'CV Harvard ATS' : 'Harvard ATS Resume' }} ↗</NuxtLink>
         </nav>
       </header>
 
@@ -438,26 +438,26 @@ function onCardMousemove(e: MouseEvent) {
               {{ tr.home.aboutText }}
             </p>
             <div class="pa-globe-pill">
-              <DatosIcon name="globe" :size="13" class="pa-globe-icon" />
+              <AppIcon name="globe" :size="13" class="pa-globe-icon" />
               <span class="pa-globe-text">{{ tr.home.globePill }}</span>
             </div>
           </div>
 
           <div class="poster-actions">
             <NuxtLink to="/about" class="poster-btn primary" :title="isEs ? 'Abrir currículum completo en formato Harvard ATS o Moderno con foto' : 'Open complete resume in Harvard ATS or Modern format'">
-              <DatosIcon name="file" :size="13" />
+              <AppIcon name="file" :size="13" />
               <span>{{ tr.home.btnCv }}</span>
-              <DatosIcon name="chevron-right" :size="12" class="poster-btn-arr" />
+              <AppIcon name="chevron-right" :size="12" class="poster-btn-arr" />
             </NuxtLink>
             <NuxtLink to="/projects" class="poster-btn secondary" :title="isEs ? 'Explorar todas las aplicaciones en producción' : 'Explore all applications in production'">
-              <DatosIcon name="folder" :size="13" />
+              <AppIcon name="folder" :size="13" />
               <span>{{ tr.home.btnProjects }}</span>
-              <DatosIcon name="chevron-right" :size="12" class="poster-btn-arr" />
+              <AppIcon name="chevron-right" :size="12" class="poster-btn-arr" />
             </NuxtLink>
             <NuxtLink to="/contact" class="poster-btn tertiary" :title="isEs ? 'Canales de contacto directo' : 'Direct contact channels'">
-              <DatosIcon name="mail" :size="13" />
+              <AppIcon name="mail" :size="13" />
               <span>{{ tr.home.btnContact }}</span>
-              <DatosIcon name="chevron-right" :size="12" class="poster-btn-arr" />
+              <AppIcon name="chevron-right" :size="12" class="poster-btn-arr" />
             </NuxtLink>
           </div>
         </div>
@@ -516,7 +516,7 @@ function onCardMousemove(e: MouseEvent) {
           @click="dismissInlineTip"
         >
           <span>{{ isEs ? 'Entendido' : 'Dismiss' }}</span>
-          <DatosIcon name="close" :size="10" />
+          <AppIcon name="close" :size="10" />
         </button>
       </div>
 
@@ -540,7 +540,7 @@ function onCardMousemove(e: MouseEvent) {
               </div>
               <NuxtLink to="/projects" class="sw-h-link">
                 <span>{{ tr.home.swViewAll }}</span>
-                <DatosIcon name="chevron-right" :size="12" />
+                <AppIcon name="chevron-right" :size="12" />
               </NuxtLink>
             </div>
 
@@ -577,7 +577,7 @@ function onCardMousemove(e: MouseEvent) {
                   </div>
                   <div class="sw-cta">
                     <span>{{ tr.home.openDossier }}</span>
-                    <DatosIcon name="chevron-right" :size="12" />
+                    <AppIcon name="chevron-right" :size="12" />
                   </div>
                 </div>
               </NuxtLink>
@@ -665,9 +665,9 @@ function onCardMousemove(e: MouseEvent) {
           <div class="pf-contact-box">
             <span class="pf-c-tag">{{ tr.home.footerContact }}</span>
             <ul class="pf-links">
-              <li><DatosIcon name="mail" :size="12" /> <a href="mailto:mateogabus@gmail.com">mateogabus@gmail.com</a></li>
-              <li><DatosIcon name="briefcase" :size="12" /> <a href="https://www.linkedin.com/in/mateo-sonzogni" target="_blank" rel="noopener noreferrer">linkedin.com/in/mateo-sonzogni</a></li>
-              <li><DatosIcon name="code" :size="12" /> <a href="https://github.com/MateoGs013" target="_blank" rel="noopener noreferrer">github.com/MateoGs013</a></li>
+              <li><AppIcon name="mail" :size="12" /> <a href="mailto:mateogabus@gmail.com">mateogabus@gmail.com</a></li>
+              <li><AppIcon name="briefcase" :size="12" /> <a href="https://www.linkedin.com/in/mateo-sonzogni" target="_blank" rel="noopener noreferrer">linkedin.com/in/mateo-sonzogni</a></li>
+              <li><AppIcon name="code" :size="12" /> <a href="https://github.com/MateoGs013" target="_blank" rel="noopener noreferrer">github.com/MateoGs013</a></li>
             </ul>
           </div>
         </div>
@@ -697,7 +697,7 @@ function onCardMousemove(e: MouseEvent) {
     <!-- ═══════════════════════════════════════════════════════════════════════ -->
     <template v-else>
       <!-- Cabecera de Carpeta -->
-      <DatosCabecera :id="uid" kind="folder" :badge="pad(folder.count)" :name="folder.head" :line="folder.line">
+      <ExplorerHeader :id="uid" kind="folder" :badge="pad(folder.count)" :name="folder.head" :line="folder.line">
         <div class="folder-header-actions">
           <!-- Filtros Activos Facetados -->
           <template v-if="folder.facets.length">
@@ -728,7 +728,7 @@ function onCardMousemove(e: MouseEvent) {
               :title="isEs ? 'Vista de baldosas en cuadrícula' : 'Grid tile view'"
               @click="viewMode = 'grid'"
             >
-              <DatosIcon name="grid" :size="12" />
+              <AppIcon name="grid" :size="12" />
               <span>{{ isEs ? 'GRILLA' : 'GRID' }}</span>
             </button>
             <button
@@ -738,12 +738,12 @@ function onCardMousemove(e: MouseEvent) {
               :title="isEs ? 'Vista de tabla técnica compacta' : 'Compact technical table view'"
               @click="viewMode = 'table'"
             >
-              <DatosIcon name="table" :size="12" />
+              <AppIcon name="table" :size="12" />
               <span>{{ isEs ? 'TABLA' : 'TABLE' }}</span>
             </button>
           </div>
         </div>
-      </DatosCabecera>
+      </ExplorerHeader>
 
       <!-- Vista de Cuadrícula (Especializada por Colección) -->
       <ol
@@ -765,7 +765,7 @@ function onCardMousemove(e: MouseEvent) {
             <div class="project-thumb-wrap">
               <img v-if="it.cover" :src="it.cover" :alt="it.label" class="project-thumb" loading="lazy">
               <div v-else class="project-thumb-fallback">
-                <DatosIcono kind="file" :badge="it.badge" />
+                <ExplorerBadge kind="file" :badge="it.badge" />
               </div>
               <div class="project-status-bar">
                 <span class="project-status-badge">● {{ it.status ?? 'LIVE' }}</span>
@@ -786,7 +786,7 @@ function onCardMousemove(e: MouseEvent) {
               </div>
               <div class="project-cta">
                 <span>{{ tr.collection.openDossier }}</span>
-                <DatosIcon name="chevron-right" :size="12" class="cta-arrow" />
+                <AppIcon name="chevron-right" :size="12" class="cta-arrow" />
               </div>
             </div>
           </NuxtLink>
@@ -809,7 +809,7 @@ function onCardMousemove(e: MouseEvent) {
             </div>
             <div class="exp-cta">
               <span>{{ tr.collection.technicalDetails }}</span>
-              <DatosIcon name="chevron-right" :size="12" />
+              <AppIcon name="chevron-right" :size="12" />
             </div>
           </NuxtLink>
 
@@ -828,14 +828,14 @@ function onCardMousemove(e: MouseEvent) {
             <p v-if="it.note" class="stack-note">{{ it.note }}</p>
             <div class="stack-cta">
               <span>{{ tr.collection.filterRecords }}</span>
-              <DatosIcon name="chevron-right" :size="12" />
+              <AppIcon name="chevron-right" :size="12" />
             </div>
           </NuxtLink>
 
           <!-- Baldosa Estándar -->
           <NuxtLink v-else :to="it.to" class="tile" :class="it.kind" :data-row="it.key">
             <span class="n">{{ pad(n + 1) }}</span>
-            <DatosIcono :kind="it.kind" :badge="it.badge" class="icono" />
+            <ExplorerBadge :kind="it.kind" :badge="it.badge" class="icono" />
             <span class="name">{{ it.label }}</span>
             <span class="meta">{{ it.desc ?? it.meta }}</span>
           </NuxtLink>
@@ -860,7 +860,7 @@ function onCardMousemove(e: MouseEvent) {
               <td class="td-n">{{ pad(n + 1) }}</td>
               <td class="td-name">
                 <NuxtLink :to="it.to" class="t-link" :data-row="it.key">
-                  <DatosIcon :name="it.kind === 'folder' ? 'folder' : 'file'" :size="13" class="t-icon" />
+                  <AppIcon :name="it.kind === 'folder' ? 'folder' : 'file'" :size="13" class="t-icon" />
                   <span class="t-label">{{ it.label }}</span>
                   <span v-if="it.badge" class="t-badge">{{ it.badge }}</span>
                 </NuxtLink>
@@ -871,7 +871,7 @@ function onCardMousemove(e: MouseEvent) {
               <td class="td-action">
                 <NuxtLink :to="it.to" class="btn-open">
                   <span>{{ isEs ? 'ABRIR' : 'OPEN' }}</span>
-                  <DatosIcon name="chevron-right" :size="11" />
+                  <AppIcon name="chevron-right" :size="11" />
                 </NuxtLink>
               </td>
             </tr>
