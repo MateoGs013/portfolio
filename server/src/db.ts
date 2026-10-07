@@ -10,7 +10,15 @@ const needsSsl = env.databaseUrl.includes('sslmode=require')
 
 const pool = new pg.Pool({
   connectionString: env.databaseUrl,
+  max: 10,
+  idleTimeoutMillis: 30000,
+  connectionTimeoutMillis: 5000,
   ssl: needsSsl ? { rejectUnauthorized: false } : false,
+})
+
+// Prevenir caídas del proceso por desconexión de clientes inactivos
+pool.on('error', (err) => {
+  console.error('[DB Pool] Error en cliente inactivo:', err.message)
 })
 
 const adapter = new PrismaPg(pool)

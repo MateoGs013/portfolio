@@ -12,30 +12,46 @@ function bad(field: string, expected: string): never {
   throw new HttpError(400, `campo "${field}": se esperaba ${expected}`)
 }
 
-export function str(b: Body, k: string): string {
+const SLUG_REGEX = /^[a-z0-9]+(?:-[a-z0-9]+)*$/
+
+export function str(b: Body, k: string, maxLen = 4000): string {
   const v = b[k]
   if (typeof v !== 'string' || v.trim() === '') bad(k, 'string no vacío')
-  return v.trim()
+  const trimmed = v.trim()
+  if (trimmed.length > maxLen) bad(k, `máximo ${maxLen} caracteres`)
+  return trimmed
 }
 
-export function optStr(b: Body, k: string): string | null {
+export function slug(b: Body, k: string): string {
+  const v = str(b, k, 80)
+  if (!SLUG_REGEX.test(v)) bad(k, 'slug válido en minúsculas (ej: mi-proyecto-web)')
+  return v
+}
+
+export function optStr(b: Body, k: string, maxLen = 4000): string | null {
   const v = b[k]
-  if (v === undefined || v === null || v === '') return null
+  if (v === undefined || v === null) return null
   if (typeof v !== 'string') bad(k, 'string o null')
-  return v.trim()
+  const trimmed = v.trim()
+  if (trimmed === '') return null
+  if (trimmed.length > maxLen) bad(k, `máximo ${maxLen} caracteres`)
+  return trimmed
 }
 
-export function int(b: Body, k: string): number {
+export function int(b: Body, k: string, min = -2147483648, max = 2147483647): number {
   const v = b[k]
-  const n = typeof v === 'string' ? Number(v) : v
-  if (typeof n !== 'number' || !Number.isInteger(n)) bad(k, 'entero')
+  if (typeof v === 'string' && v.trim() === '') bad(k, 'entero no vacío')
+  const n = typeof v === 'string' ? Number(v.trim()) : v
+  if (typeof n !== 'number' || !Number.isInteger(n) || n < min || n > max) {
+    bad(k, `entero entre ${min} y ${max}`)
+  }
   return n
 }
 
-export function optInt(b: Body, k: string): number | null {
+export function optInt(b: Body, k: string, min?: number, max?: number): number | null {
   const v = b[k]
-  if (v === undefined || v === null || v === '') return null
-  return int(b, k)
+  if (v === undefined || v === null || (typeof v === 'string' && v.trim() === '')) return null
+  return int(b, k, min, max)
 }
 
 export function bool(b: Body, k: string): boolean {

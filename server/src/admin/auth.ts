@@ -1,19 +1,19 @@
-import { timingSafeEqual } from 'node:crypto'
+import { createHash, timingSafeEqual } from 'node:crypto'
 import type { NextFunction, Request, Response } from 'express'
 
 const token = process.env['ADMIN_TOKEN'] ?? ''
+const tokenHash = token ? createHash('sha256').update(token).digest() : null
 
 /** Bearer token fijo desde .env. Sin ADMIN_TOKEN el admin queda apagado. */
 export function requireAdmin(req: Request, res: Response, next: NextFunction) {
-  if (!token) {
+  if (!token || !tokenHash) {
     res.status(503).json({ error: 'admin deshabilitado: falta ADMIN_TOKEN' })
     return
   }
   const header = req.get('authorization') ?? ''
   const given = header.startsWith('Bearer ') ? header.slice(7) : ''
-  const a = Buffer.from(given)
-  const b = Buffer.from(token)
-  if (a.length !== b.length || !timingSafeEqual(a, b)) {
+  const givenHash = createHash('sha256').update(given).digest()
+  if (!timingSafeEqual(givenHash, tokenHash)) {
     res.status(401).json({ error: 'unauthorized' })
     return
   }

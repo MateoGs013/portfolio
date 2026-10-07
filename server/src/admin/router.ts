@@ -7,7 +7,7 @@ import { db } from '../db.js'
 import { MediaKind, MediaRole, Prisma, ProjectStatus, TechCategory } from '../../generated/prisma/client.js'
 import { requireAdmin } from './auth.js'
 import { IMAGE_MIME, imageDims } from './image.js'
-import { HttpError, bool, date, enumOf, int, intList, json, list, optDate, optInt, optStr, str } from './input.js'
+import { HttpError, bool, date, enumOf, int, intList, json, list, optDate, optInt, optStr, slug, str } from './input.js'
 import { hunterRouter } from './hunter.js'
 
 const require = createRequire(import.meta.url)
@@ -63,7 +63,7 @@ const projectInclude = {
 
 function projectData(b: Record<string, unknown>) {
   return {
-    slug: str(b, 'slug'),
+    slug: slug(b, 'slug'),
     title: str(b, 'title'),
     year: int(b, 'year'),
     role: str(b, 'role'),
@@ -173,11 +173,11 @@ adminApi.delete('/projects/:id', async (req, res) => {
 
 // ─── media ──────────────────────────────────────────────────────────────────
 
-const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 25 * 1024 * 1024 } })
+const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 * 1024 * 1024 } })
 
 async function removeFile(src: string) {
   const abs = path.resolve('public', '.' + src)
-  if (!abs.startsWith(MEDIA_DIR)) return
+  if (!abs.startsWith(MEDIA_DIR + path.sep)) return
   await unlink(abs).catch(() => undefined)
 }
 
@@ -212,21 +212,31 @@ adminApi.post('/media', upload.single('file'), async (req, res) => {
   const project = await db.project.findUnique({ where: { id: projectId }, select: { slug: true } })
   if (!project) throw new HttpError(404, 'proyecto inexistente')
 
-  const name = `${project.slug}-${Date.now().toString(36)}.${ext}`
+  const name = path.basename(`${project.slug}-${Date.now().toString(36)}.${ext}`)
+  const targetPath = path.resolve(MEDIA_DIR, name)
+  if (!targetPath.startsWith(MEDIA_DIR + path.sep)) {
+    throw new HttpError(400, 'nombre de archivo inválido')
+  }
   await mkdir(MEDIA_DIR, { recursive: true })
-  await writeFile(path.join(MEDIA_DIR, name), file.buffer)
+  await writeFile(targetPath, file.buffer)
 
-  const row = await db.media.create({
-    data: {
-      ...mediaData(body),
-      kind: MediaKind.IMAGE,
-      src: `/media/projects/${name}`,
-      width: dims.width,
-      height: dims.height,
-      bytes: file.size,
-      projectId,
-    },
-  })
+  let row
+  try {
+    row = await db.media.create({
+      data: {
+        ...mediaData(body),
+        kind: MediaKind.IMAGE,
+        src: `/media/projects/${name}`,
+        width: dims.width,
+        height: dims.height,
+        bytes: file.size,
+        projectId,
+      },
+    })
+  } catch (err) {
+    await unlink(targetPath).catch(() => undefined)
+    throw err
+  }
   res.status(201).json(row)
 })
 
@@ -244,7 +254,7 @@ adminApi.delete('/media/:id', async (req, res) => {
 
 function techData(b: Record<string, unknown>) {
   return {
-    slug: str(b, 'slug'),
+    slug: slug(b, 'slug'),
     name: str(b, 'name'),
     category: enumOf(b, 'category', TECH_CATEGORY),
     since: int(b, 'since'),
@@ -270,7 +280,7 @@ adminApi.delete('/techs/:id', async (req, res) => {
 // ─── orgs ───────────────────────────────────────────────────────────────────
 
 function orgData(b: Record<string, unknown>) {
-  return { slug: str(b, 'slug'), name: str(b, 'name'), url: optStr(b, 'url'), city: optStr(b, 'city') }
+  return { slug: slug(b, 'slug'), name: str(b, 'name'), url: optStr(b, 'url'), city: optStr(b, 'city') }
 }
 
 adminApi.get('/orgs', async (_req, res) => {
@@ -296,7 +306,7 @@ const experienceInclude = {
 
 function experienceData(b: Record<string, unknown>) {
   return {
-    slug: str(b, 'slug'),
+    slug: slug(b, 'slug'),
     role: str(b, 'role'),
     startedAt: date(b, 'startedAt'),
     endedAt: optDate(b, 'endedAt'),
@@ -357,17 +367,27 @@ adminApi.delete('/docs/:key', async (req, res) => {
 // ─── errores del admin ──────────────────────────────────────────────────────
 
 adminApi.use((err: unknown, _req: Request, res: Response, next: NextFunction) => {
+  if (err instanceof multer.MulterError && err.code === 'LIMIT_FILE_SIZE') {
+    res.status(413).json({ error: 'el archivo supera el límite de 10MB' })
+    return
+  }
   if (err instanceof HttpError) {
     res.status(err.status).json({ error: err.message })
     return
   }
-  if (err && typeof err === 'object' && 'code' in err && err.code === 'P2002') {
-    res.status(409).json({ error: 'ya existe un registro con ese slug/clave' })
-    return
-  }
-  if (err && typeof err === 'object' && 'code' in err && err.code === 'P2025') {
-    res.status(404).json({ error: 'not found' })
-    return
+  if (err && typeof err === 'object' && 'code' in err) {
+    if (err.code === 'P2002') {
+      res.status(409).json({ error: 'ya existe un registro con ese slug/clave' })
+      return
+    }
+    if (err.code === 'P2003') {
+      res.status(400).json({ error: 'violación de integridad referencial (clave foránea inválida o en uso)' })
+      return
+    }
+    if (err.code === 'P2025') {
+      res.status(404).json({ error: 'not found' })
+      return
+    }
   }
   next(err)
 })
