@@ -77,23 +77,30 @@ function dismiss() {
 </script>
 
 <template>
-  <Transition name="guide-pop">
+  <Transition
+    enter-active-class="transition duration-200 ease-out"
+    enter-from-class="opacity-0 translate-y-3 scale-95"
+    enter-to-class="opacity-100 translate-y-0 scale-100"
+    leave-active-class="transition duration-150 ease-in"
+    leave-from-class="opacity-100 translate-y-0 scale-100"
+    leave-to-class="opacity-0 translate-y-3 scale-95"
+  >
     <aside
       v-if="open"
-      class="datos-guia"
+      class="datos-guia fixed bottom-8 max-sm:bottom-[68px] right-4 max-sm:left-2 max-sm:right-2 w-[min(390px,calc(100vw-32px))] max-sm:w-auto bg-surface border border-rule-strong rounded shadow-[0_12px_32px_rgba(0,0,0,0.45),0_2px_8px_rgba(0,0,0,0.25)] z-[85] font-mono overflow-hidden backdrop-blur-md flex flex-col"
       role="region"
       :aria-label="isEs ? 'Guía rápida de orientación' : 'Quick orientation guide'"
     >
       <!-- Cabecera de la Guía -->
-      <div class="guia-header">
-        <div class="guia-title-box">
-          <span class="guia-indicator" />
-          <span class="guia-tag">{{ isEs ? 'GUÍA RÁPIDA' : 'QUICK GUIDE' }}</span>
-          <span class="guia-step-badge">{{ step + 1 }}/{{ steps.length }}</span>
+      <div class="flex items-center justify-between px-3 py-2 bg-surface-raised border-b border-rule">
+        <div class="flex items-center gap-2">
+          <span class="w-1.5 h-1.5 rounded-full bg-sig shadow-[0_0_8px_var(--d-sig)] animate-pulse" />
+          <span class="text-[10px] font-bold tracking-[0.08em] text-ink">{{ isEs ? 'GUÍA RÁPIDA' : 'QUICK GUIDE' }}</span>
+          <span class="text-[9px] px-1.5 py-0.5 rounded-[2px] bg-rule text-dim font-semibold">{{ step + 1 }}/{{ steps.length }}</span>
         </div>
         <button
           type="button"
-          class="guia-close-btn"
+          class="inline-flex items-center justify-center w-[22px] h-[22px] rounded-[2px] border-none bg-transparent text-dim hover:bg-rule-strong hover:text-ink cursor-pointer transition-colors duration-150"
           :title="isEs ? 'Cerrar guía (no volverá a aparecer automáticamente)' : 'Close guide (will not show automatically again)'"
           :aria-label="isEs ? 'Cerrar guía' : 'Close guide'"
           @click="dismiss"
@@ -103,29 +110,29 @@ function dismiss() {
       </div>
 
       <!-- Contenido del Paso Actual -->
-      <div v-if="!showShortcuts" class="guia-body">
-        <div class="guia-step-meta">
-          <span class="guia-step-tag">{{ steps[step]?.tag }}</span>
-          <span class="guia-pill-badge">{{ steps[step]?.badge }}</span>
+      <div v-if="!showShortcuts" class="p-3.5 pb-2.5 flex flex-col gap-2">
+        <div class="flex items-center justify-between">
+          <span class="text-[9px] tracking-[0.06em] text-sig font-bold">{{ steps[step]?.tag }}</span>
+          <span class="text-[9px] px-1 py-0.5 border border-rule-strong rounded-[2px] text-dim">{{ steps[step]?.badge }}</span>
         </div>
 
-        <h4 class="guia-step-title">
-          <AppIcon :name="steps[step]?.icon ?? 'db'" :size="14" class="guia-step-icon" />
+        <h4 class="m-0 text-[13px] font-bold text-ink flex items-center gap-2 tracking-tight">
+          <AppIcon :name="steps[step]?.icon ?? 'db'" :size="14" class="text-sig shrink-0" />
           {{ steps[step]?.title }}
         </h4>
 
-        <p class="guia-step-desc">
+        <p class="m-0 text-[11px] leading-relaxed text-dim">
           {{ steps[step]?.desc }}
         </p>
 
         <!-- Indicador de Puntos -->
-        <div class="guia-dots" aria-hidden="true">
+        <div class="flex items-center gap-1.5 mt-1" aria-hidden="true">
           <button
             v-for="(s, i) in steps"
             :key="i"
             type="button"
-            class="guia-dot"
-            :class="{ active: i === step }"
+            class="h-1.5 border-none p-0 cursor-pointer transition-all duration-200"
+            :class="i === step ? 'bg-sig w-4 rounded-[3px]' : 'bg-rule-strong w-1.5 rounded-full'"
             :aria-label="`Paso ${i + 1}`"
             @click="step = i"
           />
@@ -133,33 +140,33 @@ function dismiss() {
       </div>
 
       <!-- Vista Alternativa: Chuleta de Atajos de Teclado -->
-      <div v-else class="guia-shortcuts-panel">
-        <div class="sc-header">
-          <span class="sc-title">{{ isEs ? 'ATAJOS DEL SISTEMA' : 'SYSTEM SHORTCUTS' }}</span>
+      <div v-else class="p-3.5 max-h-[220px] overflow-y-auto flex flex-col gap-1.5">
+        <div class="text-[9px] tracking-[0.08em] text-sig font-bold mb-1">
+          <span>{{ isEs ? 'ATAJOS DEL SISTEMA' : 'SYSTEM SHORTCUTS' }}</span>
         </div>
-        <ul class="sc-list">
-          <li v-for="sc in shortcuts" :key="sc.key" class="sc-item">
-            <kbd class="sc-k">{{ sc.key }}</kbd>
-            <span class="sc-label">{{ sc.label }}</span>
+        <ul class="list-none m-0 p-0 flex flex-col gap-1.5">
+          <li v-for="sc in shortcuts" :key="sc.key" class="flex items-baseline gap-2.5 text-[10.5px]">
+            <kbd class="inline-block px-1.5 py-0.5 text-[9.5px] font-bold bg-surface-raised border border-rule-strong rounded-[2px] text-ink whitespace-nowrap min-w-[48px] text-center">{{ sc.key }}</kbd>
+            <span class="text-dim leading-snug">{{ sc.label }}</span>
           </li>
         </ul>
       </div>
 
       <!-- Barra de Acciones Inferior -->
-      <div class="guia-footer">
+      <div class="flex items-center justify-between px-3 py-2 bg-surface-raised border-t border-rule">
         <button
           type="button"
-          class="guia-toggle-sc"
+          class="bg-transparent border-none text-[10px] text-dim hover:text-sig cursor-pointer px-1.5 py-1 rounded-[2px] transition-colors duration-150"
           @click="showShortcuts = !showShortcuts"
         >
           {{ showShortcuts ? (isEs ? '‹ Volver a tips' : '‹ Back to tips') : (isEs ? 'Ver atajos ⌨' : 'View shortcuts ⌨') }}
         </button>
 
-        <div class="guia-nav-btns">
+        <div class="flex items-center gap-1.5">
           <button
             v-if="!showShortcuts && step > 0"
             type="button"
-            class="guia-btn guia-btn-subtle"
+            class="inline-flex items-center justify-center px-2.5 py-1 text-[10.5px] font-semibold rounded-[2px] cursor-pointer transition-all duration-150 bg-transparent border border-rule text-dim hover:bg-rule-strong hover:text-ink"
             @click="prev"
           >
             {{ isEs ? '‹ Ant' : '‹ Prev' }}
@@ -167,7 +174,7 @@ function dismiss() {
           <button
             v-if="!showShortcuts"
             type="button"
-            class="guia-btn guia-btn-primary"
+            class="inline-flex items-center justify-center px-2.5 py-1 text-[10.5px] font-bold rounded-[2px] cursor-pointer transition-all duration-150 bg-sig text-white border border-sig hover:brightness-110 hover:-translate-y-px"
             @click="next"
           >
             {{ step === steps.length - 1 ? (isEs ? 'Entendido ✓' : 'Done ✓') : (isEs ? 'Siguiente ›' : 'Next ›') }}
@@ -175,7 +182,7 @@ function dismiss() {
           <button
             v-else
             type="button"
-            class="guia-btn guia-btn-primary"
+            class="inline-flex items-center justify-center px-2.5 py-1 text-[10.5px] font-bold rounded-[2px] cursor-pointer transition-all duration-150 bg-sig text-white border border-sig hover:brightness-110 hover:-translate-y-px"
             @click="dismiss"
           >
             {{ isEs ? 'Cerrar ✓' : 'Close ✓' }}
@@ -185,308 +192,3 @@ function dismiss() {
     </aside>
   </Transition>
 </template>
-
-<style scoped>
-.datos-guia {
-  position: fixed;
-  bottom: calc(var(--d-frame) + 32px);
-  right: calc(var(--d-frame) + 16px);
-  width: min(390px, calc(100vw - 32px));
-  background-color: var(--d-surface);
-  border: 1px solid var(--d-rule-strong);
-  border-radius: 4px;
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45), 0 2px 8px rgba(0, 0, 0, 0.25);
-  z-index: 85;
-  font-family: var(--d-mono);
-  overflow: hidden;
-  backdrop-filter: blur(16px);
-  display: flex;
-  flex-direction: column;
-}
-
-/* Header */
-.guia-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 8px 12px;
-  background-color: var(--d-surface-raised);
-  border-bottom: 1px solid var(--d-rule);
-}
-
-.guia-title-box {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.guia-indicator {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background-color: var(--d-accent);
-  box-shadow: 0 0 8px var(--d-accent);
-  animation: pulse-dot 2.5s infinite ease-in-out;
-}
-
-@keyframes pulse-dot {
-  0%, 100% { opacity: 0.6; transform: scale(0.9); }
-  50% { opacity: 1; transform: scale(1.15); }
-}
-
-.guia-tag {
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  color: var(--d-ink);
-}
-
-.guia-step-badge {
-  font-size: 9px;
-  padding: 1px 5px;
-  border-radius: 2px;
-  background: var(--d-rule);
-  color: var(--d-dim);
-  font-weight: 600;
-}
-
-.guia-close-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 22px;
-  height: 22px;
-  border-radius: 2px;
-  border: none;
-  background: transparent;
-  color: var(--d-dim);
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-
-.guia-close-btn:hover {
-  background: var(--d-rule-strong);
-  color: var(--d-ink);
-}
-
-/* Body */
-.guia-body {
-  padding: 14px 14px 10px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.guia-step-meta {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.guia-step-tag {
-  font-size: 9px;
-  letter-spacing: 0.06em;
-  color: var(--d-accent);
-  font-weight: 700;
-}
-
-.guia-pill-badge {
-  font-size: 9px;
-  padding: 1px 4px;
-  border: 1px solid var(--d-rule-strong);
-  border-radius: 2px;
-  color: var(--d-dim);
-}
-
-.guia-step-title {
-  margin: 0;
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--d-ink);
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  letter-spacing: -0.01em;
-}
-
-.guia-step-icon {
-  color: var(--d-accent);
-  flex-shrink: 0;
-}
-
-.guia-step-desc {
-  margin: 0;
-  font-size: 11px;
-  line-height: 1.55;
-  color: var(--d-dim);
-}
-
-/* Dots */
-.guia-dots {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin-top: 4px;
-}
-
-.guia-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  border: none;
-  background: var(--d-rule-strong);
-  padding: 0;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.guia-dot.active {
-  background: var(--d-accent);
-  width: 16px;
-  border-radius: 3px;
-}
-
-/* Shortcuts Panel */
-.guia-shortcuts-panel {
-  padding: 12px 14px;
-  max-height: 220px;
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.sc-header {
-  font-size: 9px;
-  letter-spacing: 0.08em;
-  color: var(--d-accent);
-  font-weight: 700;
-  margin-bottom: 4px;
-}
-
-.sc-list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.sc-item {
-  display: flex;
-  align-items: baseline;
-  gap: 10px;
-  font-size: 10.5px;
-}
-
-.sc-k {
-  display: inline-block;
-  padding: 1px 5px;
-  font-size: 9.5px;
-  font-family: inherit;
-  font-weight: 700;
-  background: var(--d-surface-raised);
-  border: 1px solid var(--d-rule-strong);
-  border-radius: 2px;
-  color: var(--d-ink);
-  white-space: nowrap;
-  min-width: 48px;
-  text-align: center;
-}
-
-.sc-label {
-  color: var(--d-dim);
-  line-height: 1.4;
-}
-
-/* Footer */
-.guia-footer {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 8px 12px;
-  background-color: var(--d-surface-raised);
-  border-top: 1px solid var(--d-rule);
-}
-
-.guia-toggle-sc {
-  background: transparent;
-  border: none;
-  font-size: 10px;
-  font-family: inherit;
-  color: var(--d-dim);
-  cursor: pointer;
-  padding: 4px 6px;
-  border-radius: 2px;
-  transition: color 0.15s ease;
-}
-
-.guia-toggle-sc:hover {
-  color: var(--d-accent);
-}
-
-.guia-nav-btns {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.guia-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 4px 10px;
-  font-size: 10.5px;
-  font-family: inherit;
-  font-weight: 600;
-  border-radius: 2px;
-  cursor: pointer;
-  transition: all 0.15s ease;
-  border: 1px solid transparent;
-}
-
-.guia-btn-subtle {
-  background: transparent;
-  border-color: var(--d-rule);
-  color: var(--d-dim);
-}
-
-.guia-btn-subtle:hover {
-  background: var(--d-rule-strong);
-  color: var(--d-ink);
-}
-
-.guia-btn-primary {
-  background: var(--d-accent);
-  color: #000;
-  border-color: var(--d-accent);
-  font-weight: 700;
-}
-
-.guia-btn-primary:hover {
-  filter: brightness(1.1);
-  transform: translateY(-1px);
-}
-
-/* Transitions */
-.guide-pop-enter-active,
-.guide-pop-leave-active {
-  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.guide-pop-enter-from,
-.guide-pop-leave-to {
-  opacity: 0;
-  transform: translateY(14px) scale(0.97);
-}
-
-@media (max-width: 640px) {
-  .datos-guia {
-    right: 8px;
-    left: 8px;
-    width: auto;
-    bottom: calc(var(--d-frame) + 68px);
-  }
-}
-</style>

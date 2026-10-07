@@ -63,116 +63,55 @@ onMounted(() => input.value?.focus())
 </script>
 
 <template>
-  <div class="velo" @click.self="emit('close')">
-    <div class="goto" role="dialog" :aria-label="isEs ? 'Ir a' : 'Goto'" @keydown="onKey">
-      <label class="linea">
-        <span class="k">{{ isEs ? 'ir a' : 'goto' }}</span>
+  <div
+    class="fixed inset-0 z-[120] bg-black/70 backdrop-blur-sm flex justify-center items-start pt-[clamp(48px,12vh,140px)]"
+    @click.self="emit('close')"
+  >
+    <div
+      class="w-[min(580px,calc(100vw-32px))] bg-surface border border-rule-strong shadow-[0_24px_60px_rgba(0,0,0,0.6)] rounded-[2px] overflow-hidden"
+      role="dialog"
+      :aria-label="isEs ? 'Ir a' : 'Goto'"
+      @keydown="onKey"
+    >
+      <label class="grid grid-cols-[auto_1fr_auto] gap-3 items-center px-4 py-3.5 border-b border-rule bg-surface-raised">
+        <span class="font-mono text-[12px] text-sig font-bold">{{ isEs ? 'ir a' : 'goto' }}</span>
         <input
           ref="input"
           v-model="q"
           type="text"
           autocomplete="off"
           spellcheck="false"
+          class="w-full border-0 p-0 bg-transparent text-ink font-sans text-base font-medium outline-none placeholder:text-faint placeholder:text-sm"
           :placeholder="isEs ? 'buscar proyecto, tecnología, etapa…' : 'search project, tech, stage…'"
           :aria-label="isEs ? 'Buscar en todo el portafolio' : 'Search whole portfolio'"
           :aria-activedescendant="results[sel] ? `goto-${sel}` : undefined"
           aria-controls="goto-lista"
         >
-        <span class="esc-badge">ESC</span>
+        <span class="font-mono text-[10px] text-dim border border-rule px-1.5 py-0.5">ESC</span>
       </label>
-      <ol id="goto-lista" class="lista" role="listbox">
+      <ol id="goto-lista" class="list-none m-0 p-0 max-h-[55vh] overflow-y-auto" role="listbox">
         <li
           v-for="(r, i) in results"
           :id="`goto-${i}`"
           :key="`${r.where}/${r.label}`"
           role="option"
           :aria-selected="i === sel"
-          class="fila"
-          :class="{ on: i === sel }"
+          class="grid grid-cols-[100px_1fr_auto] gap-3 items-center h-[42px] px-4 border-b border-rule last:border-b-0 cursor-pointer transition-colors duration-150"
+          :class="i === sel ? 'bg-sig text-white' : 'text-ink hover:bg-hover'"
           @mouseenter="sel = i"
           @click="go(r)"
         >
-          <span class="where">{{ formatWhere(r.where) }} /</span>
-          <span class="label">{{ r.label }}</span>
-          <span v-if="i === sel" class="enter-icon">↵</span>
+          <span class="font-mono text-[11px] text-right" :class="i === sel ? 'text-white/75' : 'text-dim'">{{ formatWhere(r.where) }} /</span>
+          <span class="font-sans text-[14px] font-medium overflow-hidden text-ellipsis whitespace-nowrap">{{ r.label }}</span>
+          <span v-if="i === sel" class="font-mono text-[12px] text-white opacity-80">↵</span>
         </li>
-        <li v-if="entries && !results.length" class="fila vacia">
+        <li v-if="entries && !results.length" class="grid grid-cols-1 px-4 py-3 text-faint font-mono text-[12px] cursor-default">
           {{ isEs ? `00 resultados para "${q}"` : `00 results for "${q}"` }}
         </li>
-        <li v-if="!entries" class="fila vacia">
+        <li v-if="!entries" class="grid grid-cols-1 px-4 py-3 text-faint font-mono text-[12px] cursor-default">
           {{ isEs ? 'cargando índice de la base de datos…' : 'loading database index…' }}
         </li>
       </ol>
     </div>
   </div>
 </template>
-
-<style scoped>
-.velo {
-  position: fixed;
-  inset: 0;
-  z-index: 120;
-  background: rgba(0, 0, 0, 0.7);
-  backdrop-filter: blur(4px);
-  display: flex;
-  justify-content: center;
-  align-items: flex-start;
-  padding-top: clamp(48px, 12vh, 140px);
-}
-.goto {
-  width: min(580px, calc(100vw - 32px));
-  background: var(--d-surface);
-  border: 1px solid var(--d-rule-strong);
-  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.6);
-  border-radius: 2px;
-  overflow: hidden;
-}
-.linea {
-  display: grid;
-  grid-template-columns: auto 1fr auto;
-  gap: 12px;
-  align-items: center;
-  padding: 14px 16px;
-  border-bottom: 1px solid var(--d-rule);
-  background: var(--d-surface-raised);
-}
-.k { font-family: var(--font-mono); font-size: var(--d-fs-mono); color: var(--d-sig); font-weight: 700; }
-input {
-  width: 100%;
-  border: 0;
-  padding: 0;
-  background: transparent;
-  color: var(--d-ink);
-  font-family: var(--font-text);
-  font-size: 16px;
-  font-weight: 500;
-  outline: none;
-}
-input::placeholder { color: var(--d-faint); font-size: 14px; }
-.esc-badge {
-  font-family: var(--font-mono);
-  font-size: 10px;
-  color: var(--d-dim);
-  border: 1px solid var(--d-rule);
-  padding: 2px 6px;
-}
-.lista { list-style: none; margin: 0; padding: 0; max-height: 55vh; overflow: auto; }
-.fila {
-  display: grid;
-  grid-template-columns: 100px 1fr auto;
-  gap: 12px;
-  align-items: center;
-  height: 42px;
-  padding: 0 16px;
-  border-bottom: 1px solid var(--d-rule);
-  cursor: pointer;
-  transition: all var(--d-dur) ease;
-}
-.fila:last-child { border-bottom: 0; }
-.fila.on { background: var(--d-sig); color: #ffffff; }
-.where { font-family: var(--font-mono); font-size: 11px; color: var(--d-dim); text-align: right; }
-.fila.on .where { color: rgba(255, 255, 255, 0.75); }
-.label { font-family: var(--font-text); font-size: 14px; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.enter-icon { font-family: var(--font-mono); font-size: 12px; color: #ffffff; opacity: 0.8; }
-.vacia { grid-template-columns: 1fr; color: var(--d-faint); font-family: var(--font-mono); font-size: var(--d-fs-mono); cursor: default; }
-</style>

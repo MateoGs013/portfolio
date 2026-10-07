@@ -212,38 +212,38 @@ function printCV() {
 </script>
 
 <template>
-  <section class="cv-wrapper" :class="`mode-${mode}`">
+  <section class="cv-wrapper w-full" :class="`mode-${mode}`">
     <!-- Barra de Herramientas del CV -->
-    <header class="cv-toolbar no-print">
-      <div class="cv-selector" role="group" :aria-label="isEs ? 'Estilo de Currículum Vitae' : 'Resume format style'">
+    <header class="cv-toolbar flex items-center justify-between gap-3 px-4 py-2.5 mb-5 bg-surface border border-rule max-[820px]:flex-col max-[820px]:items-stretch max-[820px]:gap-2.5 max-[820px]:p-3 no-print">
+      <div class="cv-selector inline-flex border border-rule bg-paper max-[820px]:w-full" role="group" :aria-label="isEs ? 'Estilo de Currículum Vitae' : 'Resume format style'">
         <button
           type="button"
-          class="cv-btn"
-          :class="{ active: mode === 'modern' }"
+          class="cv-btn inline-flex items-center gap-1.5 px-3.5 py-1.5 border-0 font-mono text-[11.5px] font-bold cursor-pointer transition-colors duration-150 max-[820px]:flex-1 max-[820px]:justify-center max-[820px]:text-[11px] max-[820px]:py-2"
+          :class="mode === 'modern' ? 'bg-sig text-white' : 'bg-transparent text-dim hover:text-ink hover:bg-hover'"
           :title="isEs ? 'Ver CV moderno editorial con fotografía técnica' : 'View modern editorial tech resume with photo'"
           @click="mode = 'modern'"
         >
-          <AppIcon name="user" :size="13" class="cv-btn-icon" />
+          <AppIcon name="user" :size="13" class="cv-btn-icon shrink-0" />
           <span>{{ isEs ? 'MODERNO + FOTO' : 'MODERN + PHOTO' }}</span>
         </button>
         <button
           type="button"
-          class="cv-btn"
-          :class="{ active: mode === 'harvard' }"
+          class="cv-btn inline-flex items-center gap-1.5 px-3.5 py-1.5 border-0 font-mono text-[11.5px] font-bold cursor-pointer transition-colors duration-150 max-[820px]:flex-1 max-[820px]:justify-center max-[820px]:text-[11px] max-[820px]:py-2"
+          :class="mode === 'harvard' ? 'bg-sig text-white' : 'bg-transparent text-dim hover:text-ink hover:bg-hover'"
           :title="isEs ? 'Ver CV formato clásico Harvard ATS en blanco y negro' : 'View classic black & white Harvard ATS resume'"
           @click="mode = 'harvard'"
         >
-          <AppIcon name="academic" :size="13" class="cv-btn-icon" />
+          <AppIcon name="academic" :size="13" class="cv-btn-icon shrink-0" />
           <span>HARVARD ATS</span>
         </button>
       </div>
 
-      <div class="cv-actions">
+      <div class="cv-actions flex items-center gap-2 max-[820px]:w-full">
         <!-- Botón de Descarga Directa PDF -->
         <a
           :href="cvPdfUrl"
           :download="cvDownloadFileName"
-          class="cv-action-btn cv-download-btn"
+          class="cv-action-btn cv-download-btn inline-flex items-center gap-1.5 px-3 py-1.5 bg-sig border border-sig text-white font-mono text-[11px] font-bold no-underline cursor-pointer transition-colors duration-150 hover:bg-[#c53000] max-[820px]:flex-1 max-[820px]:justify-center max-[820px]:text-[10.5px] max-[820px]:py-2"
           :title="isEs ? `Descargar archivo PDF (${cvDownloadFileName})` : `Download PDF file (${cvDownloadFileName})`"
         >
           <AppIcon name="download" :size="13" />
@@ -253,7 +253,7 @@ function printCV() {
         <!-- Botón de Impresión Navegador -->
         <button
           type="button"
-          class="cv-action-btn cv-print-btn"
+          class="cv-action-btn cv-print-btn inline-flex items-center gap-1.5 px-3 py-1.5 bg-paper border border-rule-strong text-ink font-mono text-[11px] font-bold no-underline cursor-pointer transition-colors duration-150 hover:bg-hover hover:text-sig hover:border-sig max-[820px]:flex-1 max-[820px]:justify-center max-[820px]:text-[10.5px] max-[820px]:py-2"
           :title="isEs ? 'Imprimir en papel o guardar como PDF desde el navegador (Ctrl+P)' : 'Print to paper or save as PDF via browser (Ctrl+P)'"
           @click="printCV"
         >
@@ -295,124 +295,3 @@ function printCV() {
     />
   </section>
 </template>
-
-<style scoped>
-.cv-wrapper {
-  width: 100%;
-}
-
-/* ─── Barra de Herramientas del CV ─────────────────────────────────────────── */
-.cv-toolbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 10px 16px;
-  margin-bottom: 20px;
-  background: var(--d-surface);
-  border: 1px solid var(--d-rule);
-}
-.cv-selector {
-  display: inline-flex;
-  border: 1px solid var(--d-rule);
-  background: var(--d-paper);
-}
-.cv-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 14px;
-  background: none;
-  border: none;
-  color: var(--d-dim);
-  font-family: var(--font-mono);
-  font-size: 11.5px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: all var(--d-dur) ease;
-}
-.cv-btn:hover {
-  color: var(--d-ink);
-  background: var(--d-hover);
-}
-.cv-btn.active {
-  background: var(--d-sig);
-  color: #ffffff;
-}
-.cv-actions {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-.cv-action-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 12px;
-  background: var(--d-paper);
-  border: 1px solid var(--d-rule-strong);
-  color: var(--d-ink);
-  font-family: var(--font-mono);
-  font-size: 11px;
-  font-weight: 700;
-  text-decoration: none;
-  cursor: pointer;
-  transition: all var(--d-dur) ease;
-}
-.cv-action-btn:hover {
-  background: var(--d-hover);
-  color: var(--d-sig);
-  border-color: var(--d-sig);
-}
-.cv-download-btn {
-  background: var(--d-sig);
-  color: #ffffff;
-  border-color: var(--d-sig);
-}
-.cv-download-btn:hover {
-  background: #c53000;
-  color: #ffffff;
-}
-
-@media screen and (max-width: 820px) {
-  .cv-toolbar {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 10px;
-    padding: 10px 12px;
-  }
-  .cv-selector {
-    width: 100%;
-    display: flex;
-  }
-  .cv-btn {
-    flex: 1;
-    justify-content: center;
-    font-size: 11px;
-    padding: 7px 6px;
-  }
-  .cv-actions {
-    width: 100%;
-    display: flex;
-    gap: 8px;
-  }
-  .cv-action-btn {
-    flex: 1;
-    justify-content: center;
-    font-size: 10.5px;
-    padding: 7px 6px;
-  }
-}
-
-@media print {
-  .cv-toolbar {
-    display: none !important;
-  }
-  .cv-wrapper {
-    max-width: 100% !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    background: transparent !important;
-  }
-}
-</style>

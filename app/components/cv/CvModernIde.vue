@@ -17,174 +17,173 @@ defineProps<{
 </script>
 
 <template>
-  <article class="cv-modern">
-    <div class="ide-container">
+  <article class="cv-modern w-full max-w-[1040px] mx-auto">
+    <div class="ide-container flex max-md:flex-col bg-paper border border-rule-strong text-ink font-mono text-[11px]">
       <!-- Sidebar -->
-      <aside class="ide-sidebar">
-        <div class="ide-window-controls">
-          <span class="ide-dot red" aria-hidden="true" />
-          <span class="ide-dot yellow" aria-hidden="true" />
-          <span class="ide-dot green" aria-hidden="true" />
-          <span class="ide-file-title">package.json</span>
+      <aside class="ide-sidebar w-[260px] max-md:w-full bg-surface border-r max-md:border-r-0 max-md:border-b border-rule-strong flex flex-col shrink-0">
+        <div class="ide-window-controls p-3 px-3.5 flex items-center gap-1.5 border-b border-rule-strong bg-surface-raised">
+          <span class="w-2.5 h-2.5 rounded-full bg-[#ff5f56]" aria-hidden="true" />
+          <span class="w-2.5 h-2.5 rounded-full bg-[#ffbd2e]" aria-hidden="true" />
+          <span class="w-2.5 h-2.5 rounded-full bg-[#27c93f]" aria-hidden="true" />
+          <span class="ml-auto text-sig text-[11px]">package.json</span>
         </div>
 
-        <div class="ide-sidebar-inner">
+        <div class="ide-sidebar-inner p-3.5 flex flex-col gap-3.5">
           <div class="ide-tree-block">
-            <div class="ide-sidebar-header">
-              <span class="ide-tree-root">~/curriculum</span>
+            <div class="ide-sidebar-header mb-1">
+              <span class="text-sig font-bold">~/curriculum</span>
             </div>
-            
-            <div class="ide-tree">
+
+            <div class="ide-tree flex flex-col gap-2">
               <div class="ide-tree-group">
-                <div class="ide-tree-folder">
-                  <span class="ide-tree-bullet">▼</span> src/
+                <div class="text-ink font-semibold flex items-center gap-1">
+                  <span class="text-dim text-[9px]">▼</span> src/
                 </div>
-                <ul class="ide-tree-files">
-                  <li><span class="ide-tree-bullet">·</span> profile.ts</li>
-                  <li><span class="ide-tree-bullet">·</span> experience.vue</li>
-                  <li><span class="ide-tree-bullet">·</span> stack.py</li>
-                  <li><span class="ide-tree-bullet">·</span> education.sql</li>
+                <ul class="list-none m-0 pl-3.5 flex flex-col gap-1 text-dim mt-1">
+                  <li><span class="text-faint">·</span> profile.ts</li>
+                  <li><span class="text-faint">·</span> experience.vue</li>
+                  <li><span class="text-faint">·</span> stack.py</li>
+                  <li><span class="text-faint">·</span> education.sql</li>
                 </ul>
               </div>
               <div class="ide-tree-group">
-                <div class="ide-tree-folder">
-                  <span class="ide-tree-bullet">▼</span> config/
+                <div class="text-ink font-semibold flex items-center gap-1">
+                  <span class="text-dim text-[9px]">▼</span> config/
                 </div>
-                <ul class="ide-tree-files">
-                  <li><span class="ide-tree-bullet">·</span> contact.env</li>
-                  <li><span class="ide-tree-bullet">·</span> nuxt.config.ts</li>
+                <ul class="list-none m-0 pl-3.5 flex flex-col gap-1 text-dim mt-1">
+                  <li><span class="text-faint">·</span> contact.env</li>
+                  <li><span class="text-faint">·</span> nuxt.config.ts</li>
                 </ul>
               </div>
             </div>
           </div>
 
-          <div class="ide-divider" />
+          <div class="h-px bg-rule my-0.5" />
 
-          <div class="ide-photo-wrap">
+          <div class="p-2 bg-surface-raised border border-rule flex justify-center">
             <img
               src="/media/profile/mateo-front.png"
               alt="Mateo Gabriel Sonzogni"
-              class="ide-photo"
+              class="w-28 h-28 object-cover rounded-[2px] border border-rule"
               loading="eager"
             >
           </div>
 
-          <div class="ide-divider" />
+          <div class="h-px bg-rule my-0.5" />
 
           <!-- Formación / Education -->
-          <div class="ide-sidebar-section">
-            <div class="ide-comment">// {{ isEs ? 'formación técnica' : 'education' }}</div>
-            <div class="ide-edu-item">
-              <div class="ide-edu-school">ESCUELA DA VINCI</div>
-              <div class="ide-edu-degree">{{ isEs ? 'Diseño y Desarrollo Web' : 'Web Design & Dev' }} (2024–2026)</div>
-              <div class="ide-edu-sub">{{ isEs ? 'Tesis: Ynara (Lead Front & Arq.)' : 'Thesis: Ynara (Lead Front & Arch)' }}</div>
+          <div class="ide-sidebar-section flex flex-col gap-2">
+            <div class="text-faint italic text-[10.5px]">// {{ isEs ? 'formación técnica' : 'education' }}</div>
+            <div class="flex flex-col gap-0.5">
+              <div class="text-sig font-bold text-[11px]">ESCUELA DA VINCI</div>
+              <div class="text-ink font-medium text-[10.5px]">{{ isEs ? 'Diseño y Desarrollo Web' : 'Web Design & Dev' }} (2024–2026)</div>
+              <div class="text-dim text-[10px]">{{ isEs ? 'Tesis: Ynara (Lead Front & Arq.)' : 'Thesis: Ynara (Lead Front & Arch)' }}</div>
             </div>
-            <div class="ide-edu-item">
-              <div class="ide-edu-school">CET N.º 30</div>
-              <div class="ide-edu-degree">{{ isEs ? 'Técnico en Programación' : 'Programming Tech' }} (2017–2023)</div>
-              <div class="ide-edu-sub">{{ isEs ? 'Plan integral de 7 años' : '7-year technical program' }}</div>
+            <div class="flex flex-col gap-0.5">
+              <div class="text-sig font-bold text-[11px]">CET N.º 30</div>
+              <div class="text-ink font-medium text-[10.5px]">{{ isEs ? 'Técnico en Programación' : 'Programming Tech' }} (2017–2023)</div>
+              <div class="text-dim text-[10px]">{{ isEs ? 'Plan integral de 7 años' : '7-year technical program' }}</div>
             </div>
           </div>
 
-          <div class="ide-divider" />
+          <div class="h-px bg-rule my-0.5" />
 
           <!-- Stats & Idiomas -->
-          <div class="ide-sidebar-section">
-            <div class="ide-comment">// {{ isEs ? 'métricas & idiomas' : 'metrics & languages' }}</div>
-            <ul class="ide-key-val">
-              <li><span>{{ isEs ? 'Español' : 'Spanish' }}</span> <span class="ide-highlight">{{ isEs ? 'Nativo' : 'Native' }}</span></li>
-              <li><span>{{ isEs ? 'Inglés' : 'English' }}</span> <span class="ide-highlight">{{ isEs ? 'B2 Profesional' : 'B2 Professional' }}</span></li>
-              <li><span>{{ isEs ? 'Experiencia' : 'Experience' }}</span> <span class="ide-highlight">{{ isEs ? '+3 años' : '3+ yrs' }}</span></li>
-              <li><span>{{ isEs ? 'Proyectos' : 'Projects' }}</span> <span class="ide-highlight">~10 apps</span></li>
-              <li><span>{{ isEs ? 'Disponibilidad' : 'Availability' }}</span> <span class="ide-highlight">{{ isEs ? 'Inmediata' : 'Immediate' }}</span></li>
-              <li><span>{{ isEs ? 'Zona Horaria' : 'Timezone' }}</span> <span class="ide-highlight">{{ timezone }}</span></li>
+          <div class="ide-sidebar-section flex flex-col gap-1.5">
+            <div class="text-faint italic text-[10.5px]">// {{ isEs ? 'métricas & idiomas' : 'metrics & languages' }}</div>
+            <ul class="list-none m-0 p-0 flex flex-col gap-1 text-dim text-[10.5px]">
+              <li class="flex justify-between"><span>{{ isEs ? 'Español' : 'Spanish' }}</span> <span class="text-ink font-semibold">{{ isEs ? 'Nativo' : 'Native' }}</span></li>
+              <li class="flex justify-between"><span>{{ isEs ? 'Inglés' : 'English' }}</span> <span class="text-ink font-semibold">{{ isEs ? 'B2 Profesional' : 'B2 Professional' }}</span></li>
+              <li class="flex justify-between"><span>{{ isEs ? 'Experiencia' : 'Experience' }}</span> <span class="text-ink font-semibold">{{ isEs ? '+3 años' : '3+ yrs' }}</span></li>
+              <li class="flex justify-between"><span>{{ isEs ? 'Proyectos' : 'Projects' }}</span> <span class="text-ink font-semibold">~10 apps</span></li>
+              <li class="flex justify-between"><span>{{ isEs ? 'Disponibilidad' : 'Availability' }}</span> <span class="text-ink font-semibold">{{ isEs ? 'Inmediata' : 'Immediate' }}</span></li>
+              <li class="flex justify-between"><span>{{ isEs ? 'Zona Horaria' : 'Timezone' }}</span> <span class="text-ink font-semibold">{{ timezone }}</span></li>
             </ul>
           </div>
 
-          <div class="ide-divider" />
+          <div class="h-px bg-rule my-0.5" />
 
           <!-- Contact -->
-          <div class="ide-sidebar-section">
-            <div class="ide-comment">// {{ isEs ? 'contacto' : 'contact' }}</div>
-            <ul class="ide-contact-list">
-              <li><a :href="`mailto:${email}`">{{ email }}</a></li>
-              <li><a :href="github" target="_blank" rel="noopener noreferrer">@{{ githubText.replace('github.com/', '') }}</a></li>
-              <li><a :href="linkedin" target="_blank" rel="noopener noreferrer">in/mateo-sonzogni</a></li>
-              <li><span class="ide-loc">{{ location }}</span></li>
+          <div class="ide-sidebar-section flex flex-col gap-1.5">
+            <div class="text-faint italic text-[10.5px]">// {{ isEs ? 'contacto' : 'contact' }}</div>
+            <ul class="list-none m-0 p-0 flex flex-col gap-1 text-[10.5px]">
+              <li><a :href="`mailto:${email}`" class="text-sig hover:underline">{{ email }}</a></li>
+              <li><a :href="github" target="_blank" rel="noopener noreferrer" class="text-sig hover:underline">@{{ githubText.replace('github.com/', '') }}</a></li>
+              <li><a :href="linkedin" target="_blank" rel="noopener noreferrer" class="text-sig hover:underline">in/mateo-sonzogni</a></li>
+              <li><span class="text-dim">{{ location }}</span></li>
             </ul>
           </div>
         </div>
       </aside>
 
       <!-- Main Editor -->
-      <main class="ide-main">
-        <div class="ide-tabs">
-          <div class="ide-tab active">cv.ts</div>
-          <div class="ide-tab">README.md</div>
+      <main class="ide-main flex-1 min-w-0 bg-paper flex flex-col">
+        <div class="ide-tabs flex border-b border-rule-strong bg-surface-raised">
+          <div class="ide-tab px-4 py-2 text-[11px] border-r border-rule-strong cursor-pointer bg-paper text-sig font-bold border-b-2 border-b-sig">cv.ts</div>
+          <div class="ide-tab px-4 py-2 text-[11px] border-r border-rule-strong cursor-pointer text-dim hover:text-ink">README.md</div>
         </div>
 
-        <div class="ide-editor-content">
+        <div class="ide-editor-content p-6 max-md:p-4 flex flex-col gap-5 leading-relaxed">
           <header class="ide-header">
-            <div class="ide-comment">// curriculum vitae — mateo sonzogni, 2026</div>
-            <h1 class="ide-name">{{ name }}</h1>
-            <p class="ide-role">{{ role }}</p>
+            <div class="text-faint italic text-[10.5px] mb-1">// curriculum vitae — mateo sonzogni, 2026</div>
+            <h1 class="m-0 font-sans text-2xl font-bold text-ink tracking-tight">{{ name }}</h1>
+            <p class="m-0 font-mono text-sig text-[12px] font-semibold mt-1">{{ role }}</p>
           </header>
 
-          <div class="ide-hr" />
+          <div class="h-px bg-rule" />
 
           <!-- Profile -->
-          <div class="ide-section">
-            <div class="ide-comment">// profile</div>
-            <p class="ide-text">{{ bio }}</p>
+          <div class="ide-section flex flex-col gap-2">
+            <div class="text-faint italic text-[10.5px]">// profile</div>
+            <p class="m-0 font-sans text-[13.5px] text-dim leading-relaxed">{{ bio }}</p>
           </div>
 
-          <div class="ide-hr" />
+          <div class="h-px bg-rule" />
 
           <!-- Experience & Projects -->
-          <div class="ide-section">
-            <div class="ide-comment">// {{ isEs ? 'experiencia profesional & proyectos en producción' : 'professional experience & shipped projects' }}</div>
-            
-            <div v-for="item in deliverables" :key="item.slug" class="ide-exp-item">
-              <div class="ide-exp-top-row">
-                <div class="ide-exp-title-wrap">
-                  <span class="ide-exp-title">{{ item.title }}</span>
-                  <span v-if="item.badge" class="ide-exp-badge">{{ item.badge }}</span>
+          <div class="ide-section flex flex-col gap-3">
+            <div class="text-faint italic text-[10.5px]">// {{ isEs ? 'experiencia profesional & proyectos en producción' : 'professional experience & shipped projects' }}</div>
+
+            <div v-for="item in deliverables" :key="item.slug" class="mt-2 flex flex-col gap-1.5 p-3.5 bg-surface border border-rule">
+              <div class="flex items-baseline justify-between gap-2 flex-wrap">
+                <div class="flex items-center gap-2">
+                  <span class="font-mono text-[13px] font-bold text-ink">{{ item.title }}</span>
+                  <span v-if="item.badge" class="text-[9.5px] px-1.5 py-0.5 border border-sig text-sig font-bold rounded-[2px]">{{ item.badge }}</span>
                 </div>
-                <span class="ide-exp-date">{{ item.date }}</span>
+                <span class="text-dim text-[10.5px]">{{ item.date }}</span>
               </div>
-              <div class="ide-exp-sub-row">
-                <span class="ide-exp-role">{{ item.role }}</span>
-                <span class="ide-exp-loc">{{ item.location }}</span>
+              <div class="flex items-baseline justify-between gap-2 text-dim text-[11px]">
+                <span class="text-sig font-medium">{{ item.role }}</span>
+                <span class="text-dim">{{ item.location }}</span>
               </div>
-              <p class="ide-exp-desc">{{ item.description }}</p>
-              <ul v-if="item.bullets?.length" class="ide-exp-bullets">
+              <p class="m-0 font-sans text-[12.5px] text-dim leading-relaxed">{{ item.description }}</p>
+              <ul v-if="item.bullets?.length" class="m-0 pl-4 text-dim text-[11.5px] leading-relaxed flex flex-col gap-1">
                 <li v-for="(bullet, bIdx) in item.bullets" :key="bIdx">{{ bullet }}</li>
               </ul>
-              <div v-if="item.tags?.length" class="ide-exp-tags">
-                <span v-for="tag in item.tags" :key="tag" class="ide-tag">#{{ tag }}</span>
+              <div v-if="item.tags?.length" class="flex flex-wrap gap-1.5 mt-1">
+                <span v-for="tag in item.tags" :key="tag" class="text-[10px] text-faint bg-surface-raised border border-rule px-1.5 py-0.5 rounded-[2px]">#{{ tag }}</span>
               </div>
             </div>
           </div>
 
-          <div class="ide-hr" />
+          <div class="h-px bg-rule" />
 
           <!-- Stack -->
-          <div class="ide-section">
-            <div class="ide-comment">// {{ isEs ? 'stack tecnológico' : 'tech stack' }}</div>
-            <div class="ide-stack-group">
-              <span class="ide-stack-label">frontend</span>
-              <span class="ide-stack-val">: "Vue 3 · Nuxt 4 · React · Next.js · TypeScript · Tailwind · GSAP"</span>
+          <div class="ide-section flex flex-col gap-2">
+            <div class="text-faint italic text-[10.5px]">// {{ isEs ? 'stack tecnológico' : 'tech stack' }}</div>
+            <div class="flex items-baseline gap-2 text-[11px] font-mono">
+              <span class="text-sig font-bold">frontend</span>
+              <span class="text-dim">: "Vue 3 · Nuxt 4 · React · Next.js · TypeScript · Tailwind · GSAP"</span>
             </div>
-            <div class="ide-stack-group">
-              <span class="ide-stack-label">backend </span>
-              <span class="ide-stack-val">: "Node.js · Express · FastAPI · Python · PostgreSQL (pgvector) · Prisma"</span>
+            <div class="flex items-baseline gap-2 text-[11px] font-mono">
+              <span class="text-sig font-bold">backend </span>
+              <span class="text-dim">: "Node.js · Express · FastAPI · Python · PostgreSQL (pgvector) · Prisma"</span>
             </div>
-            <div class="ide-stack-group">
-              <span class="ide-stack-label">cloud/ops</span>
-              <span class="ide-stack-val">: "Docker · Coolify VPS · Linux · CI/CD · Git · Figma UI/UX · Vitest"</span>
+            <div class="flex items-baseline gap-2 text-[11px] font-mono">
+              <span class="text-sig font-bold">cloud/ops</span>
+              <span class="text-dim">: "Docker · Coolify VPS · Linux · CI/CD · Git · Figma UI/UX · Vitest"</span>
             </div>
           </div>
-
         </div>
       </main>
     </div>
@@ -192,467 +191,7 @@ defineProps<{
 </template>
 
 <style scoped>
-.cv-modern {
-  width: 100%;
-  max-width: 1040px;
-  margin: 0 auto;
-}
-
-.ide-container {
-  display: flex;
-  background: var(--d-paper);
-  border: 1px solid var(--d-rule-strong);
-  color: var(--d-ink);
-  font-family: var(--font-mono);
-  font-size: 11px;
-}
-
-.ide-sidebar {
-  width: 260px;
-  background: var(--d-surface);
-  border-right: 1px solid var(--d-rule-strong);
-  display: flex;
-  flex-direction: column;
-  flex-shrink: 0;
-}
-
-.ide-window-controls {
-  padding: 12px 14px;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  border-bottom: 1px solid var(--d-rule-strong);
-  background: var(--d-surface-raised);
-}
-
-.ide-dot {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-}
-.ide-dot.red { background: #ff5f56; }
-.ide-dot.yellow { background: #ffbd2e; }
-.ide-dot.green { background: #27c93f; }
-
-.ide-file-title {
-  margin-left: auto;
-  color: var(--d-sig);
-  font-size: 11px;
-}
-
-.ide-sidebar-inner {
-  padding: 14px;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.ide-tree-block {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.ide-sidebar-header {
-  color: var(--d-sig);
-  font-size: 11.5px;
-}
-
-.ide-tree {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.ide-tree-group {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.ide-tree-folder {
-  color: var(--d-sig);
-}
-
-.ide-tree-bullet {
-  color: var(--d-dim);
-  margin-right: 4px;
-}
-
-.ide-tree-files {
-  list-style: none;
-  padding: 0 0 0 14px;
-  margin: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  color: var(--d-dim);
-}
-
-.ide-divider {
-  height: 1px;
-  background: var(--d-rule-strong);
-}
-
-.ide-hr {
-  height: 1px;
-  background: var(--d-rule-strong);
-  margin: 18px 0;
-}
-
-.ide-photo-wrap {
-  width: 100%;
-}
-.ide-photo {
-  width: 100%;
-  aspect-ratio: 1;
-  object-fit: cover;
-  object-position: center top;
-  filter: grayscale(20%);
-}
-
-.ide-sidebar-section {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.ide-edu-item {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  margin-bottom: 6px;
-}
-.ide-edu-school {
-  color: var(--d-ink);
-  font-weight: 700;
-  font-size: 11px;
-}
-.ide-edu-degree {
-  color: var(--d-sig);
-  font-size: 10.5px;
-}
-.ide-edu-sub {
-  color: var(--d-dim);
-  font-size: 10px;
-}
-
-.ide-comment {
-  color: var(--d-dim);
-  font-style: italic;
-  margin-bottom: 4px;
-}
-
-.ide-key-val {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  color: var(--d-dim);
-}
-
-.ide-key-val li {
-  display: flex;
-  justify-content: space-between;
-}
-
-.ide-highlight {
-  color: var(--d-sig);
-}
-
-.ide-contact-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.ide-contact-list a, .ide-loc {
-  color: var(--d-dim);
-  text-decoration: none;
-}
-.ide-contact-list a:hover {
-  color: var(--d-ink);
-  text-decoration: underline;
-}
-
-/* Editor Main */
-.ide-main {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  background: var(--d-paper);
-}
-
-.ide-tabs {
-  display: flex;
-  border-bottom: 1px solid var(--d-rule-strong);
-  background: var(--d-surface);
-}
-
-.ide-tab {
-  padding: 10px 16px;
-  color: var(--d-dim);
-  border-right: 1px solid var(--d-rule-strong);
-}
-.ide-tab.active {
-  background: var(--d-paper);
-  color: var(--d-sig);
-  border-top: 2px solid var(--d-sig);
-  margin-top: -1px;
-}
-
-.ide-editor-content {
-  padding: 24px 32px;
-  flex: 1;
-}
-
-.ide-header {
-  display: flex;
-  flex-direction: column;
-}
-
-.ide-name {
-  margin: 12px 0 4px;
-  font-size: 26px;
-  font-weight: 700;
-  color: var(--d-ink);
-  font-family: var(--font-mono);
-  letter-spacing: -0.02em;
-}
-
-.ide-name::after {
-  content: ' _';
-  color: var(--d-sig);
-  animation: blink 1s step-end infinite;
-}
-
-@keyframes blink {
-  50% { opacity: 0; }
-}
-
-.ide-role {
-  margin: 0;
-  color: var(--d-sig);
-  font-size: 12.5px;
-  font-weight: 600;
-}
-
-.ide-section {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.ide-text {
-  margin: 0;
-  color: var(--d-dim);
-  font-size: 12px;
-  line-height: 1.55;
-}
-
-.ide-exp-item {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  margin-bottom: 14px;
-  padding-bottom: 12px;
-  border-bottom: 1px dashed var(--d-rule);
-}
-.ide-exp-item:last-child {
-  border-bottom: none;
-  margin-bottom: 0;
-  padding-bottom: 0;
-}
-
-.ide-exp-top-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  gap: 8px;
-}
-
-.ide-exp-title-wrap {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.ide-exp-title {
-  color: var(--d-ink);
-  font-weight: 700;
-  font-size: 14px;
-}
-
-.ide-exp-badge {
-  color: var(--d-sig);
-  border: 1px solid var(--d-rule-strong);
-  background: var(--d-surface-raised);
-  padding: 1px 6px;
-  font-size: 9.5px;
-  border-radius: 2px;
-}
-
-.ide-exp-date {
-  color: var(--d-dim);
-  font-size: 11px;
-  flex-shrink: 0;
-}
-
-.ide-exp-sub-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  gap: 8px;
-}
-
-.ide-exp-role {
-  color: var(--d-sig);
-  font-size: 12px;
-  font-weight: 500;
-}
-
-.ide-exp-loc {
-  color: var(--d-dim);
-  font-size: 10.5px;
-}
-
-.ide-exp-desc {
-  margin: 2px 0 0;
-  color: var(--d-dim);
-  font-size: 11.5px;
-  line-height: 1.5;
-}
-
-.ide-exp-bullets {
-  margin: 4px 0 0;
-  padding-left: 14px;
-  list-style: none;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.ide-exp-bullets li {
-  position: relative;
-  color: var(--d-dim);
-  font-size: 11px;
-  line-height: 1.45;
-}
-
-.ide-exp-bullets li::before {
-  content: '·';
-  position: absolute;
-  left: -10px;
-  color: var(--d-sig);
-  font-weight: bold;
-}
-
-.ide-exp-tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 5px;
-  margin-top: 4px;
-}
-
-.ide-tag {
-  color: var(--d-dim);
-  background: var(--d-surface-raised);
-  border: 1px solid var(--d-rule);
-  padding: 1px 6px;
-  font-size: 10px;
-  border-radius: 2px;
-}
-
-.ide-stack-group {
-  display: flex;
-  gap: 12px;
-  color: var(--d-dim);
-}
-
-.ide-stack-label {
-  color: var(--d-sig);
-  width: 65px;
-}
-.ide-stack-val {
-  color: var(--d-dim);
-}
-
-/* ─── Responsive Screen Rules ─────────────────────────────────────────────── */
-@media screen and (max-width: 820px) {
-  .ide-container {
-    flex-direction: column;
-  }
-  .ide-sidebar {
-    width: 100%;
-    border-right: none;
-    border-bottom: 1px solid var(--d-rule-strong);
-  }
-  .ide-photo-wrap {
-    width: 110px;
-    margin: 0 auto;
-  }
-  .ide-editor-content {
-    padding: 18px 16px;
-  }
-  .ide-name {
-    font-size: 22px;
-  }
-}
-
-@media screen and (max-width: 520px) {
-  .ide-editor-content {
-    padding: 14px 12px;
-  }
-  .ide-name {
-    font-size: 19px;
-  }
-  .ide-role {
-    font-size: 11.5px;
-  }
-  .ide-tabs {
-    overflow-x: auto;
-  }
-  .ide-tab {
-    padding: 8px 12px;
-    font-size: 11px;
-  }
-  .ide-exp-top-row {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 2px;
-  }
-  .ide-exp-title {
-    font-size: 13px;
-  }
-  .ide-exp-title-wrap {
-    flex-wrap: wrap;
-  }
-  .ide-exp-sub-row {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 1px;
-  }
-  .ide-exp-bullets {
-    padding-left: 12px;
-  }
-  .ide-stack-group {
-    flex-direction: column;
-    gap: 2px;
-  }
-  .ide-stack-label {
-    width: auto;
-  }
-  .ide-key-val li {
-    font-size: 11px;
-  }
-}
-
-/* ─── Print Rules ──────────────────────────────────────────────────────────── */
+/* ─── Print Rules (A4 1-Page Dark Technical Layout) ───────────────────────── */
 @media print {
   .cv-modern {
     background: #09090b !important;

@@ -145,15 +145,15 @@ async function copyJson() {
     :badge="detail.type"
     :parent-url="parentRoute"
   >
-    <article class="hoja" :class="{ 'is-about-cv': isAbout && !showRawFields }" :aria-labelledby="uid">
+    <article class="hoja grid grid-cols-1 gap-5 w-full" :class="{ 'is-about-cv': isAbout && !showRawFields }" :aria-labelledby="uid">
       <ExplorerHeader :id="uid" kind="file" :badge="pad(detail.rows.length)" :name="detail.name" :line="line">
-        <div class="hoja-acciones">
+        <div class="hoja-acciones flex items-center gap-2 flex-wrap max-md:w-full">
           <!-- Toggle para ver CV vs Campos técnicos si es About -->
           <button
             v-if="isAbout"
             type="button"
-            class="raw-btn"
-            :class="{ active: showRawFields }"
+            class="raw-btn inline-flex items-center gap-1.5 h-[30px] px-2.5 border border-rule bg-surface text-dim font-mono text-[12px] font-bold cursor-pointer transition-colors duration-150 hover:border-sig hover:text-sig hover:bg-hover"
+            :class="{ '!border-sig !text-sig !bg-hover': showRawFields }"
             :title="isEs ? 'Alternar entre la vista de CV y la tabla de campos técnicos' : 'Toggle between CV view and technical fields table'"
             @click="showRawFields = !showRawFields"
           >
@@ -165,30 +165,30 @@ async function copyJson() {
           <!-- Botón de Inspección de JSON Crudo -->
           <button
             type="button"
-            class="raw-btn"
-            :class="{ active: showRawJson }"
+            class="raw-btn inline-flex items-center gap-1.5 h-[30px] px-2.5 border border-rule bg-surface text-dim font-mono text-[12px] font-bold cursor-pointer transition-colors duration-150 hover:border-sig hover:text-sig hover:bg-hover"
+            :class="{ '!border-sig !text-sig !bg-hover': showRawJson }"
             :title="isEs ? 'Inspeccionar respuesta cruda de la API REST' : 'Inspect raw REST API response'"
             @click="showRawJson = !showRawJson"
           >
-            <span class="raw-icon">{ }</span>
+            <span class="raw-icon font-black">{ }</span>
             <span>{{ showRawJson ? (isEs ? 'CERRAR JSON' : 'CLOSE JSON') : 'RAW JSON' }}</span>
           </button>
 
           <!-- Navegación entre vecinos -->
-          <nav v-if="prev || next" class="vecinos" :aria-label="isEs ? 'Registros vecinos' : 'Adjacent records'">
-            <NuxtLink v-if="prev" :to="prev.to" class="vecino" rel="prev" :title="isEs ? 'Registro anterior' : 'Previous record'">
+          <nav v-if="prev || next" class="vecinos flex items-center gap-1.5 font-sans text-[13px] flex-wrap max-md:w-full max-md:justify-between" :aria-label="isEs ? 'Registros vecinos' : 'Adjacent records'">
+            <NuxtLink v-if="prev" :to="prev.to" class="vecino inline-flex items-center gap-1.5 max-w-[280px] max-md:max-w-none max-md:flex-1 h-[30px] px-2.5 border border-rule bg-surface text-dim no-underline whitespace-nowrap overflow-hidden text-ellipsis transition-colors duration-150 hover:border-sig hover:text-sig hover:bg-hover" rel="prev" :title="isEs ? 'Registro anterior' : 'Previous record'">
               <AppIcon name="chevron-left" :size="11" />
               <span>{{ prev.label }}</span>
             </NuxtLink>
-            <span v-else class="vecino off" aria-hidden="true">
+            <span v-else class="vecino off inline-flex items-center gap-1.5 max-w-[280px] max-md:max-w-none max-md:flex-1 h-[30px] px-2.5 border border-rule bg-surface text-faint opacity-50 cursor-default" aria-hidden="true">
               <AppIcon name="chevron-left" :size="11" />
             </span>
 
-            <NuxtLink v-if="next" :to="next.to" class="vecino" rel="next" :title="isEs ? 'Registro siguiente' : 'Next record'">
+            <NuxtLink v-if="next" :to="next.to" class="vecino inline-flex items-center gap-1.5 max-w-[280px] max-md:max-w-none max-md:flex-1 h-[30px] px-2.5 border border-rule bg-surface text-dim no-underline whitespace-nowrap overflow-hidden text-ellipsis transition-colors duration-150 hover:border-sig hover:text-sig hover:bg-hover" rel="next" :title="isEs ? 'Registro siguiente' : 'Next record'">
               <span>{{ next.label }}</span>
               <AppIcon name="chevron-right" :size="11" />
             </NuxtLink>
-            <span v-else class="vecino off" aria-hidden="true">
+            <span v-else class="vecino off inline-flex items-center gap-1.5 max-w-[280px] max-md:max-w-none max-md:flex-1 h-[30px] px-2.5 border border-rule bg-surface text-faint opacity-50 cursor-default" aria-hidden="true">
               <AppIcon name="chevron-right" :size="11" />
             </span>
           </nav>
@@ -201,21 +201,21 @@ async function copyJson() {
       <!-- De lo contrario, renderizar el flujo estándar -->
       <template v-else>
         <!-- Barra de Acción Hero de Proyecto -->
-        <div v-if="isProject" class="project-hero-bar">
-          <div class="ph-meta">
-            <span class="ph-status">● {{ projectStatus }}</span>
-            <span v-if="projectYear" class="ph-pill">{{ projectYear }}</span>
-            <span v-if="projectOrg" class="ph-pill org">{{ projectOrg }}</span>
-            <span v-if="projectRole" class="ph-pill role">{{ projectRole }}</span>
+        <div v-if="isProject" class="project-hero-bar p-3.5 bg-surface border border-rule flex items-center justify-between gap-3 flex-wrap max-md:flex-col max-md:items-start">
+          <div class="ph-meta flex items-center gap-2 flex-wrap text-xs font-mono">
+            <span class="ph-status text-green font-bold">● {{ projectStatus }}</span>
+            <span v-if="projectYear" class="ph-pill px-2 py-0.5 border border-rule bg-paper text-dim text-[11px]">{{ projectYear }}</span>
+            <span v-if="projectOrg" class="ph-pill org px-2 py-0.5 border border-rule bg-paper text-dim text-[11px]">{{ projectOrg }}</span>
+            <span v-if="projectRole" class="ph-pill role px-2 py-0.5 border border-rule bg-paper text-dim text-[11px]">{{ projectRole }}</span>
           </div>
 
-          <div class="ph-actions">
+          <div class="ph-actions flex items-center gap-2 flex-wrap max-md:w-full max-md:flex-col">
             <a
               v-if="projectUrl"
               :href="projectUrl"
               target="_blank"
               rel="noopener noreferrer"
-              class="ph-btn primary"
+              class="ph-btn primary inline-flex items-center gap-2 px-3.5 py-2 font-mono text-[11.5px] font-bold no-underline cursor-pointer transition-all duration-150 rounded-[2px] bg-sig text-white border border-sig hover:bg-[#c53000] max-md:w-full max-md:justify-center max-md:min-h-[42px]"
             >
               <AppIcon name="external" :size="12" />
               <span>{{ isEs ? 'VISITAR SITIO EN VIVO' : 'VISIT LIVE SITE' }}</span>
@@ -225,7 +225,7 @@ async function copyJson() {
               :href="projectRepo"
               target="_blank"
               rel="noopener noreferrer"
-              class="ph-btn secondary"
+              class="ph-btn secondary inline-flex items-center gap-2 px-3.5 py-2 font-mono text-[11.5px] font-bold no-underline cursor-pointer transition-all duration-150 rounded-[2px] bg-paper text-ink border border-rule-strong hover:bg-hover hover:border-sig hover:text-sig max-md:w-full max-md:justify-center max-md:min-h-[42px]"
             >
               <AppIcon name="code" :size="12" />
               <span>{{ isEs ? 'CÓDIGO FUENTE EN GITHUB' : 'SOURCE CODE ON GITHUB' }}</span>
@@ -234,20 +234,25 @@ async function copyJson() {
         </div>
 
         <!-- Barra de Acción Rápida de Contacto -->
-        <div v-if="isContact" class="contact-hero-bar">
-          <div class="ch-info">
-            <span class="ch-badge">● {{ isEs ? 'DISPONIBLE // CONTRATACIÓN DIRECTA' : 'AVAILABLE // DIRECT HIRE' }}</span>
-            <span class="ch-desc">{{ isEs ? 'Respondo habitualmente en menos de 24 horas laborables.' : 'I usually respond in less than 24 business hours.' }}</span>
+        <div v-if="isContact" class="contact-hero-bar p-3.5 bg-surface border border-rule flex items-center justify-between gap-3 flex-wrap max-md:flex-col max-md:items-start">
+          <div class="ch-info flex flex-col gap-1">
+            <span class="ch-badge text-green font-mono text-xs font-bold">● {{ isEs ? 'DISPONIBLE // CONTRATACIÓN DIRECTA' : 'AVAILABLE // DIRECT HIRE' }}</span>
+            <span class="ch-desc text-dim text-[13.5px] font-sans">{{ isEs ? 'Respondo habitualmente en menos de 24 horas laborables.' : 'I usually respond in less than 24 business hours.' }}</span>
           </div>
-          <div class="ch-actions">
-            <button type="button" class="ch-btn copy" :class="{ 'copy-active': copiedEmail }" @click="copyEmail">
+          <div class="ch-actions flex items-center gap-2 flex-wrap max-md:w-full max-md:flex-col">
+            <button
+              type="button"
+              class="ch-btn copy inline-flex items-center gap-2 px-3.5 py-2 font-mono text-[11.5px] font-bold no-underline cursor-pointer transition-all duration-150 rounded-[2px] bg-paper border border-rule-strong text-ink hover:bg-hover hover:border-sig hover:text-sig max-md:w-full max-md:justify-center max-md:min-h-[42px]"
+              :class="{ '!border-green !text-green !bg-green/10': copiedEmail }"
+              @click="copyEmail"
+            >
               <AppIcon :name="copiedEmail ? 'check' : 'copy'" :size="12" />
               <span>{{ copiedEmail ? (isEs ? '¡EMAIL COPIADO!' : 'EMAIL COPIED!') : (isEs ? 'COPIAR EMAIL DIRECTO' : 'COPY DIRECT EMAIL') }}</span>
             </button>
             <a
               v-if="emailRow?.value"
               :href="`mailto:${emailRow.value}`"
-              class="ch-btn primary"
+              class="ch-btn primary inline-flex items-center gap-2 px-3.5 py-2 font-mono text-[11.5px] font-bold no-underline cursor-pointer transition-all duration-150 rounded-[2px] bg-green text-white border border-green hover:bg-[#059669] max-md:w-full max-md:justify-center max-md:min-h-[42px]"
             >
               <AppIcon name="mail" :size="12" />
               <span>{{ isEs ? 'ENVIAR CORREO' : 'SEND EMAIL' }}</span>
@@ -257,36 +262,41 @@ async function copyJson() {
         </div>
 
         <!-- Drawer de Inspección JSON Crudo -->
-        <div v-if="showRawJson" class="raw-drawer">
-          <div class="raw-toolbar">
-            <span class="raw-endpoint">GET /api/{{ detail.name.toLowerCase().replace(/\s+/g, '-') }}</span>
-            <button type="button" class="copy-btn" :class="{ 'copy-active': copied }" @click="copyJson">
+        <div v-if="showRawJson" class="raw-drawer bg-surface border border-rule-strong mb-3 overflow-hidden shadow-lg w-full rounded-[2px]">
+          <div class="raw-toolbar flex items-center justify-between gap-2 p-2 px-3.5 bg-surface-raised border-b border-rule font-mono text-[11px]">
+            <span class="raw-endpoint text-sig font-bold">GET /api/{{ detail.name.toLowerCase().replace(/\s+/g, '-') }}</span>
+            <button
+              type="button"
+              class="copy-btn inline-flex items-center gap-1.5 px-2.5 py-1 border border-rule bg-paper text-dim text-[10.5px] font-bold cursor-pointer transition-colors duration-150 hover:border-sig hover:text-sig"
+              :class="{ '!border-sig !text-sig': copied }"
+              @click="copyJson"
+            >
               <AppIcon :name="copied ? 'check' : 'copy'" :size="12" />
               <span>{{ copied ? (isEs ? '¡COPIADO AL PORTAPAPELES!' : 'COPIED TO CLIPBOARD!') : (isEs ? 'COPIAR PAYLOAD JSON' : 'COPY JSON PAYLOAD') }}</span>
             </button>
           </div>
-          <pre class="raw-code"><code>{{ jsonContent }}</code></pre>
+          <pre class="raw-code m-0 p-3.5 bg-black/70 text-ink font-mono text-[11.5px] leading-relaxed max-h-[360px] max-md:max-h-[260px] overflow-auto"><code>{{ jsonContent }}</code></pre>
         </div>
 
         <!-- Lista de Campos Técnicos -->
-        <dl class="campos">
+        <dl class="campos flex flex-col border border-rule bg-surface divide-y divide-rule">
           <div
             v-for="row in detail.rows"
             :key="row.name"
-            class="campo"
+            class="campo grid grid-cols-[180px_1fr_90px] max-md:grid-cols-[1fr_auto] p-3 px-3.5 gap-2.5 items-baseline"
             :class="{
               wide: row.wide || row.items || row.media || row.steps || row.metrics,
               narrative: row.name === 'brief' || row.name === 'outcome' || row.name === 'story' || row.name === 'summary' || row.name === 'note',
             }"
           >
-            <dt class="nombre" :title="row.label ? `campo: ${row.name}` : undefined">
-              <span class="nombre-label">{{ localizeFieldLabel(row.name, row.label) }}</span>
-              <span v-if="row.label && row.label !== row.name" class="nombre-key"> · {{ row.name }}</span>
+            <dt class="nombre font-mono text-[12px] text-dim flex items-baseline gap-1" :title="row.label ? `campo: ${row.name}` : undefined">
+              <span class="nombre-label text-ink font-medium">{{ localizeFieldLabel(row.name, row.label) }}</span>
+              <span v-if="row.label && row.label !== row.name" class="nombre-key text-faint text-[10.5px]"> · {{ row.name }}</span>
             </dt>
-            <dd class="valor">
+            <dd class="valor min-w-0 font-sans text-[13.5px] text-ink leading-relaxed break-words max-md:col-span-full max-md:mt-1">
               <ExplorerValue :cell="getLocalizedRow(row)" :name="row.name" />
             </dd>
-            <dd class="tipo">{{ row.type }}</dd>
+            <dd class="tipo font-mono text-[11px] text-faint text-right">{{ row.type }}</dd>
           </div>
         </dl>
       </template>

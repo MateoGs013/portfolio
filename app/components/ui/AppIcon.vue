@@ -51,7 +51,7 @@ const px = computed(() => (typeof props.size === 'number' ? `${props.size}px` : 
 
 <template>
   <svg
-    class="d-icon"
+    class="inline-block align-middle shrink-0 transition-[transform,stroke] duration-150 ease-out"
     viewBox="0 0 24 24"
     fill="none"
     stroke="currentColor"
@@ -253,12 +253,3 @@ const px = computed(() => (typeof props.size === 'number' ? `${props.size}px` : 
     </template>
   </svg>
 </template>
-
-<style scoped>
-.d-icon {
-  display: inline-block;
-  vertical-align: middle;
-  flex-shrink: 0;
-  transition: transform 0.15s ease, stroke 0.15s ease;
-}
-</style>

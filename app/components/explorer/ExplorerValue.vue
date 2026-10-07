@@ -38,27 +38,27 @@ function formatBytes(bytes?: number | null): string {
 
 <template>
   <!-- 1. Piezas Multimedia / Capturas Técnicas con Lightbox -->
-  <div v-if="cell.media && cell.media.length" class="media-inspector">
-    <div class="media-grid">
+  <div v-if="cell.media && cell.media.length" class="media-inspector w-full mt-1">
+    <div class="media-grid grid grid-cols-[repeat(auto-fill,minmax(clamp(240px,20vw,360px),1fr))] gap-4 w-full">
       <figure
         v-for="m in cell.media"
         :key="m.id"
-        class="media-card"
+        class="media-card group m-0 border border-rule bg-surface cursor-pointer transition-[border-color,transform] duration-150 hover:border-sig hover:-translate-y-0.5 focus-visible:border-sig focus-visible:-translate-y-0.5 focus-visible:outline-none"
         tabindex="0"
         role="button"
         :aria-label="isEs ? `Inspeccionar captura: ${m.alt}` : `Inspect screenshot: ${m.alt}`"
         @click="activeMedia = m"
         @keydown.enter="activeMedia = m"
       >
-        <div class="media-thumb-wrap">
-          <img :src="m.src" :alt="m.alt" class="media-thumb" loading="lazy">
-          <div class="media-overlay">
-            <span class="zoom-icon">⊕ {{ isEs ? 'EXPANDIR' : 'EXPAND' }}</span>
+        <div class="media-thumb-wrap relative aspect-[16/10] overflow-hidden bg-black">
+          <img :src="m.src" :alt="m.alt" class="media-thumb w-full h-full object-cover block" loading="lazy">
+          <div class="media-overlay absolute inset-0 bg-black/45 flex items-center justify-center opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100 transition-opacity duration-150">
+            <span class="zoom-icon font-mono text-[11px] font-bold text-white px-2.5 py-1 bg-black/75 border border-sig">⊕ {{ isEs ? 'EXPANDIR' : 'EXPAND' }}</span>
           </div>
         </div>
-        <figcaption class="media-meta">
-          <span class="m-role">{{ m.role }}</span>
-          <span class="m-dim">{{ m.width }}×{{ m.height }}</span>
+        <figcaption class="media-meta p-2 px-2.5 flex items-center justify-between gap-1.5 font-mono text-[11px] border-t border-rule text-dim">
+          <span class="m-role text-sig font-bold">{{ m.role }}</span>
+          <span class="m-dim text-ink">{{ m.width }}×{{ m.height }}</span>
           <span v-if="m.bytes" class="m-bytes">{{ formatBytes(m.bytes) }}</span>
         </figcaption>
       </figure>
@@ -68,23 +68,23 @@ function formatBytes(bytes?: number | null): string {
     <Teleport to="body">
       <div
         v-if="activeMedia"
-        class="lightbox-backdrop"
+        class="lightbox-backdrop fixed inset-0 z-[1000] bg-black/90 backdrop-blur-sm flex items-center justify-center p-6"
         role="dialog"
         aria-modal="true"
         @click.self="activeMedia = null"
         @keydown.esc="activeMedia = null"
       >
-        <div class="lightbox-chassis">
-          <header class="lightbox-header">
-            <div class="lh-left">
-              <span class="lh-badge">{{ activeMedia.role }}</span>
-              <span class="lh-name">{{ activeMedia.alt }}</span>
+        <div class="lightbox-chassis w-full max-w-[min(96vw,1600px)] max-h-[92vh] bg-paper border border-rule-strong shadow-[0_20px_50px_rgba(0,0,0,0.6)] flex flex-col overflow-hidden">
+          <header class="lightbox-header h-11 px-4 flex items-center justify-between border-b border-rule bg-surface">
+            <div class="lh-left flex items-center gap-2.5 min-w-0">
+              <span class="lh-badge font-mono text-[10px] font-extrabold text-sig border border-sig px-1.5 py-0.5">{{ activeMedia.role }}</span>
+              <span class="lh-name font-sans text-[13px] text-ink whitespace-nowrap overflow-hidden text-ellipsis">{{ activeMedia.alt }}</span>
             </div>
-            <div class="lh-right">
-              <span class="lh-meta">{{ activeMedia.width }} × {{ activeMedia.height }} PX · {{ formatBytes(activeMedia.bytes) }}</span>
+            <div class="lh-right flex items-center gap-4">
+              <span class="lh-meta font-mono text-[11px] text-dim">{{ activeMedia.width }} × {{ activeMedia.height }} PX · {{ formatBytes(activeMedia.bytes) }}</span>
               <button
                 type="button"
-                class="lightbox-close"
+                class="lightbox-close bg-transparent border border-rule text-ink px-2.5 py-1 font-mono text-[11px] cursor-pointer hover:border-sig hover:text-sig flex items-center gap-1.5"
                 :aria-label="isEs ? 'Cerrar visor' : 'Close viewer'"
                 @click="activeMedia = null"
               >
@@ -94,8 +94,8 @@ function formatBytes(bytes?: number | null): string {
             </div>
           </header>
 
-          <div class="lightbox-body">
-            <img :src="activeMedia.src" :alt="activeMedia.alt" class="lightbox-img">
+          <div class="lightbox-body flex-1 min-h-0 overflow-auto flex items-center justify-center bg-black">
+            <img :src="activeMedia.src" :alt="activeMedia.alt" class="lightbox-img max-w-full max-h-[80vh] object-contain">
           </div>
         </div>
       </div>
@@ -103,24 +103,24 @@ function formatBytes(bytes?: number | null): string {
   </div>
 
   <!-- 2. Pasos de Proceso de Ingeniería (Stepper Articulado) -->
-  <div v-else-if="cell.steps && cell.steps.length" class="process-stepper">
-    <div v-for="s in cell.steps" :key="s.order" class="step-card">
-      <div class="step-header">
-        <span class="step-pip">0{{ s.order }}</span>
-        <span class="step-title">{{ s.title }}</span>
+  <div v-else-if="cell.steps && cell.steps.length" class="process-stepper grid grid-cols-[repeat(auto-fit,minmax(clamp(250px,24vw,380px),1fr))] gap-3.5 w-full mt-1.5">
+    <div v-for="s in cell.steps" :key="s.order" class="step-card p-3 px-3.5 bg-surface border border-rule border-l-[3px] border-l-sig">
+      <div class="step-header flex items-center gap-2 mb-1.5">
+        <span class="step-pip font-mono text-[11px] font-extrabold text-sig">0{{ s.order }}</span>
+        <span class="step-title font-mono text-[12px] font-bold text-ink uppercase">{{ s.title }}</span>
       </div>
-      <p class="step-body">{{ s.body }}</p>
+      <p class="step-body m-0 font-sans text-[13.5px] leading-snug text-dim">{{ s.body }}</p>
     </div>
   </div>
 
   <!-- 3. Panel de Métricas Técnicas (Lighthouse, Latencia, Bundle) -->
-  <div v-else-if="cell.metrics && Object.keys(cell.metrics).length" class="metrics-panel">
-    <div class="metrics-grid">
-      <div v-for="(val, k) in cell.metrics" :key="k" class="metric-pill">
-        <span class="m-label">{{ k }}</span>
-        <span class="m-value">
+  <div v-else-if="cell.metrics && Object.keys(cell.metrics).length" class="metrics-panel w-full mt-1">
+    <div class="metrics-grid flex flex-wrap gap-2">
+      <div v-for="(val, k) in cell.metrics" :key="k" class="metric-pill flex flex-col gap-0.5 px-3 py-1.5 bg-surface border border-rule min-w-[110px]">
+        <span class="m-label font-mono text-[10px] text-dim uppercase">{{ k }}</span>
+        <span class="m-value font-mono text-[13px] font-bold text-green">
           <template v-if="typeof val === 'object' && val !== null">
-            <span v-for="(subVal, subKey) in val" :key="subKey" class="sub-metric">
+            <span v-for="(subVal, subKey) in val" :key="subKey" class="sub-metric block text-[11px] text-ink">
               {{ subKey }}: {{ subVal }}
             </span>
           </template>
@@ -133,29 +133,29 @@ function formatBytes(bytes?: number | null): string {
   </div>
 
   <!-- 4. Relaciones de Lista (Techs, Links, Relaciones Inversas) -->
-  <span v-else-if="cell.items" class="items">
+  <span v-else-if="cell.items" class="items flex flex-wrap gap-x-2 gap-y-1">
     <template v-for="(it, i) in cell.items" :key="i">
-      <span v-if="i" class="sep" aria-hidden="true">·</span>
-      <NuxtLink v-if="it.to" :to="it.to" class="rel">{{ it.label }}<span v-if="it.meta" class="im"> {{ it.meta }}</span></NuxtLink>
-      <NuxtLink v-else-if="it.facet" :to="it.facet" class="facet" :title="`filtrar ${name ?? ''} = ${it.label}`">{{ it.label }}</NuxtLink>
-      <a v-else-if="it.href" :href="it.href" target="_blank" rel="noopener noreferrer" class="ext">{{ it.label }}<span v-if="it.meta" class="im"> {{ it.meta }}</span> ↗</a>
+      <span v-if="i" class="sep text-faint" aria-hidden="true">·</span>
+      <NuxtLink v-if="it.to" :to="it.to" class="rel text-sig no-underline hover:text-sig-hover hover:underline">{{ it.label }}<span v-if="it.meta" class="im ml-1 text-dim text-[13px]"> {{ it.meta }}</span></NuxtLink>
+      <NuxtLink v-else-if="it.facet" :to="it.facet" class="facet text-ink underline decoration-dotted decoration-faint underline-offset-[3px] hover:text-sig hover:decoration-solid hover:decoration-sig" :title="`filtrar ${name ?? ''} = ${it.label}`">{{ it.label }}</NuxtLink>
+      <a v-else-if="it.href" :href="it.href" target="_blank" rel="noopener noreferrer" class="ext text-sig underline decoration-rule hover:text-sig-hover hover:underline">{{ it.label }}<span v-if="it.meta" class="im ml-1 text-dim text-[13px]"> {{ it.meta }}</span> ↗</a>
       <span v-else>{{ it.label }}</span>
     </template>
   </span>
 
   <!-- 5. Enlace a Registro Relacionado Único -->
-  <NuxtLink v-else-if="cell.to" :to="cell.to" class="rel" :class="{ plain }">
+  <NuxtLink v-else-if="cell.to" :to="cell.to" class="rel text-sig no-underline hover:text-sig-hover hover:underline" :class="{ 'plain !text-ink': plain }">
     {{ cell.value }} <span aria-hidden="true">›</span>
   </NuxtLink>
 
   <!-- 6. Enlace URL Externo / Correo Electrónico -->
-  <span v-else-if="cell.href && cell.href.startsWith('mailto:')" class="email-value-wrap">
-    <a :href="cell.href" class="ext mail-link">
+  <span v-else-if="cell.href && cell.href.startsWith('mailto:')" class="email-value-wrap inline-flex items-center gap-2.5 flex-wrap">
+    <a :href="cell.href" class="ext mail-link font-semibold text-sig hover:text-sig-hover hover:underline">
       {{ cell.value }}
     </a>
     <button
       type="button"
-      class="quick-copy-btn"
+      class="quick-copy-btn inline-flex items-center gap-1 px-2 py-0.5 border border-rule bg-surface text-dim font-mono text-[11px] font-bold cursor-pointer transition-colors duration-150 hover:border-sig hover:text-sig hover:bg-hover"
       :title="isEs ? `Copiar ${cell.value} al portapapeles` : `Copy ${cell.value} to clipboard`"
       @click="copyInline(String(cell.value))"
     >
@@ -163,288 +163,20 @@ function formatBytes(bytes?: number | null): string {
       <span>{{ copiedInline ? (isEs ? 'COPIADO' : 'COPIED') : (isEs ? 'COPIAR' : 'COPY') }}</span>
     </button>
   </span>
-  <a v-else-if="cell.href" :href="cell.href" target="_blank" rel="noopener noreferrer" class="ext">
+  <a v-else-if="cell.href" :href="cell.href" target="_blank" rel="noopener noreferrer" class="ext text-sig underline decoration-rule hover:text-sig-hover hover:underline">
     {{ cell.value }} ↗
   </a>
 
   <!-- 7. Filtro Facetado de Tabla -->
-  <NuxtLink v-else-if="cell.facet" :to="cell.facet" class="facet" :title="`filtrar ${name ?? ''} = ${cell.value}`">
+  <NuxtLink v-else-if="cell.facet" :to="cell.facet" class="facet text-ink underline decoration-dotted decoration-faint underline-offset-[3px] hover:text-sig hover:decoration-solid hover:decoration-sig" :title="`filtrar ${name ?? ''} = ${cell.value}`">
     {{ cell.value }}
   </NuxtLink>
 
   <!-- 8. Valor Nulo Explícito -->
-  <span v-else-if="cell.value === null" class="nul">NULL</span>
+  <span v-else-if="cell.value === null" class="nul font-mono text-[12px] text-dim">NULL</span>
 
   <!-- 9. Texto o Bloque Narrativo Estándar -->
   <template v-else>
     {{ cell.value }}
   </template>
 </template>
-
-<style scoped>
-.items { display: flex; flex-wrap: wrap; gap: 4px 8px; }
-.sep { color: var(--d-faint); }
-.im { margin-left: 5px; color: var(--d-dim); font-size: var(--d-fs-ui); }
-a { color: var(--d-sig); text-decoration: none; }
-a:hover { color: var(--d-sig-hover); text-decoration: underline; }
-.rel.plain { color: var(--d-ink); }
-.facet { color: var(--d-ink); text-decoration: underline dotted var(--d-faint); text-underline-offset: 3px; }
-.facet:hover { color: var(--d-sig); text-decoration: underline solid var(--d-sig); }
-.ext { text-decoration: underline; text-decoration-color: var(--d-rule); }
-.nul { font-family: var(--font-mono); font-size: var(--d-fs-mono); color: var(--d-dim); }
-
-.email-value-wrap {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  flex-wrap: wrap;
-}
-.mail-link {
-  font-weight: 600;
-  color: var(--d-sig);
-}
-.quick-copy-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 3px 8px;
-  border: 1px solid var(--d-rule);
-  background: var(--d-surface);
-  color: var(--d-dim);
-  font-family: var(--font-mono);
-  font-size: 11px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: all var(--d-dur) ease;
-}
-.quick-copy-btn:hover {
-  border-color: var(--d-sig);
-  color: var(--d-sig);
-  background: var(--d-hover);
-}
-
-/* ─── Media Inspector ──────────────────────────────────────────────────────── */
-.media-inspector {
-  width: 100%;
-  margin-top: 4px;
-}
-.media-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(clamp(240px, 20vw, 360px), 1fr));
-  gap: 16px;
-  width: 100%;
-}
-.media-card {
-  margin: 0;
-  border: 1px solid var(--d-rule);
-  background: var(--d-surface);
-  cursor: pointer;
-  transition: border-color var(--d-dur) ease, transform var(--d-dur) ease;
-}
-.media-card:hover, .media-card:focus-visible {
-  border-color: var(--d-sig);
-  transform: translateY(-2px);
-  outline: none;
-}
-.media-thumb-wrap {
-  position: relative;
-  aspect-ratio: 16 / 10;
-  overflow: hidden;
-  background: #000;
-}
-.media-thumb {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-}
-.media-overlay {
-  position: absolute;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.45);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  opacity: 0;
-  transition: opacity var(--d-dur) ease;
-}
-.media-card:hover .media-overlay, .media-card:focus-visible .media-overlay {
-  opacity: 1;
-}
-.zoom-icon {
-  font-family: var(--font-mono);
-  font-size: 11px;
-  font-weight: 700;
-  color: #ffffff;
-  padding: 5px 10px;
-  background: rgba(0, 0, 0, 0.75);
-  border: 1px solid var(--d-sig);
-}
-.media-meta {
-  padding: 8px 10px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 6px;
-  font-family: var(--font-mono);
-  font-size: 11px;
-  border-top: 1px solid var(--d-rule);
-  color: var(--d-dim);
-}
-.m-role { color: var(--d-sig); font-weight: 700; }
-.m-dim { color: var(--d-ink); }
-
-/* Lightbox Modal */
-.lightbox-backdrop {
-  position: fixed;
-  inset: 0;
-  z-index: 1000;
-  background: rgba(0, 0, 0, 0.88);
-  backdrop-filter: blur(4px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 24px;
-}
-.lightbox-chassis {
-  width: 100%;
-  max-width: min(96vw, 1600px);
-  max-height: 92vh;
-  background: var(--d-paper);
-  border: 1px solid var(--d-rule-strong);
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-.lightbox-header {
-  height: 44px;
-  padding: 0 16px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  border-bottom: 1px solid var(--d-rule);
-  background: var(--d-surface);
-}
-.lh-left { display: flex; align-items: center; gap: 10px; min-width: 0; }
-.lh-badge {
-  font-family: var(--font-mono);
-  font-size: 10px;
-  font-weight: 800;
-  color: var(--d-sig);
-  border: 1px solid var(--d-sig);
-  padding: 2px 6px;
-}
-.lh-name {
-  font-family: var(--font-text);
-  font-size: 13px;
-  color: var(--d-ink);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.lh-right { display: flex; align-items: center; gap: 16px; }
-.lh-meta { font-family: var(--font-mono); font-size: 11px; color: var(--d-dim); }
-.lightbox-close {
-  background: none;
-  border: 1px solid var(--d-rule);
-  color: var(--d-ink);
-  padding: 4px 10px;
-  font-family: var(--font-mono);
-  font-size: 11px;
-  cursor: pointer;
-}
-.lightbox-close:hover { border-color: var(--d-sig); color: var(--d-sig); }
-.lightbox-body {
-  flex: 1;
-  min-height: 0;
-  overflow: auto;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: #000;
-}
-.lightbox-img {
-  max-width: 100%;
-  max-height: 80vh;
-  object-fit: contain;
-}
-
-/* ─── Process Stepper ──────────────────────────────────────────────────────── */
-.process-stepper {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(clamp(250px, 24vw, 380px), 1fr));
-  gap: 14px;
-  width: 100%;
-  margin-top: 6px;
-}
-.step-card {
-  padding: 12px 14px;
-  background: var(--d-surface);
-  border: 1px solid var(--d-rule);
-  border-left: 3px solid var(--d-sig);
-}
-.step-header {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 6px;
-}
-.step-pip {
-  font-family: var(--font-mono);
-  font-size: 11px;
-  font-weight: 800;
-  color: var(--d-sig);
-}
-.step-title {
-  font-family: var(--font-mono);
-  font-size: 12px;
-  font-weight: 700;
-  color: var(--d-ink);
-  text-transform: uppercase;
-}
-.step-body {
-  margin: 0;
-  font-family: var(--font-text);
-  font-size: 13.5px;
-  line-height: 1.45;
-  color: var(--d-dim);
-}
-
-/* ─── Metrics Panel ────────────────────────────────────────────────────────── */
-.metrics-panel {
-  width: 100%;
-  margin-top: 4px;
-}
-.metrics-grid {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-.metric-pill {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  padding: 6px 12px;
-  background: var(--d-surface);
-  border: 1px solid var(--d-rule);
-  min-width: 110px;
-}
-.m-label {
-  font-family: var(--font-mono);
-  font-size: 10px;
-  color: var(--d-dim);
-  text-transform: uppercase;
-}
-.m-value {
-  font-family: var(--font-mono);
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--d-green);
-}
-.sub-metric {
-  display: block;
-  font-size: 11px;
-  color: var(--d-ink);
-}
-</style>

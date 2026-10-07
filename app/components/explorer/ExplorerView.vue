@@ -277,62 +277,86 @@ const currentRoot = computed(() => path.value[0] ?? '')
 </script>
 
 <template>
-  <div class="datos">
-    <div class="ventana">
+  <div class="datos flex flex-col h-dvh text-ink font-sans text-[13px] leading-normal tabular-nums bg-paper">
+    <div class="ventana flex-1 min-h-0 w-full flex flex-col bg-paper [background-image:radial-gradient(var(--d-grid-cross)_1.2px,transparent_1.2px)] [background-size:32px_32px]">
       <!-- Barra Superior de Herramientas -->
-      <header class="barra">
-        <nav class="historia" aria-label="Historial">
-          <button type="button" class="nav-btn" aria-label="atrás" @click="router.back()">
+      <header class="barra flex-none flex items-center gap-3 min-h-[52px] px-3.5 border-b border-rule bg-surface">
+        <nav class="historia flex gap-1" aria-label="Historial">
+          <button
+            type="button"
+            class="nav-btn inline-flex items-center justify-center w-[30px] h-[30px] border border-rule bg-paper text-ink text-sm no-underline cursor-pointer transition-colors duration-150 hover:border-sig hover:bg-hover hover:text-sig"
+            aria-label="atrás"
+            @click="router.back()"
+          >
             <AppIcon name="arrow-left" :size="13" />
           </button>
-          <button type="button" class="nav-btn" aria-label="adelante" @click="router.forward()">
+          <button
+            type="button"
+            class="nav-btn inline-flex items-center justify-center w-[30px] h-[30px] border border-rule bg-paper text-ink text-sm no-underline cursor-pointer transition-colors duration-150 hover:border-sig hover:bg-hover hover:text-sig"
+            aria-label="adelante"
+            @click="router.forward()"
+          >
             <AppIcon name="arrow-right" :size="13" />
           </button>
-          <NuxtLink v-if="ex?.up" :to="ex.up" class="nav-btn" aria-label="subir un nivel">
+          <NuxtLink
+            v-if="ex?.up"
+            :to="ex.up"
+            class="nav-btn inline-flex items-center justify-center w-[30px] h-[30px] border border-rule bg-paper text-ink text-sm no-underline cursor-pointer transition-colors duration-150 hover:border-sig hover:bg-hover hover:text-sig"
+            aria-label="subir un nivel"
+          >
             <AppIcon name="arrow-up" :size="13" />
           </NuxtLink>
-          <span v-else class="nav-btn off" aria-hidden="true">
+          <span
+            v-else
+            class="nav-btn off inline-flex items-center justify-center w-[30px] h-[30px] border border-rule bg-paper text-faint opacity-40 cursor-default"
+            aria-hidden="true"
+          >
             <AppIcon name="arrow-up" :size="13" />
           </span>
         </nav>
 
         <!-- Ruta / Breadcrumb -->
-        <nav class="ruta" aria-label="Ruta">
+        <nav class="ruta flex-1 flex items-center min-w-0 h-[30px] px-2.5 border border-rule bg-paper whitespace-nowrap overflow-hidden text-[12.5px] font-mono" aria-label="Ruta">
           <template v-for="(seg, i) in segments" :key="seg.label + i">
-            <span v-if="i" class="sep" aria-hidden="true">/</span>
-            <NuxtLink v-if="i < segments.length - 1" :to="seg.to">{{ seg.label }}</NuxtLink>
-            <span v-else class="here" aria-current="page">{{ seg.label }}</span>
+            <span v-if="i" class="sep text-faint px-2" aria-hidden="true">/</span>
+            <NuxtLink v-if="i < segments.length - 1" :to="seg.to" class="text-sig hover:underline hover:text-sig-hover py-1.5">{{ seg.label }}</NuxtLink>
+            <span v-else class="here text-ink font-bold" aria-current="page">{{ seg.label }}</span>
           </template>
         </nav>
 
         <!-- Botón de Búsqueda Rápida / Goto -->
-        <button class="goto-btn" type="button" :title="isEs ? 'Abrir paleta de comandos (⌘K o /)' : 'Open command palette (⌘K or /)'" @click="gotoOpen = true">
-          <AppIcon name="search" :size="12" class="goto-search-icon" />
-          <span class="goto-k">{{ isEs ? 'ir a' : 'goto' }}</span>
-          <span class="goto-ph">{{ isEs ? 'proyecto, tecnología, sección…' : 'project, tech, section…' }}</span>
-          <kbd>/</kbd>
+        <button
+          class="goto-btn flex-[0_1_240px] min-w-[140px] flex items-center gap-2 h-[30px] px-2 border border-rule bg-paper text-dim text-left cursor-pointer transition-colors duration-150 hover:border-sig hover:text-ink max-sm:hidden"
+          type="button"
+          :title="isEs ? 'Abrir paleta de comandos (⌘K o /)' : 'Open command palette (⌘K or /)'"
+          @click="gotoOpen = true"
+        >
+          <AppIcon name="search" :size="12" class="goto-search-icon text-dim shrink-0" />
+          <span class="goto-k text-sig font-bold font-mono text-[11px]">{{ isEs ? 'ir a' : 'goto' }}</span>
+          <span class="goto-ph flex-1 min-w-0 text-faint text-[12px] overflow-hidden text-ellipsis whitespace-nowrap">{{ isEs ? 'proyecto, tecnología, sección…' : 'project, tech, section…' }}</span>
+          <kbd class="font-mono text-[10px] text-dim border border-rule px-1.5 py-0.5 rounded-[2px]">/</kbd>
         </button>
 
         <!-- Acciones Rápidas del Sistema: Idioma, Hiperfoco, Reloj UTC-3, Telemetría y Tema -->
-        <div class="barra-derecha">
+        <div class="barra-derecha flex items-center gap-2 shrink-0 ml-auto">
           <!-- Switch de Idioma ES / EN -->
           <button
             type="button"
-            class="lang-btn"
+            class="lang-btn inline-flex items-center gap-1 h-[30px] px-2 border border-rule bg-paper font-mono text-[11px] font-bold text-dim cursor-pointer hover:border-sig hover:text-ink transition-colors duration-150"
             :title="isEs ? 'Switch interface to English' : 'Cambiar interfaz a Español'"
             :aria-label="isEs ? 'Switch to English' : 'Cambiar a Español'"
             @click="toggleLocale"
           >
-            <span class="lang-code" :class="{ active: isEs }">ES</span>
-            <span class="lang-sep">/</span>
-            <span class="lang-code" :class="{ active: !isEs }">EN</span>
+            <span class="lang-code" :class="{ 'text-sig font-bold': isEs }">ES</span>
+            <span class="lang-sep text-faint">/</span>
+            <span class="lang-code" :class="{ 'text-sig font-bold': !isEs }">EN</span>
           </button>
 
           <!-- Toggle de Modo Hiperfoco -->
           <button
             type="button"
-            class="tool-btn focus-btn"
-            :class="{ active: isHyperfocus }"
+            class="tool-btn focus-btn inline-flex items-center justify-center w-[30px] h-[30px] border border-rule bg-paper text-dim cursor-pointer transition-colors duration-150 hover:border-sig hover:text-sig hover:bg-hover"
+            :class="{ '!border-sig !text-sig !bg-sig/10': isHyperfocus }"
             :title="isHyperfocus ? (isEs ? 'Desactivar Modo Hiperfoco (H)' : 'Disable Hyperfocus (H)') : (isEs ? 'Activar Modo Hiperfoco (H)' : 'Enable Hyperfocus (H)')"
             :aria-label="isHyperfocus ? 'Desactivar hiperfoco' : 'Activar hiperfoco'"
             @click="toggleHyperfocus"
@@ -343,8 +367,8 @@ const currentRoot = computed(() => path.value[0] ?? '')
           <!-- Botón de Guía y Orientación Rápida -->
           <button
             type="button"
-            class="tool-btn help-btn"
-            :class="{ active: guideOpen }"
+            class="tool-btn help-btn inline-flex items-center justify-center w-[30px] h-[30px] border border-rule bg-paper text-dim cursor-pointer transition-colors duration-150 hover:border-sig hover:text-sig hover:bg-hover"
+            :class="{ '!border-sig !text-sig !bg-sig/10': guideOpen }"
             :title="guideOpen ? (isEs ? 'Cerrar guía (?)' : 'Close guide (?)') : (isEs ? 'Guía rápida y atajos (?)' : 'Quick guide & shortcuts (?)')"
             :aria-label="isEs ? 'Guía rápida' : 'Quick guide'"
             @click="guideOpen = !guideOpen"
@@ -354,20 +378,20 @@ const currentRoot = computed(() => path.value[0] ?? '')
 
           <!-- Estado del Sistema Consolidado (PG-17 + Latencia + Hora Patagonia UTC-3) -->
           <div
-            class="sys-status-badge"
+            class="sys-status-badge hidden sm:flex items-center gap-1.5 h-[30px] px-2 border border-rule bg-paper font-mono text-[10.5px] text-dim"
             :title="`PostgreSQL 17 ACID (${ex?.request.ms ?? 0}ms) · Hora local: ${utcTime || 'UTC-3'} (Patagonia, Argentina)`"
           >
-            <span class="sys-dot" />
-            <span class="sys-engine">PG-17</span>
-            <span class="sys-sep">·</span>
-            <span class="sys-ms">{{ ex?.request.ms ?? 0 }}ms</span>
-            <span class="sys-sep">·</span>
-            <span class="sys-time">{{ utcTime?.split(' ')[0] || '12:00:00' }}</span>
+            <span class="sys-dot w-1.5 h-1.5 rounded-full bg-green shadow-[0_0_6px_var(--d-green)] animate-pulse" />
+            <span class="sys-engine text-ink font-semibold">PG-17</span>
+            <span class="sys-sep text-faint">·</span>
+            <span class="sys-ms text-sig font-bold">{{ ex?.request.ms ?? 0 }}ms</span>
+            <span class="sys-sep text-faint">·</span>
+            <span class="sys-time text-dim">{{ utcTime?.split(' ')[0] || '12:00:00' }}</span>
           </div>
 
           <button
             type="button"
-            class="tool-btn theme-btn"
+            class="tool-btn theme-btn inline-flex items-center justify-center w-[30px] h-[30px] border border-rule bg-paper text-dim cursor-pointer transition-colors duration-150 hover:border-sig hover:text-sig hover:bg-hover"
             :aria-label="theme === 'dark' ? 'Cambiar a modo claro (papel técnico)' : 'Cambiar a modo oscuro (obsidiana)'"
             :title="`Cambiar a modo ${theme === 'dark' ? 'claro (papel)' : 'oscuro (obsidiana)'}`"
             @click="toggleTheme"
@@ -379,56 +403,56 @@ const currentRoot = computed(() => path.value[0] ?? '')
       </header>
 
       <!-- Barra de Notificación / Indicador de Modo Hiperfoco -->
-      <div v-if="isHyperfocus" class="hiperfoco-banner" role="status" aria-live="polite">
-        <div class="hb-center">
-          <span class="hb-title">{{ isEs ? 'HIPERFOCO // LECTURA ZEN' : 'HYPERFOCUS // ZEN READING' }}</span>
-          <span class="hb-sep">·</span>
+      <div v-if="isHyperfocus" class="hiperfoco-banner px-4 py-2 bg-sig text-white border-b border-sig flex items-center justify-center text-xs font-mono font-bold" role="status" aria-live="polite">
+        <div class="hb-center flex items-center gap-3">
+          <span class="hb-title tracking-wider">{{ isEs ? 'HIPERFOCO // LECTURA ZEN' : 'HYPERFOCUS // ZEN READING' }}</span>
+          <span class="hb-sep text-white/60">·</span>
           <button
             type="button"
-            class="hb-exit-btn"
+            class="hb-exit-btn inline-flex items-center gap-1.5 px-2 py-0.5 bg-black/30 border border-white/40 text-white text-[11px] font-mono cursor-pointer hover:bg-black/50 rounded-[2px]"
             :title="isEs ? 'Desactivar Modo Hiperfoco (H o Esc)' : 'Exit Hyperfocus Mode (H or Esc)'"
             @click="toggleHyperfocus"
           >
             <span>{{ isEs ? 'SALIR' : 'EXIT' }}</span>
-            <kbd>H / ESC</kbd>
+            <kbd class="text-[9.5px] opacity-75">H / ESC</kbd>
           </button>
         </div>
       </div>
 
       <!-- Cuerpo de la Ventana: Sidebar Explorador + Escenario Central -->
-      <div class="cuerpo-ventana">
-        <aside class="sidebar" aria-label="Explorador de Archivos">
-          <div class="sidebar-header">
-            <span class="sidebar-tag">{{ isEs ? 'EXPLORADOR' : 'EXPLORER' }}</span>
-            <span class="sidebar-status">PG-17 // DB</span>
+      <div class="cuerpo-ventana flex-1 min-h-0 grid grid-cols-[240px_1fr] max-lg:grid-cols-1 overflow-hidden">
+        <aside class="sidebar w-[240px] max-lg:hidden flex flex-col border-r border-rule bg-surface overflow-y-auto" aria-label="Explorador de Archivos">
+          <div class="sidebar-header p-3 px-3.5 border-b border-rule flex items-center justify-between font-mono text-[11px]">
+            <span class="sidebar-tag text-sig font-bold tracking-wider text-[10px]">{{ isEs ? 'EXPLORADOR' : 'EXPLORER' }}</span>
+            <span class="sidebar-status text-faint text-[10px]">PG-17 // DB</span>
           </div>
 
-          <nav class="sidebar-tree" aria-label="Secciones del sistema">
+          <nav class="sidebar-tree p-2 flex flex-col gap-1" aria-label="Secciones del sistema">
             <NuxtLink
               v-for="s in navSections"
               :key="s.root"
               :to="routeFor(s.to)"
-              class="sidebar-item"
-              :class="{ active: currentRoot === s.root }"
+              class="sidebar-item flex items-center gap-2.5 px-2.5 py-2 rounded-[2px] text-dim text-[12px] font-medium no-underline transition-colors duration-150 hover:bg-hover hover:text-ink group"
+              :class="{ 'active !bg-sig !text-white font-semibold hover:!bg-sig hover:!text-white': currentRoot === s.root }"
               :title="`${s.desc} — Atajo [${s.keyHint}]`"
             >
-              <AppIcon :name="s.icon" :size="14" class="sidebar-icon" />
-              <span class="sidebar-label">{{ s.label }}</span>
-              <kbd class="sidebar-k">{{ s.keyHint }}</kbd>
-              <span class="sidebar-badge">{{ s.badge }}</span>
+              <AppIcon :name="s.icon" :size="14" class="sidebar-icon shrink-0" />
+              <span class="sidebar-label flex-1 truncate">{{ s.label }}</span>
+              <kbd class="sidebar-k font-mono text-[10px] opacity-60 group-hover:opacity-100 border border-current px-1 py-0.5 rounded-[2px]">{{ s.keyHint }}</kbd>
+              <span class="sidebar-badge font-mono text-[10px] px-1.5 py-0.5 bg-paper text-dim border border-rule rounded-[2px]" :class="{ '!bg-white/20 !text-white !border-transparent': currentRoot === s.root }">{{ s.badge }}</span>
             </NuxtLink>
           </nav>
 
-          <div class="sidebar-footer">
-            <div class="sf-row">
-              <span class="sf-dot" />
-              <span class="sf-status">{{ isEs ? 'DISPONIBLE // 2026' : 'AVAILABLE // 2026' }}</span>
+          <div class="sidebar-footer mt-auto p-3 border-t border-rule bg-surface-raised flex flex-col gap-1.5 font-mono text-[10px]">
+            <div class="sf-row flex items-center gap-1.5">
+              <span class="sf-dot w-1.5 h-1.5 rounded-full bg-green" />
+              <span class="sf-status text-green font-bold">{{ isEs ? 'DISPONIBLE // 2026' : 'AVAILABLE // 2026' }}</span>
             </div>
-            <div class="sf-info">
+            <div class="sf-info flex justify-between items-center text-faint">
               <span>{{ isEs ? 'MOTOR: POSTGRESQL 17' : 'ENGINE: POSTGRESQL 17' }}</span>
               <button
                 type="button"
-                class="sf-guide-btn"
+                class="sf-guide-btn bg-transparent border-0 p-0 text-sig hover:underline cursor-pointer"
                 :title="isEs ? 'Abrir guía rápida de navegación (?)' : 'Open quick navigation guide (?)'"
                 @click="guideOpen = !guideOpen"
               >
@@ -438,8 +462,8 @@ const currentRoot = computed(() => path.value[0] ?? '')
           </div>
         </aside>
 
-        <main id="contenido" class="exp" tabindex="-1">
-          <div v-if="error" class="pane">
+        <main id="contenido" class="exp flex-1 min-w-0 min-h-0 overflow-y-auto p-5 max-md:p-3 focus:outline-none" tabindex="-1">
+          <div v-if="error" class="pane w-full">
             <ExplorerDetail
               :detail="{
                 kind: 'document',
@@ -454,7 +478,7 @@ const currentRoot = computed(() => path.value[0] ?? '')
               }"
             />
           </div>
-          <div v-else-if="ex" ref="pane" :key="route.fullPath" class="pane" :class="dir">
+          <div v-else-if="ex" ref="pane" :key="route.fullPath" class="pane w-full" :class="dir">
             <ExplorerFolder v-if="folder" :folder="folder" />
             <ExplorerDetail v-else-if="detail" :detail="detail" :prev="ex.prev" :next="ex.next" />
           </div>
@@ -462,39 +486,39 @@ const currentRoot = computed(() => path.value[0] ?? '')
       </div>
 
       <!-- Barra de Estado Inferior -->
-      <footer class="estado">
+      <footer class="estado flex-none h-[30px] px-3.5 border-t border-rule bg-surface flex items-center justify-between text-[11px] font-mono text-dim select-none max-lg:hidden">
         <span v-if="ex" class="medida">{{ pad(ex.request.count) }} {{ ex.request.count === 1 ? 'record' : 'records' }}</span>
         <span v-if="ex" class="req">{{ ex.request.line }} · {{ ex.request.status }} · {{ ex.request.ms }} ms</span>
-        <span class="keys" aria-hidden="true">
-          <template v-if="hoja && (ex?.prev || ex?.next)"><kbd>←</kbd><kbd>→</kbd> {{ isEs ? 'vecino' : 'adjacent' }}</template>
-          <template v-else-if="!hoja"><kbd>←</kbd><kbd>↑</kbd><kbd>↓</kbd><kbd>→</kbd> {{ isEs ? 'navegar' : 'navigate' }} <kbd>↵</kbd> {{ isEs ? 'abrir' : 'open' }}</template>
-          <template v-if="ex?.up"><kbd>⌫</kbd> {{ isEs ? 'volver' : 'back' }}</template>
-          <kbd>0-5</kbd> {{ isEs ? 'secciones' : 'sections' }}
-          <kbd>/</kbd> {{ isEs ? 'ir a' : 'goto' }}
-          <kbd>H</kbd> {{ isEs ? 'hiperfoco' : 'hyperfocus' }}
+        <span class="keys flex items-center gap-3" aria-hidden="true">
+          <template v-if="hoja && (ex?.prev || ex?.next)"><kbd class="border border-rule px-1 py-0.5 rounded-[2px]">←</kbd><kbd class="border border-rule px-1 py-0.5 rounded-[2px]">→</kbd> {{ isEs ? 'vecino' : 'adjacent' }}</template>
+          <template v-else-if="!hoja"><kbd class="border border-rule px-1 py-0.5 rounded-[2px]">←</kbd><kbd class="border border-rule px-1 py-0.5 rounded-[2px]">↑</kbd><kbd class="border border-rule px-1 py-0.5 rounded-[2px]">↓</kbd><kbd class="border border-rule px-1 py-0.5 rounded-[2px]">→</kbd> {{ isEs ? 'navegar' : 'navigate' }} <kbd class="border border-rule px-1 py-0.5 rounded-[2px]">↵</kbd> {{ isEs ? 'abrir' : 'open' }}</template>
+          <template v-if="ex?.up"><kbd class="border border-rule px-1 py-0.5 rounded-[2px]">⌫</kbd> {{ isEs ? 'volver' : 'back' }}</template>
+          <kbd class="border border-rule px-1 py-0.5 rounded-[2px]">0-5</kbd> {{ isEs ? 'secciones' : 'sections' }}
+          <kbd class="border border-rule px-1 py-0.5 rounded-[2px]">/</kbd> {{ isEs ? 'ir a' : 'goto' }}
+          <kbd class="border border-rule px-1 py-0.5 rounded-[2px]">H</kbd> {{ isEs ? 'hiperfoco' : 'hyperfocus' }}
           <button
             type="button"
-            class="keys-guide-btn"
+            class="keys-guide-btn bg-transparent border-0 p-0 text-dim hover:text-sig cursor-pointer flex items-center gap-1 font-mono text-[11px]"
             :title="isEs ? 'Abrir guía rápida (?)' : 'Open quick guide (?)'"
             @click="guideOpen = !guideOpen"
           >
-            <kbd>?</kbd> {{ isEs ? 'guía' : 'guide' }}
+            <kbd class="border border-rule px-1 py-0.5 rounded-[2px]">?</kbd> {{ isEs ? 'guía' : 'guide' }}
           </button>
         </span>
       </footer>
 
       <!-- Barra de Navegación Inferior Móvil (Thumb-friendly Bottom App Bar) -->
-      <nav class="mobile-nav" aria-label="Navegación rápida móvil">
+      <nav class="mobile-nav lg:hidden flex-none h-14 bg-surface border-t border-rule flex items-center justify-around z-20" aria-label="Navegación rápida móvil">
         <NuxtLink
           v-for="s in navSections"
           :key="s.root"
           :to="routeFor(s.to)"
-          class="mobile-nav-item"
-          :class="{ active: currentRoot === s.root }"
+          class="mobile-nav-item flex flex-col items-center justify-center flex-1 h-full text-dim no-underline transition-colors duration-150 relative"
+          :class="{ 'active !text-sig font-bold': currentRoot === s.root }"
         >
           <AppIcon :name="s.icon" :size="18" class="mn-icon" />
-          <span class="mn-label">{{ s.shortLabel }}</span>
-          <span v-if="currentRoot === s.root" class="mn-indicator" aria-hidden="true" />
+          <span class="mn-label text-[10px] font-mono mt-0.5">{{ s.shortLabel }}</span>
+          <span v-if="currentRoot === s.root" class="mn-indicator absolute bottom-0 inset-x-4 h-0.5 bg-sig rounded-full" aria-hidden="true" />
         </NuxtLink>
       </nav>
     </div>

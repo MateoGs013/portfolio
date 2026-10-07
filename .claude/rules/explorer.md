@@ -17,7 +17,14 @@ Una ventana de explorador de archivos apoyada sobre el papel. Tinta sobre papel:
 - **Un solo renderer para todas las colecciones.** Una base de datos trata a todos los records igual: la misma carpeta, la misma baldosa, la misma cabecera, el mismo archivo abierto. No hacer tratamientos especiales por colección.
 - **Una sola cosa por pantalla.** Una carpeta muestra solo sus items; recién al abrir uno aparece su contenido. Si una pantalla combina dos superficies, está mal aunque cada una sea sobria. Para Mateo "abrumador" es cantidad de cosas a la vez, no densidad tipográfica.
 - **La estructura del dato es la decoración.** Tipos declarados (`string`, `relation → Org`), `NULL` a la vista, `05 records` en lugar de un título decorativo, el conteo o el año dibujado adentro del ícono. Identificadores en minúscula y sin espaciado, tal como están en el schema. No inventar ornamento.
-- **El acento naranja (`--d-sig` / `#ff3e00`) es solo para relaciones, links y filtros.** El estado (foco, hover) se marca con borde y fondo gris, no con saturación de color.
+## Sistema de Estilos: Tailwind CSS v4 Unificado
+
+Toda la aplicación utiliza **Tailwind CSS v4** mediante `@tailwindcss/vite` (`@import "tailwindcss"` en `app/assets/css/base.css`).
+- Los tokens del diseño constructivista se mapean en el bloque `@theme` de `base.css`:
+  - Colores semánticos: `bg-paper`, `bg-surface`, `bg-surface-raised`, `bg-hover`, `text-ink`, `text-dim`, `text-faint`, `text-sig`, `border-rule`, `border-rule-strong`, `text-green`, `text-amber`.
+  - Tipografías técnicas: `font-mono` (Martian Mono), `font-sans` / `font-display` (General Sans), `font-poster` (Bebas Neue).
+- Los componentes priorizan clases utilitarias de Tailwind manteniendo las clases de anclaje semántico (`cabecera`, `sidebar`, `cuerpo-ventana`, `exp`, `hoja`, etc.) para los estilos globales del modo Hiperfoco (`html[data-hyperfocus="true"]`) y las reglas de medios `@media print`.
+- El layout de 1 página A4 de `CvHarvardAts.vue` es estricto e inmutable.
 
 ## Anatomía y Componentes (`app/components/`)
 

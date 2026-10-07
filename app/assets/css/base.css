@@ -1,5 +1,33 @@
 @import "tailwindcss";
 
+@theme {
+  --font-mono: 'Martian Mono Variable', ui-monospace, monospace;
+  --font-sans: 'General Sans Variable', system-ui, -apple-system, sans-serif;
+  --font-display: 'General Sans Variable', system-ui, -apple-system, sans-serif;
+  --font-poster: 'Bebas Neue', Impact, 'General Sans Variable', sans-serif;
+
+  --color-paper: var(--d-paper);
+  --color-surface: var(--d-surface);
+  --color-surface-raised: var(--d-surface-raised);
+  --color-ink: var(--d-ink);
+  --color-rule: var(--d-rule);
+  --color-rule-strong: var(--d-rule-strong);
+  --color-dim: var(--d-dim);
+  --color-faint: var(--d-faint);
+  --color-hover: var(--d-hover);
+  --color-sig: var(--d-sig);
+  --color-sig-hover: var(--d-sig-hover);
+  --color-sig-glow: var(--d-sig-glow);
+  --color-accent: var(--d-accent);
+  --color-amber: var(--d-amber);
+  --color-green: var(--d-green);
+  --color-orange: var(--d-orange);
+  --color-orange-deep: var(--d-orange-deep);
+  --color-orange-glow: var(--d-orange-glow);
+  --color-orange-bg: var(--d-orange-bg);
+  --color-inv-dim: var(--d-inv-dim);
+}
+
 /* Tipografías del Portafolio Técnico Mateo Sonzogni
    --font-mono: Martian Mono (claves, metadatos, tablas, telemetría, código)
    --font-text / --font-display: General Sans (títulos, etiquetas, lectura, UI) */
