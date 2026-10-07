@@ -1,3 +1,5 @@
+import tailwindcss from '@tailwindcss/vite'
+
 // https://nuxt.com/docs/api/configuration/nuxt-config
 const apiBase = process.env.NUXT_PUBLIC_API_BASE || 'http://localhost:3001/api'
 const apiOrigin = apiBase.replace(/\/api\/?$/, '')
@@ -6,6 +8,9 @@ export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
   devtools: { enabled: true },
   modules: ['@nuxt/eslint'],
+  vite: {
+    plugins: [tailwindcss()],
+  },
 
   components: [
     { path: '~/components/ui', pathPrefix: false },

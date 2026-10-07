@@ -1,4 +1,6 @@
-/* Tipografías del Portafolio Técnico Mateo Sonzogni (Mundo DATOS)
+@import "tailwindcss";
+
+/* Tipografías del Portafolio Técnico Mateo Sonzogni
    --font-mono: Martian Mono (claves, metadatos, tablas, telemetría, código)
    --font-text / --font-display: General Sans (títulos, etiquetas, lectura, UI) */
 :root {

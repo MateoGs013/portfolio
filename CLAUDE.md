@@ -20,15 +20,17 @@ Si se violan, es otro proyecto. Si una tarea los contradice, parar y preguntar.
 4. **Accesibilidad y rendimiento en primer orden.** Navegación accesible por teclado (`1-5`, `Esc`, `j/k`, `Enter`), contraste WCAG AA y respeto a `prefers-reduced-motion`.
 5. **Cero emojis en la consola administrativa.** El panel de administración (`/admin`) respeta un estándar 2026 riguroso: sin emojis, con micro-indicadores geométricos e iconografía exclusivamente utilitaria.
 6. **Integridad del Generador de CV Harvard ATS.** El panel de Job Hunter debe preservar siempre la capacidad de analizar vacantes, adaptar el CV al estándar Harvard ATS, previsualizarlo, imprimirlo en A4 y copiarlo en texto plano.
+7. **Estándar Tailwind CSS First.** Toda nueva interfaz (panel de administración y evoluciones visuales) se construye sobre clases utilitarias de **Tailwind CSS v4**, eliminando hojas de estilo monolíticas frágiles y sincronizando con los tokens sobrios del portafolio.
 
 ---
 
 ## Stack Tecnológico
 
-- **Frontend:** Nuxt 4 · Vue 3 · TypeScript · CSS nativo con variables · GSAP 3.
+- **Frontend:** Nuxt 4 · Vue 3 · TypeScript · Tailwind CSS v4 (`@tailwindcss/vite`) · CSS nativo con variables · GSAP 3.
+- **Admin CMS:** Vue 3 · Tailwind CSS v4 (`@tailwindcss/cli`) · Command Palette (`⌘K`) · Job Hunter con Gemini.
 - **Backend:** Express 5 · TypeScript (`tsx`) · Prisma ORM · PostgreSQL 17 · Multer.
 - **IA / Agente de Empleo:** Integración con modelos Gemini para evaluación de compatibilidad de empleo, redacción de cartas/pitch y generación adaptada de CV Harvard ATS.
-- **Tipografía:** Martian Mono Variable, Plus Jakarta Sans, JetBrains Mono.
+- **Tipografía:** Martian Mono Variable, General Sans Variable, Plus Jakarta Sans.
 - **Infraestructura:** Hostinger VPS gestionado con Coolify (Dockerfiles multi-stage, Traefik reverse proxy con SSL Let's Encrypt).
 
 ---
@@ -36,15 +38,16 @@ Si se violan, es otro proyecto. Si una tarea los contradice, parar y preguntar.
 ## Comandos Habituales
 
 ```bash
-cp .env.example .env    # Configuración de variables locales
-pnpm db:up              # Levantar PostgreSQL 17 en Docker (pnpm db:down para detenerlo)
-pnpm db:seed            # Poblar la base de datos con contenido inicial real
-pnpm dev                # Servidor de desarrollo Frontend (Nuxt) en :3000
-pnpm dev:api            # Servidor de desarrollo Backend (Express) en :3001
-pnpm typecheck          # Verificación estricta de tipos TypeScript (Nuxt + Express)
-pnpm lint               # Verificación de linter (ESLint)
-pnpm build              # Compilar frontend para producción
-pnpm build:api          # Generar Prisma y ejecutar migraciones
+cp .env.example .env       # Configuración de variables locales
+pnpm db:up                 # Levantar PostgreSQL 17 en Docker (pnpm db:down para detenerlo)
+pnpm db:seed               # Poblar la base de datos con contenido inicial real
+pnpm dev                   # Servidor de desarrollo Frontend (Nuxt) en :3000
+pnpm dev:api               # Servidor de desarrollo Backend (Express) en :3001
+pnpm build:admin-css       # Compilar hoja de estilos Tailwind minificada del admin
+pnpm typecheck             # Verificación estricta de tipos TypeScript (Nuxt + Express)
+pnpm lint                  # Verificación de linter (ESLint)
+pnpm build                 # Compilar frontend para producción
+pnpm build:api             # Compilar admin CSS, generar Prisma y ejecutar migraciones
 ```
 
 ---

@@ -255,6 +255,8 @@ createApp({
     // Modales y Lightbox
     lightboxImage: null,
     showHelpModal: false,
+    showCommandPalette: false,
+    commandQuery: '',
     copiedPitch: false,
 
     // Job Hunter Agent State
@@ -490,12 +492,18 @@ createApp({
           return
         }
       }
-      if (this.showHelpModal || this.lightboxImage) {
+      if (this.showHelpModal || this.lightboxImage || this.showCommandPalette) {
         if (e.key === 'Escape') {
           this.showHelpModal = false
           this.lightboxImage = null
+          this.showCommandPalette = false
           return
         }
+      }
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault()
+        this.showCommandPalette = !this.showCommandPalette
+        return
       }
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
         e.preventDefault()
@@ -1037,7 +1045,7 @@ createApp({
     },
 
     async uploadMedia() {
-      const input = this.$refs.file
+      const input = this.$refs.fileInput || this.$refs.file
       const file = input && input.files && input.files[0]
       if (!file) {
         this.say('err', 'Por favor seleccioná una imagen para subir')
@@ -1083,11 +1091,13 @@ createApp({
       }
     },
 
-    async deleteMedia(m) {
+    async deleteMedia(mediaOrId) {
+      const m = typeof mediaOrId === 'object' && mediaOrId ? mediaOrId : (this.form?.media || []).find(item => item.id === mediaOrId)
+      if (!m) return
       const confirmed = await this.askConfirm({
         title: 'Eliminar Imagen',
         message: '¿Estás seguro de que deseás eliminar este archivo multimedia?',
-        targetName: m.alt || m.src,
+        targetName: m.alt || m.url || m.src,
         detail: 'La imagen será desvinculada del proyecto y borrada del servidor.',
         confirmText: 'Borrar Imagen',
         cancelText: 'Cancelar',
@@ -1102,6 +1112,88 @@ createApp({
         this.error = e.message
         this.say('err', `Error al borrar imagen: ${e.message}`)
       }
+    },
+
+    // ─── Aliases & Helpers para la Nueva Interfaz 2026 ───────────────────────
+    createRecord() {
+      this.startNew()
+    },
+
+    selectRow(r) {
+      this.edit(r)
+    },
+
+    saveCurrent() {
+      this.save()
+    },
+
+    handleDeleteClick() {
+      this.remove()
+    },
+
+    onTitleInput() {
+      if (this.isNew && this.form && this.form.title) {
+        this.form.slug = slugify(this.form.title)
+      }
+    },
+
+    addSubRow(key) {
+      if (!this.form[key]) this.form[key] = []
+      const cols = (this.model.sub && this.model.sub[key]) || []
+      this.form[key].push(this.blankRow(cols))
+    },
+
+    removeSubRow(key, index) {
+      if (this.form && this.form[key]) {
+        this.form[key].splice(index, 1)
+      }
+    },
+
+    addMetricVisual() {
+      this.addMetricRow()
+    },
+
+    removeMetricVisual(idx) {
+      this.removeMetricRow(idx)
+    },
+
+    syncVisualMetricsToJson() {
+      this.syncMetricsFromList()
+    },
+
+    scanHunterJobs() {
+      this.triggerHunterScan()
+    },
+
+    generatePitch() {
+      if (this.hunterSelected) this.generateHunterPitch(this.hunterSelected.id)
+    },
+
+    generateTailoredCV() {
+      if (this.hunterSelected) this.generateHunterCV(this.hunterSelected.id)
+    },
+
+    downloadTailoredCVHtml() {
+      if (this.hunterSelected) this.openCVPrintWindow(this.hunterSelected.id)
+    },
+
+    copyTailoredCVText() {
+      this.copyCVTextToClipboard()
+    },
+
+    copyPitch() {
+      this.copyPitchToClipboard()
+    },
+
+    setJobStatus(status) {
+      if (this.hunterSelected) this.updateHunterJobStatus(this.hunterSelected.id, status)
+    },
+
+    async updateMediaRole(mediaId, role) {
+      const m = (this.form?.media || []).find(item => item.id === mediaId)
+      if (!m) return
+      m.role = role
+      await this.saveMedia(m)
     },
   },
 }).mount('#app')
