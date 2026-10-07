@@ -248,6 +248,19 @@ createApp({
     counts: { projects: 0, experience: 0, stack: 0, orgs: 0, docs: 0 },
     activeTab: 'general',
 
+    // Auto-Slug, Presets y Productividad
+    slugLocked: true,
+    initialFormSnapshot: null,
+    importingGitHub: false,
+    metricPresets: [
+      { label: 'Lighthouse (99/100)', key: 'Lighthouse', value: '99/100' },
+      { label: 'Bundle Size (< 45 kB)', key: 'Bundle Size', value: '< 45 kB' },
+      { label: 'Latencia API (< 80 ms)', key: 'Latencia API', value: '< 80 ms' },
+      { label: 'Commits (350+)', key: 'Commits', value: '350+' },
+      { label: 'Test Coverage (98%)', key: 'Test Coverage', value: '98%' },
+      { label: 'Uptime (99.99%)', key: 'Uptime', value: '99.99%' },
+    ],
+
     // Visual Metrics Editor State
     metricsList: [],
     advancedMetricsMode: false,
@@ -285,6 +298,15 @@ createApp({
   }),
 
   computed: {
+    isDirty() {
+      if (!this.form || !this.initialFormSnapshot) return false
+      try {
+        return JSON.stringify(this.form) !== this.initialFormSnapshot
+      } catch {
+        return false
+      }
+    },
+
     model() {
       return this.models[this.section] || {}
     },
@@ -471,11 +493,21 @@ createApp({
   mounted() {
     window.__adminApp = this
     window.addEventListener('keydown', this.handleKeydown)
+    this._beforeUnloadHandler = (e) => {
+      if (this.isDirty) {
+        e.preventDefault()
+        e.returnValue = ''
+      }
+    }
+    window.addEventListener('beforeunload', this._beforeUnloadHandler)
   },
 
   beforeUnmount() {
     if (window.__adminApp === this) window.__adminApp = null
     window.removeEventListener('keydown', this.handleKeydown)
+    if (this._beforeUnloadHandler) {
+      window.removeEventListener('beforeunload', this._beforeUnloadHandler)
+    }
   },
 
   methods: {
@@ -510,6 +542,26 @@ createApp({
         if (this.form && !this.isSaving) {
           this.save()
         }
+        return
+      }
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'n') {
+        e.preventDefault()
+        if (this.section !== 'dashboard' && this.section !== 'hunter') {
+          this.createRecord()
+        }
+        return
+      }
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'd') {
+        e.preventDefault()
+        if (this.form || this.current) {
+          this.duplicateRecord(this.form || this.current)
+        }
+        return
+      }
+      if (e.key === 'Escape' && this.form) {
+        e.preventDefault()
+        this.cancelEdit()
+        return
       }
     },
 
@@ -663,19 +715,26 @@ createApp({
     },
 
     async open(key) {
+      if (this.isDirty) {
+        const discard = await this.checkDirtyDiscard()
+        if (!discard) return
+      }
       if (key === 'dashboard') {
         this.section = 'dashboard'
         this.form = null
         this.current = null
+        this.initialFormSnapshot = null
         this.initAdmin()
         return
       }
       if (key === 'hunter') {
+        this.initialFormSnapshot = null
         return this.openHunter()
       }
       this.section = key
       this.form = null
       this.current = null
+      this.initialFormSnapshot = null
       this.error = ''
       this.searchQuery = ''
       this.projectStatusFilter = 'all'
@@ -890,33 +949,72 @@ createApp({
       }
     },
 
-    edit(r) {
+    async checkDirtyDiscard() {
+      if (!this.isDirty) return true
+      const targetName = this.form ? (this.model?.name ? this.model.name(this.form) : this.form.title || this.form.name || this.form.slug || '') : ''
+      return await this.askConfirm({
+        title: 'Cambios Sin Guardar',
+        message: 'Tenés cambios sin guardar en el formulario actual.',
+        targetName: targetName ? `[${this.model?.label || 'Registro'}] ${targetName}` : '',
+        detail: 'Si continuás sin guardar, todas las modificaciones pendientes se perderán.',
+        confirmText: 'Descartar Cambios',
+        cancelText: 'Seguir Editando',
+        kind: 'warning',
+      })
+    },
+
+    async edit(r) {
+      if (this.isDirty && this.current && this.current.id !== r.id) {
+        const discard = await this.checkDirtyDiscard()
+        if (!discard) return
+      }
       this.current = r
       this.isNew = false
+      this.slugLocked = false
       this.error = ''
       this.activeTab = 'general'
       this.techSearchQuery = ''
       this.advancedMetricsMode = false
       this.form = this.model.toForm(JSON.parse(JSON.stringify(r)))
       this.initMetricsList()
+      this.initialFormSnapshot = JSON.stringify(this.form)
     },
 
-    startNew() {
+    async startNew() {
+      if (this.isDirty) {
+        const discard = await this.checkDirtyDiscard()
+        if (!discard) return
+      }
       this.current = null
       this.isNew = true
+      this.slugLocked = true
       this.error = ''
       this.activeTab = 'general'
       this.techSearchQuery = ''
       this.advancedMetricsMode = false
       this.form = this.model.blank()
+      if (this.section === 'projects' && Array.isArray(this.rows) && this.rows.length > 0) {
+        const maxOrder = this.rows.reduce((m, r) => Math.max(m, Number(r.sortOrder) || 0), 0)
+        this.form.sortOrder = maxOrder + 1
+      }
       this.initMetricsList()
+      this.initialFormSnapshot = JSON.stringify(this.form)
     },
 
-    cancelEdit() {
+    async cancelEdit() {
+      if (this.isDirty) {
+        const discard = await this.checkDirtyDiscard()
+        if (!discard) return
+      }
       if (this.current) {
-        this.edit(this.current)
+        this.isNew = false
+        this.slugLocked = false
+        this.form = this.model.toForm(JSON.parse(JSON.stringify(this.current)))
+        this.initMetricsList()
+        this.initialFormSnapshot = JSON.stringify(this.form)
       } else {
         this.form = null
+        this.initialFormSnapshot = null
       }
     },
 
@@ -1002,6 +1100,8 @@ createApp({
       try {
         const saved = await this.api(url, { method, body: payload })
         this.say('ok', this.isNew ? 'Registro creado exitosamente' : 'Cambios guardados con éxito')
+        this.initialFormSnapshot = JSON.stringify(this.form)
+        this.slugLocked = false
         await this.reload(saved ? saved[m.idKey || 'id'] : null)
       } catch (e) {
         this.error = e.message
@@ -1132,8 +1232,180 @@ createApp({
     },
 
     onTitleInput() {
-      if (this.isNew && this.form && this.form.title) {
-        this.form.slug = slugify(this.form.title)
+      if (!this.form) return
+      if (this.slugLocked) {
+        const base = this.form.title || this.form.name || this.form.role || ''
+        if (base) {
+          this.form.slug = slugify(base)
+        }
+      }
+    },
+
+    toggleSlugLock() {
+      this.slugLocked = !this.slugLocked
+      if (this.slugLocked && this.form) {
+        const base = this.form.title || this.form.name || this.form.role || ''
+        if (base) {
+          this.form.slug = slugify(base)
+          this.say('ok', `Slug sincronizado automáticamente: "${this.form.slug}"`)
+        }
+      } else {
+        this.say('ok', 'Edición manual de slug desbloqueada.')
+      }
+    },
+
+    setPublishedNow() {
+      if (!this.form) return
+      this.form.publishedAt = toLocalDatetime(new Date().toISOString())
+      this.say('ok', 'Fecha de publicación actualizada a la hora actual')
+    },
+
+    clearPublishedAt() {
+      if (!this.form) return
+      this.form.publishedAt = ''
+    },
+
+    addMetricPreset(preset) {
+      if (!this.metricsList) this.metricsList = []
+      const existing = this.metricsList.find(m => m.key.toLowerCase().trim() === preset.key.toLowerCase().trim())
+      if (existing) {
+        existing.value = preset.value
+      } else {
+        this.metricsList.push({ key: preset.key, value: preset.value })
+      }
+      this.syncMetricsFromList()
+      this.say('ok', `Métrica añadida: "${preset.label || preset.key}"`)
+    },
+
+    async duplicateRecord(record) {
+      if (this.isDirty) {
+        const discard = await this.checkDirtyDiscard()
+        if (!discard) return
+      }
+      const source = record || this.current || this.form
+      if (!source) {
+        this.say('warn', 'No hay ningún registro seleccionado para duplicar.')
+        return
+      }
+      const clone = JSON.parse(JSON.stringify(source))
+      delete clone.id
+      delete clone.createdAt
+      delete clone.updatedAt
+      if (clone.title) clone.title = `${clone.title} (Copia)`
+      if (clone.name) clone.name = `${clone.name} (Copia)`
+      if (clone.role && !clone.title) clone.role = `${clone.role} (Copia)`
+      if (clone.slug) clone.slug = `${clone.slug}-copia`
+      this.current = null
+      this.isNew = true
+      this.slugLocked = false
+      this.activeTab = 'general'
+      this.form = this.model.toForm ? this.model.toForm(clone) : clone
+      this.initMetricsList()
+      this.initialFormSnapshot = JSON.stringify(this.form)
+      this.say('ok', `Registro duplicado: "${this.form.title || this.form.name || this.form.role}". Ajustá los campos y guardá.`)
+    },
+
+    async quickToggleProjectStatus(p, event) {
+      if (event) event.stopPropagation()
+      const nextStatus = p.status === 'LIVE' ? 'WIP' : 'LIVE'
+      const prevStatus = p.status
+      p.status = nextStatus
+      try {
+        await this.api(`projects/${p.id}`, {
+          method: 'PATCH',
+          body: { status: nextStatus },
+        })
+        if (this.form && this.form.id === p.id) {
+          this.form.status = nextStatus
+          if (this.initialFormSnapshot) {
+            try {
+              const snap = JSON.parse(this.initialFormSnapshot)
+              snap.status = nextStatus
+              this.initialFormSnapshot = JSON.stringify(snap)
+            } catch {
+              // ignore snapshot parse error
+            }
+          }
+        }
+        this.say('ok', `"${p.title}" ahora está en estado ${nextStatus}`)
+      } catch (err) {
+        p.status = prevStatus
+        this.say('err', `Error al cambiar estado: ${err.message}`)
+      }
+    },
+
+    async quickToggleProjectFeatured(p, event) {
+      if (event) event.stopPropagation()
+      const nextFeatured = !p.featured
+      p.featured = nextFeatured
+      try {
+        await this.api(`projects/${p.id}`, {
+          method: 'PATCH',
+          body: { featured: nextFeatured },
+        })
+        if (this.form && this.form.id === p.id) {
+          this.form.featured = nextFeatured
+          if (this.initialFormSnapshot) {
+            try {
+              const snap = JSON.parse(this.initialFormSnapshot)
+              snap.featured = nextFeatured
+              this.initialFormSnapshot = JSON.stringify(snap)
+            } catch {
+              // ignore snapshot parse error
+            }
+          }
+        }
+        this.say('ok', nextFeatured ? `"${p.title}" destacado ★` : `"${p.title}" quitado de destacados`)
+      } catch (err) {
+        p.featured = !nextFeatured
+        this.say('err', `Error al cambiar destacado: ${err.message}`)
+      }
+    },
+
+    async importFromGitHub() {
+      if (!this.form) return
+      const repoUrl = (this.form.repo || '').trim()
+      if (!repoUrl) {
+        this.say('warn', 'Ingresá primero la URL del repositorio GitHub en el campo correspondiente (ej: https://github.com/usuario/repo).')
+        return
+      }
+      const match = repoUrl.match(/(?:github\.com\/|^)([a-zA-Z0-9_.-]+)\/([a-zA-Z0-9_.-]+)(?:\/|\.git)?$/)
+      if (!match) {
+        this.say('warn', 'Formato de URL de GitHub no reconocido. Usá https://github.com/usuario/proyecto')
+        return
+      }
+      const owner = match[1]
+      const repoName = match[2].replace(/\.git$/, '')
+      this.importingGitHub = true
+      try {
+        const res = await fetch(`https://api.github.com/repos/${owner}/${repoName}`)
+        if (!res.ok) {
+          throw new Error(`GitHub respondió con código ${res.status}. Verificá que el repositorio sea público.`)
+        }
+        const data = await res.json()
+        if (!this.form.title) {
+          this.form.title = repoName.replace(/[-_]/g, ' ').replace(/\b\w/g, l => l.toUpperCase())
+        }
+        if (this.slugLocked || !this.form.slug) {
+          this.form.slug = slugify(this.form.title || repoName)
+        }
+        if (!this.form.summary && data.description) {
+          this.form.summary = data.description
+        }
+        if (!this.form.url && data.homepage) {
+          this.form.url = data.homepage
+        }
+        if (!this.form.role) {
+          this.form.role = 'Lead Developer & Creator'
+        }
+        if (data.stargazers_count > 0) {
+          this.addMetricPreset({ label: 'GitHub Stars', key: 'GitHub Stars', value: `${data.stargazers_count} ★` })
+        }
+        this.say('ok', `Datos importados de GitHub (${owner}/${repoName}): ${data.stargazers_count || 0} ★`)
+      } catch (err) {
+        this.say('err', `Error importando de GitHub: ${err.message}`)
+      } finally {
+        this.importingGitHub = false
       }
     },
 

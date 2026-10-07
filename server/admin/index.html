@@ -307,14 +307,21 @@
         </div>
 
         <!-- FOOTER DEL SIDEBAR -->
-        <div class="p-3 border-t border-[#24272b] bg-[#0e0f11] text-xs text-[#717b86] flex flex-col gap-2">
+        <div class="p-3 border-t border-[#24272b] bg-[#0e0f11] text-xs text-[#717b86] flex flex-col gap-1.5">
           <div class="flex items-center justify-between text-[11px] font-mono-code">
             <span>PostgreSQL 17</span>
             <span class="text-[#10b981]">Conectado</span>
           </div>
           <div class="flex items-center justify-between text-[11px] font-mono-code">
-            <span>Atajo de guardado</span>
+            <span>Guardar</span>
             <span class="text-white bg-[#1c1f24] px-1 rounded border border-[#2b3038]">Ctrl+S</span>
+          </div>
+          <div class="flex items-center justify-between text-[11px] font-mono-code">
+            <span>Nuevo / Duplicar</span>
+            <div class="flex gap-1">
+              <span class="text-white bg-[#1c1f24] px-1 rounded border border-[#2b3038]">Ctrl+N</span>
+              <span class="text-white bg-[#1c1f24] px-1 rounded border border-[#2b3038]">Ctrl+D</span>
+            </div>
           </div>
         </div>
       </aside>
@@ -542,18 +549,53 @@
                 v-for="r in filteredRows" 
                 :key="r.id || r.key"
                 @click="selectRow(r)"
-                class="p-3 cursor-pointer transition-colors"
+                class="p-3 cursor-pointer transition-colors group"
                 :class="current && ((current.id && current.id === r.id) || (current.key && current.key === r.key))
                   ? 'bg-[#191b1f] border-l-2 border-[#ff3e00]' 
                   : 'hover:bg-[#181a1d]'"
               >
                 <div class="flex items-center justify-between text-xs font-semibold text-white">
-                  <span class="truncate">{{ model.name(r) }}</span>
-                  <span v-if="r.status" class="status-dot" :class="r.status === 'LIVE' ? 'live' : r.status === 'WIP' ? 'wip' : 'archived'"></span>
+                  <span class="truncate flex-1 pr-2">{{ model.name(r) }}</span>
+                  <!-- Quick Toggles para Proyectos -->
+                  <div v-if="section === 'projects'" class="flex items-center gap-1.5 shrink-0" @click.stop>
+                    <button 
+                      type="button"
+                      @click="quickToggleProjectStatus(r, $event)"
+                      class="text-[10px] font-mono-code px-1.5 py-0.2 rounded border transition-colors cursor-pointer"
+                      :class="r.status === 'LIVE' 
+                        ? 'bg-[#10b981]/15 text-[#10b981] border-[#10b981]/30 hover:bg-[#10b981]/25' 
+                        : r.status === 'WIP'
+                        ? 'bg-[#f59e0b]/15 text-[#f59e0b] border-[#f59e0b]/30 hover:bg-[#f59e0b]/25'
+                        : 'bg-[#717b86]/15 text-[#8b949e] border-[#717b86]/30 hover:bg-[#717b86]/25'"
+                      :title="'Clic para alternar estado (actual: ' + r.status + ')'"
+                    >
+                      {{ r.status }}
+                    </button>
+                    <button 
+                      type="button"
+                      @click="quickToggleProjectFeatured(r, $event)"
+                      class="text-xs transition-colors px-0.5 cursor-pointer leading-none"
+                      :class="r.featured ? 'text-[#ff3e00] hover:text-[#ff6b3d]' : 'text-[#434952] hover:text-[#c9d1d9]'"
+                      :title="r.featured ? 'Destacado en portada (clic para quitar)' : 'No destacado (clic para destacar)'"
+                    >
+                      ★
+                    </button>
+                  </div>
+                  <span v-else-if="r.status" class="status-dot" :class="r.status === 'LIVE' ? 'live' : r.status === 'WIP' ? 'wip' : 'archived'"></span>
                 </div>
                 <div class="text-[11px] text-[#8b949e] mt-1 flex items-center justify-between">
-                  <span class="truncate">{{ model.meta ? model.meta(r) : '' }}</span>
-                  <span v-if="r.featured" class="text-[10px] font-mono-code text-[#ff3e00] shrink-0 ml-1">Destacado</span>
+                  <span class="truncate flex-1 pr-2">{{ model.meta ? model.meta(r) : '' }}</span>
+                  <div class="flex items-center gap-1.5 shrink-0">
+                    <span v-if="r.featured && section !== 'projects'" class="text-[10px] font-mono-code text-[#ff3e00]">Destacado</span>
+                    <button 
+                      type="button"
+                      @click.stop="duplicateRecord(r)"
+                      class="opacity-0 group-hover:opacity-100 text-[10px] font-mono-code text-[#717b86] hover:text-white px-1.5 py-0.5 rounded bg-[#202328] hover:bg-[#2b3038] border border-[#2d3239] transition-all"
+                      title="Duplicar este registro (Ctrl+D)"
+                    >
+                      Duplicar
+                    </button>
+                  </div>
                 </div>
               </div>
 
@@ -580,14 +622,47 @@
                   </h2>
                 </div>
 
-                <!-- Selector de Estado si el modelo lo tiene -->
-                <div v-if="form.status !== undefined" class="flex items-center gap-2">
-                  <span class="text-[11px] text-[#8b949e]">Estado:</span>
-                  <select v-model="form.status" class="bg-[#1a1c1f] text-white text-xs border border-[#2d3239] rounded px-2 py-1 outline-none">
-                    <option value="LIVE">LIVE (Visible al público)</option>
-                    <option value="WIP">WIP (En desarrollo)</option>
-                    <option value="ARCHIVED">ARCHIVED (Archivado)</option>
-                  </select>
+                <!-- Indicador de Cambios, Duplicar & Selector de Estado -->
+                <div class="flex items-center gap-3">
+                  <!-- Dirty State Badge -->
+                  <span 
+                    v-if="isDirty"
+                    class="text-[10px] font-mono-code px-2 py-0.5 rounded bg-amber-500/15 text-amber-400 border border-amber-500/30 flex items-center gap-1.5"
+                    title="Tenés modificaciones locales sin guardar en este registro"
+                  >
+                    <span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span>
+                    <span>Sin guardar</span>
+                  </span>
+                  <span 
+                    v-else-if="!isNew"
+                    class="text-[10px] font-mono-code px-2 py-0.5 rounded bg-[#10b981]/10 text-[#10b981] border border-[#10b981]/25 flex items-center gap-1.5"
+                    title="Todo sincronizado con el servidor"
+                  >
+                    <span class="w-1.5 h-1.5 rounded-full bg-[#10b981]"></span>
+                    <span>Guardado</span>
+                  </span>
+
+                  <!-- Botón Duplicar en Cabecera -->
+                  <button 
+                    v-if="!isNew"
+                    type="button" 
+                    @click="duplicateRecord(form)"
+                    class="px-2.5 py-1 text-xs text-[#8b949e] hover:text-white bg-[#1a1c1f] hover:bg-[#25282e] border border-[#2d3239] rounded transition-colors flex items-center gap-1"
+                    title="Duplicar como nuevo borrador (Ctrl+D)"
+                  >
+                    <span>Duplicar</span>
+                    <kbd class="text-[9px] font-mono-code bg-[#121417] px-1 rounded border border-[#2d3239] text-[#717b86]">Ctrl+D</kbd>
+                  </button>
+
+                  <!-- Selector de Estado si el modelo lo tiene -->
+                  <div v-if="form.status !== undefined" class="flex items-center gap-2">
+                    <span class="text-[11px] text-[#8b949e]">Estado:</span>
+                    <select v-model="form.status" class="bg-[#1a1c1f] text-white text-xs border border-[#2d3239] rounded px-2 py-1 outline-none">
+                      <option value="LIVE">LIVE (Visible al público)</option>
+                      <option value="WIP">WIP (En desarrollo)</option>
+                      <option value="ARCHIVED">ARCHIVED (Archivado)</option>
+                    </select>
+                  </div>
                 </div>
               </div>
 
@@ -622,13 +697,30 @@
                       </div>
 
                       <div>
-                        <label class="block text-xs font-semibold text-[#c9d1d9] mb-1">Slug (URL) *</label>
+                        <div class="flex items-center justify-between mb-1">
+                          <label class="block text-xs font-semibold text-[#c9d1d9]">Slug (URL) *</label>
+                          <button 
+                            type="button" 
+                            @click="toggleSlugLock"
+                            class="text-[11px] font-mono-code flex items-center gap-1 transition-colors px-1.5 py-0.5 rounded cursor-pointer"
+                            :class="slugLocked ? 'text-[#10b981] bg-[#10b981]/10 hover:bg-[#10b981]/20' : 'text-[#8b949e] bg-[#1f2226] hover:text-white'"
+                            :title="slugLocked ? 'Slug vinculado automáticamente al título. Clic para desbloquear edición manual.' : 'Slug en modo manual. Clic para volver a sincronizar automáticamente con el título.'"
+                          >
+                            <span v-if="slugLocked">🔒 Vinculado</span>
+                            <span v-else>🔓 Manual</span>
+                          </button>
+                        </div>
                         <input 
                           type="text" 
                           v-model="form.slug"
+                          :readonly="slugLocked"
                           placeholder="mi-proyecto"
                           class="w-full bg-[#15171a] border border-[#272b32] font-mono-code focus:border-[#ff3e00] rounded px-3 py-2 text-xs text-white outline-none"
+                          :class="{ 'opacity-85 bg-[#121316]': slugLocked }"
                         >
+                        <span class="text-[10px] text-[#717b86] mt-0.5 block">
+                          {{ slugLocked ? 'Se genera solo al escribir el título. Desbloqueá con el candado para personalizar.' : 'Edición manual habilitada. Clic en el candado para volver a sincronizar.' }}
+                        </span>
                       </div>
                     </div>
 
@@ -672,7 +764,28 @@
                       </div>
 
                       <div>
-                        <label class="block text-xs font-semibold text-[#c9d1d9] mb-1">Fecha de Publicación</label>
+                        <div class="flex items-center justify-between mb-1">
+                          <label class="block text-xs font-semibold text-[#c9d1d9]">Fecha de Publicación</label>
+                          <div class="flex items-center gap-1">
+                            <button 
+                              type="button" 
+                              @click="setPublishedNow"
+                              class="text-[10px] font-mono-code px-1.5 py-0.5 rounded bg-[#1c1f24] hover:bg-[#252a32] text-[#8b949e] hover:text-white transition-colors border border-[#2d3239]"
+                              title="Establecer fecha y hora actual"
+                            >
+                              [ Hoy / Ahora ]
+                            </button>
+                            <button 
+                              v-if="form.publishedAt"
+                              type="button" 
+                              @click="clearPublishedAt"
+                              class="text-[10px] font-mono-code px-1 py-0.5 rounded bg-[#1c1f24] hover:bg-red-500/20 text-[#8b949e] hover:text-red-400 transition-colors border border-[#2d3239]"
+                              title="Limpiar fecha"
+                            >
+                              ✕
+                            </button>
+                          </div>
+                        </div>
                         <input 
                           type="datetime-local" 
                           v-model="form.publishedAt"
@@ -767,10 +880,10 @@
                     <div class="flex items-center justify-between">
                       <div>
                         <h3 class="text-xs font-bold text-white">Métricas Cuantificables</h3>
-                        <p class="text-[11px] text-[#8b949e]">Agregá números de rendimiento que dan credibilidad profesional.</p>
+                        <p class="text-[11px] text-[#8b949e]">Agregá números de rendimiento y credibilidad profesional.</p>
                       </div>
                       <div class="flex items-center gap-3">
-                        <button type="button" @click="advancedMetricsMode = !advancedMetricsMode" class="text-xs text-[#717b86] hover:text-white">
+                        <button type="button" @click="toggleAdvancedMetrics" class="text-xs text-[#717b86] hover:text-white transition-colors">
                           {{ advancedMetricsMode ? 'Modo Visual' : 'Modo JSON' }}
                         </button>
                         <button v-if="!advancedMetricsMode" type="button" @click="addMetricVisual" class="text-xs text-[#ff3e00] hover:underline font-medium">
@@ -779,15 +892,29 @@
                       </div>
                     </div>
 
+                    <!-- Chips de Presets Rápidos -->
+                    <div v-if="!advancedMetricsMode" class="p-2.5 bg-[#141619] border border-[#24272b] rounded flex flex-wrap items-center gap-1.5">
+                      <span class="text-[11px] text-[#717b86] mr-1">Presets recomendados:</span>
+                      <button 
+                        v-for="p in metricPresets" 
+                        :key="p.key"
+                        type="button" 
+                        @click="addMetricPreset(p)"
+                        class="text-[11px] font-mono-code px-2 py-0.5 rounded bg-[#1a1c1f] hover:bg-[#25282e] border border-[#2d3239] hover:border-[#ff3e00] text-[#c9d1d9] transition-colors"
+                      >
+                        + {{ p.label }}
+                      </button>
+                    </div>
+
                     <!-- Modo Visual Clave-Valor -->
                     <div v-if="!advancedMetricsMode" class="space-y-2">
                       <div v-for="(m, idx) in metricsList" :key="idx" class="flex items-center gap-2">
-                        <input type="text" v-model="m.key" @input="syncVisualMetricsToJson" placeholder="Etiqueta (ej: Rendimiento)" class="flex-1 bg-[#15171a] border border-[#272b32] rounded px-3 py-1.5 text-xs text-white outline-none">
-                        <input type="text" v-model="m.value" @input="syncVisualMetricsToJson" placeholder="Valor (ej: 99/100)" class="w-36 bg-[#15171a] border border-[#272b32] rounded px-3 py-1.5 text-xs text-white font-mono-code outline-none">
-                        <button type="button" class="text-[#717b86] hover:text-red-400 text-xs px-2" @click="removeMetricVisual(idx)">✕</button>
+                        <input type="text" v-model="m.key" @input="syncVisualMetricsToJson" placeholder="Etiqueta (ej: Lighthouse)" class="flex-1 bg-[#15171a] border border-[#272b32] rounded px-3 py-1.5 text-xs text-white outline-none">
+                        <input type="text" v-model="m.value" @input="syncVisualMetricsToJson" placeholder="Valor (ej: 99/100)" class="w-40 bg-[#15171a] border border-[#272b32] rounded px-3 py-1.5 text-xs text-white font-mono-code outline-none">
+                        <button type="button" class="text-[#717b86] hover:text-red-400 text-xs px-2" @click="removeMetricVisual(idx)" title="Eliminar métrica">✕</button>
                       </div>
                       <div v-if="metricsList.length === 0" class="p-4 bg-[#141619] border border-[#24272b] rounded text-center text-xs text-[#717b86]">
-                        Sin métricas cargadas. Hacé clic en "+ Agregar Métrica" para sumar una.
+                        Sin métricas cargadas. Elegí un preset arriba o hacé clic en "+ Agregar Métrica".
                       </div>
                     </div>
 
@@ -820,7 +947,19 @@
                         <input type="url" v-model="form.url" placeholder="https://..." class="w-full bg-[#15171a] border border-[#272b32] rounded px-3 py-2 text-xs text-white outline-none">
                       </div>
                       <div>
-                        <label class="block text-xs font-semibold text-[#c9d1d9] mb-1">Repositorio GitHub</label>
+                        <div class="flex items-center justify-between mb-1">
+                          <label class="block text-xs font-semibold text-[#c9d1d9]">Repositorio GitHub</label>
+                          <button 
+                            type="button" 
+                            @click="importFromGitHub"
+                            :disabled="importingGitHub"
+                            class="text-[10px] font-mono-code px-2 py-0.5 rounded bg-[#1c1f24] hover:bg-[#282d35] text-[#ff3e00] hover:text-[#ff6b3d] border border-[#ff3e00]/30 transition-colors disabled:opacity-50 flex items-center gap-1 cursor-pointer"
+                            title="Autocompletar título, resumen, enlace y estrellas desde GitHub"
+                          >
+                            <span v-if="importingGitHub" class="animate-spin inline-block">↻</span>
+                            <span>🪄 Importar de GitHub</span>
+                          </button>
+                        </div>
                         <input type="url" v-model="form.repo" placeholder="https://github.com/..." class="w-full bg-[#15171a] border border-[#272b32] rounded px-3 py-2 text-xs text-white outline-none">
                       </div>
                     </div>
@@ -862,9 +1001,22 @@
                 <!-- CASO B: OTROS MODELOS (FORMULARIO ESTÁNDAR LIMPIO) -->
                 <div v-else class="max-w-2xl space-y-4">
                   <div v-for="f in (model.fields || [])" :key="f.name">
-                    <label class="block text-xs font-semibold text-[#c9d1d9] mb-1">
-                      {{ f.label }}
-                    </label>
+                    <div class="flex items-center justify-between mb-1">
+                      <label class="block text-xs font-semibold text-[#c9d1d9]">
+                        {{ f.label }}
+                      </label>
+                      <button 
+                        v-if="f.name === 'slug'"
+                        type="button" 
+                        @click="toggleSlugLock"
+                        class="text-[11px] font-mono-code flex items-center gap-1 transition-colors px-1.5 py-0.5 rounded cursor-pointer"
+                        :class="slugLocked ? 'text-[#10b981] bg-[#10b981]/10 hover:bg-[#10b981]/20' : 'text-[#8b949e] bg-[#1f2226] hover:text-white'"
+                        :title="slugLocked ? 'Slug vinculado automáticamente. Clic para desbloquear edición manual.' : 'Slug en modo manual. Clic para volver a vincular automáticamente.'"
+                      >
+                        <span v-if="slugLocked">🔒 Vinculado</span>
+                        <span v-else>🔓 Manual</span>
+                      </button>
+                    </div>
 
                     <!-- Textarea -->
                     <textarea 
@@ -892,11 +1044,23 @@
                       class="w-4 h-4 accent-[#ff3e00]"
                     >
 
+                    <!-- Input Slug -->
+                    <input 
+                      v-else-if="f.name === 'slug'"
+                      type="text"
+                      v-model="form.slug"
+                      :readonly="slugLocked"
+                      :placeholder="f.placeholder"
+                      class="w-full bg-[#15171a] border border-[#272b32] font-mono-code focus:border-[#ff3e00] rounded px-3 py-2 text-xs text-white outline-none"
+                      :class="{ 'opacity-85 bg-[#121316]': slugLocked }"
+                    >
+
                     <!-- Input General -->
                     <input 
                       v-else
                       :type="f.type === 'int' ? 'number' : f.type === 'date' ? 'date' : 'text'"
                       v-model="form[f.name]"
+                      @input="['name', 'role', 'title'].includes(f.name) ? onTitleInput() : null"
                       :placeholder="f.placeholder"
                       class="w-full bg-[#15171a] border border-[#272b32] focus:border-[#ff3e00] rounded px-3 py-2 text-xs text-white outline-none"
                     >
@@ -928,17 +1092,26 @@
 
               <!-- Barra de Acciones Fijada al Pie -->
               <footer class="h-14 px-6 border-t border-[#24272b] bg-[#121417] flex items-center justify-between shrink-0">
-                <div class="flex items-center gap-2 text-xs text-[#717b86]">
-                  <span class="status-dot live"></span>
-                  <span>Atajo: Ctrl + S para guardar</span>
+                <div class="flex items-center gap-3 text-xs text-[#717b86]">
+                  <div class="flex items-center gap-1.5">
+                    <span class="status-dot" :class="isDirty ? 'wip' : 'live'"></span>
+                    <span v-if="isDirty" class="text-amber-400 font-medium">Modificado</span>
+                    <span v-else class="text-[#8b949e]">Sincronizado</span>
+                  </div>
+                  <div class="hidden sm:flex items-center gap-3 border-l border-[#24272b] pl-3 text-[11px] font-mono-code text-[#717b86]">
+                    <span>Guardar: <kbd class="bg-[#1a1c1f] text-[#c9d1d9] px-1 py-0.5 rounded border border-[#2b3038]">Ctrl+S</kbd></span>
+                    <span>Nuevo: <kbd class="bg-[#1a1c1f] text-[#c9d1d9] px-1 py-0.5 rounded border border-[#2b3038]">Ctrl+N</kbd></span>
+                    <span>Duplicar: <kbd class="bg-[#1a1c1f] text-[#c9d1d9] px-1 py-0.5 rounded border border-[#2b3038]">Ctrl+D</kbd></span>
+                  </div>
                 </div>
                 <div class="flex items-center gap-3">
                   <button 
                     type="button"
                     @click="cancelEdit"
                     class="px-3 py-1.5 text-xs text-[#8b949e] hover:text-white transition-colors"
+                    :title="isDirty ? 'Descartar cambios no guardados' : 'Cerrar editor'"
                   >
-                    Descartar
+                    {{ isDirty ? 'Descartar Cambios' : 'Cerrar' }}
                   </button>
                   <button 
                     v-if="!isNew"
@@ -1307,17 +1480,22 @@
           
           <div class="space-y-2">
             <div class="p-2.5 bg-[#191b1f] rounded border border-[#272b32]">
-              <strong class="text-white block mb-0.5">1. Carga de Proyectos</strong>
-              <span>Hacé clic en "+ Nuevo", completá el título y el slug se generará solo. Usá las pestañas para organizar la historia, subir imágenes y agregar tecnologías.</span>
+              <strong class="text-white block mb-0.5">1. Carga Rápida & Auto-Slug</strong>
+              <span>Hacé clic en "+ Nuevo" (<kbd class="font-mono-code text-[10px] bg-[#121417] px-1 rounded border border-[#2d3239]">Ctrl+N</kbd>) o duplicá uno existente (<kbd class="font-mono-code text-[10px] bg-[#121417] px-1 rounded border border-[#2d3239]">Ctrl+D</kbd>). El slug se genera automáticamente al escribir el título (candado 🔒 vinculado). Si querés personalizarlo a mano, desbloquealo con un clic (🔓).</span>
             </div>
 
             <div class="p-2.5 bg-[#191b1f] rounded border border-[#272b32]">
-              <strong class="text-white block mb-0.5">2. Estados de Publicación</strong>
-              <span><strong>LIVE:</strong> Visible en el portafolio público.<br><strong>WIP:</strong> Borrador en desarrollo, no se muestra aún.<br><strong>ARCHIVED:</strong> Histórico guardado pero oculto.</span>
+              <strong class="text-white block mb-0.5">2. Presets y GitHub Importer</strong>
+              <span>En la pestaña de Tecnologías, podés tocar "🪄 Importar de GitHub" para autocompletar título, resumen, enlace y estrellas. En la pestaña de Métricas, disponés de chips de presets de 1 clic (Lighthouse, Bundle Size, Latencia).</span>
             </div>
 
             <div class="p-2.5 bg-[#191b1f] rounded border border-[#272b32]">
-              <strong class="text-white block mb-0.5">3. Job Hunter & CV Harvard ATS</strong>
+              <strong class="text-white block mb-0.5">3. Quick Toggles & Atajos</strong>
+              <span>Cambiá entre LIVE y WIP o destacá con la estrella (★) directamente desde la lista lateral sin tener que abrir el formulario. Para guardar al instante, presioná <kbd class="font-mono-code text-[10px] bg-[#121417] px-1 rounded border border-[#2d3239]">Ctrl+S</kbd>.</span>
+            </div>
+
+            <div class="p-2.5 bg-[#191b1f] rounded border border-[#272b32]">
+              <strong class="text-white block mb-0.5">4. Job Hunter & CV Harvard ATS</strong>
               <span>El agente Eros analiza vacantes tech automáticamente. Al seleccionar una oferta, tocá "Generar CV Harvard ATS" para previsualizar, imprimir en A4 o copiar el CV personalizado.</span>
             </div>
           </div>

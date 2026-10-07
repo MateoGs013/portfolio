@@ -140,6 +140,29 @@ adminApi.put('/projects/:id', async (req, res) => {
   res.json(row)
 })
 
+adminApi.patch('/projects/:id', async (req, res) => {
+  const pid = id(req)
+  const patchData: Prisma.ProjectUpdateInput = {}
+  if (req.body && typeof req.body === 'object') {
+    const b = req.body as Record<string, unknown>
+    if ('status' in b) {
+      patchData.status = enumOf(b, 'status', PROJECT_STATUS)
+    }
+    if ('featured' in b) {
+      patchData.featured = bool(b, 'featured')
+    }
+    if ('sortOrder' in b) {
+      patchData.sortOrder = int(b, 'sortOrder')
+    }
+  }
+  const row = await db.project.update({
+    where: { id: pid },
+    data: patchData,
+    include: projectInclude,
+  })
+  res.json(row)
+})
+
 adminApi.delete('/projects/:id', async (req, res) => {
   const pid = id(req)
   const media = await db.media.findMany({ where: { projectId: pid }, select: { src: true } })
