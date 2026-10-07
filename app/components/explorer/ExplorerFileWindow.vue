@@ -37,6 +37,7 @@ function onClose() {
 
 function onKey(e: KeyboardEvent) {
   if (e.key === 'Escape') {
+    e.stopPropagation()
     onClose()
   }
 }

@@ -665,9 +665,9 @@ function onCardMousemove(e: MouseEvent) {
           <div class="pf-contact-box">
             <span class="pf-c-tag">{{ tr.home.footerContact }}</span>
             <ul class="pf-links">
-              <li><AppIcon name="mail" :size="12" /> <a href="mailto:mateogabus@gmail.com">mateogabus@gmail.com</a></li>
-              <li><AppIcon name="briefcase" :size="12" /> <a href="https://www.linkedin.com/in/mateo-sonzogni" target="_blank" rel="noopener noreferrer">linkedin.com/in/mateo-sonzogni</a></li>
-              <li><AppIcon name="code" :size="12" /> <a href="https://github.com/MateoGs013" target="_blank" rel="noopener noreferrer">github.com/MateoGs013</a></li>
+              <li><a href="mailto:mateogabus@gmail.com"><AppIcon name="mail" :size="12" /> mateogabus@gmail.com</a></li>
+              <li><a href="https://www.linkedin.com/in/mateo-sonzogni" target="_blank" rel="noopener noreferrer"><AppIcon name="briefcase" :size="12" /> linkedin.com/in/mateo-sonzogni</a></li>
+              <li><a href="https://github.com/MateoGs013" target="_blank" rel="noopener noreferrer"><AppIcon name="code" :size="12" /> github.com/MateoGs013</a></li>
             </ul>
           </div>
         </div>
@@ -2030,6 +2030,7 @@ function onCardMousemove(e: MouseEvent) {
   line-height: 1.1;
   letter-spacing: 0.02em;
   color: var(--d-ink);
+  white-space: pre-line;
 }
 .manifesto-lead {
   margin: 0;
@@ -2038,6 +2039,7 @@ function onCardMousemove(e: MouseEvent) {
   font-weight: 500;
   line-height: 1.5;
   color: var(--d-dim);
+  white-space: pre-line;
 }
 .manifesto-footer {
   margin-top: 10px;
@@ -2166,9 +2168,13 @@ function onCardMousemove(e: MouseEvent) {
   color: var(--d-ink);
 }
 .pf-links a {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   color: var(--d-ink);
   text-decoration: none;
   font-weight: 700;
+  transition: color var(--d-dur) ease;
 }
 .pf-links a:hover {
   color: var(--d-orange);

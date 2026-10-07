@@ -516,7 +516,7 @@ async function copyJson() {
 }
 .ph-btn.primary {
   background: var(--d-sig);
-  color: #ffffff;
+  color: var(--d-on-sig);
   border: 1px solid var(--d-sig);
   box-shadow: 0 0 14px var(--d-sig-glow);
 }

@@ -22,10 +22,10 @@ defineProps<{
       <!-- Sidebar -->
       <aside class="ide-sidebar w-[260px] max-md:w-full bg-surface border-r max-md:border-r-0 max-md:border-b border-rule-strong flex flex-col shrink-0">
         <div class="ide-window-controls p-3 px-3.5 flex items-center gap-1.5 border-b border-rule-strong bg-surface-raised">
-          <span class="w-2.5 h-2.5 rounded-full bg-[#ff5f56]" aria-hidden="true" />
-          <span class="w-2.5 h-2.5 rounded-full bg-[#ffbd2e]" aria-hidden="true" />
-          <span class="w-2.5 h-2.5 rounded-full bg-[#27c93f]" aria-hidden="true" />
-          <span class="ml-auto text-sig text-[11px]">package.json</span>
+          <span class="ide-dot red w-2.5 h-2.5 rounded-full bg-[#ff5f56]" aria-hidden="true" />
+          <span class="ide-dot yellow w-2.5 h-2.5 rounded-full bg-[#ffbd2e]" aria-hidden="true" />
+          <span class="ide-dot green w-2.5 h-2.5 rounded-full bg-[#27c93f]" aria-hidden="true" />
+          <span class="ide-file-title ml-auto text-sig text-[11px]">package.json</span>
         </div>
 
         <div class="ide-sidebar-inner p-3.5 flex flex-col gap-3.5">
@@ -36,81 +36,81 @@ defineProps<{
 
             <div class="ide-tree flex flex-col gap-2">
               <div class="ide-tree-group">
-                <div class="text-ink font-semibold flex items-center gap-1">
+                <div class="ide-tree-folder text-ink font-semibold flex items-center gap-1">
                   <span class="text-dim text-[9px]">▼</span> src/
                 </div>
-                <ul class="list-none m-0 pl-3.5 flex flex-col gap-1 text-dim mt-1">
-                  <li><span class="text-faint">·</span> profile.ts</li>
-                  <li><span class="text-faint">·</span> experience.vue</li>
-                  <li><span class="text-faint">·</span> stack.py</li>
-                  <li><span class="text-faint">·</span> education.sql</li>
+                <ul class="ide-tree-files list-none m-0 pl-3.5 flex flex-col gap-1 text-dim mt-1">
+                  <li><span class="ide-tree-bullet text-faint">·</span> profile.ts</li>
+                  <li><span class="ide-tree-bullet text-faint">·</span> experience.vue</li>
+                  <li><span class="ide-tree-bullet text-faint">·</span> stack.py</li>
+                  <li><span class="ide-tree-bullet text-faint">·</span> education.sql</li>
                 </ul>
               </div>
               <div class="ide-tree-group">
-                <div class="text-ink font-semibold flex items-center gap-1">
+                <div class="ide-tree-folder text-ink font-semibold flex items-center gap-1">
                   <span class="text-dim text-[9px]">▼</span> config/
                 </div>
-                <ul class="list-none m-0 pl-3.5 flex flex-col gap-1 text-dim mt-1">
-                  <li><span class="text-faint">·</span> contact.env</li>
-                  <li><span class="text-faint">·</span> nuxt.config.ts</li>
+                <ul class="ide-tree-files list-none m-0 pl-3.5 flex flex-col gap-1 text-dim mt-1">
+                  <li><span class="ide-tree-bullet text-faint">·</span> contact.env</li>
+                  <li><span class="ide-tree-bullet text-faint">·</span> nuxt.config.ts</li>
                 </ul>
               </div>
             </div>
           </div>
 
-          <div class="h-px bg-rule my-0.5" />
+          <div class="ide-divider ide-hr h-px bg-rule my-0.5" />
 
-          <div class="p-2 bg-surface-raised border border-rule flex justify-center">
+          <div class="ide-photo-wrap p-2 bg-surface-raised border border-rule flex justify-center">
             <img
               src="/media/profile/mateo-front.png"
               alt="Mateo Gabriel Sonzogni"
-              class="w-28 h-28 object-cover rounded-[2px] border border-rule"
+              class="ide-photo w-28 h-28 object-cover rounded-[2px] border border-rule"
               loading="eager"
             >
           </div>
 
-          <div class="h-px bg-rule my-0.5" />
+          <div class="ide-divider ide-hr h-px bg-rule my-0.5" />
 
           <!-- Formación / Education -->
           <div class="ide-sidebar-section flex flex-col gap-2">
-            <div class="text-faint italic text-[10.5px]">// {{ isEs ? 'formación técnica' : 'education' }}</div>
-            <div class="flex flex-col gap-0.5">
-              <div class="text-sig font-bold text-[11px]">ESCUELA DA VINCI</div>
-              <div class="text-ink font-medium text-[10.5px]">{{ isEs ? 'Diseño y Desarrollo Web' : 'Web Design & Dev' }} (2024–2026)</div>
-              <div class="text-dim text-[10px]">{{ isEs ? 'Tesis: Ynara (Lead Front & Arq.)' : 'Thesis: Ynara (Lead Front & Arch)' }}</div>
+            <div class="ide-comment text-faint italic text-[10.5px]">// {{ isEs ? 'formación técnica' : 'education' }}</div>
+            <div class="ide-edu-item flex flex-col gap-0.5">
+              <div class="ide-edu-school text-sig font-bold text-[11px]">ESCUELA DA VINCI</div>
+              <div class="ide-edu-degree text-ink font-medium text-[10.5px]">{{ isEs ? 'Diseño y Desarrollo Web' : 'Web Design & Dev' }} (2024–2026)</div>
+              <div class="ide-edu-sub text-dim text-[10px]">{{ isEs ? 'Tesis: Ynara (Lead Front & Arq.)' : 'Thesis: Ynara (Lead Front & Arch)' }}</div>
             </div>
-            <div class="flex flex-col gap-0.5">
-              <div class="text-sig font-bold text-[11px]">CET N.º 30</div>
-              <div class="text-ink font-medium text-[10.5px]">{{ isEs ? 'Técnico en Programación' : 'Programming Tech' }} (2017–2023)</div>
-              <div class="text-dim text-[10px]">{{ isEs ? 'Plan integral de 7 años' : '7-year technical program' }}</div>
+            <div class="ide-edu-item flex flex-col gap-0.5">
+              <div class="ide-edu-school text-sig font-bold text-[11px]">CET N.º 30</div>
+              <div class="ide-edu-degree text-ink font-medium text-[10.5px]">{{ isEs ? 'Técnico en Programación' : 'Programming Tech' }} (2017–2023)</div>
+              <div class="ide-edu-sub text-dim text-[10px]">{{ isEs ? 'Plan integral de 7 años' : '7-year technical program' }}</div>
             </div>
           </div>
 
-          <div class="h-px bg-rule my-0.5" />
+          <div class="ide-divider ide-hr h-px bg-rule my-0.5" />
 
           <!-- Stats & Idiomas -->
           <div class="ide-sidebar-section flex flex-col gap-1.5">
-            <div class="text-faint italic text-[10.5px]">// {{ isEs ? 'métricas & idiomas' : 'metrics & languages' }}</div>
-            <ul class="list-none m-0 p-0 flex flex-col gap-1 text-dim text-[10.5px]">
-              <li class="flex justify-between"><span>{{ isEs ? 'Español' : 'Spanish' }}</span> <span class="text-ink font-semibold">{{ isEs ? 'Nativo' : 'Native' }}</span></li>
-              <li class="flex justify-between"><span>{{ isEs ? 'Inglés' : 'English' }}</span> <span class="text-ink font-semibold">{{ isEs ? 'B2 Profesional' : 'B2 Professional' }}</span></li>
-              <li class="flex justify-between"><span>{{ isEs ? 'Experiencia' : 'Experience' }}</span> <span class="text-ink font-semibold">{{ isEs ? '+3 años' : '3+ yrs' }}</span></li>
-              <li class="flex justify-between"><span>{{ isEs ? 'Proyectos' : 'Projects' }}</span> <span class="text-ink font-semibold">~10 apps</span></li>
-              <li class="flex justify-between"><span>{{ isEs ? 'Disponibilidad' : 'Availability' }}</span> <span class="text-ink font-semibold">{{ isEs ? 'Inmediata' : 'Immediate' }}</span></li>
-              <li class="flex justify-between"><span>{{ isEs ? 'Zona Horaria' : 'Timezone' }}</span> <span class="text-ink font-semibold">{{ timezone }}</span></li>
+            <div class="ide-comment text-faint italic text-[10.5px]">// {{ isEs ? 'métricas & idiomas' : 'metrics & languages' }}</div>
+            <ul class="ide-key-val list-none m-0 p-0 flex flex-col gap-1 text-dim text-[10.5px]">
+              <li class="flex justify-between"><span>{{ isEs ? 'Español' : 'Spanish' }}</span> <span class="ide-highlight text-ink font-semibold">{{ isEs ? 'Nativo' : 'Native' }}</span></li>
+              <li class="flex justify-between"><span>{{ isEs ? 'Inglés' : 'English' }}</span> <span class="ide-highlight text-ink font-semibold">{{ isEs ? 'B2 Profesional' : 'B2 Professional' }}</span></li>
+              <li class="flex justify-between"><span>{{ isEs ? 'Experiencia' : 'Experience' }}</span> <span class="ide-highlight text-ink font-semibold">{{ isEs ? '+3 años' : '3+ yrs' }}</span></li>
+              <li class="flex justify-between"><span>{{ isEs ? 'Proyectos' : 'Projects' }}</span> <span class="ide-highlight text-ink font-semibold">~10 apps</span></li>
+              <li class="flex justify-between"><span>{{ isEs ? 'Disponibilidad' : 'Availability' }}</span> <span class="ide-highlight text-ink font-semibold">{{ isEs ? 'Inmediata' : 'Immediate' }}</span></li>
+              <li class="flex justify-between"><span>{{ isEs ? 'Zona Horaria' : 'Timezone' }}</span> <span class="ide-highlight text-ink font-semibold">{{ timezone }}</span></li>
             </ul>
           </div>
 
-          <div class="h-px bg-rule my-0.5" />
+          <div class="ide-divider ide-hr h-px bg-rule my-0.5" />
 
           <!-- Contact -->
           <div class="ide-sidebar-section flex flex-col gap-1.5">
-            <div class="text-faint italic text-[10.5px]">// {{ isEs ? 'contacto' : 'contact' }}</div>
-            <ul class="list-none m-0 p-0 flex flex-col gap-1 text-[10.5px]">
+            <div class="ide-comment text-faint italic text-[10.5px]">// {{ isEs ? 'contacto' : 'contact' }}</div>
+            <ul class="ide-contact-list list-none m-0 p-0 flex flex-col gap-1 text-[10.5px]">
               <li><a :href="`mailto:${email}`" class="text-sig hover:underline">{{ email }}</a></li>
               <li><a :href="github" target="_blank" rel="noopener noreferrer" class="text-sig hover:underline">@{{ githubText.replace('github.com/', '') }}</a></li>
               <li><a :href="linkedin" target="_blank" rel="noopener noreferrer" class="text-sig hover:underline">in/mateo-sonzogni</a></li>
-              <li><span class="text-dim">{{ location }}</span></li>
+              <li><span class="ide-loc text-dim">{{ location }}</span></li>
             </ul>
           </div>
         </div>
@@ -119,69 +119,69 @@ defineProps<{
       <!-- Main Editor -->
       <main class="ide-main flex-1 min-w-0 bg-paper flex flex-col">
         <div class="ide-tabs flex border-b border-rule-strong bg-surface-raised">
-          <div class="ide-tab px-4 py-2 text-[11px] border-r border-rule-strong cursor-pointer bg-paper text-sig font-bold border-b-2 border-b-sig">cv.ts</div>
+          <div class="ide-tab active px-4 py-2 text-[11px] border-r border-rule-strong cursor-pointer bg-paper text-sig font-bold border-b-2 border-b-sig">cv.ts</div>
           <div class="ide-tab px-4 py-2 text-[11px] border-r border-rule-strong cursor-pointer text-dim hover:text-ink">README.md</div>
         </div>
 
         <div class="ide-editor-content p-6 max-md:p-4 flex flex-col gap-5 leading-relaxed">
           <header class="ide-header">
-            <div class="text-faint italic text-[10.5px] mb-1">// curriculum vitae — mateo sonzogni, 2026</div>
-            <h1 class="m-0 font-sans text-2xl font-bold text-ink tracking-tight">{{ name }}</h1>
-            <p class="m-0 font-mono text-sig text-[12px] font-semibold mt-1">{{ role }}</p>
+            <div class="ide-comment text-faint italic text-[10.5px] mb-1">// curriculum vitae — mateo sonzogni, 2026</div>
+            <h1 class="ide-name m-0 font-sans text-2xl font-bold text-ink tracking-tight">{{ name }}</h1>
+            <p class="ide-role m-0 font-mono text-sig text-[12px] font-semibold mt-1">{{ role }}</p>
           </header>
 
-          <div class="h-px bg-rule" />
+          <div class="ide-hr h-px bg-rule" />
 
           <!-- Profile -->
           <div class="ide-section flex flex-col gap-2">
-            <div class="text-faint italic text-[10.5px]">// profile</div>
-            <p class="m-0 font-sans text-[13.5px] text-dim leading-relaxed">{{ bio }}</p>
+            <div class="ide-comment text-faint italic text-[10.5px]">// profile</div>
+            <p class="ide-text m-0 font-sans text-[13.5px] text-dim leading-relaxed">{{ bio }}</p>
           </div>
 
-          <div class="h-px bg-rule" />
+          <div class="ide-hr h-px bg-rule" />
 
           <!-- Experience & Projects -->
           <div class="ide-section flex flex-col gap-3">
-            <div class="text-faint italic text-[10.5px]">// {{ isEs ? 'experiencia profesional & proyectos en producción' : 'professional experience & shipped projects' }}</div>
+            <div class="ide-comment text-faint italic text-[10.5px]">// {{ isEs ? 'experiencia profesional & proyectos en producción' : 'professional experience & shipped projects' }}</div>
 
-            <div v-for="item in deliverables" :key="item.slug" class="mt-2 flex flex-col gap-1.5 p-3.5 bg-surface border border-rule">
-              <div class="flex items-baseline justify-between gap-2 flex-wrap">
+            <div v-for="item in deliverables" :key="item.slug" class="ide-exp-item mt-2 flex flex-col gap-1.5 p-3.5 bg-surface border border-rule">
+              <div class="ide-exp-top-row flex items-baseline justify-between gap-2 flex-wrap">
                 <div class="flex items-center gap-2">
-                  <span class="font-mono text-[13px] font-bold text-ink">{{ item.title }}</span>
-                  <span v-if="item.badge" class="text-[9.5px] px-1.5 py-0.5 border border-sig text-sig font-bold rounded-[2px]">{{ item.badge }}</span>
+                  <span class="ide-exp-title font-mono text-[13px] font-bold text-ink">{{ item.title }}</span>
+                  <span v-if="item.badge" class="ide-exp-badge text-[9.5px] px-1.5 py-0.5 border border-sig text-sig font-bold rounded-[2px]">{{ item.badge }}</span>
                 </div>
-                <span class="text-dim text-[10.5px]">{{ item.date }}</span>
+                <span class="ide-exp-date text-dim text-[10.5px]">{{ item.date }}</span>
               </div>
-              <div class="flex items-baseline justify-between gap-2 text-dim text-[11px]">
-                <span class="text-sig font-medium">{{ item.role }}</span>
-                <span class="text-dim">{{ item.location }}</span>
+              <div class="ide-exp-sub-row flex items-baseline justify-between gap-2 text-dim text-[11px]">
+                <span class="ide-exp-role text-sig font-medium">{{ item.role }}</span>
+                <span class="ide-exp-loc text-dim">{{ item.location }}</span>
               </div>
-              <p class="m-0 font-sans text-[12.5px] text-dim leading-relaxed">{{ item.description }}</p>
-              <ul v-if="item.bullets?.length" class="m-0 pl-4 text-dim text-[11.5px] leading-relaxed flex flex-col gap-1">
+              <p class="ide-exp-desc ide-text m-0 font-sans text-[12.5px] text-dim leading-relaxed">{{ item.description }}</p>
+              <ul v-if="item.bullets?.length" class="ide-exp-bullets m-0 pl-4 text-dim text-[11.5px] leading-relaxed flex flex-col gap-1">
                 <li v-for="(bullet, bIdx) in item.bullets" :key="bIdx">{{ bullet }}</li>
               </ul>
-              <div v-if="item.tags?.length" class="flex flex-wrap gap-1.5 mt-1">
-                <span v-for="tag in item.tags" :key="tag" class="text-[10px] text-faint bg-surface-raised border border-rule px-1.5 py-0.5 rounded-[2px]">#{{ tag }}</span>
+              <div v-if="item.tags?.length" class="ide-exp-tags flex flex-wrap gap-1.5 mt-1">
+                <span v-for="tag in item.tags" :key="tag" class="ide-tag text-[10px] text-faint bg-surface-raised border border-rule px-1.5 py-0.5 rounded-[2px]">#{{ tag }}</span>
               </div>
             </div>
           </div>
 
-          <div class="h-px bg-rule" />
+          <div class="ide-hr h-px bg-rule" />
 
           <!-- Stack -->
           <div class="ide-section flex flex-col gap-2">
-            <div class="text-faint italic text-[10.5px]">// {{ isEs ? 'stack tecnológico' : 'tech stack' }}</div>
-            <div class="flex items-baseline gap-2 text-[11px] font-mono">
-              <span class="text-sig font-bold">frontend</span>
-              <span class="text-dim">: "Vue 3 · Nuxt 4 · React · Next.js · TypeScript · Tailwind · GSAP"</span>
+            <div class="ide-comment text-faint italic text-[10.5px]">// {{ isEs ? 'stack tecnológico' : 'tech stack' }}</div>
+            <div class="ide-stack-group flex items-baseline gap-2 text-[11px] font-mono">
+              <span class="ide-stack-label text-sig font-bold">frontend</span>
+              <span class="ide-stack-val text-dim">: "Vue 3 · Nuxt 4 · React · Next.js · TypeScript · Tailwind · GSAP"</span>
             </div>
-            <div class="flex items-baseline gap-2 text-[11px] font-mono">
-              <span class="text-sig font-bold">backend </span>
-              <span class="text-dim">: "Node.js · Express · FastAPI · Python · PostgreSQL (pgvector) · Prisma"</span>
+            <div class="ide-stack-group flex items-baseline gap-2 text-[11px] font-mono">
+              <span class="ide-stack-label text-sig font-bold">backend </span>
+              <span class="ide-stack-val text-dim">: "Node.js · Express · FastAPI · Python · PostgreSQL (pgvector) · Prisma"</span>
             </div>
-            <div class="flex items-baseline gap-2 text-[11px] font-mono">
-              <span class="text-sig font-bold">cloud/ops</span>
-              <span class="text-dim">: "Docker · Coolify VPS · Linux · CI/CD · Git · Figma UI/UX · Vitest"</span>
+            <div class="ide-stack-group flex items-baseline gap-2 text-[11px] font-mono">
+              <span class="ide-stack-label text-sig font-bold">cloud/ops</span>
+              <span class="ide-stack-val text-dim">: "Docker · Coolify VPS · Linux · CI/CD · Git · Figma UI/UX · Vitest"</span>
             </div>
           </div>
         </div>

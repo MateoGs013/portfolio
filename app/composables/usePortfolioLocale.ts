@@ -2,9 +2,8 @@ import { experienceTranslations, projectTranslations, translations, type LocaleC
 
 export type PortfolioLocale = 'es' | 'en'
 
-const currentLocale = ref<PortfolioLocale>('es')
-
 export function usePortfolioLocale() {
+  const currentLocale = useState<PortfolioLocale>('portfolio-locale', () => 'es')
   function toggleLocale() {
     currentLocale.value = currentLocale.value === 'es' ? 'en' : 'es'
     if (import.meta.client) {

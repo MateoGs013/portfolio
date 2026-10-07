@@ -1,9 +1,9 @@
 // Composable para Modo Hiperfoco (Zen / Ultraminimalista)
 // Elimina todo ruido ornamental, retícula y marcas para ofrecer lectura técnica concentrada.
 
-const hyperfocusState = ref(false)
-
 export function useHyperfocus() {
+  const hyperfocusState = useState<boolean>('hyperfocus-state', () => false)
+
   function toggleHyperfocus() {
     hyperfocusState.value = !hyperfocusState.value
     if (import.meta.client) {

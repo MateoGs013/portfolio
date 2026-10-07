@@ -34,6 +34,7 @@ const { isHyperfocus, toggleHyperfocus } = useHyperfocus()
 // Reloj dinámico en tiempo real (UTC-3 Patagonia, Argentina)
 const utcTime = ref('')
 let clockTimer: ReturnType<typeof setInterval> | null = null
+let guideTimer: ReturnType<typeof setTimeout> | null = null
 
 function updateClock() {
   const now = new Date()
@@ -64,7 +65,7 @@ onMounted(() => {
     // Orientación inicial no invasiva: abrir tras 1.8s únicamente si es desktop amplio y primera visita
     const guideSeen = localStorage.getItem('portfolio-guide-seen')
     if (!guideSeen && typeof window !== 'undefined' && window.innerWidth >= 1024) {
-      setTimeout(() => {
+      guideTimer = setTimeout(() => {
         guideOpen.value = true
         localStorage.setItem('portfolio-guide-seen', 'true')
       }, 1800)
@@ -74,6 +75,7 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
   if (clockTimer) clearInterval(clockTimer)
+  if (guideTimer) clearTimeout(guideTimer)
 })
 
 useHead({
