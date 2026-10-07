@@ -39,17 +39,17 @@ GET /api/docs/:key
 
 Envoltura: `{ data, meta: { count, filters } }`
 
-## Un modelo, dos subsets
+## Un modelo de contenido estructurado y relacional
 
-Un record tiene todos los campos; cada mundo elige los suyos. **Nunca duplicar contenido para acomodar a un mundo.** Si un mundo necesita algo que el otro no muestra, es un campo más en el mismo record.
+Toda la información vive en PostgreSQL 17 gobernada por Prisma. Cada registro contiene tanto metadatos técnicos estructurados (`summary`, `year`, `metrics`, `techs`) como narrativa y proceso en profundidad (`brief`, `outcome`, `steps`, `media`).
 
-`app/lib/fieldMeta.ts` es el único lugar donde se declara qué campo ve cada mundo:
+`app/lib/fieldMeta.ts` declara la tipificación y presentación de los campos para la hoja técnica del explorador:
 
 ```ts
-{ campo: { type, wide, worlds: ['datos'] | ['diseno'] | ['datos','diseno'] } }
+{ campo: { type, label, wide, nullable } }
 ```
 
-Antes de agregar un campo, decidir a qué mundo pertenece. Si la respuesta es "a los dos", justificarlo — que los dos mundos muestren lo mismo es la falla más fácil del proyecto.
+Nombrar una columna o propiedad es una decisión visible en la hoja técnica del portafolio. Cero duplicación de datos.
 
 ## Documentos
 

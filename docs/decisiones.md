@@ -6,7 +6,19 @@ Formato: decisión · alternativa descartada · por qué.
 
 ---
 
-## Concepto
+## Evolución Arquitectónica (Septiembre - Octubre 2026)
+
+**Portafolio unificado con Modo Focus (Hiperfoco) en lugar de "Dos Mundos".**
+*Descartado:* La división de la web en dos experiencias paralelas ("Mundo Datos" y "Mundo Diseño") con switch persistente.
+*Por qué:* Mantener dos mundos independientes complejizaba la experiencia del visitante, duplicaba la superficie de prueba y diluía el impacto del trabajo real. En su lugar, el portafolio se consolidó como un único explorador técnico relacional sobre PostgreSQL 17, enriquecido con un **Modo Focus / Hiperfoco** (`useHyperfocus.ts`) que despoja la interfaz de todo elemento no esencial para facilitar una lectura ágil y concentrada.
+
+**Infraestructura unificada en VPS de Hostinger con Coolify.**
+*Descartado:* Esquema fragmentado entre plataformas gratuitas externas (Vercel para frontend, Render para backend y Supabase para base de datos).
+*Por qué:* Generaba latencia transatlántica entre la base de datos y la API, problemas de cuotas y arranques en frío (cold starts). Se migró la totalidad de la arquitectura a un VPS propio en Hostinger administrado mediante **Coolify**, donde PostgreSQL 17, Express 5 y Nuxt 4 corren en contenedores Docker comunicados internamente en red local de alta velocidad con SSL automatizado.
+
+---
+
+## Concepto Histórico (Fase Inicial)
 
 **Dos mundos como disciplinas, no como audiencias.**
 Descartado: "modo experimental" vs "modo recruiter".

@@ -17,13 +17,13 @@
         <div class="top-avatar-badge" aria-hidden="true">MS</div>
         <div class="top-title">
           <span>Mateo Sonzogni</span>
-          <span class="tag-cms">CMS Admin</span>
+          <span class="tag-cms">CMS</span>
         </div>
       </div>
 
       <div class="top-center">
         <div class="system-status-pill">
-          <span class="pulse-dot" aria-hidden="true"></span>
+          <span class="status-dot live" aria-hidden="true"></span>
           <span>Sistema Conectado</span>
         </div>
       </div>
@@ -31,13 +31,10 @@
       <div class="top-right">
         <!-- Toast de Notificaciones -->
         <span v-if="status.text" class="status-toast" :class="status.kind">
-          <span v-if="status.kind === 'ok'">✓</span>
-          <span v-else>⚠️</span>
           {{ status.text }}
         </span>
 
-        <button type="button" class="top-help-btn" @click="showHelpModal = true" title="Guía y ayuda para asistentes">
-          <svg class="adm-icon sm" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        <button type="button" class="top-help-btn" @click="showHelpModal = true" title="Guía y ayuda para el operador">
           <span>Guía Asistente</span>
         </button>
 
@@ -46,20 +43,19 @@
           <svg class="adm-icon sm" viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
         </a>
 
-        <button v-if="token" class="ghost" @click="handleLogoutClick" title="Cerrar sesión segura">
-          <svg class="adm-icon sm" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        <button v-if="token" class="ghost" @click="handleLogoutClick" title="Cerrar sesión">
           <span>Salir</span>
         </button>
       </div>
     </header>
 
-    <!-- Pantalla de Login Amigable y Moderna -->
+    <!-- Pantalla de Login -->
     <main v-if="!token" class="login-wrap">
       <div class="login-card">
         <div class="login-card-header">
           <div class="login-avatar">MS</div>
           <h1>Portafolio CMS</h1>
-          <p>Bienvenido. Ingresá tu clave de acceso autorizada para administrar proyectos, contenidos y ofertas.</p>
+          <p>Ingresá tu clave de acceso autorizada para administrar el contenido del portafolio.</p>
         </div>
 
         <div class="login-card-body">
@@ -71,7 +67,7 @@
                   id="admin-token-input"
                   v-model="tokenInput"
                   :type="passwordVisible ? 'text' : 'password'"
-                  placeholder="••••••••••••••••"
+                  placeholder="Clave de autorización"
                   autocomplete="off"
                   autofocus
                   required
@@ -88,21 +84,20 @@
               </div>
             </div>
 
-            <button type="submit" class="primary" style="width: 100%; padding: 10px;">
-              <span>Ingresar al Administrador</span>
-              <svg class="adm-icon sm" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+            <button type="submit" class="primary" style="width: 100%; padding: 9px;">
+              <span>Ingresar al Panel</span>
             </button>
 
-            <button type="button" class="btn-dev-token" @click="useDevToken">
-              ⚡ Usar clave local de desarrollo (DEV_TOKEN)
+            <button v-if="isLocalhost" type="button" class="btn-dev-token" @click="useDevToken">
+              Autocompletar clave local de desarrollo (DEV_TOKEN)
             </button>
           </form>
         </div>
       </div>
     </main>
 
-    <!-- Espacio de Trabajo Principal (3 Columnas) -->
-    <main v-else class="work">
+    <!-- Espacio de Trabajo Principal (Rejilla Dinámica) -->
+    <main v-else class="work" :class="{ 'layout-dashboard': section === 'dashboard', 'layout-split': section !== 'dashboard' }">
       <!-- Columna 1: Sidebar de Navegación -->
       <aside class="models-sidebar">
         <div>
@@ -120,7 +115,7 @@
             </button>
           </nav>
 
-          <div class="nav-section-title">Contenido del Portafolio</div>
+          <div class="nav-section-title">Contenido</div>
           <nav class="models-nav" aria-label="Colecciones de contenido">
             <button
               v-for="(m, key) in models"
@@ -133,7 +128,7 @@
                 <span class="nav-icon" v-html="m.icon"></span>
                 <span>{{ m.label }}</span>
               </span>
-              <span class="nav-badge">{{ counts[key] !== undefined ? counts[key] : (section === key ? rows.length : '·') }}</span>
+              <span class="nav-badge">{{ counts[key] !== undefined ? counts[key] : (section === key ? rows.length : '0') }}</span>
             </button>
           </nav>
 
@@ -148,8 +143,8 @@
                 <span class="nav-icon" v-html="icons.hunter"></span>
                 <span>Job Hunter (IA)</span>
               </span>
-              <span class="nav-badge" :class="{ 'badge-glow': hunterStats.high_match_count > 0 }">
-                {{ hunterStats.high_match_count > 0 ? hunterStats.high_match_count + ' 🔥' : (hunterJobs.length || '0') }}
+              <span class="nav-badge">
+                {{ hunterStats.high_match_count > 0 ? hunterStats.high_match_count : (hunterJobs.length || '0') }}
               </span>
             </button>
           </nav>
@@ -166,24 +161,20 @@
         </div>
       </aside>
 
-      <!-- Columna 2: Lista de Registros / Explorador (Se oculta en el Dashboard) -->
+      <!-- Columna 2: Lista de Registros / Explorador (Solo en Colecciones y Hunter) -->
       <section v-if="section !== 'dashboard'" class="records-list">
         <!-- VISTA HUNTER AGENT -->
         <template v-if="section === 'hunter'">
           <div class="list-topbar">
             <div class="list-header-row">
-              <span class="list-section-title">
-                <svg class="adm-icon sm" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="22" y1="12" x2="18" y2="12"/><line x1="6" y1="12" x2="2" y2="12"/><line x1="12" y1="6" x2="12" y2="2"/><line x1="12" y1="22" x2="12" y2="18"/></svg>
-                <span>Ofertas Detectadas</span>
-              </span>
+              <span class="list-section-title">Vacantes Tech</span>
               <button
                 class="btn-create-primary"
                 :disabled="hunterIsScanning"
                 @click="triggerHunterScan"
                 title="Escanear Get on Board, RemoteOK y Hacker News"
               >
-                <span v-if="hunterIsScanning">⟳ Escaneando...</span>
-                <span v-else>⚡ Escanear Ofertas</span>
+                <span>{{ hunterIsScanning ? 'Escaneando...' : 'Escanear Vacantes' }}</span>
               </button>
             </div>
 
@@ -194,7 +185,7 @@
               <input
                 v-model="searchQuery"
                 type="text"
-                placeholder="Buscar por puesto, empresa o skill..."
+                placeholder="Buscar por puesto o empresa..."
                 class="search-input"
               >
             </div>
@@ -203,13 +194,13 @@
           <!-- Filtros de Job Hunter -->
           <div class="filter-pills-bar">
             <button class="filter-pill" :class="{ active: hunterFilter === 'high' }" @click="hunterFilter = 'high'">
-              🔥 Match ≥ 70% ({{ hunterStats.high_match_count }})
+              Match ≥ 70% ({{ hunterStats.high_match_count }})
             </button>
             <button class="filter-pill" :class="{ active: hunterFilter === 'all' }" @click="hunterFilter = 'all'">
               Todas ({{ hunterJobs.length }})
             </button>
             <button class="filter-pill" :class="{ active: hunterFilter === 'applied' }" @click="hunterFilter = 'applied'">
-              ✓ Postuladas ({{ hunterStats.applied_count }})
+              Postuladas ({{ hunterStats.applied_count }})
             </button>
             <button class="filter-pill" :class="{ active: hunterFilter === 'discarded' }" @click="hunterFilter = 'discarded'">
               Descartadas ({{ hunterStats.discarded_count }})
@@ -247,12 +238,10 @@
           <div class="list-topbar">
             <div class="list-header-row">
               <span class="list-section-title">
-                <span v-html="model.icon"></span>
                 <span>{{ model.label }}</span>
               </span>
               <button v-if="model.creatable !== false" class="btn-create-primary" @click="startNew">
-                <svg class="adm-icon sm" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                <span>Nuevo {{ model.singular || 'Registro' }}</span>
+                <span>+ Nuevo</span>
               </button>
             </div>
 
@@ -275,13 +264,13 @@
               Todos ({{ rows.length }})
             </button>
             <button class="filter-pill" :class="{ active: projectStatusFilter === 'live' }" @click="projectStatusFilter = 'live'">
-              🟢 En Vivo
+              <span class="status-dot live"></span> En Vivo
             </button>
             <button class="filter-pill" :class="{ active: projectStatusFilter === 'wip' }" @click="projectStatusFilter = 'wip'">
-              🟡 En Desarrollo
+              <span class="status-dot wip"></span> En Desarrollo
             </button>
             <button class="filter-pill" :class="{ active: projectStatusFilter === 'featured' }" @click="projectStatusFilter = 'featured'">
-              ⭐ Destacados
+              Destacados
             </button>
             <button class="filter-pill" :class="{ active: projectStatusFilter === 'archived' }" @click="projectStatusFilter = 'archived'">
               Archivados
@@ -299,8 +288,8 @@
               <div class="row-card-header">
                 <span class="row-title">{{ model.name(r) }}</span>
                 <div class="row-badges-row">
-                  <span v-if="r.featured" class="status-pill-badge featured" title="Destacado en portada">⭐</span>
-                  <span v-if="r.status" class="status-pill-badge" :class="r.status.toLowerCase()">
+                  <span v-if="r.featured" class="badge-tag featured">Destacado</span>
+                  <span v-if="r.status" class="badge-tag" :class="r.status.toLowerCase()">
                     {{ r.status }}
                   </span>
                 </div>
@@ -316,127 +305,128 @@
         </template>
       </section>
 
-      <!-- Columna 3: Dashboard / Resumen General -->
+      <!-- Columna 3: Dashboard / Resumen General (Fluido en Desktop) -->
       <section v-if="section === 'dashboard'" class="dashboard-view">
-        <div class="dashboard-hero">
-          <h1>¡Hola! Bienvenido al Administrador</h1>
-          <p>Gestioná casos de estudio, experiencia laboral, tecnologías y oportunidades laborales para tu portafolio.</p>
-        </div>
+        <div class="dashboard-container">
+          <div class="dashboard-hero">
+            <h1>Panel de Control</h1>
+            <p>Gestión centralizada de proyectos, experiencia laboral, tecnologías y oportunidades profesionales.</p>
+          </div>
 
-        <!-- Tarjetas de Estadísticas Principales -->
-        <div class="stats-kpi-grid">
-          <div class="kpi-card" @click="open('projects')">
-            <div class="kpi-header">
-              <span>Proyectos</span>
-              <svg class="adm-icon sm" viewBox="0 0 24 24"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z"/></svg>
+          <!-- Métricas Principales -->
+          <div class="stats-kpi-grid">
+            <div class="kpi-card" @click="open('projects')">
+              <div class="kpi-header">
+                <span>Proyectos</span>
+              </div>
+              <div class="kpi-value">{{ dashboardStats.totalProjects }}</div>
+              <div class="kpi-footer">
+                <span>Casos de estudio</span>
+                <svg class="adm-icon sm" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+              </div>
             </div>
-            <div class="kpi-value">{{ dashboardStats.totalProjects }}</div>
-            <div class="kpi-footer">
-              <span>Ver casos de estudio</span>
-              <svg class="adm-icon sm" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+
+            <div class="kpi-card" @click="open('experience')">
+              <div class="kpi-header">
+                <span>Experiencia</span>
+              </div>
+              <div class="kpi-value">{{ dashboardStats.totalExperience }}</div>
+              <div class="kpi-footer">
+                <span>Puestos registrados</span>
+                <svg class="adm-icon sm" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+              </div>
+            </div>
+
+            <div class="kpi-card" @click="open('stack')">
+              <div class="kpi-header">
+                <span>Stack Tecnológico</span>
+              </div>
+              <div class="kpi-value">{{ dashboardStats.totalTechs }}</div>
+              <div class="kpi-footer">
+                <span>Herramientas activas</span>
+                <svg class="adm-icon sm" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+              </div>
+            </div>
+
+            <div class="kpi-card" @click="open('hunter')">
+              <div class="kpi-header">
+                <span>Job Hunter (IA)</span>
+                <span class="hunter-score-badge score-fire">Match ≥ 70%</span>
+              </div>
+              <div class="kpi-value">{{ dashboardStats.highMatchJobs }}</div>
+              <div class="kpi-footer">
+                <span>Vacantes recomendadas</span>
+                <svg class="adm-icon sm" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+              </div>
             </div>
           </div>
 
-          <div class="kpi-card" @click="open('experience')">
-            <div class="kpi-header">
-              <span>Experiencia</span>
-              <svg class="adm-icon sm" viewBox="0 0 24 24"><rect width="20" height="14" x="2" y="7" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+          <!-- Acciones Rápidas -->
+          <div class="quick-actions-grid">
+            <div class="qa-card" @click="open('projects').then(() => startNew())">
+              <div class="qa-icon-wrap">
+                <svg class="adm-icon" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              </div>
+              <div class="qa-text-wrap">
+                <span class="qa-title">Crear Nuevo Proyecto</span>
+                <span class="qa-desc">Publicar un caso de estudio en el portafolio</span>
+              </div>
             </div>
-            <div class="kpi-value">{{ dashboardStats.totalExperience }}</div>
-            <div class="kpi-footer">
-              <span>Historial laboral registrado</span>
-            </div>
-          </div>
 
-          <div class="kpi-card" @click="open('stack')">
-            <div class="kpi-header">
-              <span>Tecnologías</span>
-              <svg class="adm-icon sm" viewBox="0 0 24 24"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+            <div class="qa-card" @click="open('experience').then(() => startNew())">
+              <div class="qa-icon-wrap">
+                <svg class="adm-icon" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              </div>
+              <div class="qa-text-wrap">
+                <span class="qa-title">Agregar Experiencia</span>
+                <span class="qa-desc">Registrar un nuevo puesto, rol o cliente</span>
+              </div>
             </div>
-            <div class="kpi-value">{{ dashboardStats.totalTechs }}</div>
-            <div class="kpi-footer">
-              <span>Stack técnico activo</span>
-            </div>
-          </div>
 
-          <div class="kpi-card" @click="open('hunter')">
-            <div class="kpi-header">
-              <span>Job Hunter (IA)</span>
-              <span class="hunter-score-badge score-fire">🔥 Match Alto</span>
+            <div class="qa-card" @click="open('stack').then(() => startNew())">
+              <div class="qa-icon-wrap">
+                <svg class="adm-icon" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              </div>
+              <div class="qa-text-wrap">
+                <span class="qa-title">Añadir Tecnología</span>
+                <span class="qa-desc">Incorporar una herramienta al arsenal</span>
+              </div>
             </div>
-            <div class="kpi-value">{{ dashboardStats.highMatchJobs }}</div>
-            <div class="kpi-footer">
-              <span>Ofertas con ≥ 70% compatibilidad</span>
-            </div>
-          </div>
-        </div>
 
-        <!-- Accesos Rápidos para el Asistente -->
-        <h2 style="font-size: 16px; font-weight: 700; color: #fff; margin-bottom: 14px;">Acciones Rápidas</h2>
-        <div class="quick-actions-grid">
-          <div class="qa-card" @click="open('projects').then(() => startNew())">
-            <div class="qa-icon-wrap">
-              <svg class="adm-icon" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            <div class="qa-card" @click="open('hunter')">
+              <div class="qa-icon-wrap">
+                <svg class="adm-icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              </div>
+              <div class="qa-text-wrap">
+                <span class="qa-title">Revisar Ofertas de Empleo</span>
+                <span class="qa-desc">Ver análisis de IA y redactar propuestas</span>
+              </div>
             </div>
-            <div class="qa-text-wrap">
-              <span class="qa-title">Crear Nuevo Proyecto</span>
-              <span class="qa-desc">Publicar un nuevo trabajo o caso de estudio</span>
-            </div>
-          </div>
 
-          <div class="qa-card" @click="open('experience').then(() => startNew())">
-            <div class="qa-icon-wrap">
-              <svg class="adm-icon" viewBox="0 0 24 24"><rect width="20" height="14" x="2" y="7" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+            <div class="qa-card" @click="showHelpModal = true">
+              <div class="qa-icon-wrap">
+                <svg class="adm-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+              </div>
+              <div class="qa-text-wrap">
+                <span class="qa-title">Guía para el Operador</span>
+                <span class="qa-desc">Criterios de formato y buenas prácticas</span>
+              </div>
             </div>
-            <div class="qa-text-wrap">
-              <span class="qa-title">Agregar Experiencia</span>
-              <span class="qa-desc">Registrar un nuevo rol, puesto o cliente</span>
-            </div>
-          </div>
 
-          <div class="qa-card" @click="open('stack').then(() => startNew())">
-            <div class="qa-icon-wrap">
-              <svg class="adm-icon" viewBox="0 0 24 24"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
-            </div>
-            <div class="qa-text-wrap">
-              <span class="qa-title">Añadir Tecnología</span>
-              <span class="qa-desc">Incorporar una nueva skill al arsenal</span>
-            </div>
+            <a href="/" target="_blank" rel="noopener noreferrer" class="qa-card" style="text-decoration: none;">
+              <div class="qa-icon-wrap">
+                <svg class="adm-icon" viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+              </div>
+              <div class="qa-text-wrap">
+                <span class="qa-title">Visitar Sitio Público</span>
+                <span class="qa-desc">Comprobar cómo se ve el portafolio online</span>
+              </div>
+            </a>
           </div>
-
-          <div class="qa-card" @click="open('hunter')">
-            <div class="qa-icon-wrap" style="background: rgba(255, 85, 28, 0.15); color: #ff551c;">
-              <svg class="adm-icon" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-            </div>
-            <div class="qa-text-wrap">
-              <span class="qa-title">Revisar Ofertas de Empleo</span>
-              <span class="qa-desc">Ver análisis de IA y redactar cartas</span>
-            </div>
-          </div>
-
-          <div class="qa-card" @click="showHelpModal = true">
-            <div class="qa-icon-wrap" style="background: rgba(16, 185, 129, 0.15); color: #10b981;">
-              <svg class="adm-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-            </div>
-            <div class="qa-text-wrap">
-              <span class="qa-title">Guía para Asistentes</span>
-              <span class="qa-desc">Instrucciones y consejos paso a paso</span>
-            </div>
-          </div>
-
-          <a href="/" target="_blank" rel="noopener noreferrer" class="qa-card" style="text-decoration: none;">
-            <div class="qa-icon-wrap">
-              <svg class="adm-icon" viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-            </div>
-            <div class="qa-text-wrap">
-              <span class="qa-title">Visitar Sitio Público</span>
-              <span class="qa-desc">Ver los cambios reflejados en vivo</span>
-            </div>
-          </a>
         </div>
       </section>
 
-      <!-- Columna 3: Vista Detalle de Job Hunter (IA ATS) -->
+      <!-- Columna 3: Vista Detalle de Job Hunter (AI ATS) -->
       <section v-else-if="section === 'hunter' && hunterSelected" class="editor-wrap">
         <div class="editor-form">
           <div class="editor-header">
@@ -453,10 +443,10 @@
                 <span class="hunter-score-badge" :class="getScoreClass(hunterSelected.match_score)">
                   {{ hunterSelected.match_score != null ? 'Match ' + hunterSelected.match_score + '%' : 'Pendiente' }}
                 </span>
-                <span class="status-pill-badge" :class="hunterSelected.status">{{ hunterSelected.status }}</span>
+                <span class="badge-tag" :class="hunterSelected.status">{{ hunterSelected.status }}</span>
               </div>
             </div>
-            <div style="font-size: 13px; color: var(--text-secondary); margin-top: 6px;">
+            <div style="font-size: 12px; color: var(--text-secondary); margin-top: 4px;">
               <strong>{{ hunterSelected.company }}</strong>
               <span v-if="hunterSelected.country"> · {{ hunterSelected.country }}</span>
               <span v-if="hunterSelected.remote_type"> · Remoto: {{ hunterSelected.remote_type }}</span>
@@ -464,34 +454,26 @@
             </div>
           </div>
 
-          <!-- Barra de Acciones de la Vacante -->
-          <div style="display: flex; gap: 10px; margin-bottom: 24px; flex-wrap: wrap;">
-            <a :href="hunterSelected.url" target="_blank" rel="noopener noreferrer" class="top-link-btn" style="padding: 8px 14px;">
+          <!-- Acciones de Vacante -->
+          <div style="display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap;">
+            <a :href="hunterSelected.url" target="_blank" rel="noopener noreferrer" class="top-link-btn">
+              <span>Abrir Vacante Original</span>
               <svg class="adm-icon sm" viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-              <span>Abrir Oferta Original</span>
             </a>
 
             <button class="primary" :disabled="hunterIsPitching" @click="generateHunterPitch(hunterSelected.id)">
-              <span v-if="hunterIsPitching">⟳ Redactando con Gemini...</span>
-              <template v-else>
-                <svg class="adm-icon sm" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-                <span>Generar Carta & Pitch con IA</span>
-              </template>
+              <span>{{ hunterIsPitching ? 'Redactando con Gemini...' : 'Generar Propuesta con IA' }}</span>
             </button>
 
             <button class="primary" style="background: #2563eb; border-color: #1d4ed8;" :disabled="hunterIsGeneratingCV" @click="generateHunterCV(hunterSelected.id)">
-              <span v-if="hunterIsGeneratingCV">⟳ Adaptando CV Harvard ATS...</span>
-              <template v-else>
-                <svg class="adm-icon sm" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-                <span>Generar CV Harvard ATS</span>
-              </template>
+              <span>{{ hunterIsGeneratingCV ? 'Adaptando CV Harvard ATS...' : 'Generar CV Harvard ATS' }}</span>
             </button>
 
             <button
               :class="hunterSelected.status === 'applied' ? 'success' : ''"
               @click="updateHunterJobStatus(hunterSelected.id, hunterSelected.status === 'applied' ? 'saved' : 'applied')"
             >
-              <span>{{ hunterSelected.status === 'applied' ? '✓ Postulación Enviada' : 'Marcar como Postulado' }}</span>
+              <span>{{ hunterSelected.status === 'applied' ? 'Postulación Enviada' : 'Marcar como Postulado' }}</span>
             </button>
 
             <button
@@ -505,14 +487,11 @@
           <!-- Evaluación de Gemini -->
           <div v-if="hunterSelectedAnalysis" class="form-card">
             <div class="form-card-title">
-              <h3>
-                <svg class="adm-icon" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-                <span>Evaluación de Compatibilidad (Gemini AI)</span>
-              </h3>
+              <h3>Evaluación de Compatibilidad (Gemini AI)</h3>
               <small>{{ hunterSelectedAnalysis.verdict || 'Análisis completado' }}</small>
             </div>
 
-            <p style="font-size: 13.5px; color: var(--text-main); margin-bottom: 14px; line-height: 1.55;">
+            <p style="font-size: 13px; color: var(--text-main); margin-bottom: 12px; line-height: 1.5;">
               {{ hunterSelectedAnalysis.summary }}
             </p>
 
@@ -524,35 +503,31 @@
                 </ul>
               </div>
               <div class="cons-column">
-                <div class="column-title">Gaps / Requisitos Faltantes</div>
+                <div class="column-title">Requisitos Pendientes</div>
                 <ul>
                   <li v-for="(con, i) in (hunterSelectedAnalysis.cons || [])" :key="i">{{ con }}</li>
                 </ul>
               </div>
             </div>
 
-            <div v-if="hunterSelectedAnalysis.suggested_projects && hunterSelectedAnalysis.suggested_projects.length" style="margin-top: 14px;">
-              <span style="font-size: 11.5px; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Proyectos recomendados a citar:</span>
+            <div v-if="hunterSelectedAnalysis.suggested_projects && hunterSelectedAnalysis.suggested_projects.length" style="margin-top: 12px;">
+              <span style="font-size: 11px; font-weight: 600; color: var(--text-muted); text-transform: uppercase;">Proyectos recomendados a citar:</span>
               <div style="display: flex; gap: 6px; margin-top: 6px; flex-wrap: wrap;">
                 <span v-for="proj in hunterSelectedAnalysis.suggested_projects" :key="proj" class="chip-btn selected">{{ proj }}</span>
               </div>
             </div>
           </div>
 
-          <!-- Pitch y Carta Generados -->
+          <!-- Pitch Generado -->
           <div v-if="hunterPitch || hunterSelected.pitch_draft" class="form-card">
             <div class="form-card-title">
-              <h3>
-                <svg class="adm-icon" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
-                <span>Pitch & Carta de Presentación Personalizada</span>
-              </h3>
+              <h3>Propuesta & Carta de Presentación</h3>
               <button type="button" class="primary" @click="copyPitchToClipboard">
-                <svg class="adm-icon sm" viewBox="0 0 24 24"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
-                <span>{{ copiedPitch ? '¡Copiado con Éxito! ✓' : 'Copiar Texto' }}</span>
+                <span>{{ copiedPitch ? 'Copiado al Portapapeles' : 'Copiar Texto' }}</span>
               </button>
             </div>
 
-            <div v-if="currentPitchSubject" style="margin-bottom: 12px; font-size: 13px;">
+            <div v-if="currentPitchSubject" style="margin-bottom: 10px; font-size: 12.5px;">
               <strong style="color: var(--primary);">Asunto sugerido:</strong> {{ currentPitchSubject }}
             </div>
             <div class="pitch-text-box">{{ currentPitchBody }}</div>
@@ -615,10 +590,10 @@
             <div class="form-card-title">
               <h3>Descripción Oficial del Puesto</h3>
             </div>
-            <div v-if="hunterSelected.tags && hunterSelected.tags.length" style="display: flex; gap: 6px; margin-bottom: 14px; flex-wrap: wrap;">
+            <div v-if="hunterSelected.tags && hunterSelected.tags.length" style="display: flex; gap: 5px; margin-bottom: 12px; flex-wrap: wrap;">
               <span v-for="t in hunterSelected.tags" :key="t" class="chip-btn">{{ t }}</span>
             </div>
-            <p style="font-size: 13px; color: var(--text-secondary); line-height: 1.6; white-space: pre-wrap;">
+            <p style="font-size: 12.5px; color: var(--text-secondary); line-height: 1.55; white-space: pre-wrap;">
               {{ hunterSelected.description }}
             </p>
           </div>
@@ -641,15 +616,15 @@
             <div class="editor-title-row">
               <div class="editor-title-left">
                 <h2>{{ isNew ? '+ Nuevo ' + (model.singular || 'Registro') : model.name(form) }}</h2>
-                <span class="status-pill-badge" :class="isNew ? 'featured' : (form.status ? form.status.toLowerCase() : 'live')">
-                  {{ isNew ? 'Modo Creación' : (form.status || model.label) }}
+                <span class="badge-tag" :class="isNew ? 'featured' : (form.status ? form.status.toLowerCase() : 'live')">
+                  {{ isNew ? 'Creación' : (form.status || model.label) }}
                 </span>
-                <span v-if="form.featured" class="status-pill-badge featured">⭐ En Portada</span>
+                <span v-if="form.featured" class="badge-tag featured">En Portada</span>
               </div>
             </div>
           </div>
 
-          <!-- Pestañas del Editor (Estilo Linear / Calm UI) -->
+          <!-- Pestañas del Editor (Estilo Linear) -->
           <nav v-if="tabs.length > 1" class="editor-tabs" aria-label="Pestañas de formulario">
             <button
               v-for="t in tabs"
@@ -664,20 +639,16 @@
             </button>
           </nav>
 
-          <!-- Pestaña 1: Datos Básicos y Configuración -->
+          <!-- Pestaña 1: Datos Básicos -->
           <div v-show="activeTab === 'general'" class="form-card">
             <div class="form-card-title">
-              <h3>
-                <svg class="adm-icon" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-                <span>Información Principal</span>
-              </h3>
-              <small>Completá los campos para identificar el registro</small>
+              <h3>Información Principal</h3>
+              <small>Identificación del registro</small>
             </div>
 
             <div class="fields-grid">
-              <!-- Renderizado de Campos según Tipo -->
               <template v-for="f in model.fields.filter(f => f.type !== 'text' && f.type !== 'json' && !f.type.startsWith('rels:'))" :key="f.name">
-                <!-- Booleano como Switch visual -->
+                <!-- Booleano como Switch -->
                 <div v-if="f.type === 'bool'" class="field wide">
                   <div class="switch-field" @click="form[f.name] = !form[f.name]">
                     <div class="switch-toggle-box" :class="{ checked: form[f.name] }">
@@ -693,17 +664,14 @@
                 <!-- Campo estándar -->
                 <div v-else class="field" :class="{ wide: f.type === 'url' || f.name === 'title' || f.name === 'name' }">
                   <div class="field-label-row">
-                    <label :for="'f-' + f.name">
-                      <span>{{ f.label }}</span>
-                    </label>
+                    <label :for="'f-' + f.name">{{ f.label }}</label>
                     <div class="field-actions-slot">
                       <button v-if="f.name === 'slug'" type="button" class="btn-field-action" @click="suggestSlug" title="Generar identificador a partir del título">
-                        ⚡ Sugerir slug
+                        Generar slug
                       </button>
                     </div>
                   </div>
 
-                  <!-- String / URL -->
                   <input
                     v-if="f.type === 'string' || f.type === 'url'"
                     :id="'f-' + f.name"
@@ -712,7 +680,6 @@
                     :placeholder="f.placeholder || ''"
                   >
 
-                  <!-- Número Entero -->
                   <input
                     v-else-if="f.type === 'int'"
                     :id="'f-' + f.name"
@@ -722,7 +689,6 @@
                     :placeholder="f.placeholder || ''"
                   >
 
-                  <!-- Fechas -->
                   <input
                     v-else-if="f.type === 'date'"
                     :id="'f-' + f.name"
@@ -736,7 +702,6 @@
                     type="datetime-local"
                   >
 
-                  <!-- Enum (Select) -->
                   <select
                     v-else-if="f.type.startsWith('enum:')"
                     :id="'f-' + f.name"
@@ -745,7 +710,6 @@
                     <option v-for="v in meta.enums[f.type.slice(5)]" :key="v" :value="v">{{ v }}</option>
                   </select>
 
-                  <!-- Relación (Org, etc.) -->
                   <select
                     v-else-if="f.type.startsWith('rel:')"
                     :id="'f-' + f.name"
@@ -761,16 +725,14 @@
                 </div>
               </template>
 
-              <!-- Selector de Chips de Tecnologías (rels:techs) -->
+              <!-- Chips de Tecnologías -->
               <div
                 v-for="f in model.fields.filter(f => f.type.startsWith('rels:'))"
                 :key="f.name"
                 class="field wide"
               >
                 <div class="field-label-row">
-                  <label>
-                    <span>{{ f.label }}</span>
-                  </label>
+                  <label>{{ f.label }}</label>
                   <span class="field-hint">{{ (form[f.name] || []).length }} seleccionadas</span>
                 </div>
 
@@ -778,7 +740,7 @@
                   <input
                     v-model="techSearchQuery"
                     type="text"
-                    placeholder="Filtrar tecnologías (ej: Vue, TypeScript, Figma)..."
+                    placeholder="Filtrar herramientas (ej: Vue, TypeScript, Figma)..."
                     class="search-input"
                   >
                 </div>
@@ -803,16 +765,12 @@
           <!-- Pestaña 2: Historia y Textos Narrativos -->
           <div v-if="model.fields.some(f => f.type === 'text')" v-show="activeTab === 'narrative'" class="form-card">
             <div class="form-card-title">
-              <h3>
-                <svg class="adm-icon" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
-                <span>Contenido y Narrativa</span>
-              </h3>
-              <small>Redactá la historia y los aprendizajes del caso</small>
+              <h3>Contenido y Narrativa</h3>
+              <small>Descripción del proyecto y aprendizajes</small>
             </div>
 
-            <!-- Tip para Asistentes -->
-            <div style="padding: 12px 16px; border-radius: var(--radius-sm); background: rgba(99, 102, 241, 0.08); border: 1px solid rgba(99, 102, 241, 0.2); margin-bottom: 18px; font-size: 12px; color: #c7d2fe;">
-              💡 <strong>Tip para el asistente:</strong> El <em>Resumen Breve</em> se muestra en la tarjeta del proyecto en portada. El <em>Reto</em> y el <em>Resultado</em> se leen en la vista expandida. Mantené párrafos concisos y directos.
+            <div style="padding: 10px 14px; border-radius: var(--radius-sm); background: rgba(99, 102, 241, 0.06); border: 1px solid var(--primary-border); margin-bottom: 16px; font-size: 11.5px; color: #c7d2fe;">
+              <strong>Pauta editorial:</strong> La <em>Síntesis ejecutiva</em> se muestra en la tarjeta del proyecto en portada y en la ficha de DATOS. El <em>Reto</em> y el <em>Resultado</em> se leen en la vista expandida de DISEÑO. Se recomienda redactar párrafos concisos y directos.
             </div>
 
             <div class="fields-grid">
@@ -821,9 +779,7 @@
                 :key="f.name"
                 class="field wide"
               >
-                <label :for="'f-' + f.name">
-                  <span>{{ f.label }}</span>
-                </label>
+                <label :for="'f-' + f.name">{{ f.label }}</label>
                 <textarea
                   :id="'f-' + f.name"
                   v-model="form[f.name]"
@@ -835,23 +791,17 @@
             </div>
           </div>
 
-          <!-- Pestaña 3: Galería Multimedia (Imágenes y Capturas) -->
+          <!-- Pestaña 3: Galería Multimedia -->
           <div v-if="model.media && !isNew" v-show="activeTab === 'media'" class="form-card">
             <div class="form-card-title">
-              <h3>
-                <svg class="adm-icon" viewBox="0 0 24 24"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
-                <span>Galería de Imágenes del Proyecto</span>
-              </h3>
-              <small>{{ form.media.length }} piezas cargadas</small>
+              <h3>Galería de Imágenes del Proyecto</h3>
+              <small>{{ form.media.length }} archivos</small>
             </div>
 
-            <!-- Formulario de Subida Amigable -->
+            <!-- Zona de Carga -->
             <form class="media-upload-dropzone" @submit.prevent="uploadMedia">
-              <div class="dropzone-icon">
-                <svg class="adm-icon xl" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-              </div>
-              <div class="dropzone-title">Subir Nueva Pieza Multimedia</div>
-              <div class="dropzone-subtitle">Archivos recomendados: WebP o PNG en alta resolución (1920×1080 o similar)</div>
+              <div class="dropzone-title">Subir Imagen al Proyecto</div>
+              <div class="dropzone-subtitle">Formatos recomendados: WebP o PNG en alta resolución (1920×1080 o relación 16:9)</div>
 
               <div class="upload-form-grid">
                 <div>
@@ -859,8 +809,8 @@
                   <input ref="file" type="file" accept="image/png,image/jpeg,image/webp" required>
                 </div>
                 <div>
-                  <label class="field-hint" style="display: block; margin-bottom: 4px;">Descripción Alt (Accesibilidad)</label>
-                  <input v-model="uploadForm.alt" type="text" placeholder="Ej: Captura de pantalla del Home" required>
+                  <label class="field-hint" style="display: block; margin-bottom: 4px;">Texto Alternativo (Alt)</label>
+                  <input v-model="uploadForm.alt" type="text" placeholder="Descripción para accesibilidad" required>
                 </div>
                 <div>
                   <label class="field-hint" style="display: block; margin-bottom: 4px;">Rol de la Imagen</label>
@@ -870,19 +820,19 @@
                 </div>
                 <div>
                   <button type="submit" class="primary">
-                    <span>Subir Imagen</span>
+                    <span>Subir</span>
                   </button>
                 </div>
               </div>
             </form>
 
-            <!-- Cuadrícula Visual de Imágenes -->
+            <!-- Cuadrícula de Imágenes -->
             <div v-if="form.media.length" class="media-cards-grid">
               <div v-for="m in form.media" :key="m.id" class="media-card">
                 <div class="media-card-preview" @click="openLightbox(m.src)" style="cursor: zoom-in;">
                   <img :src="m.src" :alt="m.alt" loading="lazy">
                   <span class="media-card-role-badge" :class="{ cover: m.role === 'COVER' }">
-                    {{ m.role === 'COVER' ? '⭐ Portada (COVER)' : m.role }}
+                    {{ m.role === 'COVER' ? 'Portada' : m.role }}
                   </span>
                   <div class="media-card-actions-overlay">
                     <button type="button" class="ghost danger" title="Borrar imagen" @click.stop="deleteMedia(m)">
@@ -896,7 +846,7 @@
                     <label class="field-hint">Descripción Alt</label>
                     <input v-model="m.alt" type="text" @change="saveMedia(m)">
                   </div>
-                  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px;">
                     <div>
                       <label class="field-hint">Rol</label>
                       <select v-model="m.role" @change="saveMedia(m)">
@@ -916,41 +866,36 @@
               </div>
             </div>
             <div v-else class="metric-empty-tip">
-              Este proyecto todavía no tiene imágenes. Subí una portada arriba para empezar.
+              Este proyecto aún no tiene imágenes asociadas.
             </div>
           </div>
 
           <!-- Pestaña 4: Sub-tablas (Enlaces y Pasos) -->
           <div v-for="(cols, sub) in model.sub || {}" :key="sub" v-show="activeTab === 'sub'" class="form-card">
             <div class="form-card-title">
-              <h3>
-                <svg class="adm-icon" viewBox="0 0 24 24"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
-                <span>{{ sub === 'links' ? 'Enlaces Relacionados' : sub === 'steps' ? 'Pasos del Proceso (Case Study)' : sub }}</span>
-              </h3>
+              <h3>{{ sub === 'links' ? 'Enlaces Directos' : sub === 'steps' ? 'Pasos del Proceso (Taller)' : sub }}</h3>
               <button type="button" class="primary" @click="form[sub].push(blankRow(cols))">
-                <svg class="adm-icon sm" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                <span>Agregar Elemento</span>
+                <span>+ Agregar Fila</span>
               </button>
             </div>
 
-            <!-- Caso Pasos del Proceso (Steps) en tarjetas -->
+            <!-- Steps -->
             <template v-if="sub === 'steps'">
               <div v-for="(row, i) in form[sub]" :key="i" class="step-card">
                 <div class="step-card-header">
                   <span class="step-card-num">Paso {{ row.order || (i + 1) }}</span>
                   <button type="button" class="ghost danger" @click="form[sub].splice(i, 1)" title="Eliminar paso">
-                    <svg class="adm-icon sm" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                     <span>Eliminar</span>
                   </button>
                 </div>
-                <div style="display: grid; grid-template-columns: 80px 1fr 1fr; gap: 10px;">
+                <div style="display: grid; grid-template-columns: 70px 1fr 1fr; gap: 8px;">
                   <div>
                     <label class="field-hint">Orden</label>
                     <input v-model.number="row.order" type="number">
                   </div>
                   <div>
                     <label class="field-hint">Título del paso</label>
-                    <input v-model="row.title" type="text" placeholder="Ej: 01 · Investigación de usuarios">
+                    <input v-model="row.title" type="text" placeholder="Ej: 01 · Definición del problema">
                   </div>
                   <div>
                     <label class="field-hint">Imagen vinculada</label>
@@ -964,29 +909,29 @@
                 </div>
                 <div>
                   <label class="field-hint">Descripción detallada</label>
-                  <textarea v-model="row.body" rows="3" placeholder="Explicá lo que se investigó o diseñó en esta etapa..."></textarea>
+                  <textarea v-model="row.body" rows="3" placeholder="Detalles de la fase de trabajo..."></textarea>
                 </div>
               </div>
             </template>
 
-            <!-- Caso Enlaces (Links) -->
+            <!-- Links -->
             <template v-else-if="sub === 'links'">
-              <div v-for="(row, i) in form[sub]" :key="i" style="display: flex; gap: 10px; margin-bottom: 10px; align-items: center;">
-                <input v-model="row.label" type="text" placeholder="Etiqueta (ej: Demo en Vivo, Behance, Figma)" style="width: 200px;">
-                <input v-model="row.url" type="text" placeholder="URL completa (https://...)" style="flex: 1;">
+              <div v-for="(row, i) in form[sub]" :key="i" style="display: flex; gap: 8px; margin-bottom: 8px; align-items: center;">
+                <input v-model="row.label" type="text" placeholder="Etiqueta (ej: Demo en Vivo, Figma)" style="width: 180px;">
+                <input v-model="row.url" type="text" placeholder="https://..." style="flex: 1;">
                 <button type="button" class="ghost danger" @click="form[sub].splice(i, 1)">
                   <svg class="adm-icon sm" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                 </button>
               </div>
             </template>
 
-            <!-- Caso genérico (Docs fields) -->
+            <!-- Genérico -->
             <template v-else>
-              <div v-for="(row, i) in form[sub]" :key="i" style="display: grid; grid-template-columns: 160px 100px 1fr 120px 40px; gap: 8px; margin-bottom: 10px; align-items: center;">
-                <input v-model="row.name" type="text" placeholder="Nombre clave">
+              <div v-for="(row, i) in form[sub]" :key="i" style="display: grid; grid-template-columns: 140px 90px 1fr 110px 32px; gap: 6px; margin-bottom: 8px; align-items: center;">
+                <input v-model="row.name" type="text" placeholder="Nombre">
                 <input v-model="row.type" type="text" placeholder="Tipo">
-                <textarea v-model="row.value" rows="2" placeholder="Valor o contenido"></textarea>
-                <label style="display: flex; align-items: center; gap: 6px; font-size: 11px;">
+                <textarea v-model="row.value" rows="2" placeholder="Valor"></textarea>
+                <label style="display: flex; align-items: center; gap: 5px; font-size: 11px;">
                   <input v-model="row.wide" type="checkbox">
                   <span>Ancho completo</span>
                 </label>
@@ -997,29 +942,25 @@
             </template>
 
             <div v-if="!form[sub].length" class="metric-empty-tip">
-              No hay elementos en esta lista. Hacé clic en "Agregar Elemento" para crear uno.
+              No hay elementos en esta lista.
             </div>
           </div>
 
-          <!-- Pestaña 5: Métricas de Impacto (Editor Visual + JSON) -->
+          <!-- Pestaña 5: Métricas de Impacto -->
           <div v-if="model.fields.some(f => f.type === 'json')" v-show="activeTab === 'telemetry'" class="form-card">
             <div class="form-card-title">
-              <h3>
-                <svg class="adm-icon" viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
-                <span>Métricas Cuantitativas y Rendimiento</span>
-              </h3>
+              <h3>Métricas Cuantitativas y Rendimiento</h3>
               <div style="display: flex; gap: 8px;">
                 <button type="button" class="ghost" @click="toggleAdvancedMetrics">
                   <span>{{ advancedMetricsMode ? 'Volver al Editor Visual' : 'Modo Avanzado (JSON)' }}</span>
                 </button>
                 <button v-if="!advancedMetricsMode" type="button" class="primary" @click="addMetricRow">
-                  <svg class="adm-icon sm" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                  <span>Agregar Métrica</span>
+                  <span>+ Agregar Métrica</span>
                 </button>
               </div>
             </div>
 
-            <!-- Editor Visual de Métricas Clave-Valor (Amigable para Asistentes) -->
+            <!-- Editor Visual de Métricas Clave-Valor -->
             <div v-if="!advancedMetricsMode" class="metrics-visual-wrap">
               <div v-for="(m, i) in metricsList" :key="i" class="metric-row">
                 <input
@@ -1027,12 +968,12 @@
                   type="text"
                   placeholder="Nombre (ej: Velocidad LCP, Usuarios, Performance)"
                   @input="syncMetricsFromList"
-                  style="width: 240px;"
+                  style="width: 220px;"
                 >
                 <input
                   v-model="m.value"
                   type="text"
-                  placeholder="Valor (ej: 0.8s, 150.000+, 99/100)"
+                  placeholder="Valor (ej: 0.8s, 50k+, 99/100)"
                   @input="syncMetricsFromList"
                   style="flex: 1;"
                 >
@@ -1042,11 +983,11 @@
               </div>
 
               <div v-if="!metricsList.length" class="metric-empty-tip">
-                No hay métricas añadidas. Podés agregar cifras clave como "Velocidad LCP: 0.8s" o "Retención: +40%" haciendo clic en "Agregar Métrica".
+                No hay métricas añadidas. Podés registrar valores como "Velocidad LCP: 0.8s" o "Retención: +40%" haciendo clic en "+ Agregar Métrica".
               </div>
             </div>
 
-            <!-- Modo Avanzado JSON (Para Developers) -->
+            <!-- Modo Avanzado JSON -->
             <div v-else>
               <textarea
                 v-model="form.metrics"
@@ -1059,22 +1000,20 @@
           </div>
         </div>
 
-        <!-- Sticky Footer de Acciones -->
+        <!-- Barra de Acciones Anclada Naturalmente (Flex) -->
         <footer class="actions-footer">
           <div class="af-left">
-            <span class="key-tip"><kbd>Ctrl</kbd> + <kbd>S</kbd> para guardar rápido</span>
+            <span class="key-tip"><kbd>Ctrl</kbd> + <kbd>S</kbd> para guardar</span>
             <span v-if="error" class="status-toast err">{{ error }}</span>
             <span v-else-if="status.text" class="status-toast" :class="status.kind">{{ status.text }}</span>
           </div>
 
           <div class="af-right">
             <button v-if="!isNew && model.deletable !== false" type="button" class="danger" @click="remove">
-              <svg class="adm-icon sm" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
               <span>Eliminar</span>
             </button>
             <button type="button" class="ghost" @click="cancelEdit">Cancelar</button>
             <button type="button" class="primary" :disabled="isSaving" @click="save">
-              <svg class="adm-icon sm" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
               <span>{{ isSaving ? 'Guardando...' : (isNew ? 'Crear Registro' : 'Guardar Cambios') }}</span>
             </button>
           </div>
@@ -1090,62 +1029,59 @@
         </svg>
         <div class="empty-title">Ningún registro seleccionado</div>
         <div class="empty-text">
-          Seleccioná un elemento de la lista para editarlo o hacé clic en "+ Nuevo" para crear uno nuevo.
+          Seleccioná un elemento de la lista izquierda para editarlo o creá uno nuevo desde la parte superior.
         </div>
       </section>
     </main>
 
-    <!-- Modal de Guía Rápida para Asistentes -->
+    <!-- Modal de Guía Rápida para el Operador -->
     <transition name="modal">
       <div v-if="showHelpModal" class="modal-backdrop" @click.self="showHelpModal = false">
         <div class="modal-dialog modal-lg">
           <div class="modal-header">
-            <h3>
-              <svg class="adm-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-              <span>Guía Práctica para Administrar el Portafolio</span>
-            </h3>
+            <h3>Guía de Gestión del Portafolio</h3>
             <button type="button" class="ghost" @click="showHelpModal = false">✕</button>
           </div>
 
           <div class="modal-body">
             <div class="help-guide-section">
-              <h4>🚀 1. Cómo dar de alta un Proyecto nuevo</h4>
-              <p>Hacé clic en <strong>Proyectos</strong> en el menú lateral y luego en <strong>+ Nuevo Proyecto</strong>.</p>
+              <h4>1. Publicación de Proyectos</h4>
+              <p>Hacé clic en <strong>Proyectos</strong> en el menú lateral y luego en <strong>+ Nuevo</strong>.</p>
               <ul>
-                <li><strong>Título:</strong> Escribí el nombre del proyecto y tocá el botón <em>⚡ Sugerir slug</em> para generar automáticamente el identificador de la URL.</li>
-                <li><strong>Estado:</strong> Seleccioná <em>LIVE</em> si ya querés que se vea en el sitio web, o <em>WIP</em> si aún lo estás completando.</li>
-                <li><strong>En Portada (Featured):</strong> Activá el interruptor si es uno de los mejores trabajos y debe figurar en la pantalla principal.</li>
-                <li><strong>Resumen breve:</strong> Una o dos líneas atractivas que expliquen el proyecto.</li>
+                <li><strong>Título:</strong> Escribí el nombre oficial y pulsá <em>Generar slug</em> para auto-completar el identificador web.</li>
+                <li><strong>Estado:</strong> Usá <em>LIVE</em> para que sea visible en el portafolio público, o <em>WIP</em> si está en borrador.</li>
+                <li><strong>En Portada:</strong> Activá el interruptor para ubicar el proyecto entre los primeros destacados de la portada.</li>
+                <li><strong>Síntesis ejecutiva:</strong> Redactá una o dos líneas que expliquen el impacto del trabajo.</li>
               </ul>
             </div>
 
             <div class="help-guide-section">
-              <h4>🖼️ 2. Subida de Imágenes y Multimedia</h4>
-              <p>En la pestaña <strong>Galería Multimedia</strong> podés cargar todas las capturas del proyecto.</p>
+              <h4>2. Galería de Imágenes</h4>
+              <p>En la pestaña <strong>Galería Multimedia</strong> se suben las capturas del proyecto.</p>
               <ul>
-                <li><strong>Formato recomendado:</strong> WebP o PNG optimizado. Dimensiones ideales: 1920×1080 o relación 16:9.</li>
-                <li><strong>Portada (COVER):</strong> Debe haber al menos una imagen con el rol <code>COVER</code>, que será la que se use de miniatura principal en el portafolio.</li>
-                <li><strong>Texto Alt:</strong> Describí brevemente la imagen (ej: "Vista de la pantalla de inicio en versión móvil") para accesibilidad y SEO.</li>
+                <li><strong>Formato recomendado:</strong> WebP o PNG optimizado en resolución 1920×1080 o formato 16:9.</li>
+                <li><strong>Portada (COVER):</strong> Es indispensable que al menos una imagen tenga el rol <code>COVER</code>, que será la miniatura principal del proyecto.</li>
+                <li><strong>Texto Alt:</strong> Describí la imagen con precisión para cumplir con estándares de accesibilidad y SEO.</li>
               </ul>
             </div>
 
             <div class="help-guide-section">
-              <h4>📊 3. Métricas de Impacto</h4>
-              <p>En la pestaña <strong>Métricas de Impacto</strong> podés agregar datos cuantitativos sin saber programar:</p>
+              <h4>3. Métricas de Impacto</h4>
+              <p>En la pestaña <strong>Métricas de Impacto</strong> podés añadir métricas cuantitativas sin escribir código:</p>
               <ul>
-                <li>Escribí el nombre (ej: <code>Velocidad LCP</code> o <code>Usuarios activos</code>) y el valor (ej: <code>0.8s</code> o <code>50,000</code>).</li>
+                <li>Ingresá el nombre (ej: <code>Velocidad LCP</code>) y el valor medido (ej: <code>0.8s</code>).</li>
               </ul>
             </div>
 
             <div class="help-guide-section">
-              <h4>🎯 4. Job Hunter y Agente de Inteligencia Artificial</h4>
-              <p>La sección <strong>Job Hunter (IA)</strong> rastrea ofertas de empleo tech en tiempo real. Al hacer clic en una vacante podés pulsar <strong>Generar Carta & Pitch con IA</strong> para que Gemini redacte una propuesta a medida lista para copiar y enviar.</p>
+              <h4>4. Job Hunter y Agente de Inteligencia Artificial</h4>
+              <p>El módulo <strong>Job Hunter (IA)</strong> rastrea ofertas de empleo de tecnología en tiempo real. Al abrir una vacante podés pulsar <strong>Generar Propuesta con IA</strong> para que Gemini redacte una carta de presentación a medida lista para copiar.</p>
             </div>
           </div>
 
           <div class="modal-footer">
             <button type="button" class="primary" @click="showHelpModal = false">
-              <span>Entendido, ¡gracias!</span>
+              <span>Cerrar Guía</span>
             </button>
           </div>
         </div>
@@ -1159,7 +1095,7 @@
           <div class="lightbox-img-wrap">
             <img :src="lightboxImage" alt="Vista previa en alta resolución">
           </div>
-          <div style="text-align: center; margin-top: 14px;">
+          <div style="text-align: center; margin-top: 12px;">
             <button type="button" class="ghost" style="color: #fff; background: rgba(0,0,0,0.6);" @click="closeLightbox">
               <span>Cerrar Vista Previa (Esc)</span>
             </button>
@@ -1168,7 +1104,7 @@
       </div>
     </transition>
 
-    <!-- Modal de Confirmación Amigable -->
+    <!-- Modal de Confirmación -->
     <transition name="modal">
       <div v-if="dialog.open" class="modal-backdrop" @click.self="onDialogCancel">
         <div class="modal-dialog">
@@ -1178,16 +1114,16 @@
           </div>
 
           <div class="modal-body">
-            <p style="font-size: 14px; color: var(--text-main); margin-bottom: 12px; line-height: 1.5;">
+            <p style="font-size: 13.5px; color: var(--text-main); margin-bottom: 12px; line-height: 1.5;">
               {{ dialog.message }}
             </p>
 
-            <div v-if="dialog.targetName" style="padding: 10px 14px; border-radius: var(--radius-sm); background: rgba(255,255,255,0.05); border: 1px solid var(--border-subtle); margin-bottom: 12px; font-size: 13px;">
-              <span style="color: var(--text-muted); font-size: 11px; display: block; margin-bottom: 2px;">ELEMENTO SELECCIONADO:</span>
+            <div v-if="dialog.targetName" style="padding: 9px 12px; border-radius: var(--radius-sm); background: rgba(255,255,255,0.04); border: 1px solid var(--border-subtle); margin-bottom: 12px; font-size: 12.5px;">
+              <span style="color: var(--text-muted); font-size: 10.5px; display: block; margin-bottom: 2px;">ELEMENTO SELECCIONADO:</span>
               <strong style="color: #fff;">{{ dialog.targetName }}</strong>
             </div>
 
-            <div v-if="dialog.detail" style="font-size: 12px; color: var(--text-secondary); line-height: 1.45;">
+            <div v-if="dialog.detail" style="font-size: 11.5px; color: var(--text-secondary); line-height: 1.45;">
               {{ dialog.detail }}
             </div>
           </div>

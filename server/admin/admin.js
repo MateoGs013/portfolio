@@ -54,7 +54,7 @@ function slugify(text) {
 const ICONS = {
   dashboard: '<svg class="adm-icon" viewBox="0 0 24 24"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg>',
   projects: '<svg class="adm-icon" viewBox="0 0 24 24"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z"/></svg>',
-  experience: '<svg class="adm-icon" viewBox="0 0 24 24"><rect width="20" height="14" x="2" y="7" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>',
+  experience: '<svg class="adm-icon" viewBox="0 0 24 24"><rect width="20" height="14" x="2" y="7" rx="2" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>',
   stack: '<svg class="adm-icon" viewBox="0 0 24 24"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>',
   orgs: '<svg class="adm-icon" viewBox="0 0 24 24"><path d="M3 21h18"/><path d="M5 21V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16"/><path d="M9 9h1"/><path d="M9 13h1"/><path d="M9 17h1"/><path d="M14 9h1"/><path d="M14 13h1"/><path d="M14 17h1"/></svg>',
   docs: '<svg class="adm-icon" viewBox="0 0 24 24"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>',
@@ -68,17 +68,17 @@ const MODELS = {
     icon: ICONS.projects,
     path: 'projects',
     name: r => r.title || '(Sin título)',
-    meta: r => `${r.year} · ${r.status}${r.featured ? ' · ⭐ Destacado' : ''}`,
+    meta: r => `${r.year} · ${r.status}${r.featured ? ' · Destacado' : ''}`,
     fields: [
-      F('slug', 'string', 'Identificador web (Slug)', 'Parte de la URL pública. Usá minúsculas y guiones (ej: mi-nuevo-proyecto).', 'mi-nuevo-proyecto'),
+      F('slug', 'string', 'Identificador web (Slug)', 'Parte de la URL pública. Usá minúsculas y guiones.', 'mi-nuevo-proyecto'),
       F('title', 'string', 'Título del proyecto', 'Nombre visible del proyecto o caso de estudio.', 'Plataforma Interactiva'),
       F('year', 'int', 'Año de realización', 'Año en el que se desarrolló el trabajo.', '2026'),
-      F('role', 'string', 'Rol desempeñado', 'Tu puesto o responsabilidad principal en el proyecto.', 'Lead Developer & Designer'),
-      F('status', 'enum:ProjectStatus', 'Estado de publicación', 'En Vivo (visible), En Desarrollo o Archivado.'),
+      F('role', 'string', 'Rol desempeñado', 'Puesto o responsabilidad principal en el proyecto.', 'Lead Developer & Designer'),
+      F('status', 'enum:ProjectStatus', 'Estado de producción', 'En Vivo (visible), En Desarrollo o Archivado.'),
       F('featured', 'bool', 'Destacar en portada', 'Muestra este proyecto en los primeros lugares destacados del sitio.'),
       F('sortOrder', 'int', 'Prioridad de orden', 'Número menor aparece primero (0 es máxima prioridad).', '0'),
       F('publishedAt', 'datetime', 'Fecha de publicación', 'Fecha formal de lanzamiento.'),
-      F('summary', 'text', 'Resumen breve (1 a 2 líneas)', 'Descripción corta que aparece en las tarjetas de presentación.', 'Diseño y desarrollo de una experiencia inmersiva...'),
+      F('summary', 'text', 'Síntesis ejecutiva (1 a 2 líneas)', 'Descripción corta que aparece en las tarjetas de presentación.', 'Diseño y desarrollo de una experiencia inmersiva...'),
       F('brief', 'text', 'El Reto / Desafío', 'Explicá el problema que el cliente o proyecto necesitaba resolver.', 'El cliente requería una solución de alta velocidad...'),
       F('outcome', 'text', 'El Resultado / Impacto', 'Qué se logró, beneficios medibles y aprendizajes obtenidos.', 'Se logró un aumento del 40% en retención...'),
       F('url', 'url', 'Sitio web online', 'Enlace público para visitar el proyecto funcionando.', 'https://ejemplo.com'),
@@ -137,7 +137,7 @@ const MODELS = {
       F('endedAt', 'date', 'Fecha de finalización', 'Dejar vacío si es tu posición actual.'),
       F('orgId', 'rel:orgs', 'Empresa u Organización', 'Empresa en la que desempeñaste el rol.'),
       F('techIds', 'rels:techs', 'Tecnologías utilizadas', 'Herramientas principales de esta experiencia.'),
-      F('summary', 'text', 'Resumen ejecutivo (1 línea)', 'Descripción concisa de tu aporte.', 'Liderazgo técnico en desarrollo de interfaces web...'),
+      F('summary', 'text', 'Síntesis de desempeño (1 línea)', 'Descripción concisa de tu aporte.', 'Liderazgo técnico en desarrollo de interfaces web...'),
       F('story', 'text', 'Historia y aprendizajes', 'Relato más amplio de retos, responsabilidades y logros.', 'Durante este período lideré un equipo de...'),
     ],
     toForm: r => ({
@@ -162,7 +162,7 @@ const MODELS = {
       F('name', 'string', 'Nombre de la tecnología', 'Nombre visible oficial.', 'Vue.js'),
       F('category', 'enum:TechCategory', 'Categoría técnica', 'Área o tipo de herramienta.'),
       F('since', 'int', 'Año de inicio', 'Año en el que empezaste a utilizarla profesionalmente.', '2022'),
-      F('note', 'string', 'Criterio o nota de uso', 'Cuándo o por qué la elegís para un proyecto.', 'La utilizo para crear interfaces altamente reactivas y modulares.'),
+      F('note', 'string', 'Criterio técnico de uso', 'Cuándo o por qué la elegís para un proyecto.', 'La utilizo para crear interfaces altamente reactivas y modulares.'),
       F('color', 'string', 'Color de acento (HEX)', 'Color de contraste en formato hexadecimal (ej: #42b883).', '#42b883'),
     ],
     toForm: r => ({ ...r }),
@@ -265,8 +265,8 @@ createApp({
     hunterIsScanning: false,
     hunterIsPitching: false,
     hunterPitch: null,
-    hunterIsGeneratingCV: false,
     hunterCV: null,
+    hunterIsGeneratingCV: false,
 
     // Dialogo Modal
     dialog: {
@@ -291,7 +291,6 @@ createApp({
       if (!this.model || !this.model.name) return []
       let list = this.rows || []
 
-      // Filtro específico para Proyectos por estado
       if (this.section === 'projects' && this.projectStatusFilter !== 'all') {
         if (this.projectStatusFilter === 'featured') {
           list = list.filter(r => r.featured)
@@ -393,9 +392,8 @@ createApp({
       const cv = this.currentTailoredCV
       if (!cv) return ''
       const lines = []
-      lines.push((cv.name || 'MATEO GABRIEL SONZOGNI').toUpperCase())
+      lines.push(`${cv.name || 'Mateo Gabus Sonzogni'}`)
       lines.push(`${cv.title || ''} | ${cv.location || ''}`)
-      lines.push(`Email: ${cv.email || 'mateogabus@gmail.com'} | Web: ${cv.portfolio || 'https://mateogs.tech'} | LinkedIn: ${cv.linkedin || ''} | GitHub: ${cv.github || ''}`)
       lines.push('\n=== PROFESSIONAL SUMMARY ===')
       lines.push(cv.summary || '')
       lines.push('\n=== TECHNICAL SKILLS ===')
@@ -420,7 +418,10 @@ createApp({
       return lines.join('\n')
     },
 
-    // Estadísticas para el Dashboard
+    isLocalhost() {
+      return typeof window !== 'undefined' && ['localhost', '127.0.0.1'].includes(window.location.hostname)
+    },
+
     dashboardStats() {
       const projects = this.meta.options.projects || []
       const techs = this.meta.options.techs || []
@@ -613,7 +614,6 @@ createApp({
           if (meta.options.techs) this.counts.stack = meta.options.techs.length
           if (meta.options.orgs) this.counts.orgs = meta.options.orgs.length
         }
-        // Cargar conteos de experiencia y docs
         const [expRows, docRows] = await Promise.all([
           this.api('experience').catch(() => []),
           this.api('docs').catch(() => []),
@@ -650,7 +650,7 @@ createApp({
       const base = this.form.title || this.form.name || this.form.role || ''
       if (base) {
         this.form.slug = slugify(base)
-        this.say('ok', `Slug generado: "${this.form.slug}"`)
+        this.say('ok', `Slug generado: ${this.form.slug}`)
       }
     },
 
@@ -748,7 +748,7 @@ createApp({
 
     async triggerHunterScan() {
       this.hunterIsScanning = true
-      this.say('ok', 'Escaneando Get on Board, RemoteOK y HN en tiempo real...')
+      this.say('ok', 'Escaneando Get on Board, RemoteOK y Hacker News...')
       try {
         const res = await this.api('hunter/scan', { method: 'POST' })
         this.say('ok', `Escaneo finalizado: ${res.new_jobs || 0} nuevas ofertas detectadas`)
@@ -763,7 +763,7 @@ createApp({
 
     async generateHunterPitch(jobId) {
       this.hunterIsPitching = true
-      this.say('ok', 'Gemini está analizando la vacante y redactando tu pitch personalizado...')
+      this.say('ok', 'Gemini está analizando la vacante y redactando la propuesta...')
       try {
         const res = await this.api(`hunter/pitch/${jobId}`, { method: 'POST' })
         if (res && res.data) {
@@ -771,11 +771,11 @@ createApp({
           if (this.hunterSelected && this.hunterSelected.id === jobId) {
             this.hunterSelected.pitch_draft = JSON.stringify(res.data)
           }
-          this.say('ok', 'Pitch y carta de presentación redactados con éxito.')
+          this.say('ok', 'Propuesta redactada con éxito')
           await this.fetchHunterJobs()
         }
       } catch (e) {
-        this.say('err', `Error generando pitch: ${e.message}`)
+        this.say('err', `Error generando propuesta: ${e.message}`)
       } finally {
         this.hunterIsPitching = false
       }
@@ -783,7 +783,7 @@ createApp({
 
     async generateHunterCV(jobId) {
       this.hunterIsGeneratingCV = true
-      this.say('ok', 'Gemini está analizando los requisitos y adaptando tu CV Harvard ATS...')
+      this.say('ok', 'Gemini está adaptando el CV al estándar Harvard ATS para esta vacante...')
       try {
         const res = await this.api(`hunter/cv/${jobId}`, { method: 'POST' })
         if (res && res.data) {
@@ -791,7 +791,7 @@ createApp({
           if (this.hunterSelected && this.hunterSelected.id === jobId) {
             this.hunterSelected.tailored_cv = JSON.stringify(res.data)
           }
-          this.say('ok', 'CV adaptado Harvard ATS generado con éxito.')
+          this.say('ok', 'CV adaptado Harvard ATS generado con éxito')
           await this.fetchHunterJobs()
         }
       } catch (e) {
@@ -827,9 +827,9 @@ createApp({
       if (!text) return
       try {
         await navigator.clipboard.writeText(text)
-        this.say('ok', 'CV en texto plano ATS copiado al portapapeles.')
+        this.say('ok', 'CV en texto plano ATS copiado al portapapeles')
       } catch {
-        this.say('err', 'No se pudo copiar el CV al portapapeles.')
+        this.say('err', 'No se pudo copiar el CV al portapapeles')
       }
     },
 
@@ -857,7 +857,7 @@ createApp({
       try {
         await navigator.clipboard.writeText(text)
         this.copiedPitch = true
-        this.say('ok', '¡Pitch copiado al portapapeles!')
+        this.say('ok', 'Propuesta copiada al portapapeles')
         setTimeout(() => { this.copiedPitch = false }, 2500)
       } catch {
         this.say('err', 'No se pudo copiar automáticamente')
@@ -982,7 +982,6 @@ createApp({
       this.error = ''
       this.isSaving = true
 
-      // Asegurar sincronización de métricas
       if (!this.advancedMetricsMode) {
         this.syncMetricsFromList()
       }
@@ -994,7 +993,7 @@ createApp({
 
       try {
         const saved = await this.api(url, { method, body: payload })
-        this.say('ok', this.isNew ? '¡Registro creado exitosamente!' : 'Cambios guardados con éxito ✓')
+        this.say('ok', this.isNew ? 'Registro creado exitosamente' : 'Cambios guardados con éxito')
         await this.reload(saved ? saved[m.idKey || 'id'] : null)
       } catch (e) {
         this.error = e.message
@@ -1011,7 +1010,7 @@ createApp({
         message: `¿Estás seguro de que deseás eliminar permanentemente "${name}"?`,
         targetName: `[${this.model.label}] ${name}`,
         detail: 'Esta acción borrará el registro de la base de datos de forma irreversible.',
-        confirmText: 'Sí, Eliminar Registro',
+        confirmText: 'Eliminar Registro',
         cancelText: 'Cancelar',
         kind: 'danger',
       })
@@ -1056,7 +1055,7 @@ createApp({
 
       try {
         await this.api('media', { method: 'POST', body: fd })
-        this.say('ok', '¡Imagen subida exitosamente!')
+        this.say('ok', 'Imagen subida exitosamente')
         input.value = ''
         this.uploadForm = { alt: '', role: 'GALLERY', layer: null, order: 0 }
         await this.reload(this.current.id)
@@ -1090,7 +1089,7 @@ createApp({
         message: '¿Estás seguro de que deseás eliminar este archivo multimedia?',
         targetName: m.alt || m.src,
         detail: 'La imagen será desvinculada del proyecto y borrada del servidor.',
-        confirmText: 'Sí, Borrar Imagen',
+        confirmText: 'Borrar Imagen',
         cancelText: 'Cancelar',
         kind: 'danger',
       })

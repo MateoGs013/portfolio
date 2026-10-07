@@ -1,123 +1,161 @@
-# Guía de Despliegue: Combo Vercel + Supabase + Render
+# Guía de Despliegue: Hostinger VPS con Coolify
 
-Esta guía detalla el paso a paso exacto para desplegar el portafolio utilizando la arquitectura híbrida seleccionada:
-- **Base de Datos**: PostgreSQL en **Supabase** (administrada, gratuita, alta disponibilidad).
-- **Backend API & Admin**: Express 5 + Prisma en **Render** (servidor Node.js continuo con HTTPS automático).
-- **Frontend Web**: Nuxt 4 en **Vercel** (red global Edge CDN, máxima velocidad para recruiters y clientes).
+Esta guía detalla la arquitectura de infraestructura, configuración de contenedores y procedimiento de despliegue continuo para el portafolio en un **VPS de Hostinger gestionado mediante Coolify**.
 
 ---
 
-## Orden de Ejecución (3 Fases)
+## 1. Arquitectura de Servicios en Coolify
 
-Seguí este orden para que cada servicio tenga los datos y URLs que necesita del anterior:
-1. **Fase 1**: Crear la base de datos en **Supabase** y obtener `DATABASE_URL`.
-2. **Fase 2**: Desplegar el backend en **Render**, migrar datos y correr el seed.
-3. **Fase 3**: Desplegar el frontend en **Vercel** conectado a la URL de Render.
+Toda la infraestructura se ejecuta en contenedores Docker orquestados por Coolify y securizados con proxy inverso Traefik con certificados SSL automáticos (Let's Encrypt).
+
+```
+[ Internet / Visitantes ]
+            │
+            ▼ (HTTPS: https://mateogs.tech)
+┌────────────────────────────────────────────────────────┐
+│ Traefik Reverse Proxy (Coolify Gateway)                │
+└───────────┬────────────────────────────────────────────┘
+            │
+            ├────────────────────────────────────────────┐
+            ▼ (Puerto 3000)                              ▼ (Opcional / Directo 3001)
+┌──────────────────────────────┐             ┌──────────────────────────────┐
+│ Frontend: Nuxt 4 (SSR)       │             │ Backend: Express 5 + Prisma  │
+│ (Dockerfile.web)             │──(Proxy)───▶│ (Dockerfile.api)             │
+│ - Rutas públicas             │             │ - API REST (/api/*)          │
+│ - Modo Focus / Hiperfoco     │             │ - Consola Admin (/admin/*)   │
+│ - CV Harvard ATS en /about   │             │ - Eros Job Hunter Agent      │
+└──────────────────────────────┘             └──────────────┬───────────────┘
+                                                            │
+                                             ┌──────────────┴───────────────┐
+                                             ▼ (Puerto 5432)
+                               ┌──────────────────────────────┐
+                               │ Database: PostgreSQL 17      │
+                               │ - Servicio administrado      │
+                               │ - Volumen persistente        │
+                               └──────────────────────────────┘
+```
 
 ---
 
-## Fase 1: Base de Datos en Supabase (PostgreSQL 17)
+## 2. Componentes y Archivos de Despliegue
 
-1. Ingresá a [supabase.com](https://supabase.com) e iniciá sesión con tu cuenta de GitHub.
-2. Hacé clic en **"New Project"**:
-   - **Name**: `portfolio-db`
-   - **Database Password**: Generá una contraseña segura y **guardala** (la necesitarás para la URL de conexión).
-   - **Region**: Elegí `South America (São Paulo)` para mínima latencia con Argentina, o `US East (North Virginia)`.
-   - Plan: **Free**.
-3. Hacé clic en **"Create new project"** y esperá ~1 minuto a que termine de aprovisionarse.
-4. Obtené tu cadena de conexión (`DATABASE_URL`):
-   - Andá a **Project Settings** (ícono de engranaje abajo a la izquierda) → **Database**.
-   - En la sección **Connection string**, seleccioná la pestaña **URI** (o Node.js).
-   - Copiá la URL directa (puerto `5432`) o la URL con Session Mode (puerto `5432`):
-     ```text
-     postgresql://postgres.[PROJECT-REF]:[TU-PASSWORD]@aws-0-[REGION].pooler.supabase.com:5432/postgres
-     ```
-   - **Importante**: Reemplazá `[TU-PASSWORD]` por la contraseña que creaste en el paso 2.
+El repositorio cuenta con Dockerfiles optimizados para producción:
+
+1. **`Dockerfile.web`**:
+   - Multi-stage build con Node 22 Alpine y pnpm 10.
+   - Compila Nuxt 4 (`pnpm build`) generando `.output`.
+   - Expone el puerto `3000`.
+   - Levanta con `node .output/server/index.mjs`.
+
+2. **`Dockerfile.api`**:
+   - Multi-stage build con Node 22 Alpine y pnpm 10.
+   - Genera el cliente de Prisma (`pnpm prisma generate`).
+   - Sirve la API Express y la UI estática del panel de administración (`/admin`).
+   - Expone el puerto `3001`.
+   - Levanta con `pnpm start:api` (`tsx server/src/index.ts`).
+
+3. **`docker-compose.yml`**:
+   - Configuración base del contenedor PostgreSQL 17 alpine para desarrollo y stacks de Coolify.
 
 ---
 
-## Fase 2: Backend API & Admin Console en Render
+## 3. Configuración en Coolify (Paso a Paso)
 
-1. Subí tus últimos cambios a tu repositorio de GitHub:
-   ```bash
-   git add .
-   git commit -m "feat: configuracion para deploy en Supabase, Render y Vercel"
-   git push origin main
+### Paso 1: Crear la Base de Datos PostgreSQL 17
+
+1. En el panel de Coolify en tu VPS de Hostinger, navegá a tu Proyecto y hacé clic en **"+ New Resource"** → **"Database"** → **"PostgreSQL"**.
+2. Configurá los valores:
+   - **Database Name**: `portfolio`
+   - **User**: `portfolio`
+   - **Password**: `[TU_PASSWORD_SEGURO]`
+   - **Version**: `17-alpine`
+3. Hacé clic en **"Deploy"**.
+4. En la pestaña de la base de datos, obtené la cadena de conexión interna (`Internal Database URL`):
+   ```text
+   postgresql://portfolio:[TU_PASSWORD_SEGURO]@postgres:5432/portfolio
    ```
-2. Ingresá a [render.com](https://render.com) e iniciá sesión con GitHub.
-3. Hacé clic en **"New +"** → **"Web Service"**:
-   - Seleccioná **"Build and deploy from a Git repository"** → Elegí tu repositorio `Portfolio`.
-4. Configurá el servicio:
-   - **Name**: `portfolio-api` (o el nombre que elijas).
-   - **Region**: Preferentemente la misma o cercana a la de Supabase (ej. `Oregon` o `Frankfurt`).
-   - **Branch**: `main`.
-   - **Runtime**: `Node`.
-   - **Build Command**: 
+
+---
+
+### Paso 2: Desplegar el Backend API & Admin (`Dockerfile.api`)
+
+1. En tu proyecto de Coolify, hacé clic en **"+ New Resource"** → **"Application"** → **"GitHub Repository"**.
+2. Seleccioná el repositorio del portafolio y la rama `main`.
+3. Configurá el método de compilación:
+   - **Build Pack**: `Docker file`
+   - **Dockerfile location**: `/Dockerfile.api`
+4. En **"Ports Exposes"**, indicá `3001`.
+5. En **"Domains"**, podés dejarlo sin dominio público (si Nuxt actuará como proxy inverso completo) o asignarle un subdominio como `https://api.mateogs.tech`.
+6. En la pestaña **"Environment Variables"**, definí:
+   ```env
+   NODE_ENV=production
+   PORT=3001
+   DATABASE_URL=postgresql://portfolio:[TU_PASSWORD_SEGURO]@postgres:5432/portfolio
+   ADMIN_TOKEN=tu-clave-secreta-para-acceder-al-panel
+   CORS_ORIGIN=https://mateogs.tech
+   HUNTER_API_URL=http://eros:8000
+   GEMINI_API_KEY=tu-api-key-de-gemini
+   ```
+7. Hacé clic en **"Deploy"**.
+8. **Ejecutar migraciones y seed inicial:**
+   - Una vez finalizado el build, ingresá a la pestaña **"Terminal"** del contenedor del backend en Coolify y ejecutá:
      ```bash
-     corepack enable && pnpm install --no-frozen-lockfile && pnpm build:api
-     ```
-   - **Start Command**: 
-     ```bash
-     pnpm start:api
-     ```
-   - **Instance Type**: `Free`.
-5. En la sección **"Environment Variables"**, agregá:
-   - `DATABASE_URL`: La URL completa que copiaste de Supabase en la Fase 1.
-   - `ADMIN_TOKEN`: Una clave secreta para acceder a tu panel `/admin` (ej: `mateo-admin-2026`).
-   - `CORS_ORIGIN`: `*` (o la URL de Vercel cuando la generes).
-   - `NODE_VERSION`: `22`.
-6. Hacé clic en **"Deploy Web Service"**.
-   - Render clonará el repositorio, generará Prisma y aplicará las migraciones SQL directamente en Supabase.
-7. **Poblar los datos iniciales (Seed)**:
-   - Una vez que el deploy termine y diga *Live*, andá a la pestaña **"Shell"** en el menú lateral de Render y ejecutá:
-     ```bash
+     pnpm prisma migrate deploy
      pnpm db:seed
      ```
-   - Verás la confirmación de la carga de proyectos (La Rúcula, ARG Piscinas, Ynara, etc.), stack y trayectoria.
-8. **Copiá la URL pública de Render**:
-   - Arriba a la izquierda verás la URL asignada a tu API (ej: `https://portfolio-api-xxxx.onrender.com`).
+   - Esto creará las tablas relacionales y poblará los datos iniciales de proyectos, trayectoria y habilidades.
 
 ---
 
-## Fase 3: Frontend Nuxt 4 en Vercel
+### Paso 3: Desplegar el Frontend Nuxt 4 (`Dockerfile.web`)
 
-1. Ingresá a [vercel.com](https://vercel.com) e iniciá sesión con GitHub.
-2. Hacé clic en **"Add New..."** → **"Project"**.
-3. Buscá tu repositorio `Portfolio` y hacé clic en **"Import"**.
-4. Vercel detectará automáticamente que es un proyecto **Nuxt.js**:
-   - **Framework Preset**: `Nuxt.js`.
-   - **Build Command**: `pnpm build` (o por defecto).
-   - **Output Directory**: por defecto.
-5. Desplegá la sección **"Environment Variables"** y agregá:
-   - **Name**: `NUXT_PUBLIC_API_BASE`
-   - **Value**: La URL de Render de la Fase 2 terminada en `/api`:
-     ```text
-     https://portfolio-api-xxxx.onrender.com/api
-     ```
-6. Hacé clic en **"Deploy"**.
-7. En ~60 segundos el build finalizará y Vercel te entregará la URL en vivo con SSL (ej: `https://portfolio-xxxx.vercel.app`).
-
----
-
-## Verificación Final
-
-1. **Portafolio en Vivo**: Entrá a tu URL de Vercel. Verificá que carguen las tarjetas de proyectos, métricas Lighthouse y el CV.
-2. **Consola de Administración**:
-   - Entrá a `https://tu-portfolio.vercel.app/admin` (se conecta mediante proxy a Render).
-   - O entrá directamente a `https://portfolio-api-xxxx.onrender.com/admin`.
-   - Ingresá con tu `ADMIN_TOKEN`. Podrás editar proyectos y datos en tiempo real impactando directamente en Supabase.
-3. **Dominio Propio (Opcional)**:
-   - En Vercel: Andá a **Settings** → **Domains** y agregá tu dominio (ej. `mateosonzogni.com`).
-   - En Render: Podés asociar `api.mateosonzogni.com` si lo deseás.
+1. Hacé clic en **"+ New Resource"** → **"Application"** → **"GitHub Repository"**.
+2. Seleccioná nuevamente el repositorio y la rama `main`.
+3. Configurá el método de compilación:
+   - **Build Pack**: `Docker file`
+   - **Dockerfile location**: `/Dockerfile.web`
+4. En **"Ports Exposes"**, indicá `3000`.
+5. En **"Domains"**, asigná tu dominio principal con HTTPS:
+   ```text
+   https://mateogs.tech
+   ```
+6. En la pestaña **"Environment Variables"**, definí:
+   ```env
+   NODE_ENV=production
+   PORT=3000
+   HOST=0.0.0.0
+   NUXT_PUBLIC_API_BASE=http://portfolio-api:3001/api
+   ```
+   *(Nota: si el backend y frontend están en la misma red de Coolify, podés usar el hostname interno del contenedor `http://portfolio-api:3001/api`; alternativamente, usá `https://api.mateogs.tech/api`).*
+7. Hacé clic en **"Deploy"**.
 
 ---
 
-## Resumen de Variables por Plataforma
+## 4. Enrutamiento Unificado (Proxy de Nitro)
 
-| Servicio | Variable | Valor |
-|---|---|---|
-| **Supabase** | *(Genera)* `DATABASE_URL` | `postgresql://postgres.[ref]:[pass]@[host]:5432/postgres` |
-| **Render** | `DATABASE_URL` | Pegar la URI de Supabase |
-| **Render** | `ADMIN_TOKEN` | Tu token privado para el admin |
-| **Render** | `CORS_ORIGIN` | `*` o URL de Vercel |
-| **Vercel** | `NUXT_PUBLIC_API_BASE` | `https://portfolio-api-xxxx.onrender.com/api` |
+Gracias a las directivas de `nitro.routeRules` en `nuxt.config.ts`:
+
+- Cualquier petición a `https://mateogs.tech/admin` o `https://mateogs.tech/admin/**` es enviada de forma transparente al backend Express (`:3001/admin`).
+- Cualquier petición a `https://mateogs.tech/api/**` es proxiada directamente a la API Express.
+- No es necesario lidiar con problemas de CORS en producción, ya que tanto el portafolio público como el panel de administración operan bajo el mismo origen (`https://mateogs.tech`).
+
+---
+
+## 5. Mantenimiento y Operaciones Habituales
+
+### Actualización Automática (Webhooks / CI)
+Coolify incluye webhooks automáticos de despliegue. Cada `git push origin main` en GitHub dispara la reconstrucción de los contenedores correspondientes sin downtime.
+
+### Respaldos de Base de Datos
+En Coolify, ingresá a la base de datos PostgreSQL → pestaña **"Backups"**:
+- Activá respaldos programados (ej: diario a las 03:00 UTC).
+- Podés almacenar los backups localmente en el VPS de Hostinger o sincronizarlos con un bucket S3.
+
+### Inspección de Logs
+Para revisar eventos o depurar peticiones:
+- En Coolify, seleccioná el servicio correspondiente y hacé clic en la pestaña **"Logs"**.
+- Para ver logs desde SSH en el Hostinger VPS:
+  ```bash
+  docker ps
+  docker logs -f [CONTAINER_NAME]
+  ```

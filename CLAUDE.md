@@ -1,76 +1,79 @@
-# Portafolio Dos Mundos
+# Portafolio Mateo Sonzogni
 
-El mismo contenido renderizado en dos mundos opuestos, con un control persistente para pasar de uno al otro.
+Portafolio técnico y explorador relacional de proyectos, trayectoria y habilidades construido sobre PostgreSQL 17, Express 5 y Nuxt 4.
 
-- **DATOS** — denso, frío, tipográfico, navegable entero con teclado. Presume de velocidad, precisión y accesibilidad.
-- **DISEÑO** — cálido, animado, material. Presume de materialidad, tiempo y oficio.
+El portafolio se estructura en torno a:
+- **Explorador Técnico:** Presenta los proyectos y el stack con metadatos, métricas cuantificables de rendimiento y relaciones directas en la base de datos.
+- **Modo Focus / Hiperfoco (`useHyperfocus.ts`):** Oculta elementos secundarios y decorativos para brindar una lectura clara, rápida y sin fricciones.
+- **CV Harvard ATS y Visualizador IDE (`DatosCV.vue`):** Visualización en `/about` y exportación lista para imprimir en una sola página A4 (`CV-{ES,EN}-Mateo-Sonzogni-ATS.pdf` y `CV-{ES,EN}-Mateo-Sonzogni.pdf`).
+- **Consola de Administración (`/admin`):** CMS interno y centro de operaciones del agente autónomo de empleo (**Job Hunter** / Eros), con generación de propuestas y CV Harvard ATS adaptado a cada vacante.
 
-Que la misma estructura de información pueda tener dos formas coherentes y opuestas **es la tesis del portafolio, no una función**.
+---
 
-## Invariantes
+## Invariantes del Proyecto
 
 Si se violan, es otro proyecto. Si una tarea los contradice, parar y preguntar.
 
-1. **Un solo modelo de contenido, dos renderers.** El contenido se escribe una vez. Cero duplicación.
-2. **Cada mundo elige su subset de campos.** DATOS muestra hechos sobre el trabajo (metadata, tipos, relaciones, métricas). DISEÑO muestra el trabajo (imágenes, proceso, texto largo). Si los dos muestran los mismos campos, el proyecto falló. Es la falla más fácil de cometer: correr `/revision-mundos` antes de dar cualquier feature por terminada.
-3. **La ruta es el estado y el estado es un request.** Nada de navegación que viva solo en memoria.
-4. **La posición se conserva al cambiar de mundo.** No hace falta que las estructuras coincidan.
-5. **Los mundos difieren en temperatura, densidad y ritmo, no solo en paleta.** Si el switch se siente como un reskin, no está hecho.
-6. **DATOS renderiza todas las colecciones igual. DISEÑO le da a cada sección su propia forma.** Esa asimetría es la diferencia estructural entre los mundos.
-7. **DATOS es el piso de accesibilidad del sitio.** No es un fallback degradado: es la mitad buena. Todo tiene que ser alcanzable desde ahí.
-8. **`prefers-reduced-motion` corta toda animación y salta al estado final.** Nada puede depender del movimiento para entenderse.
+1. **Un solo modelo relacional de contenido.** Toda la información (proyectos, experiencia, tecnologías, empresas, multimedia) vive en PostgreSQL 17 modelada por Prisma. Cero duplicación.
+2. **La ruta es el estado.** Las vistas y filtros se resuelven mediante rutas limpias y query parameters estándar, completamente indexables y compartibles.
+3. **Modo Focus sin distracciones.** El modo Focus (`useHyperfocus`) permite a reclutadores y clientes concentrarse en la lectura del contenido técnico sin ruidos de interfaz.
+4. **Accesibilidad y rendimiento en primer orden.** Navegación accesible por teclado (`1-5`, `Esc`, `j/k`, `Enter`), contraste WCAG AA y respeto a `prefers-reduced-motion`.
+5. **Cero emojis en la consola administrativa.** El panel de administración (`/admin`) respeta un estándar 2026 riguroso: sin emojis, con micro-indicadores geométricos e iconografía exclusivamente utilitaria.
+6. **Integridad del Generador de CV Harvard ATS.** El panel de Job Hunter debe preservar siempre la capacidad de analizar vacantes, adaptar el CV al estándar Harvard ATS, previsualizarlo, imprimirlo en A4 y copiarlo en texto plano.
 
-## Stack
+---
 
-Nuxt 4 · TypeScript · CSS nativo con custom properties · GSAP 3 · Express + Prisma + PostgreSQL.
-CSS 3D transforms en DATOS. WebGL permitido en DISEÑO si algo lo justifica.
-Fuentes: Fraunces Variable, General Sans, Martian Mono.
+## Stack Tecnológico
 
-## Comandos
+- **Frontend:** Nuxt 4 · Vue 3 · TypeScript · CSS nativo con variables · GSAP 3.
+- **Backend:** Express 5 · TypeScript (`tsx`) · Prisma ORM · PostgreSQL 17 · Multer.
+- **IA / Agente de Empleo:** Integración con modelos Gemini para evaluación de compatibilidad de empleo, redacción de cartas/pitch y generación adaptada de CV Harvard ATS.
+- **Tipografía:** Martian Mono Variable, Plus Jakarta Sans, JetBrains Mono.
+- **Infraestructura:** Hostinger VPS gestionado con Coolify (Dockerfiles multi-stage, Traefik reverse proxy con SSL Let's Encrypt).
+
+---
+
+## Comandos Habituales
 
 ```bash
-cp .env.example .env  # una vez
-pnpm db:up            # Postgres 17 en Docker (pnpm db:down para bajarlo)
-pnpm dev              # front en :3000
-pnpm dev:api          # API Express en :3001
-pnpm typecheck        # antes de dar algo por terminado (Nuxt + server)
-pnpm lint
-pnpm prisma migrate dev
-pnpm prisma studio
+cp .env.example .env    # Configuración de variables locales
+pnpm db:up              # Levantar PostgreSQL 17 en Docker (pnpm db:down para detenerlo)
+pnpm db:seed            # Poblar la base de datos con contenido inicial real
+pnpm dev                # Servidor de desarrollo Frontend (Nuxt) en :3000
+pnpm dev:api            # Servidor de desarrollo Backend (Express) en :3001
+pnpm typecheck          # Verificación estricta de tipos TypeScript (Nuxt + Express)
+pnpm lint               # Verificación de linter (ESLint)
+pnpm build              # Compilar frontend para producción
+pnpm build:api          # Generar Prisma y ejecutar migraciones
 ```
 
-## Estructura
+---
+
+## Estructura del Repositorio
 
 ```
-app/worlds/datos/     renderer DATOS
-app/worlds/diseno/    renderer DISEÑO
-app/lib/fieldMeta.ts  qué campos ve cada mundo, y con qué tipo
-app/lib/path.ts       la ruta como estado: path, profundidad por mundo, truncado
-app/nitro/            reservado; Nitro no sirve rutas (el API es Express)
-server/src/           API Express (server/generated/ es el cliente Prisma, ignorado)
-server/admin/         UI del admin propio, servida por el API en /admin
-prisma/               schema y migraciones
-docs/                 concepto, decisiones, fases, prototipos
+app/                    Frontend Nuxt 4 (composables, layouts, páginas, componentes)
+app/worlds/datos/       Explorador técnico, hojas de detalle y visor DatosCV.vue
+app/nitro/              Reservado; Nitro no sirve rutas propias (proxiadas a Express)
+server/src/             Backend Express 5 (rutas REST, admin, multer, cliente Prisma)
+server/admin/           Consola de administración propia (HTML/CSS/JS sin build) en /admin
+prisma/                 Esquema de base de datos relacional y migraciones SQL
+public/cv/              PDFs de CV oficiales (ES/EN estándar y ATS de 1 página)
+docs/                   Documentación de arquitectura, decisiones y despliegue
+docs/archive/           Histórico de prototipos, conceptos descartados ("Dos Mundos") y configs previas
 ```
+
+---
 
 ## Dónde está el resto
 
-Este archivo solo tiene lo que aplica siempre. Lo específico se carga solo cuando hace falta:
+Este archivo resume las directrices transversales. La documentación detallada se encuentra en:
 
-- `.claude/rules/datos.md` — se carga al tocar `app/worlds/datos/**`
-- `.claude/rules/diseno.md` — se carga al tocar `app/worlds/diseno/**`
-- `.claude/rules/backend.md` — se carga al tocar `server/**` o `prisma/**`
-- `docs/concepto.md` — el porqué, en largo. Leerlo antes de proponer algo estructural.
-- `docs/decisiones.md` — qué se probó y se descartó. **Leerlo antes de proponer una idea creativa**, para no repetir un camino ya cerrado.
-- `docs/fases.md` — el orden de trabajo y los criterios de terminado.
-- `docs/prototipos/` — validaron mecánicas, **no dirección de arte**. Tomar la estructura, decidir el resto de nuevo: reproducirlos ya se rechazó una vez.
-
-## Skills
-
-- `/revision-mundos` — chequea que los dos mundos no hayan convergido. Correr antes de dar una feature por terminada.
-- `/nueva-seccion` — procedimiento para agregar una sección al mundo DISEÑO.
-- `/piso-calidad` — auditoría de accesibilidad y performance antes de cerrar una fase.
-
-## Estado
-
-Fases 0 a 3 cerradas (5-sep-2026, DATOS revisado el 6-sep): schema, siete endpoints, admin en `/admin`, shell (ruta como estado, truncado, cookie, umbral) y DATOS completo (ventana de explorador de archivos: carpetas en grilla de íconos, archivo abierto con campos y vecinos, la misma cabecera en los tres niveles, teclado de carpeta, ir a, facetas). Fase 4 cerrada (6-sep-2026): DISEÑO `projects` como tira de película y obra que se pinta con scrubber (`app/worlds/diseno/sections/`). Fase 5 cerrada (6-sep-2026): `experience` (exposición larga), `stack` (la caja por año), `about` (specimen de blando a firme) y `contact` (los créditos), todas en `app/worlds/diseno/sections/`. Sigue la Fase 6 (el pasaje: ancla FLIP sobre el nombre, cortina, ida y vuelta distintas). Cambiar el schema implica migración nueva y revisar `app/lib/fieldMeta.ts`.
+- `.claude/rules/datos.md` — Reglas al tocar `app/worlds/datos/**`
+- `.claude/rules/backend.md` — Reglas al tocar `server/**` o `prisma/**`
+- `.claude/rules/admin.md` — Reglas de interfaz y UX al tocar `server/admin/**`
+- `DEPLOY.md` — Guía completa de despliegue en Hostinger VPS con Coolify
+- `docs/admin.md` — Arquitectura y especificaciones de la consola de administración 2026
+- `docs/decisiones.md` — Registro de decisiones arquitectónicas y motivos de descarte
+- `docs/fases.md` — Estado de las fases de desarrollo del proyecto
+- `docs/archive/` — Carpeta de archivo para documentación histórica conservada

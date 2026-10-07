@@ -30,8 +30,7 @@ Desenchufar el mouse y recorrer el sitio entero.
 
 ## 3 · Lector de pantalla
 
-- DATOS muestra una carpeta o una hoja; la carpeta es una `section` con su encabezado y los vecinos de la hoja son un `nav` con `aria-label`. Las baldosas son links comunes con el ícono en `aria-hidden`: el foco itinerante de las flechas se mueve entre ellos y el Tab también los recorre.
-- Las capas del mundo DISEÑO fuera de la vista activa, igual.
+- El explorador muestra una carpeta o una hoja; la carpeta es una `section` con su encabezado y los vecinos de la hoja son un `nav` con `aria-label`. Las baldosas son links comunes con el ícono en `aria-hidden`: el foco itinerante de las flechas se mueve entre ellos y el Tab también los recorre.
 - Los SVG decorativos con `aria-hidden="true"`.
 - Las imágenes con `alt` real, no el filename.
 
@@ -39,27 +38,24 @@ Desenchufar el mouse y recorrer el sitio entero.
 
 Activar `prefers-reduced-motion: reduce`.
 
-- ¿Toda animación salta al estado final?
-- ¿La construcción por capas del mundo DISEÑO muestra la pieza terminada?
-- ¿El pasaje entre mundos es un corte y no se rompe?
+- ¿Toda animación o transición salta al estado final?
+- ¿El modo Focus y la alternancia de vistas se resuelven sin saltos bruscos?
 - **¿Se entiende todo el sitio sin una sola animación?** Si algo solo se comprende viéndolo moverse, está mal diseñado.
 
 ## 5 · Layout shift y carga
 
 - CLS en cero. Las fuentes variables son pesadas: `font-display`, preload de las críticas, y reservar espacio.
-- Sin FOUC en el cambio de mundo.
-- Medir el bundle. **Este es contenido, no solo métrica**: el mundo DATOS puede exponer sus propias cifras y eso es presumir en su moneda.
+- Medir el bundle. El explorador puede exponer sus propias cifras y eso es presumir en su moneda.
 
 ## 6 · Responsive
 
-- DATOS por debajo de ~900px: la grilla a dos columnas, las hojas apiladas, sin perspectiva ni ayudas de teclado.
-- DISEÑO: verificar que cada sección tenga una versión mobile pensada, no solo apretada.
-- Probar a 320px de ancho.
+- Explorador por debajo de ~900px: la grilla a dos columnas, las hojas apiladas, sin perspectiva ni ayudas de teclado.
+- Probar a 320px de ancho y en pantallas móviles.
+- Visor de CV en `/about` y exportación A4 comprobados en viewport mobile y desktop.
 
 ## 7 · Degradación de contenido
 
-- Un proyecto sin `media` con capas: ¿el mundo DISEÑO se rompe o degrada?
-- Un record con `metrics: null`: ¿DATOS muestra `NULL` o queda un hueco?
+- Un record con `metrics: null`: ¿el explorador muestra `NULL` o queda un hueco?
 - Una colección vacía: ¿hay estado vacío o crashea?
 
 ## Salida

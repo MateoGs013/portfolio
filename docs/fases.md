@@ -122,3 +122,15 @@ Correr `/piso-calidad`. No cerrar con bloqueantes abiertos.
 - [ ] Responsive hasta 320px
 - [ ] Degradación de contenido
 - [ ] Métricas propias expuestas como contenido en DATOS
+
+---
+
+## Fase 8 — Unificación con Modo Focus y Despliegue en Coolify ✅ cerrada (Sep/Oct 2026)
+
+- [x] Descarte oficial de "Dos Mundos" y remoción de `app/worlds/diseno`.
+- [x] Consolidación en un explorador técnico relacional sobre PostgreSQL 17.
+- [x] Implementación de **Modo Focus / Hiperfoco** (`useHyperfocus.ts`) para lectura directa sin ruido de interfaz.
+- [x] Integración de **CV Harvard ATS** e IDE en `/about` (`DatosCV.vue`) con exportación de 1 página A4.
+- [x] Rediseño de la consola de administración (`/admin`) a estándares 2026 (sin emojis, layout desktop elástico, editor visual de métricas).
+- [x] Job Hunter AI con evaluación de vacantes (Gemini), redacción de pitch y generador de CV Harvard ATS adaptado.
+- [x] Infraestructura en producción consolidada en **Hostinger VPS mediante Coolify** (PostgreSQL 17, Dockerfiles multi-stage y Traefik SSL).
