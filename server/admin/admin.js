@@ -244,6 +244,7 @@ createApp({
     searchQuery: '',
     projectStatusFilter: 'all',
     techSearchQuery: '',
+    allTechs: [],
     isSaving: false,
     counts: { projects: 0, experience: 0, stack: 0, orgs: 0, docs: 0 },
     activeTab: 'general',
@@ -357,10 +358,50 @@ createApp({
     },
 
     filteredAvailableTechs() {
-      const all = this.meta.options.techs || []
+      const all = (this.allTechs && this.allTechs.length ? this.allTechs : this.meta.options.techs) || []
       if (!this.techSearchQuery.trim()) return all
       const q = this.techSearchQuery.toLowerCase().trim()
       return all.filter(t => (t.name || '').toLowerCase().includes(q))
+    },
+
+    categorizedTechs() {
+      const all = (this.allTechs && this.allTechs.length ? this.allTechs : this.meta.options.techs) || []
+      const q = this.techSearchQuery.toLowerCase().trim()
+      const filtered = q ? all.filter(t => (t.name || '').toLowerCase().includes(q)) : all
+
+      const CATEGORY_NAMES = {
+        FRONTEND: 'Frontend & Interfaces',
+        BACKEND: 'Backend & APIs',
+        DATABASE: 'Bases de Datos & ORM',
+        CLOUD_OPS: 'Cloud, DevOps & Infra',
+        TOOLING: 'Herramientas & Entorno',
+        LANGUAGE: 'Lenguajes',
+      }
+
+      const groups = {
+        FRONTEND: { label: CATEGORY_NAMES.FRONTEND, items: [] },
+        BACKEND: { label: CATEGORY_NAMES.BACKEND, items: [] },
+        DATABASE: { label: CATEGORY_NAMES.DATABASE, items: [] },
+        CLOUD_OPS: { label: CATEGORY_NAMES.CLOUD_OPS, items: [] },
+        TOOLING: { label: CATEGORY_NAMES.TOOLING, items: [] },
+        LANGUAGE: { label: CATEGORY_NAMES.LANGUAGE, items: [] },
+        OTHER: { label: 'Otras Herramientas', items: [] },
+      }
+
+      for (const t of filtered) {
+        const cat = (t.category && groups[t.category]) ? t.category : 'OTHER'
+        groups[cat].items.push(t)
+      }
+
+      return Object.entries(groups)
+        .filter(([, g]) => g.items.length > 0)
+        .map(([k, g]) => ({ key: k, label: g.label, items: g.items }))
+    },
+
+    selectedTechsList() {
+      if (!this.form || !Array.isArray(this.form.techIds)) return []
+      const all = (this.allTechs && this.allTechs.length ? this.allTechs : this.meta.options.techs) || []
+      return this.form.techIds.map(id => all.find(t => t.id === id)).filter(Boolean)
     },
 
     hunterSelectedAnalysis() {
@@ -691,12 +732,14 @@ createApp({
           if (meta.options.techs) this.counts.stack = meta.options.techs.length
           if (meta.options.orgs) this.counts.orgs = meta.options.orgs.length
         }
-        const [expRows, docRows] = await Promise.all([
+        const [expRows, docRows, techRows] = await Promise.all([
           this.api('experience').catch(() => []),
           this.api('docs').catch(() => []),
+          this.api('techs').catch(() => []),
         ])
         this.counts.experience = expRows.length
         this.counts.docs = docRows.length
+        this.allTechs = techRows || []
 
         this.fetchHunterStats()
         this.fetchHunterJobs()
@@ -1084,7 +1127,6 @@ createApp({
       }
     },
 
-    // ─── Tecnologías Chips ────────────────────────────────────────────────────
     toggleTech(techId) {
       if (!this.form) return
       if (!Array.isArray(this.form.techIds)) this.form.techIds = []
@@ -1096,8 +1138,55 @@ createApp({
       }
     },
 
+    removeSelectedTech(techId) {
+      if (!this.form || !Array.isArray(this.form.techIds)) return
+      const idx = this.form.techIds.indexOf(techId)
+      if (idx !== -1) this.form.techIds.splice(idx, 1)
+    },
+
     isTechSelected(techId) {
       return Array.isArray(this.form?.techIds) && this.form.techIds.includes(techId)
+    },
+
+    calcExperienceDuration(startedAt, endedAt) {
+      if (!startedAt) return ''
+      const start = new Date(startedAt)
+      const end = endedAt ? new Date(endedAt) : new Date()
+      if (isNaN(start.getTime()) || isNaN(end.getTime())) return ''
+
+      let months = (end.getFullYear() - start.getFullYear()) * 12 + (end.getMonth() - start.getMonth())
+      if (months < 0) months = 0
+      const years = Math.floor(months / 12)
+      const remMonths = months % 12
+
+      const parts = []
+      if (years > 0) parts.push(`${years} ${years === 1 ? 'año' : 'años'}`)
+      if (remMonths > 0) parts.push(`${remMonths} ${remMonths === 1 ? 'mes' : 'meses'}`)
+      if (parts.length === 0) return 'Menos de 1 mes'
+      return `${parts.join(' y ')}${!endedAt ? ' (en curso)' : ''}`
+    },
+
+    calcTechExperience(since) {
+      const year = Number(since)
+      if (!year || year < 1990 || year > new Date().getFullYear()) return ''
+      const diff = new Date().getFullYear() - year
+      if (diff <= 0) return 'Menos de 1 año'
+      return `${diff} ${diff === 1 ? 'año' : 'años'} de trayectoria`
+    },
+
+    toggleCurrentExperience() {
+      if (!this.form) return
+      if (this.form.endedAt) {
+        this.form.endedAt = ''
+      } else {
+        this.form.endedAt = new Date().toISOString().slice(0, 10)
+      }
+    },
+
+    setProjectStatus(status) {
+      if (this.form) {
+        this.form.status = status
+      }
     },
 
     // ─── Guardar y Eliminar ───────────────────────────────────────────────────
@@ -1376,7 +1465,7 @@ createApp({
             }
           }
         }
-        this.say('ok', nextFeatured ? `"${p.title}" destacado ★` : `"${p.title}" quitado de destacados`)
+        this.say('ok', nextFeatured ? `"${p.title}" marcado como destacado` : `"${p.title}" quitado de destacados`)
       } catch (err) {
         p.featured = !nextFeatured
         this.say('err', `Error al cambiar destacado: ${err.message}`)
@@ -1420,9 +1509,9 @@ createApp({
           this.form.role = 'Lead Developer & Creator'
         }
         if (data.stargazers_count > 0) {
-          this.addMetricPreset({ label: 'GitHub Stars', key: 'GitHub Stars', value: `${data.stargazers_count} ★` })
+          this.addMetricPreset({ label: 'GitHub Stars', key: 'GitHub Stars', value: `${data.stargazers_count}` })
         }
-        this.say('ok', `Datos importados de GitHub (${owner}/${repoName}): ${data.stargazers_count || 0} ★`)
+        this.say('ok', `Datos importados de GitHub (${owner}/${repoName}): ${data.stargazers_count || 0} estrellas`)
       } catch (err) {
         this.say('err', `Error importando de GitHub: ${err.message}`)
       } finally {
