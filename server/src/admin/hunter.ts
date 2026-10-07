@@ -1,5 +1,4 @@
 import { Router, type Request, type Response } from 'express'
-import { env } from '../env.js'
 
 export const hunterRouter = Router()
 
@@ -61,6 +60,26 @@ hunterRouter.post('/pitch/:id', async (req: Request, res: Response) => {
   res.status(result.status).json(result.data)
 })
 
+/** POST /api/admin/hunter/cv/:id */
+hunterRouter.post('/cv/:id', async (req: Request, res: Response) => {
+  const result = await forward(`${HUNTER_URL}/api/cv/${req.params['id']}`, { method: 'POST' })
+  res.status(result.status).json(result.data)
+})
+
+/** GET /api/admin/hunter/cv/:id/html */
+hunterRouter.get('/cv/:id/html', async (req: Request, res: Response) => {
+  try {
+    const upstreamRes = await fetch(`${HUNTER_URL}/api/cv/${req.params['id']}/html`, {
+      signal: AbortSignal.timeout(45000),
+    })
+    const html = await upstreamRes.text()
+    res.status(upstreamRes.status).type('html').send(html)
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err)
+    res.status(503).type('html').send(`<h1>Error cargando CV</h1><p>${msg}</p>`)
+  }
+})
+
 /** PATCH /api/admin/hunter/jobs/:id/status */
 hunterRouter.patch('/jobs/:id/status', async (req: Request, res: Response) => {
   const result = await forward(`${HUNTER_URL}/api/jobs/${req.params['id']}/status`, {
@@ -69,3 +88,4 @@ hunterRouter.patch('/jobs/:id/status', async (req: Request, res: Response) => {
   })
   res.status(result.status).json(result.data)
 })
+
