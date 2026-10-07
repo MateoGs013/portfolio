@@ -176,17 +176,17 @@ async function copyJson() {
 
           <!-- Navegación entre vecinos -->
           <nav v-if="prev || next" class="vecinos flex items-center gap-1.5 font-sans text-[13px] flex-wrap max-md:w-full max-md:justify-between" :aria-label="isEs ? 'Registros vecinos' : 'Adjacent records'">
-            <NuxtLink v-if="prev" :to="prev.to" class="vecino inline-flex items-center gap-1.5 max-w-[280px] max-md:max-w-none max-md:flex-1 h-[30px] px-2.5 border border-rule bg-surface text-dim no-underline whitespace-nowrap overflow-hidden text-ellipsis transition-colors duration-150 hover:border-sig hover:text-sig hover:bg-hover" rel="prev" :title="isEs ? 'Registro anterior' : 'Previous record'">
-              <AppIcon name="chevron-left" :size="11" />
+            <NuxtLink v-if="prev" :to="prev.to" class="vecino group inline-flex items-center gap-1.5 max-w-[280px] max-md:max-w-none max-md:flex-1 h-[30px] px-2.5 border border-rule bg-surface text-dim no-underline whitespace-nowrap overflow-hidden text-ellipsis transition-colors duration-150 hover:border-sig hover:text-sig hover:bg-hover" rel="prev" :title="isEs ? 'Registro anterior' : 'Previous record'">
+              <AppIcon name="chevron-left" :size="11" class="group-hover:text-sig transition-colors duration-150" />
               <span>{{ prev.label }}</span>
             </NuxtLink>
             <span v-else class="vecino off inline-flex items-center gap-1.5 max-w-[280px] max-md:max-w-none max-md:flex-1 h-[30px] px-2.5 border border-rule bg-surface text-faint opacity-50 cursor-default" aria-hidden="true">
               <AppIcon name="chevron-left" :size="11" />
             </span>
 
-            <NuxtLink v-if="next" :to="next.to" class="vecino inline-flex items-center gap-1.5 max-w-[280px] max-md:max-w-none max-md:flex-1 h-[30px] px-2.5 border border-rule bg-surface text-dim no-underline whitespace-nowrap overflow-hidden text-ellipsis transition-colors duration-150 hover:border-sig hover:text-sig hover:bg-hover" rel="next" :title="isEs ? 'Registro siguiente' : 'Next record'">
+            <NuxtLink v-if="next" :to="next.to" class="vecino group inline-flex items-center gap-1.5 max-w-[280px] max-md:max-w-none max-md:flex-1 h-[30px] px-2.5 border border-rule bg-surface text-dim no-underline whitespace-nowrap overflow-hidden text-ellipsis transition-colors duration-150 hover:border-sig hover:text-sig hover:bg-hover" rel="next" :title="isEs ? 'Registro siguiente' : 'Next record'">
               <span>{{ next.label }}</span>
-              <AppIcon name="chevron-right" :size="11" />
+              <AppIcon name="chevron-right" :size="11" class="group-hover:text-sig transition-colors duration-150" />
             </NuxtLink>
             <span v-else class="vecino off inline-flex items-center gap-1.5 max-w-[280px] max-md:max-w-none max-md:flex-1 h-[30px] px-2.5 border border-rule bg-surface text-faint opacity-50 cursor-default" aria-hidden="true">
               <AppIcon name="chevron-right" :size="11" />
@@ -215,7 +215,7 @@ async function copyJson() {
               :href="projectUrl"
               target="_blank"
               rel="noopener noreferrer"
-              class="ph-btn primary inline-flex items-center gap-2 px-3.5 py-2 font-mono text-[11.5px] font-bold no-underline cursor-pointer transition-all duration-150 rounded-[2px] bg-sig text-white border border-sig hover:bg-[#c53000] max-md:w-full max-md:justify-center max-md:min-h-[42px]"
+              class="ph-btn primary inline-flex items-center gap-2 px-3.5 py-2 font-mono text-[11.5px] font-bold no-underline cursor-pointer transition-all duration-150 rounded-[2px] bg-sig text-on-sig border border-sig hover:bg-sig-hover max-md:w-full max-md:justify-center max-md:min-h-[42px]"
             >
               <AppIcon name="external" :size="12" />
               <span>{{ isEs ? 'VISITAR SITIO EN VIVO' : 'VISIT LIVE SITE' }}</span>
@@ -225,9 +225,9 @@ async function copyJson() {
               :href="projectRepo"
               target="_blank"
               rel="noopener noreferrer"
-              class="ph-btn secondary inline-flex items-center gap-2 px-3.5 py-2 font-mono text-[11.5px] font-bold no-underline cursor-pointer transition-all duration-150 rounded-[2px] bg-paper text-ink border border-rule-strong hover:bg-hover hover:border-sig hover:text-sig max-md:w-full max-md:justify-center max-md:min-h-[42px]"
+              class="ph-btn secondary group inline-flex items-center gap-2 px-3.5 py-2 font-mono text-[11.5px] font-bold no-underline cursor-pointer transition-all duration-150 rounded-[2px] bg-paper text-ink border border-rule-strong hover:bg-hover hover:border-sig hover:text-sig max-md:w-full max-md:justify-center max-md:min-h-[42px]"
             >
-              <AppIcon name="code" :size="12" />
+              <AppIcon name="code" :size="12" class="group-hover:text-sig transition-colors duration-150" />
               <span>{{ isEs ? 'CÓDIGO FUENTE EN GITHUB' : 'SOURCE CODE ON GITHUB' }}</span>
             </a>
           </div>
@@ -242,17 +242,17 @@ async function copyJson() {
           <div class="ch-actions flex items-center gap-2 flex-wrap max-md:w-full max-md:flex-col">
             <button
               type="button"
-              class="ch-btn copy inline-flex items-center gap-2 px-3.5 py-2 font-mono text-[11.5px] font-bold no-underline cursor-pointer transition-all duration-150 rounded-[2px] bg-paper border border-rule-strong text-ink hover:bg-hover hover:border-sig hover:text-sig max-md:w-full max-md:justify-center max-md:min-h-[42px]"
+              class="ch-btn copy group inline-flex items-center gap-2 px-3.5 py-2 font-mono text-[11.5px] font-bold no-underline cursor-pointer transition-all duration-150 rounded-[2px] bg-paper border border-rule-strong text-ink hover:bg-hover hover:border-sig hover:text-sig max-md:w-full max-md:justify-center max-md:min-h-[42px]"
               :class="{ '!border-green !text-green !bg-green/10': copiedEmail }"
               @click="copyEmail"
             >
-              <AppIcon :name="copiedEmail ? 'check' : 'copy'" :size="12" />
+              <AppIcon :name="copiedEmail ? 'check' : 'copy'" :size="12" class="group-hover:text-sig transition-colors duration-150" />
               <span>{{ copiedEmail ? (isEs ? '¡EMAIL COPIADO!' : 'EMAIL COPIED!') : (isEs ? 'COPIAR EMAIL DIRECTO' : 'COPY DIRECT EMAIL') }}</span>
             </button>
             <a
               v-if="emailRow?.value"
               :href="`mailto:${emailRow.value}`"
-              class="ch-btn primary inline-flex items-center gap-2 px-3.5 py-2 font-mono text-[11.5px] font-bold no-underline cursor-pointer transition-all duration-150 rounded-[2px] bg-green text-white border border-green hover:bg-[#059669] max-md:w-full max-md:justify-center max-md:min-h-[42px]"
+              class="ch-btn primary inline-flex items-center gap-2 px-3.5 py-2 font-mono text-[11.5px] font-bold no-underline cursor-pointer transition-all duration-150 rounded-[2px] bg-green text-white border border-green hover:bg-[#047857] max-md:w-full max-md:justify-center max-md:min-h-[42px]"
             >
               <AppIcon name="mail" :size="12" />
               <span>{{ isEs ? 'ENVIAR CORREO' : 'SEND EMAIL' }}</span>

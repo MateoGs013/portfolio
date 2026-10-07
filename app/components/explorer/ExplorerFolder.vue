@@ -809,7 +809,7 @@ function onCardMousemove(e: MouseEvent) {
             </div>
             <div class="exp-cta">
               <span>{{ tr.collection.technicalDetails }}</span>
-              <AppIcon name="chevron-right" :size="12" />
+              <AppIcon name="chevron-right" :size="12" class="cta-arrow" />
             </div>
           </NuxtLink>
 
@@ -828,7 +828,7 @@ function onCardMousemove(e: MouseEvent) {
             <p v-if="it.note" class="stack-note">{{ it.note }}</p>
             <div class="stack-cta">
               <span>{{ tr.collection.filterRecords }}</span>
-              <AppIcon name="chevron-right" :size="12" />
+              <AppIcon name="chevron-right" :size="12" class="cta-arrow" />
             </div>
           </NuxtLink>
 
@@ -1007,6 +1007,9 @@ function onCardMousemove(e: MouseEvent) {
   background: var(--d-surface);
 }
 .v-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
   background: none;
   border: none;
   padding: 4px 10px;
@@ -1018,11 +1021,11 @@ function onCardMousemove(e: MouseEvent) {
   transition: all var(--d-dur) ease;
 }
 .v-btn:hover {
-  color: var(--d-ink);
+  color: var(--d-sig);
   background: var(--d-hover);
 }
 .v-btn.active {
-  background: var(--d-rule);
+  background: var(--d-hover);
   color: var(--d-sig);
 }
 
@@ -1057,7 +1060,8 @@ function onCardMousemove(e: MouseEvent) {
   border-bottom: 1px solid var(--d-rule);
   vertical-align: middle;
 }
-.t-row:hover {
+.t-row:hover,
+.t-row:focus-within {
   background: var(--d-hover);
 }
 .t-link {
@@ -1067,13 +1071,20 @@ function onCardMousemove(e: MouseEvent) {
   color: var(--d-ink);
   text-decoration: none;
   font-weight: 600;
+  transition: color var(--d-dur) ease;
 }
-.t-link:hover {
+.t-link:hover,
+.t-row:hover .t-link {
   color: var(--d-sig);
 }
 .t-icon {
   color: var(--d-dim);
   flex-shrink: 0;
+  transition: color var(--d-dur) ease;
+}
+.t-link:hover .t-icon,
+.t-row:hover .t-icon {
+  color: var(--d-sig);
 }
 .t-badge {
   font-family: var(--font-mono);
@@ -1082,6 +1093,11 @@ function onCardMousemove(e: MouseEvent) {
   border: 1px solid var(--d-rule);
   padding: 1px 4px;
   margin-left: 4px;
+  transition: all var(--d-dur) ease;
+}
+.t-row:hover .t-badge {
+  border-color: var(--d-sig);
+  color: var(--d-sig);
 }
 .td-key code {
   font-family: var(--font-mono);
@@ -1118,7 +1134,7 @@ function onCardMousemove(e: MouseEvent) {
 }
 .btn-open:hover {
   background: var(--d-sig);
-  color: #fff;
+  color: var(--d-on-sig);
   border-color: var(--d-sig);
 }
 
@@ -1138,9 +1154,20 @@ function onCardMousemove(e: MouseEvent) {
   text-decoration: none;
   transition: all var(--d-dur) ease;
 }
-.facet:hover { border-color: var(--d-ink); background: var(--d-hover); }
-.facet-x { color: var(--d-dim); }
-.facet:hover .facet-x { color: var(--d-ink); }
+.facet:hover,
+.facet:focus-visible {
+  border-color: var(--d-sig);
+  background: var(--d-hover);
+  color: var(--d-sig-hover);
+}
+.facet-x {
+  color: var(--d-dim);
+  transition: color var(--d-dur) ease;
+}
+.facet:hover .facet-x,
+.facet:focus-visible .facet-x {
+  color: var(--d-sig-hover);
+}
 
 /* Grilla Clásica de Baldosas: fluida sin límites para llenar el ancho disponible */
 .grid {
@@ -1166,10 +1193,23 @@ function onCardMousemove(e: MouseEvent) {
   text-align: center;
   transition: all var(--d-dur) ease;
 }
-.tile:hover {
+.tile:hover,
+.tile:focus-visible {
   background: var(--d-hover);
   border-color: var(--d-sig);
   transform: translateY(-2px);
+}
+.tile:hover .icono svg,
+.tile:focus-visible .icono svg {
+  stroke: var(--d-sig);
+}
+.tile:hover .name,
+.tile:focus-visible .name {
+  color: var(--d-sig);
+}
+.tile:hover .badge,
+.tile:focus-visible .badge {
+  color: var(--d-sig);
 }
 .n {
   position: absolute;
@@ -1460,13 +1500,13 @@ function onCardMousemove(e: MouseEvent) {
 }
 .poster-btn.primary {
   background: var(--d-orange);
-  color: #000000;
+  color: var(--d-on-sig);
   border: 1px solid var(--d-orange);
 }
 .poster-btn.primary:hover {
   background: var(--d-orange-deep);
   border-color: var(--d-orange-deep);
-  color: #ffffff;
+  color: var(--d-on-sig);
   box-shadow: 0 0 14px var(--d-orange-glow);
 }
 .poster-btn.secondary {
@@ -1491,6 +1531,10 @@ function onCardMousemove(e: MouseEvent) {
 }
 .poster-btn-arr {
   font-size: 13px;
+  transition: transform 0.15s ease;
+}
+.poster-btn:hover .poster-btn-arr {
+  transform: translateX(3px);
 }
 
 /* 1.2.B Retrato de Perfil de Mateo (Sin efectos 3D) */
@@ -2384,13 +2428,20 @@ function onCardMousemove(e: MouseEvent) {
   font-size: 11px;
   font-weight: 700;
   color: var(--d-sig);
+  transition: color var(--d-dur) ease;
 }
 .cta-arrow {
   font-size: 14px;
-  transition: transform var(--d-dur) ease;
+  transition: transform var(--d-dur) ease, color var(--d-dur) ease;
 }
-.project-card:hover .cta-arrow {
+.project-card:hover .project-cta,
+.project-card:focus-visible .project-cta {
+  color: var(--d-sig-hover);
+}
+.project-card:hover .cta-arrow,
+.project-card:focus-visible .cta-arrow {
   transform: translateX(3px);
+  color: var(--d-sig-hover);
 }
 
 /* ─── Tarjeta de Experiencia ───────────────────────────────────────────────── */
@@ -2454,12 +2505,24 @@ function onCardMousemove(e: MouseEvent) {
   margin-bottom: 10px;
 }
 .exp-cta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   font-family: var(--font-mono);
   font-size: 11px;
   font-weight: 700;
   color: var(--d-sig);
   border-top: 1px solid var(--d-rule);
   padding-top: 8px;
+  transition: color var(--d-dur) ease;
+}
+.exp-card:hover .exp-cta,
+.exp-card:focus-visible .exp-cta {
+  color: var(--d-sig-hover);
+}
+.exp-card:hover .cta-arrow,
+.exp-card:focus-visible .cta-arrow {
+  transform: translateX(3px);
 }
 
 /* ─── Tarjeta de Stack ─────────────────────────────────────────────────────── */
@@ -2519,6 +2582,9 @@ function onCardMousemove(e: MouseEvent) {
   overflow: hidden;
 }
 .stack-cta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   font-family: var(--font-mono);
   font-size: 10.5px;
   font-weight: 700;
@@ -2526,6 +2592,15 @@ function onCardMousemove(e: MouseEvent) {
   margin-top: auto;
   border-top: 1px solid var(--d-rule);
   padding-top: 8px;
+  transition: color var(--d-dur) ease;
+}
+.stack-card:hover .stack-cta,
+.stack-card:focus-visible .stack-cta {
+  color: var(--d-sig-hover);
+}
+.stack-card:hover .cta-arrow,
+.stack-card:focus-visible .cta-arrow {
+  transform: translateX(3px);
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════ */
@@ -2787,10 +2862,11 @@ function onCardMousemove(e: MouseEvent) {
   color: var(--d-ink);
   text-decoration: underline;
   text-underline-offset: 3px;
-  transition: opacity var(--d-dur) ease;
+  transition: color var(--d-dur) ease;
 }
-.hd-link:hover {
-  opacity: 0.7;
+.hd-link:hover,
+.hd-link:focus-visible {
+  color: var(--d-sig);
 }
 .hd-sep {
   color: var(--d-faint);

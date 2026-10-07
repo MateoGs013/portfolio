@@ -97,13 +97,13 @@ onMounted(() => input.value?.focus())
           role="option"
           :aria-selected="i === sel"
           class="grid grid-cols-[100px_1fr_auto] gap-3 items-center h-[42px] px-4 border-b border-rule last:border-b-0 cursor-pointer transition-colors duration-150"
-          :class="i === sel ? 'bg-sig text-white' : 'text-ink hover:bg-hover'"
+          :class="i === sel ? 'bg-sig text-on-sig font-semibold' : 'text-ink hover:bg-hover'"
           @mouseenter="sel = i"
           @click="go(r)"
         >
-          <span class="font-mono text-[11px] text-right" :class="i === sel ? 'text-white/75' : 'text-dim'">{{ formatWhere(r.where) }} /</span>
+          <span class="font-mono text-[11px] text-right" :class="i === sel ? 'text-on-sig/80 font-medium' : 'text-dim'">{{ formatWhere(r.where) }} /</span>
           <span class="font-sans text-[14px] font-medium overflow-hidden text-ellipsis whitespace-nowrap">{{ r.label }}</span>
-          <span v-if="i === sel" class="font-mono text-[12px] text-white opacity-80">↵</span>
+          <span v-if="i === sel" class="font-mono text-[12px] text-on-sig font-bold">↵</span>
         </li>
         <li v-if="entries && !results.length" class="grid grid-cols-1 px-4 py-3 text-faint font-mono text-[12px] cursor-default">
           {{ isEs ? `00 resultados para "${q}"` : `00 results for "${q}"` }}

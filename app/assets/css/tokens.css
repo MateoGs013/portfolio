@@ -23,7 +23,7 @@
   --d-rule: rgba(255, 255, 255, 0.08);
   --d-rule-strong: rgba(255, 255, 255, 0.15);
   --d-dim: #929298;
-  --d-faint: #606066;
+  --d-faint: #7c7c82;
   --d-hover: #1c1c22;
   --d-sig: #ff3e00;
   --d-sig-hover: #ff551c;
@@ -32,6 +32,7 @@
   --d-amber: #e5a00d;
   --d-green: #22c55e;
   --d-inv-dim: #929298;
+  --d-on-sig: #09090b;
 
   --d-grid-cross: rgba(255, 255, 255, 0.022);
 
@@ -57,6 +58,11 @@
 
 html[data-theme="light"] {
   /* Technical Poster Paper (Inspirado en papel cálido de imprenta suizo) */
+  --d-orange: #c53000;
+  --d-orange-deep: #a82900;
+  --d-orange-glow: rgba(197, 48, 0, 0.22);
+  --d-orange-bg: rgba(197, 48, 0, 0.08);
+
   --d-paper: #f8f7f4;
   --d-surface: #efeee9;
   --d-surface-raised: #e5e3dc;
@@ -64,15 +70,16 @@ html[data-theme="light"] {
   --d-rule: rgba(0, 0, 0, 0.08);
   --d-rule-strong: rgba(0, 0, 0, 0.16);
   --d-dim: #55555c;
-  --d-faint: #787882;
+  --d-faint: #64646b;
   --d-hover: #e6e4dc;
-  --d-sig: #ff3e00;
-  --d-sig-hover: #e03600;
-  --d-sig-glow: rgba(255, 62, 0, 0.25);
-  --d-accent: #ff3e00;
-  --d-amber: #d97706;
-  --d-green: #059669;
+  --d-sig: #c53000;
+  --d-sig-hover: #a82900;
+  --d-sig-glow: rgba(197, 48, 0, 0.22);
+  --d-accent: #c53000;
+  --d-amber: #b45309;
+  --d-green: #047857;
   --d-inv-dim: #80808a;
+  --d-on-sig: #ffffff;
   --d-grid-cross: rgba(0, 0, 0, 0.026);
   color-scheme: light;
 }
@@ -125,6 +132,7 @@ html[data-hyperfocus="true"] {
   --d-surface: #000000 !important;
   --d-surface-raised: #060606 !important;
   --d-hover: #0d0d0d !important;
+  --d-on-sig: #000000 !important;
 }
 
 html[data-theme="light"][data-hyperfocus="true"] {
@@ -135,6 +143,7 @@ html[data-theme="light"][data-hyperfocus="true"] {
   --d-ink: #000000 !important;
   --d-dim: #555555 !important;
   --d-faint: #777777 !important;
+  --d-on-sig: #ffffff !important;
 }
 
 /* Ocultar Barra Lateral en Hiperfoco (Zen / Reader Mode) */

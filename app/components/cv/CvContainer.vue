@@ -218,22 +218,22 @@ function printCV() {
       <div class="cv-selector inline-flex border border-rule bg-paper max-[820px]:w-full" role="group" :aria-label="isEs ? 'Estilo de Currículum Vitae' : 'Resume format style'">
         <button
           type="button"
-          class="cv-btn inline-flex items-center gap-1.5 px-3.5 py-1.5 border-0 font-mono text-[11.5px] font-bold cursor-pointer transition-colors duration-150 max-[820px]:flex-1 max-[820px]:justify-center max-[820px]:text-[11px] max-[820px]:py-2"
-          :class="mode === 'modern' ? 'bg-sig text-white' : 'bg-transparent text-dim hover:text-ink hover:bg-hover'"
+          class="cv-btn group inline-flex items-center gap-1.5 px-3.5 py-1.5 border-0 font-mono text-[11.5px] font-bold cursor-pointer transition-colors duration-150 max-[820px]:flex-1 max-[820px]:justify-center max-[820px]:text-[11px] max-[820px]:py-2"
+          :class="mode === 'modern' ? 'bg-sig text-on-sig' : 'bg-transparent text-dim hover:text-ink hover:bg-hover'"
           :title="isEs ? 'Ver CV moderno editorial con fotografía técnica' : 'View modern editorial tech resume with photo'"
           @click="mode = 'modern'"
         >
-          <AppIcon name="user" :size="13" class="cv-btn-icon shrink-0" />
+          <AppIcon name="user" :size="13" class="cv-btn-icon shrink-0 transition-colors duration-150 group-hover:text-sig group-[.bg-sig]:text-on-sig" />
           <span>{{ isEs ? 'MODERNO + FOTO' : 'MODERN + PHOTO' }}</span>
         </button>
         <button
           type="button"
-          class="cv-btn inline-flex items-center gap-1.5 px-3.5 py-1.5 border-0 font-mono text-[11.5px] font-bold cursor-pointer transition-colors duration-150 max-[820px]:flex-1 max-[820px]:justify-center max-[820px]:text-[11px] max-[820px]:py-2"
-          :class="mode === 'harvard' ? 'bg-sig text-white' : 'bg-transparent text-dim hover:text-ink hover:bg-hover'"
+          class="cv-btn group inline-flex items-center gap-1.5 px-3.5 py-1.5 border-0 font-mono text-[11.5px] font-bold cursor-pointer transition-colors duration-150 max-[820px]:flex-1 max-[820px]:justify-center max-[820px]:text-[11px] max-[820px]:py-2"
+          :class="mode === 'harvard' ? 'bg-sig text-on-sig' : 'bg-transparent text-dim hover:text-ink hover:bg-hover'"
           :title="isEs ? 'Ver CV formato clásico Harvard ATS en blanco y negro' : 'View classic black & white Harvard ATS resume'"
           @click="mode = 'harvard'"
         >
-          <AppIcon name="academic" :size="13" class="cv-btn-icon shrink-0" />
+          <AppIcon name="academic" :size="13" class="cv-btn-icon shrink-0 transition-colors duration-150 group-hover:text-sig group-[.bg-sig]:text-on-sig" />
           <span>HARVARD ATS</span>
         </button>
       </div>
@@ -243,7 +243,7 @@ function printCV() {
         <a
           :href="cvPdfUrl"
           :download="cvDownloadFileName"
-          class="cv-action-btn cv-download-btn inline-flex items-center gap-1.5 px-3 py-1.5 bg-sig border border-sig text-white font-mono text-[11px] font-bold no-underline cursor-pointer transition-colors duration-150 hover:bg-[#c53000] max-[820px]:flex-1 max-[820px]:justify-center max-[820px]:text-[10.5px] max-[820px]:py-2"
+          class="cv-action-btn cv-download-btn inline-flex items-center gap-1.5 px-3 py-1.5 bg-sig border border-sig text-on-sig font-mono text-[11px] font-bold no-underline cursor-pointer transition-colors duration-150 hover:bg-sig-hover max-[820px]:flex-1 max-[820px]:justify-center max-[820px]:text-[10.5px] max-[820px]:py-2"
           :title="isEs ? `Descargar archivo PDF (${cvDownloadFileName})` : `Download PDF file (${cvDownloadFileName})`"
         >
           <AppIcon name="download" :size="13" />
@@ -253,11 +253,11 @@ function printCV() {
         <!-- Botón de Impresión Navegador -->
         <button
           type="button"
-          class="cv-action-btn cv-print-btn inline-flex items-center gap-1.5 px-3 py-1.5 bg-paper border border-rule-strong text-ink font-mono text-[11px] font-bold no-underline cursor-pointer transition-colors duration-150 hover:bg-hover hover:text-sig hover:border-sig max-[820px]:flex-1 max-[820px]:justify-center max-[820px]:text-[10.5px] max-[820px]:py-2"
+          class="cv-action-btn cv-print-btn group inline-flex items-center gap-1.5 px-3 py-1.5 bg-paper border border-rule-strong text-ink font-mono text-[11px] font-bold no-underline cursor-pointer transition-colors duration-150 hover:bg-hover hover:text-sig hover:border-sig max-[820px]:flex-1 max-[820px]:justify-center max-[820px]:text-[10.5px] max-[820px]:py-2"
           :title="isEs ? 'Imprimir en papel o guardar como PDF desde el navegador (Ctrl+P)' : 'Print to paper or save as PDF via browser (Ctrl+P)'"
           @click="printCV"
         >
-          <AppIcon name="printer" :size="13" />
+          <AppIcon name="printer" :size="13" class="group-hover:text-sig transition-colors duration-150" />
           <span>{{ isEs ? 'IMPRIMIR' : 'PRINT' }}</span>
         </button>
       </div>

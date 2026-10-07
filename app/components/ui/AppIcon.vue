@@ -51,7 +51,7 @@ const px = computed(() => (typeof props.size === 'number' ? `${props.size}px` : 
 
 <template>
   <svg
-    class="inline-block align-middle shrink-0 transition-[transform,stroke] duration-150 ease-out"
+    class="inline-block align-middle shrink-0 transition-[transform,color,stroke] duration-150 ease-out"
     viewBox="0 0 24 24"
     fill="none"
     stroke="currentColor"

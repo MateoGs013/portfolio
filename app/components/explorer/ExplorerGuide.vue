@@ -100,7 +100,7 @@ function dismiss() {
         </div>
         <button
           type="button"
-          class="inline-flex items-center justify-center w-[22px] h-[22px] rounded-[2px] border-none bg-transparent text-dim hover:bg-rule-strong hover:text-ink cursor-pointer transition-colors duration-150"
+          class="inline-flex items-center justify-center w-[22px] h-[22px] rounded-[2px] border-none bg-transparent text-dim hover:bg-rule-strong hover:text-sig cursor-pointer transition-colors duration-150"
           :title="isEs ? 'Cerrar guía (no volverá a aparecer automáticamente)' : 'Close guide (will not show automatically again)'"
           :aria-label="isEs ? 'Cerrar guía' : 'Close guide'"
           @click="dismiss"
@@ -174,7 +174,7 @@ function dismiss() {
           <button
             v-if="!showShortcuts"
             type="button"
-            class="inline-flex items-center justify-center px-2.5 py-1 text-[10.5px] font-bold rounded-[2px] cursor-pointer transition-all duration-150 bg-sig text-white border border-sig hover:brightness-110 hover:-translate-y-px"
+            class="inline-flex items-center justify-center px-2.5 py-1 text-[10.5px] font-bold rounded-[2px] cursor-pointer transition-all duration-150 bg-sig text-on-sig border border-sig hover:brightness-110 hover:-translate-y-px"
             @click="next"
           >
             {{ step === steps.length - 1 ? (isEs ? 'Entendido ✓' : 'Done ✓') : (isEs ? 'Siguiente ›' : 'Next ›') }}
@@ -182,7 +182,7 @@ function dismiss() {
           <button
             v-else
             type="button"
-            class="inline-flex items-center justify-center px-2.5 py-1 text-[10.5px] font-bold rounded-[2px] cursor-pointer transition-all duration-150 bg-sig text-white border border-sig hover:brightness-110 hover:-translate-y-px"
+            class="inline-flex items-center justify-center px-2.5 py-1 text-[10.5px] font-bold rounded-[2px] cursor-pointer transition-all duration-150 bg-sig text-on-sig border border-sig hover:brightness-110 hover:-translate-y-px"
             @click="dismiss"
           >
             {{ isEs ? 'Cerrar ✓' : 'Close ✓' }}

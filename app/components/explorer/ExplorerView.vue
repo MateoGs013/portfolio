@@ -326,15 +326,15 @@ const currentRoot = computed(() => path.value[0] ?? '')
 
         <!-- Botón de Búsqueda Rápida / Goto -->
         <button
-          class="goto-btn flex-[0_1_240px] min-w-[140px] flex items-center gap-2 h-[30px] px-2 border border-rule bg-paper text-dim text-left cursor-pointer transition-colors duration-150 hover:border-sig hover:text-ink max-sm:hidden"
+          class="goto-btn group flex-[0_1_240px] min-w-[140px] flex items-center gap-2 h-[30px] px-2 border border-rule bg-paper text-dim text-left cursor-pointer transition-colors duration-150 hover:border-sig hover:text-ink max-sm:hidden"
           type="button"
           :title="isEs ? 'Abrir paleta de comandos (⌘K o /)' : 'Open command palette (⌘K or /)'"
           @click="gotoOpen = true"
         >
-          <AppIcon name="search" :size="12" class="goto-search-icon text-dim shrink-0" />
+          <AppIcon name="search" :size="12" class="goto-search-icon text-dim shrink-0 group-hover:text-sig transition-colors duration-150" />
           <span class="goto-k text-sig font-bold font-mono text-[11px]">{{ isEs ? 'ir a' : 'goto' }}</span>
           <span class="goto-ph flex-1 min-w-0 text-faint text-[12px] overflow-hidden text-ellipsis whitespace-nowrap">{{ isEs ? 'proyecto, tecnología, sección…' : 'project, tech, section…' }}</span>
-          <kbd class="font-mono text-[10px] text-dim border border-rule px-1.5 py-0.5 rounded-[2px]">/</kbd>
+          <kbd class="font-mono text-[10px] text-dim border border-rule px-1.5 py-0.5 rounded-[2px] group-hover:border-sig group-hover:text-sig transition-colors duration-150">/</kbd>
         </button>
 
         <!-- Acciones Rápidas del Sistema: Idioma, Hiperfoco, Reloj UTC-3, Telemetría y Tema -->
@@ -403,18 +403,18 @@ const currentRoot = computed(() => path.value[0] ?? '')
       </header>
 
       <!-- Barra de Notificación / Indicador de Modo Hiperfoco -->
-      <div v-if="isHyperfocus" class="hiperfoco-banner px-4 py-2 bg-sig text-white border-b border-sig flex items-center justify-center text-xs font-mono font-bold" role="status" aria-live="polite">
+      <div v-if="isHyperfocus" class="hiperfoco-banner px-4 py-2 bg-sig text-on-sig border-b border-sig flex items-center justify-center text-xs font-mono font-bold" role="status" aria-live="polite">
         <div class="hb-center flex items-center gap-3">
           <span class="hb-title tracking-wider">{{ isEs ? 'HIPERFOCO // LECTURA ZEN' : 'HYPERFOCUS // ZEN READING' }}</span>
-          <span class="hb-sep text-white/60">·</span>
+          <span class="hb-sep opacity-60">·</span>
           <button
             type="button"
-            class="hb-exit-btn inline-flex items-center gap-1.5 px-2 py-0.5 bg-black/30 border border-white/40 text-white text-[11px] font-mono cursor-pointer hover:bg-black/50 rounded-[2px]"
+            class="hb-exit-btn inline-flex items-center gap-1.5 px-2 py-0.5 bg-black/25 dark:bg-white/20 border border-current text-on-sig text-[11px] font-mono cursor-pointer hover:opacity-80 rounded-[2px]"
             :title="isEs ? 'Desactivar Modo Hiperfoco (H o Esc)' : 'Exit Hyperfocus Mode (H or Esc)'"
             @click="toggleHyperfocus"
           >
             <span>{{ isEs ? 'SALIR' : 'EXIT' }}</span>
-            <kbd class="text-[9.5px] opacity-75">H / ESC</kbd>
+            <kbd class="text-[9.5px] opacity-80">H / ESC</kbd>
           </button>
         </div>
       </div>
@@ -433,13 +433,13 @@ const currentRoot = computed(() => path.value[0] ?? '')
               :key="s.root"
               :to="routeFor(s.to)"
               class="sidebar-item flex items-center gap-2.5 px-2.5 py-2 rounded-[2px] text-dim text-[12px] font-medium no-underline transition-colors duration-150 hover:bg-hover hover:text-ink group"
-              :class="{ 'active !bg-sig !text-white font-semibold hover:!bg-sig hover:!text-white': currentRoot === s.root }"
+              :class="{ 'active !bg-hover !text-ink font-semibold border-l-[3px] !border-sig': currentRoot === s.root }"
               :title="`${s.desc} — Atajo [${s.keyHint}]`"
             >
-              <AppIcon :name="s.icon" :size="14" class="sidebar-icon shrink-0" />
-              <span class="sidebar-label flex-1 truncate">{{ s.label }}</span>
-              <kbd class="sidebar-k font-mono text-[10px] opacity-60 group-hover:opacity-100 border border-current px-1 py-0.5 rounded-[2px]">{{ s.keyHint }}</kbd>
-              <span class="sidebar-badge font-mono text-[10px] px-1.5 py-0.5 bg-paper text-dim border border-rule rounded-[2px]" :class="{ '!bg-white/20 !text-white !border-transparent': currentRoot === s.root }">{{ s.badge }}</span>
+              <AppIcon :name="s.icon" :size="14" class="sidebar-icon shrink-0 transition-colors duration-150 text-dim group-hover:text-sig group-[.active]:!text-sig" />
+              <span class="sidebar-label flex-1 truncate group-[.active]:font-bold">{{ s.label }}</span>
+              <kbd class="sidebar-k font-mono text-[10px] opacity-60 group-hover:opacity-100 group-[.active]:opacity-100 group-hover:text-sig group-[.active]:text-sig border border-current px-1 py-0.5 rounded-[2px] transition-colors duration-150">{{ s.keyHint }}</kbd>
+              <span class="sidebar-badge font-mono text-[10px] px-1.5 py-0.5 bg-paper text-dim border border-rule rounded-[2px] transition-colors duration-150 group-[.active]:!border-sig group-[.active]:!text-sig group-[.active]:!bg-surface-raised">{{ s.badge }}</span>
             </NuxtLink>
           </nav>
 
