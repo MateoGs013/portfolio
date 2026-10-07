@@ -482,6 +482,23 @@ createApp({
       }
       return list
     },
+
+    filteredCommandPaletteItems() {
+      const allCommands = [
+        { label: '+ Crear Nuevo Registro', category: 'Acciones Rápidas', badge: this.model?.singular || 'Nuevo', action: () => { this.createRecord(); this.showCommandPalette = false; } },
+        { label: '+ Crear Nuevo Proyecto', category: 'Acciones Rápidas', badge: 'Proyecto', action: () => { this.open('projects'); this.createRecord(); this.showCommandPalette = false; } },
+        { label: 'Ver Vacantes en Job Hunter', category: 'Acciones Rápidas', badge: 'Eros IA', action: () => { this.open('hunter'); this.showCommandPalette = false; } },
+        { label: 'Ir a Panel Principal (Dashboard)', category: 'Navegación', badge: 'Inicio', action: () => { this.open('dashboard'); this.showCommandPalette = false; } },
+        { label: 'Proyectos', category: 'Secciones', badge: String(this.counts.projects || 0), action: () => { this.open('projects'); this.showCommandPalette = false; } },
+        { label: 'Experiencia Laboral', category: 'Secciones', badge: String(this.counts.experience || 0), action: () => { this.open('experience'); this.showCommandPalette = false; } },
+        { label: 'Stack & Habilidades', category: 'Secciones', badge: String(this.counts.stack || 0), action: () => { this.open('stack'); this.showCommandPalette = false; } },
+        { label: 'Empresas & Organizaciones', category: 'Secciones', badge: String(this.counts.orgs || 0), action: () => { this.open('orgs'); this.showCommandPalette = false; } },
+        { label: 'Páginas & Textos (Docs)', category: 'Secciones', badge: String(this.counts.docs || 0), action: () => { this.open('docs'); this.showCommandPalette = false; } },
+      ]
+      if (!this.commandQuery.trim()) return allCommands
+      const q = this.commandQuery.toLowerCase().trim()
+      return allCommands.filter(c => c.label.toLowerCase().includes(q) || c.category.toLowerCase().includes(q) || c.badge.toLowerCase().includes(q))
+    },
   },
 
   created() {
@@ -964,7 +981,7 @@ createApp({
     },
 
     async edit(r) {
-      if (this.isDirty && this.current && this.current.id !== r.id) {
+      if (this.isDirty && (!this.current || this.rowKey(this.current) !== this.rowKey(r))) {
         const discard = await this.checkDirtyDiscard()
         if (!discard) return
       }
@@ -1299,7 +1316,11 @@ createApp({
       this.isNew = true
       this.slugLocked = false
       this.activeTab = 'general'
-      this.form = this.model.toForm ? this.model.toForm(clone) : clone
+      if (source === this.form || (clone.techIds && !clone.techs)) {
+        this.form = clone
+      } else {
+        this.form = this.model.toForm ? this.model.toForm(clone) : clone
+      }
       this.initMetricsList()
       this.initialFormSnapshot = JSON.stringify(this.form)
       this.say('ok', `Registro duplicado: "${this.form.title || this.form.name || this.form.role}". Ajustá los campos y guardá.`)
