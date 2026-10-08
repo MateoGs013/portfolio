@@ -219,6 +219,10 @@ export const AdmJobHunter = {
       return 'text-zinc-400 bg-white/5 border-white/10'
     }
 
+    async function scanJobs() {
+      await store.scanHunterJobs()
+    }
+
     return {
       store,
       hunterPitch,
@@ -236,6 +240,7 @@ export const AdmJobHunter = {
       copyTailoredCVText,
       openTailoredCVHtml,
       getVerdictClass,
+      scanJobs,
     }
   },
   template: `
@@ -256,7 +261,7 @@ export const AdmJobHunter = {
 
             <button
               type="button"
-              @click="store.scanHunterJobs"
+              @click="scanJobs"
               :disabled="store.hunter.isScanning"
               class="btn-primary !h-[26px] !px-2.5 !text-xs cursor-pointer disabled:opacity-50 inline-flex items-center gap-1.5"
             >

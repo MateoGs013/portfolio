@@ -315,35 +315,45 @@ export const store = reactive({
 
   // ─── OPERACIONES DE JOB HUNTER ────────────────────────────────────────────
   async loadHunterJobs() {
+    const s = this || store
     try {
       const res = await api.getHunterJobs()
       const list = Array.isArray(res) ? res : (res && Array.isArray(res.data) ? res.data : [])
-      this.hunter.jobs = list
-      this.counts.hunter = list.length
+      s.hunter.jobs = list
+      s.counts.hunter = list.length
       if (list.length > 0) {
-        if (!this.hunter.selected || !list.find(j => j.id === this.hunter.selected.id)) {
-          this.hunter.selected = list[0]
+        if (!s.hunter.selected || !list.find(j => j.id === s.hunter.selected.id)) {
+          s.hunter.selected = list[0]
         }
       }
     } catch (err) {
-      this.toast('err', `Error al cargar vacantes: ${err.message}`)
+      s.toast('err', `Error al cargar vacantes: ${err.message}`)
     }
   },
 
   async scanHunterJobs() {
-    if (this.hunter.isScanning) return
-    this.hunter.isScanning = true
+    const s = this || store
+    if (s.hunter.isScanning) return
+    s.hunter.isScanning = true
     try {
       const res = await api.scanHunterJobs()
       const count = res?.scanned ?? res?.new_jobs ?? (res?.data?.scanned ?? res?.data?.new_jobs) ?? 0
       const evaluated = res?.evaluated_count ?? res?.data?.evaluated_count
       const evalText = evaluated !== undefined && evaluated !== null ? ` (${evaluated} evaluadas con IA)` : ''
-      this.toast('ok', `Escaneo finalizado: ${count} vacantes detectadas${evalText}`)
-      await this.loadHunterJobs()
+      s.toast('ok', `Escaneo finalizado: ${count} vacantes detectadas${evalText}`)
+      await s.loadHunterJobs()
     } catch (err) {
-      this.toast('err', `Error al escanear ofertas: ${err.message}`)
+      s.toast('err', `Error al escanear ofertas: ${err.message}`)
     } finally {
-      this.hunter.isScanning = false
+      s.hunter.isScanning = false
     }
   },
 })
+
+// Blindaje de métodos contra invocaciones desvinculadas de this (callbacks de eventos o event handlers)
+for (const key of Object.keys(store)) {
+  if (typeof store[key] === 'function') {
+    store[key] = store[key].bind(store)
+  }
+}
+
