@@ -21,5 +21,6 @@ export const env = {
   databaseUrl: required('DATABASE_URL'),
   port: Number(process.env['PORT'] ?? process.env['API_PORT'] ?? 3001),
   corsOrigin: process.env['CORS_ORIGIN'] ?? 'http://localhost:3000',
+  hunterApiUrl: (process.env['HUNTER_API_URL'] || 'https://eros.mateogs.tech').replace(/\/+$/, ''),
 }
 

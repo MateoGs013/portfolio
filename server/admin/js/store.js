@@ -316,11 +316,14 @@ export const store = reactive({
   // ─── OPERACIONES DE JOB HUNTER ────────────────────────────────────────────
   async loadHunterJobs() {
     try {
-      const jobs = await api.getHunterJobs()
-      this.hunter.jobs = jobs || []
-      this.counts.hunter = this.hunter.jobs.length
-      if (this.hunter.jobs.length > 0 && !this.hunter.selected) {
-        this.hunter.selected = this.hunter.jobs[0]
+      const res = await api.getHunterJobs()
+      const list = Array.isArray(res) ? res : (res && Array.isArray(res.data) ? res.data : [])
+      this.hunter.jobs = list
+      this.counts.hunter = list.length
+      if (list.length > 0) {
+        if (!this.hunter.selected || !list.find(j => j.id === this.hunter.selected.id)) {
+          this.hunter.selected = list[0]
+        }
       }
     } catch (err) {
       this.toast('err', `Error al cargar vacantes: ${err.message}`)
@@ -332,7 +335,10 @@ export const store = reactive({
     this.hunter.isScanning = true
     try {
       const res = await api.scanHunterJobs()
-      this.toast('ok', `Escaneo finalizado: ${res.new_jobs || 0} nuevas ofertas detectadas`)
+      const count = res?.scanned ?? res?.new_jobs ?? (res?.data?.scanned ?? res?.data?.new_jobs) ?? 0
+      const evaluated = res?.evaluated_count ?? res?.data?.evaluated_count
+      const evalText = evaluated !== undefined && evaluated !== null ? ` (${evaluated} evaluadas con IA)` : ''
+      this.toast('ok', `Escaneo finalizado: ${count} vacantes detectadas${evalText}`)
       await this.loadHunterJobs()
     } catch (err) {
       this.toast('err', `Error al escanear ofertas: ${err.message}`)
