@@ -250,7 +250,7 @@ function cellFor(collection: CollectionKey, record: AnyRecord, name: string, ext
     else if (name === 'links') {
       const links = (field(record, 'links') as LinkRef[] | undefined) ?? []
       cell.value = links.length ? null : '—'
-      cell.items = links.map(l => ({ label: l.label, meta: host(l.url), href: l.url }))
+      cell.items = links.map(l => ({ label: l.label, meta: host(l.url), href: safeHref(l.url) }))
     }
     else if (inv) {
       const list = extra[name] ?? (field(record, name) as AnyRecord[] | undefined)
@@ -269,7 +269,7 @@ function cellFor(collection: CollectionKey, record: AnyRecord, name: string, ext
     if (ref?.slug) cell.to = routeFor([meta.type.endsWith('Org') ? 'orgs' : collection, ref.slug])
   }
   else if (meta.type === 'url' && typeof value === 'string') {
-    cell.href = value
+    cell.href = safeHref(value)
   }
   else if (value !== null && value !== undefined && canFilter(collection, name)) {
     cell.facet = routeFor([collection], { [name]: String(value) })
@@ -277,11 +277,29 @@ function cellFor(collection: CollectionKey, record: AnyRecord, name: string, ext
   return cell
 }
 
-/** Un campo de documento como fila: las urls y los mails se vuelven links. */
+const ALLOWED_PROTOCOLS = new Set(['http:', 'https:', 'mailto:'])
+
+/** Valida que una URL use exclusivamente protocolos seguros (http, https, mailto). */
+export function safeHref(url?: string | null): string | undefined {
+  if (!url || typeof url !== 'string') return undefined
+  const trimmed = url.trim()
+  try {
+    const parsed = new URL(trimmed)
+    if (ALLOWED_PROTOCOLS.has(parsed.protocol)) {
+      return trimmed
+    }
+  }
+  catch {
+    return undefined
+  }
+  return undefined
+}
+
+/** Un campo de documento como fila: las urls y los mails se vuelven links seguros. */
 function docRow(f: DocField): Row {
   const row: Row = { name: f.name, type: f.type, value: f.value, wide: f.wide }
-  if (/^[^\s@]+@[^\s@]+$/.test(f.value)) row.href = `mailto:${f.value}`
-  else if (f.type === 'url') row.href = f.value
+  if (/^[^\s@]+@[^\s@]+$/.test(f.value)) row.href = safeHref(`mailto:${f.value}`)
+  else if (f.type === 'url') row.href = safeHref(f.value)
   return row
 }
 

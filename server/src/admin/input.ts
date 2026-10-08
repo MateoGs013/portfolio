@@ -38,6 +38,39 @@ export function optStr(b: Body, k: string, maxLen = 4000): string | null {
   return trimmed
 }
 
+const ALLOWED_PROTOCOLS = new Set(['http:', 'https:', 'mailto:'])
+
+export function url(b: Body, k: string, maxLen = 2048): string {
+  const v = str(b, k, maxLen)
+  try {
+    const parsed = new URL(v)
+    if (!ALLOWED_PROTOCOLS.has(parsed.protocol)) {
+      bad(k, 'URL con protocolo permitido (http, https o mailto)')
+    }
+    return v
+  }
+  catch (e) {
+    if (e instanceof HttpError) throw e
+    bad(k, 'URL válida (ej: https://ejemplo.com)')
+  }
+}
+
+export function optUrl(b: Body, k: string, maxLen = 2048): string | null {
+  const v = optStr(b, k, maxLen)
+  if (!v) return null
+  try {
+    const parsed = new URL(v)
+    if (!ALLOWED_PROTOCOLS.has(parsed.protocol)) {
+      bad(k, 'URL con protocolo permitido (http, https o mailto)')
+    }
+    return v
+  }
+  catch (e) {
+    if (e instanceof HttpError) throw e
+    bad(k, 'URL válida (ej: https://ejemplo.com)')
+  }
+}
+
 export function int(b: Body, k: string, min = -2147483648, max = 2147483647): number {
   const v = b[k]
   if (typeof v === 'string' && v.trim() === '') bad(k, 'entero no vacío')

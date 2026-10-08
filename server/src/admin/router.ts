@@ -7,7 +7,7 @@ import { db } from '../db.js'
 import { MediaKind, MediaRole, Prisma, ProjectStatus, TechCategory } from '../../generated/prisma/client.js'
 import { requireAdmin } from './auth.js'
 import { IMAGE_MIME, imageDims } from './image.js'
-import { HttpError, bool, date, enumOf, int, intList, json, list, optDate, optInt, optStr, slug, str } from './input.js'
+import { HttpError, bool, date, enumOf, int, intList, json, list, optDate, optInt, optStr, optUrl, slug, str, url } from './input.js'
 import { hunterRouter } from './hunter.js'
 
 const require = createRequire(import.meta.url)
@@ -24,6 +24,10 @@ adminUi.use(express.static(ADMIN_DIR, { index: 'index.html' }))
 // ─── API ────────────────────────────────────────────────────────────────────
 
 export const adminApi = Router()
+adminApi.use((req, _res, next) => {
+  if (req.body === undefined || req.body === null) req.body = {}
+  next()
+})
 adminApi.use(requireAdmin)
 adminApi.use('/hunter', hunterRouter)
 
@@ -72,8 +76,8 @@ function projectData(b: Record<string, unknown>) {
     summary: str(b, 'summary'),
     brief: optStr(b, 'brief'),
     outcome: optStr(b, 'outcome'),
-    url: optStr(b, 'url'),
-    repo: optStr(b, 'repo'),
+    url: optUrl(b, 'url'),
+    repo: optUrl(b, 'repo'),
     metrics: json(b, 'metrics') as Prisma.InputJsonValue | null,
     sortOrder: optInt(b, 'sortOrder') ?? 0,
     publishedAt: optDate(b, 'publishedAt'),
@@ -82,7 +86,7 @@ function projectData(b: Record<string, unknown>) {
 }
 
 function projectNested(b: Record<string, unknown>) {
-  const links = list(b, 'links').map(l => ({ label: str(l, 'label'), url: str(l, 'url') }))
+  const links = list(b, 'links').map(l => ({ label: str(l, 'label'), url: url(l, 'url') }))
   const steps = list(b, 'steps').map((s, i) => ({
     order: optInt(s, 'order') ?? i + 1,
     title: str(s, 'title'),
@@ -202,10 +206,14 @@ adminApi.get('/media', async (req, res) => {
 adminApi.post('/media', upload.single('file'), async (req, res) => {
   const file = req.file
   if (!file) throw new HttpError(400, 'falta el archivo (campo "file")')
-  const ext = IMAGE_MIME[file.mimetype]
-  if (!ext) throw new HttpError(400, `tipo no soportado: ${file.mimetype} (png, jpeg, webp)`)
+  const mimeExt = IMAGE_MIME[file.mimetype]
+  if (!mimeExt) throw new HttpError(400, `tipo no soportado: ${file.mimetype} (png, jpeg, webp)`)
   const dims = imageDims(file.buffer)
-  if (!dims) throw new HttpError(400, 'no se pudo leer el tamaño de la imagen')
+  if (!dims) throw new HttpError(400, 'no se pudo leer el tamaño o formato de la imagen')
+  if (dims.format !== mimeExt && !(mimeExt === 'jpg' && dims.format === 'jpg')) {
+    throw new HttpError(400, 'el contenido del archivo no coincide con el tipo MIME declarado')
+  }
+  const ext = dims.format
 
   const body = req.body as Record<string, unknown>
   const projectId = int(body, 'projectId')
@@ -280,7 +288,7 @@ adminApi.delete('/techs/:id', async (req, res) => {
 // ─── orgs ───────────────────────────────────────────────────────────────────
 
 function orgData(b: Record<string, unknown>) {
-  return { slug: slug(b, 'slug'), name: str(b, 'name'), url: optStr(b, 'url'), city: optStr(b, 'city') }
+  return { slug: slug(b, 'slug'), name: str(b, 'name'), url: optUrl(b, 'url'), city: optStr(b, 'city') }
 }
 
 adminApi.get('/orgs', async (_req, res) => {
@@ -342,25 +350,36 @@ adminApi.delete('/experience/:id', async (req, res) => {
 // ─── docs ───────────────────────────────────────────────────────────────────
 
 function docFields(b: Record<string, unknown>): Prisma.InputJsonValue {
-  return list(b, 'fields').map(f => ({
-    name: str(f, 'name'),
-    type: str(f, 'type'),
-    value: typeof f['value'] === 'string' ? f['value'] : '',
-    ...(bool(f, 'wide') ? { wide: true } : {}),
-    ...(Array.isArray(f['worlds']) && f['worlds'].length ? { worlds: f['worlds'] as string[] } : {}),
-  }))
+  return list(b, 'fields').map(f => {
+    const type = str(f, 'type')
+    let val = typeof f['value'] === 'string' ? f['value'] : ''
+    if (type === 'url' && val.trim() !== '') {
+      val = optUrl({ val }, 'val') ?? ''
+    }
+    const worlds = Array.isArray(f['worlds'])
+      ? f['worlds'].filter((w): w is string => typeof w === 'string')
+      : []
+    return {
+      name: str(f, 'name'),
+      type,
+      value: val,
+      ...(bool(f, 'wide') ? { wide: true } : {}),
+      ...(worlds.length ? { worlds } : {}),
+    }
+  })
 }
 
 adminApi.get('/docs', async (_req, res) => {
   res.json(await db.doc.findMany({ orderBy: { key: 'asc' } }))
 })
 adminApi.put('/docs/:key', async (req, res) => {
-  const key = String(req.params['key'])
+  const key = slug({ key: req.params['key'] }, 'key')
   const data = { title: str(req.body, 'title'), fields: docFields(req.body) }
   res.json(await db.doc.upsert({ where: { key }, create: { key, ...data }, update: data }))
 })
 adminApi.delete('/docs/:key', async (req, res) => {
-  await db.doc.delete({ where: { key: String(req.params['key']) } })
+  const key = slug({ key: req.params['key'] }, 'key')
+  await db.doc.delete({ where: { key } })
   res.status(204).end()
 })
 

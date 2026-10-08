@@ -7,7 +7,7 @@ import CvContainer from '~/components/cv/CvContainer.vue'
 import AppIcon from '~/components/ui/AppIcon.vue'
 import ExplorerValue from './ExplorerValue.vue'
 import ExplorerFileWindow from './ExplorerFileWindow.vue'
-import { pad, type Detail, type Vecino } from '~/lib/explorer'
+import { pad, safeHref, type Detail, type Vecino } from '~/lib/explorer'
 import { routeFor } from '~/lib/path'
 
 const props = defineProps<{
@@ -40,8 +40,8 @@ const canonicalFilePath = computed(() => {
 })
 
 const raw = computed(() => (props.detail.rawRecord as Record<string, unknown> | undefined) ?? {})
-const projectUrl = computed(() => typeof raw.value.url === 'string' && raw.value.url ? raw.value.url : null)
-const projectRepo = computed(() => typeof raw.value.repo === 'string' && raw.value.repo ? raw.value.repo : null)
+const projectUrl = computed(() => typeof raw.value.url === 'string' ? (safeHref(raw.value.url) ?? null) : null)
+const projectRepo = computed(() => typeof raw.value.repo === 'string' ? (safeHref(raw.value.repo) ?? null) : null)
 const projectStatus = computed(() => typeof raw.value.status === 'string' ? raw.value.status : 'LIVE')
 const projectYear = computed(() => raw.value.year ? String(raw.value.year) : null)
 

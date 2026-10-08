@@ -1,7 +1,7 @@
-/** Lee ancho y alto de PNG, JPEG y WebP sin dependencias. Null si no lo reconoce. */
-export function imageDims(buf: Buffer): { width: number, height: number } | null {
+/** Lee ancho, alto y formato real (magic bytes) de PNG, JPEG y WebP sin dependencias. Null si no lo reconoce. */
+export function imageDims(buf: Buffer): { width: number, height: number, format: 'png' | 'jpg' | 'webp' } | null {
   if (buf.length >= 24 && buf.readUInt32BE(0) === 0x89504E47) {
-    return { width: buf.readUInt32BE(16), height: buf.readUInt32BE(20) }
+    return { width: buf.readUInt32BE(16), height: buf.readUInt32BE(20), format: 'png' }
   }
 
   if (buf[0] === 0xFF && buf[1] === 0xD8) {
@@ -17,7 +17,7 @@ export function imageDims(buf: Buffer): { width: number, height: number } | null
         continue
       }
       const isSOF = marker >= 0xC0 && marker <= 0xCF && marker !== 0xC4 && marker !== 0xC8 && marker !== 0xCC
-      if (isSOF) return { height: buf.readUInt16BE(i + 5), width: buf.readUInt16BE(i + 7) }
+      if (isSOF) return { height: buf.readUInt16BE(i + 5), width: buf.readUInt16BE(i + 7), format: 'jpg' }
       i += 2 + buf.readUInt16BE(i + 2)
     }
     return null
@@ -25,7 +25,7 @@ export function imageDims(buf: Buffer): { width: number, height: number } | null
 
   if (buf.length >= 30 && buf.toString('ascii', 0, 4) === 'RIFF' && buf.toString('ascii', 8, 12) === 'WEBP') {
     const chunk = buf.toString('ascii', 12, 16)
-    if (chunk === 'VP8X') return { width: 1 + buf.readUIntLE(24, 3), height: 1 + buf.readUIntLE(27, 3) }
+    if (chunk === 'VP8X') return { width: 1 + buf.readUIntLE(24, 3), height: 1 + buf.readUIntLE(27, 3), format: 'webp' }
     if (chunk === 'VP8L') {
       const b0 = buf[21] ?? 0
       const b1 = buf[22] ?? 0
@@ -34,9 +34,10 @@ export function imageDims(buf: Buffer): { width: number, height: number } | null
       return {
         width: 1 + (((b1 & 0x3F) << 8) | b0),
         height: 1 + (((b3 & 0xF) << 10) | (b2 << 2) | ((b1 & 0xC0) >> 6)),
+        format: 'webp',
       }
     }
-    if (chunk === 'VP8 ') return { width: buf.readUInt16LE(26) & 0x3FFF, height: buf.readUInt16LE(28) & 0x3FFF }
+    if (chunk === 'VP8 ') return { width: buf.readUInt16LE(26) & 0x3FFF, height: buf.readUInt16LE(28) & 0x3FFF, format: 'webp' }
   }
 
   return null

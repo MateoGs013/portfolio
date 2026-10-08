@@ -1,5 +1,8 @@
+import path from 'node:path'
 import cors from 'cors'
 import express, { type Express, type NextFunction, type Request, type Response } from 'express'
+import rateLimit from 'express-rate-limit'
+import helmet from 'helmet'
 import { db } from './db.js'
 import { env } from './env.js'
 import { adminApi, adminUi } from './admin/router.js'
@@ -11,35 +14,93 @@ import { projects } from './routes/projects.js'
 import { schema } from './routes/schema.js'
 import { stack } from './routes/stack.js'
 
-import path from 'node:path'
-
 export const app: Express = express()
 
 app.disable('x-powered-by')
-const corsOrigins = env.corsOrigin.split(',').map(s => s.trim())
-app.use(cors({
-  origin: (origin, callback) => {
-    if (!origin || corsOrigins.includes('*') || corsOrigins.includes(origin)) {
-      callback(null, true)
-    } else {
-      callback(new Error(`Origen ${origin} no permitido por política CORS`))
-    }
-  },
-  credentials: true,
-}))
-app.use(express.json())
+// Detrás del reverse proxy Traefik en Coolify
+app.set('trust proxy', 1)
 
-app.get('/api/health', async (_req, res) => {
-  const version = await db.$queryRaw<{ v: string }[]>`select version() as v`
-    .then(rows => rows[0]?.v.split(' on ')[0] ?? null)
-    .catch(() => null)
-  const dbOk = version !== null
-  res.status(dbOk ? 200 : 503).json(envelope({ ok: true, db: dbOk, version }))
+// M1: Cabeceras de seguridad generales con Helmet
+app.use(helmet({
+  contentSecurityPolicy: false, // Nuxt y admin manejan sus directivas CSP específicas
+  crossOriginEmbedderPolicy: false,
+}))
+
+// M1: CSP específica y estricta para la consola de administración
+app.use(['/admin', '/api/admin'], helmet.contentSecurityPolicy({
+  directives: {
+    defaultSrc: ["'self'"],
+    scriptSrc: ["'self'"],
+    styleSrc: ["'self'", "'unsafe-inline'"],
+    imgSrc: ["'self'", 'data:'],
+    connectSrc: ["'self'"],
+    frameAncestors: ["'none'"],
+    baseUri: ["'self'"],
+    formAction: ["'self'"],
+  },
+}))
+
+// M2: Rate limiting general para la API pública
+const publicApiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 300,
+  standardHeaders: 'draft-8',
+  legacyHeaders: false,
+  message: { error: 'demasiadas peticiones, por favor reintente más tarde' },
 })
 
-app.use('/media', express.static(path.resolve('public/media')))
-app.use('/api', schema, projects, experience, stack, orgs, docs)
-app.use('/api/admin', adminApi)
+// M2: Rate limiting estricto para fallos de autenticación en el admin (10 fallos por IP cada 15 min)
+const adminAuthFailuresLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 10,
+  skipSuccessfulRequests: true,
+  standardHeaders: 'draft-8',
+  legacyHeaders: false,
+  message: { error: 'demasiados intentos fallidos de autenticación en admin, reintente en 15 minutos' },
+})
+
+// M3: CORS ajustado sin credentials, sin wildcard arbitrario y montado exclusivamente en /api
+const allowedOrigins = env.corsOrigin
+  .split(',')
+  .map(s => s.trim())
+  .filter(s => s && s !== '*')
+
+if (allowedOrigins.length > 0) {
+  const corsMiddleware = cors({
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true)
+      } else {
+        callback(new Error(`Origen ${origin} no permitido por política CORS`))
+      }
+    },
+    credentials: false,
+  })
+  app.use('/api', corsMiddleware)
+}
+
+app.use(express.json())
+
+// Baja #1: Verificación de salud sin fuga de versión de la base de datos
+app.get('/api/health', async (_req, res) => {
+  const dbOk = await db.$queryRaw`select 1`
+    .then(() => true)
+    .catch(() => false)
+  res.status(dbOk ? 200 : 503).json(envelope({ ok: true, db: dbOk }))
+})
+
+// Archivos estáticos de media con protección contra MIME-sniffing
+app.use('/media', express.static(path.resolve('public/media'), {
+  setHeaders: (res) => {
+    res.setHeader('X-Content-Type-Options', 'nosniff')
+  },
+}))
+
+// Rutas de API pública con rate limiter
+app.use('/api', publicApiLimiter, schema, projects, experience, stack, orgs, docs)
+
+// Rutas de administración con rate limiter para fallos de auth
+app.use('/api/admin', adminAuthFailuresLimiter, adminApi)
 app.use('/admin', adminUi)
 
 app.use((_req, res) => {

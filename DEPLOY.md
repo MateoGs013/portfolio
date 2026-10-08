@@ -42,20 +42,22 @@ Toda la infraestructura se ejecuta en contenedores Docker orquestados por Coolif
 El repositorio cuenta con Dockerfiles optimizados para producción:
 
 1. **`Dockerfile.web`**:
-   - Multi-stage build con Node 22 Alpine y pnpm 10.
+   - Multi-stage build con Node 24 Alpine y pnpm 10.
+   - Ejecuta como usuario sin privilegios `USER node`.
    - Compila Nuxt 4 (`pnpm build`) generando `.output`.
    - Expone el puerto `3000`.
    - Levanta con `node .output/server/index.mjs`.
 
 2. **`Dockerfile.api`**:
-   - Multi-stage build con Node 22 Alpine y pnpm 10.
+   - Multi-stage build con Node 24 Alpine y pnpm 10.
+   - Ejecuta como usuario sin privilegios `USER node`.
    - Genera el cliente de Prisma (`pnpm prisma generate`).
    - Sirve la API Express y la UI estática del panel de administración (`/admin`).
    - Expone el puerto `3001`.
    - Levanta con `pnpm start:api` (`tsx server/src/index.ts`).
 
 3. **`docker-compose.yml`**:
-   - Configuración base del contenedor PostgreSQL 17 alpine para desarrollo y stacks de Coolify.
+   - Configuración base del contenedor PostgreSQL 17 alpine aislado en `127.0.0.1:5432:5432`.
 
 ---
 
@@ -69,8 +71,9 @@ El repositorio cuenta con Dockerfiles optimizados para producción:
    - **User**: `portfolio`
    - **Password**: `[TU_PASSWORD_SEGURO]`
    - **Version**: `17-alpine`
-3. Hacé clic en **"Deploy"**.
-4. En la pestaña de la base de datos, obtené la cadena de conexión interna (`Internal Database URL`):
+3. **Seguridad de red:** Asegurate de **no exponer el puerto 5432 públicamente**. Coolify asigna una red Docker interna donde los contenedores se comunican de forma aislada.
+4. Hacé clic en **"Deploy"**.
+5. En la pestaña de la base de datos, obtené la cadena de conexión interna (`Internal Database URL`):
    ```text
    postgresql://portfolio:[TU_PASSWORD_SEGURO]@postgres:5432/portfolio
    ```
@@ -86,7 +89,9 @@ El repositorio cuenta con Dockerfiles optimizados para producción:
    - **Dockerfile location**: `/Dockerfile.api`
 4. En **"Ports Exposes"**, indicá `3001`.
 5. En **"Domains"**, podés dejarlo sin dominio público (si Nuxt actuará como proxy inverso completo) o asignarle un subdominio como `https://api.mateogs.tech`.
-6. En la pestaña **"Environment Variables"**, definí:
+6. En la pestaña **"Persistent Storage" / "Storages"**:
+   - Montar volumen persistente: destino `/app/public/media/projects` (o `/app/public/media`). Esto garantiza que las imágenes subidas desde el CMS no se eliminen al redeployar.
+7. En la pestaña **"Environment Variables"**, definí:
    ```env
    NODE_ENV=production
    PORT=3001
@@ -94,16 +99,20 @@ El repositorio cuenta con Dockerfiles optimizados para producción:
    ADMIN_TOKEN=tu-clave-secreta-para-acceder-al-panel
    CORS_ORIGIN=https://mateogs.tech
    HUNTER_API_URL=http://eros:8000
+   EROS_API_KEY=tu-clave-secreta-compartida-con-eros
    GEMINI_API_KEY=tu-api-key-de-gemini
    ```
-7. Hacé clic en **"Deploy"**.
-8. **Ejecutar migraciones y seed inicial:**
+8. Hacé clic en **"Deploy"**.
+9. **Ejecutar migraciones y seed inicial:**
    - Una vez finalizado el build, ingresá a la pestaña **"Terminal"** del contenedor del backend en Coolify y ejecutá:
      ```bash
      pnpm prisma migrate deploy
      pnpm db:seed
      ```
    - Esto creará las tablas relacionales y poblará los datos iniciales de proyectos, trayectoria y habilidades.
+
+> [!NOTE] Seguridad de Eros Agent
+> Eros no debe publicarse con un dominio en Internet. Debe correr en la misma red de Coolify bajo `http://eros:8000` y con `EROS_API_KEY` compartida requerida en todas sus peticiones.
 
 ---
 

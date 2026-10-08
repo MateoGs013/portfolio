@@ -24,6 +24,14 @@ export default defineNuxtConfig({
   nitro: {
     typescript: { tsConfig: { exclude: ['../../server/**/*'] } },
     routeRules: {
+      '/**': {
+        headers: {
+          'X-Content-Type-Options': 'nosniff',
+          'X-Frame-Options': 'DENY',
+          'Referrer-Policy': 'strict-origin-when-cross-origin',
+          'Permissions-Policy': 'camera=(), microphone=(), geolocation=()',
+        },
+      },
       '/admin': { proxy: `${apiOrigin}/admin/` },
       '/admin/**': { proxy: `${apiOrigin}/admin/**` },
       '/api/admin/**': { proxy: `${apiOrigin}/api/admin/**` },

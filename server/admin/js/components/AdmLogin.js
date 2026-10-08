@@ -19,6 +19,8 @@ export const AdmLogin = {
       await store.initSession()
     }
 
+    const isLocal = ['localhost', '127.0.0.1', '::1'].includes(window.location.hostname)
+
     function useDevToken() {
       store.tokenInput = 'dev-token'
       login()
@@ -29,6 +31,7 @@ export const AdmLogin = {
       icons: ICONS,
       login,
       useDevToken,
+      isLocal,
     }
   },
   template: `
@@ -75,7 +78,7 @@ export const AdmLogin = {
           </button>
         </form>
 
-        <div class="pt-2 border-t border-white/5 flex items-center justify-between text-[11px] font-mono-code text-zinc-500">
+        <div v-if="isLocal" class="pt-2 border-t border-white/5 flex items-center justify-between text-[11px] font-mono-code text-zinc-500">
           <span>Ambiente Local</span>
           <button
             type="button"

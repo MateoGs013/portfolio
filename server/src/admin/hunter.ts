@@ -1,21 +1,40 @@
 import { Router, type Request, type Response } from 'express'
 import { env } from '../env.js'
+import { createCvTicket } from './auth.js'
 
 export const hunterRouter = Router()
 
-// URL del agente Eros en deploy (por defecto el servicio en producción)
+function escapeHtml(s: string): string {
+  return s
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+}
+
+// URL del agente Eros en deploy (requiere variable de entorno HUNTER_API_URL)
 const getHunterUrl = () => (process.env['HUNTER_API_URL'] || env.hunterApiUrl || 'https://eros.mateogs.tech').replace(/\/+$/, '')
 
 async function forward(urlPath: string, init?: RequestInit, timeoutMs = 60000) {
   const baseUrl = getHunterUrl()
+  if (!baseUrl) {
+    return {
+      ok: false,
+      status: 503,
+      data: { error: 'Eros Agent no configurado: falta HUNTER_API_URL en el entorno' },
+    }
+  }
   const fullUrl = `${baseUrl}/${urlPath.replace(/^\//, '')}`
   try {
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+      ...(env.erosApiKey ? { Authorization: `Bearer ${env.erosApiKey}` } : {}),
+      ...((init?.headers as Record<string, string>) || {}),
+    }
     const res = await fetch(fullUrl, {
       ...init,
-      headers: {
-        'Content-Type': 'application/json',
-        ...(init?.headers || {}),
-      },
+      headers,
       signal: AbortSignal.timeout(timeoutMs),
     })
     const isJson = res.headers.get('content-type')?.includes('application/json')
@@ -30,6 +49,17 @@ async function forward(urlPath: string, init?: RequestInit, timeoutMs = 60000) {
     }
   }
 }
+
+/** POST /api/admin/hunter/cv/:id/ticket - Ticket de un solo uso para abrir CV HTML */
+hunterRouter.post(['/cv/:id/ticket', '/jobs/:id/cv/ticket'], (req: Request, res: Response) => {
+  const id = getParamId(req)
+  if (!id) {
+    res.status(400).json({ error: 'ID de vacante requerido' })
+    return
+  }
+  const ticket = createCvTicket(id)
+  res.json({ ticket })
+})
 
 /** GET /api/admin/hunter/stats */
 hunterRouter.get('/stats', async (_req: Request, res: Response) => {
@@ -111,9 +141,21 @@ hunterRouter.get(['/cv/:id/html', '/jobs/:id/cv/html'], async (req: Request, res
     res.status(400).type('html').send('<h1>ID de vacante requerido</h1>')
     return
   }
+  const verifiedTicketId = (req as unknown as { verifiedTicketId?: string }).verifiedTicketId
+  if (verifiedTicketId !== undefined && verifiedTicketId !== id) {
+    res.status(403).type('html').send('<h1>Ticket no válido para esta vacante</h1>')
+    return
+  }
   const baseUrl = getHunterUrl()
+  if (!baseUrl) {
+    res.status(503).type('html').send('<h1>Eros Agent no configurado</h1><p>Falta HUNTER_API_URL en el entorno</p>')
+    return
+  }
   try {
     const upstreamRes = await fetch(`${baseUrl}/api/cv/${encodeURIComponent(id)}/html`, {
+      headers: {
+        ...(env.erosApiKey ? { Authorization: `Bearer ${env.erosApiKey}` } : {}),
+      },
       signal: AbortSignal.timeout(45000),
     })
     let html = await upstreamRes.text()
@@ -123,9 +165,12 @@ hunterRouter.get(['/cv/:id/html', '/jobs/:id/cv/html'], async (req: Request, res
     if (req.query['download'] === 'true') {
       res.setHeader('Content-Disposition', 'attachment; filename="CV_Mateo_Sonzogni_Harvard_ATS.html"')
     }
+    // Sandbox CSP: origen opaco, sin allow-same-origin para aislar de credenciales de admin
+    res.setHeader('Content-Security-Policy', "sandbox allow-scripts allow-modals; default-src 'none'; style-src 'unsafe-inline'; img-src data: https:;")
+    res.setHeader('X-Content-Type-Options', 'nosniff')
     res.status(upstreamRes.status).type('html').send(html)
   } catch (err: unknown) {
-    const msg = err instanceof Error ? err.message : String(err)
+    const msg = escapeHtml(err instanceof Error ? err.message : String(err))
     res.status(503).type('html').send(`<h1>Error cargando CV de Eros</h1><p>${msg}</p>`)
   }
 })

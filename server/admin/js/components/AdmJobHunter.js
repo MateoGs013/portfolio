@@ -215,25 +215,62 @@ export const AdmJobHunter = {
       store.toast('ok', 'CV ATS copiado en texto plano')
     }
 
-    function getCVUrl(params = {}) {
-      if (!store.hunter.selected) return ''
-      const query = new URLSearchParams({ token: store.token, ...params })
-      return `/api/admin/hunter/cv/${encodeURIComponent(store.hunter.selected.id)}/html?${query.toString()}`
+    async function getCVTicket() {
+      if (!store.hunter.selected) return null
+      try {
+        const res = await fetch(`/api/admin/hunter/cv/${encodeURIComponent(store.hunter.selected.id)}/ticket`, {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${store.token}` },
+        })
+        if (!res.ok) {
+          store.toast('err', 'No se pudo generar ticket para el CV')
+          return null
+        }
+        const data = await res.json()
+        return data.ticket || null
+      } catch {
+        store.toast('err', 'Error al solicitar ticket para el CV')
+        return null
+      }
     }
 
-    function openTailoredCVHtml() {
+    async function openTailoredCVHtml() {
       if (!store.hunter.selected) return
-      window.open(getCVUrl(), '_blank')
+      const ticket = await getCVTicket()
+      if (!ticket) return
+      window.open(`/api/admin/hunter/cv/${encodeURIComponent(store.hunter.selected.id)}/html?ticket=${encodeURIComponent(ticket)}`, '_blank', 'noopener')
     }
 
-    function printTailoredCV() {
+    async function printTailoredCV() {
       if (!store.hunter.selected) return
-      window.open(getCVUrl({ auto_print: 'true' }), '_blank')
+      const ticket = await getCVTicket()
+      if (!ticket) return
+      window.open(`/api/admin/hunter/cv/${encodeURIComponent(store.hunter.selected.id)}/html?ticket=${encodeURIComponent(ticket)}&auto_print=true`, '_blank', 'noopener')
     }
 
-    function downloadTailoredCVHtml() {
+    async function downloadTailoredCVHtml() {
       if (!store.hunter.selected) return
-      window.location.href = getCVUrl({ download: 'true' })
+      try {
+        const res = await fetch(`/api/admin/hunter/cv/${encodeURIComponent(store.hunter.selected.id)}/html?download=true`, {
+          headers: { Authorization: `Bearer ${store.token}` },
+        })
+        if (!res.ok) {
+          store.toast('err', 'Error al descargar CV')
+          return
+        }
+        const blob = await res.blob()
+        const url = URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = 'CV_Mateo_Sonzogni_Harvard_ATS.html'
+        document.body.appendChild(a)
+        a.click()
+        a.remove()
+        URL.revokeObjectURL(url)
+        store.toast('ok', 'CV descargado')
+      } catch {
+        store.toast('err', 'Fallo de red al descargar CV')
+      }
     }
 
     function getVerdictClass(verdict) {
@@ -281,7 +318,6 @@ export const AdmJobHunter = {
       openTailoredCVHtml,
       printTailoredCV,
       downloadTailoredCVHtml,
-      getCVUrl,
       getVerdictClass,
       scanJobs,
       purgeJobs,

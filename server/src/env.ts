@@ -1,7 +1,7 @@
 import fs from 'node:fs'
 
 // Carga segura de .env en desarrollo local si existe el archivo en disco.
-// En entornos cloud (Render, Vercel, Supabase), las variables se inyectan en process.env.
+// En despliegue (Docker / Coolify), las variables se inyectan en process.env.
 if (typeof process.loadEnvFile === 'function' && fs.existsSync('.env')) {
   try {
     process.loadEnvFile('.env')
@@ -21,6 +21,7 @@ export const env = {
   databaseUrl: required('DATABASE_URL'),
   port: Number(process.env['PORT'] ?? process.env['API_PORT'] ?? 3001),
   corsOrigin: process.env['CORS_ORIGIN'] ?? 'http://localhost:3000',
-  hunterApiUrl: (process.env['HUNTER_API_URL'] || 'https://eros.mateogs.tech').replace(/\/+$/, ''),
+  hunterApiUrl: (process.env['HUNTER_API_URL'] ?? 'https://eros.mateogs.tech').replace(/\/+$/, ''),
+  erosApiKey: process.env['EROS_API_KEY'] ?? '',
 }
 

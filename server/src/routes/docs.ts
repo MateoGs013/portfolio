@@ -50,11 +50,12 @@ const fallbackDocs: Record<string, { key: string, title: string, updatedAt: stri
 
 /** GET /api/docs/:key → { key, title, fields: [{ name, type, value, wide?, worlds? }] } */
 docs.get('/docs/:key', async (req, res) => {
+  const key = req.params.key
   try {
-    const data = await db.doc.findUnique({ where: { key: req.params.key } })
+    const data = await db.doc.findUnique({ where: { key } })
     if (!data) {
-      if (fallbackDocs[req.params.key]) {
-        const fb = fallbackDocs[req.params.key]!
+      if (key && Object.hasOwn(fallbackDocs, key)) {
+        const fb = fallbackDocs[key]!
         res.json(envelope(fb, { count: fb.fields.length }))
         return
       }
@@ -65,8 +66,8 @@ docs.get('/docs/:key', async (req, res) => {
     res.json(envelope(data, { count }))
   }
   catch {
-    if (fallbackDocs[req.params.key]) {
-      const fb = fallbackDocs[req.params.key]!
+    if (key && Object.hasOwn(fallbackDocs, key)) {
+      const fb = fallbackDocs[key]!
       res.json(envelope(fb, { count: fb.fields.length }))
       return
     }

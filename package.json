@@ -32,7 +32,9 @@
     "@prisma/client": "7.10.0",
     "cors": "^2.8.6",
     "express": "^5.2.1",
-    "multer": "^2.3.0",
+    "express-rate-limit": "^8.7.1",
+    "helmet": "^8.3.0",
+    "multer": "^2.4.0",
     "nuxt": "^4.5.2",
     "pg": "^8.23.0",
     "prisma": "7.10.0",
@@ -56,6 +58,14 @@
     "vue-tsc": "^3.3.11"
   },
   "pnpm": {
+    "overrides": {
+      "proxy-addr": "^2.0.8",
+      "devalue": "^5.9.3",
+      "source-map-js": "^1.2.2",
+      "shell-quote": "^1.11.0",
+      "serialize-javascript": "^7.1.2",
+      "fast-uri": "^3.1.8"
+    },
     "onlyBuiltDependencies": [
       "@prisma/engines",
       "esbuild",

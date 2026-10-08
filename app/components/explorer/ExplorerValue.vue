@@ -2,7 +2,7 @@
 // Renderizador de valores para hojas técnicas y tablas.
 // Soporta relaciones, filtros, links externos, activos multimedia (con visor lightbox),
 import AppIcon from '~/components/ui/AppIcon.vue'
-import type { Cell, MediaItem } from '~/lib/explorer'
+import { safeHref, type Cell, type MediaItem } from '~/lib/explorer'
 
 const { isEs } = usePortfolioLocale()
 
@@ -138,7 +138,7 @@ function formatBytes(bytes?: number | null): string {
       <span v-if="i" class="sep text-faint" aria-hidden="true">·</span>
       <NuxtLink v-if="it.to" :to="it.to" class="rel text-sig no-underline hover:text-sig-hover hover:underline">{{ it.label }}<span v-if="it.meta" class="im ml-1 text-dim text-[13px]"> {{ it.meta }}</span></NuxtLink>
       <NuxtLink v-else-if="it.facet" :to="it.facet" class="facet text-ink underline decoration-dotted decoration-faint underline-offset-[3px] hover:text-sig hover:decoration-solid hover:decoration-sig" :title="`filtrar ${name ?? ''} = ${it.label}`">{{ it.label }}</NuxtLink>
-      <a v-else-if="it.href" :href="it.href" target="_blank" rel="noopener noreferrer" class="ext text-sig underline decoration-rule hover:text-sig-hover hover:underline">{{ it.label }}<span v-if="it.meta" class="im ml-1 text-dim text-[13px]"> {{ it.meta }}</span> ↗</a>
+      <a v-else-if="it.href && safeHref(it.href)" :href="safeHref(it.href)" target="_blank" rel="noopener noreferrer" class="ext text-sig underline decoration-rule hover:text-sig-hover hover:underline">{{ it.label }}<span v-if="it.meta" class="im ml-1 text-dim text-[13px]"> {{ it.meta }}</span> ↗</a>
       <span v-else>{{ it.label }}</span>
     </template>
   </span>
@@ -149,8 +149,8 @@ function formatBytes(bytes?: number | null): string {
   </NuxtLink>
 
   <!-- 6. Enlace URL Externo / Correo Electrónico -->
-  <span v-else-if="cell.href && cell.href.startsWith('mailto:')" class="email-value-wrap inline-flex items-center gap-2.5 flex-wrap">
-    <a :href="cell.href" class="ext mail-link font-semibold text-sig hover:text-sig-hover hover:underline">
+  <span v-else-if="cell.href && safeHref(cell.href) && safeHref(cell.href)!.startsWith('mailto:')" class="email-value-wrap inline-flex items-center gap-2.5 flex-wrap">
+    <a :href="safeHref(cell.href)" class="ext mail-link font-semibold text-sig hover:text-sig-hover hover:underline">
       {{ cell.value }}
     </a>
     <button
@@ -163,7 +163,7 @@ function formatBytes(bytes?: number | null): string {
       <span>{{ copiedInline ? (isEs ? 'COPIADO' : 'COPIED') : (isEs ? 'COPIAR' : 'COPY') }}</span>
     </button>
   </span>
-  <a v-else-if="cell.href" :href="cell.href" target="_blank" rel="noopener noreferrer" class="ext text-sig underline decoration-rule hover:text-sig-hover hover:underline">
+  <a v-else-if="cell.href && safeHref(cell.href)" :href="safeHref(cell.href)" target="_blank" rel="noopener noreferrer" class="ext text-sig underline decoration-rule hover:text-sig-hover hover:underline">
     {{ cell.value }} ↗
   </a>
 
