@@ -1,6 +1,7 @@
 @import url('https://api.fontshare.com/v2/css?f[]=general-sans@300,400,500,600,700&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Martian+Mono:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
 @import "tailwindcss";
+@source "./**/*.{html,js}";
 
 @theme {
   --font-sans: 'General Sans', 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
