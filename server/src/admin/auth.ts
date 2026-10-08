@@ -11,7 +11,10 @@ export function requireAdmin(req: Request, res: Response, next: NextFunction) {
     return
   }
   const header = req.get('authorization') ?? ''
-  const given = header.startsWith('Bearer ') ? header.slice(7) : ''
+  let given = header.startsWith('Bearer ') ? header.slice(7) : ''
+  if (!given && typeof req.query['token'] === 'string') {
+    given = req.query['token']
+  }
   const givenHash = createHash('sha256').update(given).digest()
   if (!timingSafeEqual(givenHash, tokenHash)) {
     res.status(401).json({ error: 'unauthorized' })

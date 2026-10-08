@@ -202,10 +202,25 @@ export const AdmJobHunter = {
       store.toast('ok', 'CV ATS copiado en texto plano')
     }
 
+    function getCVUrl(params = {}) {
+      if (!store.hunter.selected) return ''
+      const query = new URLSearchParams({ token: store.token, ...params })
+      return `/api/admin/hunter/cv/${encodeURIComponent(store.hunter.selected.id)}/html?${query.toString()}`
+    }
+
     function openTailoredCVHtml() {
       if (!store.hunter.selected) return
-      const url = `/api/admin/hunter/cv/${encodeURIComponent(store.hunter.selected.id)}/html`
-      window.open(url, '_blank')
+      window.open(getCVUrl(), '_blank')
+    }
+
+    function printTailoredCV() {
+      if (!store.hunter.selected) return
+      window.open(getCVUrl({ auto_print: 'true' }), '_blank')
+    }
+
+    function downloadTailoredCVHtml() {
+      if (!store.hunter.selected) return
+      window.location.href = getCVUrl({ download: 'true' })
     }
 
     function getVerdictClass(verdict) {
@@ -251,6 +266,9 @@ export const AdmJobHunter = {
       generateTailoredCV,
       copyTailoredCVText,
       openTailoredCVHtml,
+      printTailoredCV,
+      downloadTailoredCVHtml,
+      getCVUrl,
       getVerdictClass,
       scanJobs,
       purgeJobs,
@@ -614,79 +632,172 @@ export const AdmJobHunter = {
               </div>
             </div>
 
-            <!-- CV Harvard ATS Adaptado (Vista Previa B&W y Botón de HTML Oficial) -->
-            <div v-if="cvData" class="p-4.5 bg-[#121318] border border-white/10 rounded-lg space-y-4">
-              <div class="flex items-center justify-between border-b border-white/5 pb-2.5">
+            <!-- Empty State si aún no se generó CV adaptado -->
+            <div v-if="!cvData" class="p-5 bg-[#121318] border border-white/10 rounded-lg flex flex-col sm:flex-row items-center justify-between gap-4">
+              <div class="flex items-center gap-3.5">
+                <div class="w-10 h-10 rounded-lg bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-400 shrink-0">
+                  <svg class="adm-icon" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                </div>
+                <div>
+                  <h3 class="text-xs font-bold font-mono-code text-white uppercase tracking-wider">CV Harvard ATS Adaptado</h3>
+                  <p class="text-[11px] text-zinc-400 mt-0.5">Generá una versión personalizada en formato Harvard A4 destacando proyectos afines a esta vacante.</p>
+                </div>
+              </div>
+              <button 
+                type="button" 
+                @click="generateTailoredCV" 
+                :disabled="store.hunter.isGeneratingCV"
+                class="btn-primary !h-[32px] !px-3.5 !text-xs cursor-pointer inline-flex items-center gap-2 shrink-0 disabled:opacity-50"
+              >
+                <span v-if="store.hunter.isGeneratingCV" class="animate-spin inline-block text-[11px]">↻</span>
+                <span>{{ store.hunter.isGeneratingCV ? 'Adaptando CV...' : 'Generar CV Harvard ATS' }}</span>
+              </button>
+            </div>
+
+            <!-- CV Harvard ATS Adaptado (Vista Previa A4 Realista & Acciones de Descarga/Impresión) -->
+            <div v-else class="p-4.5 bg-[#121318] border border-white/10 rounded-lg space-y-4">
+              <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-white/5 pb-3">
                 <div>
                   <div class="flex items-center gap-2">
-                    <span class="w-1.5 h-1.5 rounded-full bg-cyan-400"></span>
-                    <h3 class="text-xs font-bold font-mono-code text-white uppercase tracking-wider">CV Harvard ATS Adaptado</h3>
+                    <span class="w-2 h-2 rounded-full bg-cyan-400 animate-pulse"></span>
+                    <h3 class="text-xs font-bold font-mono-code text-white uppercase tracking-wider">CV Harvard ATS Adaptado · Formato A4</h3>
                   </div>
-                  <p class="text-[11px] text-zinc-400 mt-0.5">Palabras clave y proyectos jerarquizados específicamente para esta vacante.</p>
+                  <p class="text-[11px] text-zinc-400 mt-0.5">Hoja única 210 × 297 mm · Sin fotos ni gráficos · Formato 100% amigable para parsers ATS</p>
                 </div>
-                <div class="flex items-center gap-2">
+
+                <!-- Barra de Acciones de Exportación -->
+                <div class="flex items-center flex-wrap gap-2">
+                  <button 
+                    type="button" 
+                    @click="printTailoredCV" 
+                    class="btn-primary !h-[30px] !text-xs cursor-pointer inline-flex items-center gap-1.5 shadow-sm"
+                    title="Imprimir o Descargar directamente en PDF A4 nativo del navegador"
+                  >
+                    <svg class="adm-icon sm" viewBox="0 0 24 24"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+                    <span>Descargar / Imprimir PDF (A4)</span>
+                  </button>
+
+                  <button 
+                    type="button" 
+                    @click="downloadTailoredCVHtml" 
+                    class="btn-secondary !h-[30px] !text-xs cursor-pointer inline-flex items-center gap-1.5 text-zinc-200 hover:text-white"
+                    title="Descargar archivo HTML independiente listo para enviar o editar"
+                  >
+                    <svg class="adm-icon sm" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                    <span>Guardar HTML</span>
+                  </button>
+
+                  <button 
+                    type="button" 
+                    @click="copyTailoredCVText" 
+                    class="btn-secondary !h-[30px] !text-xs cursor-pointer inline-flex items-center gap-1.5"
+                    title="Copiar contenido en texto plano para postulaciones con formularios ATS"
+                  >
+                    <svg class="adm-icon sm" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                    <span>Copiar ATS</span>
+                  </button>
+
                   <button 
                     type="button" 
                     @click="openTailoredCVHtml" 
-                    class="btn-primary !h-[28px] !text-xs cursor-pointer inline-flex items-center gap-1.5"
+                    class="btn-ghost !h-[30px] !px-2 !text-xs cursor-pointer text-zinc-400 hover:text-white inline-flex items-center"
+                    title="Abrir en pestaña nueva"
                   >
-                    <span>Abrir HTML Oficial A4</span>
                     <svg class="adm-icon sm" viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
                   </button>
-                  <button type="button" @click="copyTailoredCVText" class="btn-secondary !h-[28px] !text-xs cursor-pointer">
-                    Copiar Texto ATS
+
+                  <button 
+                    type="button" 
+                    @click="generateTailoredCV" 
+                    :disabled="store.hunter.isGeneratingCV"
+                    class="btn-ghost !h-[30px] !px-2 !text-xs cursor-pointer text-zinc-400 hover:text-white inline-flex items-center"
+                    title="Regenerar con Eros IA"
+                  >
+                    <span v-if="store.hunter.isGeneratingCV" class="animate-spin inline-block text-[11px]">↻</span>
+                    <span v-else>↻</span>
                   </button>
                 </div>
               </div>
 
-              <!-- Tarjeta Visual Harvard ATS B&W -->
-              <div class="bg-white text-black p-6 rounded shadow-sm font-serif text-xs space-y-3.5 select-text">
-                <div class="text-center border-b border-black pb-2.5">
-                  <div class="text-sm font-bold tracking-wider uppercase font-sans">{{ cvData.name || 'MATEO GABRIEL SONZOGNI' }}</div>
-                  <div class="text-[10.5px] italic text-zinc-700 mt-0.5">
-                    {{ cvData.title || 'Desarrollador Frontend & Full Stack' }} · {{ cvData.location || 'Argentina' }} · {{ cvData.email || 'mateogabus@gmail.com' }}
-                  </div>
-                </div>
+              <!-- Staging Canvas A4 con Sombra Realista y Proporción A4 -->
+              <div class="bg-[#08090b] p-3 sm:p-6 md:p-8 rounded-lg border border-white/5 flex justify-center overflow-x-auto">
+                <div class="w-full max-w-[700px] min-h-[960px] bg-white text-[#111111] p-8 sm:p-11 md:p-12 shadow-[0_25px_50px_-12px_rgba(0,0,0,0.95),0_0_0_1px_rgba(0,0,0,0.08)] rounded-sm font-serif text-xs select-text flex flex-col justify-between">
+                  <div>
+                    <!-- Cabecera Harvard -->
+                    <div class="text-center pb-2">
+                      <h1 class="text-xl sm:text-2xl font-bold font-sans tracking-wide text-black uppercase">{{ cvData.name || 'MATEO GABRIEL SONZOGNI' }}</h1>
+                      <div class="text-[11px] font-sans font-semibold text-zinc-800 mt-1">
+                        {{ cvData.title || 'Full Stack Developer & Software Engineer' }}
+                      </div>
+                      <div class="text-[10px] font-sans text-zinc-600 mt-1 flex flex-wrap justify-center items-center gap-x-2 gap-y-0.5">
+                        <span>{{ cvData.location || 'Río Negro, Patagonia Argentina (UTC-3)' }}</span>
+                        <span class="text-zinc-400">·</span>
+                        <a :href="'mailto:' + (cvData.email || 'mateogabus@gmail.com')" class="text-zinc-800 hover:underline">{{ cvData.email || 'mateogabus@gmail.com' }}</a>
+                        <span class="text-zinc-400">·</span>
+                        <a :href="cvData.portfolio || 'https://mateogs.tech'" target="_blank" class="text-zinc-800 hover:underline">mateogs.tech</a>
+                        <span v-if="cvData.linkedin" class="text-zinc-400">·</span>
+                        <a v-if="cvData.linkedin" :href="cvData.linkedin" target="_blank" class="text-zinc-800 hover:underline">LinkedIn</a>
+                        <span v-if="cvData.github" class="text-zinc-400">·</span>
+                        <a v-if="cvData.github" :href="cvData.github" target="_blank" class="text-zinc-800 hover:underline">GitHub</a>
+                      </div>
+                    </div>
+                    <div class="border-b-[1.5px] border-black my-2.5"></div>
 
-                <!-- Professional Summary -->
-                <div>
-                  <div class="font-bold border-b border-black text-[11px] mb-1 font-sans uppercase tracking-wide">Professional Summary (Tailored)</div>
-                  <p class="text-[10px] leading-relaxed text-justify text-zinc-800">
-                    {{ cvData.summary || 'Software engineer specialized in reactive frontend architectures.' }}
-                  </p>
-                </div>
+                    <!-- Professional Summary -->
+                    <div class="mb-3.5">
+                      <h2 class="text-[11px] font-sans font-bold uppercase tracking-wider text-black border-b border-black pb-0.5 mb-1.5">
+                        Professional Summary
+                      </h2>
+                      <p class="text-[10px] leading-relaxed text-justify text-zinc-800 font-serif">
+                        {{ cvData.summary || 'Software engineer specialized in reactive web architectures, high-performance UI, and robust backend systems.' }}
+                      </p>
+                    </div>
 
-                <!-- Competencies & Skills -->
-                <div v-if="cvData.skills && Object.keys(cvData.skills).length">
-                  <div class="font-bold border-b border-black text-[11px] mb-1 font-sans uppercase tracking-wide">Core Competencies & Stack</div>
-                  <div class="space-y-1 text-[10px]">
-                    <div v-for="(skillsList, category) in cvData.skills" :key="category">
-                      <span class="font-bold">{{ category }}: </span>
-                      <span>{{ Array.isArray(skillsList) ? skillsList.join(', ') : skillsList }}</span>
+                    <!-- Core Competencies & Stack -->
+                    <div v-if="cvData.skills && Object.keys(cvData.skills).length" class="mb-3.5">
+                      <h2 class="text-[11px] font-sans font-bold uppercase tracking-wider text-black border-b border-black pb-0.5 mb-1.5">
+                        Core Competencies & Stack
+                      </h2>
+                      <div class="space-y-1 text-[9.5px] font-serif leading-snug">
+                        <div v-for="(skillsList, category) in cvData.skills" :key="category">
+                          <span class="font-sans font-bold text-black uppercase tracking-tight text-[9.5px]">{{ category }}: </span>
+                          <span class="text-zinc-800">{{ Array.isArray(skillsList) ? skillsList.join(', ') : skillsList }}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Prioritized Experience & Shipped Projects -->
+                    <div v-if="cvData.experience && cvData.experience.length" class="mb-3.5">
+                      <h2 class="text-[11px] font-sans font-bold uppercase tracking-wider text-black border-b border-black pb-0.5 mb-2">
+                        Relevant Experience & Shipped Projects
+                      </h2>
+                      <div v-for="(exp, expIdx) in cvData.experience" :key="expIdx" class="mb-2.5 last:mb-0">
+                        <div class="flex justify-between items-baseline font-sans text-[10.5px] font-bold text-black">
+                          <span>{{ (exp.title || exp.company || '').toUpperCase() }} — <span class="font-semibold text-zinc-800">{{ exp.role }}</span></span>
+                          <span class="text-[9.5px] font-normal font-sans text-zinc-600">{{ exp.period || '2026' }}</span>
+                        </div>
+                        <ul class="list-disc pl-4 mt-0.5 space-y-0.5 text-[9.5px] leading-relaxed text-zinc-800 font-serif">
+                          <li v-for="(b, bIdx) in (exp.bullets || [])" :key="bIdx">{{ b }}</li>
+                        </ul>
+                      </div>
+                    </div>
+
+                    <!-- Education -->
+                    <div v-if="cvData.education && cvData.education.length" class="mb-2">
+                      <h2 class="text-[11px] font-sans font-bold uppercase tracking-wider text-black border-b border-black pb-0.5 mb-1.5">
+                        Education
+                      </h2>
+                      <div v-for="(edu, eduIdx) in cvData.education" :key="eduIdx" class="flex justify-between items-baseline font-sans text-[10px]">
+                        <span class="font-bold text-black">{{ edu.degree || edu.title }} — <span class="font-normal text-zinc-800">{{ edu.institution }}</span></span>
+                        <span class="text-[9.5px] text-zinc-600">{{ edu.period || '' }}</span>
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                <!-- Experience -->
-                <div v-if="cvData.experience && cvData.experience.length">
-                  <div class="font-bold border-b border-black text-[11px] mb-1.5 font-sans uppercase tracking-wide">Prioritized Experience & Shipped Projects</div>
-                  <div v-for="exp in cvData.experience" :key="exp.title || exp.company" class="space-y-0.5 text-[10px] mb-2">
-                    <div class="flex justify-between font-bold">
-                      <span>{{ (exp.title || exp.company || '').toUpperCase() }} — {{ exp.role }}</span>
-                      <span>{{ exp.period || '2026' }}</span>
-                    </div>
-                    <ul class="list-disc pl-4 space-y-0.5 text-zinc-800">
-                      <li v-for="(b, bIdx) in (exp.bullets || [])" :key="bIdx">{{ b }}</li>
-                    </ul>
-                  </div>
-                </div>
-
-                <!-- Education -->
-                <div v-if="cvData.education && cvData.education.length">
-                  <div class="font-bold border-b border-black text-[11px] mb-1 font-sans uppercase tracking-wide">Education</div>
-                  <div v-for="edu in cvData.education" :key="edu.degree || edu.institution" class="flex justify-between text-[10px]">
-                    <span class="font-bold">{{ edu.degree || edu.title }} — {{ edu.institution }}</span>
-                    <span>{{ edu.period || '' }}</span>
+                  <!-- Pie de Página A4 Estándar -->
+                  <div class="mt-6 pt-2 border-t border-zinc-200 flex justify-between items-center text-[9px] font-mono-code text-zinc-400 select-none">
+                    <span>Estándar Harvard ATS (Página Única)</span>
+                    <span>210 × 297 mm · A4</span>
                   </div>
                 </div>
               </div>

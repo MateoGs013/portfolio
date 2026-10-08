@@ -116,7 +116,13 @@ hunterRouter.get(['/cv/:id/html', '/jobs/:id/cv/html'], async (req: Request, res
     const upstreamRes = await fetch(`${baseUrl}/api/cv/${encodeURIComponent(id)}/html`, {
       signal: AbortSignal.timeout(45000),
     })
-    const html = await upstreamRes.text()
+    let html = await upstreamRes.text()
+    if (req.query['auto_print'] === 'true') {
+      html = html.replace('</body>', '<script>window.addEventListener("load", () => { setTimeout(() => window.print(), 350); });</script></body>')
+    }
+    if (req.query['download'] === 'true') {
+      res.setHeader('Content-Disposition', 'attachment; filename="CV_Mateo_Sonzogni_Harvard_ATS.html"')
+    }
     res.status(upstreamRes.status).type('html').send(html)
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : String(err)
