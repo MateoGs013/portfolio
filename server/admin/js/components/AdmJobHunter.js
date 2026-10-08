@@ -195,7 +195,20 @@ export const AdmJobHunter = {
         lines.push('EDUCATION')
         for (const edu of cv.education) {
           lines.push(`${edu.degree || edu.title || ''} — ${edu.institution || ''} (${edu.period || ''})`)
+          if (edu.details) {
+            lines.push(edu.details)
+          }
         }
+        lines.push('')
+      }
+      if (cv.languages && cv.languages.length) {
+        lines.push('LANGUAGES')
+        lines.push(Array.isArray(cv.languages) ? cv.languages.join(' · ') : String(cv.languages))
+        lines.push('')
+      }
+      if (cv.methodologies && cv.methodologies.length) {
+        lines.push('ENGINEERING PRACTICES & METHODOLOGIES')
+        lines.push(Array.isArray(cv.methodologies) ? cv.methodologies.join(' · ') : String(cv.methodologies))
         lines.push('')
       }
       await navigator.clipboard.writeText(lines.join('\n'))
@@ -779,6 +792,9 @@ export const AdmJobHunter = {
                         <ul class="list-disc pl-4 mt-0.5 space-y-0.5 text-[9.5px] leading-relaxed text-zinc-800 font-serif">
                           <li v-for="(b, bIdx) in (exp.bullets || [])" :key="bIdx">{{ b }}</li>
                         </ul>
+                        <div v-if="exp.tech_stack && exp.tech_stack.length" class="text-[9px] text-zinc-600 font-sans mt-0.5 pl-4">
+                          <span class="italic font-medium">Stack:</span> {{ Array.isArray(exp.tech_stack) ? exp.tech_stack.join(', ') : exp.tech_stack }}
+                        </div>
                       </div>
                     </div>
 
@@ -787,9 +803,29 @@ export const AdmJobHunter = {
                       <h2 class="text-[11px] font-sans font-bold uppercase tracking-wider text-black border-b border-black pb-0.5 mb-1.5">
                         Education
                       </h2>
-                      <div v-for="(edu, eduIdx) in cvData.education" :key="eduIdx" class="flex justify-between items-baseline font-sans text-[10px]">
-                        <span class="font-bold text-black">{{ edu.degree || edu.title }} — <span class="font-normal text-zinc-800">{{ edu.institution }}</span></span>
-                        <span class="text-[9.5px] text-zinc-600">{{ edu.period || '' }}</span>
+                      <div v-for="(edu, eduIdx) in cvData.education" :key="eduIdx" class="mb-1 last:mb-0">
+                        <div class="flex justify-between items-baseline font-sans text-[10px]">
+                          <span class="font-bold text-black">{{ edu.degree || edu.title }} — <span class="font-normal text-zinc-800">{{ edu.institution }}</span></span>
+                          <span class="text-[9.5px] text-zinc-600">{{ edu.period || '' }}</span>
+                        </div>
+                        <p v-if="edu.details" class="text-[9px] text-zinc-600 font-serif leading-snug mt-0.5">{{ edu.details }}</p>
+                      </div>
+                    </div>
+
+                    <!-- Languages & Engineering Practices -->
+                    <div v-if="(cvData.languages && cvData.languages.length) || (cvData.methodologies && cvData.methodologies.length)" class="mb-2">
+                      <h2 class="text-[11px] font-sans font-bold uppercase tracking-wider text-black border-b border-black pb-0.5 mb-1.5">
+                        Languages & Engineering Standards
+                      </h2>
+                      <div class="space-y-1 text-[9.5px] font-serif leading-snug">
+                        <div v-if="cvData.languages && cvData.languages.length">
+                          <span class="font-sans font-bold text-black uppercase tracking-tight text-[9.5px]">Languages: </span>
+                          <span class="text-zinc-800">{{ Array.isArray(cvData.languages) ? cvData.languages.join(' · ') : cvData.languages }}</span>
+                        </div>
+                        <div v-if="cvData.methodologies && cvData.methodologies.length">
+                          <span class="font-sans font-bold text-black uppercase tracking-tight text-[9.5px]">Methodologies & Practices: </span>
+                          <span class="text-zinc-800">{{ Array.isArray(cvData.methodologies) ? cvData.methodologies.join(' · ') : cvData.methodologies }}</span>
+                        </div>
                       </div>
                     </div>
                   </div>
