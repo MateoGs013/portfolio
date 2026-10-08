@@ -70,6 +70,12 @@ hunterRouter.post('/evaluate', async (req: Request, res: Response) => {
   res.status(result.status).json(result.data)
 })
 
+/** POST /api/admin/hunter/purge */
+hunterRouter.post('/purge', async (_req: Request, res: Response) => {
+  const result = await forward('api/purge', { method: 'POST' }, 30000)
+  res.status(result.status).json(result.data)
+})
+
 function getParamId(req: Request): string {
   const val = req.params['id']
   if (Array.isArray(val)) return val[0] || ''

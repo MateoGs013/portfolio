@@ -130,6 +130,10 @@ export class ApiClient {
     return this.fetch('hunter/scan', { method: 'POST' })
   }
 
+  async purgeHunterJobs() {
+    return this.fetch('hunter/purge', { method: 'POST' })
+  }
+
   async updateHunterJobStatus(id, status) {
     return this.fetch(`hunter/jobs/${encodeURIComponent(id)}/status`, {
       method: 'PATCH',

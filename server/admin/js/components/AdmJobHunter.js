@@ -223,6 +223,18 @@ export const AdmJobHunter = {
       await store.scanHunterJobs()
     }
 
+    async function purgeJobs() {
+      const confirmed = await store.requestConfirm({
+        title: 'Depurar Vacantes Incompatibles',
+        message: 'Esto descartará vacantes de la base que no cumplan con el filtro geográfico (W2 / US-only), seniority o stack.',
+        confirmText: 'Depurar Ahora',
+        kind: 'warning',
+      })
+      if (confirmed) {
+        await store.purgeHunterJobs()
+      }
+    }
+
     return {
       store,
       hunterPitch,
@@ -241,6 +253,7 @@ export const AdmJobHunter = {
       openTailoredCVHtml,
       getVerdictClass,
       scanJobs,
+      purgeJobs,
     }
   },
   template: `
@@ -259,15 +272,25 @@ export const AdmJobHunter = {
               </span>
             </div>
 
-            <button
-              type="button"
-              @click="scanJobs"
-              :disabled="store.hunter.isScanning"
-              class="btn-primary !h-[26px] !px-2.5 !text-xs cursor-pointer disabled:opacity-50 inline-flex items-center gap-1.5"
-            >
-              <span v-if="store.hunter.isScanning" class="animate-spin inline-block text-[11px]">↻</span>
-              <span>{{ store.hunter.isScanning ? 'Escaneando...' : 'Escanear' }}</span>
-            </button>
+            <div class="flex items-center gap-1.5">
+              <button
+                type="button"
+                @click="purgeJobs"
+                title="Depurar vacantes incompatibles (W2 / EE.UU. Only / Obsoletas)"
+                class="btn-ghost !h-[26px] !px-2 !text-[11px] cursor-pointer text-zinc-400 hover:text-white"
+              >
+                Depurar
+              </button>
+              <button
+                type="button"
+                @click="scanJobs"
+                :disabled="store.hunter.isScanning"
+                class="btn-primary !h-[26px] !px-2.5 !text-xs cursor-pointer disabled:opacity-50 inline-flex items-center gap-1.5"
+              >
+                <span v-if="store.hunter.isScanning" class="animate-spin inline-block text-[11px]">↻</span>
+                <span>{{ store.hunter.isScanning ? 'Escaneando...' : 'Escanear' }}</span>
+              </button>
+            </div>
           </div>
 
           <!-- Buscador -->

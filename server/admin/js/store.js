@@ -348,6 +348,18 @@ export const store = reactive({
       s.hunter.isScanning = false
     }
   },
+
+  async purgeHunterJobs() {
+    const s = this || store
+    try {
+      const res = await api.purgeHunterJobs()
+      const count = res?.purged_count ?? res?.data?.purged_count ?? 0
+      s.toast('ok', `Depuración completa: ${count} vacantes no calificadas descartadas`)
+      await s.loadHunterJobs()
+    } catch (err) {
+      s.toast('err', `Error al depurar vacantes: ${err.message}`)
+    }
+  },
 })
 
 // Blindaje de métodos contra invocaciones desvinculadas de this (callbacks de eventos o event handlers)
