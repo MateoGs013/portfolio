@@ -26,14 +26,15 @@ app.use(helmet({
   crossOriginEmbedderPolicy: false,
 }))
 
-// M1: CSP específica y estricta para la consola de administración
+// M1: CSP específica y ajustada para la consola de administración (permite tipografías web y Vue runtime)
 app.use(['/admin', '/api/admin'], helmet.contentSecurityPolicy({
   directives: {
     defaultSrc: ["'self'"],
-    scriptSrc: ["'self'"],
-    styleSrc: ["'self'", "'unsafe-inline'"],
-    imgSrc: ["'self'", 'data:'],
-    connectSrc: ["'self'"],
+    scriptSrc: ["'self'", "'unsafe-eval'"],
+    styleSrc: ["'self'", "'unsafe-inline'", 'https://api.fontshare.com', 'https://fonts.googleapis.com'],
+    fontSrc: ["'self'", 'https://fonts.gstatic.com', 'https://cdn.fontshare.com', 'data:'],
+    imgSrc: ["'self'", 'data:', 'https:', 'blob:'],
+    connectSrc: ["'self'", 'blob:'],
     frameAncestors: ["'none'"],
     baseUri: ["'self'"],
     formAction: ["'self'"],
