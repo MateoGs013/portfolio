@@ -18,6 +18,8 @@ import { fieldMeta, fieldsFor, type CollectionKey, type DocField, type DocKey, t
 import { isDoc, isRoot, routeFor, type Path } from '~/lib/path'
 import { filtersFor, listEndpoint, listFilters, type Answer, type useApi } from '~/composables/useApi'
 
+export type { AnyRecord, Doc, Experience, LinkRef, Org, Project, TechRef }
+
 type Api = ReturnType<typeof useApi>
 
 export interface Item {
@@ -41,6 +43,12 @@ export interface Item {
   year?: number
   since?: number
   desc?: string
+  url?: string | null
+  repo?: string | null
+  startedAt?: string
+  endedAt?: string | null
+  story?: string | null
+  metrics?: Record<string, unknown> | null
 }
 
 export interface Facet {
@@ -170,7 +178,7 @@ function metaOf(collection: CollectionKey, record: AnyRecord): string {
   if (collection === 'experience') {
     const s = String(field(record, 'startedAt') ?? '').slice(0, 4)
     const e = field(record, 'endedAt') ? String(field(record, 'endedAt')).slice(0, 4) : 'act'
-    return `${s}–${e}`
+    return s === e ? s : `${s}–${e}`
   }
   if (collection === 'stack') return String(field(record, 'since') ?? '')
   if (collection === 'orgs') return String(field(record, 'city') ?? '')
@@ -503,6 +511,9 @@ export async function resolveExplorer(api: Api, path: Path, query: LocationQuery
             item.role = typeof p.role === 'string' ? p.role : undefined
             item.org = p.org && typeof p.org === 'object' && 'name' in p.org ? String((p.org as { name?: unknown }).name) : undefined
             item.techs = Array.isArray(p.techs) ? (p.techs as TechRef[]).map(t => ({ name: t.name, slug: t.slug })) : []
+            item.url = typeof p.url === 'string' ? p.url : null
+            item.repo = typeof p.repo === 'string' ? p.repo : null
+            item.metrics = typeof p.metrics === 'object' && p.metrics ? (p.metrics as Record<string, unknown>) : null
           }
           else if (collection === 'stack') {
             const s = r as unknown as Record<string, unknown>
@@ -515,7 +526,10 @@ export async function resolveExplorer(api: Api, path: Path, query: LocationQuery
             item.role = typeof e.role === 'string' ? e.role : undefined
             item.org = e.org && typeof e.org === 'object' && 'name' in e.org ? String((e.org as { name?: unknown }).name) : undefined
             item.summary = typeof e.summary === 'string' ? e.summary : undefined
+            item.story = typeof e.story === 'string' ? e.story : undefined
             item.techs = Array.isArray(e.techs) ? (e.techs as TechRef[]).map(t => ({ name: t.name, slug: t.slug })) : []
+            item.startedAt = typeof e.startedAt === 'string' ? e.startedAt : undefined
+            item.endedAt = typeof e.endedAt === 'string' ? e.endedAt : null
           }
           return item
         }),
@@ -561,6 +575,23 @@ export async function resolveExplorer(api: Api, path: Path, query: LocationQuery
     extra.projects = org.projects as unknown as AnyRecord[]
     extra.experiences = org.experiences as unknown as AnyRecord[]
   }
+  if (collection === 'experience') {
+    const expRecord = record as Experience
+    const orgSlug = expRecord.org?.slug
+    const projList = await api.list('projects').catch(() => null)
+    if (projList?.data?.length) {
+      const allProjects = projList.data as Project[]
+      const matched = allProjects.filter(p => {
+        if (orgSlug && p.org?.slug === orgSlug) return true
+        if (p.slug === expRecord.slug) return true
+        if (p.slug === 'argpiscinas' && expRecord.slug === 'arg-piscinas') return true
+        return false
+      })
+      if (matched.length) {
+        extra.projects = matched as unknown as AnyRecord[]
+      }
+    }
+  }
 
   // Hoja del record
   detail = {
@@ -569,6 +600,7 @@ export async function resolveExplorer(api: Api, path: Path, query: LocationQuery
     type: `record · ${modelName[collection]}`,
     updated: 'updatedAt' in record ? String(record.updatedAt).slice(0, 10) : null,
     rawRecord: record,
+    projects: extra.projects as Project[] | undefined,
     rows: fieldsFor(collection)
       .filter(name => name !== meta.nameField)
       .map(name => ({

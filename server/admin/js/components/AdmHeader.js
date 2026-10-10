@@ -21,15 +21,15 @@ export const AdmHeader = {
     }
   },
   template: `
-    <header class="h-[52px] bg-[#0c0d10] border-b border-white/10 px-5 flex items-center justify-between shrink-0 select-none z-30">
+    <header class="h-[52px] bg-[#0c0d10] border-b border-white/10 px-4 sm:px-5 flex items-center justify-between shrink-0 select-none z-30">
       <!-- Identidad y Monograma -->
-      <div class="flex items-center gap-4">
-        <div class="flex items-center gap-2.5">
-          <div class="w-6 h-6 rounded bg-[#ff3e00] text-[#09090b] flex items-center justify-center font-bold text-xs font-mono-code tracking-tighter">
+      <div class="flex items-center gap-3 sm:gap-4 min-w-0">
+        <div class="flex items-center gap-2 sm:gap-2.5">
+          <div class="w-6 h-6 rounded bg-[#ff3e00] text-[#09090b] flex items-center justify-center font-bold text-xs font-mono-code tracking-tighter shrink-0">
             MS
           </div>
-          <span class="text-xs font-bold text-white tracking-tight">Mateo Sonzogni</span>
-          <span class="text-[10px] font-mono-code bg-white/5 text-zinc-400 px-1.5 py-0.5 rounded border border-white/10">
+          <span class="text-xs font-bold text-white tracking-tight truncate">Mateo Sonzogni</span>
+          <span class="text-[10px] font-mono-code bg-white/5 text-zinc-400 px-1.5 py-0.5 rounded border border-white/10 shrink-0">
             CMS 2026
           </span>
         </div>
@@ -43,7 +43,7 @@ export const AdmHeader = {
         </div>
       </div>
 
-      <!-- Command Palette Trigger Central -->
+      <!-- Command Palette Trigger Central (Desktop) -->
       <button
         type="button"
         @click="$emit('openPalette')"
@@ -59,8 +59,18 @@ export const AdmHeader = {
         </kbd>
       </button>
 
-      <!-- Enlaces y Acciones de Cabecera -->
-      <div class="flex items-center gap-2.5 text-xs">
+      <!-- Botón de Búsqueda Móvil -->
+      <button
+        type="button"
+        @click="$emit('openPalette')"
+        class="sm:hidden p-1.5 text-zinc-400 hover:text-white rounded bg-white/5 border border-white/10 cursor-pointer"
+        title="Buscar o saltar a..."
+      >
+        <svg class="adm-icon sm" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+      </button>
+
+      <!-- Enlaces y Acciones de Cabecera (Desktop) -->
+      <div class="hidden sm:flex items-center gap-2.5 text-xs">
         <a
           href="/"
           target="_blank"
@@ -90,5 +100,6 @@ export const AdmHeader = {
         </button>
       </div>
     </header>
+
   `,
 }

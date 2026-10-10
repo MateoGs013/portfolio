@@ -124,6 +124,7 @@ export const AdmEditor = {
         } else {
           store.createRecord()
         }
+        store.mobileView = 'list'
       } catch (err) {
         store.toast('err', `Error al eliminar: ${err.message}`)
       }
@@ -137,11 +138,13 @@ export const AdmEditor = {
           } else if (store.rows.length > 0) {
             store.selectRecord(store.rows[0])
           }
+          store.mobileView = 'list'
         })
       } else {
         if (store.current) {
           store.selectRecord(store.current)
         }
+        store.mobileView = 'list'
       }
     }
 
@@ -160,13 +163,22 @@ export const AdmEditor = {
       <div v-if="store.form" class="h-full flex flex-col overflow-hidden">
         
         <!-- CABECERA DEL EDITOR -->
-        <div class="p-4 px-6 border-b border-white/10 bg-[#0c0d10] flex items-center justify-between shrink-0 select-none">
-          <div class="flex items-center gap-3">
-            <span class="text-[11px] font-mono-code uppercase text-zinc-500 tracking-wider">
+        <div class="p-3 sm:p-4 px-4 sm:px-6 border-b border-white/10 bg-[#0c0d10] flex items-center justify-between shrink-0 select-none flex-wrap sm:flex-nowrap gap-2">
+          <div class="flex items-center gap-2 sm:gap-3 min-w-0">
+            <button
+              type="button"
+              @click="store.mobileView = 'list'"
+              class="md:hidden flex items-center gap-1 px-2.5 py-1 text-xs font-mono-code text-zinc-300 hover:text-white bg-white/5 hover:bg-white/10 rounded border border-white/10 shrink-0 cursor-pointer"
+              title="Volver a la lista"
+            >
+              <span>←</span>
+              <span>Lista</span>
+            </button>
+            <span class="text-[11px] font-mono-code uppercase text-zinc-500 tracking-wider truncate">
               {{ store.section }} / {{ store.isNew ? 'nuevo' : (store.form.slug || store.form.key || 'editar') }}
             </span>
-            <span class="h-3 w-px bg-white/10"></span>
-            <div class="flex items-center gap-1.5">
+            <span class="h-3 w-px bg-white/10 hidden sm:inline-block"></span>
+            <div class="hidden sm:flex items-center gap-1.5 shrink-0">
               <span class="status-dot" :class="store.isDirty ? 'wip' : 'live'"></span>
               <span class="text-[11px] font-mono-code" :class="store.isDirty ? 'text-amber-400' : 'text-emerald-400'">
                 {{ store.isDirty ? 'Modificado' : 'Sincronizado' }}
@@ -174,7 +186,7 @@ export const AdmEditor = {
             </div>
           </div>
 
-          <div class="flex items-center gap-2.5">
+          <div class="flex items-center gap-2 sm:gap-2.5 shrink-0">
             <button
               type="button"
               @click="duplicateRecord"
@@ -182,7 +194,7 @@ export const AdmEditor = {
               title="Duplicar como nuevo borrador (Ctrl+D)"
             >
               <span>Duplicar</span>
-              <kbd class="text-[9px] font-mono-code bg-black/40 px-1 rounded border border-white/10 text-zinc-400">Ctrl+D</kbd>
+              <kbd class="hidden md:inline-block text-[9px] font-mono-code bg-black/40 px-1 rounded border border-white/10 text-zinc-400">Ctrl+D</kbd>
             </button>
 
             <!-- Selector de Estado Pill para Proyectos -->
@@ -190,7 +202,7 @@ export const AdmEditor = {
               <button
                 type="button"
                 @click="setProjectStatus('LIVE')"
-                class="px-2 py-0.5 rounded text-[10.5px] font-mono-code transition-colors flex items-center gap-1 cursor-pointer"
+                class="px-2 py-0.5 rounded text-[10px] sm:text-[10.5px] font-mono-code transition-colors flex items-center gap-1 cursor-pointer"
                 :class="store.form.status === 'LIVE' ? 'bg-emerald-500/15 text-emerald-300 font-bold border border-emerald-500/30' : 'text-zinc-500 hover:text-white'"
               >
                 <span class="status-dot live"></span> LIVE
@@ -198,7 +210,7 @@ export const AdmEditor = {
               <button
                 type="button"
                 @click="setProjectStatus('WIP')"
-                class="px-2 py-0.5 rounded text-[10.5px] font-mono-code transition-colors flex items-center gap-1 cursor-pointer"
+                class="px-2 py-0.5 rounded text-[10px] sm:text-[10.5px] font-mono-code transition-colors flex items-center gap-1 cursor-pointer"
                 :class="store.form.status === 'WIP' ? 'bg-amber-500/15 text-amber-300 font-bold border border-amber-500/30' : 'text-zinc-500 hover:text-white'"
               >
                 <span class="status-dot wip"></span> WIP
@@ -206,7 +218,7 @@ export const AdmEditor = {
               <button
                 type="button"
                 @click="setProjectStatus('ARCHIVED')"
-                class="px-2 py-0.5 rounded text-[10.5px] font-mono-code transition-colors flex items-center gap-1 cursor-pointer"
+                class="hidden sm:flex px-2 py-0.5 rounded text-[10.5px] font-mono-code transition-colors items-center gap-1 cursor-pointer"
                 :class="store.form.status === 'ARCHIVED' ? 'bg-zinc-500/15 text-zinc-300 font-bold border border-zinc-500/30' : 'text-zinc-500 hover:text-white'"
               >
                 <span class="status-dot archived"></span> ARCHIVED
@@ -218,33 +230,33 @@ export const AdmEditor = {
         <!-- Pestañas Lineales (Linear-style tabs) para Proyectos -->
         <div
           v-if="store.section === 'projects'"
-          class="px-6 border-b border-white/10 bg-[#0c0d10] flex items-center gap-2 shrink-0 select-none overflow-x-auto"
+          class="px-4 sm:px-6 border-b border-white/10 bg-[#0c0d10] flex items-center gap-2 shrink-0 select-none overflow-x-auto"
         >
-          <button type="button" @click="store.activeTab = 'general'" class="linear-tab" :class="{ active: store.activeTab === 'general' }">
+          <button type="button" @click="store.activeTab = 'general'" class="linear-tab shrink-0" :class="{ active: store.activeTab === 'general' }">
             <span>Datos Básicos</span>
           </button>
-          <button type="button" @click="store.activeTab = 'story'" class="linear-tab" :class="{ active: store.activeTab === 'story' }">
+          <button type="button" @click="store.activeTab = 'story'" class="linear-tab shrink-0" :class="{ active: store.activeTab === 'story' }">
             <span>Caso de Estudio & Textos</span>
           </button>
-          <button type="button" @click="store.activeTab = 'media'" class="linear-tab" :class="{ active: store.activeTab === 'media' }">
+          <button type="button" @click="store.activeTab = 'media'" class="linear-tab shrink-0" :class="{ active: store.activeTab === 'media' }">
             <span>Multimedia & Portada</span>
             <span v-if="(store.form.media || []).length" class="text-[9.5px] bg-white/10 px-1 rounded">{{ (store.form.media || []).length }}</span>
           </button>
-          <button type="button" @click="store.activeTab = 'metrics'" class="linear-tab" :class="{ active: store.activeTab === 'metrics' }">
+          <button type="button" @click="store.activeTab = 'metrics'" class="linear-tab shrink-0" :class="{ active: store.activeTab === 'metrics' }">
             <span>Métricas de Impacto</span>
             <span v-if="store.metricsList.length" class="text-[9.5px] bg-white/10 px-1 rounded">{{ store.metricsList.length }}</span>
           </button>
-          <button type="button" @click="store.activeTab = 'stack'" class="linear-tab" :class="{ active: store.activeTab === 'stack' }">
+          <button type="button" @click="store.activeTab = 'stack'" class="linear-tab shrink-0" :class="{ active: store.activeTab === 'stack' }">
             <span>Stack & Enlaces</span>
             <span v-if="(store.form.techIds || []).length" class="text-[9.5px] bg-white/10 px-1 rounded">{{ (store.form.techIds || []).length }}</span>
           </button>
-          <button type="button" @click="store.activeTab = 'sub'" class="linear-tab" :class="{ active: store.activeTab === 'sub' }">
+          <button type="button" @click="store.activeTab = 'sub'" class="linear-tab shrink-0" :class="{ active: store.activeTab === 'sub' }">
             <span>Enlaces & Pasos</span>
           </button>
         </div>
 
         <!-- CUERPO DEL EDITOR (SCROLL CENTRAL INDEPENDIENTE) -->
-        <div class="flex-1 overflow-y-auto p-6 space-y-6">
+        <div class="flex-1 overflow-y-auto p-4 sm:p-6 space-y-5 sm:space-y-6">
           <ProjectForm v-if="store.section === 'projects'" />
           <ExperienceForm v-else-if="store.section === 'experience'" />
           <StackForm v-else-if="store.section === 'stack'" />
@@ -253,34 +265,34 @@ export const AdmEditor = {
         </div>
 
         <!-- BARRA DE ACCIONES ANCLADA AL PIE DEL EDITOR -->
-        <footer class="h-[54px] px-6 border-t border-white/10 bg-[#0c0d10] flex items-center justify-between shrink-0 select-none">
+        <footer class="h-[54px] px-4 sm:px-6 border-t border-white/10 bg-[#0c0d10] flex items-center justify-between shrink-0 select-none">
           <div class="flex items-center gap-3 text-xs text-zinc-500 font-mono-code">
             <div class="flex items-center gap-1.5">
               <span class="status-dot" :class="store.isDirty ? 'wip' : 'live'"></span>
-              <span v-if="store.isDirty" class="text-amber-400">Modificado con cambios pendientes</span>
-              <span v-else class="text-emerald-400">Sincronizado con base de datos</span>
+              <span v-if="store.isDirty" class="text-amber-400 text-[11px] sm:text-xs">Modificado</span>
+              <span v-else class="text-emerald-400 text-[11px] sm:text-xs">Sincronizado</span>
             </div>
-            <div class="hidden md:flex items-center gap-3 border-l border-white/10 pl-3 text-[11px]">
+            <div class="hidden lg:flex items-center gap-3 border-l border-white/10 pl-3 text-[11px]">
               <span>Guardar: <kbd class="bg-black/40 text-zinc-300 px-1 py-0.5 rounded border border-white/10">Ctrl+S</kbd></span>
               <span>Nuevo: <kbd class="bg-black/40 text-zinc-300 px-1 py-0.5 rounded border border-white/10">Ctrl+N</kbd></span>
             </div>
           </div>
 
-          <div class="flex items-center gap-2.5">
+          <div class="flex items-center gap-2 sm:gap-2.5">
             <button
               type="button"
               @click="cancelEdit"
-              class="btn-secondary cursor-pointer"
+              class="btn-secondary !h-[30px] !text-[11px] sm:!text-xs cursor-pointer"
               :title="store.isDirty ? 'Descartar cambios no guardados' : 'Cerrar editor'"
             >
-              {{ store.isDirty ? 'Descartar Cambios' : 'Cerrar' }}
+              {{ store.isDirty ? 'Descartar' : 'Cerrar' }}
             </button>
 
             <button
               v-if="!store.isNew"
               type="button"
               @click="remove"
-              class="btn-danger cursor-pointer"
+              class="btn-danger !h-[30px] !text-[11px] sm:!text-xs cursor-pointer"
               title="Eliminar este registro permanentemente"
             >
               Eliminar
@@ -289,14 +301,15 @@ export const AdmEditor = {
             <button
               type="button"
               @click="save"
-              class="btn-primary cursor-pointer"
+              class="btn-primary !h-[30px] !text-[11px] sm:!text-xs cursor-pointer"
               title="Guardar cambios en la base de datos (Ctrl+S)"
             >
-              <span>{{ store.isNew ? 'Crear Registro' : 'Guardar Cambios' }}</span>
-              <kbd class="text-[9.5px] bg-black/40 px-1 py-0.2 rounded border border-black/20 text-black font-bold">Ctrl+S</kbd>
+              <span>{{ store.isNew ? 'Crear' : 'Guardar' }}</span>
+              <kbd class="hidden md:inline-block text-[9.5px] bg-black/40 px-1 py-0.2 rounded border border-black/20 text-black font-bold">Ctrl+S</kbd>
             </button>
           </div>
         </footer>
+
 
       </div>
 

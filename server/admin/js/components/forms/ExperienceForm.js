@@ -112,7 +112,7 @@ export const ExperienceForm = {
   },
   template: `
     <div class="max-w-2xl space-y-5">
-      <div class="grid grid-cols-2 gap-4">
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
           <label class="field-label">Cargo o Posición *</label>
           <input
@@ -157,7 +157,7 @@ export const ExperienceForm = {
 
       <!-- Fechas con Botón de Actualidad y Cálculo de Duración -->
       <div class="p-3 bg-[#0d0e12] rounded border border-white/10 space-y-2">
-        <div class="grid grid-cols-2 gap-4">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label class="field-label">Fecha de Inicio *</label>
             <input

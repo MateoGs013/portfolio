@@ -22,6 +22,7 @@ export const store = reactive({
   initialSnapshot: null,
   slugLocked: true,
   activeTab: 'general',
+  mobileView: 'list', // 'list' | 'detail' for responsive master-detail
 
   // Metadatos relacionales
   meta: {
@@ -214,6 +215,7 @@ export const store = reactive({
     this.searchQuery = ''
     this.filter = 'all'
     this.activeTab = 'general'
+    this.mobileView = 'list'
 
     if (sec === 'dashboard') {
       this.current = null

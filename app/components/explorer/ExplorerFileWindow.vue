@@ -94,21 +94,21 @@ onBeforeUnmount(() => {
       </div>
 
       <!-- Título y Ruta del Archivo -->
-      <div class="va-path-info flex items-center gap-2 min-w-0 overflow-hidden font-mono text-[11.5px]">
+      <div class="va-path-info flex items-center gap-1.5 sm:gap-2 flex-1 min-w-0 overflow-hidden font-mono text-[11px] sm:text-[11.5px]">
         <AppIcon name="file" :size="13" class="va-file-icon text-sig shrink-0" />
-        <span class="va-filename font-bold text-ink whitespace-nowrap">{{ title }}</span>
-        <span v-if="path" class="va-canonical-path text-dim whitespace-nowrap overflow-hidden text-ellipsis text-[11px] max-sm:hidden">{{ path }}</span>
+        <span class="va-filename font-bold text-ink truncate">{{ title }}</span>
+        <span v-if="path" class="va-canonical-path text-dim whitespace-nowrap overflow-hidden text-ellipsis text-[11px] hidden sm:inline">{{ path }}</span>
       </div>
 
       <!-- Badge de Estado en la Ventana -->
-      <div class="va-status-tag flex items-center gap-1.5 px-2 py-0.5 bg-paper border border-rule font-mono text-[10px] text-dim shrink-0 max-sm:hidden">
+      <div class="va-status-tag hidden sm:flex items-center gap-1.5 px-2 py-0.5 bg-paper border border-rule font-mono text-[10px] text-dim shrink-0">
         <span class="va-dot w-1.5 h-1.5 rounded-full bg-green" />
         <span class="va-status-text font-bold">{{ badge ?? 'READ-ONLY · UTF-8' }}</span>
       </div>
     </header>
 
     <!-- Contenido del Archivo -->
-    <div class="va-body flex-1 min-h-0 p-5 max-sm:p-3 overflow-y-auto">
+    <div class="va-body flex-1 min-h-0 p-3 sm:p-5 overflow-y-auto">
       <slot />
     </div>
   </div>

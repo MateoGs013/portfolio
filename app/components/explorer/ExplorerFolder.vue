@@ -7,19 +7,81 @@ import AppIcon from '~/components/ui/AppIcon.vue'
 import ExplorerBadge from './ExplorerBadge.vue'
 import { pad, type Folder } from '~/lib/explorer'
 import type { Project } from '~/lib/api'
+import { routeFor } from '~/lib/path'
 
 const props = defineProps<{ folder: Folder }>()
 const uid = useId()
 
+const route = useRoute()
 const { isEs, tr, getProjectLocalization, getExperienceLocalization } = usePortfolioLocale()
 const { isHyperfocus } = useHyperfocus()
-const viewMode = ref<'grid' | 'table'>('grid')
+const viewMode = ref<'grid' | 'table' | 'timeline'>(props.folder.head === 'experience' ? 'timeline' : 'grid')
+
+watch(() => props.folder.head, (head) => {
+  if (isHyperfocus.value) {
+    viewMode.value = 'table'
+  }
+  else if (head === 'experience') {
+    viewMode.value = 'timeline'
+  }
+  else {
+    viewMode.value = 'grid'
+  }
+})
 
 watch(isHyperfocus, (val) => {
   if (val) {
     viewMode.value = 'table'
   }
+  else if (props.folder.head === 'experience') {
+    viewMode.value = 'timeline'
+  }
+  else {
+    viewMode.value = 'grid'
+  }
 }, { immediate: true })
+
+const activeStatusFilter = computed(() => {
+  const s = route.query.status
+  return typeof s === 'string' ? s : null
+})
+const hasStatusFilter = computed(() => !!activeStatusFilter.value)
+const isStatusLive = computed(() => activeStatusFilter.value === 'LIVE')
+const isStatusWip = computed(() => activeStatusFilter.value === 'WIP')
+
+function formatExpPeriod(it: Folder['items'][number]): string {
+  if (it.key === 'cet-30') return isEs.value ? '2017 — 2023 · 7 Años' : '2017 — 2023 · 7 Years'
+  if (it.key === 'escuela-da-vinci') return isEs.value ? '2024 — 2026 · Carrera' : '2024 — 2026 · Degree'
+  if (it.key === 'freelance') return isEs.value ? '2023 — Presente' : '2023 — Present'
+  if (it.key === 'ynara') return isEs.value ? 'Mayo — Junio 2026 · Tesis' : 'May — June 2026 · Thesis'
+  if (it.key === 'la-rucula') return isEs.value ? 'Marzo — Julio 2026' : 'March — July 2026'
+  if (it.key === 'arg-piscinas') return isEs.value ? 'Enero — Julio 2026' : 'January — July 2026'
+  return it.meta
+}
+
+function getExpCategory(key: string): { label: string, color: string } {
+  if (key === 'ynara') return { label: isEs.value ? 'TESIS & LIDERAZGO' : 'THESIS & LEAD', color: 'text-sig' }
+  if (key === 'la-rucula' || key === 'arg-piscinas') return { label: isEs.value ? 'PRODUCCIÓN CLIENTE' : 'CLIENT PRODUCTION', color: 'text-green' }
+  if (key === 'freelance') return { label: isEs.value ? 'FREELANCE & TURNKEY' : 'FREELANCE & TURNKEY', color: 'text-amber' }
+  return { label: isEs.value ? 'FORMACIÓN TÉCNICA' : 'TECHNICAL EDUCATION', color: 'text-dim' }
+}
+
+function getExpHighlights(key: string): string[] {
+  if (key === 'ynara') return isEs.value ? ['382 commits liderados', 'Tesis preaprobada Da Vinci', 'pgvector'] : ['382 commits led', 'Pre-approved thesis', 'pgvector']
+  if (key === 'la-rucula') return isEs.value ? ['Lighthouse 99', 'En producción en Chiclana', 'Vue 3 + GSAP'] : ['Lighthouse 99', 'Live production in Chiclana', 'Vue 3 + GSAP']
+  if (key === 'arg-piscinas') return isEs.value ? ['Lighthouse 98', 'Multi-idioma ES/EN/DE', 'Panel Prisma'] : ['Lighthouse 98', 'Multilingual ES/EN/DE', 'Prisma CMS']
+  if (key === 'cet-30') return isEs.value ? ['7 Años de formación', 'Título de Técnico en Programación', 'Bases de bajo nivel'] : ['7-Year technical basis', 'Official programming degree', 'Low-level foundations']
+  if (key === 'freelance') return isEs.value ? ['~10 Entregables llave en mano', 'Stack full-cycle', 'Directo a producción'] : ['~10 Turnkey deliverables', 'Full-cycle stack', 'Direct to production']
+  if (key === 'escuela-da-vinci') return isEs.value ? ['Promoción 2026', 'Tesis sobresaliente', 'Dirección visual & frontend'] : ['2026 Class', 'Honors thesis', 'Visual direction & frontend']
+  return []
+}
+
+function getExpLinkedProject(key: string): { slug: string, title: string } | null {
+  if (key === 'ynara') return { slug: 'ynara', title: 'Ynara AI Assistant' }
+  if (key === 'la-rucula') return { slug: 'la-rucula', title: 'La Rúcula Gastrobar' }
+  if (key === 'arg-piscinas') return { slug: 'argpiscinas', title: 'ARG Piscinas' }
+  return null
+}
 
 // 1. Scramble Text interactivo en el titular constructivista
 const { displayText: headline1, scramble: scramble1 } = useScrambleText(computed(() => tr.value.home.headline[0]), 300)
@@ -715,12 +777,23 @@ function onCardMousemove(e: MouseEvent) {
 
           <!-- Hint de navegación por teclado -->
           <span class="folder-header-hint" aria-hidden="true">
-            <span class="desktop-only"><kbd>↵</kbd> {{ isEs ? 'enter / clic abre hoja' : 'enter / click opens sheet' }}</span>
-            <span class="mobile-only">{{ isEs ? 'toca para abrir ficha' : 'tap to open sheet' }}</span>
+            <span class="hidden sm:inline"><kbd>↵</kbd> {{ isEs ? 'enter / clic abre hoja' : 'enter / click opens sheet' }}</span>
+            <span class="sm:hidden">{{ isEs ? 'toca para abrir ficha' : 'tap to open sheet' }}</span>
           </span>
 
-          <!-- Selector de Vista (Baldosas vs Tabla) -->
+          <!-- Selector de Vista (Cronología vs Grilla vs Tabla) -->
           <div v-if="folder.items.length" class="view-toggle" role="group" aria-label="Modo de visualización">
+            <button
+              v-if="folder.head === 'experience'"
+              type="button"
+              class="v-btn"
+              :class="{ active: viewMode === 'timeline' }"
+              :title="isEs ? 'Vista de cronología técnica' : 'Technical timeline view'"
+              @click="viewMode = 'timeline'"
+            >
+              <AppIcon name="clock" :size="12" />
+              <span>{{ tr.collection.timeline }}</span>
+            </button>
             <button
               type="button"
               class="v-btn"
@@ -729,7 +802,7 @@ function onCardMousemove(e: MouseEvent) {
               @click="viewMode = 'grid'"
             >
               <AppIcon name="grid" :size="12" />
-              <span>{{ isEs ? 'GRILLA' : 'GRID' }}</span>
+              <span>{{ tr.collection.grid }}</span>
             </button>
             <button
               type="button"
@@ -739,54 +812,231 @@ function onCardMousemove(e: MouseEvent) {
               @click="viewMode = 'table'"
             >
               <AppIcon name="table" :size="12" />
-              <span>{{ isEs ? 'TABLA' : 'TABLE' }}</span>
+              <span>{{ tr.collection.table }}</span>
             </button>
           </div>
         </div>
       </ExplorerHeader>
 
-      <!-- Vista de Cuadrícula (Especializada por Colección) -->
+      <!-- Barra de Filtros Rápidos de Proyectos -->
+      <div v-if="folder.head === 'projects'" class="projects-filter-bar flex items-center justify-between gap-2.5 sm:gap-3 p-2.5 px-3 sm:px-3.5 mb-4 bg-surface border border-rule flex-wrap w-full min-w-0">
+        <div class="flex items-center gap-1.5 flex-wrap w-full sm:w-auto min-w-0">
+          <span class="font-mono text-[10.5px] sm:text-[11px] text-dim font-bold mr-1 shrink-0 w-full sm:w-auto mb-0.5 sm:mb-0">{{ isEs ? 'FILTRAR POR ESTADO:' : 'FILTER BY STATUS:' }}</span>
+          <div class="flex items-center gap-1.5 flex-wrap">
+            <NuxtLink
+              :to="routeFor(['projects'])"
+              class="filter-pill font-mono text-[10.5px] sm:text-[11px] px-2 sm:px-2.5 py-1 border transition-colors duration-150 no-underline rounded-[2px] shrink-0"
+              :class="!hasStatusFilter ? 'border-sig bg-sig text-on-sig font-bold' : 'border-rule bg-paper text-dim hover:border-sig hover:text-ink'"
+            >
+              {{ tr.collection.filterAll }} (06)
+            </NuxtLink>
+            <NuxtLink
+              :to="routeFor(['projects'], { status: 'LIVE' })"
+              class="filter-pill font-mono text-[10.5px] sm:text-[11px] px-2 sm:px-2.5 py-1 border transition-colors duration-150 no-underline rounded-[2px] shrink-0"
+              :class="isStatusLive ? 'border-green bg-green/15 text-green font-bold' : 'border-rule bg-paper text-dim hover:border-green hover:text-green'"
+            >
+              ● {{ tr.collection.filterLive }} (03)
+            </NuxtLink>
+            <NuxtLink
+              :to="routeFor(['projects'], { status: 'WIP' })"
+              class="filter-pill font-mono text-[10.5px] sm:text-[11px] px-2 sm:px-2.5 py-1 border transition-colors duration-150 no-underline rounded-[2px] shrink-0"
+              :class="isStatusWip ? 'border-amber bg-amber/15 text-amber font-bold' : 'border-rule bg-paper text-dim hover:border-amber hover:text-amber'"
+            >
+              ○ {{ tr.collection.filterWip }} (03)
+            </NuxtLink>
+          </div>
+        </div>
+        <div class="text-faint font-mono text-[10.5px] hidden md:block">
+          {{ isEs ? 'PostgreSQL 17 · Rendimiento Lighthouse 98+ · Código Real' : 'PostgreSQL 17 · Lighthouse 98+ · Production Code' }}
+        </div>
+      </div>
+
+      <!-- 1. Vista de Cronología Técnica (Timeline) para Experiencia -->
+      <div v-if="viewMode === 'timeline' && folder.head === 'experience'" class="experience-timeline relative pl-6 sm:pl-9 my-3 w-full max-w-full min-w-0">
+        <!-- Línea Vertical de Conexión del Timeline -->
+        <div class="timeline-axis absolute left-2 sm:left-3 top-3 bottom-3 w-[2px] bg-rule" aria-hidden="true" />
+
+        <div class="timeline-nodes flex flex-col gap-4 sm:gap-5 w-full min-w-0">
+          <article
+            v-for="(it, idx) in folder.items"
+            :key="it.key"
+            class="timeline-node relative bg-surface border border-rule border-l-[3px] border-l-sig p-3 sm:p-4.5 hover:border-sig transition-all duration-150 group rounded-[2px] w-full min-w-0"
+            :data-row="it.key"
+          >
+            <!-- Pin del Nodo en el Eje -->
+            <div class="timeline-pin absolute -left-[20px] sm:-left-[27px] top-4 w-3.5 h-3.5 rounded-full border-2 border-surface bg-sig shadow-[0_0_8px_var(--d-sig)] group-hover:scale-125 transition-transform" aria-hidden="true" />
+
+            <!-- Cabecera del Hito -->
+            <div class="tl-head flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 sm:gap-2 mb-2 w-full min-w-0">
+              <div class="flex items-center gap-1.5 sm:gap-2 flex-wrap min-w-0 flex-1">
+                <span class="tl-num font-mono text-[11px] text-faint tabular-nums shrink-0">{{ pad(idx + 1) }}.</span>
+                <span class="tl-cat font-mono text-[10px] font-bold px-2 py-0.5 border border-rule bg-paper rounded-[2px] shrink-0" :class="getExpCategory(it.key).color">
+                  {{ getExpCategory(it.key).label }}
+                </span>
+                <span class="tl-org font-mono text-[12px] font-bold text-sig break-words">
+                  {{ it.org ?? it.label }}
+                </span>
+              </div>
+              <div class="tl-period font-mono text-[10px] sm:text-[11px] px-2 py-0.5 border border-rule bg-paper text-dim font-bold rounded-[2px] self-start sm:self-auto shrink-0">
+                {{ formatExpPeriod(it) }}
+              </div>
+            </div>
+
+            <!-- Título del Rol -->
+            <h3 class="tl-role text-[15px] sm:text-[17px] font-bold text-ink mb-1.5 leading-snug break-words">
+              {{ isEs ? (it.role || getExperienceLocalization(it.key)?.role || it.label) : (getExperienceLocalization(it.key)?.role || it.role || it.label) }}
+            </h3>
+
+            <!-- Resumen de Impacto -->
+            <p class="tl-summary text-[13px] sm:text-[13.5px] text-dim leading-relaxed mb-3 break-words">
+              {{ isEs ? (it.summary || getExperienceLocalization(it.key)?.summary) : (getExperienceLocalization(it.key)?.summary || it.summary) }}
+            </p>
+
+            <!-- Highlights Técnicos -->
+            <div v-if="getExpHighlights(it.key).length" class="tl-highlights flex items-center gap-1.5 sm:gap-2 flex-wrap mb-3 font-mono text-[10px] sm:text-[10.5px]">
+              <span v-for="h in getExpHighlights(it.key)" :key="h" class="tl-highlight px-2 py-0.5 bg-surface-raised border border-rule text-ink rounded-[2px] break-words">
+                ✓ {{ h }}
+              </span>
+            </div>
+
+            <!-- Pie del Hito: Stack + Proyecto Vinculado + Enlace al Dossier -->
+            <div class="tl-footer flex flex-col sm:flex-row sm:items-center justify-between gap-2 pt-2.5 border-t border-rule w-full min-w-0">
+              <div class="flex items-center gap-1.5 flex-wrap min-w-0 w-full sm:w-auto flex-1">
+                <span v-for="t in (it.techs ?? []).slice(0, 4)" :key="t.slug" class="p-tech-chip">
+                  {{ t.name }}
+                </span>
+                <NuxtLink
+                  v-if="getExpLinkedProject(it.key)"
+                  :to="`/projects/${getExpLinkedProject(it.key)!.slug}`"
+                  class="font-mono text-[10px] font-bold text-sig px-2 py-0.5 border border-sig/40 bg-sig/10 hover:bg-sig hover:text-on-sig transition-colors no-underline inline-flex items-center gap-1 rounded-[2px] max-w-full"
+                  :title="isEs ? 'Ver proyecto relacionado' : 'View related project'"
+                >
+                  <AppIcon name="folder" :size="10" class="shrink-0" />
+                  <span class="truncate">{{ isEs ? 'PROYECTO:' : 'PROJECT:' }} {{ getExpLinkedProject(it.key)!.title }} ↗</span>
+                </NuxtLink>
+              </div>
+
+              <div class="flex items-center justify-end w-full sm:w-auto pt-1 sm:pt-0 shrink-0">
+                <NuxtLink :to="it.to" class="tl-cta inline-flex items-center gap-1 font-mono text-[11px] font-bold text-sig hover:text-sig-hover no-underline">
+                  <span>{{ tr.collection.technicalDetails }}</span>
+                  <AppIcon name="chevron-right" :size="12" class="cta-arrow" />
+                </NuxtLink>
+              </div>
+            </div>
+          </article>
+        </div>
+      </div>
+
+      <!-- 2. Vista de Cuadrícula (Especializada por Colección) -->
       <ol
-        v-if="viewMode === 'grid'"
-        class="grid"
+        v-else-if="viewMode === 'grid'"
+        class="folder-items-grid grid gap-4 sm:gap-5 w-full list-none p-0 m-0"
         :class="{
-          'projects-grid': folder.head === 'projects',
-          'cards-grid': folder.head === 'stack' || folder.head === 'experience',
+          'grid-cols-1 md:grid-cols-2 xl:grid-cols-3': folder.head === 'projects',
+          'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4': folder.head === 'stack' || folder.head === 'experience',
+          'grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6': folder.head !== 'projects' && folder.head !== 'stack' && folder.head !== 'experience',
         }"
       >
-        <li v-for="(it, n) in folder.items" :key="it.key">
+        <li v-for="(it, n) in folder.items" :key="it.key" class="w-full min-w-0">
           <!-- Tarjeta de Proyecto -->
           <NuxtLink
             v-if="folder.head === 'projects'"
             :to="it.to"
-            class="project-card"
+            class="project-card group flex flex-col h-full border border-rule bg-surface hover:border-sig transition-all duration-150 rounded-[2px] overflow-hidden no-underline"
             :data-row="it.key"
           >
-            <div class="project-thumb-wrap">
-              <img v-if="it.cover" :src="it.cover" :alt="it.label" class="project-thumb" loading="lazy">
-              <div v-else class="project-thumb-fallback">
-                <ExplorerBadge kind="file" :badge="it.badge" />
+            <!-- Contenedor de Portada o Fallback Técnico -->
+            <div class="relative w-full aspect-[16/9.5] bg-black overflow-hidden border-b border-rule flex flex-col justify-between">
+              <img v-if="it.cover" :src="it.cover" :alt="it.label" class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-[1.02]" loading="lazy">
+              <!-- Blueprint Fallback Técnico cuando no hay cover raster -->
+              <div v-else class="project-blueprint-fallback flex flex-col justify-between p-3.5 sm:p-4 bg-surface-raised relative overflow-hidden h-full w-full">
+                <div class="flex items-center justify-between font-mono text-[10px] text-dim z-10 pr-24">
+                  <span class="text-sig font-bold truncate">// ARCHITECTURE SPEC</span>
+                  <span class="text-faint truncate hidden sm:inline">UTF-8 // SYS</span>
+                </div>
+                <div class="blueprint-graphic flex flex-col items-center justify-center my-auto py-1 z-10 text-center">
+                  <AppIcon :name="it.key === 'ynara-web' ? 'zap' : 'code'" :size="28" class="text-sig/70 mb-1" />
+                  <span class="font-mono text-[11px] sm:text-[11.5px] font-bold text-ink tracking-wider truncate max-w-full">{{ it.key === 'ynara-web' ? 'WEBGL / SHADERS / GLSL' : 'OBSIDIAN / AI VAULT' }}</span>
+                  <span class="font-mono text-[9.5px] sm:text-[10px] text-dim mt-0.5 truncate max-w-full">{{ it.key === 'ynara-web' ? '60 FPS · 4 Draw Calls' : '1,420 Notes · 850 Nodes' }}</span>
+                </div>
+                <div class="flex items-center justify-between font-mono text-[9.5px] text-faint border-t border-rule/50 pt-1 z-10">
+                  <span>{{ it.key }}.ts</span>
+                  <span>UTF-8 // READY</span>
+                </div>
+                <div class="absolute inset-0 opacity-15 pointer-events-none [background-image:linear-gradient(to_right,var(--d-sig)_1px,transparent_1px),linear-gradient(to_bottom,var(--d-sig)_1px,transparent_1px)] [background-size:20px_20px]" />
               </div>
-              <div class="project-status-bar">
-                <span class="project-status-badge">● {{ it.status ?? 'LIVE' }}</span>
-                <span class="project-year-badge">{{ it.year ?? it.meta }}</span>
+
+              <!-- Barra de Estado Flotante (sin superposiciones) -->
+              <div class="absolute top-2 right-2 flex items-center gap-1.5 z-20 font-mono text-[10px]">
+                <span
+                  class="px-2 py-0.5 font-bold rounded-[2px] backdrop-blur-md shadow-sm border"
+                  :class="it.status === 'LIVE' ? 'text-green border-green/40 bg-black/85' : 'text-amber border-amber/40 bg-black/85'"
+                >
+                  ● {{ it.status ?? 'LIVE' }}
+                </span>
+                <span class="px-1.5 py-0.5 border border-rule bg-black/85 text-dim backdrop-blur-md rounded-[2px] hidden sm:inline">
+                  {{ it.year ?? it.meta }}
+                </span>
               </div>
             </div>
 
-            <div class="project-info">
-              <div class="project-title-row">
-                <span class="p-num">{{ pad(n + 1) }}</span>
-                <h3 class="p-name">{{ it.label }}</h3>
+            <!-- Cuerpo de la Tarjeta -->
+            <div class="project-info flex flex-col flex-1 p-3.5 sm:p-4 gap-2 min-w-0">
+              <div class="project-title-row flex items-baseline gap-2 min-w-0">
+                <span class="p-num font-mono text-[11px] text-faint tabular-nums shrink-0">{{ pad(n + 1) }}</span>
+                <h3 class="p-name font-sans text-[15px] sm:text-[16px] font-bold text-ink group-hover:text-sig transition-colors leading-snug line-clamp-2 m-0 break-words">
+                  {{ it.label }}
+                </h3>
               </div>
-              <p v-if="it.org && it.org.toLowerCase() !== it.label.toLowerCase()" class="p-org">{{ isEs ? (it.org || getProjectLocalization(it.key)?.orgDesc) : (getProjectLocalization(it.key)?.orgDesc || it.org) }}</p>
-              <p v-if="it.summary" class="p-summary">{{ isEs ? (it.summary || getProjectLocalization(it.key)?.summary) : (getProjectLocalization(it.key)?.summary || it.summary) }}</p>
-              <div v-if="it.techs && it.techs.length" class="p-techs">
-                <span v-for="t in it.techs.slice(0, 4)" :key="t.slug" class="p-tech-chip">{{ t.name }}</span>
-                <span v-if="it.techs.length > 4" class="p-tech-chip more">+{{ it.techs.length - 4 }}</span>
+              <p v-if="it.org && it.org.toLowerCase() !== it.label.toLowerCase()" class="p-org font-mono text-[11px] text-sig font-medium line-clamp-1 m-0 break-words">
+                {{ isEs ? (it.org || getProjectLocalization(it.key)?.orgDesc) : (getProjectLocalization(it.key)?.orgDesc || it.org) }}
+              </p>
+              <p v-if="it.summary" class="p-summary font-sans text-[13px] text-dim leading-relaxed line-clamp-2 m-0 break-words">
+                {{ isEs ? (it.summary || getProjectLocalization(it.key)?.summary) : (getProjectLocalization(it.key)?.summary || it.summary) }}
+              </p>
+              <div v-if="it.techs && it.techs.length" class="p-techs flex flex-wrap gap-1 mt-auto pt-1">
+                <span v-for="t in it.techs.slice(0, 4)" :key="t.slug" class="p-tech-chip">
+                  {{ t.name }}
+                </span>
+                <span v-if="it.techs.length > 4" class="p-tech-chip more">
+                  +{{ it.techs.length - 4 }}
+                </span>
               </div>
-              <div class="project-cta">
-                <span>{{ tr.collection.openDossier }}</span>
-                <AppIcon name="chevron-right" :size="12" class="cta-arrow" />
+
+              <!-- Footer de Acciones Rápidas en la Tarjeta -->
+              <div class="project-card-footer flex flex-col sm:flex-row sm:items-center justify-between pt-2.5 mt-auto border-t border-rule gap-2 w-full min-w-0">
+                <div class="project-quick-actions flex items-center gap-1.5 flex-wrap min-w-0">
+                  <a
+                    v-if="it.url"
+                    :href="it.url"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="quick-pill font-mono text-[10px] px-2 py-0.5 border border-rule bg-paper text-dim hover:border-sig hover:text-sig flex items-center gap-1 transition-colors rounded-[2px]"
+                    :title="isEs ? 'Visitar sitio en vivo' : 'Visit live site'"
+                    @click.stop
+                  >
+                    <span>{{ tr.collection.liveSite }}</span>
+                    <AppIcon name="external" :size="9" />
+                  </a>
+                  <a
+                    v-if="it.repo"
+                    :href="it.repo"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="quick-pill font-mono text-[10px] px-2 py-0.5 border border-rule bg-paper text-dim hover:border-sig hover:text-sig flex items-center gap-1 transition-colors rounded-[2px]"
+                    :title="isEs ? 'Ver repositorio en GitHub' : 'View GitHub repository'"
+                    @click.stop
+                  >
+                    <span>{{ tr.collection.sourceCode }}</span>
+                    <AppIcon name="code" :size="9" />
+                  </a>
+                </div>
+                <div class="flex items-center justify-end w-full sm:w-auto pt-1 sm:pt-0 shrink-0">
+                  <div class="project-dossier-link inline-flex items-center gap-1 font-mono text-[11px] font-bold text-sig hover:text-sig-hover">
+                    <span>{{ tr.collection.openDossier }}</span>
+                    <AppIcon name="chevron-right" :size="12" class="cta-arrow" />
+                  </div>
+                </div>
               </div>
             </div>
           </NuxtLink>
@@ -795,19 +1045,30 @@ function onCardMousemove(e: MouseEvent) {
           <NuxtLink
             v-else-if="folder.head === 'experience'"
             :to="it.to"
-            class="exp-card"
+            class="exp-card group flex flex-col h-full p-3.5 sm:p-4 border border-rule bg-surface hover:border-sig transition-all duration-150 rounded-[2px] no-underline min-w-0"
             :data-row="it.key"
           >
-            <div class="exp-card-header">
-              <span class="exp-org">{{ it.org ?? it.label }}</span>
-              <span class="exp-period">{{ it.meta }}</span>
+            <div class="exp-card-header flex items-center justify-between gap-2 mb-1.5 font-mono text-[11px] min-w-0">
+              <span class="exp-org text-sig font-bold break-words">{{ it.org ?? it.label }}</span>
+              <span class="exp-period text-dim shrink-0">{{ formatExpPeriod(it) }}</span>
             </div>
-            <h3 class="exp-role">{{ isEs ? (it.role || getExperienceLocalization(it.key)?.role || it.label) : (getExperienceLocalization(it.key)?.role || it.role || it.label) }}</h3>
-            <p v-if="it.summary" class="exp-summary">{{ isEs ? (it.summary || getExperienceLocalization(it.key)?.summary) : (getExperienceLocalization(it.key)?.summary || it.summary) }}</p>
-            <div v-if="it.techs && it.techs.length" class="exp-techs">
-              <span v-for="t in it.techs.slice(0, 3)" :key="t.slug" class="p-tech-chip">{{ t.name }}</span>
+            <div class="flex items-center gap-1.5 mb-2">
+              <span class="font-mono text-[9.5px] font-bold px-1.5 py-0.5 border border-rule bg-paper rounded-[2px]" :class="getExpCategory(it.key).color">
+                {{ getExpCategory(it.key).label }}
+              </span>
             </div>
-            <div class="exp-cta">
+            <h3 class="exp-role text-[15px] font-bold text-ink group-hover:text-sig transition-colors leading-snug m-0 mb-2 line-clamp-2 break-words">
+              {{ isEs ? (it.role || getExperienceLocalization(it.key)?.role || it.label) : (getExperienceLocalization(it.key)?.role || it.role || it.label) }}
+            </h3>
+            <p v-if="it.summary" class="exp-summary text-[13px] text-dim leading-relaxed line-clamp-2 m-0 mb-3 break-words">
+              {{ isEs ? (it.summary || getExperienceLocalization(it.key)?.summary) : (getExperienceLocalization(it.key)?.summary || it.summary) }}
+            </p>
+            <div v-if="it.techs && it.techs.length" class="exp-techs flex flex-wrap gap-1 mt-auto mb-3">
+              <span v-for="t in it.techs.slice(0, 3)" :key="t.slug" class="p-tech-chip">
+                {{ t.name }}
+              </span>
+            </div>
+            <div class="exp-cta flex items-center justify-between pt-2 border-t border-rule font-mono text-[11px] font-bold text-sig group-hover:text-sig-hover">
               <span>{{ tr.collection.technicalDetails }}</span>
               <AppIcon name="chevron-right" :size="12" class="cta-arrow" />
             </div>
@@ -1170,7 +1431,7 @@ function onCardMousemove(e: MouseEvent) {
 }
 
 /* Grilla Clásica de Baldosas: fluida sin límites para llenar el ancho disponible */
-.grid {
+.tiles-fallback-grid {
   list-style: none;
   margin: 0;
   padding: 12px 0 0;
@@ -2279,16 +2540,6 @@ function onCardMousemove(e: MouseEvent) {
   }
 }
 
-/* ─── Variantes de Cuadrícula ──────────────────────────────────────────────── */
-.grid.projects-grid {
-  grid-template-columns: repeat(auto-fill, minmax(clamp(280px, 28vw, 440px), 1fr));
-  gap: 18px;
-}
-.grid.cards-grid {
-  grid-template-columns: repeat(auto-fill, minmax(clamp(230px, 22vw, 340px), 1fr));
-  gap: 14px;
-}
-
 /* ─── Tarjeta de Proyecto Especializada ────────────────────────────────────── */
 .project-card {
   display: flex;
@@ -2367,7 +2618,6 @@ function onCardMousemove(e: MouseEvent) {
   display: flex;
   flex-direction: column;
   flex: 1;
-  padding: 16px 18px 14px;
 }
 .project-title-row {
   display: flex;
@@ -2411,7 +2661,6 @@ function onCardMousemove(e: MouseEvent) {
   flex-wrap: wrap;
   gap: 5px;
   margin-top: auto;
-  margin-bottom: 12px;
 }
 .p-tech-chip {
   padding: 2px 7px;
@@ -2529,6 +2778,61 @@ function onCardMousemove(e: MouseEvent) {
 .exp-card:hover .cta-arrow,
 .exp-card:focus-visible .cta-arrow {
   transform: translateX(3px);
+}
+
+/* ─── Timeline de Experiencia ─────────────────────────────────────────────── */
+.experience-timeline {
+  display: flex;
+  flex-direction: column;
+}
+.timeline-axis {
+  background: linear-gradient(to bottom, var(--d-sig), var(--d-rule) 15%, var(--d-rule) 85%, var(--d-sig));
+}
+.timeline-node {
+  background: var(--d-surface);
+  border: 1px solid var(--d-rule);
+  border-left: 3px solid var(--d-sig);
+  transition: all var(--d-dur) ease;
+}
+.timeline-node:hover {
+  border-color: var(--d-sig);
+  background: var(--d-hover);
+  transform: translateX(3px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+}
+.timeline-pin {
+  box-shadow: 0 0 10px var(--d-sig-glow);
+}
+.tl-cta {
+  transition: all var(--d-dur) ease;
+}
+.timeline-node:hover .tl-cta {
+  color: var(--d-sig-hover);
+}
+.timeline-node:hover .cta-arrow {
+  transform: translateX(4px);
+}
+
+/* ─── Blueprint Fallback de Proyecto ──────────────────────────────────────── */
+.project-blueprint-fallback {
+  aspect-ratio: 16 / 9.5;
+  background: var(--d-surface-raised);
+}
+.quick-pill {
+  transition: all var(--d-dur) ease;
+}
+.quick-pill:hover {
+  border-color: var(--d-sig);
+  color: var(--d-sig);
+  background: var(--d-hover);
+}
+
+/* ─── Barra de Filtros de Proyectos ───────────────────────────────────────── */
+.projects-filter-bar {
+  border-left: 3px solid var(--d-sig);
+}
+.filter-pill {
+  transition: all var(--d-dur) ease;
 }
 
 /* ─── Tarjeta de Stack ─────────────────────────────────────────────────────── */

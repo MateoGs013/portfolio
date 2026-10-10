@@ -215,7 +215,7 @@ export const ProjectForm = {
       
       <!-- PESTAÑA 1: DATOS BÁSICOS -->
       <div v-show="store.activeTab === 'general'" class="space-y-4">
-        <div class="grid grid-cols-2 gap-4">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label class="field-label">Título del Proyecto *</label>
             <input
@@ -260,7 +260,7 @@ export const ProjectForm = {
           <span class="field-hint">Organización en la que se desarrolló este proyecto.</span>
         </div>
 
-        <div class="grid grid-cols-3 gap-4">
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div>
             <label class="field-label">Año de Realización</label>
             <input
@@ -293,7 +293,7 @@ export const ProjectForm = {
           </div>
         </div>
 
-        <div class="grid grid-cols-2 gap-4">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label class="field-label">Fecha de Publicación</label>
             <input
@@ -385,7 +385,7 @@ export const ProjectForm = {
           </div>
 
           <!-- Cuadrícula de Imágenes -->
-          <div class="grid grid-cols-2 gap-3">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div
               v-for="m in (store.form.media || [])"
               :key="m.id"
@@ -397,7 +397,7 @@ export const ProjectForm = {
                 class="w-20 h-16 object-cover rounded bg-black shrink-0 cursor-pointer border border-white/10 hover:border-[#ff3e00]"
                 @click="store.modals.lightbox = m.src"
               />
-              <div class="flex-1 truncate space-y-1.5">
+              <div class="flex-1 truncate space-y-1.5 min-w-0">
                 <div class="text-xs font-medium text-white truncate font-mono-code">{{ (m.src || '').split('/').pop() }}</div>
                 <div class="flex items-center gap-2">
                   <select
@@ -447,28 +447,30 @@ export const ProjectForm = {
             </button>
           </div>
 
-          <div v-for="(m, mIdx) in store.metricsList" :key="mIdx" class="flex items-center gap-2">
-            <input
-              type="text"
-              v-model="m.key"
-              @input="store.syncMetricsToJson()"
-              placeholder="Nombre (ej: Lighthouse)"
-              class="text-input !h-[30px] w-48 font-mono-code"
-            />
-            <input
-              type="text"
-              v-model="m.value"
-              @input="store.syncMetricsToJson()"
-              placeholder="Valor (ej: 99/100)"
-              class="text-input !h-[30px] flex-1 font-mono-code"
-            />
-            <button
-              type="button"
-              @click="removeMetricVisual(mIdx)"
-              class="text-zinc-500 hover:text-red-400 px-2 py-1 text-xs cursor-pointer"
-            >
-              ✕
-            </button>
+          <div v-for="(m, mIdx) in store.metricsList" :key="mIdx" class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+            <div class="flex items-center gap-2 flex-1">
+              <input
+                type="text"
+                v-model="m.key"
+                @input="store.syncMetricsToJson()"
+                placeholder="Nombre (ej: Lighthouse)"
+                class="text-input !h-[30px] w-full sm:w-48 font-mono-code"
+              />
+              <input
+                type="text"
+                v-model="m.value"
+                @input="store.syncMetricsToJson()"
+                placeholder="Valor (ej: 99/100)"
+                class="text-input !h-[30px] flex-1 font-mono-code"
+              />
+              <button
+                type="button"
+                @click="removeMetricVisual(mIdx)"
+                class="text-zinc-500 hover:text-red-400 px-2 py-1 text-xs cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
           </div>
 
           <button
@@ -522,7 +524,7 @@ export const ProjectForm = {
           </div>
         </div>
 
-        <div class="grid grid-cols-2 gap-4 pt-2">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
           <div>
             <label class="field-label">URL Pública / Demo Online</label>
             <input
@@ -564,28 +566,30 @@ export const ProjectForm = {
             <h4 class="text-xs font-bold text-white uppercase font-mono-code">Enlaces Secundarios</h4>
             <button type="button" @click="addSubRow('links')" class="text-xs text-[#ff3e00] hover:underline font-medium cursor-pointer">+ Agregar Enlace</button>
           </div>
-          <div v-for="(lnk, idx) in (store.form.links || [])" :key="idx" class="flex items-center gap-2">
-            <input
-              type="text"
-              v-model="lnk.label"
-              @input="store.checkDirty()"
-              placeholder="Etiqueta (ej: Documentación)"
-              class="text-input !h-[30px] w-48 font-mono-code"
-            />
-            <input
-              type="url"
-              v-model="lnk.url"
-              @input="store.checkDirty()"
-              placeholder="https://..."
-              class="text-input !h-[30px] flex-1 font-mono-code"
-            />
-            <button
-              type="button"
-              @click="removeSubRow('links', idx)"
-              class="text-zinc-500 hover:text-red-400 px-2 py-1 text-xs cursor-pointer"
-            >
-              ✕
-            </button>
+          <div v-for="(lnk, idx) in (store.form.links || [])" :key="idx" class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+            <div class="flex items-center gap-2 flex-1">
+              <input
+                type="text"
+                v-model="lnk.label"
+                @input="store.checkDirty()"
+                placeholder="Etiqueta (ej: Documentación)"
+                class="text-input !h-[30px] w-full sm:w-48 font-mono-code"
+              />
+              <input
+                type="url"
+                v-model="lnk.url"
+                @input="store.checkDirty()"
+                placeholder="https://..."
+                class="text-input !h-[30px] flex-1 font-mono-code"
+              />
+              <button
+                type="button"
+                @click="removeSubRow('links', idx)"
+                class="text-zinc-500 hover:text-red-400 px-2 py-1 text-xs cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
           </div>
         </div>
 

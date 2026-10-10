@@ -30,7 +30,7 @@ export const OrgsForm = {
   },
   template: `
     <div class="max-w-2xl space-y-5">
-      <div class="grid grid-cols-2 gap-4">
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
           <label class="field-label">Nombre de la Organización *</label>
           <input
@@ -62,7 +62,7 @@ export const OrgsForm = {
         </div>
       </div>
 
-      <div class="grid grid-cols-2 gap-4">
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
           <label class="field-label">Sitio Web Corporativo</label>
           <input

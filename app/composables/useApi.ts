@@ -33,7 +33,7 @@ export const listEndpoint: Record<CollectionKey, string | null> = {
 
 /** Filtros que acepta cada lista. Es el contrato de URL: la query pública mapea uno a uno. */
 export const listFilters: Record<CollectionKey, readonly string[]> = {
-  projects: ['stack', 'year', 'role', 'featured'],
+  projects: ['stack', 'year', 'role', 'featured', 'status'],
   experience: ['stack', 'org'],
   stack: ['category'],
   orgs: [],

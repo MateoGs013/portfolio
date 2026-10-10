@@ -12,6 +12,7 @@ export const AdmJobHunter = {
     const hunterPitch = ref(null)
     const currentTailoredCV = ref(null)
     const activePitchTab = ref('elevator') // 'elevator' | 'cover' | 'subject'
+    const hunterMobileView = ref(store.hunter.selected ? 'detail' : 'list')
 
     const filteredJobs = computed(() => {
       const q = store.searchQuery.trim().toLowerCase()
@@ -78,6 +79,7 @@ export const AdmJobHunter = {
 
     function selectJob(j) {
       store.hunter.selected = j
+      hunterMobileView.value = 'detail'
       hunterPitch.value = null
       currentTailoredCV.value = null
       activePitchTab.value = 'elevator'
@@ -321,12 +323,16 @@ export const AdmJobHunter = {
       getVerdictClass,
       scanJobs,
       purgeJobs,
+      hunterMobileView,
     }
   },
   template: `
     <div class="flex-1 flex overflow-hidden bg-[#08090a]">
       <!-- Lista Lateral de Vacantes (340px) -->
-      <div class="w-84 bg-[#101114] border-r border-white/10 flex flex-col shrink-0 overflow-hidden select-none">
+      <div
+        class="bg-[#101114] border-r border-white/10 flex-col shrink-0 overflow-hidden select-none"
+        :class="hunterMobileView === 'list' ? 'flex w-full md:w-84' : 'hidden md:flex md:w-84'"
+      >
         <div class="p-3 border-b border-white/10 space-y-2.5 bg-[#0c0d10]">
           <div class="flex items-center justify-between">
             <div class="flex items-center gap-2">
@@ -455,14 +461,26 @@ export const AdmJobHunter = {
       </div>
 
       <!-- Detalle de la Vacante & Herramientas de IA -->
-      <div class="flex-1 flex flex-col overflow-hidden bg-[#08090a]">
+      <div
+        class="flex-1 flex-col overflow-hidden bg-[#08090a]"
+        :class="hunterMobileView === 'detail' ? 'flex w-full' : 'hidden md:flex'"
+      >
         <div v-if="store.hunter.selected" class="h-full flex flex-col overflow-hidden">
           
           <!-- Cabecera de Vacante -->
-          <div class="p-5 border-b border-white/10 bg-[#0c0d10] flex items-center justify-between shrink-0 select-none">
-            <div class="min-w-0 pr-4">
-              <div class="flex items-center gap-2.5 flex-wrap">
-                <h2 class="text-base font-bold text-white tracking-tight truncate">{{ store.hunter.selected.title }}</h2>
+          <div class="p-4 sm:p-5 border-b border-white/10 bg-[#0c0d10] flex items-center justify-between shrink-0 select-none flex-wrap sm:flex-nowrap gap-3">
+            <div class="min-w-0 pr-2 sm:pr-4 flex-1">
+              <div class="flex items-center gap-2 sm:gap-2.5 flex-wrap">
+                <button
+                  type="button"
+                  @click="hunterMobileView = 'list'"
+                  class="md:hidden flex items-center gap-1 px-2.5 py-1 text-xs font-mono-code text-zinc-300 hover:text-white bg-white/5 hover:bg-white/10 rounded border border-white/10 shrink-0 cursor-pointer"
+                  title="Volver a la lista de vacantes"
+                >
+                  <span>←</span>
+                  <span>Vacantes</span>
+                </button>
+                <h2 class="text-sm sm:text-base font-bold text-white tracking-tight truncate">{{ store.hunter.selected.title }}</h2>
                 <span 
                   class="text-xs font-mono-code font-bold px-2 py-0.5 rounded border"
                   :class="(store.hunter.selected.match_score || 0) >= 70 ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20' : 'text-amber-400 bg-amber-500/10 border-amber-500/20'"

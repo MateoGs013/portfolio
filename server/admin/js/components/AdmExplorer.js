@@ -40,6 +40,7 @@ export const AdmExplorer = {
     }
 
     async function onSelect(r) {
+      store.mobileView = 'detail'
       if (isSelected(r)) return
       if (store.isDirty) {
         const proceed = await store.checkDirtyDiscard(() => store.selectRecord(r))
@@ -50,6 +51,7 @@ export const AdmExplorer = {
     }
 
     async function onCreate() {
+      store.mobileView = 'detail'
       if (store.isNew) return
       if (store.isDirty) {
         const proceed = await store.checkDirtyDiscard(() => store.createRecord())
@@ -69,7 +71,7 @@ export const AdmExplorer = {
     }
   },
   template: `
-    <div class="w-80 bg-[#101114] border-r border-white/10 flex flex-col shrink-0 overflow-hidden select-none">
+    <div class="w-full md:w-80 bg-[#101114] border-r border-white/10 flex flex-col shrink-0 overflow-hidden select-none">
       <!-- Cabecera de Explorador -->
       <div class="p-3 border-b border-white/10 space-y-2.5 bg-[#0c0d10]">
         <div class="flex items-center justify-between">

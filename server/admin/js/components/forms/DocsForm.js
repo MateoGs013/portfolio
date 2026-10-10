@@ -32,7 +32,7 @@ export const DocsForm = {
   },
   template: `
     <div class="max-w-2xl space-y-5">
-      <div class="grid grid-cols-2 gap-4">
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
           <label class="field-label">Clave del Documento (Identificador) *</label>
           <input
@@ -78,7 +78,7 @@ export const DocsForm = {
           :key="idx"
           class="p-3.5 bg-[#0d0e12] border border-white/10 rounded space-y-2"
         >
-          <div class="flex items-center gap-2">
+          <div class="flex flex-wrap items-center gap-2">
             <input
               type="text"
               v-model="b.name"

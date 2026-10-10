@@ -13,7 +13,7 @@ export const AdmSidebar = {
     }
   },
   template: `
-    <aside class="w-60 bg-[#0c0d10] border-r border-white/10 flex flex-col shrink-0 select-none">
+    <aside class="hidden md:flex w-60 bg-[#0c0d10] border-r border-white/10 flex-col shrink-0 select-none">
       <div class="p-3 space-y-6 flex-1 overflow-y-auto">
         <!-- GRUPO 1: VISTA GENERAL -->
         <div class="space-y-1">

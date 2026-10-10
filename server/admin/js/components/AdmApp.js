@@ -9,6 +9,7 @@ import { AdmExplorer } from './AdmExplorer.js'
 import { AdmEditor } from './AdmEditor.js'
 import { AdmDashboard } from './AdmDashboard.js'
 import { AdmJobHunter } from './AdmJobHunter.js'
+import { AdmBottomNav } from './ui/AdmBottomNav.js'
 import { CommandPalette } from './modals/CommandPalette.js'
 import { ConfirmModal } from './modals/ConfirmModal.js'
 import { HelpModal } from './modals/HelpModal.js'
@@ -25,6 +26,7 @@ export const AdmApp = {
     AdmEditor,
     AdmDashboard,
     AdmJobHunter,
+    AdmBottomNav,
     CommandPalette,
     ConfirmModal,
     HelpModal,
@@ -52,24 +54,27 @@ export const AdmApp = {
 
         <!-- 2. Cuerpo Principal con Navegación y Lienzo -->
         <div class="flex-1 flex overflow-hidden">
-          <!-- Sidebar Fijo (240px) -->
+          <!-- Sidebar Fijo (240px) en Desktop -->
           <AdmSidebar />
 
-          <!-- Lienzo Principal Dinámico -->
-          <main class="flex-1 flex overflow-hidden bg-[#08090a]">
-            <!-- A. Modo Dashboard: Contenedor fluido completo (240px 1fr) -->
+          <!-- Lienzo Principal Dinámico con padding inferior en móvil para bottom nav -->
+          <main class="flex-1 flex overflow-hidden bg-[#08090a] pb-[62px] md:pb-0">
+            <!-- A. Modo Dashboard: Contenedor fluido completo -->
             <AdmDashboard v-if="store.section === 'dashboard'" />
 
             <!-- B. Modo Job Hunter: Consola IA dedicada -->
             <AdmJobHunter v-else-if="store.section === 'hunter'" />
 
-            <!-- C. Modo Colecciones: Rejilla Explorador (320px) + Editor Flex (1fr) -->
+            <!-- C. Modo Colecciones: Rejilla Explorador (320px) + Editor Flex (1fr) con Master-Detail en móvil -->
             <div v-else class="flex-1 flex overflow-hidden">
-              <AdmExplorer />
-              <AdmEditor />
+              <AdmExplorer :class="store.mobileView === 'list' ? 'flex' : 'hidden md:flex'" />
+              <AdmEditor :class="store.mobileView === 'detail' ? 'flex' : 'hidden md:flex'" />
             </div>
           </main>
         </div>
+
+        <!-- 3. Barra de Navegación Inferior Móvil (Redes Sociales Style) -->
+        <AdmBottomNav />
       </div>
 
       <!-- ════════════════════════════════════════════════════════════════════ -->

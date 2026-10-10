@@ -41,7 +41,7 @@ export const StackForm = {
   },
   template: `
     <div class="max-w-2xl space-y-5">
-      <div class="grid grid-cols-2 gap-4">
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
           <label class="field-label">Nombre de la Tecnología *</label>
           <input
@@ -73,7 +73,7 @@ export const StackForm = {
         </div>
       </div>
 
-      <div class="grid grid-cols-2 gap-4">
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
           <label class="field-label">Categoría Técnica</label>
           <select

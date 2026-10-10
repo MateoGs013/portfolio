@@ -34,32 +34,51 @@ function formatBytes(bytes?: number | null): string {
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
 }
+
+function formatMetricKey(key: string | number): string {
+  const k = String(key)
+  const map: Record<string, string> = {
+    performanceScore: 'PERFORMANCE',
+    accessibilityScore: 'ACCESSIBILITY',
+    bestPracticesScore: 'BEST PRACTICES',
+    seoScore: 'SEO',
+    lcp: 'LCP',
+    bundleSizeKb: 'BUNDLE SIZE',
+    localeCount: 'LOCALES',
+  }
+  if (map[k]) return map[k]
+  return k
+    .replace(/([A-Z])/g, ' $1')
+    .replace(/[_-]/g, ' ')
+    .trim()
+    .toUpperCase()
+}
 </script>
 
 <template>
   <!-- 1. Piezas Multimedia / Capturas Técnicas con Lightbox -->
   <div v-if="cell.media && cell.media.length" class="media-inspector w-full mt-1">
-    <div class="media-grid grid grid-cols-[repeat(auto-fill,minmax(clamp(240px,20vw,360px),1fr))] gap-4 w-full">
+    <div class="media-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5 sm:gap-4 w-full">
       <figure
         v-for="m in cell.media"
         :key="m.id"
-        class="media-card group m-0 border border-rule bg-surface cursor-pointer transition-[border-color,transform] duration-150 hover:border-sig hover:-translate-y-0.5 focus-visible:border-sig focus-visible:-translate-y-0.5 focus-visible:outline-none"
+        class="media-card group m-0 border border-rule bg-surface cursor-pointer transition-[border-color,transform] duration-150 hover:border-sig hover:-translate-y-0.5 focus-visible:border-sig focus-visible:-translate-y-0.5 focus-visible:outline-none rounded-[2px] overflow-hidden"
         tabindex="0"
         role="button"
         :aria-label="isEs ? `Inspeccionar captura: ${m.alt}` : `Inspect screenshot: ${m.alt}`"
         @click="activeMedia = m"
         @keydown.enter="activeMedia = m"
       >
-        <div class="media-thumb-wrap relative aspect-[16/10] overflow-hidden bg-black">
+        <div class="media-thumb-wrap relative aspect-[16/10] overflow-hidden bg-black w-full">
           <img :src="m.src" :alt="m.alt" class="media-thumb w-full h-full object-cover block" loading="lazy">
           <div class="media-overlay absolute inset-0 bg-black/45 flex items-center justify-center opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100 transition-opacity duration-150">
             <span class="zoom-icon font-mono text-[11px] font-bold text-white px-2.5 py-1 bg-black/75 border border-sig">⊕ {{ isEs ? 'EXPANDIR' : 'EXPAND' }}</span>
           </div>
         </div>
         <figcaption class="media-meta p-2 px-2.5 flex items-center justify-between gap-1.5 font-mono text-[11px] border-t border-rule text-dim">
-          <span class="m-role text-sig font-bold">{{ m.role }}</span>
-          <span class="m-dim text-ink">{{ m.width }}×{{ m.height }}</span>
-          <span v-if="m.bytes" class="m-bytes">{{ formatBytes(m.bytes) }}</span>
+          <span class="m-role text-sig font-bold truncate">{{ m.role }}</span>
+          <span class="m-dim text-ink truncate">{{ m.width }}×{{ m.height }}</span>
+          <span v-if="m.bytes" class="m-bytes truncate">{{ formatBytes(m.bytes) }}</span>
         </figcaption>
       </figure>
     </div>
@@ -68,20 +87,20 @@ function formatBytes(bytes?: number | null): string {
     <Teleport to="body">
       <div
         v-if="activeMedia"
-        class="lightbox-backdrop fixed inset-0 z-[1000] bg-black/90 backdrop-blur-sm flex items-center justify-center p-6"
+        class="lightbox-backdrop fixed inset-0 z-[1000] bg-black/90 backdrop-blur-sm flex items-center justify-center p-3 sm:p-6"
         role="dialog"
         aria-modal="true"
         @click.self="activeMedia = null"
         @keydown.esc="activeMedia = null"
       >
-        <div class="lightbox-chassis w-full max-w-[min(96vw,1600px)] max-h-[92vh] bg-paper border border-rule-strong shadow-[0_20px_50px_rgba(0,0,0,0.6)] flex flex-col overflow-hidden">
-          <header class="lightbox-header h-11 px-4 flex items-center justify-between border-b border-rule bg-surface">
-            <div class="lh-left flex items-center gap-2.5 min-w-0">
-              <span class="lh-badge font-mono text-[10px] font-extrabold text-sig border border-sig px-1.5 py-0.5">{{ activeMedia.role }}</span>
-              <span class="lh-name font-sans text-[13px] text-ink whitespace-nowrap overflow-hidden text-ellipsis">{{ activeMedia.alt }}</span>
+        <div class="lightbox-chassis w-full max-w-[min(96vw,1600px)] max-h-[92vh] bg-paper border border-rule-strong shadow-[0_20px_50px_rgba(0,0,0,0.6)] flex flex-col overflow-hidden rounded-[2px]">
+          <header class="lightbox-header h-11 px-3 sm:px-4 flex items-center justify-between border-b border-rule bg-surface gap-2">
+            <div class="lh-left flex items-center gap-2 min-w-0 flex-1">
+              <span class="lh-badge font-mono text-[10px] font-extrabold text-sig border border-sig px-1.5 py-0.5 shrink-0">{{ activeMedia.role }}</span>
+              <span class="lh-name font-sans text-[13px] text-ink truncate">{{ activeMedia.alt }}</span>
             </div>
-            <div class="lh-right flex items-center gap-4">
-              <span class="lh-meta font-mono text-[11px] text-dim">{{ activeMedia.width }} × {{ activeMedia.height }} PX · {{ formatBytes(activeMedia.bytes) }}</span>
+            <div class="lh-right flex items-center gap-2 sm:gap-4 shrink-0">
+              <span class="lh-meta font-mono text-[11px] text-dim hidden sm:inline">{{ activeMedia.width }} × {{ activeMedia.height }} PX · {{ formatBytes(activeMedia.bytes) }}</span>
               <button
                 type="button"
                 class="lightbox-close bg-transparent border border-rule text-ink px-2.5 py-1 font-mono text-[11px] cursor-pointer hover:border-sig hover:text-sig flex items-center gap-1.5"
@@ -94,7 +113,7 @@ function formatBytes(bytes?: number | null): string {
             </div>
           </header>
 
-          <div class="lightbox-body flex-1 min-h-0 overflow-auto flex items-center justify-center bg-black">
+          <div class="lightbox-body flex-1 min-h-0 overflow-auto flex items-center justify-center bg-black p-1 sm:p-3">
             <img :src="activeMedia.src" :alt="activeMedia.alt" class="lightbox-img max-w-full max-h-[80vh] object-contain">
           </div>
         </div>
@@ -103,31 +122,37 @@ function formatBytes(bytes?: number | null): string {
   </div>
 
   <!-- 2. Pasos de Proceso de Ingeniería (Stepper Articulado) -->
-  <div v-else-if="cell.steps && cell.steps.length" class="process-stepper grid grid-cols-[repeat(auto-fit,minmax(clamp(250px,24vw,380px),1fr))] gap-3.5 w-full mt-1.5">
-    <div v-for="s in cell.steps" :key="s.order" class="step-card p-3 px-3.5 bg-surface border border-rule border-l-[3px] border-l-sig">
+  <div v-else-if="cell.steps && cell.steps.length" class="process-stepper grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5 w-full mt-1.5">
+    <div v-for="s in cell.steps" :key="s.order" class="step-card p-3 sm:p-3.5 bg-surface border border-rule border-l-[3px] border-l-sig rounded-[2px]">
       <div class="step-header flex items-center gap-2 mb-1.5">
         <span class="step-pip font-mono text-[11px] font-extrabold text-sig">0{{ s.order }}</span>
-        <span class="step-title font-mono text-[12px] font-bold text-ink uppercase">{{ s.title }}</span>
+        <span class="step-title font-mono text-[12px] font-bold text-ink uppercase truncate">{{ s.title }}</span>
       </div>
-      <p class="step-body m-0 font-sans text-[13.5px] leading-snug text-dim">{{ s.body }}</p>
+      <p class="step-body m-0 font-sans text-[13px] sm:text-[13.5px] leading-relaxed text-dim break-words">{{ s.body }}</p>
     </div>
   </div>
 
   <!-- 3. Panel de Métricas Técnicas (Lighthouse, Latencia, Bundle) -->
   <div v-else-if="cell.metrics && Object.keys(cell.metrics).length" class="metrics-panel w-full mt-1">
-    <div class="metrics-grid flex flex-wrap gap-2">
-      <div v-for="(val, k) in cell.metrics" :key="k" class="metric-pill flex flex-col gap-0.5 px-3 py-1.5 bg-surface border border-rule min-w-[110px]">
-        <span class="m-label font-mono text-[10px] text-dim uppercase">{{ k }}</span>
-        <span class="m-value font-mono text-[13px] font-bold text-green">
-          <template v-if="typeof val === 'object' && val !== null">
-            <span v-for="(subVal, subKey) in val" :key="subKey" class="sub-metric block text-[11px] text-ink">
-              {{ subKey }}: {{ subVal }}
-            </span>
-          </template>
-          <template v-else>
-            {{ val }}
-          </template>
-        </span>
+    <div class="metrics-grid grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-2 w-full">
+      <div v-for="(val, k) in cell.metrics" :key="k" class="metric-pill flex flex-col justify-between gap-1 p-2 sm:px-2.5 sm:py-2 bg-surface border border-rule rounded-[2px] min-w-0">
+        <span class="m-label font-mono text-[9px] sm:text-[9.5px] text-dim font-bold tracking-wider uppercase truncate" :title="formatMetricKey(k)">{{ formatMetricKey(k) }}</span>
+        <div class="flex items-baseline gap-1 min-w-0">
+          <span
+            class="m-value font-mono text-[13px] sm:text-[14px] font-bold truncate"
+            :class="typeof val === 'number' && val >= 90 ? 'text-green' : 'text-ink'"
+          >
+            <template v-if="typeof val === 'object' && val !== null">
+              <span v-for="(subVal, subKey) in val" :key="subKey" class="sub-metric block text-[10.5px] text-ink truncate">
+                {{ subKey }}: {{ subVal }}
+              </span>
+            </template>
+            <template v-else>
+              {{ val }}
+            </template>
+          </span>
+          <span v-if="String(k).toLowerCase().includes('score') && typeof val === 'number'" class="font-mono text-[9px] text-faint shrink-0">/100</span>
+        </div>
       </div>
     </div>
   </div>

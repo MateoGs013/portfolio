@@ -74,6 +74,7 @@ export interface LocaleContent {
   collection: {
     grid: string
     table: string
+    timeline: string
     openDossier: string
     technicalDetails: string
     filterRecords: string
@@ -82,6 +83,15 @@ export interface LocaleContent {
     tableSlug: string
     tableMeta: string
     removeFilter: string
+    filterAll: string
+    filterLive: string
+    filterWip: string
+    filterClient: string
+    filterThesis: string
+    filterEdu: string
+    liveSite: string
+    sourceCode: string
+    viewDossier: string
   }
   detail: {
     dossierTab: string
@@ -101,6 +111,17 @@ export interface LocaleContent {
     copyPhone: string
     sendEmail: string
     directMessage: string
+    executiveOverview: string
+    briefSection: string
+    outcomeSection: string
+    telemetrySection: string
+    gallerySection: string
+    workshopSection: string
+    stackSection: string
+    specsSection: string
+    impactSection: string
+    storySection: string
+    relatedProjects: string
     fieldLabels: Record<string, string>
   }
   goto: {
@@ -202,6 +223,7 @@ export const translations: Record<'es' | 'en', LocaleContent> = {
     collection: {
       grid: 'GRILLA',
       table: 'TABLA',
+      timeline: 'CRONOLOGÍA',
       openDossier: 'ABRIR DOSSIER TÉCNICO',
       technicalDetails: 'DETALLES TÉCNICOS',
       filterRecords: 'FILTRAR REGISTROS',
@@ -210,10 +232,19 @@ export const translations: Record<'es' | 'en', LocaleContent> = {
       tableSlug: 'SLUG',
       tableMeta: 'METADATO',
       removeFilter: 'quitar el filtro',
+      filterAll: 'TODOS',
+      filterLive: 'EN PRODUCCIÓN',
+      filterWip: 'EN DESARROLLO',
+      filterClient: 'CLIENTES',
+      filterThesis: 'TESIS',
+      filterEdu: 'FORMACIÓN',
+      liveSite: 'SITIO EN VIVO',
+      sourceCode: 'CÓDIGO FUENTE',
+      viewDossier: 'VER DOSSIER',
     },
     detail: {
-      dossierTab: 'FICHA TÉCNICA',
-      fieldsTab: 'CAMPOS CRUDOS',
+      dossierTab: 'DOSSIER EDITORIAL',
+      fieldsTab: 'ESQUEMA CAMPOS',
       jsonTab: 'JSON CRUDO',
       copyJson: 'COPIAR JSON',
       copied: 'COPIADO',
@@ -229,6 +260,17 @@ export const translations: Record<'es' | 'en', LocaleContent> = {
       copyPhone: 'COPIAR TELÉFONO',
       sendEmail: 'ENVIAR MENSAJE',
       directMessage: 'MENSAJE DIRECTO',
+      executiveOverview: 'SÍNTESIS EJECUTIVA',
+      briefSection: '01 // EL ENCARGO / BRIEF',
+      outcomeSection: '02 // RESULTADO EN PRODUCCIÓN',
+      telemetrySection: 'TELEMETRÍA & RENDIMIENTO',
+      gallerySection: 'CAPTURAS TÉCNICAS',
+      workshopSection: 'PROCESO DE INGENIERÍA (TALLER)',
+      stackSection: 'ARSENAL TECNOLÓGICO',
+      specsSection: 'ESPECIFICACIONES DEL SISTEMA',
+      impactSection: 'PUNTOS CLAVE DE IMPACTO',
+      storySection: 'RELATO DE APRENDIZAJES E IMPACTO',
+      relatedProjects: 'PROYECTO DESARROLLADO EN ESTA ETAPA',
       fieldLabels: {
         summary: 'síntesis ejecutiva',
         media: 'capturas & piezas multimedia',
@@ -357,6 +399,7 @@ export const translations: Record<'es' | 'en', LocaleContent> = {
     collection: {
       grid: 'GRID',
       table: 'TABLE',
+      timeline: 'TIMELINE',
       openDossier: 'OPEN TECHNICAL DOSSIER',
       technicalDetails: 'TECHNICAL DETAILS',
       filterRecords: 'FILTER RECORDS',
@@ -365,10 +408,19 @@ export const translations: Record<'es' | 'en', LocaleContent> = {
       tableSlug: 'SLUG',
       tableMeta: 'METADATA',
       removeFilter: 'remove filter',
+      filterAll: 'ALL',
+      filterLive: 'LIVE PRODUCTION',
+      filterWip: 'IN DEVELOPMENT',
+      filterClient: 'CLIENTS',
+      filterThesis: 'THESIS',
+      filterEdu: 'EDUCATION',
+      liveSite: 'LIVE SITE',
+      sourceCode: 'SOURCE CODE',
+      viewDossier: 'VIEW DOSSIER',
     },
     detail: {
-      dossierTab: 'TECHNICAL DOSSIER',
-      fieldsTab: 'RAW FIELDS',
+      dossierTab: 'EDITORIAL DOSSIER',
+      fieldsTab: 'SCHEMA FIELDS',
       jsonTab: 'RAW JSON',
       copyJson: 'COPY JSON',
       copied: 'COPIED',
@@ -384,6 +436,17 @@ export const translations: Record<'es' | 'en', LocaleContent> = {
       copyPhone: 'COPY PHONE',
       sendEmail: 'SEND MESSAGE',
       directMessage: 'DIRECT MESSAGE',
+      executiveOverview: 'EXECUTIVE OVERVIEW',
+      briefSection: '01 // THE BRIEF / CHALLENGE',
+      outcomeSection: '02 // PRODUCTION OUTCOME',
+      telemetrySection: 'TELEMETRY & PERFORMANCE',
+      gallerySection: 'TECHNICAL SCREENSHOTS',
+      workshopSection: 'ENGINEERING PROCESS (WORKSHOP)',
+      stackSection: 'TECH ARSENAL',
+      specsSection: 'SYSTEM SPECIFICATIONS',
+      impactSection: 'IMPACT HIGHLIGHTS',
+      storySection: 'LEARNINGS & IMPACT STORY',
+      relatedProjects: 'PROJECT DEVELOPED DURING THIS MILESTONE',
       fieldLabels: {
         summary: 'executive summary',
         media: 'screenshots & media assets',
@@ -552,6 +615,26 @@ export const experienceTranslations: Record<string, { role: { es: string, en: st
     summary: {
       es: '382 commits liderando la arquitectura técnica y el frontend del asistente de IA adaptativo.',
       en: '382 commits leading technical architecture and frontend for the adaptive AI assistant.',
+    },
+  },
+  'escuela-da-vinci': {
+    role: {
+      es: 'Estudiante · Diseño y Desarrollo Web',
+      en: 'Student · Web Design & Development (Associate Degree)',
+    },
+    summary: {
+      es: 'Carrera en curso, promoción 2026. UI/UX, dirección visual, front moderno, backend, bases de datos y tesis sobresaliente.',
+      en: 'Higher education program, graduating 2026. UI/UX, visual direction, modern frontend, backend architectures, databases and honors degree thesis.',
+    },
+  },
+  'cet-30': {
+    role: {
+      es: 'Técnico en Programación (7 Años)',
+      en: 'Computer Programming Technician (7-Year Program)',
+    },
+    summary: {
+      es: 'Programación en el CET N.º 30, Río Negro. Formación exhaustiva en lógica algorítmica, estructuras de datos, redes y arquitectura de sistemas.',
+      en: 'Comprehensive 7-year technical education in algorithmic logic, data structures, computer networks, and low-level system architectures.',
     },
   },
 }

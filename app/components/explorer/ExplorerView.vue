@@ -282,11 +282,11 @@ const currentRoot = computed(() => path.value[0] ?? '')
   <div class="datos flex flex-col h-dvh text-ink font-sans text-[13px] leading-normal tabular-nums bg-paper">
     <div class="ventana flex-1 min-h-0 w-full flex flex-col bg-paper [background-image:radial-gradient(var(--d-grid-cross)_1.2px,transparent_1.2px)] [background-size:32px_32px]">
       <!-- Barra Superior de Herramientas -->
-      <header class="barra flex-none flex items-center gap-3 min-h-[52px] px-3.5 border-b border-rule bg-surface">
+      <header class="barra flex-none flex items-center justify-between gap-1.5 sm:gap-3 min-h-[46px] sm:min-h-[52px] px-2 sm:px-3.5 border-b border-rule bg-surface w-full max-w-full overflow-hidden">
         <nav class="historia flex gap-1" aria-label="Historial">
           <button
             type="button"
-            class="nav-btn inline-flex items-center justify-center w-[30px] h-[30px] border border-rule bg-paper text-ink text-sm no-underline cursor-pointer transition-colors duration-150 hover:border-sig hover:bg-hover hover:text-sig"
+            class="nav-btn inline-flex items-center justify-center w-7 h-7 sm:w-[30px] sm:h-[30px] border border-rule bg-paper text-ink text-sm no-underline cursor-pointer transition-colors duration-150 hover:border-sig hover:bg-hover hover:text-sig"
             aria-label="atrás"
             @click="router.back()"
           >
@@ -294,7 +294,7 @@ const currentRoot = computed(() => path.value[0] ?? '')
           </button>
           <button
             type="button"
-            class="nav-btn inline-flex items-center justify-center w-[30px] h-[30px] border border-rule bg-paper text-ink text-sm no-underline cursor-pointer transition-colors duration-150 hover:border-sig hover:bg-hover hover:text-sig"
+            class="nav-btn hidden sm:inline-flex items-center justify-center w-7 h-7 sm:w-[30px] sm:h-[30px] border border-rule bg-paper text-ink text-sm no-underline cursor-pointer transition-colors duration-150 hover:border-sig hover:bg-hover hover:text-sig"
             aria-label="adelante"
             @click="router.forward()"
           >
@@ -303,14 +303,14 @@ const currentRoot = computed(() => path.value[0] ?? '')
           <NuxtLink
             v-if="ex?.up"
             :to="ex.up"
-            class="nav-btn inline-flex items-center justify-center w-[30px] h-[30px] border border-rule bg-paper text-ink text-sm no-underline cursor-pointer transition-colors duration-150 hover:border-sig hover:bg-hover hover:text-sig"
+            class="nav-btn inline-flex items-center justify-center w-7 h-7 sm:w-[30px] sm:h-[30px] border border-rule bg-paper text-ink text-sm no-underline cursor-pointer transition-colors duration-150 hover:border-sig hover:bg-hover hover:text-sig"
             aria-label="subir un nivel"
           >
             <AppIcon name="arrow-up" :size="13" />
           </NuxtLink>
           <span
             v-else
-            class="nav-btn off inline-flex items-center justify-center w-[30px] h-[30px] border border-rule bg-paper text-faint opacity-40 cursor-default"
+            class="nav-btn off inline-flex items-center justify-center w-7 h-7 sm:w-[30px] sm:h-[30px] border border-rule bg-paper text-faint opacity-40 cursor-default"
             aria-hidden="true"
           >
             <AppIcon name="arrow-up" :size="13" />
@@ -318,9 +318,9 @@ const currentRoot = computed(() => path.value[0] ?? '')
         </nav>
 
         <!-- Ruta / Breadcrumb -->
-        <nav class="ruta flex-1 flex items-center min-w-0 h-[30px] px-2.5 border border-rule bg-paper whitespace-nowrap overflow-hidden text-[12.5px] font-mono" aria-label="Ruta">
+        <nav class="ruta flex-1 flex items-center min-w-0 h-7 sm:h-[30px] px-2 sm:px-2.5 border border-rule bg-paper whitespace-nowrap overflow-hidden text-[11px] sm:text-[12.5px] font-mono truncate" aria-label="Ruta">
           <template v-for="(seg, i) in segments" :key="seg.label + i">
-            <span v-if="i" class="sep text-faint px-2" aria-hidden="true">/</span>
+            <span v-if="i" class="sep text-faint px-1.5 sm:px-2" aria-hidden="true">/</span>
             <NuxtLink v-if="i < segments.length - 1" :to="seg.to" class="text-sig hover:underline hover:text-sig-hover py-1.5">{{ seg.label }}</NuxtLink>
             <span v-else class="here text-ink font-bold" aria-current="page">{{ seg.label }}</span>
           </template>
@@ -328,7 +328,7 @@ const currentRoot = computed(() => path.value[0] ?? '')
 
         <!-- Botón de Búsqueda Rápida / Goto -->
         <button
-          class="goto-btn group flex-[0_1_240px] min-w-[140px] flex items-center gap-2 h-[30px] px-2 border border-rule bg-paper text-dim text-left cursor-pointer transition-colors duration-150 hover:border-sig hover:text-ink max-sm:hidden"
+          class="goto-btn group flex-[0_1_240px] min-w-[140px] hidden sm:flex items-center gap-2 h-[30px] px-2 border border-rule bg-paper text-dim text-left cursor-pointer transition-colors duration-150 hover:border-sig hover:text-ink"
           type="button"
           :title="isEs ? 'Abrir paleta de comandos (⌘K o /)' : 'Open command palette (⌘K or /)'"
           @click="gotoOpen = true"
@@ -340,11 +340,11 @@ const currentRoot = computed(() => path.value[0] ?? '')
         </button>
 
         <!-- Acciones Rápidas del Sistema: Idioma, Hiperfoco, Reloj UTC-3, Telemetría y Tema -->
-        <div class="barra-derecha flex items-center gap-2 shrink-0 ml-auto">
+        <div class="barra-derecha flex items-center gap-1.5 sm:gap-2 shrink-0 ml-auto">
           <!-- Switch de Idioma ES / EN -->
           <button
             type="button"
-            class="lang-btn inline-flex items-center gap-1 h-[30px] px-2 border border-rule bg-paper font-mono text-[11px] font-bold text-dim cursor-pointer hover:border-sig hover:text-ink transition-colors duration-150"
+            class="lang-btn inline-flex items-center gap-1 h-7 sm:h-[30px] px-1.5 sm:px-2 border border-rule bg-paper font-mono text-[10.5px] sm:text-[11px] font-bold text-dim cursor-pointer hover:border-sig hover:text-ink transition-colors duration-150"
             :title="isEs ? 'Switch interface to English' : 'Cambiar interfaz a Español'"
             :aria-label="isEs ? 'Switch to English' : 'Cambiar a Español'"
             @click="toggleLocale"
@@ -357,7 +357,7 @@ const currentRoot = computed(() => path.value[0] ?? '')
           <!-- Toggle de Modo Hiperfoco -->
           <button
             type="button"
-            class="tool-btn focus-btn inline-flex items-center justify-center w-[30px] h-[30px] border border-rule bg-paper text-dim cursor-pointer transition-colors duration-150 hover:border-sig hover:text-sig hover:bg-hover"
+            class="tool-btn focus-btn hidden sm:inline-flex items-center justify-center w-7 h-7 sm:w-[30px] sm:h-[30px] border border-rule bg-paper text-dim cursor-pointer transition-colors duration-150 hover:border-sig hover:text-sig hover:bg-hover"
             :class="{ '!border-sig !text-sig !bg-sig/10': isHyperfocus }"
             :title="isHyperfocus ? (isEs ? 'Desactivar Modo Hiperfoco (H)' : 'Disable Hyperfocus (H)') : (isEs ? 'Activar Modo Hiperfoco (H)' : 'Enable Hyperfocus (H)')"
             :aria-label="isHyperfocus ? 'Desactivar hiperfoco' : 'Activar hiperfoco'"
@@ -369,7 +369,7 @@ const currentRoot = computed(() => path.value[0] ?? '')
           <!-- Botón de Guía y Orientación Rápida -->
           <button
             type="button"
-            class="tool-btn help-btn inline-flex items-center justify-center w-[30px] h-[30px] border border-rule bg-paper text-dim cursor-pointer transition-colors duration-150 hover:border-sig hover:text-sig hover:bg-hover"
+            class="tool-btn help-btn hidden sm:inline-flex items-center justify-center w-7 h-7 sm:w-[30px] sm:h-[30px] border border-rule bg-paper text-dim cursor-pointer transition-colors duration-150 hover:border-sig hover:text-sig hover:bg-hover"
             :class="{ '!border-sig !text-sig !bg-sig/10': guideOpen }"
             :title="guideOpen ? (isEs ? 'Cerrar guía (?)' : 'Close guide (?)') : (isEs ? 'Guía rápida y atajos (?)' : 'Quick guide & shortcuts (?)')"
             :aria-label="isEs ? 'Guía rápida' : 'Quick guide'"
@@ -393,7 +393,7 @@ const currentRoot = computed(() => path.value[0] ?? '')
 
           <button
             type="button"
-            class="tool-btn theme-btn inline-flex items-center justify-center w-[30px] h-[30px] border border-rule bg-paper text-dim cursor-pointer transition-colors duration-150 hover:border-sig hover:text-sig hover:bg-hover"
+            class="tool-btn theme-btn inline-flex items-center justify-center w-7 h-7 sm:w-[30px] sm:h-[30px] border border-rule bg-paper text-dim cursor-pointer transition-colors duration-150 hover:border-sig hover:text-sig hover:bg-hover"
             :aria-label="theme === 'dark' ? 'Cambiar a modo claro (papel técnico)' : 'Cambiar a modo oscuro (obsidiana)'"
             :title="`Cambiar a modo ${theme === 'dark' ? 'claro (papel)' : 'oscuro (obsidiana)'}`"
             @click="toggleTheme"
@@ -464,7 +464,7 @@ const currentRoot = computed(() => path.value[0] ?? '')
           </div>
         </aside>
 
-        <main id="contenido" class="exp flex-1 min-w-0 min-h-0 overflow-y-auto p-5 max-md:p-3 focus:outline-none" tabindex="-1">
+        <main id="contenido" class="exp flex-1 min-w-0 min-h-0 overflow-y-auto p-3 md:p-5 focus:outline-none" tabindex="-1">
           <div v-if="error" class="pane w-full">
             <ExplorerDetail
               :detail="{
@@ -509,18 +509,30 @@ const currentRoot = computed(() => path.value[0] ?? '')
         </span>
       </footer>
 
-      <!-- Barra de Navegación Inferior Móvil (Thumb-friendly Bottom App Bar) -->
-      <nav class="mobile-nav lg:hidden flex-none h-14 bg-surface border-t border-rule flex items-center justify-around z-20" aria-label="Navegación rápida móvil">
+      <!-- Barra de Navegación Inferior Móvil Estilo App Nativa / Redes Sociales -->
+      <nav class="mobile-nav lg:hidden flex-none fixed bottom-0 inset-x-0 z-50 h-[62px] pb-[env(safe-area-inset-bottom,0)] bg-surface/90 backdrop-blur-xl border-t border-rule flex items-center justify-around px-1 shadow-[0_-8px_24px_rgba(0,0,0,0.4)]" aria-label="Navegación rápida móvil">
         <NuxtLink
           v-for="s in navSections"
           :key="s.root"
           :to="routeFor(s.to)"
-          class="mobile-nav-item flex flex-col items-center justify-center flex-1 h-full text-dim no-underline transition-colors duration-150 relative"
+          class="mobile-nav-item flex flex-col items-center justify-center flex-1 h-full text-dim no-underline transition-all duration-150 relative group py-1"
           :class="{ 'active !text-sig font-bold': currentRoot === s.root }"
         >
-          <AppIcon :name="s.icon" :size="18" class="mn-icon" />
-          <span class="mn-label text-[10px] font-mono mt-0.5">{{ s.shortLabel }}</span>
-          <span v-if="currentRoot === s.root" class="mn-indicator absolute bottom-0 inset-x-4 h-0.5 bg-sig rounded-full" aria-hidden="true" />
+          <!-- Indicador superior activo con glow -->
+          <span
+            v-if="currentRoot === s.root"
+            class="mn-indicator absolute top-0 inset-x-3.5 h-[2.5px] bg-sig rounded-full shadow-[0_0_8px_var(--d-sig)]"
+            aria-hidden="true"
+          />
+          <div
+            class="mn-icon-wrap flex items-center justify-center w-8 h-6.5 rounded-full transition-all duration-150"
+            :class="currentRoot === s.root ? 'bg-sig/10 text-sig scale-110' : 'text-dim group-hover:text-ink'"
+          >
+            <AppIcon :name="s.icon" :size="17" class="mn-icon" />
+          </div>
+          <span class="mn-label text-[10px] font-mono mt-0.5 tracking-tight transition-colors" :class="currentRoot === s.root ? 'text-sig font-bold' : 'text-dim group-hover:text-ink'">
+            {{ s.shortLabel }}
+          </span>
         </NuxtLink>
       </nav>
     </div>
@@ -565,11 +577,13 @@ const currentRoot = computed(() => path.value[0] ?? '')
   flex: none;
   display: flex;
   align-items: center;
-  gap: 12px;
-  min-height: 52px;
-  padding: 0 var(--d-inset);
+  gap: clamp(6px, 1.2vw, 12px);
+  min-height: 48px;
+  padding: 0 clamp(8px, 1.4vw, 16px);
   border-bottom: 1px solid var(--d-rule);
   background: var(--d-surface);
+  max-width: 100%;
+  overflow: hidden;
 }
 .historia { display: flex; gap: 4px; }
 .nav-btn {
@@ -774,6 +788,8 @@ kbd {
 .exp {
   flex: 1;
   min-height: 0;
+  width: 100%;
+  max-width: 100%;
   padding: var(--d-inset) var(--d-inset) 28px;
   overflow-y: auto;
   overflow-x: hidden;
@@ -1061,40 +1077,38 @@ kbd {
     gap: 3px;
   }
   .nav-btn {
-    width: 30px;
-    height: 30px;
+    width: 28px;
+    height: 28px;
   }
   .ruta {
-    height: 30px;
-    padding: 0 6px;
+    flex: 1;
+    height: 28px;
+    padding: 0 8px;
     font-size: 11px;
     min-width: 0;
-    max-width: 130px;
+    max-width: none;
     overflow: hidden;
     text-overflow: ellipsis;
   }
   .goto-btn {
-    flex: none;
-    height: 30px;
-    padding: 0 6px;
-    min-width: 0;
+    display: none !important;
   }
   .barra-derecha {
-    gap: 6px;
+    gap: 5px;
     flex-shrink: 0;
   }
-  .tool-btn,
-  .lang-btn,
-  .theme-btn {
-    height: 30px;
-  }
-  .tool-btn,
-  .theme-btn {
-    width: 30px;
+  .focus-btn,
+  .help-btn {
+    display: none !important;
   }
   .lang-btn {
+    height: 28px;
     padding: 0 6px;
-    font-size: 10px;
+    font-size: 10.5px;
+  }
+  .theme-btn {
+    width: 28px;
+    height: 28px;
   }
   .telemetria-badge,
   .clock-badge,
@@ -1104,15 +1118,19 @@ kbd {
 
   .cuerpo-ventana {
     flex-direction: column;
-    overflow: visible;
-    max-width: 100vw;
+    overflow: hidden;
+    max-width: 100%;
+    width: 100%;
   }
 
   .exp {
-    padding: 8px 8px calc(76px + env(safe-area-inset-bottom, 0px)) !important;
-    overflow: visible;
+    padding: 10px 10px calc(76px + env(safe-area-inset-bottom, 0px)) !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
     perspective: none;
-    max-width: 100vw;
+    max-width: 100%;
+    width: 100%;
+    box-sizing: border-box;
   }
 
   /* Barra de Estado inferior se oculta en mobile en favor del Tab Bar */

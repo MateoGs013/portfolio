@@ -11,7 +11,7 @@ export const AdmDashboard = {
     }
   },
   template: `
-    <div class="flex-1 overflow-y-auto p-8 space-y-8 bg-[#08090a]">
+    <div class="flex-1 overflow-y-auto p-4 sm:p-8 space-y-6 sm:space-y-8 bg-[#08090a]">
       <!-- Header Ejecutivo -->
       <div class="space-y-1">
         <h1 class="text-xl font-bold text-white tracking-tight">Consola de Operaciones</h1>
@@ -102,7 +102,7 @@ export const AdmDashboard = {
           <h3 class="text-xs font-bold font-mono-code text-white uppercase tracking-wider">
             Accesos Rápidos de Curaduría
           </h3>
-          <div class="grid grid-cols-2 gap-2 text-xs">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
             <button
               type="button"
               @click="store.loadSection('projects').then(() => store.createRecord())"

@@ -3,16 +3,16 @@ import { db } from '../db.js'
 import { envelope } from '../envelope.js'
 import { asBool, asInt, readFilters } from '../filters.js'
 import { fallbackProjects } from '../fallbackData.js'
-import type { Prisma } from '../../generated/prisma/client.js'
+import type { Prisma, ProjectStatus } from '../../generated/prisma/client.js'
 
 export const projects = Router()
 
-const FILTERS = ['stack', 'year', 'role', 'featured'] as const
+const FILTERS = ['stack', 'year', 'role', 'featured', 'status'] as const
 
 const orgSelect = { select: { slug: true, name: true } } satisfies Prisma.Project$orgArgs
 const techSelect = { select: { slug: true, name: true }, orderBy: { name: 'asc' } } satisfies Prisma.Project$techsArgs
 
-/** GET /api/projects?stack=&year=&role=&featured= */
+/** GET /api/projects?stack=&year=&role=&featured=&status= */
 projects.get('/projects', async (req, res) => {
   const filters = readFilters(req, FILTERS)
 
@@ -24,6 +24,7 @@ projects.get('/projects', async (req, res) => {
     if (filters.role) where.role = { contains: filters.role, mode: 'insensitive' }
     const featured = asBool(filters.featured)
     if (featured !== undefined) where.featured = featured
+    if (filters.status) where.status = filters.status as ProjectStatus
 
     const data = await db.project.findMany({
       where,
@@ -56,6 +57,9 @@ projects.get('/projects', async (req, res) => {
     const featured = asBool(filters.featured)
     if (featured !== undefined) {
       data = data.filter(p => p.featured === featured)
+    }
+    if (filters.status) {
+      data = data.filter(p => p.status === filters.status)
     }
 
     res.json(envelope(data, { filters }))
