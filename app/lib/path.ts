@@ -28,10 +28,31 @@ export function isDoc(root: Root): root is DocKey {
   return (docOrder as readonly string[]).includes(root as DocKey)
 }
 
-/** Del param catch-all de Nuxt (`string | string[] | undefined`) al path limpio. */
+const PATH_ALIASES: Record<string, string> = {
+  proyectos: 'projects',
+  proyecto: 'projects',
+  experiencia: 'experience',
+  habilidades: 'stack',
+  tecnologias: 'stack',
+  tecnologia: 'stack',
+  'sobre-mi': 'about',
+  sobremi: 'about',
+  acerca: 'about',
+  contacto: 'contact',
+  organizaciones: 'orgs',
+}
+
+/** Del param catch-all de Nuxt (`string | string[] | undefined`) al path limpio con soporte de alias. */
 export function parsePath(param: unknown): Path {
   const raw = Array.isArray(param) ? param : typeof param === 'string' ? param.split('/') : []
-  return raw.map(s => String(s).trim()).filter(Boolean)
+  const segments = raw.map(s => String(s).trim()).filter(Boolean)
+  if (segments.length > 0) {
+    const root = segments[0]?.toLowerCase()
+    if (root && PATH_ALIASES[root]) {
+      segments[0] = PATH_ALIASES[root]!
+    }
+  }
+  return segments
 }
 
 export function pathString(path: Path): string {

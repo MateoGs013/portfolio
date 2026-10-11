@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import type { CvDeliverable } from './types'
+
 defineProps<{
   name: string
   role: string
@@ -10,6 +12,7 @@ defineProps<{
   linkedin: string
   linkedinText: string
   isEs: boolean
+  deliverables?: CvDeliverable[]
 }>()
 </script>
 
@@ -81,77 +84,98 @@ defineProps<{
     <section class="h-section">
       <h2 class="h-title">{{ isEs ? 'EXPERIENCIA PROFESIONAL & PROYECTOS' : 'PROFESSIONAL EXPERIENCE & PROJECTS' }}</h2>
 
-      <div class="h-entry">
-        <div class="h-entry-header">
-          <span class="h-org">YNARA AI ASSISTANT {{ isEs ? '(TESIS DA VINCI)' : '(DA VINCI THESIS)' }}</span>
-          <span class="h-date">05/2026 – 07/2026</span>
+      <template v-if="deliverables && deliverables.length">
+        <div v-for="d in deliverables" :key="d.slug" class="h-entry">
+          <div class="h-entry-header">
+            <span class="h-org">{{ d.title.toUpperCase() }} {{ d.badge ? `(${d.badge.toUpperCase()})` : '' }}</span>
+            <span class="h-date">{{ d.date }}</span>
+          </div>
+          <div class="h-entry-sub">
+            <span class="h-degree">{{ d.role }}</span>
+            <span class="h-loc">{{ d.location }}</span>
+          </div>
+          <p v-if="d.description" class="h-desc text-[11px] text-[#444] mb-1 italic">
+            {{ d.description }}
+          </p>
+          <ul class="h-bullets">
+            <li v-for="(b, bIdx) in d.bullets" :key="bIdx">{{ b }}</li>
+          </ul>
         </div>
-        <div class="h-entry-sub">
-          <span class="h-degree">{{ isEs ? 'Arquitecto de Software & Lead Frontend' : 'Software Architect & Lead Frontend' }}</span>
-          <span class="h-loc">Buenos Aires, Argentina</span>
-        </div>
-        <ul class="h-bullets">
-          <li v-if="isEs">Lideré la arquitectura técnica y el frontend reactivo con 382 commits a lo largo de 6 semanas de desarrollo intensivo.</li>
-          <li v-else>Led system architecture and reactive frontend with 382 commits over 6 weeks of intensive engineering.</li>
-          <li v-if="isEs">Diseñé pipelines de inferencia y memoria vectorial persistente con PostgreSQL, pgvector y FastAPI.</li>
-          <li v-else>Engineered inference pipelines and persistent vector memory with PostgreSQL, pgvector, and FastAPI.</li>
-          <li v-if="isEs">Construí la aplicación web con Next.js y TypeScript, logrando tiempos de respuesta inferiores a 100ms en local.</li>
-          <li v-else>Built the web client with Next.js and TypeScript, achieving sub-100ms response times in local environments.</li>
-        </ul>
-      </div>
+      </template>
 
-      <div class="h-entry">
-        <div class="h-entry-header">
-          <span class="h-org">LA RÚCULA GASTROBAR</span>
-          <span class="h-date">03/2026 – 07/2026</span>
+      <template v-else>
+        <div class="h-entry">
+          <div class="h-entry-header">
+            <span class="h-org">YNARA AI ASSISTANT {{ isEs ? '(TESIS DA VINCI)' : '(DA VINCI THESIS)' }}</span>
+            <span class="h-date">05/2026 – 07/2026</span>
+          </div>
+          <div class="h-entry-sub">
+            <span class="h-degree">{{ isEs ? 'Arquitecto de Software & Lead Frontend' : 'Software Architect & Lead Frontend' }}</span>
+            <span class="h-loc">Buenos Aires, Argentina</span>
+          </div>
+          <ul class="h-bullets">
+            <li v-if="isEs">Lideré la arquitectura técnica y el frontend reactivo con 382 commits a lo largo de 6 semanas de desarrollo intensivo.</li>
+            <li v-else>Led system architecture and reactive frontend with 382 commits over 6 weeks of intensive engineering.</li>
+            <li v-if="isEs">Diseñé pipelines de inferencia y memoria vectorial persistente con PostgreSQL, pgvector y FastAPI.</li>
+            <li v-else>Engineered inference pipelines and persistent vector memory with PostgreSQL, pgvector, and FastAPI.</li>
+            <li v-if="isEs">Construí la aplicación web con Next.js y TypeScript, logrando tiempos de respuesta inferiores a 100ms en local.</li>
+            <li v-else>Built the web client with Next.js and TypeScript, achieving sub-100ms response times in local environments.</li>
+          </ul>
         </div>
-        <div class="h-entry-sub">
-          <span class="h-degree">{{ isEs ? 'Desarrollador Full Stack & Diseñador UI' : 'Full Stack Developer & UI Designer' }}</span>
-          <span class="h-loc">Cádiz, {{ isEs ? 'España' : 'Spain' }}</span>
-        </div>
-        <ul class="h-bullets">
-          <li v-if="isEs">Diseñé y programé un sitio editorial menu-first optimizado para escaneo QR de clientes en mesa.</li>
-          <li v-else>Designed and engineered an editorial menu-first web app optimized for table-side QR scanning.</li>
-          <li v-if="isEs">Integré arquitectura con fallback offline en caché para garantizar servicio continuo ante caídas de conectividad.</li>
-          <li v-else>Integrated cached offline fallbacks ensuring seamless continuous service during connectivity drops.</li>
-          <li v-if="isEs">Puntuación Lighthouse de 99 en Performance y 100 en SEO y Accesibilidad con bundle final de apenas 42 KB.</li>
-          <li v-else>Achieved 99 Performance and 100 SEO &amp; Accessibility Lighthouse scores with a compact 42 KB production bundle.</li>
-        </ul>
-      </div>
 
-      <div class="h-entry">
-        <div class="h-entry-header">
-          <span class="h-org">ARG PISCINAS</span>
-          <span class="h-date">01/2026 – 07/2026</span>
+        <div class="h-entry">
+          <div class="h-entry-header">
+            <span class="h-org">LA RÚCULA GASTROBAR</span>
+            <span class="h-date">03/2026 – 07/2026</span>
+          </div>
+          <div class="h-entry-sub">
+            <span class="h-degree">{{ isEs ? 'Desarrollador Full Stack & Diseñador UI' : 'Full Stack Developer & UI Designer' }}</span>
+            <span class="h-loc">Cádiz, {{ isEs ? 'España' : 'Spain' }}</span>
+          </div>
+          <ul class="h-bullets">
+            <li v-if="isEs">Diseñé y programé un sitio editorial menu-first optimizado para escaneo QR de clientes en mesa.</li>
+            <li v-else>Designed and engineered an editorial menu-first web app optimized for table-side QR scanning.</li>
+            <li v-if="isEs">Integré arquitectura con fallback offline en caché para garantizar servicio continuo ante caídas de conectividad.</li>
+            <li v-else>Integrated cached offline fallbacks ensuring seamless continuous service during connectivity drops.</li>
+            <li v-if="isEs">Puntuación Lighthouse de 99 en Performance y 100 en SEO y Accesibilidad con bundle final de apenas 42 KB.</li>
+            <li v-else>Achieved 99 Performance and 100 SEO &amp; Accessibility Lighthouse scores with a compact 42 KB production bundle.</li>
+          </ul>
         </div>
-        <div class="h-entry-sub">
-          <span class="h-degree">{{ isEs ? 'Desarrollador Full Stack' : 'Full Stack Developer' }}</span>
-          <span class="h-loc">Andalucía, {{ isEs ? 'España' : 'Spain' }}</span>
-        </div>
-        <ul class="h-bullets">
-          <li v-if="isEs">Desarrollé una plataforma corporativa multi-idioma (Español, Inglés y Alemán) con panel de control a medida.</li>
-          <li v-else>Engineered a multilingual corporate web platform (Spanish, English, German) with custom administrative CMS.</li>
-          <li v-if="isEs">Modelé esquemas relacionales y tipado estricto de extremo a extremo con Prisma ORM, Node.js y TypeScript.</li>
-          <li v-else>Modeled relational schemas and end-to-end type safety using Prisma ORM, Node.js, and TypeScript.</li>
-        </ul>
-      </div>
 
-      <div class="h-entry">
-        <div class="h-entry-header">
-          <span class="h-org">{{ isEs ? 'DESARROLLO FREELANCE' : 'FREELANCE DEVELOPMENT' }}</span>
-          <span class="h-date">{{ isEs ? '2023 – Presente' : '2023 – Present' }}</span>
+        <div class="h-entry">
+          <div class="h-entry-header">
+            <span class="h-org">ARG PISCINAS</span>
+            <span class="h-date">01/2026 – 07/2026</span>
+          </div>
+          <div class="h-entry-sub">
+            <span class="h-degree">{{ isEs ? 'Desarrollador Full Stack' : 'Full Stack Developer' }}</span>
+            <span class="h-loc">Andalucía, {{ isEs ? 'España' : 'Spain' }}</span>
+          </div>
+          <ul class="h-bullets">
+            <li v-if="isEs">Desarrollé una plataforma corporativa multi-idioma (Español, Inglés y Alemán) con panel de control a medida.</li>
+            <li v-else>Engineered a multilingual corporate web platform (Spanish, English, German) with custom administrative CMS.</li>
+            <li v-if="isEs">Modelé esquemas relacionales y tipado estricto de extremo a extremo con Prisma ORM, Node.js y TypeScript.</li>
+            <li v-else>Modeled relational schemas and end-to-end type safety using Prisma ORM, Node.js, and TypeScript.</li>
+          </ul>
         </div>
-        <div class="h-entry-sub">
-          <span class="h-degree">{{ isEs ? 'Desarrollador Full Stack' : 'Full Stack Developer' }}</span>
-          <span class="h-loc">{{ isEs ? 'Remoto' : 'Remote' }}</span>
+
+        <div class="h-entry">
+          <div class="h-entry-header">
+            <span class="h-org">{{ isEs ? 'DESARROLLO FREELANCE' : 'FREELANCE DEVELOPMENT' }}</span>
+            <span class="h-date">{{ isEs ? '2023 – Presente' : '2023 – Present' }}</span>
+          </div>
+          <div class="h-entry-sub">
+            <span class="h-degree">{{ isEs ? 'Desarrollador Full Stack' : 'Full Stack Developer' }}</span>
+            <span class="h-loc">{{ isEs ? 'Remoto' : 'Remote' }}</span>
+          </div>
+          <ul class="h-bullets">
+            <li v-if="isEs">Desarrollo integral de soluciones de software a medida con APIs REST y arquitecturas modulares.</li>
+            <li v-else>End-to-end development of custom software solutions with decoupled REST APIs and scalable architectures.</li>
+            <li v-if="isEs">Entrega exitosa de aproximadamente 10 proyectos web llave en mano combinando diseño en Figma y despliegue a producción.</li>
+            <li v-else>Successful delivery of ~10 turnkey web solutions combining Figma UI design and production deployments.</li>
+          </ul>
         </div>
-        <ul class="h-bullets">
-          <li v-if="isEs">Desarrollo integral de soluciones de software a medida con APIs REST y arquitecturas modulares.</li>
-          <li v-else>End-to-end development of custom software solutions with decoupled REST APIs and scalable architectures.</li>
-          <li v-if="isEs">Entrega exitosa de aproximadamente 10 proyectos web llave en mano combinando diseño en Figma y despliegue a producción.</li>
-          <li v-else>Successful delivery of ~10 turnkey web solutions combining Figma UI design and production deployments.</li>
-        </ul>
-      </div>
+      </template>
     </section>
 
     <!-- Habilidades Técnicas -->

@@ -40,6 +40,14 @@ const canonicalFilePath = computed(() => {
   return `file://portfolio/${n}.json`
 })
 
+const apiEndpoint = computed(() => {
+  if (props.detail.requestLine) {
+    return props.detail.requestLine.startsWith('GET') ? props.detail.requestLine : `GET ${props.detail.requestLine}`
+  }
+  const n = props.detail.name.toLowerCase().replace(/\s+/g, '-')
+  return `GET /api/${n}`
+})
+
 const raw = computed(() => (props.detail.rawRecord as Record<string, unknown> | undefined) ?? {})
 const projectUrl = computed(() => typeof raw.value.url === 'string' ? (safeHref(raw.value.url) ?? null) : null)
 const projectRepo = computed(() => typeof raw.value.repo === 'string' ? (safeHref(raw.value.repo) ?? null) : null)
@@ -360,7 +368,7 @@ async function copyJson() {
       <!-- Drawer de Inspección JSON Crudo -->
       <div v-if="showRawJson" class="raw-drawer bg-surface border border-rule-strong mb-3 overflow-hidden shadow-lg w-full rounded-[2px]">
         <div class="raw-toolbar flex items-center justify-between gap-2 p-2 px-3.5 bg-surface-raised border-b border-rule font-mono text-[11px]">
-          <span class="raw-endpoint text-sig font-bold">GET /api/{{ detail.name.toLowerCase().replace(/\s+/g, '-') }}</span>
+          <span class="raw-endpoint text-sig font-bold">{{ apiEndpoint }}</span>
           <button
             type="button"
             class="copy-btn inline-flex items-center gap-1.5 px-2.5 py-1 border border-rule bg-paper text-dim text-[10.5px] font-bold cursor-pointer transition-colors duration-150 hover:border-sig hover:text-sig"

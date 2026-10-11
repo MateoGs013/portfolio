@@ -37,10 +37,13 @@ const cvLocation = computed(() => isEs.value
   ? (getDocField('location') || 'Río Negro, Patagonia Argentina')
   : 'Río Negro, Patagonia, Argentina',
 )
-const cvBio = computed(() => isEs.value
-  ? 'Desarrollador de software especializado en ingeniería frontend reactiva, arquitectura de APIs y experiencia de usuario. Tesis de grado preaprobada en Escuela Da Vinci con 382 commits liderando la arquitectura de un asistente de IA on-premise. Trayectoria verificable en producción con más de 10 entregables para clientes en España y Argentina (La Rúcula Gastrobar, ARG Piscinas). Dominio de TypeScript, Vue 3, Nuxt 4, React, Next.js, Node.js, FastAPI y PostgreSQL. Criterio integral de producto y diseño de punta a punta.'
-  : 'Software engineer specialized in reactive frontend engineering, API architecture, and user experience. Pre-approved degree thesis at Da Vinci School with 382 commits leading system architecture for an on-premise AI assistant. Verifiable production track record with 10+ deliverables for clients across Spain and Argentina (La Rúcula Gastrobar, ARG Piscinas). Proficient in TypeScript, Vue 3, Nuxt 4, React, Next.js, Node.js, FastAPI, and PostgreSQL. End-to-end product design mindset.',
-)
+const cvBio = computed(() => {
+  const customBio = getDocField('engineering_philosophy') || getDocField('bio')
+  if (customBio) return customBio
+  return isEs.value
+    ? 'Desarrollador de software especializado en ingeniería frontend reactiva, arquitectura de APIs y experiencia de usuario. Tesis de grado preaprobada en Escuela Da Vinci con 382 commits liderando la arquitectura de un asistente de IA on-premise. Trayectoria verificable en producción con más de 10 entregables para clientes en España y Argentina (La Rúcula Gastrobar, ARG Piscinas). Dominio de TypeScript, Vue 3, Nuxt 4, React, Next.js, Node.js, FastAPI y PostgreSQL. Criterio integral de producto y diseño de punta a punta.'
+    : 'Software engineer specialized in reactive frontend engineering, API architecture, and user experience. Pre-approved degree thesis at Da Vinci School with 382 commits leading system architecture for an on-premise AI assistant. Verifiable production track record with 10+ deliverables for clients across Spain and Argentina (La Rúcula Gastrobar, ARG Piscinas). Proficient in TypeScript, Vue 3, Nuxt 4, React, Next.js, Node.js, FastAPI, and PostgreSQL. End-to-end product design mindset.'
+})
 
 const cvEmail = computed(() => props.detail?.contact?.email || 'mateogabus@gmail.com')
 const cvGithub = computed(() => props.detail?.contact?.github || 'https://github.com/MateoGs013')
@@ -50,6 +53,36 @@ const cvLinkedinText = computed(() => cvLinkedin.value.replace(/^https?:\/\/(www
 const cvTimezone = computed(() => props.detail?.contact?.timezone || 'UTC-3')
 
 const cvDeliverables = computed<CvDeliverable[]>(() => {
+  if (props.detail?.projects && props.detail.projects.length) {
+    return props.detail.projects.map((p) => {
+      const isYnara = p.slug === 'ynara'
+      const isThesis = isYnara || p.title?.toLowerCase().includes('ynara')
+      const badge = isThesis
+        ? (isEs.value ? 'Tesis Da Vinci' : 'Da Vinci Thesis')
+        : (p.status === 'LIVE' ? (isEs.value ? 'Producción' : 'Production') : 'WIP')
+
+      const bullets: string[] = []
+      if (p.brief) bullets.push(p.brief)
+      if (p.outcome) bullets.push(p.outcome)
+      if (!bullets.length && p.summary) bullets.push(p.summary)
+
+      const orgObj = p.org && typeof p.org === 'object' ? (p.org as { city?: string, name?: string }) : null
+      const loc = orgObj?.city || orgObj?.name || (isEs.value ? 'Remoto' : 'Remote')
+
+      return {
+        slug: p.slug,
+        title: p.title,
+        badge,
+        date: p.year ? String(p.year) : (isEs.value ? '2026' : '2026'),
+        role: p.role || (isEs.value ? 'Desarrollador Full Stack' : 'Full Stack Developer'),
+        location: loc,
+        description: p.summary || '',
+        bullets,
+        tags: Array.isArray(p.techs) ? p.techs.map(t => t.name) : [],
+      }
+    })
+  }
+
   if (isEs.value) {
     return [
       {
@@ -275,6 +308,7 @@ function printCV() {
       :github-text="cvGithubText"
       :linkedin="cvLinkedin"
       :linkedin-text="cvLinkedinText"
+      :deliverables="cvDeliverables"
       :is-es="isEs"
     />
 

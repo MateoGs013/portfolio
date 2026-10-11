@@ -50,12 +50,25 @@ const isStatusLive = computed(() => activeStatusFilter.value === 'LIVE')
 const isStatusWip = computed(() => activeStatusFilter.value === 'WIP')
 
 function formatExpPeriod(it: Folder['items'][number]): string {
+  const exp = props.folder.experience?.find(e => e.slug === it.key)
+  if (exp?.startedAt) {
+    const sDate = new Date(exp.startedAt)
+    const sYear = sDate.getFullYear()
+    if (!exp.endedAt) {
+      return isEs.value ? `${sYear} — Presente` : `${sYear} — Present`
+    }
+    const eDate = new Date(exp.endedAt)
+    const eYear = eDate.getFullYear()
+    if (sYear === eYear) {
+      const sMonth = sDate.toLocaleDateString(isEs.value ? 'es-ES' : 'en-US', { month: 'short' })
+      const eMonth = eDate.toLocaleDateString(isEs.value ? 'es-ES' : 'en-US', { month: 'short' })
+      return `${sMonth} — ${eMonth} ${sYear}`
+    }
+    return `${sYear} — ${eYear}`
+  }
   if (it.key === 'cet-30') return isEs.value ? '2017 — 2023 · 7 Años' : '2017 — 2023 · 7 Years'
   if (it.key === 'escuela-da-vinci') return isEs.value ? '2024 — 2026 · Carrera' : '2024 — 2026 · Degree'
   if (it.key === 'freelance') return isEs.value ? '2023 — Presente' : '2023 — Present'
-  if (it.key === 'ynara') return isEs.value ? 'Mayo — Junio 2026 · Tesis' : 'May — June 2026 · Thesis'
-  if (it.key === 'la-rucula') return isEs.value ? 'Marzo — Julio 2026' : 'March — July 2026'
-  if (it.key === 'arg-piscinas') return isEs.value ? 'Enero — Julio 2026' : 'January — July 2026'
   return it.meta
 }
 
@@ -77,16 +90,82 @@ function getExpHighlights(key: string): string[] {
 }
 
 function getExpLinkedProject(key: string): { slug: string, title: string } | null {
+  const p = props.folder.projects?.find(proj => proj.slug === key || (key === 'arg-piscinas' && proj.slug === 'argpiscinas'))
+  if (p) return { slug: p.slug, title: p.title }
   if (key === 'ynara') return { slug: 'ynara', title: 'Ynara AI Assistant' }
   if (key === 'la-rucula') return { slug: 'la-rucula', title: 'La Rúcula Gastrobar' }
   if (key === 'arg-piscinas') return { slug: 'argpiscinas', title: 'ARG Piscinas' }
   return null
 }
 
+// Extracción dinámica de campos del documento 'home' desde PostgreSQL / API
+function getHomeField(name: string): string | null {
+  const f = (props.folder.homeDoc?.fields as Array<{ name: string, value: string }> | undefined)?.find(field => field.name === name)
+  return f ? String(f.value) : null
+}
+
+const homeHeadlineWords = computed(() => {
+  if (isEs.value) {
+    const raw = getHomeField('headline')
+    if (raw) {
+      const parts = raw.split(' ').filter(Boolean)
+      if (parts.length >= 3) return [parts[0]!, parts[1]!, parts.slice(2).join(' ')]
+    }
+  }
+  return tr.value.home.headline
+})
+
 // 1. Scramble Text interactivo en el titular constructivista
-const { displayText: headline1, scramble: scramble1 } = useScrambleText(computed(() => tr.value.home.headline[0]), 300)
-const { displayText: headline2, scramble: scramble2 } = useScrambleText(computed(() => tr.value.home.headline[1]), 220)
-const { displayText: headline3, scramble: scramble3 } = useScrambleText(computed(() => tr.value.home.headline[2]), 360)
+const { displayText: headline1, scramble: scramble1 } = useScrambleText(computed(() => homeHeadlineWords.value[0] ?? ''), 300)
+const { displayText: headline2, scramble: scramble2 } = useScrambleText(computed(() => homeHeadlineWords.value[1] ?? ''), 220)
+const { displayText: headline3, scramble: scramble3 } = useScrambleText(computed(() => homeHeadlineWords.value[2] ?? ''), 360)
+
+const homeAboutText = computed(() => (isEs.value ? (getHomeField('about_text') ?? tr.value.home.aboutText) : tr.value.home.aboutText))
+const homeGlobePill = computed(() => (isEs.value ? (getHomeField('globe_pill') ?? tr.value.home.globePill) : tr.value.home.globePill))
+const homeProfileRole = computed(() => (isEs.value ? (getHomeField('profile_role') ?? tr.value.home.profileRole) : tr.value.home.profileRole))
+const homeProfileStatus = computed(() => (isEs.value ? (getHomeField('profile_status') ?? tr.value.home.profileStatus) : tr.value.home.profileStatus))
+const homeManifestoQuote = computed(() => (isEs.value ? (getHomeField('manifesto_quote') ?? tr.value.home.manifestoQuote) : tr.value.home.manifestoQuote))
+const homeManifestoLead = computed(() => (isEs.value ? (getHomeField('manifesto_lead') ?? tr.value.home.manifestoLead) : tr.value.home.manifestoLead))
+
+const projectCounts = computed(() => {
+  const list = props.folder.projects && props.folder.projects.length ? props.folder.projects : props.folder.items
+  const all = list.length
+  const live = list.filter((p: { status?: string }) => p.status === 'LIVE').length
+  const wip = list.filter((p: { status?: string }) => p.status === 'WIP').length
+  return {
+    all: pad(all),
+    live: pad(live),
+    wip: pad(wip),
+  }
+})
+
+const projectCountBadge = computed(() => {
+  const count = props.folder.projects?.length ?? Number(props.folder.items?.find(i => i.key === 'projects')?.badge ?? 6)
+  return pad(isNaN(count) ? 6 : count)
+})
+
+const getCount = (key: string, fallbackNum: number) => {
+  const c = props.folder.schemaCounts?.[key] ?? props.folder.items?.find(i => i.key === key)?.badge
+  const parsed = typeof c === 'number' ? c : (c ? Number(c) : fallbackNum)
+  return isNaN(parsed) ? pad(fallbackNum) : pad(parsed)
+}
+
+const bentoStackList = computed(() => {
+  const defaults = [
+    'VUE 3 / NUXT 4', 'TYPESCRIPT', 'REACT / NEXT.JS', 'PYTHON / FASTAPI',
+    'POSTGRESQL 17 ACID', 'PRISMA ORM', 'GSAP & LENIS', 'TAILWIND CSS', 'DOCKER & CI/CD'
+  ]
+  if (props.folder.projects && props.folder.projects.length) {
+    const techSet = new Set<string>()
+    for (const p of props.folder.projects) {
+      if (p.techs) {
+        for (const t of p.techs) techSet.add(t.name.toUpperCase())
+      }
+    }
+    if (techSet.size >= 6) return Array.from(techSet).slice(0, 9)
+  }
+  return defaults
+})
 
 function scrambleHeadline() {
   scramble1()
@@ -343,19 +422,19 @@ function onCardMousemove(e: MouseEvent) {
           <NuxtLink to="/projects" class="hd-nav-link">
             <span class="hnl-num">01.</span>
             <span class="hnl-label">{{ isEs ? 'Proyectos' : 'Projects' }}</span>
-            <span class="hnl-count">(06)</span>
+            <span class="hnl-count">({{ getCount('projects', 6) }})</span>
           </NuxtLink>
           <span class="hd-sep">·</span>
           <NuxtLink to="/experience" class="hd-nav-link">
             <span class="hnl-num">02.</span>
             <span class="hnl-label">{{ isEs ? 'Experiencia' : 'Experience' }}</span>
-            <span class="hnl-count">(07)</span>
+            <span class="hnl-count">({{ getCount('experience', 6) }})</span>
           </NuxtLink>
           <span class="hd-sep">·</span>
           <NuxtLink to="/stack" class="hd-nav-link">
             <span class="hnl-num">03.</span>
             <span class="hnl-label">{{ isEs ? 'Stack' : 'Stack' }}</span>
-            <span class="hnl-count">(22)</span>
+            <span class="hnl-count">({{ getCount('stack', 22) }})</span>
           </NuxtLink>
           <span class="hd-sep">·</span>
           <NuxtLink to="/about" class="hd-nav-link">
@@ -367,7 +446,7 @@ function onCardMousemove(e: MouseEvent) {
           <NuxtLink to="/contact" class="hd-nav-link">
             <span class="hnl-num">05.</span>
             <span class="hnl-label">{{ isEs ? 'Contacto' : 'Contact' }}</span>
-            <span class="hnl-count">(06)</span>
+            <span class="hnl-count">({{ getCount('contact', 7) }})</span>
           </NuxtLink>
         </nav>
       </section>
@@ -376,7 +455,7 @@ function onCardMousemove(e: MouseEvent) {
       <section class="hd-section">
         <div class="hd-sec-header">
           <h2 class="hd-sec-title">{{ isEs ? '02 / MATRIZ DE PROYECTOS EN PRODUCCIÓN & TESIS' : '02 / PRODUCTION PROJECTS & THESIS MATRIX' }}</h2>
-          <span class="hd-sec-meta">{{ isEs ? '06 REGISTROS' : '06 RECORDS' }}</span>
+          <span class="hd-sec-meta">{{ isEs ? `${getCount('projects', masterProjects.length)} REGISTROS` : `${getCount('projects', masterProjects.length)} RECORDS` }}</span>
         </div>
 
         <div class="hd-clean-projects">
@@ -468,13 +547,13 @@ function onCardMousemove(e: MouseEvent) {
       <header class="poster-topbar" aria-label="Coordenadas del sistema">
         <div class="pt-item pt-left">
           <span class="pt-mark" aria-hidden="true">⌖</span>
-          <span class="pt-role">{{ tr.home.roleTop }}</span>
+          <span class="pt-role">{{ homeProfileRole }}</span>
         </div>
         <div class="pt-item pt-center">
           <span class="pt-loc">PATAGONIA, AR · UTC-3</span>
         </div>
         <div class="pt-item pt-right">
-          <span class="pt-avail">{{ tr.home.availTop }}</span>
+          <span class="pt-avail">{{ homeProfileStatus }}</span>
         </div>
       </header>
 
@@ -497,11 +576,11 @@ function onCardMousemove(e: MouseEvent) {
               <span class="pa-tag">{{ tr.home.aboutTag }}</span>
             </div>
             <p class="pa-text">
-              {{ tr.home.aboutText }}
+              {{ homeAboutText }}
             </p>
             <div class="pa-globe-pill">
               <AppIcon name="globe" :size="13" class="pa-globe-icon" />
-              <span class="pa-globe-text">{{ tr.home.globePill }}</span>
+              <span class="pa-globe-text">{{ homeGlobePill }}</span>
             </div>
           </div>
 
@@ -513,7 +592,7 @@ function onCardMousemove(e: MouseEvent) {
             </NuxtLink>
             <NuxtLink to="/projects" class="poster-btn secondary" :title="isEs ? 'Explorar todas las aplicaciones en producción' : 'Explore all applications in production'">
               <AppIcon name="folder" :size="13" />
-              <span>{{ tr.home.btnProjects }}</span>
+              <span>{{ tr.home.btnProjects }} ({{ projectCountBadge }})</span>
               <AppIcon name="chevron-right" :size="12" class="poster-btn-arr" />
             </NuxtLink>
             <NuxtLink to="/contact" class="poster-btn tertiary" :title="isEs ? 'Canales de contacto directo' : 'Direct contact channels'">
@@ -543,9 +622,9 @@ function onCardMousemove(e: MouseEvent) {
             <div class="portrait-meta">
               <div class="portrait-name-row">
                 <span class="pm-name">MATEO GABRIEL SONZOGNI</span>
-                <span class="pm-badge">{{ tr.home.profileStatus }}</span>
+                <span class="pm-badge">{{ homeProfileStatus }}</span>
               </div>
-              <span class="pm-role">{{ tr.home.profileRole }}</span>
+              <span class="pm-role">{{ homeProfileRole }}</span>
               <span class="pm-loc">PATAGONIA, ARGENTINA · UTC-3</span>
             </div>
           </div>
@@ -601,7 +680,7 @@ function onCardMousemove(e: MouseEvent) {
                 </span>
               </div>
               <NuxtLink to="/projects" class="sw-h-link">
-                <span>{{ tr.home.swViewAll }}</span>
+                <span>{{ tr.home.swViewAll }} ({{ projectCountBadge }})</span>
                 <AppIcon name="chevron-right" :size="12" />
               </NuxtLink>
             </div>
@@ -678,8 +757,8 @@ function onCardMousemove(e: MouseEvent) {
             <h2 class="bento-heading-dark">{{ tr.home.manifestoTag }}</h2>
           </div>
           <div class="manifesto-content">
-            <p class="manifesto-quote" v-html="tr.home.manifestoQuote" />
-            <p class="manifesto-lead" v-html="tr.home.manifestoLead" />
+            <p class="manifesto-quote" v-html="homeManifestoQuote" />
+            <p class="manifesto-lead" v-html="homeManifestoLead" />
             <div class="manifesto-footer">
               <span>{{ tr.home.manifestoNoTrends }}</span>
               <span>{{ tr.home.manifestoOnlySolutions }}</span>
@@ -699,15 +778,9 @@ function onCardMousemove(e: MouseEvent) {
             <span class="bento-cross" aria-hidden="true">+ +</span>
           </div>
           <ul class="bento-stack-list">
-            <li><span>VUE 3 / NUXT 4</span><span class="sq-mark">▪</span></li>
-            <li><span>TYPESCRIPT</span><span class="sq-mark">▪</span></li>
-            <li><span>REACT / NEXT.JS</span><span class="sq-mark">▪</span></li>
-            <li><span>PYTHON / FASTAPI</span><span class="sq-mark">▪</span></li>
-            <li><span>POSTGRESQL 17 ACID</span><span class="sq-mark">▪</span></li>
-            <li><span>PRISMA ORM</span><span class="sq-mark">▪</span></li>
-            <li><span>GSAP &amp; LENIS</span><span class="sq-mark">▪</span></li>
-            <li><span>TAILWIND CSS</span><span class="sq-mark">▪</span></li>
-            <li><span>DOCKER &amp; CI/CD</span><span class="sq-mark">▪</span></li>
+            <li v-for="st in bentoStackList" :key="st">
+              <span>{{ st }}</span><span class="sq-mark">▪</span>
+            </li>
           </ul>
         </article>
       </section>
@@ -828,21 +901,21 @@ function onCardMousemove(e: MouseEvent) {
               class="filter-pill font-mono text-[10.5px] sm:text-[11px] px-2 sm:px-2.5 py-1 border transition-colors duration-150 no-underline rounded-[2px] shrink-0"
               :class="!hasStatusFilter ? 'border-sig bg-sig text-on-sig font-bold' : 'border-rule bg-paper text-dim hover:border-sig hover:text-ink'"
             >
-              {{ tr.collection.filterAll }} (06)
+              {{ tr.collection.filterAll }} ({{ projectCounts.all }})
             </NuxtLink>
             <NuxtLink
               :to="routeFor(['projects'], { status: 'LIVE' })"
               class="filter-pill font-mono text-[10.5px] sm:text-[11px] px-2 sm:px-2.5 py-1 border transition-colors duration-150 no-underline rounded-[2px] shrink-0"
               :class="isStatusLive ? 'border-green bg-green/15 text-green font-bold' : 'border-rule bg-paper text-dim hover:border-green hover:text-green'"
             >
-              ● {{ tr.collection.filterLive }} (03)
+              ● {{ tr.collection.filterLive }} ({{ projectCounts.live }})
             </NuxtLink>
             <NuxtLink
               :to="routeFor(['projects'], { status: 'WIP' })"
               class="filter-pill font-mono text-[10.5px] sm:text-[11px] px-2 sm:px-2.5 py-1 border transition-colors duration-150 no-underline rounded-[2px] shrink-0"
               :class="isStatusWip ? 'border-amber bg-amber/15 text-amber font-bold' : 'border-rule bg-paper text-dim hover:border-amber hover:text-amber'"
             >
-              ○ {{ tr.collection.filterWip }} (03)
+              ○ {{ tr.collection.filterWip }} ({{ projectCounts.wip }})
             </NuxtLink>
           </div>
         </div>

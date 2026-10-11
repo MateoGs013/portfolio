@@ -11,7 +11,7 @@ import type { CollectionKey, DocKey } from '~/lib/fieldMeta'
 export type ListQuery = LocationQuery | Record<string, string | undefined>
 
 export type ListOf<K extends CollectionKey> =
-  K extends 'projects' ? Project[] : K extends 'experience' ? Experience[] : K extends 'stack' ? Tech[] : never
+  K extends 'projects' ? Project[] : K extends 'experience' ? Experience[] : K extends 'stack' ? Tech[] : K extends 'orgs' ? Org[] : never
 
 export type RecordOf<K extends CollectionKey> =
   K extends 'projects' ? Project : K extends 'experience' ? Experience : K extends 'stack' ? Tech : K extends 'orgs' ? Org : never
@@ -23,12 +23,12 @@ export interface Answer<T> extends Envelope<T> {
   ms: number
 }
 
-/** Endpoint de lista de cada colección. `orgs` no tiene: se llega por relación. */
+/** Endpoint de lista de cada colección. */
 export const listEndpoint: Record<CollectionKey, string | null> = {
   projects: '/projects',
   experience: '/experience',
   stack: '/stack',
-  orgs: null,
+  orgs: '/orgs',
 }
 
 /** Filtros que acepta cada lista. Es el contrato de URL: la query pública mapea uno a uno. */
@@ -84,15 +84,24 @@ export function useApi() {
     return get<ListOf<K>>(path, filtersFor(collection, query))
   }
 
-  /** Un record por slug. `projects` y `orgs` tienen detalle propio; el resto se saca de la lista. */
+  /** Un record por slug. Consulta el endpoint individual de la colección. */
   async function record<K extends CollectionKey>(collection: K, slug: string): Promise<Answer<RecordOf<K>>> {
-    if (collection === 'projects' || collection === 'orgs') {
-      return get<RecordOf<K>>(`/${collection}/${encodeURIComponent(slug)}`)
+    try {
+      return await get<RecordOf<K>>(`/${collection}/${encodeURIComponent(slug)}`)
     }
-    const answer = await list(collection)
-    const found = (answer.data as RecordOf<K>[]).find(r => r.slug === slug)
-    if (!found) throw createError({ statusCode: 404, statusMessage: 'no existe', data: { request: answer.request } })
-    return { ...answer, data: found, meta: { count: 1, filters: {} } }
+    catch (err) {
+      // Fallback por lista si el endpoint directo no estuviera disponible
+      try {
+        const answer = await list(collection)
+        const found = (answer.data as RecordOf<K>[]).find(r => r.slug === slug)
+        if (found) {
+          return { ...answer, data: found, meta: { count: 1, filters: {} } }
+        }
+      } catch {
+        // ignorar
+      }
+      throw err
+    }
   }
 
   const doc = (key: DocKey) => get<Doc>(`/docs/${key}`)

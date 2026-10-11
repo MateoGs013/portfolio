@@ -68,6 +68,8 @@ export interface Folder {
   facets: Facet[]
   projects?: Project[]
   experience?: Experience[]
+  homeDoc?: Doc | null
+  schemaCounts?: Record<string, number>
 }
 
 /** Un record vecino en la lista de la colección: a dónde se pasa de lado. */
@@ -139,6 +141,7 @@ export interface Detail {
   projects?: Project[]
   experience?: Experience[]
   contact?: Record<string, string>
+  requestLine?: string
 }
 
 export interface Explorer {
@@ -354,6 +357,21 @@ const fallbackDocData: Record<DocKey, Doc> = {
       { name: 'preferred_contact', type: 'string', value: 'Email directo, LinkedIn o mensaje vía GitHub' },
     ],
   },
+  home: {
+    key: 'home',
+    title: 'home',
+    updatedAt: new Date().toISOString(),
+    fields: [
+      { name: 'headline', type: 'string', value: 'CONSTRUIR CON PROPÓSITO' },
+      { name: 'about_tag', type: 'string', value: 'SOBRE MÍ —' },
+      { name: 'about_text', type: 'text', wide: true, value: 'Construyo productos digitales y arquitecturas de software que unen precisión relacional en PostgreSQL 17, APIs tipadas (TypeScript / Python) e interfaces reactivas contemporáneas con micro-interacciones espaciales. Mínimo ruido. Máximo impacto.' },
+      { name: 'globe_pill', type: 'string', value: 'DISPONIBLE GLOBALMENTE · COLABORACIONES REMOTAS Y FREELANCE' },
+      { name: 'profile_role', type: 'string', value: 'DESARROLLADOR FULL STACK Y CREATIVO' },
+      { name: 'profile_status', type: 'string', value: '● DISPONIBLE // 2026' },
+      { name: 'manifesto_quote', type: 'text', wide: true, value: 'EL BUEN CÓDIGO NO ES SOLO CÓMO SE VE.<br>ES CÓMO CORRE, A QUIÉN SIRVE Y QUÉ REPRESENTA.' },
+      { name: 'manifesto_lead', type: 'text', wide: true, value: 'DISEÑO CON PROPÓSITO.<br>CONSTRUYO CON PRECISIÓN.<br>ENTREGO CON ORGULLO.' },
+    ],
+  },
 }
 
 export async function resolveExplorer(api: Api, path: Path, query: LocationQuery): Promise<Explorer> {
@@ -368,36 +386,47 @@ export async function resolveExplorer(api: Api, path: Path, query: LocationQuery
 
   if (!root) {
     // La raíz es la base de datos completa: sus colecciones y documentos
-    const [schema, projectsRes, expRes] = await Promise.all([
+    const [schema, projectsRes, expRes, homeRes] = await Promise.all([
       api.schema(),
       api.list('projects').catch(() => null),
       api.list('experience').catch(() => null),
+      api.doc('home').catch(() => null),
     ])
     last = schema
-    const rootInfo: Record<string, { label: string, desc: string }> = {
-      projects: { label: 'proyectos', desc: '06 aplicaciones reales en producción' },
-      experience: { label: 'experiencia', desc: '06 etapas: freelance, Da Vinci y CET 30' },
-      stack: { label: 'stack', desc: '22 tecnologías con criterio técnico' },
-      about: { label: 'sobre mí', desc: 'Perfil, formación técnica y visión' },
-      contact: { label: 'contacto', desc: 'Email directo y disponibilidad inmediata' },
-      orgs: { label: 'organizaciones', desc: '04 empresas e instituciones' },
+    const schemaMap: Record<string, number> = {}
+    for (const e of schema.data) {
+      schemaMap[e.key] = e.count
+    }
+    const rootInfo: Record<string, { label: string, desc: (n: number) => string }> = {
+      projects: { label: 'proyectos', desc: n => `${pad(n)} aplicaciones reales en producción` },
+      experience: { label: 'experiencia', desc: n => `${pad(n)} etapas: freelance, Da Vinci y CET 30` },
+      stack: { label: 'stack', desc: n => `${pad(n)} tecnologías con criterio técnico` },
+      about: { label: 'sobre mí', desc: n => `${pad(n)} campos de perfil, formación y principios` },
+      contact: { label: 'contacto', desc: n => `${pad(n)} canales de contacto y disponibilidad` },
+      orgs: { label: 'organizaciones', desc: n => `${pad(n)} empresas e instituciones clientes` },
+      home: { label: 'portada', desc: n => `${pad(n)} campos de especificación editorial` },
     }
     folder = {
       head: 'db',
       line: ['database', `${pad(schema.meta.count)} tables`, 'PostgreSQL 17'],
       count: schema.meta.count,
       facets: [],
-      items: schema.data.map(e => ({
-        key: e.key,
-        label: rootInfo[e.key]?.label ?? e.label,
-        meta: rootInfo[e.key]?.desc ?? `${pad(e.count)} ${e.kind === 'collection' ? 'records' : 'fields'}`,
-        desc: rootInfo[e.key]?.desc,
-        badge: pad(e.count),
-        kind: e.kind === 'collection' ? 'folder' : 'file',
-        to: routeFor([e.key]),
-      })),
+      items: schema.data.filter(e => e.key !== 'home').map(e => {
+        const info = rootInfo[e.key]
+        return {
+          key: e.key,
+          label: info?.label ?? e.label,
+          meta: info ? info.desc(e.count) : `${pad(e.count)} ${e.kind === 'collection' ? 'records' : 'fields'}`,
+          desc: info ? info.desc(e.count) : undefined,
+          badge: pad(e.count),
+          kind: e.kind === 'collection' ? 'folder' : 'file',
+          to: routeFor([e.key]),
+        }
+      }),
       projects: projectsRes?.data ?? [],
       experience: expRes?.data ?? [],
+      homeDoc: homeRes?.data ?? null,
+      schemaCounts: schemaMap,
     }
     return done()
   }
@@ -614,6 +643,9 @@ export async function resolveExplorer(api: Api, path: Path, query: LocationQuery
   return done()
 
   function done(): Explorer {
+    if (detail) {
+      detail.requestLine = last.request
+    }
     return {
       level: path.length,
       folder,

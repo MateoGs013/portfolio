@@ -86,6 +86,27 @@ useHead({
 usePreloadFonts('datos')
 
 const nuxtApp = useNuxtApp()
+
+const { data: schemaSummary } = await useAsyncData(
+  'schema-summary',
+  () => api.schema(),
+  {
+    getCachedData(key) {
+      return nuxtApp.isHydrating ? nuxtApp.payload.data[key] : nuxtApp.static.data[key]
+    }
+  }
+)
+
+const liveCounts = computed<Record<string, number>>(() => {
+  const map: Record<string, number> = {}
+  if (schemaSummary.value?.data) {
+    for (const item of schemaSummary.value.data) {
+      map[item.key] = item.count
+    }
+  }
+  return map
+})
+
 const { data: ex, error } = await useAsyncData<Explorer>(
   computed(() => `explorer${route.fullPath}`),
   () => resolveExplorer(api, path.value, route.query),
@@ -268,11 +289,11 @@ interface NavSection {
 
 const navSections = computed<NavSection[]>(() => [
   { root: '', label: isEs.value ? 'db / raíz' : 'db / root', shortLabel: isEs.value ? 'Inicio' : 'Home', to: [], badge: 'SYS', keyHint: '0', icon: 'db', desc: isEs.value ? 'Resumen del sistema y arquitectura' : 'System overview & architecture' },
-  { root: 'projects', label: isEs.value ? '01 · proyectos' : '01 · projects', shortLabel: isEs.value ? 'Proyectos' : 'Projects', to: ['projects'], badge: '06', keyHint: '1', icon: 'folder', desc: isEs.value ? 'Aplicaciones en producción' : 'Production applications' },
-  { root: 'experience', label: isEs.value ? '02 · experiencia' : '02 · experience', shortLabel: 'Exp', to: ['experience'], badge: '07', keyHint: '2', icon: 'briefcase', desc: isEs.value ? 'Trayectoria profesional y roles' : 'Career history & roles' },
-  { root: 'stack', label: isEs.value ? '03 · stack' : '03 · stack', shortLabel: 'Stack', to: ['stack'], badge: '22', keyHint: '3', icon: 'code', desc: isEs.value ? 'Tecnologías y lenguajes' : 'Technologies & languages' },
-  { root: 'about', label: isEs.value ? '04 · sobre mí' : '04 · about me', shortLabel: isEs.value ? 'CV' : 'About', to: ['about'], badge: '13', keyHint: '4', icon: 'file', desc: isEs.value ? 'Perfil bio, formación y principios' : 'Bio, resume & principles' },
-  { root: 'contact', label: isEs.value ? '05 · contacto' : '05 · contact', shortLabel: isEs.value ? 'Contacto' : 'Contact', to: ['contact'], badge: '06', keyHint: '5', icon: 'mail', desc: isEs.value ? 'Canales y disponibilidad' : 'Channels & availability' },
+  { root: 'projects', label: isEs.value ? '01 · proyectos' : '01 · projects', shortLabel: isEs.value ? 'Proyectos' : 'Projects', to: ['projects'], badge: pad(liveCounts.value.projects ?? 6), keyHint: '1', icon: 'folder', desc: isEs.value ? 'Aplicaciones en producción' : 'Production applications' },
+  { root: 'experience', label: isEs.value ? '02 · experiencia' : '02 · experience', shortLabel: 'Exp', to: ['experience'], badge: pad(liveCounts.value.experience ?? 6), keyHint: '2', icon: 'briefcase', desc: isEs.value ? 'Trayectoria profesional y roles' : 'Career history & roles' },
+  { root: 'stack', label: isEs.value ? '03 · stack' : '03 · stack', shortLabel: 'Stack', to: ['stack'], badge: pad(liveCounts.value.stack ?? 22), keyHint: '3', icon: 'code', desc: isEs.value ? 'Tecnologías y lenguajes' : 'Technologies & languages' },
+  { root: 'about', label: isEs.value ? '04 · sobre mí' : '04 · about me', shortLabel: isEs.value ? 'CV' : 'About', to: ['about'], badge: pad(liveCounts.value.about ?? 13), keyHint: '4', icon: 'file', desc: isEs.value ? 'Perfil bio, formación y principios' : 'Bio, resume & principles' },
+  { root: 'contact', label: isEs.value ? '05 · contacto' : '05 · contact', shortLabel: isEs.value ? 'Contacto' : 'Contact', to: ['contact'], badge: pad(liveCounts.value.contact ?? 7), keyHint: '5', icon: 'mail', desc: isEs.value ? 'Canales y disponibilidad' : 'Channels & availability' },
 ])
 
 const currentRoot = computed(() => path.value[0] ?? '')
