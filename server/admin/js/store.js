@@ -58,6 +58,7 @@ export const store = reactive({
     isEvaluatingSingle: false,
     isPitching: false,
     isGeneratingCV: false,
+    isPurging: false,
     copiedPitch: false,
     copiedCV: false,
   },
@@ -390,13 +391,21 @@ export const store = reactive({
 
   async purgeHunterJobs() {
     const s = this || store
+    if (s.hunter.isPurging) return
+    s.hunter.isPurging = true
     try {
       const res = await api.purgeHunterJobs()
       const count = res?.purged_count ?? res?.data?.purged_count ?? 0
-      s.toast('ok', `Depuración completa: ${count} vacantes no calificadas descartadas`)
+      if (count > 0) {
+        s.toast('ok', `Depuración completa: ${count} vacantes incompatibles/descartadas eliminadas`)
+      } else {
+        s.toast('info', 'No se encontraron vacantes incompatibles para depurar')
+      }
       await s.loadHunterJobs()
     } catch (err) {
       s.toast('err', `Error al depurar vacantes: ${err.message}`)
+    } finally {
+      s.hunter.isPurging = false
     }
   },
 

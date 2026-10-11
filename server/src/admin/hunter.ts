@@ -39,6 +39,13 @@ async function forward(urlPath: string, init?: RequestInit, timeoutMs = 60000) {
     })
     const isJson = res.headers.get('content-type')?.includes('application/json')
     const data = isJson ? await res.json().catch(() => null) : await res.text()
+    if (res.status === 401 || res.status === 403) {
+      return {
+        ok: false,
+        status: 502,
+        data: { error: 'Fallo de autenticación entre Portfolio y Eros Agent (verificar EROS_API_KEY en variables de entorno)' },
+      }
+    }
     return { ok: res.ok, status: res.status, data }
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : String(err)

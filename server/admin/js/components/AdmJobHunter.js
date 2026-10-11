@@ -312,9 +312,10 @@ export const AdmJobHunter = {
     }
 
     async function purgeJobs() {
+      if (store.hunter.isPurging) return
       const confirmed = await store.requestConfirm({
         title: 'Depurar Vacantes Incompatibles',
-        message: 'Esto descartará vacantes de la base que no cumplan con el filtro geográfico (W2 / US-only), seniority o stack.',
+        message: 'Esto eliminará permanentemente de la base las vacantes incompatibles (W2 / EE.UU. Only / stack no afín) y aquellas descartadas o con coincidencia menor a 35%.',
         confirmText: 'Depurar Ahora',
         kind: 'warning',
       })
@@ -376,11 +377,13 @@ export const AdmJobHunter = {
             <button
               type="button"
               @click="purgeJobs"
-              title="Depurar vacantes incompatibles (W2 / EE.UU. Only / Obsoletas)"
-              class="btn-ghost !h-[26px] !px-2 !text-[11px] cursor-pointer text-zinc-400 hover:text-white font-mono-code inline-flex items-center gap-1 shrink-0"
+              :disabled="store.hunter.isPurging"
+              title="Depurar vacantes incompatibles (W2 / EE.UU. Only / Obsoletas / Descartadas)"
+              class="btn-ghost !h-[26px] !px-2 !text-[11px] cursor-pointer text-zinc-400 hover:text-white font-mono-code inline-flex items-center gap-1 shrink-0 disabled:opacity-50"
             >
-              <svg class="adm-icon xs text-zinc-400" viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
-              <span>Depurar</span>
+              <svg v-if="store.hunter.isPurging" class="adm-icon xs animate-spin text-zinc-400" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
+              <svg v-else class="adm-icon xs text-zinc-400" viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+              <span>{{ store.hunter.isPurging ? 'Depurando...' : 'Depurar' }}</span>
             </button>
           </div>
 
