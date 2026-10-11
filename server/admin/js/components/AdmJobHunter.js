@@ -39,6 +39,11 @@ export const AdmJobHunter = {
       })
     })
 
+    const pendingJobsCount = computed(() => {
+      const list = store.hunter.jobs || []
+      return list.filter(j => (j.match_score === null || j.match_score === undefined) && j.status !== 'discarded').length
+    })
+
     const selectedAnalysis = computed(() => {
       if (!store.hunter.selected || !store.hunter.selected.match_analysis) return null
       try {
@@ -293,6 +298,10 @@ export const AdmJobHunter = {
     }
 
     async function evaluatePendingJobs() {
+      if (pendingJobsCount.value === 0) {
+        store.toast('info', 'No hay vacantes pendientes de evaluación en la cola')
+        return
+      }
       await store.evaluatePendingHunterJobs()
     }
 
@@ -321,6 +330,7 @@ export const AdmJobHunter = {
       cvData,
       activePitchTab,
       filteredJobs,
+      pendingJobsCount,
       selectedAnalysis,
       selectJob,
       setJobStatus,
@@ -347,46 +357,58 @@ export const AdmJobHunter = {
         :class="hunterMobileView === 'list' ? 'flex w-full md:w-84' : 'hidden md:flex md:w-84'"
       >
         <div class="p-3 border-b border-white/10 space-y-2.5 bg-[#0c0d10]">
-          <div class="flex items-center justify-between">
-            <div class="flex items-center gap-2">
-              <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
-              <h2 class="text-xs font-bold text-white uppercase font-mono-code tracking-wide">
+          <!-- Fila 1: Título y Acción Secundaria (Depurar) -->
+          <div class="flex items-center justify-between gap-2">
+            <div class="flex items-center gap-2 min-w-0">
+              <span class="w-2 h-2 rounded-full bg-emerald-400 shrink-0"></span>
+              <h2 class="text-xs font-bold text-white uppercase font-mono-code tracking-wide truncate">
                 Eros Hunter
               </h2>
-              <span class="text-[10px] font-mono-code bg-white/5 text-zinc-400 px-1.5 py-0.2 rounded border border-white/10">
-                {{ filteredJobs.length }}
+              <span 
+                class="text-[10px] font-mono-code bg-white/5 text-zinc-400 px-1.5 py-0.5 rounded border border-white/10 shrink-0"
+                :title="'Mostrando ' + filteredJobs.length + ' de ' + store.hunter.jobs.length + ' vacantes'"
+              >
+                {{ filteredJobs.length }}<span v-if="filteredJobs.length !== store.hunter.jobs.length" class="text-zinc-500">/{{ store.hunter.jobs.length }}</span>
               </span>
             </div>
 
-            <div class="flex items-center gap-1.5 flex-wrap">
-              <button
-                type="button"
-                @click="evaluatePendingJobs"
-                :disabled="store.hunter.isEvaluating"
-                title="Evaluar con IA las vacantes pendientes en cola"
-                class="btn-secondary !h-[26px] !px-2 !text-[11px] cursor-pointer text-amber-300 border-amber-500/30 hover:bg-amber-500/10 inline-flex items-center gap-1"
-              >
-                <span v-if="store.hunter.isEvaluating" class="animate-spin inline-block text-[10px]">↻</span>
-                <span>{{ store.hunter.isEvaluating ? 'Evaluando...' : '🧠 Evaluar' }}</span>
-              </button>
-              <button
-                type="button"
-                @click="purgeJobs"
-                title="Depurar vacantes incompatibles (W2 / EE.UU. Only / Obsoletas)"
-                class="btn-ghost !h-[26px] !px-1.5 !text-[11px] cursor-pointer text-zinc-400 hover:text-white"
-              >
-                Depurar
-              </button>
-              <button
-                type="button"
-                @click="scanJobs"
-                :disabled="store.hunter.isScanning"
-                class="btn-primary !h-[26px] !px-2 !text-xs cursor-pointer disabled:opacity-50 inline-flex items-center gap-1"
-              >
-                <span v-if="store.hunter.isScanning" class="animate-spin inline-block text-[11px]">↻</span>
-                <span>{{ store.hunter.isScanning ? 'Escaneando...' : 'Escanear' }}</span>
-              </button>
-            </div>
+            <button
+              type="button"
+              @click="purgeJobs"
+              title="Depurar vacantes incompatibles (W2 / EE.UU. Only / Obsoletas)"
+              class="btn-ghost !h-[26px] !px-2 !text-[11px] cursor-pointer text-zinc-400 hover:text-white font-mono-code inline-flex items-center gap-1 shrink-0"
+            >
+              <span>🧹</span>
+              <span>Depurar</span>
+            </button>
+          </div>
+
+          <!-- Fila 2: Acciones Principales (Escanear & Evaluar con IA) -->
+          <div class="grid grid-cols-2 gap-2">
+            <button
+              type="button"
+              @click="scanJobs"
+              :disabled="store.hunter.isScanning"
+              class="btn-primary !h-[30px] !px-2 text-xs font-semibold cursor-pointer disabled:opacity-50 inline-flex items-center justify-center gap-1.5"
+            >
+              <span v-if="store.hunter.isScanning" class="animate-spin inline-block text-[11px]">↻</span>
+              <span v-else>⚡</span>
+              <span>{{ store.hunter.isScanning ? 'Escaneando...' : 'Escanear' }}</span>
+            </button>
+            <button
+              type="button"
+              @click="evaluatePendingJobs"
+              :disabled="store.hunter.isEvaluating"
+              :title="pendingJobsCount > 0 ? `Evaluar con IA las ${pendingJobsCount} vacantes pendientes` : 'Evaluar vacantes pendientes'"
+              class="btn-secondary !h-[30px] !px-2 text-xs font-semibold cursor-pointer text-amber-300 border-amber-500/30 hover:bg-amber-500/10 disabled:opacity-50 inline-flex items-center justify-center gap-1.5"
+            >
+              <span v-if="store.hunter.isEvaluating" class="animate-spin inline-block text-[11px]">↻</span>
+              <span v-else>🧠</span>
+              <span>{{ store.hunter.isEvaluating ? 'Evaluando...' : 'Evaluar' }}</span>
+              <span v-if="!store.hunter.isEvaluating && pendingJobsCount > 0" class="text-[10px] bg-amber-500/20 text-amber-300 px-1 py-0.2 rounded font-mono-code">
+                {{ pendingJobsCount }}
+              </span>
+            </button>
           </div>
 
           <!-- Buscador -->
@@ -395,58 +417,81 @@ export const AdmJobHunter = {
               type="text"
               v-model="store.searchQuery"
               placeholder="Buscar rol, empresa o portal..."
-              class="text-input !h-[30px] pl-7 text-xs font-mono-code"
+              class="text-input !h-[30px] !pl-8.5 !pr-7 text-xs font-mono-code w-full placeholder:text-zinc-500"
             />
-            <svg class="adm-icon sm text-zinc-500 absolute left-2 top-1/2 -translate-y-1/2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+            <svg class="adm-icon sm text-zinc-500 absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+            <button
+              v-if="store.searchQuery"
+              type="button"
+              @click="store.searchQuery = ''"
+              class="absolute right-2 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-white text-xs cursor-pointer p-1"
+              title="Limpiar búsqueda"
+            >
+              ✕
+            </button>
           </div>
 
-          <!-- Filtros de Vacantes -->
-          <div class="flex items-center gap-1 text-[10.5px] font-mono-code flex-wrap">
+          <!-- Filtros de Vacantes (Grid 3x2 parejo) -->
+          <div class="grid grid-cols-3 gap-1 pt-0.5 font-mono-code text-[11px]">
             <button
               type="button"
               @click="store.hunter.filter = 'high'"
-              class="px-2 py-0.5 rounded transition-colors cursor-pointer"
-              :class="store.hunter.filter === 'high' ? 'bg-[#ff3e00]/20 text-[#ff3e00] font-bold border border-[#ff3e00]/30' : 'text-zinc-500 hover:text-white'"
+              class="px-1 py-1 rounded text-center truncate border transition-all cursor-pointer"
+              :class="store.hunter.filter === 'high' 
+                ? 'bg-[#ff3e00]/20 text-[#ff3e00] font-bold border-[#ff3e00]/40' 
+                : 'bg-white/[0.02] text-zinc-400 border-white/5 hover:text-white hover:bg-white/5'"
             >
-              Score &ge; 70%
+              &ge; 70% Match
             </button>
             <button
               type="button"
               @click="store.hunter.filter = 'all'"
-              class="px-2 py-0.5 rounded transition-colors cursor-pointer"
-              :class="store.hunter.filter === 'all' ? 'bg-white/15 text-white font-semibold' : 'text-zinc-500 hover:text-white'"
+              class="px-1 py-1 rounded text-center truncate border transition-all cursor-pointer"
+              :class="store.hunter.filter === 'all' 
+                ? 'bg-white/20 text-white font-bold border-white/30' 
+                : 'bg-white/[0.02] text-zinc-400 border-white/5 hover:text-white hover:bg-white/5'"
             >
               Todas
             </button>
             <button
               type="button"
               @click="store.hunter.filter = 'pending'"
-              class="px-2 py-0.5 rounded transition-colors cursor-pointer"
-              :class="store.hunter.filter === 'pending' ? 'bg-amber-500/20 text-amber-300 font-bold border border-amber-500/30' : 'text-zinc-500 hover:text-white'"
+              class="px-1 py-1 rounded text-center truncate border transition-all cursor-pointer"
+              :class="store.hunter.filter === 'pending' 
+                ? 'bg-amber-500/20 text-amber-300 font-bold border-amber-500/40' 
+                : pendingJobsCount > 0 
+                  ? 'bg-amber-500/10 text-amber-400/90 border-amber-500/25 hover:text-amber-200' 
+                  : 'bg-white/[0.02] text-zinc-400 border-white/5 hover:text-white hover:bg-white/5'"
             >
-              Pendientes
+              Pendientes{{ pendingJobsCount > 0 ? ` (${pendingJobsCount})` : '' }}
             </button>
             <button
               type="button"
               @click="store.hunter.filter = 'saved'"
-              class="px-2 py-0.5 rounded transition-colors cursor-pointer"
-              :class="store.hunter.filter === 'saved' ? 'bg-amber-500/15 text-amber-300 font-semibold' : 'text-zinc-500 hover:text-white'"
+              class="px-1 py-1 rounded text-center truncate border transition-all cursor-pointer"
+              :class="store.hunter.filter === 'saved' 
+                ? 'bg-amber-500/20 text-amber-300 font-bold border-amber-500/40' 
+                : 'bg-white/[0.02] text-zinc-400 border-white/5 hover:text-white hover:bg-white/5'"
             >
               Guardadas
             </button>
             <button
               type="button"
               @click="store.hunter.filter = 'applied'"
-              class="px-2 py-0.5 rounded transition-colors cursor-pointer"
-              :class="store.hunter.filter === 'applied' ? 'bg-emerald-500/15 text-emerald-300 font-semibold' : 'text-zinc-500 hover:text-white'"
+              class="px-1 py-1 rounded text-center truncate border transition-all cursor-pointer"
+              :class="store.hunter.filter === 'applied' 
+                ? 'bg-emerald-500/20 text-emerald-300 font-bold border-emerald-500/40' 
+                : 'bg-white/[0.02] text-zinc-400 border-white/5 hover:text-white hover:bg-white/5'"
             >
               Postuladas
             </button>
             <button
               type="button"
               @click="store.hunter.filter = 'discarded'"
-              class="px-2 py-0.5 rounded transition-colors cursor-pointer"
-              :class="store.hunter.filter === 'discarded' ? 'bg-red-500/15 text-red-300 font-semibold' : 'text-zinc-500 hover:text-white'"
+              class="px-1 py-1 rounded text-center truncate border transition-all cursor-pointer"
+              :class="store.hunter.filter === 'discarded' 
+                ? 'bg-red-500/20 text-red-300 font-bold border-red-500/40' 
+                : 'bg-white/[0.02] text-zinc-400 border-white/5 hover:text-white hover:bg-white/5'"
             >
               Descartadas
             </button>
@@ -499,8 +544,74 @@ export const AdmJobHunter = {
             </div>
           </div>
 
-          <div v-if="filteredJobs.length === 0" class="p-8 text-center text-xs text-zinc-500 font-mono-code">
-            Sin vacantes bajo este criterio. Presioná "Escanear" para consultar fuentes activas en Eros.
+          <!-- Estados Vacíos Inteligentes -->
+          <div v-if="filteredJobs.length === 0" class="p-6 text-center">
+            <!-- Caso 1: Hay vacantes sin evaluar -->
+            <div v-if="pendingJobsCount > 0 && !store.searchQuery" class="space-y-3">
+              <div class="text-amber-400 text-xs font-mono-code flex items-center justify-center gap-1.5 font-bold">
+                <span>⏳</span>
+                <span>{{ pendingJobsCount }} vacante{{ pendingJobsCount === 1 ? '' : 's' }} sin evaluar</span>
+              </div>
+              <p class="text-[11px] text-zinc-400 leading-relaxed font-mono-code max-w-[240px] mx-auto">
+                Hay vacantes capturadas pendientes de análisis semántico con IA.
+              </p>
+              <div class="flex flex-col gap-2 pt-1 max-w-[200px] mx-auto">
+                <button
+                  type="button"
+                  @click="evaluatePendingJobs"
+                  :disabled="store.hunter.isEvaluating"
+                  class="btn-secondary !h-[30px] !px-3 !text-xs text-amber-300 border-amber-500/30 hover:bg-amber-500/10 cursor-pointer inline-flex items-center justify-center gap-1 font-mono-code"
+                >
+                  <span v-if="store.hunter.isEvaluating" class="animate-spin inline-block text-[10px]">↻</span>
+                  <span>{{ store.hunter.isEvaluating ? 'Evaluando...' : '🧠 Evaluar cola ahora' }}</span>
+                </button>
+                <button
+                  type="button"
+                  @click="store.hunter.filter = 'pending'"
+                  class="btn-ghost !h-[26px] !px-2 !text-[11px] text-zinc-300 hover:text-white cursor-pointer font-mono-code"
+                >
+                  Ver pendientes
+                </button>
+              </div>
+            </div>
+
+            <!-- Caso 2: Búsqueda activa sin resultados -->
+            <div v-else-if="store.searchQuery" class="space-y-2 font-mono-code">
+              <div class="text-xs text-zinc-400">Sin resultados para "{{ store.searchQuery }}"</div>
+              <button
+                type="button"
+                @click="store.searchQuery = ''"
+                class="text-[11px] text-[#ff3e00] hover:underline cursor-pointer"
+              >
+                Limpiar búsqueda
+              </button>
+            </div>
+
+            <!-- Caso 3: Sin vacantes en absoluto -->
+            <div v-else-if="store.hunter.jobs.length === 0" class="space-y-3 font-mono-code">
+              <div class="text-xs text-zinc-400">Sin vacantes registradas en el radar.</div>
+              <button
+                type="button"
+                @click="scanJobs"
+                :disabled="store.hunter.isScanning"
+                class="btn-primary !h-[28px] !px-3 !text-xs cursor-pointer inline-flex items-center gap-1.5 mx-auto"
+              >
+                <span v-if="store.hunter.isScanning" class="animate-spin inline-block text-[10px]">↻</span>
+                <span>{{ store.hunter.isScanning ? 'Escaneando...' : '⚡ Escanear portales' }}</span>
+              </button>
+            </div>
+
+            <!-- Caso 4: Filtro sin resultados -->
+            <div v-else class="space-y-2 font-mono-code">
+              <div class="text-xs text-zinc-400">Sin vacantes bajo el criterio actual.</div>
+              <button
+                type="button"
+                @click="store.hunter.filter = 'all'"
+                class="text-[11px] text-zinc-300 hover:text-white underline cursor-pointer"
+              >
+                Ver todas ({{ store.hunter.jobs.length }})
+              </button>
+            </div>
           </div>
         </div>
       </div>
