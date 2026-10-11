@@ -148,6 +148,22 @@ export class ApiClient {
     return this.fetch('hunter/purge', { method: 'POST' })
   }
 
+  async semanticSearchHunterJobs(query, limit = 30) {
+    return this.fetch('hunter/search/semantic', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ query, limit }),
+    })
+  }
+
+  async vectorizeHunterJobs(limit = 100) {
+    return this.fetch('hunter/vectorize', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ limit }),
+    })
+  }
+
   async updateHunterJobStatus(id, status) {
     return this.fetch(`hunter/jobs/${encodeURIComponent(id)}/status`, {
       method: 'PATCH',

@@ -124,6 +124,24 @@ hunterRouter.post('/purge', async (_req: Request, res: Response) => {
   res.status(result.status).json(result.data)
 })
 
+/** POST /api/admin/hunter/search/semantic */
+hunterRouter.post(['/search/semantic', '/semantic-search'], async (req: Request, res: Response) => {
+  const result = await forward('api/jobs/semantic-search', {
+    method: 'POST',
+    body: JSON.stringify(req.body),
+  }, 30000)
+  res.status(result.status).json(result.data)
+})
+
+/** POST /api/admin/hunter/vectorize */
+hunterRouter.post('/vectorize', async (req: Request, res: Response) => {
+  const result = await forward('api/vectorize', {
+    method: 'POST',
+    body: JSON.stringify(req.body),
+  }, 45000)
+  res.status(result.status).json(result.data)
+})
+
 function getParamId(req: Request): string {
   const val = req.params['id']
   if (Array.isArray(val)) return val[0] || ''

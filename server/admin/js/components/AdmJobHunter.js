@@ -16,7 +16,7 @@ export const AdmJobHunter = {
 
     const filteredJobs = computed(() => {
       const q = store.searchQuery.trim().toLowerCase()
-      let list = store.hunter.jobs || []
+      let list = [...(store.hunter.jobs || [])]
 
       if (store.hunter.filter === 'high') {
         list = list.filter(j => (j.match_score || 0) >= 70)
@@ -30,13 +30,24 @@ export const AdmJobHunter = {
         list = list.filter(j => j.status === 'discarded')
       }
 
-      if (!q) return list
-      return list.filter(j => {
-        const title = (j.title || '').toLowerCase()
-        const comp = (j.company || '').toLowerCase()
-        const src = (j.source || '').toLowerCase()
-        return title.includes(q) || comp.includes(q) || src.includes(q)
-      })
+      if (q) {
+        list = list.filter(j => {
+          const title = (j.title || '').toLowerCase()
+          const comp = (j.company || '').toLowerCase()
+          const src = (j.source || '').toLowerCase()
+          return title.includes(q) || comp.includes(q) || src.includes(q)
+        })
+      }
+
+      if (store.hunter.sortBy === 'semantic') {
+        list.sort((a, b) => (b.semantic_score || 0) - (a.semantic_score || 0))
+      } else if (store.hunter.sortBy === 'recent') {
+        list.sort((a, b) => String(b.found_at || '').localeCompare(String(a.found_at || '')))
+      } else {
+        list.sort((a, b) => (b.match_score || 0) - (a.match_score || 0))
+      }
+
+      return list
     })
 
     const pendingJobsCount = computed(() => {
@@ -324,6 +335,10 @@ export const AdmJobHunter = {
       }
     }
 
+    async function vectorizeJobs() {
+      await store.vectorizeHunterJobs()
+    }
+
     return {
       store,
       hunterPitch,
@@ -348,6 +363,7 @@ export const AdmJobHunter = {
       evaluatePendingJobs,
       evaluateCurrentJob,
       purgeJobs,
+      vectorizeJobs,
       hunterMobileView,
     }
   },
@@ -374,17 +390,30 @@ export const AdmJobHunter = {
               </span>
             </div>
 
-            <button
-              type="button"
-              @click="purgeJobs"
-              :disabled="store.hunter.isPurging"
-              title="Depurar vacantes incompatibles (W2 / EE.UU. Only / Obsoletas / Descartadas)"
-              class="btn-ghost !h-[26px] !px-2 !text-[11px] cursor-pointer text-zinc-400 hover:text-white font-mono-code inline-flex items-center gap-1 shrink-0 disabled:opacity-50"
-            >
-              <svg v-if="store.hunter.isPurging" class="adm-icon xs animate-spin text-zinc-400" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
-              <svg v-else class="adm-icon xs text-zinc-400" viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
-              <span>{{ store.hunter.isPurging ? 'Depurando...' : 'Depurar' }}</span>
-            </button>
+            <div class="flex items-center gap-1 shrink-0">
+              <button
+                type="button"
+                @click="vectorizeJobs"
+                :disabled="store.hunter.isVectorizing"
+                title="Vectorizar vacantes con Gemini text-embedding"
+                class="btn-ghost !h-[26px] !px-1.5 !text-[11px] cursor-pointer text-zinc-400 hover:text-cyan-300 font-mono-code inline-flex items-center gap-1 shrink-0 disabled:opacity-50"
+              >
+                <svg v-if="store.hunter.isVectorizing" class="adm-icon xs animate-spin text-cyan-400" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
+                <svg v-else class="adm-icon xs text-zinc-400" viewBox="0 0 24 24"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+                <span class="hidden sm:inline">{{ store.hunter.isVectorizing ? 'Indexando...' : 'Vectorizar' }}</span>
+              </button>
+              <button
+                type="button"
+                @click="purgeJobs"
+                :disabled="store.hunter.isPurging"
+                title="Depurar vacantes incompatibles (W2 / EE.UU. Only / Obsoletas / Descartadas)"
+                class="btn-ghost !h-[26px] !px-1.5 !text-[11px] cursor-pointer text-zinc-400 hover:text-white font-mono-code inline-flex items-center gap-1 shrink-0 disabled:opacity-50"
+              >
+                <svg v-if="store.hunter.isPurging" class="adm-icon xs animate-spin text-zinc-400" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
+                <svg v-else class="adm-icon xs text-zinc-400" viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+                <span>{{ store.hunter.isPurging ? 'Depurando...' : 'Depurar' }}</span>
+              </button>
+            </div>
           </div>
 
           <!-- Fila 2: Acciones Principales (Escanear & Evaluar con IA) -->
@@ -433,6 +462,40 @@ export const AdmJobHunter = {
             >
               <svg class="adm-icon xs" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
             </button>
+          </div>
+
+          <!-- Selector de Ordenamiento Semántico / IA / Recientes -->
+          <div class="flex items-center justify-between text-[10px] font-mono-code text-zinc-400 px-0.5">
+            <span class="text-zinc-500">Orden:</span>
+            <div class="flex items-center gap-1">
+              <button
+                type="button"
+                @click="store.hunter.sortBy = 'ia'"
+                class="px-1.5 py-0.5 rounded cursor-pointer transition-colors"
+                :class="store.hunter.sortBy === 'ia' ? 'bg-amber-500/20 text-amber-300 font-bold border border-amber-500/30' : 'text-zinc-500 hover:text-zinc-300'"
+                title="Ordenar por Score de IA"
+              >
+                Match IA
+              </button>
+              <button
+                type="button"
+                @click="store.hunter.sortBy = 'semantic'"
+                class="px-1.5 py-0.5 rounded cursor-pointer transition-colors"
+                :class="store.hunter.sortBy === 'semantic' ? 'bg-cyan-500/20 text-cyan-300 font-bold border border-cyan-500/30' : 'text-zinc-500 hover:text-zinc-300'"
+                title="Ordenar por Afinidad Vectorial (Gemini Embedding)"
+              >
+                Vectorial
+              </button>
+              <button
+                type="button"
+                @click="store.hunter.sortBy = 'recent'"
+                class="px-1.5 py-0.5 rounded cursor-pointer transition-colors"
+                :class="store.hunter.sortBy === 'recent' ? 'bg-white/10 text-white font-bold border border-white/20' : 'text-zinc-500 hover:text-zinc-300'"
+                title="Ordenar por fecha de captura"
+              >
+                Recientes
+              </button>
+            </div>
           </div>
 
           <!-- Filtros de Vacantes (Grid 3x2 parejo) -->
@@ -515,27 +578,37 @@ export const AdmJobHunter = {
           >
             <div class="flex items-center justify-between text-xs font-bold text-white">
               <span class="truncate">{{ j.title }}</span>
-              <span 
-                v-if="j.match_score !== null && j.match_score !== undefined"
-                class="font-mono-code font-bold text-[11px] shrink-0 ml-1.5"
-                :class="j.match_score >= 70 ? 'text-emerald-400' : j.match_score >= 50 ? 'text-amber-400' : 'text-zinc-400'"
-              >
-                {{ j.match_score }}%
-              </span>
-              <span
-                v-else-if="j.status === 'discarded'"
-                class="font-mono-code text-[10px] text-red-400/80 shrink-0 ml-1.5"
-              >
-                Desc.
-              </span>
-              <span
-                v-else
-                class="font-mono-code text-[10px] text-amber-400 bg-amber-500/10 border border-amber-500/20 px-1.5 py-0.2 rounded shrink-0 ml-1.5 inline-flex items-center gap-1"
-                title="Pendiente de evaluación con IA"
-              >
-                <svg class="adm-icon xs text-amber-400" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                <span>Pendiente</span>
-              </span>
+              <div class="flex items-center gap-1 shrink-0 ml-1.5">
+                <span 
+                  v-if="j.match_score !== null && j.match_score !== undefined"
+                  class="font-mono-code font-bold text-[11px]"
+                  :class="j.match_score >= 70 ? 'text-emerald-400' : j.match_score >= 50 ? 'text-amber-400' : 'text-zinc-400'"
+                  :title="'Score IA: ' + j.match_score + '%'"
+                >
+                  {{ j.match_score }}%
+                </span>
+                <span
+                  v-if="j.semantic_score !== null && j.semantic_score !== undefined"
+                  class="font-mono-code text-[9px] text-cyan-300 bg-cyan-500/10 border border-cyan-500/20 px-1 py-0.2 rounded"
+                  :title="'Afinidad Vectorial Gemini: ' + j.semantic_score + '%'"
+                >
+                  v:{{ j.semantic_score }}%
+                </span>
+                <span
+                  v-else-if="j.status === 'discarded'"
+                  class="font-mono-code text-[10px] text-red-400/80"
+                >
+                  Desc.
+                </span>
+                <span
+                  v-else-if="j.match_score === null || j.match_score === undefined"
+                  class="font-mono-code text-[10px] text-amber-400 bg-amber-500/10 border border-amber-500/20 px-1.5 py-0.2 rounded inline-flex items-center gap-1"
+                  title="Pendiente de evaluación con IA"
+                >
+                  <svg class="adm-icon xs text-amber-400" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                  <span>Pendiente</span>
+                </span>
+              </div>
             </div>
             <div class="text-[11px] text-zinc-400 mt-0.5 truncate">{{ j.company }} · <span class="capitalize">{{ j.source }}</span></div>
             <div class="text-[10px] font-mono-code text-zinc-500 mt-1.5 flex items-center justify-between gap-1">
@@ -657,7 +730,14 @@ export const AdmJobHunter = {
                   class="text-xs font-mono-code font-bold px-2 py-0.5 rounded border"
                   :class="store.hunter.selected.match_score >= 70 ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20' : 'text-amber-400 bg-amber-500/10 border-amber-500/20'"
                 >
-                  {{ store.hunter.selected.match_score }}% Match
+                  {{ store.hunter.selected.match_score }}% Match IA
+                </span>
+                <span 
+                  v-if="store.hunter.selected.semantic_score !== null && store.hunter.selected.semantic_score !== undefined"
+                  class="text-xs font-mono-code font-bold px-2 py-0.5 rounded border text-cyan-300 bg-cyan-500/10 border-cyan-500/20"
+                  :title="'Afinidad vectorial calculada con text-embedding de Gemini'"
+                >
+                  {{ store.hunter.selected.semantic_score }}% Vectorial
                 </span>
                 <span 
                   v-else-if="store.hunter.selected.status === 'discarded'"
@@ -751,6 +831,22 @@ export const AdmJobHunter = {
                 <span class="text-[10px] text-zinc-400 bg-white/5 border border-white/10 px-2 py-0.5 rounded">
                   {{ store.hunter.selected.salary && !store.hunter.selected.salary.includes('Est') ? 'Dato publicado por la empresa' : 'Estimación de mercado (Eros IA)' }}
                 </span>
+              </div>
+
+              <!-- Medidor de Afinidad Vectorial (Gemini Embedding) -->
+              <div v-if="store.hunter.selected.semantic_score !== null && store.hunter.selected.semantic_score !== undefined" class="p-3 bg-[#0c0d10] rounded border border-white/5 flex items-center justify-between text-xs font-mono-code flex-wrap gap-2">
+                <div class="flex items-center gap-2.5">
+                  <div class="w-7 h-7 rounded bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center shrink-0">
+                    <svg class="adm-icon sm text-cyan-400" viewBox="0 0 24 24"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+                  </div>
+                  <div>
+                    <span class="text-zinc-500 text-[10px] uppercase font-bold block">Afinidad Vectorial del Perfil:</span>
+                    <span class="text-cyan-300 font-bold text-xs">{{ store.hunter.selected.semantic_score }}% de Coincidencia Semántica</span>
+                  </div>
+                </div>
+                <div class="w-36 bg-white/5 rounded-full h-1.5 overflow-hidden border border-white/10 shrink-0">
+                  <div class="bg-cyan-400 h-full rounded-full transition-all" :style="{ width: store.hunter.selected.semantic_score + '%' }"></div>
+                </div>
               </div>
 
               <!-- Pros & Cons Grid -->

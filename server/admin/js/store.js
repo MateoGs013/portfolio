@@ -59,6 +59,8 @@ export const store = reactive({
     isPitching: false,
     isGeneratingCV: false,
     isPurging: false,
+    isVectorizing: false,
+    sortBy: 'ia',
     copiedPitch: false,
     copiedCV: false,
   },
@@ -406,6 +408,22 @@ export const store = reactive({
       s.toast('err', `Error al depurar vacantes: ${err.message}`)
     } finally {
       s.hunter.isPurging = false
+    }
+  },
+
+  async vectorizeHunterJobs() {
+    const s = this || store
+    if (s.hunter.isVectorizing) return
+    s.hunter.isVectorizing = true
+    try {
+      const res = await api.vectorizeHunterJobs()
+      const count = res?.vectorized_count ?? res?.data?.vectorized_count ?? 0
+      s.toast('ok', `Vectorización completada: ${count} vacantes indexadas con Gemini`)
+      await s.loadHunterJobs()
+    } catch (err) {
+      s.toast('err', `Error al vectorizar vacantes: ${err.message}`)
+    } finally {
+      s.hunter.isVectorizing = false
     }
   },
 
