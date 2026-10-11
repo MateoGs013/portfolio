@@ -405,6 +405,17 @@ const contactFields: DocField[] = [
   { name: 'preferred_contact', type: 'string', value: 'Email directo, LinkedIn o mensaje vía GitHub' },
 ]
 
+const homeFields: DocField[] = [
+  { name: 'headline', type: 'string', value: 'CONSTRUIR CON PROPÓSITO' },
+  { name: 'about_tag', type: 'string', value: 'SOBRE MÍ —' },
+  { name: 'about_text', type: 'text', wide: true, value: 'Construyo productos digitales y arquitecturas de software que unen precisión relacional en PostgreSQL 17, APIs tipadas (TypeScript / Python) e interfaces reactivas contemporáneas con micro-interacciones espaciales. Mínimo ruido. Máximo impacto.' },
+  { name: 'globe_pill', type: 'string', value: 'DISPONIBLE GLOBALMENTE · COLABORACIONES REMOTAS Y FREELANCE' },
+  { name: 'profile_role', type: 'string', value: 'DESARROLLADOR FULL STACK Y CREATIVO' },
+  { name: 'profile_status', type: 'string', value: '● DISPONIBLE // 2026' },
+  { name: 'manifesto_quote', type: 'text', wide: true, value: 'EL BUEN CÓDIGO NO ES SOLO CÓMO SE VE.<br>ES CÓMO CORRE, A QUIÉN SIRVE Y QUÉ REPRESENTA.' },
+  { name: 'manifesto_lead', type: 'text', wide: true, value: 'DISEÑO CON PROPÓSITO.<br>CONSTRUYO CON PRECISIÓN.<br>ENTREGO CON ORGULLO.' },
+]
+
 // ─── carga ──────────────────────────────────────────────────────────────────
 
 async function main() {
@@ -461,6 +472,7 @@ async function main() {
     data: [
       { key: 'about', title: 'about', fields: aboutFields },
       { key: 'contact', title: 'contact', fields: contactFields },
+      { key: 'home', title: 'home', fields: homeFields },
     ],
   })
 

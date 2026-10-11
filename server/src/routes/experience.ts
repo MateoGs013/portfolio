@@ -41,3 +41,35 @@ experience.get('/experience', async (req, res) => {
     res.json(envelope(data, { filters }))
   }
 })
+
+/** GET /api/experience/:slug → detalle de una etapa de experiencia por su slug. */
+experience.get('/experience/:slug', async (req, res) => {
+  try {
+    const data = await db.experience.findUnique({
+      where: { slug: req.params.slug },
+      include: {
+        org: { select: { slug: true, name: true, city: true } },
+        techs: { select: { slug: true, name: true }, orderBy: { name: 'asc' } },
+      },
+    })
+
+    if (!data) {
+      const fb = fallbackExperience.find(e => e.slug === req.params.slug)
+      if (fb) {
+        res.json(envelope(fb))
+        return
+      }
+      res.status(404).json({ error: 'not found' })
+      return
+    }
+
+    res.json(envelope(data))
+  } catch {
+    const fb = fallbackExperience.find(e => e.slug === req.params.slug)
+    if (fb) {
+      res.json(envelope(fb))
+      return
+    }
+    res.status(500).json({ error: 'internal error' })
+  }
+})
