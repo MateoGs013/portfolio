@@ -535,10 +535,18 @@ export const AdmJobHunter = {
               </span>
             </div>
             <div class="text-[11px] text-zinc-400 mt-0.5 truncate">{{ j.company }} · <span class="capitalize">{{ j.source }}</span></div>
-            <div class="text-[10px] font-mono-code text-zinc-500 mt-1.5 flex items-center justify-between">
-              <span class="truncate max-w-[170px]">{{ j.country || j.salary || (j.is_remote ? 'Remoto' : 'Ubicación no esp.') }}</span>
+            <div class="text-[10px] font-mono-code text-zinc-500 mt-1.5 flex items-center justify-between gap-1">
+              <span class="truncate max-w-[130px]">{{ j.country || (j.is_remote ? 'Remoto' : 'Ubicación no esp.') }}</span>
               <span 
-                class="uppercase px-1 py-0.2 rounded border text-[9px]"
+                v-if="j.salary" 
+                class="text-emerald-400 font-semibold truncate text-[9.5px] bg-emerald-500/10 px-1.5 py-0.2 rounded border border-emerald-500/20 max-w-[135px]"
+                :title="j.salary"
+              >
+                {{ j.salary }}
+              </span>
+              <span 
+                v-else
+                class="uppercase px-1 py-0.2 rounded border text-[9px] shrink-0"
                 :class="j.status === 'applied' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : j.status === 'discarded' ? 'bg-red-500/10 text-red-400 border-red-500/20' : 'bg-white/5 text-zinc-400 border-white/10'"
               >
                 {{ j.status }}
@@ -664,6 +672,14 @@ export const AdmJobHunter = {
                 <span v-if="store.hunter.selected.is_remote" class="text-[10px] font-mono-code text-cyan-400 bg-cyan-500/10 px-1.5 py-0.5 rounded border border-cyan-500/20">
                   Remoto
                 </span>
+                <span 
+                  v-if="store.hunter.selected.salary || selectedAnalysis?.salary_estimate" 
+                  class="text-[11px] font-mono-code text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20 inline-flex items-center gap-1 font-semibold"
+                  :title="store.hunter.selected.salary && !store.hunter.selected.salary.includes('Est') ? 'Compensación publicada en la oferta' : 'Rango salarial estimado por Eros IA'"
+                >
+                  <svg class="adm-icon xs text-emerald-400" viewBox="0 0 24 24"><line x1="12" y1="2" x2="12" y2="22"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                  <span>{{ store.hunter.selected.salary || selectedAnalysis.salary_estimate }}</span>
+                </span>
               </div>
               <div class="text-xs text-zinc-400 mt-1 flex items-center gap-2">
                 <span class="font-semibold text-zinc-300">{{ store.hunter.selected.company }}</span>
@@ -717,6 +733,22 @@ export const AdmJobHunter = {
               <p v-if="selectedAnalysis.summary" class="text-xs text-zinc-300 leading-relaxed font-sans bg-[#0c0d10] p-3 rounded border border-white/5">
                 {{ selectedAnalysis.summary }}
               </p>
+
+              <!-- Banda Salarial & Compensación de Mercado -->
+              <div v-if="store.hunter.selected.salary || selectedAnalysis.salary_estimate" class="p-3 bg-[#0c0d10] rounded border border-white/5 flex items-center justify-between text-xs font-mono-code flex-wrap gap-2">
+                <div class="flex items-center gap-2.5">
+                  <div class="w-7 h-7 rounded bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shrink-0">
+                    <svg class="adm-icon sm text-emerald-400" viewBox="0 0 24 24"><line x1="12" y1="2" x2="12" y2="22"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                  </div>
+                  <div>
+                    <span class="text-zinc-500 text-[10px] uppercase font-bold block">Banda Salarial / Compensación:</span>
+                    <span class="text-emerald-400 font-bold text-xs">{{ store.hunter.selected.salary || selectedAnalysis.salary_estimate }}</span>
+                  </div>
+                </div>
+                <span class="text-[10px] text-zinc-400 bg-white/5 border border-white/10 px-2 py-0.5 rounded">
+                  {{ store.hunter.selected.salary && !store.hunter.selected.salary.includes('Est') ? 'Dato publicado por la empresa' : 'Estimación de mercado (Eros IA)' }}
+                </span>
+              </div>
 
               <!-- Pros & Cons Grid -->
               <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
