@@ -112,6 +112,7 @@ export const AdmJobHunter = {
       try {
         await api.updateHunterJobStatus(store.hunter.selected.id, status)
         store.hunter.selected.status = status
+        store._persistHunterJobs()
         store.toast('ok', `Vacante marcada como: ${status}`)
       } catch (err) {
         store.toast('err', `Error al cambiar estado: ${err.message}`)
@@ -399,7 +400,7 @@ export const AdmJobHunter = {
               type="button"
               @click="evaluatePendingJobs"
               :disabled="store.hunter.isEvaluating"
-              :title="pendingJobsCount > 0 ? `Evaluar con IA las ${pendingJobsCount} vacantes pendientes` : 'Evaluar vacantes pendientes'"
+              :title="pendingJobsCount > 0 ? ('Evaluar con IA las ' + pendingJobsCount + ' vacantes pendientes') : 'Evaluar vacantes pendientes'"
               class="btn-secondary !h-[30px] !px-2 text-xs font-semibold cursor-pointer text-amber-300 border-amber-500/30 hover:bg-amber-500/10 disabled:opacity-50 inline-flex items-center justify-center gap-1.5"
             >
               <span v-if="store.hunter.isEvaluating" class="animate-spin inline-block text-[11px]">↻</span>
@@ -463,7 +464,7 @@ export const AdmJobHunter = {
                   ? 'bg-amber-500/10 text-amber-400/90 border-amber-500/25 hover:text-amber-200' 
                   : 'bg-white/[0.02] text-zinc-400 border-white/5 hover:text-white hover:bg-white/5'"
             >
-              Pendientes{{ pendingJobsCount > 0 ? ` (${pendingJobsCount})` : '' }}
+              Pendientes{{ pendingJobsCount > 0 ? (' (' + pendingJobsCount + ')') : '' }}
             </button>
             <button
               type="button"

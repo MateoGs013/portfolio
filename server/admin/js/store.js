@@ -6,6 +6,15 @@ import { MODELS } from './config.js'
 
 const { reactive } = window.Vue
 
+function getCachedHunterJobs() {
+  try {
+    const raw = localStorage.getItem('eros_hunter_jobs')
+    return raw ? JSON.parse(raw) : []
+  } catch {
+    return []
+  }
+}
+
 export const store = reactive({
   // Autenticación
   token: api.getToken(),
@@ -36,12 +45,12 @@ export const store = reactive({
     stack: 0,
     orgs: 0,
     docs: 0,
-    hunter: 0,
+    hunter: getCachedHunterJobs().length,
   },
 
   // Job Hunter & Reclutamiento IA
   hunter: {
-    jobs: [],
+    jobs: getCachedHunterJobs(),
     filter: 'high',
     selected: null,
     isScanning: false,
@@ -318,20 +327,46 @@ export const store = reactive({
   },
 
   // ─── OPERACIONES DE JOB HUNTER ────────────────────────────────────────────
+  _persistHunterJobs() {
+    try {
+      localStorage.setItem('eros_hunter_jobs', JSON.stringify(this.hunter.jobs || []))
+    } catch (err) {
+      console.warn('Error al persistir vacantes en localStorage:', err)
+    }
+  },
+
   async loadHunterJobs() {
     const s = this || store
+    // 1. Si no hay vacantes en memoria, poblar con caché inmediata de localStorage
+    if (!s.hunter.jobs || s.hunter.jobs.length === 0) {
+      const cached = getCachedHunterJobs()
+      if (cached.length > 0) {
+        s.hunter.jobs = cached
+        s.counts.hunter = cached.length
+        if (!s.hunter.selected) s.hunter.selected = cached[0]
+      }
+    }
+
+    // 2. Traer la última lista fresca desde el agente Eros
     try {
       const res = await api.getHunterJobs()
       const list = Array.isArray(res) ? res : (res && Array.isArray(res.data) ? res.data : [])
-      s.hunter.jobs = list
-      s.counts.hunter = list.length
-      if (list.length > 0) {
-        if (!s.hunter.selected || !list.find(j => j.id === s.hunter.selected.id)) {
-          s.hunter.selected = list[0]
+      if (list.length > 0 || (s.hunter.jobs.length === 0)) {
+        s.hunter.jobs = list
+        s.counts.hunter = list.length
+        s._persistHunterJobs()
+      }
+      if (s.hunter.jobs.length > 0) {
+        if (!s.hunter.selected || !s.hunter.jobs.find(j => j.id === s.hunter.selected.id)) {
+          s.hunter.selected = s.hunter.jobs[0]
         }
       }
     } catch (err) {
-      s.toast('err', `Error al cargar vacantes: ${err.message}`)
+      if (s.hunter.jobs.length > 0) {
+        console.warn('Eros Agent no respondió; usando vacantes guardadas en localStorage.')
+      } else {
+        s.toast('err', `Error al cargar vacantes: ${err.message}`)
+      }
     }
   },
 
@@ -396,6 +431,7 @@ export const store = reactive({
         if (s.hunter.selected && s.hunter.selected.id === id) {
           s.hunter.selected = { ...s.hunter.selected, ...job }
         }
+        s._persistHunterJobs()
         s.toast('ok', `Vacante evaluada: ${job.match_score ?? 0}% de compatibilidad`)
       }
     } catch (err) {
