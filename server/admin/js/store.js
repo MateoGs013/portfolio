@@ -45,6 +45,8 @@ export const store = reactive({
     filter: 'high',
     selected: null,
     isScanning: false,
+    isEvaluating: false,
+    isEvaluatingSingle: false,
     isPitching: false,
     isGeneratingCV: false,
     copiedPitch: false,
@@ -360,6 +362,46 @@ export const store = reactive({
       await s.loadHunterJobs()
     } catch (err) {
       s.toast('err', `Error al depurar vacantes: ${err.message}`)
+    }
+  },
+
+  async evaluatePendingHunterJobs(limit = 15) {
+    const s = this || store
+    if (s.hunter.isEvaluating) return
+    s.hunter.isEvaluating = true
+    try {
+      const res = await api.evaluateHunterJobs(limit)
+      const count = res?.evaluated_count ?? res?.data?.evaluated_count ?? (Array.isArray(res?.evaluated) ? res.evaluated.length : 0)
+      s.toast('ok', `Evaluación completada: ${count} vacantes analizadas con Gemini`)
+      await s.loadHunterJobs()
+    } catch (err) {
+      s.toast('err', `Error al evaluar vacantes: ${err.message}`)
+    } finally {
+      s.hunter.isEvaluating = false
+    }
+  },
+
+  async evaluateSingleHunterJob(id) {
+    const s = this || store
+    if (!id || s.hunter.isEvaluatingSingle) return
+    s.hunter.isEvaluatingSingle = true
+    try {
+      const res = await api.evaluateHunterJob(id)
+      const job = res?.job || res?.data?.job || res
+      if (job) {
+        const idx = s.hunter.jobs.findIndex(j => j.id === id)
+        if (idx !== -1) {
+          s.hunter.jobs[idx] = { ...s.hunter.jobs[idx], ...job }
+        }
+        if (s.hunter.selected && s.hunter.selected.id === id) {
+          s.hunter.selected = { ...s.hunter.selected, ...job }
+        }
+        s.toast('ok', `Vacante evaluada: ${job.match_score ?? 0}% de compatibilidad`)
+      }
+    } catch (err) {
+      s.toast('err', `Error al evaluar vacante: ${err.message}`)
+    } finally {
+      s.hunter.isEvaluatingSingle = false
     }
   },
 })

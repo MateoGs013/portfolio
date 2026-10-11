@@ -130,6 +130,20 @@ export class ApiClient {
     return this.fetch('hunter/scan', { method: 'POST' })
   }
 
+  async evaluateHunterJobs(limit = 15) {
+    return this.fetch('hunter/evaluate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ limit }),
+    })
+  }
+
+  async evaluateHunterJob(id) {
+    return this.fetch(`hunter/jobs/${encodeURIComponent(id)}/evaluate`, {
+      method: 'POST',
+    })
+  }
+
   async purgeHunterJobs() {
     return this.fetch('hunter/purge', { method: 'POST' })
   }

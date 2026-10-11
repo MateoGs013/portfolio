@@ -24,6 +24,8 @@ export const AdmJobHunter = {
         list = list.filter(j => j.status === 'applied')
       } else if (store.hunter.filter === 'saved') {
         list = list.filter(j => j.status === 'saved')
+      } else if (store.hunter.filter === 'pending') {
+        list = list.filter(j => (j.match_score === null || j.match_score === undefined) && j.status !== 'discarded')
       } else if (store.hunter.filter === 'discarded') {
         list = list.filter(j => j.status === 'discarded')
       }
@@ -290,6 +292,15 @@ export const AdmJobHunter = {
       await store.scanHunterJobs()
     }
 
+    async function evaluatePendingJobs() {
+      await store.evaluatePendingHunterJobs()
+    }
+
+    async function evaluateCurrentJob() {
+      if (!store.hunter.selected) return
+      await store.evaluateSingleHunterJob(store.hunter.selected.id)
+    }
+
     async function purgeJobs() {
       const confirmed = await store.requestConfirm({
         title: 'Depurar Vacantes Incompatibles',
@@ -322,6 +333,8 @@ export const AdmJobHunter = {
       downloadTailoredCVHtml,
       getVerdictClass,
       scanJobs,
+      evaluatePendingJobs,
+      evaluateCurrentJob,
       purgeJobs,
       hunterMobileView,
     }
@@ -345,12 +358,22 @@ export const AdmJobHunter = {
               </span>
             </div>
 
-            <div class="flex items-center gap-1.5">
+            <div class="flex items-center gap-1.5 flex-wrap">
+              <button
+                type="button"
+                @click="evaluatePendingJobs"
+                :disabled="store.hunter.isEvaluating"
+                title="Evaluar con IA las vacantes pendientes en cola"
+                class="btn-secondary !h-[26px] !px-2 !text-[11px] cursor-pointer text-amber-300 border-amber-500/30 hover:bg-amber-500/10 inline-flex items-center gap-1"
+              >
+                <span v-if="store.hunter.isEvaluating" class="animate-spin inline-block text-[10px]">↻</span>
+                <span>{{ store.hunter.isEvaluating ? 'Evaluando...' : '🧠 Evaluar' }}</span>
+              </button>
               <button
                 type="button"
                 @click="purgeJobs"
                 title="Depurar vacantes incompatibles (W2 / EE.UU. Only / Obsoletas)"
-                class="btn-ghost !h-[26px] !px-2 !text-[11px] cursor-pointer text-zinc-400 hover:text-white"
+                class="btn-ghost !h-[26px] !px-1.5 !text-[11px] cursor-pointer text-zinc-400 hover:text-white"
               >
                 Depurar
               </button>
@@ -358,7 +381,7 @@ export const AdmJobHunter = {
                 type="button"
                 @click="scanJobs"
                 :disabled="store.hunter.isScanning"
-                class="btn-primary !h-[26px] !px-2.5 !text-xs cursor-pointer disabled:opacity-50 inline-flex items-center gap-1.5"
+                class="btn-primary !h-[26px] !px-2 !text-xs cursor-pointer disabled:opacity-50 inline-flex items-center gap-1"
               >
                 <span v-if="store.hunter.isScanning" class="animate-spin inline-block text-[11px]">↻</span>
                 <span>{{ store.hunter.isScanning ? 'Escaneando...' : 'Escanear' }}</span>
@@ -394,6 +417,14 @@ export const AdmJobHunter = {
               :class="store.hunter.filter === 'all' ? 'bg-white/15 text-white font-semibold' : 'text-zinc-500 hover:text-white'"
             >
               Todas
+            </button>
+            <button
+              type="button"
+              @click="store.hunter.filter = 'pending'"
+              class="px-2 py-0.5 rounded transition-colors cursor-pointer"
+              :class="store.hunter.filter === 'pending' ? 'bg-amber-500/20 text-amber-300 font-bold border border-amber-500/30' : 'text-zinc-500 hover:text-white'"
+            >
+              Pendientes
             </button>
             <button
               type="button"
@@ -436,10 +467,24 @@ export const AdmJobHunter = {
             <div class="flex items-center justify-between text-xs font-bold text-white">
               <span class="truncate">{{ j.title }}</span>
               <span 
+                v-if="j.match_score !== null && j.match_score !== undefined"
                 class="font-mono-code font-bold text-[11px] shrink-0 ml-1.5"
-                :class="(j.match_score || 0) >= 70 ? 'text-emerald-400' : (j.match_score || 0) >= 50 ? 'text-amber-400' : 'text-zinc-400'"
+                :class="j.match_score >= 70 ? 'text-emerald-400' : j.match_score >= 50 ? 'text-amber-400' : 'text-zinc-400'"
               >
                 {{ j.match_score }}%
+              </span>
+              <span
+                v-else-if="j.status === 'discarded'"
+                class="font-mono-code text-[10px] text-red-400/80 shrink-0 ml-1.5"
+              >
+                Desc.
+              </span>
+              <span
+                v-else
+                class="font-mono-code text-[10px] text-amber-400 bg-amber-500/10 border border-amber-500/20 px-1.5 py-0.2 rounded shrink-0 ml-1.5"
+                title="Pendiente de evaluación con IA"
+              >
+                ⏳ Pendiente
               </span>
             </div>
             <div class="text-[11px] text-zinc-400 mt-0.5 truncate">{{ j.company }} · <span class="capitalize">{{ j.source }}</span></div>
@@ -482,10 +527,23 @@ export const AdmJobHunter = {
                 </button>
                 <h2 class="text-sm sm:text-base font-bold text-white tracking-tight truncate">{{ store.hunter.selected.title }}</h2>
                 <span 
+                  v-if="store.hunter.selected.match_score !== null && store.hunter.selected.match_score !== undefined"
                   class="text-xs font-mono-code font-bold px-2 py-0.5 rounded border"
-                  :class="(store.hunter.selected.match_score || 0) >= 70 ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20' : 'text-amber-400 bg-amber-500/10 border-amber-500/20'"
+                  :class="store.hunter.selected.match_score >= 70 ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20' : 'text-amber-400 bg-amber-500/10 border-amber-500/20'"
                 >
                   {{ store.hunter.selected.match_score }}% Match
+                </span>
+                <span 
+                  v-else-if="store.hunter.selected.status === 'discarded'"
+                  class="text-xs font-mono-code px-2 py-0.5 rounded border text-red-400 bg-red-500/10 border-red-500/20"
+                >
+                  Descartada (Filtro Previo)
+                </span>
+                <span 
+                  v-else
+                  class="text-xs font-mono-code px-2 py-0.5 rounded border text-amber-400 bg-amber-500/10 border-amber-500/20"
+                >
+                  ⏳ Pendiente de Evaluación
                 </span>
                 <span v-if="store.hunter.selected.is_remote" class="text-[10px] font-mono-code text-cyan-400 bg-cyan-500/10 px-1.5 py-0.5 rounded border border-cyan-500/20">
                   Remoto
@@ -597,6 +655,31 @@ export const AdmJobHunter = {
                     {{ sk }}
                   </span>
                 </div>
+              </div>
+            </div>
+
+            <!-- Tarjeta CTA cuando la vacante aún no fue evaluada por la IA -->
+            <div v-else-if="store.hunter.selected.status !== 'discarded'" class="p-5 bg-[#121318] border border-amber-500/25 rounded-lg space-y-3.5">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                  <span class="w-2 h-2 rounded-full bg-amber-400"></span>
+                  <h3 class="text-xs font-bold font-mono-code text-white uppercase tracking-wider">Vacante Pendiente de Evaluación Semántica</h3>
+                </div>
+                <span class="text-[10px] font-mono-code text-amber-400 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded">Sin Puntuación</span>
+              </div>
+              <p class="text-xs text-zinc-300 leading-relaxed font-sans">
+                Esta oferta fue capturada en el escaneo pero aún no pasó por Gemini. Puedes evaluarla ahora mismo para calcular el porcentaje de match contra tu CV y detectar pros, contras y proyectos clave a destacar.
+              </p>
+              <div class="flex items-center gap-2 pt-1">
+                <button
+                  type="button"
+                  @click="evaluateCurrentJob"
+                  :disabled="store.hunter.isEvaluatingSingle"
+                  class="btn-primary !h-[32px] !px-3.5 !text-xs cursor-pointer inline-flex items-center gap-1.5"
+                >
+                  <span v-if="store.hunter.isEvaluatingSingle" class="animate-spin text-xs">↻</span>
+                  <span>{{ store.hunter.isEvaluatingSingle ? 'Evaluando con Gemini...' : '⚡ Evaluar esta vacante con IA' }}</span>
+                </button>
               </div>
             </div>
 

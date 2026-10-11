@@ -100,6 +100,17 @@ hunterRouter.post('/evaluate', async (req: Request, res: Response) => {
   res.status(result.status).json(result.data)
 })
 
+/** POST /api/admin/hunter/jobs/:id/evaluate */
+hunterRouter.post(['/evaluate/:id', '/jobs/:id/evaluate'], async (req: Request, res: Response) => {
+  const id = getParamId(req)
+  if (!id) {
+    res.status(400).json({ error: 'ID de vacante requerido' })
+    return
+  }
+  const result = await forward(`api/jobs/${encodeURIComponent(id)}/evaluate`, { method: 'POST' }, 45000)
+  res.status(result.status).json(result.data)
+})
+
 /** POST /api/admin/hunter/purge */
 hunterRouter.post('/purge', async (_req: Request, res: Response) => {
   const result = await forward('api/purge', { method: 'POST' }, 30000)
