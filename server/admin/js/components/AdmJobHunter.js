@@ -379,7 +379,7 @@ export const AdmJobHunter = {
               title="Depurar vacantes incompatibles (W2 / EE.UU. Only / Obsoletas)"
               class="btn-ghost !h-[26px] !px-2 !text-[11px] cursor-pointer text-zinc-400 hover:text-white font-mono-code inline-flex items-center gap-1 shrink-0"
             >
-              <span>🧹</span>
+              <svg class="adm-icon xs text-zinc-400" viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
               <span>Depurar</span>
             </button>
           </div>
@@ -393,7 +393,7 @@ export const AdmJobHunter = {
               class="btn-primary !h-[30px] !px-2 text-xs font-semibold cursor-pointer disabled:opacity-50 inline-flex items-center justify-center gap-1.5"
             >
               <span v-if="store.hunter.isScanning" class="animate-spin inline-block text-[11px]">↻</span>
-              <span v-else>⚡</span>
+              <svg v-else class="adm-icon xs" viewBox="0 0 24 24"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/></svg>
               <span>{{ store.hunter.isScanning ? 'Escaneando...' : 'Escanear' }}</span>
             </button>
             <button
@@ -404,7 +404,7 @@ export const AdmJobHunter = {
               class="btn-secondary !h-[30px] !px-2 text-xs font-semibold cursor-pointer text-amber-300 border-amber-500/30 hover:bg-amber-500/10 disabled:opacity-50 inline-flex items-center justify-center gap-1.5"
             >
               <span v-if="store.hunter.isEvaluating" class="animate-spin inline-block text-[11px]">↻</span>
-              <span v-else>🧠</span>
+              <svg v-else class="adm-icon xs text-amber-300" viewBox="0 0 24 24"><path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3L12 3z"/></svg>
               <span>{{ store.hunter.isEvaluating ? 'Evaluando...' : 'Evaluar' }}</span>
               <span v-if="!store.hunter.isEvaluating && pendingJobsCount > 0" class="text-[10px] bg-amber-500/20 text-amber-300 px-1 py-0.2 rounded font-mono-code">
                 {{ pendingJobsCount }}
@@ -425,10 +425,10 @@ export const AdmJobHunter = {
               v-if="store.searchQuery"
               type="button"
               @click="store.searchQuery = ''"
-              class="absolute right-2 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-white text-xs cursor-pointer p-1"
+              class="absolute right-2 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-white cursor-pointer p-1 inline-flex items-center"
               title="Limpiar búsqueda"
             >
-              ✕
+              <svg class="adm-icon xs" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
             </button>
           </div>
 
@@ -527,10 +527,11 @@ export const AdmJobHunter = {
               </span>
               <span
                 v-else
-                class="font-mono-code text-[10px] text-amber-400 bg-amber-500/10 border border-amber-500/20 px-1.5 py-0.2 rounded shrink-0 ml-1.5"
+                class="font-mono-code text-[10px] text-amber-400 bg-amber-500/10 border border-amber-500/20 px-1.5 py-0.2 rounded shrink-0 ml-1.5 inline-flex items-center gap-1"
                 title="Pendiente de evaluación con IA"
               >
-                ⏳ Pendiente
+                <svg class="adm-icon xs text-amber-400" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                <span>Pendiente</span>
               </span>
             </div>
             <div class="text-[11px] text-zinc-400 mt-0.5 truncate">{{ j.company }} · <span class="capitalize">{{ j.source }}</span></div>
@@ -550,7 +551,7 @@ export const AdmJobHunter = {
             <!-- Caso 1: Hay vacantes sin evaluar -->
             <div v-if="pendingJobsCount > 0 && !store.searchQuery" class="space-y-3">
               <div class="text-amber-400 text-xs font-mono-code flex items-center justify-center gap-1.5 font-bold">
-                <span>⏳</span>
+                <svg class="adm-icon sm text-amber-400" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
                 <span>{{ pendingJobsCount }} vacante{{ pendingJobsCount === 1 ? '' : 's' }} sin evaluar</span>
               </div>
               <p class="text-[11px] text-zinc-400 leading-relaxed font-mono-code max-w-[240px] mx-auto">
@@ -561,10 +562,11 @@ export const AdmJobHunter = {
                   type="button"
                   @click="evaluatePendingJobs"
                   :disabled="store.hunter.isEvaluating"
-                  class="btn-secondary !h-[30px] !px-3 !text-xs text-amber-300 border-amber-500/30 hover:bg-amber-500/10 cursor-pointer inline-flex items-center justify-center gap-1 font-mono-code"
+                  class="btn-secondary !h-[30px] !px-3 !text-xs text-amber-300 border-amber-500/30 hover:bg-amber-500/10 cursor-pointer inline-flex items-center justify-center gap-1.5 font-mono-code"
                 >
                   <span v-if="store.hunter.isEvaluating" class="animate-spin inline-block text-[10px]">↻</span>
-                  <span>{{ store.hunter.isEvaluating ? 'Evaluando...' : '🧠 Evaluar cola ahora' }}</span>
+                  <svg v-else class="adm-icon xs text-amber-300" viewBox="0 0 24 24"><path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3L12 3z"/></svg>
+                  <span>{{ store.hunter.isEvaluating ? 'Evaluando...' : 'Evaluar cola ahora' }}</span>
                 </button>
                 <button
                   type="button"
@@ -598,7 +600,8 @@ export const AdmJobHunter = {
                 class="btn-primary !h-[28px] !px-3 !text-xs cursor-pointer inline-flex items-center gap-1.5 mx-auto"
               >
                 <span v-if="store.hunter.isScanning" class="animate-spin inline-block text-[10px]">↻</span>
-                <span>{{ store.hunter.isScanning ? 'Escaneando...' : '⚡ Escanear portales' }}</span>
+                <svg v-else class="adm-icon xs" viewBox="0 0 24 24"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+                <span>{{ store.hunter.isScanning ? 'Escaneando...' : 'Escanear portales' }}</span>
               </button>
             </div>
 
@@ -653,9 +656,10 @@ export const AdmJobHunter = {
                 </span>
                 <span 
                   v-else
-                  class="text-xs font-mono-code px-2 py-0.5 rounded border text-amber-400 bg-amber-500/10 border-amber-500/20"
+                  class="text-xs font-mono-code px-2 py-0.5 rounded border text-amber-400 bg-amber-500/10 border-amber-500/20 inline-flex items-center gap-1.5"
                 >
-                  ⏳ Pendiente de Evaluación
+                  <svg class="adm-icon xs text-amber-400" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                  <span>Pendiente de Evaluación</span>
                 </span>
                 <span v-if="store.hunter.selected.is_remote" class="text-[10px] font-mono-code text-cyan-400 bg-cyan-500/10 px-1.5 py-0.5 rounded border border-cyan-500/20">
                   Remoto
@@ -790,7 +794,8 @@ export const AdmJobHunter = {
                   class="btn-primary !h-[32px] !px-3.5 !text-xs cursor-pointer inline-flex items-center gap-1.5"
                 >
                   <span v-if="store.hunter.isEvaluatingSingle" class="animate-spin text-xs">↻</span>
-                  <span>{{ store.hunter.isEvaluatingSingle ? 'Evaluando con Gemini...' : '⚡ Evaluar esta vacante con IA' }}</span>
+                  <svg v-else class="adm-icon xs" viewBox="0 0 24 24"><path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3L12 3z"/></svg>
+                  <span>{{ store.hunter.isEvaluatingSingle ? 'Evaluando con Gemini...' : 'Evaluar esta vacante con IA' }}</span>
                 </button>
               </div>
             </div>
