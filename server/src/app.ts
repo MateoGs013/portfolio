@@ -24,17 +24,19 @@ app.set('trust proxy', 1)
 app.use(helmet({
   contentSecurityPolicy: false, // Nuxt y admin manejan sus directivas CSP específicas
   crossOriginEmbedderPolicy: false,
+  crossOriginResourcePolicy: { policy: 'cross-origin' }, // Permite consumir API y /media cross-origin
 }))
 
 // M1: CSP específica y ajustada para la consola de administración (permite tipografías web y Vue runtime)
 app.use(['/admin', '/api/admin'], helmet.contentSecurityPolicy({
   directives: {
     defaultSrc: ["'self'"],
-    scriptSrc: ["'self'", "'unsafe-eval'"],
+    scriptSrc: ["'self'", "'unsafe-eval'", "'unsafe-inline'"],
+    scriptSrcAttr: ["'unsafe-inline'"],
     styleSrc: ["'self'", "'unsafe-inline'", 'https://api.fontshare.com', 'https://fonts.googleapis.com'],
     fontSrc: ["'self'", 'https://fonts.gstatic.com', 'https://cdn.fontshare.com', 'data:'],
     imgSrc: ["'self'", 'data:', 'https:', 'blob:'],
-    connectSrc: ["'self'", 'blob:'],
+    connectSrc: ["'self'", 'blob:', 'https://api.github.com'],
     frameAncestors: ["'none'"],
     baseUri: ["'self'"],
     formAction: ["'self'"],
@@ -60,25 +62,41 @@ const adminAuthFailuresLimiter = rateLimit({
   message: { error: 'demasiados intentos fallidos de autenticación en admin, reintente en 15 minutos' },
 })
 
-// M3: CORS ajustado sin credentials, sin wildcard arbitrario y montado exclusivamente en /api
-const allowedOrigins = env.corsOrigin
+// M3: CORS robusto para desarrollo y producción
+const configuredOrigins = env.corsOrigin
   .split(',')
   .map(s => s.trim())
-  .filter(s => s && s !== '*')
+  .filter(Boolean)
 
-if (allowedOrigins.length > 0) {
-  const corsMiddleware = cors({
-    origin: (origin, callback) => {
-      if (!origin || allowedOrigins.includes(origin)) {
-        callback(null, true)
-      } else {
-        callback(new Error(`Origen ${origin} no permitido por política CORS`))
-      }
-    },
-    credentials: false,
-  })
-  app.use('/api', corsMiddleware)
-}
+const isDev = process.env['NODE_ENV'] !== 'production'
+
+const corsMiddleware = cors({
+  origin: (origin, callback) => {
+    // Permitir peticiones sin Origin (curl, SSR, llamadas server-to-server)
+    if (!origin) return callback(null, true)
+
+    // Si se configuró wildcard '*'
+    if (configuredOrigins.includes('*')) return callback(null, true)
+
+    // Si el origen está en la lista explícita configurada
+    if (configuredOrigins.includes(origin)) return callback(null, true)
+
+    // En desarrollo local, permitir cualquier localhost o 127.0.0.1 (cualquier puerto)
+    if (isDev) {
+      const isLocalhost = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin)
+      if (isLocalhost) return callback(null, true)
+    }
+
+    // Rechazar sin lanzar excepciones 500 no controladas
+    callback(null, false)
+  },
+  credentials: false,
+  methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+})
+
+app.use('/api', corsMiddleware)
+app.use('/media', corsMiddleware)
 
 app.use(express.json())
 
