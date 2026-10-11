@@ -166,7 +166,7 @@ hunterRouter.get(['/cv/:id/html', '/jobs/:id/cv/html'], async (req: Request, res
       res.setHeader('Content-Disposition', 'attachment; filename="CV_Mateo_Sonzogni_Harvard_ATS.html"')
     }
     // Sandbox CSP: origen opaco, sin allow-same-origin para aislar de credenciales de admin
-    res.setHeader('Content-Security-Policy', "sandbox allow-scripts allow-modals; default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data: https:;")
+    res.setHeader('Content-Security-Policy', "sandbox allow-scripts allow-modals; default-src 'none'; script-src 'unsafe-inline' 'unsafe-eval'; style-src 'unsafe-inline'; img-src data: https:;")
     res.setHeader('X-Content-Type-Options', 'nosniff')
     res.status(upstreamRes.status).type('html').send(html)
   } catch (err: unknown) {
