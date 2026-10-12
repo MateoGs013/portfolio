@@ -46,6 +46,7 @@ export const store = reactive({
     orgs: 0,
     docs: 0,
     hunter: getCachedHunterJobs().length,
+    content: 0,
   },
 
   // Job Hunter & Reclutamiento IA
@@ -63,6 +64,16 @@ export const store = reactive({
     sortBy: 'ia',
     copiedPitch: false,
     copiedCV: false,
+  },
+
+  // Gestión de Contenido Omnicanal (Eros IA)
+  content: {
+    posts: [],
+    filter: 'all',
+    selected: null,
+    isGenerating: false,
+    publishing: {},
+    expanded: {},
   },
 
   // Filtros & Búsqueda
@@ -200,13 +211,14 @@ export const store = reactive({
 
   async refreshCounts() {
     try {
-      const [projs, exps, stks, orgs, dcs, jbs] = await Promise.all([
+      const [projs, exps, stks, orgs, dcs, jbs, cnts] = await Promise.all([
         api.getCollection('projects').catch(() => []),
         api.getCollection('experience').catch(() => []),
         api.getCollection('techs').catch(() => []),
         api.getCollection('orgs').catch(() => []),
         api.getCollection('docs').catch(() => []),
         api.getHunterJobs().catch(() => []),
+        api.getContentPosts().catch(() => []),
       ])
       this.counts.projects = projs.length
       this.counts.experience = exps.length
@@ -214,6 +226,7 @@ export const store = reactive({
       this.counts.orgs = orgs.length
       this.counts.docs = dcs.length
       this.counts.hunter = jbs.length
+      this.counts.content = cnts.length
     } catch (err) {
       console.warn('Error al calcular conteos:', err)
     }
@@ -246,6 +259,15 @@ export const store = reactive({
       this.isNew = false
       this.isDirty = false
       await this.loadHunterJobs()
+      return
+    }
+
+    if (sec === 'content') {
+      this.current = null
+      this.form = null
+      this.isNew = false
+      this.isDirty = false
+      await this.loadContentPosts()
       return
     }
 
@@ -465,6 +487,98 @@ export const store = reactive({
       s.toast('err', `Error al evaluar vacante: ${err.message}`)
     } finally {
       s.hunter.isEvaluatingSingle = false
+    }
+  },
+
+  // ─── OPERACIONES DE CONTENIDO OMNICANAL (EROS IA) ─────────────────────────
+  async loadContentPosts() {
+    const s = this || store
+    try {
+      const posts = await api.getContentPosts()
+      s.content.posts = Array.isArray(posts) ? posts : []
+      s.counts.content = s.content.posts.length
+      if (s.content.posts.length > 0 && (!s.content.selected || !s.content.posts.find(p => p.id === s.content.selected.id))) {
+        s.content.selected = s.content.posts[0]
+      }
+    } catch (err) {
+      console.warn('Error al cargar posts omnicanal:', err)
+      s.toast('err', `Error al cargar publicaciones de contenido: ${err.message}`)
+    }
+  },
+
+  async generateContentPost(payload) {
+    const s = this || store
+    if (s.content.isGenerating) return null
+    s.content.isGenerating = true
+    try {
+      const res = await api.generateContent(payload)
+      const post = res?.post || res?.data?.post || res
+      s.toast('ok', 'Contenido omnicanal generado con éxito')
+      await s.loadContentPosts()
+      if (post && post.id) {
+        s.content.selected = s.content.posts.find(p => p.id === post.id) || post
+      }
+      return post
+    } catch (err) {
+      s.toast('err', `Error al generar contenido: ${err.message}`)
+      throw err
+    } finally {
+      s.content.isGenerating = false
+    }
+  },
+
+  async publishContentPost(id, platform = 'all') {
+    const s = this || store
+    if (s.content.publishing[id]) return
+    s.content.publishing[id] = true
+    try {
+      const res = await api.publishContentPost(id, platform)
+      s.toast('ok', `Contenido despachado exitosamente a n8n (${platform})`)
+      await s.loadContentPosts()
+      return res
+    } catch (err) {
+      s.toast('err', `Error al publicar contenido: ${err.message}`)
+    } finally {
+      delete s.content.publishing[id]
+    }
+  },
+
+  async updateContentPostStatus(id, status) {
+    const s = this || store
+    try {
+      await api.updateContentPostStatus(id, status)
+      const post = s.content.posts.find(p => p.id === id)
+      if (post) post.status = status
+      if (s.content.selected && s.content.selected.id === id) {
+        s.content.selected.status = status
+      }
+      s.toast('ok', `Estado actualizado a: ${status}`)
+    } catch (err) {
+      s.toast('err', `Error al actualizar estado: ${err.message}`)
+    }
+  },
+
+  async deleteContentPost(id) {
+    const s = this || store
+    const confirmed = await s.requestConfirm({
+      title: 'Eliminar Publicación',
+      message: '¿Estás seguro de que deseas eliminar este contenido omnicanal?',
+      detail: 'Se borrará el post de LinkedIn, el hilo de X, el artículo de Dev.to y su carrusel generado.',
+      confirmText: 'Eliminar Definitivamente',
+      cancelText: 'Cancelar',
+      kind: 'danger',
+    })
+    if (!confirmed) return
+    try {
+      await api.deleteContentPost(id)
+      s.content.posts = s.content.posts.filter(p => p.id !== id)
+      s.counts.content = s.content.posts.length
+      if (s.content.selected && s.content.selected.id === id) {
+        s.content.selected = s.content.posts[0] || null
+      }
+      s.toast('ok', 'Publicación eliminada correctamente')
+    } catch (err) {
+      s.toast('err', `Error al eliminar publicación: ${err.message}`)
     }
   },
 })

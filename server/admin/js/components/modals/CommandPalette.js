@@ -88,6 +88,16 @@ export const CommandPalette = {
           },
         },
         {
+          id: 'go-content',
+          label: 'Contenido Omnicanal (Eros IA)',
+          category: 'Herramientas & IA',
+          badge: `${store.counts.content}`,
+          action: () => {
+            store.loadSection('content')
+            emit('close')
+          },
+        },
+        {
           id: 'open-portfolio',
           label: 'Ver Portafolio Público',
           category: 'Navegación',

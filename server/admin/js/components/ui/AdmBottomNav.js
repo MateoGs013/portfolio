@@ -35,7 +35,7 @@ export const AdmBottomNav = {
     }
 
     const isSecondarySection = () => {
-      return ['stack', 'orgs', 'docs'].includes(store.section)
+      return ['stack', 'orgs', 'docs', 'content'].includes(store.section)
     }
 
     return {
@@ -233,6 +233,22 @@ export const AdmBottomNav = {
             </div>
             <span class="text-[10px] font-mono-code bg-white/10 px-1.5 py-0.5 rounded text-zinc-300">
               {{ store.counts.docs }}
+            </span>
+          </button>
+
+          <!-- Contenido Omnicanal (Eros IA) -->
+          <button
+            type="button"
+            @click="navigate('content')"
+            class="flex items-center justify-between p-3 rounded-lg border border-white/10 bg-[#161720] hover:border-purple-500/50 transition-colors text-left"
+            :class="{ '!border-purple-500 !bg-purple-500/10 text-purple-400': store.section === 'content' }"
+          >
+            <div class="flex items-center gap-2.5">
+              <span v-html="icons.content"></span>
+              <span class="text-xs font-medium">Contenido Omnicanal</span>
+            </div>
+            <span class="text-[10px] font-mono-code bg-white/10 px-1.5 py-0.5 rounded text-zinc-300">
+              {{ store.counts.content }}
             </span>
           </button>
         </div>

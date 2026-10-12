@@ -48,6 +48,7 @@ export const ICONS = {
   chevronDown: `<svg class="adm-icon" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>`,
   refresh: `<svg class="adm-icon" viewBox="0 0 24 24"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 21h5v-5"/></svg>`,
   menu: `<svg class="adm-icon" viewBox="0 0 24 24"><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="18" y2="18"/></svg>`,
+  content: `<svg class="adm-icon" viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="4" y1="10" x2="20" y2="10"/><line x1="8" y1="14" x2="12" y2="14"/><line x1="8" y1="17" x2="16" y2="17"/></svg>`,
 }
 
 export const METRIC_PRESETS = [

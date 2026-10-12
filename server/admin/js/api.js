@@ -123,7 +123,10 @@ export class ApiClient {
 
   // Job Hunter & IA
   async getHunterJobs() {
-    return this.fetch('hunter/jobs')
+    const res = await this.fetch('hunter/jobs')
+    if (Array.isArray(res)) return res
+    if (res && Array.isArray(res.data)) return res.data
+    return []
   }
 
   async scanHunterJobs() {
@@ -182,6 +185,54 @@ export class ApiClient {
     return this.fetch(`hunter/jobs/${encodeURIComponent(id)}/cv`, {
       method: 'POST',
     })
+  }
+
+  // Eros Omnichannel Content (Career OS)
+  async getContentPosts(status = null, limit = 50) {
+    const q = new URLSearchParams()
+    if (status && status !== 'all') q.set('status', status)
+    if (limit) q.set('limit', String(limit))
+    const queryStr = q.toString() ? `?${q.toString()}` : ''
+    const res = await this.fetch(`content/posts${queryStr}`)
+    if (Array.isArray(res)) return res
+    if (res && Array.isArray(res.data)) return res.data
+    return []
+  }
+
+  async getContentPost(id) {
+    return this.fetch(`content/posts/${encodeURIComponent(id)}`)
+  }
+
+  async generateContent(payload) {
+    return this.fetch('content/generate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    })
+  }
+
+  async publishContentPost(id) {
+    return this.fetch(`content/posts/${encodeURIComponent(id)}/publish`, {
+      method: 'POST',
+    })
+  }
+
+  async updateContentPostStatus(id, status) {
+    return this.fetch(`content/posts/${encodeURIComponent(id)}/status`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status }),
+    })
+  }
+
+  async deleteContentPost(id) {
+    return this.fetch(`content/posts/${encodeURIComponent(id)}`, {
+      method: 'DELETE',
+    })
+  }
+
+  getCarouselUrl(id) {
+    return `/api/admin/content/carousel/${encodeURIComponent(id)}/html`
   }
 }
 

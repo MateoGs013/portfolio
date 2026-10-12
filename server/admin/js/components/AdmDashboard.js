@@ -20,8 +20,8 @@ export const AdmDashboard = {
         </p>
       </div>
 
-      <!-- Cuadrícula de 4 Métricas de Alta Densidad -->
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <!-- Cuadrícula de 5 Métricas de Alta Densidad -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
         <!-- 1. Proyectos -->
         <div
           @click="store.loadSection('projects')"
@@ -93,6 +93,24 @@ export const AdmDashboard = {
             <span class="text-emerald-400 group-hover:text-emerald-300 transition-colors">Abrir consola →</span>
           </div>
         </div>
+
+        <!-- 5. Contenido Omnicanal -->
+        <div
+          @click="store.loadSection('content')"
+          class="p-4 bg-[#121318] hover:bg-[#16171f] border border-purple-500/20 hover:border-purple-500/40 rounded-xl transition-all cursor-pointer space-y-3 group"
+        >
+          <div class="flex items-center justify-between text-purple-400 text-xs font-mono-code">
+            <span>Contenido Omnicanal</span>
+            <span class="status-dot live"></span>
+          </div>
+          <div class="text-3xl font-extrabold text-purple-400 tracking-tight font-mono-code">
+            {{ store.counts.content }}
+          </div>
+          <div class="text-[11px] text-zinc-500 flex items-center justify-between">
+            <span>Posts & Carruseles</span>
+            <span class="text-purple-400 group-hover:text-purple-300 transition-colors">Editorial IA →</span>
+          </div>
+        </div>
       </div>
 
       <!-- Accesos Rápidos & Operaciones Inmediatas -->
@@ -130,6 +148,13 @@ export const AdmDashboard = {
               class="btn-secondary !h-[34px] !justify-start !px-3 !text-xs cursor-pointer"
             >
               + Añadir Empresa
+            </button>
+            <button
+              type="button"
+              @click="store.loadSection('content')"
+              class="btn-secondary !h-[34px] !justify-start !px-3 !text-xs cursor-pointer sm:col-span-2 text-purple-300 border-purple-500/20 hover:bg-purple-500/10 font-mono-code"
+            >
+              + Gestión de Contenido Omnicanal (Eros IA)
             </button>
           </div>
         </div>

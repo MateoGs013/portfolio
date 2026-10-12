@@ -165,6 +165,17 @@ export const AdmJobHunter = {
       setTimeout(() => { store.hunter.copiedPitch = false }, 2500)
     }
 
+    const copiedNote = ref(false)
+
+    async function copyConnectionNoteText() {
+      const note = store.hunter.selected?.connection_note
+      if (!note) return
+      await navigator.clipboard.writeText(note)
+      copiedNote.value = true
+      store.toast('ok', 'Nota de conexión copiada al portapapeles (< 280 caracteres)')
+      setTimeout(() => { copiedNote.value = false }, 2500)
+    }
+
     async function generateTailoredCV() {
       if (!store.hunter.selected || store.hunter.isGeneratingCV) return
       store.hunter.isGeneratingCV = true
@@ -365,6 +376,8 @@ export const AdmJobHunter = {
       purgeJobs,
       vectorizeJobs,
       hunterMobileView,
+      copiedNote,
+      copyConnectionNoteText,
     }
   },
   template: `
@@ -610,7 +623,10 @@ export const AdmJobHunter = {
                 </span>
               </div>
             </div>
-            <div class="text-[11px] text-zinc-400 mt-0.5 truncate">{{ j.company }} · <span class="capitalize">{{ j.source }}</span></div>
+            <div class="text-[11px] text-zinc-400 mt-0.5 truncate flex items-center justify-between">
+              <span class="truncate">{{ j.company }} · <span class="capitalize">{{ j.source }}</span></span>
+              <span v-if="j.hiring_manager_name" class="text-cyan-400 bg-cyan-500/10 border border-cyan-500/20 px-1 py-0.2 rounded text-[8.5px] font-mono-code shrink-0 ml-1" title="Hiring Lead detectado">[Lead]</span>
+            </div>
             <div class="text-[10px] font-mono-code text-zinc-500 mt-1.5 flex items-center justify-between gap-1">
               <span class="truncate max-w-[130px]">{{ j.country || (j.is_remote ? 'Remoto' : 'Ubicación no esp.') }}</span>
               <span 
@@ -928,6 +944,61 @@ export const AdmJobHunter = {
                   <svg v-else class="adm-icon xs" viewBox="0 0 24 24"><path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3L12 3z"/></svg>
                   <span>{{ store.hunter.isEvaluatingSingle ? 'Evaluando con Gemini...' : 'Evaluar esta vacante con IA' }}</span>
                 </button>
+              </div>
+            </div>
+
+            <!-- Detective de Hiring Manager & Conexión Directa (Fase 4) -->
+            <div v-if="store.hunter.selected.hiring_manager_name || store.hunter.selected.connection_note" class="p-4.5 bg-[#121318] border border-cyan-500/30 rounded-lg space-y-3.5">
+              <div class="flex items-center justify-between border-b border-white/5 pb-2.5">
+                <div class="flex items-center gap-2">
+                  <span class="w-1.5 h-1.5 rounded-full bg-cyan-400"></span>
+                  <h3 class="text-xs font-bold font-mono-code text-white uppercase tracking-wider">Hiring Lead & Conexión Directa</h3>
+                </div>
+                <span class="text-[10px] font-mono-code text-cyan-400 bg-cyan-500/10 border border-cyan-500/20 px-2 py-0.5 rounded font-bold">
+                  Lead Detectado
+                </span>
+              </div>
+
+              <!-- Responsable / Recruiter -->
+              <div v-if="store.hunter.selected.hiring_manager_name" class="p-3 bg-[#0c0d10] rounded border border-white/5 flex items-center justify-between text-xs font-mono-code flex-wrap gap-2">
+                <div>
+                  <div class="text-white font-bold text-xs flex items-center gap-2">
+                    <span>{{ store.hunter.selected.hiring_manager_name }}</span>
+                    <span v-if="store.hunter.selected.hiring_manager_title" class="text-zinc-400 font-normal text-[11px]">· {{ store.hunter.selected.hiring_manager_title }}</span>
+                  </div>
+                  <div class="text-[10px] text-zinc-500 mt-0.5">Responsable directo o recruiter identificado para esta vacante</div>
+                </div>
+                <a
+                  v-if="store.hunter.selected.hiring_manager_url"
+                  :href="store.hunter.selected.hiring_manager_url"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="btn-secondary !h-[26px] !text-xs inline-flex items-center gap-1.5 text-cyan-300 border-cyan-500/30 hover:bg-cyan-500/10 font-mono-code"
+                >
+                  <span>Ver en LinkedIn</span>
+                  <svg class="adm-icon xs" viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                </a>
+              </div>
+
+              <!-- Nota de Conexión Personalizada (< 280 car.) -->
+              <div v-if="store.hunter.selected.connection_note" class="space-y-2">
+                <div class="flex items-center justify-between text-[11px] font-mono-code">
+                  <span class="text-zinc-400 font-bold">Nota de Conexión Personalizada (&lt; 280 car.):</span>
+                  <span class="text-zinc-500 text-[10px]">{{ store.hunter.selected.connection_note.length }} / 300</span>
+                </div>
+                <div class="p-3 bg-[#0c0d10] rounded border border-white/5 text-xs text-zinc-200 leading-relaxed font-sans whitespace-pre-wrap">
+                  {{ store.hunter.selected.connection_note }}
+                </div>
+                <div class="flex justify-end">
+                  <button
+                    type="button"
+                    @click="copyConnectionNoteText"
+                    class="btn-primary !h-[28px] !text-xs inline-flex items-center gap-1.5 cursor-pointer font-mono-code"
+                  >
+                    <span v-if="copiedNote" class="text-emerald-300 font-bold">[Copiado ✓]</span>
+                    <span v-else>Copiar Nota de Conexión</span>
+                  </button>
+                </div>
               </div>
             </div>
 

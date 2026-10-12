@@ -9,6 +9,7 @@ import { requireAdmin } from './auth.js'
 import { IMAGE_MIME, imageDims } from './image.js'
 import { HttpError, bool, date, enumOf, int, intList, json, list, optDate, optInt, optStr, optUrl, slug, str, url } from './input.js'
 import { hunterRouter } from './hunter.js'
+import { contentRouter } from './content.js'
 
 const require = createRequire(import.meta.url)
 const ADMIN_DIR = path.resolve('server/admin')
@@ -30,6 +31,7 @@ adminApi.use((req, _res, next) => {
 })
 adminApi.use(requireAdmin)
 adminApi.use('/hunter', hunterRouter)
+adminApi.use('/content', contentRouter)
 
 const PROJECT_STATUS = Object.values(ProjectStatus)
 const TECH_CATEGORY = Object.values(TechCategory)

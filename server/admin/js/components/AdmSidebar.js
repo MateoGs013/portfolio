@@ -121,6 +121,19 @@ export const AdmSidebar = {
               {{ store.counts.hunter }}
             </span>
           </button>
+
+          <button
+            type="button"
+            @click="store.loadSection('content')"
+            class="nav-item w-full text-left"
+            :class="{ active: store.section === 'content' }"
+          >
+            <span v-html="icons.content"></span>
+            <span class="flex-1 truncate">Contenido Omnicanal</span>
+            <span class="text-[10px] font-mono-code bg-purple-500/10 text-purple-400 px-1.5 py-0.2 rounded border border-purple-500/20">
+              {{ store.counts.content }}
+            </span>
+          </button>
         </div>
       </div>
 
