@@ -90,11 +90,15 @@ hunterRouter.get('/jobs', async (req: Request, res: Response) => {
 
 /** POST /api/admin/hunter/scan */
 hunterRouter.post('/scan', async (req: Request, res: Response) => {
-  const query = new URLSearchParams(req.query as Record<string, string>).toString()
+  const params = new URLSearchParams(req.query as Record<string, string>)
+  if (!params.has('evaluate')) {
+    params.set('evaluate', 'false')
+  }
+  const query = params.toString()
   const result = await forward(`api/scan${query ? `?${query}` : ''}`, {
     method: 'POST',
     body: req.body && Object.keys(req.body).length ? JSON.stringify(req.body) : undefined,
-  }, 75000) // 75s para escaneo completo y evaluación de IA
+  }, 60000)
   res.status(result.status).json(result.data)
 })
 

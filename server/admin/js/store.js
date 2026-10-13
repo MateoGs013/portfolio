@@ -428,10 +428,12 @@ export const store = reactive({
     s.hunter.isScanning = true
     try {
       const res = await api.scanHunterJobs()
-      const count = res?.scanned ?? res?.new_jobs ?? (res?.data?.scanned ?? res?.data?.new_jobs) ?? 0
+      const total = res?.scanned ?? res?.data?.scanned ?? 0
+      const newJobs = res?.new_jobs ?? res?.data?.new_jobs ?? 0
       const evaluated = res?.evaluated_count ?? res?.data?.evaluated_count
-      const evalText = evaluated !== undefined && evaluated !== null ? ` (${evaluated} evaluadas con IA)` : ''
-      s.toast('ok', `Escaneo finalizado: ${count} vacantes detectadas${evalText}`)
+      const evalText = evaluated ? ` (${evaluated} evaluadas con IA)` : ''
+      const newText = newJobs > 0 ? ` (${newJobs} nuevas guardadas)` : ''
+      s.toast('ok', `Escaneo finalizado: ${total} vacantes analizadas${newText}${evalText}`)
       await s.loadHunterJobs()
     } catch (err) {
       s.toast('err', `Error al escanear ofertas: ${err.message}`)

@@ -130,7 +130,7 @@ export class ApiClient {
   }
 
   async scanHunterJobs() {
-    return this.fetch('hunter/scan', { method: 'POST' })
+    return this.fetch('hunter/scan?evaluate=false', { method: 'POST' })
   }
 
   async evaluateHunterJobs(limit = 15) {
