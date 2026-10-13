@@ -49,6 +49,8 @@ export const ICONS = {
   refresh: `<svg class="adm-icon" viewBox="0 0 24 24"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 21h5v-5"/></svg>`,
   menu: `<svg class="adm-icon" viewBox="0 0 24 24"><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="18" y2="18"/></svg>`,
   content: `<svg class="adm-icon" viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="4" y1="10" x2="20" y2="10"/><line x1="8" y1="14" x2="12" y2="14"/><line x1="8" y1="17" x2="16" y2="17"/></svg>`,
+  articles: `<svg class="adm-icon" viewBox="0 0 24 24"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/><path d="M6 6h10"/><path d="M6 10h10"/><path d="M6 14h6"/></svg>`,
+  radar: `<svg class="adm-icon" viewBox="0 0 24 24"><path d="M19.07 4.93A10 10 0 0 0 4.93 19.07"/><path d="M16.24 7.76A6 6 0 0 0 7.76 16.24"/><path d="M13.41 10.59a2 2 0 0 0-2.82 2.82"/><line x1="12" y1="12" x2="21" y2="3"/></svg>`,
 }
 
 export const METRIC_PRESETS = [
@@ -142,6 +144,46 @@ export const MODELS = {
     toPayload: f => f,
   },
 
+  articles: {
+    label: 'Artículos & Blog',
+    singular: 'Artículo',
+    icon: ICONS.articles,
+    path: 'articles',
+    name: r => r.title || '(Sin título)',
+    meta: r => `${r.status} · ${r.readingTimeMin || 5} min${r.featured ? ' · Destacado' : ''}`,
+    toForm: r => ({
+      ...r,
+      publishedAt: toLocalDatetime(r.publishedAt),
+      techIds: (r.techs || []).map(t => t.id),
+      projectId: r.projectId ?? null,
+    }),
+    blank: () => ({
+      slug: '',
+      title: '',
+      summary: '',
+      content: '',
+      readingTimeMin: 5,
+      status: 'PUBLISHED',
+      featured: false,
+      sortOrder: 0,
+      publishedAt: toLocalDatetime(new Date().toISOString()),
+      coverImage: '',
+      canonicalUrl: '',
+      projectId: null,
+      techIds: [],
+    }),
+    toPayload: f => ({
+      ...f,
+      publishedAt: f.publishedAt ? new Date(f.publishedAt).toISOString() : null,
+      coverImage: f.coverImage || null,
+      canonicalUrl: f.canonicalUrl || null,
+      readingTimeMin: Number(f.readingTimeMin) || 5,
+      sortOrder: Number(f.sortOrder) || 0,
+      projectId: f.projectId ? Number(f.projectId) : null,
+      techIds: (f.techIds || []).map(Number),
+    }),
+  },
+
   docs: {
     label: 'Páginas & Textos',
     singular: 'Documento',
@@ -157,7 +199,7 @@ export const MODELS = {
     blank: () => ({ key: '', title: '', fields: [] }),
     toPayload: f => ({
       title: f.title,
-      fields: (f.fields || []).map(x => ({ ...x, worlds: ['datos'] })),
+      fields: (f.fields || []).map(x => ({ ...x })),
     }),
     saveUrl: f => `docs/${encodeURIComponent(f.key)}`,
     saveMethod: () => 'PUT',

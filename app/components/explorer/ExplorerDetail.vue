@@ -8,6 +8,7 @@ import CvContainer from '~/components/cv/CvContainer.vue'
 import AppIcon from '~/components/ui/AppIcon.vue'
 import ExplorerValue from './ExplorerValue.vue'
 import ExplorerFileWindow from './ExplorerFileWindow.vue'
+import ArticleMarkdown from '~/components/blog/ArticleMarkdown.vue'
 import { pad, safeHref, type Detail, type Vecino, type Project } from '~/lib/explorer'
 import { routeFor } from '~/lib/path'
 
@@ -27,6 +28,7 @@ const copied = ref(false)
 const isAbout = computed(() => props.detail.name.toLowerCase() === 'about' || props.detail.type.includes('about'))
 const isProject = computed(() => props.detail.type.includes('projects') || props.detail.type.includes('Project'))
 const isExperience = computed(() => props.detail.type.includes('experience') || props.detail.type.includes('Experience'))
+const isArticle = computed(() => props.detail.type.includes('articles') || props.detail.type.includes('Article'))
 const isContact = computed(() => props.detail.name.toLowerCase() === 'contact' || props.detail.type.includes('contact'))
 
 const canonicalFilePath = computed(() => {
@@ -37,6 +39,7 @@ const canonicalFilePath = computed(() => {
   if (t.includes('contact')) return `file://portfolio/contact/channels.json`
   if (t.includes('tech') || t.includes('stack')) return `file://portfolio/stack/${n}.ts`
   if (t.includes('experience')) return `file://portfolio/experience/${n}.ts`
+  if (t.includes('article')) return `file://portfolio/articles/${n}.md`
   return `file://portfolio/${n}.json`
 })
 
@@ -268,6 +271,31 @@ async function copyEmail() {
     // Fallback silencioso
   }
 }
+
+// Datos computados para Artículos / Blog
+const articleSummaryRow = computed(() => props.detail.rows.find(x => x.name === 'summary') ?? null)
+const articleContentRow = computed(() => props.detail.rows.find(x => x.name === 'content') ?? null)
+const articleReadingTime = computed(() => {
+  const r = props.detail.rows.find(x => x.name === 'readingTimeMin')
+  return typeof r?.value === 'string' || typeof r?.value === 'number' ? Number(r.value) : 5
+})
+const articleStatus = computed(() => {
+  const r = props.detail.rows.find(x => x.name === 'status')
+  return typeof r?.value === 'string' ? r.value : 'PUBLISHED'
+})
+const articlePublishedAt = computed(() => {
+  const r = props.detail.rows.find(x => x.name === 'publishedAt')
+  return typeof r?.value === 'string' ? r.value.slice(0, 10) : null
+})
+const articleTechsRow = computed(() => {
+  return props.detail.rows.find(x => x.name === 'techs' && x.items && x.items.length) ?? null
+})
+const articleProjectRow = computed(() => {
+  return props.detail.rows.find(x => x.name === 'project' && (x.to || x.value)) ?? null
+})
+const articleCanonicalRow = computed(() => {
+  return props.detail.rows.find(x => x.name === 'canonicalUrl' && x.href) ?? null
+})
 
 const { path: explorerPath } = useExplorerRoute()
 const parentRoute = computed(() => routeFor(explorerPath.value.slice(0, -1)))
@@ -729,7 +757,109 @@ async function copyJson() {
         </details>
       </div>
 
-      <!-- 4. De lo contrario (o si se activó 'showRawFields'): Renderizar Esquema de Campos Estándar -->
+      <!-- 4. Si es ARTÍCULO / BLOG y está en modo Dossier Editorial (por defecto) -->
+      <div v-else-if="isArticle && !showRawFields" class="dossier-wrap article-dossier flex flex-col gap-5 sm:gap-6 w-full min-w-0">
+        <!-- Hero Bar del Artículo -->
+        <div class="article-hero-bar w-full p-3.5 sm:p-4 bg-surface border border-rule border-l-4 border-l-sig flex flex-col md:flex-row md:items-center justify-between gap-3.5 rounded-[2px]">
+          <div class="ah-meta flex flex-wrap items-center gap-1.5 sm:gap-2.5 text-xs font-mono min-w-0 flex-1">
+            <div class="flex items-center gap-1.5 shrink-0">
+              <span
+                class="ah-status px-2.5 py-1 font-bold rounded-[2px]"
+                :class="articleStatus === 'PUBLISHED' ? 'text-green border border-green/30 bg-green/10' : 'text-amber border border-amber/30 bg-amber/10'"
+              >
+                ● {{ articleStatus }}
+              </span>
+              <span class="ah-pill px-2.5 py-1 border border-rule bg-paper text-dim text-[11px] sm:text-[11.5px] rounded-[2px]">
+                {{ pad(articleReadingTime) }} MIN READ
+              </span>
+              <span v-if="articlePublishedAt" class="ah-pill px-2.5 py-1 border border-rule bg-paper text-faint text-[11px] sm:text-[11.5px] rounded-[2px]">
+                {{ articlePublishedAt }}
+              </span>
+            </div>
+            <span v-if="articleProjectRow?.value" class="ah-pill project px-2.5 py-1 border border-rule bg-paper text-sig font-semibold text-[11px] sm:text-[11.5px] rounded-[2px] max-w-full break-words">
+              PROYECTO: {{ articleProjectRow.value }}
+            </span>
+          </div>
+
+          <div v-if="articleCanonicalRow?.href" class="ah-actions flex items-center gap-2 w-full md:w-auto shrink-0">
+            <a
+              :href="articleCanonicalRow.href"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="ph-btn secondary group inline-flex items-center justify-center gap-2 px-3.5 sm:px-4 py-2 font-mono text-[11.5px] font-bold no-underline cursor-pointer transition-all duration-150 rounded-[2px] bg-paper text-ink border border-rule-strong hover:bg-hover hover:border-sig hover:text-sig w-full sm:w-auto min-h-[38px]"
+            >
+              <AppIcon name="external" :size="12" class="group-hover:text-sig transition-colors duration-150" />
+              <span>CANONICAL URL</span>
+            </a>
+          </div>
+        </div>
+
+        <!-- Síntesis Ejecutiva Lead -->
+        <div v-if="articleSummaryRow?.value" class="summary-lead-card p-4 sm:p-5 bg-surface border-l-4 border-sig border-y border-r border-rule rounded-[2px] w-full min-w-0">
+          <span class="font-mono text-[11px] font-bold text-sig uppercase tracking-wider block mb-1.5">{{ tr.detail.executiveOverview }}</span>
+          <p class="m-0 font-sans text-[14.5px] sm:text-[15.5px] text-ink leading-relaxed break-words">
+            {{ articleSummaryRow.value }}
+          </p>
+        </div>
+
+        <!-- Tecnologías Relacionadas -->
+        <div v-if="articleTechsRow" class="techs-section p-3.5 sm:p-4 bg-surface border border-rule rounded-[2px] flex flex-col gap-2.5 w-full min-w-0">
+          <div class="flex items-center justify-between gap-2 border-b border-rule pb-2 w-full min-w-0">
+            <span class="font-mono text-[11.5px] font-bold text-ink tracking-wider flex items-center gap-2 min-w-0">
+              <AppIcon name="code" :size="12" class="text-sig shrink-0" />
+              <span class="truncate">{{ tr.detail.stackSection }}</span>
+            </span>
+            <span class="font-mono text-[10.5px] text-dim hidden sm:inline shrink-0">STACK APLICADO</span>
+          </div>
+          <div class="flex flex-wrap gap-2 pt-1">
+            <template v-for="(it, i) in articleTechsRow.items" :key="i">
+              <NuxtLink
+                v-if="it.to"
+                :to="it.to"
+                class="tech-chip font-mono text-[11.5px] px-3 py-1.5 border border-rule bg-paper text-ink no-underline hover:border-sig hover:text-sig transition-colors rounded-[2px]"
+              >
+                {{ it.label }}
+              </NuxtLink>
+            </template>
+          </div>
+        </div>
+
+        <!-- Cuerpo del Artículo en Markdown Técnico -->
+        <div v-if="articleContentRow?.value" class="article-body-section p-4 sm:p-6 bg-surface border border-rule rounded-[2px] w-full min-w-0 shadow-sm">
+          <ArticleMarkdown :content="String(articleContentRow.value)" />
+        </div>
+
+        <!-- Cajón Colapsable de Especificaciones Técnicas del Esquema Relacional -->
+        <details class="specs-accordion border border-rule bg-surface rounded-[2px] transition-all w-full min-w-0">
+          <summary class="p-3 px-3.5 sm:px-4 font-mono text-[12px] font-bold text-dim cursor-pointer select-none hover:text-sig flex items-center justify-between gap-2">
+            <span class="flex items-center gap-2 min-w-0">
+              <AppIcon name="table" :size="12" class="shrink-0" />
+              <span class="truncate">{{ tr.detail.specsSection }} ({{ pad(detail.rows.length) }} {{ isEs ? 'CAMPOS' : 'FIELDS' }})</span>
+            </span>
+            <span class="text-faint text-[10.5px] hidden sm:inline shrink-0">{{ isEs ? 'DESPLEGAR ESQUEMA' : 'EXPAND SCHEMA' }}</span>
+          </summary>
+          <div class="p-3 sm:p-4 pt-2 border-t border-rule bg-paper/50">
+            <dl class="campos flex flex-col border border-rule bg-surface divide-y divide-rule w-full m-0">
+              <div
+                v-for="row in detail.rows"
+                :key="row.name"
+                class="campo grid grid-cols-1 sm:grid-cols-[minmax(120px,180px)_1fr_auto] p-3 sm:px-3.5 gap-2 sm:gap-3 items-baseline w-full min-w-0"
+              >
+                <dt class="nombre font-mono text-[11.5px] sm:text-[12px] text-dim flex items-baseline gap-1 min-w-0 break-words">
+                  <span class="nombre-label text-ink font-medium">{{ localizeFieldLabel(row.name, row.label) }}</span>
+                  <span v-if="row.label && row.label !== row.name" class="nombre-key text-faint text-[10px]"> · {{ row.name }}</span>
+                </dt>
+                <dd class="valor min-w-0 font-sans text-[13px] sm:text-[13.5px] text-ink leading-relaxed break-words w-full m-0">
+                  <ExplorerValue :cell="getLocalizedRow(row)" :name="row.name" />
+                </dd>
+                <dd class="tipo font-mono text-[10.5px] sm:text-[11px] text-faint sm:text-right shrink-0 break-all self-start sm:self-auto m-0">{{ row.type }}</dd>
+              </div>
+            </dl>
+          </div>
+        </details>
+      </div>
+
+      <!-- 5. De lo contrario (o si se activó 'showRawFields'): Renderizar Esquema de Campos Estándar -->
       <template v-else>
         <!-- Barra de Acción Hero de Proyecto (para vista de campos crudos) -->
         <div v-if="isProject" class="project-hero-bar w-full p-3.5 sm:p-4 bg-surface border border-rule border-l-4 border-l-sig flex flex-col md:flex-row md:items-center justify-between gap-3.5 rounded-[2px]">

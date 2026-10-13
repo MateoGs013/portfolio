@@ -1,20 +1,19 @@
 /**
- * Acceso al API. Los dos mundos leen de acá y de ningún otro lado:
- * un solo modelo, dos renderers. Cada llamada devuelve también el request
- * que la produjo y cuánto tardó: DATOS los muestra, porque la máquina a la
- * vista es parte de su argumento.
+ * Acceso al API del portafolio.
+ * Modelo relacional unificado sobre PostgreSQL 17 / Nitro API.
+ * Cada llamada devuelve el envelope de datos, el request ejecutado y la latencia en ms.
  */
 import type { LocationQuery } from 'vue-router'
-import type { Doc, Envelope, Experience, Org, Project, SchemaEntry, Tech } from '~/lib/api'
+import type { Article, Doc, Envelope, Experience, Org, Project, SchemaEntry, Tech } from '~/lib/api'
 import type { CollectionKey, DocKey } from '~/lib/fieldMeta'
 
 export type ListQuery = LocationQuery | Record<string, string | undefined>
 
 export type ListOf<K extends CollectionKey> =
-  K extends 'projects' ? Project[] : K extends 'experience' ? Experience[] : K extends 'stack' ? Tech[] : K extends 'orgs' ? Org[] : never
+  K extends 'projects' ? Project[] : K extends 'experience' ? Experience[] : K extends 'stack' ? Tech[] : K extends 'articles' ? Article[] : K extends 'orgs' ? Org[] : never
 
 export type RecordOf<K extends CollectionKey> =
-  K extends 'projects' ? Project : K extends 'experience' ? Experience : K extends 'stack' ? Tech : K extends 'orgs' ? Org : never
+  K extends 'projects' ? Project : K extends 'experience' ? Experience : K extends 'stack' ? Tech : K extends 'articles' ? Article : K extends 'orgs' ? Org : never
 
 /** Lo que devuelve cada llamada: el sobre del API más el request y el tiempo. */
 export interface Answer<T> extends Envelope<T> {
@@ -28,6 +27,7 @@ export const listEndpoint: Record<CollectionKey, string | null> = {
   projects: '/projects',
   experience: '/experience',
   stack: '/stack',
+  articles: '/articles',
   orgs: '/orgs',
 }
 
@@ -36,6 +36,7 @@ export const listFilters: Record<CollectionKey, readonly string[]> = {
   projects: ['stack', 'year', 'role', 'featured', 'status'],
   experience: ['stack', 'org'],
   stack: ['category'],
+  articles: ['stack', 'featured', 'project'],
   orgs: [],
 }
 

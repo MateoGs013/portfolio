@@ -158,6 +158,18 @@ export const AdmContentManager = {
       return map[p] || p || 'Estratégico'
     }
 
+    const isPublishingToBlog = ref(false)
+
+    async function handlePublishToBlog(id) {
+      if (isPublishingToBlog.value) return
+      isPublishingToBlog.value = true
+      try {
+        await store.publishPostToBlog(id)
+      } finally {
+        isPublishingToBlog.value = false
+      }
+    }
+
     return {
       store,
       icons: ICONS,
@@ -175,6 +187,8 @@ export const AdmContentManager = {
       copyText,
       openCarouselWindow,
       formatPillar,
+      isPublishingToBlog,
+      handlePublishToBlog,
     }
   },
   template: `
@@ -559,20 +573,32 @@ export const AdmContentManager = {
                 </div>
               </div>
 
-              <!-- TAB 3: DEV.TO MARKDOWN -->
+              <!-- TAB 3: DEV.TO MARKDOWN & BLOG PORTFOLIO -->
               <div v-else-if="activeSubTab === 'devto'" class="space-y-4">
-                <div class="flex items-center justify-between">
+                <div class="flex items-center justify-between flex-wrap gap-2">
                   <span class="text-xs font-mono-code uppercase font-bold text-zinc-400">
                     Artículo Técnico Formateado en Markdown
                   </span>
-                  <button
-                    type="button"
-                    @click="copyText(store.content.selected.devto_markdown, 'devto')"
-                    class="btn-primary !h-[28px] !text-xs font-mono-code cursor-pointer"
-                  >
-                    <span v-if="copiedKeys['devto']" class="text-emerald-300 font-bold">[Copiado ✓]</span>
-                    <span v-else>Copiar Markdown Dev.to</span>
-                  </button>
+                  <div class="flex items-center gap-2">
+                    <button
+                      type="button"
+                      @click="handlePublishToBlog(store.content.selected.id)"
+                      :disabled="isPublishingToBlog"
+                      class="btn-primary !h-[28px] !text-xs font-mono-code cursor-pointer bg-emerald-600 hover:bg-emerald-500 border-emerald-500 text-white"
+                      title="Publicar directamente como artículo en mateogs.tech/blog"
+                    >
+                      <span v-if="isPublishingToBlog" class="animate-spin text-xs">↻</span>
+                      <span>{{ isPublishingToBlog ? 'Publicando...' : 'Publicar en Blog del Portafolio' }}</span>
+                    </button>
+                    <button
+                      type="button"
+                      @click="copyText(store.content.selected.devto_markdown, 'devto')"
+                      class="btn-secondary !h-[28px] !text-xs font-mono-code cursor-pointer"
+                    >
+                      <span v-if="copiedKeys['devto']" class="text-emerald-300 font-bold">[Copiado ✓]</span>
+                      <span v-else>Copiar Markdown Dev.to</span>
+                    </button>
+                  </div>
                 </div>
 
                 <div class="p-4 bg-[#0c0d10] border border-white/10 rounded-lg">

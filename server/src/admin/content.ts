@@ -1,4 +1,5 @@
 import { Router, type Request, type Response } from 'express'
+import { db } from '../db.js'
 import { env } from '../env.js'
 
 export const contentRouter = Router()
@@ -140,3 +141,46 @@ contentRouter.get('/carousel/:id/html', async (req: Request, res: Response) => {
     res.status(503).type('html').send(`<h1>Error cargando carrusel</h1><p>${msg}</p>`)
   }
 })
+
+/** POST /api/admin/content/posts/:id/publish-to-blog - Convierte y publica el post en la tabla Article */
+contentRouter.post('/posts/:id/publish-to-blog', async (req: Request, res: Response) => {
+  const id = getParamId(req)
+  if (!id) {
+    res.status(400).json({ error: 'ID de publicación requerido' })
+    return
+  }
+  const result = await forward(`api/content/posts/${encodeURIComponent(id)}`)
+  if (!result.ok || !result.data) {
+    res.status(result.status || 500).json({ error: 'No se pudo obtener el post desde Eros' })
+    return
+  }
+  const post = ((result.data as { post?: Record<string, unknown> })?.post || result.data) as Record<string, unknown>
+  
+  const title = String(post['title'] || 'Publicación Técnica').trim()
+  const content = String(post['devto_markdown'] || post['body'] || '').trim()
+  const summary = String(post['hook'] || title).slice(0, 200).trim()
+  const baseSlug = title.toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^\w\s-]/g, '').trim().replace(/\s+/g, '-').slice(0, 60)
+  const slug = `${baseSlug || 'articulo'}-${Date.now().toString(36).slice(-4)}`
+
+  try {
+    const article = await db.article.create({
+      data: {
+        slug,
+        title,
+        summary,
+        content,
+        readingTimeMin: Math.max(2, Math.ceil(content.split(/\s+/).length / 200)),
+        status: 'PUBLISHED',
+        publishedAt: new Date(),
+        canonicalUrl: `https://mateogs.tech/blog/${slug}`,
+      },
+    })
+    res.status(201).json({ ok: true, article })
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err)
+    res.status(500).json({ error: `Error al crear artículo en PostgreSQL: ${msg}` })
+  }
+})
+

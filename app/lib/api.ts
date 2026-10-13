@@ -112,12 +112,34 @@ export interface Doc {
   updatedAt: string
 }
 
+export type ArticleStatus = 'DRAFT' | 'PUBLISHED' | 'ARCHIVED'
+
+export interface Article {
+  id: number
+  slug: string
+  title: string
+  summary: string
+  content: string
+  readingTimeMin: number
+  status: ArticleStatus
+  featured: boolean
+  coverImage: string | null
+  canonicalUrl: string | null
+  sortOrder: number
+  publishedAt: string | null
+  createdAt: string
+  updatedAt: string
+  techs: TechRef[]
+  project: { slug: string, title: string } | null
+}
+
 /** Qué tipo devuelve la lista de cada colección. */
 export interface CollectionRecord {
   projects: Project
   experience: Experience
   stack: Tech
+  articles: Article
   orgs: Org
 }
 
-export type AnyRecord = Project | Experience | Tech | Org
+export type AnyRecord = Project | Experience | Tech | Org | Article

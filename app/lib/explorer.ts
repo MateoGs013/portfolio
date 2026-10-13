@@ -1,11 +1,13 @@
 /**
- * El explorador de DATOS (Portafolio Mateo Sonzogni).
+ * El explorador técnico del Portafolio de Mateo Sonzogni.
  *
  * Dado un path resuelve el panel correspondiente:
  *   []                       carpeta: las tablas y documentos de la base
  *   [about]                  hoja: campos del documento de especificación
  *   [projects]               carpeta: los records, con facetas de filtrado
  *   [projects, la-rucula]    hoja: el record completo con dossier de ingeniería
+ *   [articles]               carpeta: publicaciones técnicas y blog de ingeniería
+ *   [articles, slug]         hoja: artículo técnico completo
  *   [orgs, la-rucula-gastrobar] hoja de organización o cliente
  *
  * Es un explorador de alta precisión: las relaciones son hipervínculos bidireccionales,
@@ -13,12 +15,12 @@
  * (brief, outcome, pasos de proceso, capturas técnicas y métricas).
  */
 import type { LocationQuery, RouteLocationRaw } from 'vue-router'
-import type { AnyRecord, Doc, Experience, LinkRef, Org, Project, TechRef } from '~/lib/api'
+import type { AnyRecord, Article, Doc, Experience, LinkRef, Org, Project, TechRef } from '~/lib/api'
 import { fieldMeta, fieldsFor, type CollectionKey, type DocField, type DocKey, type FieldMeta } from '~/lib/fieldMeta'
 import { isDoc, isRoot, routeFor, type Path } from '~/lib/path'
 import { filtersFor, listEndpoint, listFilters, type Answer, type useApi } from '~/composables/useApi'
 
-export type { AnyRecord, Doc, Experience, LinkRef, Org, Project, TechRef }
+export type { AnyRecord, Article, Doc, Experience, LinkRef, Org, Project, TechRef }
 
 type Api = ReturnType<typeof useApi>
 
@@ -49,6 +51,7 @@ export interface Item {
   endedAt?: string | null
   story?: string | null
   metrics?: Record<string, unknown> | null
+  readingTimeMin?: number
 }
 
 export interface Facet {
@@ -68,6 +71,7 @@ export interface Folder {
   facets: Facet[]
   projects?: Project[]
   experience?: Experience[]
+  articles?: Article[]
   homeDoc?: Doc | null
   schemaCounts?: Record<string, number>
 }
@@ -140,6 +144,7 @@ export interface Detail {
   rawRecord?: unknown
   projects?: Project[]
   experience?: Experience[]
+  articles?: Article[]
   contact?: Record<string, string>
   requestLine?: string
 }
@@ -167,6 +172,7 @@ const modelName: Record<CollectionKey, string> = {
   projects: 'Project',
   experience: 'Experience',
   stack: 'Tech',
+  articles: 'Article',
   orgs: 'Org',
 }
 
@@ -184,6 +190,7 @@ function metaOf(collection: CollectionKey, record: AnyRecord): string {
     return s === e ? s : `${s}–${e}`
   }
   if (collection === 'stack') return String(field(record, 'since') ?? '')
+  if (collection === 'articles') return `${field(record, 'readingTimeMin') ?? 5} min`
   if (collection === 'orgs') return String(field(record, 'city') ?? '')
   return ''
 }
@@ -218,6 +225,8 @@ function countOf(record: AnyRecord, name: string): number {
 function inverse(collection: CollectionKey, name: string): { target: CollectionKey, filter: string } | null {
   if (collection === 'stack' && name === 'projects') return { target: 'projects', filter: 'stack' }
   if (collection === 'stack' && name === 'experiences') return { target: 'experience', filter: 'stack' }
+  if (collection === 'stack' && name === 'articles') return { target: 'articles', filter: 'stack' }
+  if (collection === 'projects' && name === 'articles') return { target: 'articles', filter: 'project' }
   if (collection === 'orgs' && name === 'projects') return { target: 'projects', filter: 'org' }
   if (collection === 'orgs' && name === 'experiences') return { target: 'experience', filter: 'org' }
   return null
@@ -275,9 +284,12 @@ function cellFor(collection: CollectionKey, record: AnyRecord, name: string, ext
     }
   }
   else if (meta.type.startsWith('relation')) {
-    const ref = value as { slug?: string, name?: string } | null
-    cell.value = ref?.name ?? null
-    if (ref?.slug) cell.to = routeFor([meta.type.endsWith('Org') ? 'orgs' : collection, ref.slug])
+    const ref = value as { slug?: string, name?: string, title?: string } | null
+    cell.value = ref?.title ?? ref?.name ?? null
+    if (ref?.slug) {
+      const target = meta.type.includes('Org') ? 'orgs' : meta.type.includes('Project') ? 'projects' : collection
+      cell.to = routeFor([target, ref.slug])
+    }
   }
   else if (meta.type === 'url' && typeof value === 'string') {
     cell.href = safeHref(value)
@@ -401,6 +413,7 @@ export async function resolveExplorer(api: Api, path: Path, query: LocationQuery
       projects: { label: 'proyectos', desc: n => `${pad(n)} aplicaciones reales en producción` },
       experience: { label: 'experiencia', desc: n => `${pad(n)} etapas: freelance, Da Vinci y CET 30` },
       stack: { label: 'stack', desc: n => `${pad(n)} tecnologías con criterio técnico` },
+      articles: { label: 'artículos & blog', desc: n => `${pad(n)} publicaciones técnicas de ingeniería` },
       about: { label: 'sobre mí', desc: n => `${pad(n)} campos de perfil, formación y principios` },
       contact: { label: 'contacto', desc: n => `${pad(n)} canales de contacto y disponibilidad` },
       orgs: { label: 'organizaciones', desc: n => `${pad(n)} empresas e instituciones clientes` },
@@ -560,6 +573,15 @@ export async function resolveExplorer(api: Api, path: Path, query: LocationQuery
             item.startedAt = typeof e.startedAt === 'string' ? e.startedAt : undefined
             item.endedAt = typeof e.endedAt === 'string' ? e.endedAt : null
           }
+          else if (collection === 'articles') {
+            const a = r as unknown as Record<string, unknown>
+            item.summary = typeof a.summary === 'string' ? a.summary : undefined
+            item.status = typeof a.status === 'string' ? a.status : undefined
+            item.techs = Array.isArray(a.techs) ? (a.techs as TechRef[]).map(t => ({ name: t.name, slug: t.slug })) : []
+            item.readingTimeMin = typeof a.readingTimeMin === 'number' ? a.readingTimeMin : undefined
+            item.cover = typeof a.coverImage === 'string' ? a.coverImage : undefined
+            item.url = typeof a.canonicalUrl === 'string' ? a.canonicalUrl : null
+          }
           return item
         }),
       }
@@ -572,7 +594,7 @@ export async function resolveExplorer(api: Api, path: Path, query: LocationQuery
     prev = vecino(records[at - 1])
     next = vecino(records[at + 1])
 
-    if (collection === 'projects') {
+    if (collection === 'projects' || collection === 'articles') {
       const one = await api.record(collection, slug)
       last = one
       record = one.data
@@ -592,12 +614,20 @@ export async function resolveExplorer(api: Api, path: Path, query: LocationQuery
   // Relaciones inversas
   const extra: Record<string, AnyRecord[]> = {}
   if (collection === 'stack') {
-    const [projects, experiences] = await Promise.all([
+    const [projects, experiences, articles] = await Promise.all([
       api.list('projects', { stack: record.slug }),
       api.list('experience', { stack: record.slug }),
+      api.list('articles', { stack: record.slug }).catch(() => ({ data: [] })),
     ])
     extra.projects = projects.data as AnyRecord[]
     extra.experiences = experiences.data as AnyRecord[]
+    extra.articles = (articles?.data ?? []) as AnyRecord[]
+  }
+  if (collection === 'projects') {
+    const articlesRes = await api.list('articles', { project: record.slug }).catch(() => null)
+    if (articlesRes?.data?.length) {
+      extra.articles = articlesRes.data as AnyRecord[]
+    }
   }
   if (collection === 'orgs') {
     const org = record as Org
@@ -630,6 +660,7 @@ export async function resolveExplorer(api: Api, path: Path, query: LocationQuery
     updated: 'updatedAt' in record ? String(record.updatedAt).slice(0, 10) : null,
     rawRecord: record,
     projects: extra.projects as Project[] | undefined,
+    articles: extra.articles as Article[] | undefined,
     rows: fieldsFor(collection)
       .filter(name => name !== meta.nameField)
       .map(name => ({

@@ -24,7 +24,7 @@ export interface FieldMeta {
   nullable?: boolean
 }
 
-export type CollectionKey = 'projects' | 'experience' | 'stack' | 'orgs'
+export type CollectionKey = 'projects' | 'experience' | 'stack' | 'articles' | 'orgs'
 export type DocKey = 'about' | 'contact' | 'home'
 
 export interface CollectionMeta {
@@ -106,6 +106,24 @@ export const fieldMeta: Record<CollectionKey, CollectionMeta> = {
       slug: { type: 'string', label: 'identificador' },
     },
   },
+
+  articles: {
+    label: 'articles',
+    kind: 'collection',
+    nameField: 'title',
+    fields: {
+      summary: { type: 'string', label: 'síntesis ejecutiva', wide: true },
+      content: { type: 'text', label: 'desarrollo técnico (markdown)', wide: true },
+      readingTimeMin: { type: 'int', label: 'tiempo de lectura (min)' },
+      techs: { type: 'relation[] → Tech', label: 'tecnologías aplicadas' },
+      project: { type: 'relation → Project', label: 'proyecto de referencia', nullable: true },
+      status: { type: 'enum ArticleStatus', label: 'estado de publicación' },
+      featured: { type: 'bool', label: 'artículo destacado' },
+      publishedAt: { type: 'datetime', label: 'publicado en', nullable: true },
+      canonicalUrl: { type: 'url', label: 'enlace canónico', nullable: true },
+      slug: { type: 'string', label: 'identificador' },
+    },
+  },
 }
 
 /** Forma de cada item de `Doc.fields`. */
@@ -118,7 +136,7 @@ export type DocField = {
 }
 
 /** Orden de navegación en el explorador. */
-export const collectionOrder: CollectionKey[] = ['projects', 'experience', 'stack', 'orgs']
+export const collectionOrder: CollectionKey[] = ['projects', 'experience', 'stack', 'articles', 'orgs']
 export const docOrder: DocKey[] = ['about', 'contact', 'home']
 
 export function fieldsFor(collection: CollectionKey, _world?: string): string[] {

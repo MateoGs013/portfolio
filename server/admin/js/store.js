@@ -44,9 +44,11 @@ export const store = reactive({
     experience: 0,
     stack: 0,
     orgs: 0,
+    articles: 0,
     docs: 0,
     hunter: getCachedHunterJobs().length,
     content: 0,
+    radar: 0,
   },
 
   // Job Hunter & Reclutamiento IA
@@ -74,6 +76,16 @@ export const store = reactive({
     isGenerating: false,
     publishing: {},
     expanded: {},
+  },
+
+  // TrendRadar (Eros IA)
+  radar: {
+    trends: [],
+    filter: 'all',
+    selected: null,
+    isScanning: false,
+    isGenerating: false,
+    generatingId: null,
   },
 
   // Filtros & Búsqueda
@@ -211,22 +223,26 @@ export const store = reactive({
 
   async refreshCounts() {
     try {
-      const [projs, exps, stks, orgs, dcs, jbs, cnts] = await Promise.all([
+      const [projs, exps, stks, orgs, arts, dcs, jbs, cnts, rads] = await Promise.all([
         api.getCollection('projects').catch(() => []),
         api.getCollection('experience').catch(() => []),
         api.getCollection('techs').catch(() => []),
         api.getCollection('orgs').catch(() => []),
+        api.getCollection('articles').catch(() => []),
         api.getCollection('docs').catch(() => []),
         api.getHunterJobs().catch(() => []),
         api.getContentPosts().catch(() => []),
+        api.getRadarTrends().catch(() => []),
       ])
       this.counts.projects = projs.length
       this.counts.experience = exps.length
       this.counts.stack = stks.length
       this.counts.orgs = orgs.length
+      this.counts.articles = arts.length
       this.counts.docs = dcs.length
       this.counts.hunter = jbs.length
       this.counts.content = cnts.length
+      this.counts.radar = rads.length
     } catch (err) {
       console.warn('Error al calcular conteos:', err)
     }
@@ -268,6 +284,15 @@ export const store = reactive({
       this.isNew = false
       this.isDirty = false
       await this.loadContentPosts()
+      return
+    }
+
+    if (sec === 'radar') {
+      this.current = null
+      this.form = null
+      this.isNew = false
+      this.isDirty = false
+      await this.loadRadarTrends()
       return
     }
 
@@ -579,6 +604,90 @@ export const store = reactive({
       s.toast('ok', 'Publicación eliminada correctamente')
     } catch (err) {
       s.toast('err', `Error al eliminar publicación: ${err.message}`)
+    }
+  },
+
+  async publishPostToBlog(id) {
+    const s = this || store
+    try {
+      const res = await api.publishPostToBlog(id)
+      s.toast('ok', `Artículo publicado exitosamente en el Blog: /blog/${res?.article?.slug || ''}`)
+      await s.loadContentPosts()
+      await s.refreshCounts()
+      return res
+    } catch (err) {
+      s.toast('err', `Error al publicar en el Blog: ${err.message}`)
+      throw err
+    }
+  },
+
+  // TrendRadar Operations
+  async loadRadarTrends() {
+    const s = this || store
+    try {
+      const trends = await api.getRadarTrends()
+      s.radar.trends = trends || []
+      s.counts.radar = s.radar.trends.length
+      if (s.radar.trends.length > 0 && (!s.radar.selected || !s.radar.trends.find(t => t.id === s.radar.selected.id))) {
+        s.radar.selected = s.radar.trends[0]
+      }
+    } catch (err) {
+      console.warn('Error al cargar tendencias de TrendRadar:', err)
+      s.toast('err', `Error al cargar radar de tendencias: ${err.message}`)
+    }
+  },
+
+  async scanRadar() {
+    const s = this || store
+    if (s.radar.isScanning) return
+    s.radar.isScanning = true
+    try {
+      const res = await api.scanRadar(15)
+      s.toast('ok', `Radar completado: ${res.new_trends ?? res.trends?.length ?? 0} tendencias evaluadas`)
+      await s.loadRadarTrends()
+    } catch (err) {
+      s.toast('err', `Error al escanear radar: ${err.message}`)
+    } finally {
+      s.radar.isScanning = false
+    }
+  },
+
+  async updateRadarTrendStatus(id, status) {
+    const s = this || store
+    try {
+      await api.updateRadarTrendStatus(id, status)
+      const trend = s.radar.trends.find(t => t.id === id)
+      if (trend) trend.status = status
+      if (s.radar.selected && s.radar.selected.id === id) {
+        s.radar.selected.status = status
+      }
+      s.toast('ok', `Estado de tendencia actualizado: ${status}`)
+    } catch (err) {
+      s.toast('err', `Error al actualizar tendencia: ${err.message}`)
+    }
+  },
+
+  async generateFromRadarTrend(id, payload = {}) {
+    const s = this || store
+    if (s.radar.generatingId) return
+    s.radar.generatingId = id
+    s.radar.isGenerating = true
+    try {
+      const res = await api.generateFromRadarTrend(id, payload)
+      s.toast('ok', 'Publicación técnica omnicanal generada exitosamente desde tendencia')
+      await s.loadRadarTrends()
+      await s.loadContentPosts()
+      s.section = 'content'
+      if (res?.post) {
+        s.content.selected = s.content.posts.find(p => p.id === res.post.id) || res.post
+      }
+      return res
+    } catch (err) {
+      s.toast('err', `Error al generar contenido desde tendencia: ${err.message}`)
+      throw err
+    } finally {
+      s.radar.generatingId = null
+      s.radar.isGenerating = false
     }
   },
 })

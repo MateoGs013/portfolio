@@ -13,6 +13,7 @@ import { orgs } from './routes/orgs.js'
 import { projects } from './routes/projects.js'
 import { schema } from './routes/schema.js'
 import { stack } from './routes/stack.js'
+import { articles } from './routes/articles.js'
 
 export const app: Express = express()
 
@@ -116,7 +117,7 @@ app.use('/media', express.static(path.resolve('public/media'), {
 }))
 
 // Rutas de API pública con rate limiter
-app.use('/api', publicApiLimiter, schema, projects, experience, stack, orgs, docs)
+app.use('/api', publicApiLimiter, schema, projects, experience, stack, orgs, docs, articles)
 
 // Rutas de administración con rate limiter para fallos de auth
 app.use('/api/admin', adminAuthFailuresLimiter, adminApi)

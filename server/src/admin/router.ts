@@ -4,12 +4,13 @@ import path from 'node:path'
 import express, { Router, type NextFunction, type Request, type Response } from 'express'
 import multer from 'multer'
 import { db } from '../db.js'
-import { MediaKind, MediaRole, Prisma, ProjectStatus, TechCategory } from '../../generated/prisma/client.js'
+import { ArticleStatus, MediaKind, MediaRole, Prisma, ProjectStatus, TechCategory } from '../../generated/prisma/client.js'
 import { requireAdmin } from './auth.js'
 import { IMAGE_MIME, imageDims } from './image.js'
 import { HttpError, bool, date, enumOf, int, intList, json, list, optDate, optInt, optStr, optUrl, slug, str, url } from './input.js'
 import { hunterRouter } from './hunter.js'
 import { contentRouter } from './content.js'
+import { radarRouter } from './radar.js'
 
 const require = createRequire(import.meta.url)
 const ADMIN_DIR = path.resolve('server/admin')
@@ -32,8 +33,10 @@ adminApi.use((req, _res, next) => {
 adminApi.use(requireAdmin)
 adminApi.use('/hunter', hunterRouter)
 adminApi.use('/content', contentRouter)
+adminApi.use('/radar', radarRouter)
 
 const PROJECT_STATUS = Object.values(ProjectStatus)
+const ARTICLE_STATUS = Object.values(ArticleStatus)
 const TECH_CATEGORY = Object.values(TechCategory)
 const MEDIA_KIND = Object.values(MediaKind)
 const MEDIA_ROLE = Object.values(MediaRole)
@@ -52,7 +55,7 @@ adminApi.get('/meta', async (_req, res) => {
     db.project.findMany({ select: { id: true, title: true }, orderBy: { title: 'asc' } }),
   ])
   res.json({
-    enums: { ProjectStatus: PROJECT_STATUS, TechCategory: TECH_CATEGORY, MediaKind: MEDIA_KIND, MediaRole: MEDIA_ROLE },
+    enums: { ProjectStatus: PROJECT_STATUS, ArticleStatus: ARTICLE_STATUS, TechCategory: TECH_CATEGORY, MediaKind: MEDIA_KIND, MediaRole: MEDIA_ROLE },
     options: { orgs, techs, projects },
   })
 })
@@ -382,6 +385,86 @@ adminApi.put('/docs/:key', async (req, res) => {
 adminApi.delete('/docs/:key', async (req, res) => {
   const key = slug({ key: req.params['key'] }, 'key')
   await db.doc.delete({ where: { key } })
+  res.status(204).end()
+})
+
+// ─── articles ───────────────────────────────────────────────────────────────
+
+function articleData(b: Record<string, unknown>) {
+  return {
+    slug: slug(b, 'slug'),
+    title: str(b, 'title'),
+    summary: str(b, 'summary'),
+    content: str(b, 'content'),
+    readingTimeMin: optInt(b, 'readingTimeMin') ?? 5,
+    status: enumOf(b, 'status', ARTICLE_STATUS),
+    featured: bool(b, 'featured'),
+    coverImage: optStr(b, 'coverImage'),
+    canonicalUrl: optUrl(b, 'canonicalUrl'),
+    sortOrder: optInt(b, 'sortOrder') ?? 0,
+    publishedAt: optDate(b, 'publishedAt'),
+    projectId: optInt(b, 'projectId'),
+  }
+}
+
+adminApi.get('/articles', async (_req, res) => {
+  res.json(await db.article.findMany({
+    orderBy: [{ sortOrder: 'asc' }, { createdAt: 'desc' }],
+    include: {
+      techs: { select: { id: true, name: true, slug: true } },
+      project: { select: { id: true, title: true, slug: true } },
+    },
+  }))
+})
+
+adminApi.get('/articles/:id', async (req, res) => {
+  const row = await db.article.findUnique({
+    where: { id: id(req) },
+    include: {
+      techs: { select: { id: true, name: true, slug: true } },
+      project: { select: { id: true, title: true, slug: true } },
+    },
+  })
+  if (!row) throw new HttpError(404, 'artículo inexistente')
+  res.json(row)
+})
+
+adminApi.post('/articles', async (req, res) => {
+  const b = req.body as Record<string, unknown>
+  const techIds = intList(b, 'techIds')
+  const row = await db.article.create({
+    data: {
+      ...articleData(b),
+      techs: techIds.length > 0 ? { connect: techIds.map(n => ({ id: n })) } : undefined,
+    },
+    include: {
+      techs: { select: { id: true, name: true, slug: true } },
+      project: { select: { id: true, title: true, slug: true } },
+    },
+  })
+  res.status(201).json(row)
+})
+
+adminApi.put('/articles/:id', async (req, res) => {
+  const articleId = id(req)
+  const b = req.body as Record<string, unknown>
+  const techIds = intList(b, 'techIds')
+  const row = await db.article.update({
+    where: { id: articleId },
+    data: {
+      ...articleData(b),
+      techs: { set: techIds.map(n => ({ id: n })) },
+    },
+    include: {
+      techs: { select: { id: true, name: true, slug: true } },
+      project: { select: { id: true, title: true, slug: true } },
+    },
+  })
+  res.json(row)
+})
+
+adminApi.delete('/articles/:id', async (req, res) => {
+  await db.article.delete({ where: { id: id(req) } })
   res.status(204).end()
 })
 

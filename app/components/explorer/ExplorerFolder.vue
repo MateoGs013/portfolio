@@ -1166,6 +1166,38 @@ function onCardMousemove(e: MouseEvent) {
             </div>
           </NuxtLink>
 
+          <!-- Tarjeta de Artículos / Blog -->
+          <NuxtLink
+            v-else-if="folder.head === 'articles'"
+            :to="it.to"
+            class="article-card group flex flex-col h-full p-4 sm:p-5 border border-rule bg-surface hover:border-sig transition-all duration-150 rounded-[2px] no-underline min-w-0"
+            :data-row="it.key"
+          >
+            <div class="article-card-header flex items-center justify-between gap-2 mb-2 font-mono text-[11px] min-w-0">
+              <span class="article-status font-bold px-1.5 py-0.5 rounded-[2px] bg-green/10 text-green border border-green/30">
+                ● {{ it.status ?? 'PUBLISHED' }}
+              </span>
+              <span v-if="it.readingTimeMin" class="article-reading-time text-dim shrink-0">
+                {{ pad(it.readingTimeMin) }} MIN READ
+              </span>
+            </div>
+            <h3 class="article-title text-[16px] sm:text-[17px] font-bold text-ink group-hover:text-sig transition-colors leading-snug m-0 mb-2 line-clamp-2 break-words">
+              {{ it.label }}
+            </h3>
+            <p v-if="it.summary" class="article-summary text-[13px] sm:text-[13.5px] text-dim leading-relaxed line-clamp-3 m-0 mb-3 break-words">
+              {{ it.summary }}
+            </p>
+            <div v-if="it.techs && it.techs.length" class="article-techs flex flex-wrap gap-1 mt-auto mb-3">
+              <span v-for="t in it.techs.slice(0, 4)" :key="t.slug" class="p-tech-chip">
+                {{ t.name }}
+              </span>
+            </div>
+            <div class="article-cta flex items-center justify-between pt-2.5 border-t border-rule font-mono text-[11px] font-bold text-sig group-hover:text-sig-hover">
+              <span>{{ isEs ? 'LEER ARTÍCULO' : 'READ ARTICLE' }}</span>
+              <AppIcon name="chevron-right" :size="12" class="cta-arrow" />
+            </div>
+          </NuxtLink>
+
           <!-- Baldosa Estándar -->
           <NuxtLink v-else :to="it.to" class="tile" :class="it.kind" :data-row="it.key">
             <span class="n">{{ pad(n + 1) }}</span>

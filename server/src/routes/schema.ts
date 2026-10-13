@@ -7,11 +7,12 @@ export const schema = Router()
 /** GET /api/schema → [{ key, label, kind, count }] — la raíz del explorador. */
 schema.get('/schema', async (_req, res) => {
   try {
-    const [projects, experience, stack, orgs, docs] = await Promise.all([
+    const [projects, experience, stack, orgs, articles, docs] = await Promise.all([
       db.project.count(),
       db.experience.count(),
       db.tech.count(),
       db.org.count(),
+      db.article.count(),
       db.doc.findMany({ select: { key: true, fields: true }, orderBy: { key: 'asc' } }),
     ])
 
@@ -19,6 +20,7 @@ schema.get('/schema', async (_req, res) => {
       { key: 'projects', label: 'projects', kind: 'collection', count: projects },
       { key: 'experience', label: 'experience', kind: 'collection', count: experience },
       { key: 'stack', label: 'stack', kind: 'collection', count: stack },
+      { key: 'articles', label: 'articles', kind: 'collection', count: articles },
       { key: 'orgs', label: 'orgs', kind: 'collection', count: orgs },
     ]
     const documents = docs.map(d => ({
@@ -35,6 +37,7 @@ schema.get('/schema', async (_req, res) => {
       { key: 'projects', label: 'projects', kind: 'collection', count: 6 },
       { key: 'experience', label: 'experience', kind: 'collection', count: 6 },
       { key: 'stack', label: 'stack', kind: 'collection', count: 22 },
+      { key: 'articles', label: 'articles', kind: 'collection', count: 1 },
       { key: 'orgs', label: 'orgs', kind: 'collection', count: 4 },
       { key: 'about', label: 'about', kind: 'document', count: 13 },
       { key: 'contact', label: 'contact', kind: 'document', count: 7 },

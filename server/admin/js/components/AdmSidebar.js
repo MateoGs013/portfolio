@@ -91,6 +91,19 @@ export const AdmSidebar = {
 
           <button
             type="button"
+            @click="store.loadSection('articles')"
+            class="nav-item w-full text-left"
+            :class="{ active: store.section === 'articles' }"
+          >
+            <span v-html="icons.articles"></span>
+            <span class="flex-1 truncate">Artículos & Blog</span>
+            <span class="text-[10px] font-mono-code bg-white/5 px-1.5 py-0.2 rounded text-zinc-400">
+              {{ store.counts.articles }}
+            </span>
+          </button>
+
+          <button
+            type="button"
             @click="store.loadSection('docs')"
             class="nav-item w-full text-left"
             :class="{ active: store.section === 'docs' }"
@@ -132,6 +145,19 @@ export const AdmSidebar = {
             <span class="flex-1 truncate">Contenido Omnicanal</span>
             <span class="text-[10px] font-mono-code bg-purple-500/10 text-purple-400 px-1.5 py-0.2 rounded border border-purple-500/20">
               {{ store.counts.content }}
+            </span>
+          </button>
+
+          <button
+            type="button"
+            @click="store.loadSection('radar')"
+            class="nav-item w-full text-left"
+            :class="{ active: store.section === 'radar' }"
+          >
+            <span v-html="icons.radar"></span>
+            <span class="flex-1 truncate">TrendRadar (Eros)</span>
+            <span class="text-[10px] font-mono-code bg-cyan-500/10 text-cyan-400 px-1.5 py-0.2 rounded border border-cyan-500/20">
+              {{ store.counts.radar }}
             </span>
           </button>
         </div>

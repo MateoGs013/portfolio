@@ -10,6 +10,7 @@ import { AdmEditor } from './AdmEditor.js'
 import { AdmDashboard } from './AdmDashboard.js'
 import { AdmJobHunter } from './AdmJobHunter.js'
 import { AdmContentManager } from './AdmContentManager.js'
+import { AdmTrendRadar } from './AdmTrendRadar.js'
 import { AdmBottomNav } from './ui/AdmBottomNav.js'
 import { CommandPalette } from './modals/CommandPalette.js'
 import { ConfirmModal } from './modals/ConfirmModal.js'
@@ -28,6 +29,7 @@ export const AdmApp = {
     AdmDashboard,
     AdmJobHunter,
     AdmContentManager,
+    AdmTrendRadar,
     AdmBottomNav,
     CommandPalette,
     ConfirmModal,
@@ -70,7 +72,10 @@ export const AdmApp = {
             <!-- C. Modo Contenido Omnicanal: Consola Editorial IA -->
             <AdmContentManager v-else-if="store.section === 'content'" />
 
-            <!-- D. Modo Colecciones: Rejilla Explorador (320px) + Editor Flex (1fr) con Master-Detail en móvil -->
+            <!-- D. Modo TrendRadar: Consola de Tendencias Técnicas -->
+            <AdmTrendRadar v-else-if="store.section === 'radar'" />
+
+            <!-- E. Modo Colecciones: Rejilla Explorador (320px) + Editor Flex (1fr) con Master-Detail en móvil -->
             <div v-else class="flex-1 flex overflow-hidden">
               <AdmExplorer :class="store.mobileView === 'list' ? 'flex' : 'hidden md:flex'" />
               <AdmEditor :class="store.mobileView === 'detail' ? 'flex' : 'hidden md:flex'" />

@@ -39,8 +39,8 @@ const steps = computed(() => [
     title: isEs.value ? 'Modo Hiperfoco y CV Harvard' : 'Hyperfocus & Harvard CV',
     icon: 'zap' as const,
     desc: isEs.value
-      ? 'Pulsa [H] o el rayo [⚡] para modo zen de lectura pura. En la sección 04 (/about) encontrarás el currículum técnico con formato dual (ATS Harvard y moderno) listo para imprimir en PDF.'
-      : 'Press [H] or [⚡] for zen reading without chrome. In section 04 (/about) you will find the dual-format resume (Harvard ATS & Modern) ready to export as PDF.',
+      ? 'Pulsa [H] o el icono [FOCUS] para modo zen de lectura pura. En la sección 04 (/about) encontrarás el currículum técnico con formato dual (ATS Harvard y moderno) listo para imprimir en PDF.'
+      : 'Press [H] or [FOCUS] for zen reading without chrome. In section 04 (/about) you will find the dual-format resume (Harvard ATS & Modern) ready to export as PDF.',
     badge: 'ZEN',
   },
 ])

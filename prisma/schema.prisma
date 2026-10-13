@@ -1,8 +1,5 @@
-// PROPUESTA — Fase 0. No migrar sin aprobación explícita.
-//
-// El mundo DATOS muestra estos nombres, tipos y relaciones en pantalla.
-// Cada nombre de campo es una decisión visible. Qué campo ve cada mundo
-// se declara en app/lib/fieldMeta.ts, no acá.
+// Portafolio Técnico Mateo Sonzogni — Esquema Relacional de Base de Datos
+// Modelado para el Explorador Técnico Unificado y Modo Focus sobre PostgreSQL 17
 
 generator client {
   provider = "prisma-client"
@@ -18,7 +15,8 @@ datasource db {
 //   projects    ¿qué hizo?
 //   experience  ¿dónde y cuándo trabajó?
 //   stack       ¿con qué?
-//   orgs        ¿para quién?  (se llega por relación, no desde la raíz)
+//   orgs        ¿para quién?
+//   articles    ¿qué escribió y qué arquitectura profundizó?
 
 model Project {
   id          Int           @id @default(autoincrement())
@@ -28,23 +26,24 @@ model Project {
   role        String // "Lead", "Dev", "Diseño + Front"
   status      ProjectStatus @default(LIVE)
   featured    Boolean       @default(false)
-  summary     String // una línea. DATOS.
-  brief       String?       @db.Text // el problema, en largo. DISEÑO.
-  outcome     String?       @db.Text // qué pasó después. DISEÑO.
+  summary     String // una línea
+  brief       String?       @db.Text
+  outcome     String?       @db.Text
   url         String?
   repo        String?
-  metrics     Json? // { lcp, bundleKb, a11y, ... } — NULL a la vista si no hay
+  metrics     Json? // { lcp, bundleKb, a11y, ... }
   sortOrder   Int           @default(0)
   publishedAt DateTime?
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
 
-  org   Org?          @relation(fields: [orgId], references: [id])
-  orgId Int?
-  techs Tech[]
-  media Media[]
-  steps ProcessStep[]
-  links Link[]
+  org      Org?          @relation(fields: [orgId], references: [id])
+  orgId    Int?
+  techs    Tech[]
+  media    Media[]
+  steps    ProcessStep[]
+  links    Link[]
+  articles Article[]
 
   @@index([year])
   @@index([orgId])
@@ -117,9 +116,10 @@ model Tech {
   category    TechCategory
   since       Int // año en que empezó a usarla
   note        String? // una línea de criterio: cuándo la elige
-  color       String? // hex. Solo DISEÑO (los chips).
+  color       String? // hex. Solo chips.
   projects    Project[]
   experiences Experience[]
+  articles    Article[]
 }
 
 enum TechCategory {
@@ -175,4 +175,38 @@ model Doc {
   title     String
   fields    Json
   updatedAt DateTime @updatedAt
+}
+
+// ─── Artículos & Publicaciones Técnicas del Blog ────────────────────────────
+// Publicaciones técnicas de ingeniería, arquitectura y deep dives.
+// Vinculadas con el stack tecnológico y opcionalmente con un proyecto real.
+
+model Article {
+  id             Int           @id @default(autoincrement())
+  slug           String        @unique
+  title          String
+  summary        String        // Síntesis técnica de 1-2 líneas
+  content        String        @db.Text // Markdown completo con código y tablas
+  readingTimeMin Int           @default(5)
+  status         ArticleStatus @default(DRAFT)
+  featured       Boolean       @default(false)
+  coverImage     String?       // URL o path de portada
+  canonicalUrl   String?       // URL original si fue cross-posteado (Dev.to / Medium / X)
+  sortOrder      Int           @default(0)
+  publishedAt    DateTime?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  techs          Tech[]
+  project        Project?      @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  projectId      Int?
+
+  @@index([status, publishedAt])
+  @@index([projectId])
+}
+
+enum ArticleStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
 }

@@ -231,8 +231,53 @@ export class ApiClient {
     })
   }
 
+  async publishPostToBlog(id) {
+    return this.fetch(`content/posts/${encodeURIComponent(id)}/publish-to-blog`, {
+      method: 'POST',
+    })
+  }
+
   getCarouselUrl(id) {
     return `/api/admin/content/carousel/${encodeURIComponent(id)}/html`
+  }
+
+  // Eros TrendRadar (Radar de Tendencias Técnicas)
+  async getRadarTrends(status = null, minScore = null, limit = 50) {
+    const q = new URLSearchParams()
+    if (status && status !== 'all') q.set('status', status)
+    if (minScore !== null && minScore !== undefined) q.set('min_score', String(minScore))
+    if (limit) q.set('limit', String(limit))
+    const queryStr = q.toString() ? `?${q.toString()}` : ''
+    const res = await this.fetch(`radar/trends${queryStr}`)
+    if (Array.isArray(res)) return res
+    if (res && Array.isArray(res.data)) return res.data
+    return []
+  }
+
+  async scanRadar(limit = 15) {
+    return this.fetch(`radar/scan?limit=${limit}`, {
+      method: 'POST',
+    })
+  }
+
+  async getRadarTrend(id) {
+    return this.fetch(`radar/trends/${encodeURIComponent(id)}`)
+  }
+
+  async updateRadarTrendStatus(id, status) {
+    return this.fetch(`radar/trends/${encodeURIComponent(id)}/status`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status }),
+    })
+  }
+
+  async generateFromRadarTrend(id, payload = {}) {
+    return this.fetch(`radar/trends/${encodeURIComponent(id)}/generate`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    })
   }
 }
 
