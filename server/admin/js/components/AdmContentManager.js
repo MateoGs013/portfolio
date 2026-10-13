@@ -170,6 +170,11 @@ export const AdmContentManager = {
       }
     }
 
+    function copyFullThread() {
+      const full = (twitterThreadList.value || []).join('\n\n---\n\n')
+      copyText(full, 'thread')
+    }
+
     return {
       store,
       icons: ICONS,
@@ -185,6 +190,7 @@ export const AdmContentManager = {
       selectPost,
       handleGenerateSubmit,
       copyText,
+      copyFullThread,
       openCarouselWindow,
       formatPillar,
       isPublishingToBlog,
@@ -541,7 +547,7 @@ export const AdmContentManager = {
                   </span>
                   <button
                     type="button"
-                    @click="copyText(twitterThreadList.join('\n\n---\n\n'), 'thread')"
+                    @click="copyFullThread"
                     class="btn-secondary !h-[28px] !text-xs font-mono-code"
                   >
                     <span v-if="copiedKeys['thread']" class="text-emerald-400">[Copiado ✓]</span>

@@ -10,6 +10,7 @@ import { ExperienceForm } from './forms/ExperienceForm.js'
 import { StackForm } from './forms/StackForm.js'
 import { OrgsForm } from './forms/OrgsForm.js'
 import { DocsForm } from './forms/DocsForm.js'
+import { ArticleForm } from './forms/ArticleForm.js'
 
 const { computed } = window.Vue
 
@@ -21,6 +22,7 @@ export const AdmEditor = {
     StackForm,
     OrgsForm,
     DocsForm,
+    ArticleForm,
   },
   setup() {
     const model = computed(() => MODELS[store.section])
@@ -262,6 +264,7 @@ export const AdmEditor = {
           <StackForm v-else-if="store.section === 'stack'" />
           <OrgsForm v-else-if="store.section === 'orgs'" />
           <DocsForm v-else-if="store.section === 'docs'" />
+          <ArticleForm v-else-if="store.section === 'articles'" />
         </div>
 
         <!-- BARRA DE ACCIONES ANCLADA AL PIE DEL EDITOR -->
