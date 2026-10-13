@@ -63,6 +63,8 @@ export const store = reactive({
     isGeneratingCV: false,
     isPurging: false,
     isVectorizing: false,
+    isDeletingAll: false,
+    isDeletingSingle: false,
     sortBy: 'ia',
     copiedPitch: false,
     copiedCV: false,
@@ -455,6 +457,62 @@ export const store = reactive({
       s.toast('err', `Error al depurar vacantes: ${err.message}`)
     } finally {
       s.hunter.isPurging = false
+    }
+  },
+
+  async deleteAllHunterJobs() {
+    const s = this || store
+    if (s.hunter.isDeletingAll) return
+    const confirmed = await s.requestConfirm({
+      title: 'Eliminar Todas las Vacantes',
+      message: '¿Estás seguro de que deseas eliminar todas las vacantes escaneadas?',
+      detail: 'Esta acción borrará todas las ofertas de la base de datos para que puedas escanear todo limpio desde cero.',
+      confirmText: 'Eliminar Todo',
+      cancelText: 'Cancelar',
+      kind: 'danger',
+    })
+    if (!confirmed) return
+    s.hunter.isDeletingAll = true
+    try {
+      const res = await api.deleteAllHunterJobs()
+      const count = res?.deleted_count ?? res?.data?.deleted_count ?? 0
+      s.hunter.jobs = []
+      s.hunter.selected = null
+      s.counts.hunter = 0
+      localStorage.removeItem('eros_hunter_jobs')
+      s.toast('ok', `Se eliminaron ${count} vacantes escaneadas. Listo para escanear de cero.`)
+    } catch (err) {
+      s.toast('err', `Error al eliminar vacantes: ${err.message}`)
+    } finally {
+      s.hunter.isDeletingAll = false
+    }
+  },
+
+  async deleteSingleHunterJob(id) {
+    const s = this || store
+    if (!id || s.hunter.isDeletingSingle) return
+    const confirmed = await s.requestConfirm({
+      title: 'Eliminar Vacante',
+      message: '¿Deseas eliminar permanentemente esta vacante?',
+      confirmText: 'Eliminar',
+      cancelText: 'Cancelar',
+      kind: 'danger',
+    })
+    if (!confirmed) return
+    s.hunter.isDeletingSingle = true
+    try {
+      await api.deleteHunterJob(id)
+      s.hunter.jobs = s.hunter.jobs.filter(j => j.id !== id)
+      s.counts.hunter = s.hunter.jobs.length
+      if (s.hunter.selected && s.hunter.selected.id === id) {
+        s.hunter.selected = s.hunter.jobs[0] || null
+      }
+      s._persistHunterJobs()
+      s.toast('ok', 'Vacante eliminada')
+    } catch (err) {
+      s.toast('err', `Error al eliminar vacante: ${err.message}`)
+    } finally {
+      s.hunter.isDeletingSingle = false
     }
   },
 

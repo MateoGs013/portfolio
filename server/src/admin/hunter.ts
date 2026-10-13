@@ -224,3 +224,21 @@ hunterRouter.patch(['/jobs/:id/status', '/status/:id'], async (req: Request, res
   })
   res.status(result.status).json(result.data)
 })
+
+/** DELETE /api/admin/hunter/jobs - Eliminar todas las vacantes para reiniciar desde cero */
+hunterRouter.delete('/jobs', async (_req: Request, res: Response) => {
+  const result = await forward('api/jobs', { method: 'DELETE' }, 30000)
+  res.status(result.status).json(result.data)
+})
+
+/** DELETE /api/admin/hunter/jobs/:id - Eliminar una vacante individual */
+hunterRouter.delete(['/jobs/:id', '/:id'], async (req: Request, res: Response) => {
+  const id = getParamId(req)
+  if (!id) {
+    res.status(400).json({ error: 'ID de vacante requerido' })
+    return
+  }
+  const result = await forward(`api/jobs/${encodeURIComponent(id)}`, { method: 'DELETE' }, 15000)
+  res.status(result.status).json(result.data)
+})
+

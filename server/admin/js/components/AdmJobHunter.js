@@ -350,6 +350,15 @@ export const AdmJobHunter = {
       await store.vectorizeHunterJobs()
     }
 
+    async function deleteAllJobs() {
+      await store.deleteAllHunterJobs()
+    }
+
+    async function deleteCurrentJob() {
+      if (!store.hunter.selected) return
+      await store.deleteSingleHunterJob(store.hunter.selected.id)
+    }
+
     return {
       store,
       hunterPitch,
@@ -374,6 +383,8 @@ export const AdmJobHunter = {
       evaluatePendingJobs,
       evaluateCurrentJob,
       purgeJobs,
+      deleteAllJobs,
+      deleteCurrentJob,
       vectorizeJobs,
       hunterMobileView,
       copiedNote,
@@ -425,6 +436,17 @@ export const AdmJobHunter = {
                 <svg v-if="store.hunter.isPurging" class="adm-icon xs animate-spin text-zinc-400" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
                 <svg v-else class="adm-icon xs text-zinc-400" viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
                 <span>{{ store.hunter.isPurging ? 'Depurando...' : 'Depurar' }}</span>
+              </button>
+              <button
+                type="button"
+                @click="deleteAllJobs"
+                :disabled="store.hunter.isDeletingAll || store.hunter.jobs.length === 0"
+                title="Eliminar todas las vacantes escaneadas para escanear todo desde cero"
+                class="btn-ghost !h-[26px] !px-1.5 !text-[11px] cursor-pointer text-zinc-400 hover:text-rose-400 font-mono-code inline-flex items-center gap-1 shrink-0 disabled:opacity-40"
+              >
+                <svg v-if="store.hunter.isDeletingAll" class="adm-icon xs animate-spin text-rose-400" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
+                <svg v-else class="adm-icon xs text-zinc-400 hover:text-rose-400" viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+                <span>{{ store.hunter.isDeletingAll ? 'Borrando...' : 'Vaciar' }}</span>
               </button>
             </div>
           </div>
@@ -1295,32 +1317,46 @@ export const AdmJobHunter = {
               </div>
             </div>
 
-            <!-- Botones de Estado de Postulación -->
-            <div class="pt-2 flex items-center gap-2 select-none border-t border-white/5">
-              <span class="text-xs text-zinc-400 font-mono-code">Estado de la vacante:</span>
+            <!-- Botones de Estado de Postulación y Eliminación -->
+            <div class="pt-2 flex items-center justify-between select-none border-t border-white/5 flex-wrap gap-2">
+              <div class="flex items-center gap-2">
+                <span class="text-xs text-zinc-400 font-mono-code">Estado:</span>
+                <button
+                  type="button"
+                  @click="setJobStatus('applied')"
+                  class="px-2.5 py-1 text-xs rounded border transition-colors font-mono-code cursor-pointer"
+                  :class="store.hunter.selected.status === 'applied' ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30 font-bold' : 'bg-[#121318] text-zinc-400 border-white/10 hover:text-white'"
+                >
+                  Postulada
+                </button>
+                <button
+                  type="button"
+                  @click="setJobStatus('saved')"
+                  class="px-2.5 py-1 text-xs rounded border transition-colors font-mono-code cursor-pointer"
+                  :class="store.hunter.selected.status === 'saved' ? 'bg-amber-500/15 text-amber-300 border-amber-500/30 font-bold' : 'bg-[#121318] text-zinc-400 border-white/10 hover:text-white'"
+                >
+                  Guardada
+                </button>
+                <button
+                  type="button"
+                  @click="setJobStatus('discarded')"
+                  class="px-2.5 py-1 text-xs rounded border transition-colors font-mono-code cursor-pointer"
+                  :class="store.hunter.selected.status === 'discarded' ? 'bg-red-500/15 text-red-300 border-red-500/30 font-bold' : 'bg-[#121318] text-zinc-400 border-white/10 hover:text-white'"
+                >
+                  Descartada
+                </button>
+              </div>
+
               <button
                 type="button"
-                @click="setJobStatus('applied')"
-                class="px-2.5 py-1 text-xs rounded border transition-colors font-mono-code cursor-pointer"
-                :class="store.hunter.selected.status === 'applied' ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30 font-bold' : 'bg-[#121318] text-zinc-400 border-white/10 hover:text-white'"
+                @click="deleteCurrentJob"
+                :disabled="store.hunter.isDeletingSingle"
+                title="Eliminar esta vacante permanentemente de la base de datos"
+                class="px-2.5 py-1 text-xs rounded border border-rose-500/30 text-rose-400 bg-rose-500/10 hover:bg-rose-500/20 font-mono-code cursor-pointer inline-flex items-center gap-1.5 transition-colors disabled:opacity-50"
               >
-                Postulada
-              </button>
-              <button
-                type="button"
-                @click="setJobStatus('saved')"
-                class="px-2.5 py-1 text-xs rounded border transition-colors font-mono-code cursor-pointer"
-                :class="store.hunter.selected.status === 'saved' ? 'bg-amber-500/15 text-amber-300 border-amber-500/30 font-bold' : 'bg-[#121318] text-zinc-400 border-white/10 hover:text-white'"
-              >
-                Guardada
-              </button>
-              <button
-                type="button"
-                @click="setJobStatus('discarded')"
-                class="px-2.5 py-1 text-xs rounded border transition-colors font-mono-code cursor-pointer"
-                :class="store.hunter.selected.status === 'discarded' ? 'bg-red-500/15 text-red-300 border-red-500/30 font-bold' : 'bg-[#121318] text-zinc-400 border-white/10 hover:text-white'"
-              >
-                Descartada
+                <svg v-if="store.hunter.isDeletingSingle" class="adm-icon xs animate-spin text-rose-400" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
+                <svg v-else class="adm-icon xs text-rose-400" viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+                <span>{{ store.hunter.isDeletingSingle ? 'Borrando...' : 'Eliminar Vacante' }}</span>
               </button>
             </div>
 

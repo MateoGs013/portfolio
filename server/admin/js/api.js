@@ -151,6 +151,14 @@ export class ApiClient {
     return this.fetch('hunter/purge', { method: 'POST' })
   }
 
+  async deleteAllHunterJobs() {
+    return this.fetch('hunter/jobs', { method: 'DELETE' })
+  }
+
+  async deleteHunterJob(id) {
+    return this.fetch(`hunter/jobs/${encodeURIComponent(id)}`, { method: 'DELETE' })
+  }
+
   async semanticSearchHunterJobs(query, limit = 30) {
     return this.fetch('hunter/search/semantic', {
       method: 'POST',
