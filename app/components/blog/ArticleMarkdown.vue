@@ -3,6 +3,7 @@
 // Tipografía de alta precisión, bloques de código con selector de lenguaje y copiado en 1 clic.
 // Estética Obsidian Dark y acentos International Orange. Cero emojis.
 import AppIcon from '~/components/ui/AppIcon.vue'
+import { safeHref } from '~/lib/explorer'
 
 const props = defineProps<{
   content: string
@@ -155,8 +156,12 @@ function renderInline(text?: string): string {
   // Código en línea `código`
   out = out.replace(/`([^`]+)`/g, '<code class="px-1.5 py-0.5 font-mono text-[11.5px] bg-paper border border-rule text-sig rounded-[2px]">$1</code>')
 
-  // Enlaces [texto](url)
-  out = out.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer" class="text-sig underline underline-offset-2 hover:text-sig-hover hover:decoration-sig">$1 ↗</a>')
+  // Enlaces [texto](url) sanitizados
+  out = out.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (_match, label, href) => {
+    const sanitized = safeHref(href)
+    if (!sanitized) return label
+    return `<a href="${sanitized}" target="_blank" rel="noopener noreferrer" class="text-sig underline underline-offset-2 hover:text-sig-hover hover:decoration-sig">${label} ↗</a>`
+  })
 
   return out
 }

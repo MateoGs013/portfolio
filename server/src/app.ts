@@ -53,11 +53,11 @@ const publicApiLimiter = rateLimit({
   message: { error: 'demasiadas peticiones, por favor reintente más tarde' },
 })
 
-// M2: Rate limiting estricto para fallos de autenticación en el admin (10 fallos por IP cada 15 min)
+// M2: Rate limiting estricto para fallos de autenticación en el admin (10 fallos 401 por IP cada 15 min)
 const adminAuthFailuresLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   limit: 10,
-  skipSuccessfulRequests: true,
+  requestWasSuccessful: (_req, res) => res.statusCode !== 401,
   standardHeaders: 'draft-8',
   legacyHeaders: false,
   message: { error: 'demasiados intentos fallidos de autenticación en admin, reintente en 15 minutos' },

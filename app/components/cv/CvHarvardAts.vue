@@ -335,12 +335,17 @@ defineProps<{
 }
 
 @media print {
+  @page {
+    size: A4 portrait;
+    margin: 10mm 14mm 10mm 14mm;
+  }
   .cv-harvard {
     border: none !important;
     box-shadow: none !important;
-    width: 210mm !important;
-    min-height: 297mm !important;
-    padding: 12mm 16mm !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-height: auto !important;
+    padding: 0 !important;
     margin: 0 !important;
     box-sizing: border-box !important;
     background: #ffffff !important;
@@ -351,26 +356,26 @@ defineProps<{
   }
   .cv-harvard .h-header {
     border-bottom: 1.25pt solid #000000 !important;
-    padding-bottom: 4pt !important;
-    margin-bottom: 6pt !important;
+    padding-bottom: 3pt !important;
+    margin-bottom: 5pt !important;
     text-align: center !important;
   }
   .cv-harvard .h-name {
-    font-size: 18pt !important;
+    font-size: 17pt !important;
     font-weight: 700 !important;
     letter-spacing: 0.03em !important;
-    margin-bottom: 2pt !important;
+    margin-bottom: 1.5pt !important;
   }
   .cv-harvard .h-role {
-    font-size: 9.5pt !important;
-    margin-bottom: 2pt !important;
+    font-size: 9pt !important;
+    margin-bottom: 1.5pt !important;
   }
   .cv-harvard .h-contact {
-    font-size: 8.5pt !important;
-    gap: 5pt !important;
+    font-size: 8pt !important;
+    gap: 4pt !important;
   }
   .cv-harvard .h-section {
-    margin-bottom: 5pt !important;
+    margin-bottom: 3.5pt !important;
     break-inside: avoid !important;
     page-break-inside: avoid !important;
   }

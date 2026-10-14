@@ -55,7 +55,7 @@ enum ProjectStatus {
   WIP
 }
 
-// Subvista `process` de un proyecto. Ordenada. DISEÑO la recorre con el scrubber.
+// Subvista `process` de un proyecto con desglose secuencial de pasos y decisiones técnicas.
 model ProcessStep {
   id        Int     @id @default(autoincrement())
   order     Int
@@ -67,10 +67,10 @@ model ProcessStep {
   mediaId   Int?
 
   @@unique([projectId, order])
+  @@index([mediaId])
 }
 
-// Una pieza visual. `layer` es opcional: si un proyecto no viene descompuesto
-// en capas, DISEÑO degrada a la obra terminada. `role` dice para qué sirve.
+// Una pieza visual o multimedia asociada a proyectos.
 model Media {
   id        Int           @id @default(autoincrement())
   kind      MediaKind     @default(IMAGE)
@@ -81,7 +81,7 @@ model Media {
   height    Int
   layer     Int? // 0 = fondo … n = frente. NULL = pieza completa.
   order     Int           @default(0)
-  bytes     Int? // DATOS lo muestra al lado del thumbnail
+  bytes     Int? // Peso en bytes del archivo para métricas de optimización
   project   Project       @relation(fields: [projectId], references: [id], onDelete: Cascade)
   projectId Int
   steps     ProcessStep[]
@@ -106,6 +106,8 @@ model Link {
   url       String
   project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
   projectId Int
+
+  @@index([projectId])
 }
 
 // Colección `stack`. `since` en lugar de `years`: los años se derivan y no envejecen.
@@ -133,27 +135,24 @@ enum TechCategory {
   DESIGN
 }
 
-// Colección `experience`. Fechas reales, no años sueltos: DISEÑO las dibuja
-// como bandas y DATOS las muestra como `date`. Modela encargos y etapas, no
-// puestos: toda la experiencia es freelance o propia. Por eso `org` es
-// opcional: "freelance desde 2023" no tiene una organización detrás.
+// Colección `experience`. Registro cronológico de trayectoria profesional, encargos y consultoría.
 model Experience {
   id        Int       @id @default(autoincrement())
   slug      String    @unique
   role      String
   startedAt DateTime  @db.Date
   endedAt   DateTime? @db.Date // NULL = actual
-  summary   String // una línea. DATOS.
-  story     String?   @db.Text // qué aprendió ahí. DISEÑO.
+  summary   String // Síntesis ejecutiva de responsabilidades y logros
+  story     String?   @db.Text // Profundización técnica y aprendizajes clave
   org       Org?      @relation(fields: [orgId], references: [id])
   orgId     Int?
   techs     Tech[]
 
   @@index([startedAt])
+  @@index([orgId])
 }
 
-// Clientes y empleadores. Existe para que `project.org` y `experience.org`
-// sean relaciones de verdad y DATOS pueda saltar de lado entre ellas.
+// Clientes, empresas y empleadores con vinculación relacional a proyectos y experiencia.
 model Org {
   id          Int          @id @default(autoincrement())
   slug        String       @unique
@@ -165,11 +164,7 @@ model Org {
 }
 
 // ─── Documentos ─────────────────────────────────────────────────────────────
-// `about` y `contact` son contenido libre, no colecciones. Cada campo lleva
-// su propio tipo porque DATOS lo muestra:
-//   fields: [{ name, type, value, wide?, worlds? }]
-//   worlds por defecto = los dos; declarar ['datos'] o ['diseno'] cuando no.
-
+// `about` y `contact` son documentos estructurados configurables.
 model Doc {
   key       String   @id // "about" | "contact"
   title     String

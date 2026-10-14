@@ -415,12 +415,18 @@ html[data-hyperfocus="true"] .hb-dot {
   }
 
   /* 6. Modo Harvard ATS en Impresión (100% B&W Académico, 1 Página A4 Exacta) */
+  @page {
+    size: A4 portrait;
+    margin: 10mm 14mm 10mm 14mm;
+  }
   .cv-harvard {
     border: none !important;
     box-shadow: none !important;
     padding: 0 !important;
     margin: 0 !important;
+    width: 100% !important;
     max-width: 100% !important;
+    min-height: auto !important;
     background: #ffffff !important;
     color: #000000 !important;
     font-family: 'Times New Roman', Times, Garamond, Georgia, serif !important;

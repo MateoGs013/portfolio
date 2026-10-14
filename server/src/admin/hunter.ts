@@ -1,6 +1,6 @@
 import { Router, type Request, type Response } from 'express'
 import { env } from '../env.js'
-import { createCvTicket } from './auth.js'
+import { createCvTicket, isAdminAuthorized, validateCvTicket } from './auth.js'
 
 export const hunterRouter = Router()
 
@@ -181,9 +181,10 @@ hunterRouter.get(['/cv/:id/html', '/jobs/:id/cv/html'], async (req: Request, res
     res.status(400).type('html').send('<h1>ID de vacante requerido</h1>')
     return
   }
-  const verifiedTicketId = (req as unknown as { verifiedTicketId?: string }).verifiedTicketId
-  if (verifiedTicketId !== undefined && verifiedTicketId !== id) {
-    res.status(403).type('html').send('<h1>Ticket no válido para esta vacante</h1>')
+  const ticketParam = req.query['ticket']
+  const hasValidTicket = typeof ticketParam === 'string' && validateCvTicket(ticketParam, id)
+  if (!hasValidTicket && !isAdminAuthorized(req)) {
+    res.status(401).type('html').send('<h1>Acceso no autorizado al CV</h1><p>Se requiere sesión de administración o un ticket válido para esta vacante.</p>')
     return
   }
   const baseUrl = getHunterUrl()

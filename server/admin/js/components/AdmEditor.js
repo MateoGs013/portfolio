@@ -56,11 +56,14 @@ export const AdmEditor = {
       store.toast('ok', `Registro duplicado: "${baseTitle}". Revisá los datos y guardá.`)
     }
 
+    const isSaving = ref(false)
+
     async function save() {
-      if (!store.form) return
+      if (!store.form || isSaving.value) return
       const m = model.value
       if (!m) return
 
+      isSaving.value = true
       try {
         const payload = m.toPayload(store.form)
         let saved = null
@@ -93,6 +96,8 @@ export const AdmEditor = {
         }
       } catch (err) {
         store.toast('err', `Error al guardar: ${err.message}`)
+      } finally {
+        isSaving.value = false
       }
     }
 
@@ -153,6 +158,7 @@ export const AdmEditor = {
     return {
       store,
       model,
+      isSaving,
       setProjectStatus,
       duplicateRecord,
       save,
@@ -304,11 +310,13 @@ export const AdmEditor = {
             <button
               type="button"
               @click="save"
-              class="btn-primary !h-[30px] !text-[11px] sm:!text-xs cursor-pointer"
+              :disabled="isSaving"
+              class="btn-primary !h-[30px] !text-[11px] sm:!text-xs cursor-pointer disabled:opacity-50 inline-flex items-center gap-1.5"
               title="Guardar cambios en la base de datos (Ctrl+S)"
             >
-              <span>{{ store.isNew ? 'Crear' : 'Guardar' }}</span>
-              <kbd class="hidden md:inline-block text-[9.5px] bg-black/40 px-1 py-0.2 rounded border border-black/20 text-black font-bold">Ctrl+S</kbd>
+              <span v-if="isSaving" class="animate-spin inline-block text-[10px]">↻</span>
+              <span>{{ isSaving ? 'Guardando...' : (store.isNew ? 'Crear' : 'Guardar') }}</span>
+              <kbd v-if="!isSaving" class="hidden md:inline-block text-[9.5px] bg-black/40 px-1 py-0.2 rounded border border-black/20 text-black font-bold">Ctrl+S</kbd>
             </button>
           </div>
         </footer>

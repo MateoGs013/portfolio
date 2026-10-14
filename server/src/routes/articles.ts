@@ -78,11 +78,8 @@ articles.get('/articles', async (req, res) => {
     if (filters.project) where.project = { slug: filters.project }
     const featured = asBool(filters.featured)
     if (featured !== undefined) where.featured = featured
-    if (filters.status) {
-      where.status = filters.status as ArticleStatus
-    } else {
-      where.status = 'PUBLISHED'
-    }
+    // Solo artículos publicados en la API pública para evitar fuga de borradores
+    where.status = 'PUBLISHED'
 
     const data = await db.article.findMany({
       where,
@@ -95,7 +92,7 @@ articles.get('/articles', async (req, res) => {
 
     res.json(envelope(data, { filters }))
   } catch {
-    let list = [fallbackArticle]
+    let list = [fallbackArticle].filter(a => a.status === 'PUBLISHED')
     if (filters.stack) {
       list = list.filter(a => a.techs.some(t => t.slug === filters.stack))
     }
@@ -106,9 +103,7 @@ articles.get('/articles', async (req, res) => {
     if (featured !== undefined) {
       list = list.filter(a => a.featured === featured)
     }
-    if (filters.status) {
-      list = list.filter(a => a.status === filters.status)
-    }
+
     res.json(envelope(list, { filters }))
   }
 })
@@ -119,8 +114,8 @@ articles.get('/articles/:slug', async (req, res) => {
   if (!slug) return res.status(400).json({ error: 'slug requerido' })
 
   try {
-    const item = await db.article.findUnique({
-      where: { slug },
+    const item = await db.article.findFirst({
+      where: { slug, status: 'PUBLISHED' },
       include: {
         techs: techSelect,
         project: projectSelect,
@@ -128,7 +123,7 @@ articles.get('/articles/:slug', async (req, res) => {
     })
 
     if (!item) {
-      if (slug === fallbackArticle.slug) {
+      if (slug === fallbackArticle.slug && fallbackArticle.status === 'PUBLISHED') {
         return res.json(envelope(fallbackArticle))
       }
       return res.status(404).json({ error: 'artículo no encontrado' })
@@ -136,7 +131,7 @@ articles.get('/articles/:slug', async (req, res) => {
 
     res.json(envelope(item))
   } catch {
-    if (slug === fallbackArticle.slug) {
+    if (slug === fallbackArticle.slug && fallbackArticle.status === 'PUBLISHED') {
       return res.json(envelope(fallbackArticle))
     }
     res.status(404).json({ error: 'artículo no encontrado' })

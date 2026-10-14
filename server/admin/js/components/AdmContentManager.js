@@ -39,7 +39,7 @@ export const AdmContentManager = {
         await navigator.clipboard.writeText(text)
         setCopied(key)
         store.toast('ok', successMsg)
-      } catch (err) {
+      } catch {
         store.toast('err', 'No se pudo copiar el texto')
       }
     }
@@ -143,9 +143,15 @@ export const AdmContentManager = {
       }
     }
 
-    function openCarouselWindow(id) {
-      const url = api.getCarouselUrl(id)
-      window.open(url, '_blank', 'noopener')
+    async function openCarouselWindow(id) {
+      try {
+        const ticketRes = await api.getCarouselTicket(id)
+        const ticketParam = ticketRes?.ticket ? `?ticket=${encodeURIComponent(ticketRes.ticket)}` : ''
+        const url = `${api.getCarouselUrl(id)}${ticketParam}`
+        window.open(url, '_blank', 'noopener')
+      } catch (err) {
+        store.toast('err', `No se pudo abrir la vista previa: ${err.message}`)
+      }
     }
 
     function formatPillar(p) {

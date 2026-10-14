@@ -1,8 +1,18 @@
 import { Router, type Request, type Response } from 'express'
 import { db } from '../db.js'
 import { env } from '../env.js'
+import { createCarouselTicket, isAdminAuthorized, validateCarouselTicket } from './auth.js'
 
 export const contentRouter = Router()
+
+function escapeHtml(s: string): string {
+  return s
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+}
 
 const getErosUrl = () => (process.env['HUNTER_API_URL'] || env.hunterApiUrl || 'https://eros.mateogs.tech').replace(/\/+$/, '')
 
@@ -120,6 +130,17 @@ contentRouter.delete('/posts/:id', async (req: Request, res: Response) => {
   res.status(result.status).json(result.data)
 })
 
+/** POST /api/admin/content/carousel/:id/ticket - Ticket temporal de un solo uso */
+contentRouter.post('/carousel/:id/ticket', (req: Request, res: Response) => {
+  const id = getParamId(req)
+  if (!id) {
+    res.status(400).json({ error: 'ID de publicación requerido' })
+    return
+  }
+  const ticket = createCarouselTicket(id)
+  res.json({ ok: true, ticket })
+})
+
 /** GET /api/admin/content/carousel/:id/html - Vista HTML del carrusel */
 contentRouter.get('/carousel/:id/html', async (req: Request, res: Response) => {
   const id = getParamId(req)
@@ -127,9 +148,18 @@ contentRouter.get('/carousel/:id/html', async (req: Request, res: Response) => {
     res.status(400).type('html').send('<h1>ID de publicación requerido</h1>')
     return
   }
+  const ticketParam = req.query['ticket']
+  const hasValidTicket = typeof ticketParam === 'string' && validateCarouselTicket(ticketParam, id)
+  if (!hasValidTicket && !isAdminAuthorized(req)) {
+    res.status(401).type('html').send('<h1>Acceso no autorizado al carrusel</h1><p>Se requiere sesión de administración o un ticket válido para esta publicación.</p>')
+    return
+  }
   const baseUrl = getErosUrl()
   try {
     const upstreamRes = await fetch(`${baseUrl}/api/content/carousel/${encodeURIComponent(id)}/html`, {
+      headers: {
+        ...(env.erosApiKey ? { Authorization: `Bearer ${env.erosApiKey}` } : {}),
+      },
       signal: AbortSignal.timeout(30000),
     })
     const html = await upstreamRes.text()
@@ -137,7 +167,7 @@ contentRouter.get('/carousel/:id/html', async (req: Request, res: Response) => {
     res.setHeader('X-Content-Type-Options', 'nosniff')
     res.status(upstreamRes.status).type('html').send(html)
   } catch (err: unknown) {
-    const msg = err instanceof Error ? err.message : String(err)
+    const msg = escapeHtml(err instanceof Error ? err.message : String(err))
     res.status(503).type('html').send(`<h1>Error cargando carrusel</h1><p>${msg}</p>`)
   }
 })

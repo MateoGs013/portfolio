@@ -265,6 +265,12 @@ export class ApiClient {
     })
   }
 
+  async getCarouselTicket(id) {
+    return this.fetch(`content/carousel/${encodeURIComponent(id)}/ticket`, {
+      method: 'POST',
+    })
+  }
+
   getCarouselUrl(id) {
     return `/api/admin/content/carousel/${encodeURIComponent(id)}/html`
   }
