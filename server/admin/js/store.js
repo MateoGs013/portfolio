@@ -65,6 +65,7 @@ export const store = reactive({
     isVectorizing: false,
     isDeletingAll: false,
     isDeletingSingle: false,
+    isApplying: false,
     sortBy: 'ia',
     copiedPitch: false,
     copiedCV: false,
@@ -572,6 +573,52 @@ export const store = reactive({
       s.toast('err', `Error al evaluar vacante: ${err.message}`)
     } finally {
       s.hunter.isEvaluatingSingle = false
+    }
+  },
+
+  async applyHunterJobByEmail(id, payload = {}) {
+    const s = this || store
+    if (!id || s.hunter.isApplying) return
+    s.hunter.isApplying = true
+    try {
+      const res = await api.applyHunterJobByEmail(id, payload)
+      const recipient = res?.dispatched_to || payload.to_email || 'destinatario'
+      const provider = res?.provider ? ` vía ${res.provider.toUpperCase()}` : ''
+      s.toast('ok', `Postulación enviada exitosamente a ${recipient}${provider}`)
+      const job = s.hunter.jobs.find(j => j.id === id)
+      if (job) {
+        job.status = 'applied'
+        job.applied_at = res?.applied_at || new Date().toISOString()
+        if (payload.to_email) job.contact_email = payload.to_email
+      }
+      if (s.hunter.selected && s.hunter.selected.id === id) {
+        s.hunter.selected.status = 'applied'
+        s.hunter.selected.applied_at = res?.applied_at || new Date().toISOString()
+        if (payload.to_email) s.hunter.selected.contact_email = payload.to_email
+      }
+      s._persistHunterJobs()
+      return res
+    } catch (err) {
+      s.toast('err', `Error al enviar postulación: ${err.message}`)
+      throw err
+    } finally {
+      s.hunter.isApplying = false
+    }
+  },
+
+  async updateHunterJobContactEmail(id, email) {
+    const s = this || store
+    try {
+      await api.updateHunterJobContactEmail(id, email)
+      const job = s.hunter.jobs.find(j => j.id === id)
+      if (job) job.contact_email = email
+      if (s.hunter.selected && s.hunter.selected.id === id) {
+        s.hunter.selected.contact_email = email
+      }
+      s._persistHunterJobs()
+      s.toast('ok', 'Correo de contacto actualizado')
+    } catch (err) {
+      s.toast('err', `Error al actualizar correo de contacto: ${err.message}`)
     }
   },
 

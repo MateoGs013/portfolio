@@ -195,6 +195,26 @@ export class ApiClient {
     })
   }
 
+  async getHunterJobApplyPreview(id) {
+    return this.fetch(`hunter/jobs/${encodeURIComponent(id)}/apply-preview`)
+  }
+
+  async applyHunterJobByEmail(id, data = {}) {
+    return this.fetch(`hunter/jobs/${encodeURIComponent(id)}/apply-email`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    })
+  }
+
+  async updateHunterJobContactEmail(id, contact_email) {
+    return this.fetch(`hunter/jobs/${encodeURIComponent(id)}/contact-email`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ contact_email }),
+    })
+  }
+
   // Eros Omnichannel Content (Career OS)
   async getContentPosts(status = null, limit = 50) {
     const q = new URLSearchParams()

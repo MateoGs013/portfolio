@@ -246,3 +246,42 @@ hunterRouter.delete(['/jobs/:id', '/:id'], async (req: Request, res: Response) =
   res.status(result.status).json(result.data)
 })
 
+/** GET /api/admin/hunter/jobs/:id/apply-preview - Vista previa de correo de postulación */
+hunterRouter.get(['/jobs/:id/apply-preview', '/apply-preview/:id'], async (req: Request, res: Response) => {
+  const id = getParamId(req)
+  if (!id) {
+    res.status(400).json({ error: 'ID de vacante requerido' })
+    return
+  }
+  const result = await forward(`api/jobs/${encodeURIComponent(id)}/apply-preview`, { method: 'GET' }, 20000)
+  res.status(result.status).json(result.data)
+})
+
+/** POST /api/admin/hunter/jobs/:id/apply-email - Despacho de postulación por email / n8n */
+hunterRouter.post(['/jobs/:id/apply-email', '/apply-email/:id'], async (req: Request, res: Response) => {
+  const id = getParamId(req)
+  if (!id) {
+    res.status(400).json({ error: 'ID de vacante requerido' })
+    return
+  }
+  const result = await forward(`api/jobs/${encodeURIComponent(id)}/apply-email`, {
+    method: 'POST',
+    body: JSON.stringify(req.body),
+  }, 35000)
+  res.status(result.status).json(result.data)
+})
+
+/** PATCH /api/admin/hunter/jobs/:id/contact-email - Actualizar correo de contacto de vacante */
+hunterRouter.patch(['/jobs/:id/contact-email', '/contact-email/:id'], async (req: Request, res: Response) => {
+  const id = getParamId(req)
+  if (!id) {
+    res.status(400).json({ error: 'ID de vacante requerido' })
+    return
+  }
+  const result = await forward(`api/jobs/${encodeURIComponent(id)}/contact-email`, {
+    method: 'PATCH',
+    body: JSON.stringify(req.body),
+  }, 15000)
+  res.status(result.status).json(result.data)
+})
+
