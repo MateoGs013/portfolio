@@ -1,61 +1,9 @@
 import { Router, type Request, type Response } from 'express'
 import { env } from '../env.js'
 import { createCvTicket, isAdminAuthorized, validateCvTicket } from './auth.js'
+import { forwardToEros, escapeHtml, getParamId, getErosBaseUrl } from './proxy.js'
 
 export const hunterRouter = Router()
-
-function escapeHtml(s: string): string {
-  return s
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;')
-}
-
-// URL del agente Eros en deploy (requiere variable de entorno HUNTER_API_URL)
-const getHunterUrl = () => (process.env['HUNTER_API_URL'] || env.hunterApiUrl || 'https://eros.mateogs.tech').replace(/\/+$/, '')
-
-async function forward(urlPath: string, init?: RequestInit, timeoutMs = 60000) {
-  const baseUrl = getHunterUrl()
-  if (!baseUrl) {
-    return {
-      ok: false,
-      status: 503,
-      data: { error: 'Eros Agent no configurado: falta HUNTER_API_URL en el entorno' },
-    }
-  }
-  const fullUrl = `${baseUrl}/${urlPath.replace(/^\//, '')}`
-  try {
-    const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
-      ...(env.erosApiKey ? { Authorization: `Bearer ${env.erosApiKey}` } : {}),
-      ...((init?.headers as Record<string, string>) || {}),
-    }
-    const res = await fetch(fullUrl, {
-      ...init,
-      headers,
-      signal: AbortSignal.timeout(timeoutMs),
-    })
-    const isJson = res.headers.get('content-type')?.includes('application/json')
-    const data = isJson ? await res.json().catch(() => null) : await res.text()
-    if (res.status === 401 || res.status === 403) {
-      return {
-        ok: false,
-        status: 502,
-        data: { error: 'Fallo de autenticación entre Portfolio y Eros Agent (verificar EROS_API_KEY en variables de entorno)' },
-      }
-    }
-    return { ok: res.ok, status: res.status, data }
-  } catch (err: unknown) {
-    const msg = err instanceof Error ? err.message : String(err)
-    return {
-      ok: false,
-      status: 503,
-      data: { error: `Eros Agent no responde (${baseUrl}): ${msg}` },
-    }
-  }
-}
 
 /** POST /api/admin/hunter/cv/:id/ticket - Ticket de un solo uso para abrir CV HTML */
 hunterRouter.post(['/cv/:id/ticket', '/jobs/:id/cv/ticket'], (req: Request, res: Response) => {
@@ -70,14 +18,14 @@ hunterRouter.post(['/cv/:id/ticket', '/jobs/:id/cv/ticket'], (req: Request, res:
 
 /** GET /api/admin/hunter/stats */
 hunterRouter.get('/stats', async (_req: Request, res: Response) => {
-  const result = await forward('api/stats')
+  const result = await forwardToEros('api/stats')
   res.status(result.status).json(result.data)
 })
 
 /** GET /api/admin/hunter/jobs */
 hunterRouter.get('/jobs', async (req: Request, res: Response) => {
   const query = new URLSearchParams(req.query as Record<string, string>).toString()
-  const result = await forward(`api/jobs${query ? `?${query}` : ''}`)
+  const result = await forwardToEros(`api/jobs${query ? `?${query}` : ''}`)
   if (!result.ok) {
     res.status(result.status).json(result.data)
     return
@@ -95,7 +43,7 @@ hunterRouter.post('/scan', async (req: Request, res: Response) => {
     params.set('evaluate', 'false')
   }
   const query = params.toString()
-  const result = await forward(`api/scan${query ? `?${query}` : ''}`, {
+  const result = await forwardToEros(`api/scan${query ? `?${query}` : ''}`, {
     method: 'POST',
     body: req.body && Object.keys(req.body).length ? JSON.stringify(req.body) : undefined,
   }, 60000)
@@ -104,7 +52,7 @@ hunterRouter.post('/scan', async (req: Request, res: Response) => {
 
 /** POST /api/admin/hunter/evaluate */
 hunterRouter.post('/evaluate', async (req: Request, res: Response) => {
-  const result = await forward('api/evaluate', {
+  const result = await forwardToEros('api/evaluate', {
     method: 'POST',
     body: JSON.stringify(req.body),
   }, 60000)
@@ -118,19 +66,19 @@ hunterRouter.post(['/evaluate/:id', '/jobs/:id/evaluate'], async (req: Request, 
     res.status(400).json({ error: 'ID de vacante requerido' })
     return
   }
-  const result = await forward(`api/jobs/${encodeURIComponent(id)}/evaluate`, { method: 'POST' }, 45000)
+  const result = await forwardToEros(`api/jobs/${encodeURIComponent(id)}/evaluate`, { method: 'POST' }, 45000)
   res.status(result.status).json(result.data)
 })
 
 /** POST /api/admin/hunter/purge */
 hunterRouter.post('/purge', async (_req: Request, res: Response) => {
-  const result = await forward('api/purge', { method: 'POST' }, 30000)
+  const result = await forwardToEros('api/purge', { method: 'POST' }, 30000)
   res.status(result.status).json(result.data)
 })
 
 /** POST /api/admin/hunter/search/semantic */
 hunterRouter.post(['/search/semantic', '/semantic-search'], async (req: Request, res: Response) => {
-  const result = await forward('api/jobs/semantic-search', {
+  const result = await forwardToEros('api/jobs/semantic-search', {
     method: 'POST',
     body: JSON.stringify(req.body),
   }, 30000)
@@ -139,18 +87,12 @@ hunterRouter.post(['/search/semantic', '/semantic-search'], async (req: Request,
 
 /** POST /api/admin/hunter/vectorize */
 hunterRouter.post('/vectorize', async (req: Request, res: Response) => {
-  const result = await forward('api/vectorize', {
+  const result = await forwardToEros('api/vectorize', {
     method: 'POST',
     body: JSON.stringify(req.body),
   }, 45000)
   res.status(result.status).json(result.data)
 })
-
-function getParamId(req: Request): string {
-  const val = req.params['id']
-  if (Array.isArray(val)) return val[0] || ''
-  return typeof val === 'string' ? val : ''
-}
 
 /** POST /api/admin/hunter/pitch/:id */
 hunterRouter.post(['/pitch/:id', '/jobs/:id/pitch'], async (req: Request, res: Response) => {
@@ -159,7 +101,7 @@ hunterRouter.post(['/pitch/:id', '/jobs/:id/pitch'], async (req: Request, res: R
     res.status(400).json({ error: 'ID de vacante requerido' })
     return
   }
-  const result = await forward(`api/pitch/${encodeURIComponent(id)}`, { method: 'POST' }, 45000)
+  const result = await forwardToEros(`api/pitch/${encodeURIComponent(id)}`, { method: 'POST' }, 45000)
   res.status(result.status).json(result.data)
 })
 
@@ -170,7 +112,7 @@ hunterRouter.post(['/cv/:id', '/jobs/:id/cv'], async (req: Request, res: Respons
     res.status(400).json({ error: 'ID de vacante requerido' })
     return
   }
-  const result = await forward(`api/cv/${encodeURIComponent(id)}`, { method: 'POST' }, 45000)
+  const result = await forwardToEros(`api/cv/${encodeURIComponent(id)}`, { method: 'POST' }, 45000)
   res.status(result.status).json(result.data)
 })
 
@@ -187,7 +129,7 @@ hunterRouter.get(['/cv/:id/html', '/jobs/:id/cv/html'], async (req: Request, res
     res.status(401).type('html').send('<h1>Acceso no autorizado al CV</h1><p>Se requiere sesión de administración o un ticket válido para esta vacante.</p>')
     return
   }
-  const baseUrl = getHunterUrl()
+  const baseUrl = getErosBaseUrl()
   if (!baseUrl) {
     res.status(503).type('html').send('<h1>Eros Agent no configurado</h1><p>Falta HUNTER_API_URL en el entorno</p>')
     return
@@ -223,7 +165,7 @@ hunterRouter.patch(['/jobs/:id/status', '/status/:id'], async (req: Request, res
     res.status(400).json({ error: 'ID de vacante requerido' })
     return
   }
-  const result = await forward(`api/jobs/${encodeURIComponent(id)}/status`, {
+  const result = await forwardToEros(`api/jobs/${encodeURIComponent(id)}/status`, {
     method: 'PATCH',
     body: JSON.stringify(req.body),
   })
@@ -232,7 +174,7 @@ hunterRouter.patch(['/jobs/:id/status', '/status/:id'], async (req: Request, res
 
 /** DELETE /api/admin/hunter/jobs - Eliminar todas las vacantes para reiniciar desde cero */
 hunterRouter.delete('/jobs', async (_req: Request, res: Response) => {
-  const result = await forward('api/jobs', { method: 'DELETE' }, 30000)
+  const result = await forwardToEros('api/jobs', { method: 'DELETE' }, 30000)
   res.status(result.status).json(result.data)
 })
 
@@ -243,7 +185,7 @@ hunterRouter.delete(['/jobs/:id', '/:id'], async (req: Request, res: Response) =
     res.status(400).json({ error: 'ID de vacante requerido' })
     return
   }
-  const result = await forward(`api/jobs/${encodeURIComponent(id)}`, { method: 'DELETE' }, 15000)
+  const result = await forwardToEros(`api/jobs/${encodeURIComponent(id)}`, { method: 'DELETE' }, 15000)
   res.status(result.status).json(result.data)
 })
 
@@ -254,7 +196,7 @@ hunterRouter.get(['/jobs/:id/apply-preview', '/apply-preview/:id'], async (req: 
     res.status(400).json({ error: 'ID de vacante requerido' })
     return
   }
-  const result = await forward(`api/jobs/${encodeURIComponent(id)}/apply-preview`, { method: 'GET' }, 20000)
+  const result = await forwardToEros(`api/jobs/${encodeURIComponent(id)}/apply-preview`, { method: 'GET' }, 20000)
   res.status(result.status).json(result.data)
 })
 
@@ -265,7 +207,7 @@ hunterRouter.post(['/jobs/:id/apply-email', '/apply-email/:id'], async (req: Req
     res.status(400).json({ error: 'ID de vacante requerido' })
     return
   }
-  const result = await forward(`api/jobs/${encodeURIComponent(id)}/apply-email`, {
+  const result = await forwardToEros(`api/jobs/${encodeURIComponent(id)}/apply-email`, {
     method: 'POST',
     body: JSON.stringify(req.body),
   }, 35000)
@@ -279,7 +221,7 @@ hunterRouter.patch(['/jobs/:id/contact-email', '/contact-email/:id'], async (req
     res.status(400).json({ error: 'ID de vacante requerido' })
     return
   }
-  const result = await forward(`api/jobs/${encodeURIComponent(id)}/contact-email`, {
+  const result = await forwardToEros(`api/jobs/${encodeURIComponent(id)}/contact-email`, {
     method: 'PATCH',
     body: JSON.stringify(req.body),
   }, 15000)

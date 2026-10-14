@@ -11,7 +11,11 @@ export const AdmToast = {
   },
   emits: ['dismiss'],
   template: `
-    <div class="fixed bottom-20 md:bottom-5 right-3 md:right-5 left-3 sm:left-auto z-50 flex flex-col gap-2 max-w-sm pointer-events-none">
+    <div
+      role="region"
+      aria-label="Notificaciones del sistema"
+      class="fixed bottom-20 md:bottom-5 right-3 md:right-5 left-3 sm:left-auto z-50 flex flex-col gap-2 max-w-sm pointer-events-none"
+    >
       <transition-group
         enter-active-class="transition duration-200 ease-out"
         enter-from-class="transform translate-y-3 opacity-0"
@@ -23,6 +27,8 @@ export const AdmToast = {
         <div
           v-for="t in toasts"
           :key="t.id"
+          role="status"
+          aria-live="polite"
           class="pointer-events-auto p-3.5 rounded-lg border text-xs shadow-2xl flex items-start gap-2.5 backdrop-blur-md"
           :class="[
             t.kind === 'ok' && 'bg-[#0f1914]/90 border-emerald-500/30 text-emerald-300',
@@ -42,6 +48,7 @@ export const AdmToast = {
           <button
             type="button"
             @click="$emit('dismiss', t.id)"
+            aria-label="Cerrar notificacion"
             class="text-zinc-500 hover:text-white shrink-0 ml-1 cursor-pointer"
           >
             ✕

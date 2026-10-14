@@ -160,7 +160,12 @@ export const CommandPalette = {
       @click.self="$emit('close')"
       @keydown="onKeyDown"
     >
-      <div class="bg-[#121318] border border-white/15 rounded-xl max-w-lg w-full overflow-hidden shadow-2xl flex flex-col max-h-[480px]">
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-label="Paleta de Comandos del CMS"
+        class="bg-[#121318] border border-white/15 rounded-xl max-w-lg w-full overflow-hidden shadow-2xl flex flex-col max-h-[480px]"
+      >
         <!-- Buscador Input -->
         <div class="p-3.5 border-b border-white/10 flex items-center gap-3 bg-[#0d0e12]">
           <svg class="adm-icon text-zinc-500" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>

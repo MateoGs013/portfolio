@@ -1,5 +1,7 @@
 // Componente Modal: ConfirmModal (AdmConfirmModal)
-// Diálogo de confirmación accesible con lenguaje claro y tranquilizador (Invariante #9)
+// Dialogo de confirmacion accesible con lenguaje claro y tranquilizador
+
+const { onMounted, onBeforeUnmount, ref } = window.Vue
 
 export const ConfirmModal = {
   name: 'AdmConfirmModal',
@@ -9,12 +11,40 @@ export const ConfirmModal = {
       required: true,
     },
   },
+  setup(props) {
+    const confirmBtnRef = ref(null)
+
+    function onKeyDown(e) {
+      if (e.key === 'Escape') {
+        e.preventDefault()
+        props.dialog.onCancel()
+      }
+    }
+
+    onMounted(() => {
+      window.addEventListener('keydown', onKeyDown)
+      confirmBtnRef.value?.focus()
+    })
+
+    onBeforeUnmount(() => {
+      window.removeEventListener('keydown', onKeyDown)
+    })
+
+    return {
+      confirmBtnRef,
+    }
+  },
   template: `
     <div
       class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4"
       @click.self="dialog.onCancel()"
     >
-      <div class="bg-[#121318] border border-white/15 rounded-xl max-w-md w-full p-6 shadow-2xl space-y-4">
+      <div
+        role="dialog"
+        aria-modal="true"
+        :aria-label="dialog.title"
+        class="bg-[#121318] border border-white/15 rounded-xl max-w-md w-full p-6 shadow-2xl space-y-4"
+      >
         <div>
           <div class="flex items-center gap-2">
             <span
@@ -50,6 +80,7 @@ export const ConfirmModal = {
             {{ dialog.cancelText || 'Cancelar' }}
           </button>
           <button
+            ref="confirmBtnRef"
             type="button"
             @click="dialog.onConfirm()"
             class="!h-[30px] !text-xs cursor-pointer"

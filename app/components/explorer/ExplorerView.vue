@@ -127,6 +127,20 @@ const folder = computed(() => ex.value?.folder ?? null)
 const detail = computed(() => ex.value?.detail ?? null)
 const hoja = computed(() => !!detail.value && !folder.value)
 
+const detailSummary = computed(() => {
+  if (!detail.value) return null
+  const summaryRow = detail.value.rows.find(r => ['summary', 'brief', 'tagline', 'note', 'about_text'].includes(r.name))
+  return summaryRow?.value || `${detail.value.name} — Dossier de ingeniería y especificación técnica en el portafolio de Mateo Sonzogni.`
+})
+
+useSeoMeta({
+  title: computed(() => detail.value ? `${detail.value.name} — Mateo Sonzogni` : ['mateo sonzogni', ...path.value].join(' / ')),
+  ogTitle: computed(() => detail.value ? `${detail.value.name} — Mateo Sonzogni` : ['mateo sonzogni', ...path.value].join(' / ')),
+  description: computed(() => detailSummary.value || 'Portafolio técnico y base de datos relacional de ingeniería de Mateo Sonzogni.'),
+  ogDescription: computed(() => detailSummary.value || 'Portafolio técnico y base de datos relacional de ingeniería de Mateo Sonzogni.'),
+  ogType: computed(() => (detail.value?.type === 'Article' ? 'article' : 'website')),
+})
+
 // Breadcrumbs de ruta
 const segments = computed(() => [
   { label: 'db', to: routeFor([]) },

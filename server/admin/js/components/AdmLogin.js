@@ -1,22 +1,32 @@
 // Componente Estructural: AdmLogin
-// Consola de autenticación y seguridad para el panel de administración
+// Consola de autenticacion y seguridad para el panel de administracion
 
 import { store } from '../store.js'
 import { api } from '../api.js'
 import { ICONS } from '../config.js'
 
+const { ref } = window.Vue
+
 export const AdmLogin = {
   name: 'AdmLogin',
   setup() {
+    const isAuthenticating = ref(false)
+
     async function login() {
+      if (isAuthenticating.value) return
       const val = store.tokenInput.trim()
       if (!val) {
-        store.toast('err', 'Ingresá el token de administrador para continuar.')
+        store.toast('err', 'Ingresa el token de administrador para continuar.')
         return
       }
-      api.setToken(val)
-      store.token = val
-      await store.initSession()
+      isAuthenticating.value = true
+      try {
+        api.setToken(val)
+        store.token = val
+        await store.initSession()
+      } finally {
+        isAuthenticating.value = false
+      }
     }
 
     const isLocal = ['localhost', '127.0.0.1', '::1'].includes(window.location.hostname)
@@ -32,6 +42,7 @@ export const AdmLogin = {
       login,
       useDevToken,
       isLocal,
+      isAuthenticating,
     }
   },
   template: `
@@ -42,7 +53,7 @@ export const AdmLogin = {
           <div class="w-10 h-10 rounded-lg bg-[#ff3e00] text-[#09090b] flex items-center justify-center font-bold text-sm mx-auto font-mono-code tracking-tighter shadow-lg shadow-[#ff3e00]/20">
             MS
           </div>
-          <h1 class="text-sm font-bold text-white tracking-tight">Consola de Administración</h1>
+          <h1 class="text-sm font-bold text-white tracking-tight">Consola de Administracion</h1>
           <p class="text-[11px] text-zinc-400 font-mono-code">Acceso restringido para el portafolio 2026</p>
         </div>
 
@@ -53,8 +64,9 @@ export const AdmLogin = {
               <input
                 :type="store.passwordVisible ? 'text' : 'password'"
                 v-model="store.tokenInput"
-                placeholder="Ingresá tu clave secreta..."
+                placeholder="Ingresa tu clave secreta..."
                 class="text-input font-mono-code pr-9"
+                :disabled="isAuthenticating"
                 autofocus
               />
               <button
@@ -72,9 +84,11 @@ export const AdmLogin = {
 
           <button
             type="submit"
-            class="btn-primary w-full !h-[36px] !text-xs cursor-pointer"
+            :disabled="isAuthenticating"
+            class="btn-primary w-full !h-[36px] !text-xs cursor-pointer flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Ingresar a la Consola
+            <span v-if="isAuthenticating" class="inline-block w-3.5 h-3.5 border-2 border-white/20 border-t-white rounded-full animate-spin"></span>
+            <span>{{ isAuthenticating ? 'Autenticando...' : 'Ingresar a la Consola' }}</span>
           </button>
         </form>
 
@@ -83,7 +97,8 @@ export const AdmLogin = {
           <button
             type="button"
             @click="useDevToken"
-            class="hover:text-white underline cursor-pointer"
+            :disabled="isAuthenticating"
+            class="hover:text-white underline cursor-pointer disabled:opacity-50"
           >
             Usar dev-token
           </button>

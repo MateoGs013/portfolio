@@ -2,71 +2,14 @@ import { Router, type Request, type Response } from 'express'
 import { db } from '../db.js'
 import { env } from '../env.js'
 import { createCarouselTicket, isAdminAuthorized, validateCarouselTicket } from './auth.js'
+import { forwardToEros, escapeHtml, getParamId, getErosBaseUrl } from './proxy.js'
 
 export const contentRouter = Router()
-
-function escapeHtml(s: string): string {
-  return s
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;')
-}
-
-const getErosUrl = () => (process.env['HUNTER_API_URL'] || env.hunterApiUrl || 'https://eros.mateogs.tech').replace(/\/+$/, '')
-
-async function forward(urlPath: string, init?: RequestInit, timeoutMs = 60000) {
-  const baseUrl = getErosUrl()
-  if (!baseUrl) {
-    return {
-      ok: false,
-      status: 503,
-      data: { error: 'Eros Agent no configurado: falta HUNTER_API_URL en el entorno' },
-    }
-  }
-  const fullUrl = `${baseUrl}/${urlPath.replace(/^\//, '')}`
-  try {
-    const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
-      ...(env.erosApiKey ? { Authorization: `Bearer ${env.erosApiKey}` } : {}),
-      ...((init?.headers as Record<string, string>) || {}),
-    }
-    const res = await fetch(fullUrl, {
-      ...init,
-      headers,
-      signal: AbortSignal.timeout(timeoutMs),
-    })
-    const isJson = res.headers.get('content-type')?.includes('application/json')
-    const data = isJson ? await res.json().catch(() => null) : await res.text()
-    if (res.status === 401 || res.status === 403) {
-      return {
-        ok: false,
-        status: 502,
-        data: { error: 'Fallo de autenticación con Eros Agent (verificar EROS_API_KEY en variables de entorno)' },
-      }
-    }
-    return { ok: res.ok, status: res.status, data }
-  } catch (err: unknown) {
-    const msg = err instanceof Error ? err.message : String(err)
-    return {
-      ok: false,
-      status: 503,
-      data: { error: `Eros Agent no responde (${baseUrl}): ${msg}` },
-    }
-  }
-}
-
-function getParamId(req: Request): string {
-  const val = req.params['id']
-  if (Array.isArray(val)) return val[0] || ''
-  return typeof val === 'string' ? val : ''
-}
 
 /** GET /api/admin/content/posts - Lista de publicaciones omnicanal */
 contentRouter.get('/posts', async (req: Request, res: Response) => {
   const query = new URLSearchParams(req.query as Record<string, string>).toString()
-  const result = await forward(`api/content/posts${query ? `?${query}` : ''}`)
+  const result = await forwardToEros(`api/content/posts${query ? `?${query}` : ''}`)
   res.status(result.status).json(result.data)
 })
 
@@ -77,13 +20,13 @@ contentRouter.get('/posts/:id', async (req: Request, res: Response) => {
     res.status(400).json({ error: 'ID de publicación requerido' })
     return
   }
-  const result = await forward(`api/content/posts/${encodeURIComponent(id)}`)
+  const result = await forwardToEros(`api/content/posts/${encodeURIComponent(id)}`)
   res.status(result.status).json(result.data)
 })
 
 /** POST /api/admin/content/generate - Generar nueva publicación con Gemini */
 contentRouter.post('/generate', async (req: Request, res: Response) => {
-  const result = await forward('api/content/generate', {
+  const result = await forwardToEros('api/content/generate', {
     method: 'POST',
     body: JSON.stringify(req.body),
   }, 60000)
@@ -97,7 +40,7 @@ contentRouter.post('/posts/:id/publish', async (req: Request, res: Response) => 
     res.status(400).json({ error: 'ID de publicación requerido' })
     return
   }
-  const result = await forward(`api/content/posts/${encodeURIComponent(id)}/publish`, {
+  const result = await forwardToEros(`api/content/posts/${encodeURIComponent(id)}/publish`, {
     method: 'POST',
   }, 45000)
   res.status(result.status).json(result.data)
@@ -110,7 +53,7 @@ contentRouter.patch('/posts/:id/status', async (req: Request, res: Response) => 
     res.status(400).json({ error: 'ID de publicación requerido' })
     return
   }
-  const result = await forward(`api/content/posts/${encodeURIComponent(id)}/status`, {
+  const result = await forwardToEros(`api/content/posts/${encodeURIComponent(id)}/status`, {
     method: 'PATCH',
     body: JSON.stringify(req.body),
   })
@@ -124,7 +67,7 @@ contentRouter.delete('/posts/:id', async (req: Request, res: Response) => {
     res.status(400).json({ error: 'ID de publicación requerido' })
     return
   }
-  const result = await forward(`api/content/posts/${encodeURIComponent(id)}`, {
+  const result = await forwardToEros(`api/content/posts/${encodeURIComponent(id)}`, {
     method: 'DELETE',
   })
   res.status(result.status).json(result.data)
@@ -154,7 +97,7 @@ contentRouter.get('/carousel/:id/html', async (req: Request, res: Response) => {
     res.status(401).type('html').send('<h1>Acceso no autorizado al carrusel</h1><p>Se requiere sesión de administración o un ticket válido para esta publicación.</p>')
     return
   }
-  const baseUrl = getErosUrl()
+  const baseUrl = getErosBaseUrl()
   try {
     const upstreamRes = await fetch(`${baseUrl}/api/content/carousel/${encodeURIComponent(id)}/html`, {
       headers: {
@@ -179,7 +122,7 @@ contentRouter.post('/posts/:id/publish-to-blog', async (req: Request, res: Respo
     res.status(400).json({ error: 'ID de publicación requerido' })
     return
   }
-  const result = await forward(`api/content/posts/${encodeURIComponent(id)}`)
+  const result = await forwardToEros(`api/content/posts/${encodeURIComponent(id)}`)
   if (!result.ok || !result.data) {
     res.status(result.status || 500).json({ error: 'No se pudo obtener el post desde Eros' })
     return

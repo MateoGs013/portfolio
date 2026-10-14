@@ -1,50 +1,7 @@
 import { Router, type Request, type Response } from 'express'
-import { env } from '../env.js'
+import { forwardToEros, getParamId } from './proxy.js'
 
 export const radarRouter = Router()
-
-const getErosUrl = () => (process.env['HUNTER_API_URL'] || env.hunterApiUrl || 'https://eros.mateogs.tech').replace(/\/+$/, '')
-
-async function forward(urlPath: string, init?: RequestInit, timeoutMs = 60000) {
-  const baseUrl = getErosUrl()
-  if (!baseUrl) {
-    return {
-      ok: false,
-      status: 503,
-      data: { error: 'Eros Agent no configurado: falta HUNTER_API_URL en el entorno' },
-    }
-  }
-  const fullUrl = `${baseUrl}/${urlPath.replace(/^\//, '')}`
-  try {
-    const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
-      ...(env.erosApiKey ? { Authorization: `Bearer ${env.erosApiKey}` } : {}),
-      ...((init?.headers as Record<string, string>) || {}),
-    }
-    const res = await fetch(fullUrl, {
-      ...init,
-      headers,
-      signal: AbortSignal.timeout(timeoutMs),
-    })
-    const isJson = res.headers.get('content-type')?.includes('application/json')
-    const data = isJson ? await res.json().catch(() => null) : await res.text()
-    if (res.status === 401 || res.status === 403) {
-      return {
-        ok: false,
-        status: 502,
-        data: { error: 'Fallo de autenticación con Eros Agent (verificar EROS_API_KEY en variables de entorno)' },
-      }
-    }
-    return { ok: res.ok, status: res.status, data }
-  } catch (err: unknown) {
-    const msg = err instanceof Error ? err.message : String(err)
-    return {
-      ok: false,
-      status: 503,
-      data: { error: `Eros Agent no responde (${baseUrl}): ${msg}` },
-    }
-  }
-}
 
 const fallbackTrends = [
   {
@@ -88,16 +45,10 @@ const fallbackTrends = [
   },
 ]
 
-function getParamId(req: Request): string {
-  const val = req.params['id']
-  if (Array.isArray(val)) return val[0] || ''
-  return typeof val === 'string' ? val : ''
-}
-
 /** GET /api/admin/radar/trends - Lista de tendencias detectadas */
 radarRouter.get('/trends', async (req: Request, res: Response) => {
   const query = new URLSearchParams(req.query as Record<string, string>).toString()
-  const result = await forward(`api/radar/trends${query ? `?${query}` : ''}`)
+  const result = await forwardToEros(`api/radar/trends${query ? `?${query}` : ''}`)
   if (result.ok && Array.isArray(result.data)) {
     return res.status(result.status).json(result.data)
   }
@@ -108,7 +59,7 @@ radarRouter.get('/trends', async (req: Request, res: Response) => {
 /** POST /api/admin/radar/scan - Dispara un escaneo de fuentes tecnológicas */
 radarRouter.post('/scan', async (req: Request, res: Response) => {
   const limit = req.query['limit'] ? String(req.query['limit']) : '15'
-  const result = await forward(`api/radar/scan?limit=${limit}`, { method: 'POST' })
+  const result = await forwardToEros(`api/radar/scan?limit=${limit}`, { method: 'POST' })
   if (result.ok) {
     return res.status(result.status).json(result.data)
   }
@@ -122,7 +73,7 @@ radarRouter.post('/scan', async (req: Request, res: Response) => {
 /** GET /api/admin/radar/trends/:id - Detalle de una tendencia */
 radarRouter.get('/trends/:id', async (req: Request, res: Response) => {
   const id = getParamId(req)
-  const result = await forward(`api/radar/trends/${encodeURIComponent(id)}`)
+  const result = await forwardToEros(`api/radar/trends/${encodeURIComponent(id)}`)
   if (result.ok) {
     return res.status(result.status).json(result.data)
   }
@@ -134,20 +85,17 @@ radarRouter.get('/trends/:id', async (req: Request, res: Response) => {
 /** PATCH /api/admin/radar/trends/:id/status - Actualiza estado de tendencia */
 radarRouter.patch('/trends/:id/status', async (req: Request, res: Response) => {
   const id = getParamId(req)
-  const result = await forward(`api/radar/trends/${encodeURIComponent(id)}/status`, {
+  const result = await forwardToEros(`api/radar/trends/${encodeURIComponent(id)}/status`, {
     method: 'PATCH',
     body: JSON.stringify(req.body),
   })
-  if (result.ok) {
-    return res.status(result.status).json(result.data)
-  }
-  res.json({ ok: true, id, status: req.body?.status || 'DISCARDED' })
+  res.status(result.status).json(result.data)
 })
 
 /** POST /api/admin/radar/trends/:id/generate - Genera post omnicanal a partir de una tendencia */
 radarRouter.post('/trends/:id/generate', async (req: Request, res: Response) => {
   const id = getParamId(req)
-  const result = await forward(`api/radar/trends/${encodeURIComponent(id)}/generate`, {
+  const result = await forwardToEros(`api/radar/trends/${encodeURIComponent(id)}/generate`, {
     method: 'POST',
     body: JSON.stringify(req.body),
   })

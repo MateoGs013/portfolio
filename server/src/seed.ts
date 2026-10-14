@@ -474,70 +474,128 @@ const homeFields: DocField[] = [
   { name: 'manifesto_lead', type: 'text', wide: true, value: 'DISEÑO CON PROPÓSITO.<br>CONSTRUYO CON PRECISIÓN.<br>ENTREGO CON ORGULLO.' },
 ]
 
+const seedArticles = [
+  {
+    slug: 'postgresql-17-universal-vector-relational-production',
+    title: 'PostgreSQL 17 como Base Relacional y Vectorial Universal en Producción',
+    summary: 'Análisis de arquitectura y trade-offs: cómo consolidar pgvector y datos relacionales en PostgreSQL 17 reduciendo latencia y complejidad operativa.',
+    content: `# PostgreSQL 17 como Base Relacional y Vectorial Universal en Producción
+
+La proliferación de bases de datos especializadas para vectores resolvió necesidades iniciales en la adopción de modelos de lenguaje. Sin embargo, en arquitecturas de ingeniería de producción introduce una sobrecarga crítica: la sincronización bidireccional entre el sistema transaccional de registro y el índice vectorial externo.
+
+## El Problema del Estado Desacoplado
+
+Cuando el catálogo de vacantes o publicaciones reside en PostgreSQL y los embeddings se sincronizan de forma asíncrona hacia un cluster vectorial externo:
+1. Las operaciones no son atómicas.
+2. Los filtros estructurados requieren un pipeline de dos fases con serialización intermedia.
+3. Las fallas de red generan estados inconsistentes o huérfanos.
+
+## La Solución: pgvector en PostgreSQL 17
+
+Con las mejoras de indexación HNSW en pgvector y la gestión de memoria en PostgreSQL 17:
+- Las consultas semánticas se ejecutan dentro del mismo planificador de consultas SQL.
+- Los joins entre la tabla vectorial y metadatos relacionales se procesan en memoria compartida sin sobrecarga de red.
+- Las garantías ACID se mantienen en cada inserción y mutación de embeddings.
+
+\`\`\`sql
+SELECT j.id, j.title, j.company, 1 - (j.embedding <=> $1) AS similarity
+FROM "Job" j
+WHERE j.status = 'ACTIVE'
+ORDER BY j.embedding <=> $1
+LIMIT 10;
+\`\`\`
+
+## Conclusión
+
+Consolidar la persistencia relacional y vectorial en un único nodo de PostgreSQL 17 reduce costos operativos a cero sobrecosto, elimina workers de sincronización redundantes y garantiza consistencia transaccional estricta.`,
+    readingTimeMin: 4,
+    status: 'PUBLISHED' as const,
+    featured: true,
+    publishedAt: new Date(),
+    canonicalUrl: 'https://mateogs.tech/blog/postgresql-17-universal-vector-relational-production',
+    techSlugs: ['postgresql', 'prisma'],
+  },
+]
+
 // ─── carga ──────────────────────────────────────────────────────────────────
 
 async function main() {
-  await db.processStep.deleteMany()
-  await db.media.deleteMany()
-  await db.link.deleteMany()
-  await db.project.deleteMany()
-  await db.experience.deleteMany()
-  await db.tech.deleteMany()
-  await db.org.deleteMany()
-  await db.doc.deleteMany()
+  await db.$transaction(async (tx) => {
+    await tx.processStep.deleteMany()
+    await tx.media.deleteMany()
+    await tx.link.deleteMany()
+    await tx.article.deleteMany()
+    await tx.project.deleteMany()
+    await tx.experience.deleteMany()
+    await tx.tech.deleteMany()
+    await tx.org.deleteMany()
+    await tx.doc.deleteMany()
 
-  await db.tech.createMany({
-    data: techs.map(t => ({
-      ...t,
-      note: techNotes[t.slug] ?? null,
-      color: techColors[t.slug] ?? null,
-    })),
+    await tx.tech.createMany({
+      data: techs.map(t => ({
+        ...t,
+        note: techNotes[t.slug] ?? null,
+        color: techColors[t.slug] ?? null,
+      })),
+    })
+
+    await tx.org.createMany({ data: orgs })
+
+    for (const [i, p] of projects.entries()) {
+      const { org, techs: techSlugs, links, steps, cover, metrics, ...scalars } = p
+      await tx.project.create({
+        data: {
+          ...scalars,
+          sortOrder: i,
+          publishedAt: new Date(),
+          metrics: metrics ? (metrics as Prisma.InputJsonValue) : Prisma.JsonNull,
+          org: org ? { connect: { slug: org } } : undefined,
+          techs: { connect: techSlugs.map(slug => ({ slug })) },
+          links: { create: links },
+          steps: { create: steps.map((s, order) => ({ ...s, order: order + 1 })) },
+          media: cover ? { create: [{ ...cover, role: MediaRole.COVER, layer: null, order: 0 }] } : undefined,
+        },
+      })
+    }
+
+    for (const e of experience) {
+      const { org, techs: techSlugs, startedAt, endedAt, ...scalars } = e
+      await tx.experience.create({
+        data: {
+          ...scalars,
+          startedAt: new Date(startedAt),
+          endedAt: endedAt ? new Date(endedAt) : null,
+          org: org ? { connect: { slug: org } } : undefined,
+          techs: { connect: techSlugs.map(slug => ({ slug })) },
+        },
+      })
+    }
+
+    await tx.doc.createMany({
+      data: [
+        { key: 'about', title: 'about', fields: aboutFields },
+        { key: 'contact', title: 'contact', fields: contactFields },
+        { key: 'home', title: 'home', fields: homeFields },
+      ],
+    })
+
+    for (const a of seedArticles) {
+      const { techSlugs, ...scalars } = a
+      await tx.article.create({
+        data: {
+          ...scalars,
+          techs: { connect: techSlugs.map(slug => ({ slug })) },
+        },
+      })
+    }
+  }, {
+    timeout: 30000,
   })
 
-  await db.org.createMany({ data: orgs })
-
-  for (const [i, p] of projects.entries()) {
-    const { org, techs: techSlugs, links, steps, cover, metrics, ...scalars } = p
-    await db.project.create({
-      data: {
-        ...scalars,
-        sortOrder: i,
-        publishedAt: new Date(),
-        metrics: metrics ? (metrics as Prisma.InputJsonValue) : Prisma.JsonNull,
-        org: org ? { connect: { slug: org } } : undefined,
-        techs: { connect: techSlugs.map(slug => ({ slug })) },
-        links: { create: links },
-        steps: { create: steps.map((s, order) => ({ ...s, order: order + 1 })) },
-        media: cover ? { create: [{ ...cover, role: MediaRole.COVER, layer: null, order: 0 }] } : undefined,
-      },
-    })
-  }
-
-  for (const e of experience) {
-    const { org, techs: techSlugs, startedAt, endedAt, ...scalars } = e
-    await db.experience.create({
-      data: {
-        ...scalars,
-        startedAt: new Date(startedAt),
-        endedAt: endedAt ? new Date(endedAt) : null,
-        org: org ? { connect: { slug: org } } : undefined,
-        techs: { connect: techSlugs.map(slug => ({ slug })) },
-      },
-    })
-  }
-
-  await db.doc.createMany({
-    data: [
-      { key: 'about', title: 'about', fields: aboutFields },
-      { key: 'contact', title: 'contact', fields: contactFields },
-      { key: 'home', title: 'home', fields: homeFields },
-    ],
-  })
-
-  const [nProjects, nExperience, nTechs, nOrgs, nDocs] = await Promise.all([
-    db.project.count(), db.experience.count(), db.tech.count(), db.org.count(), db.doc.count(),
+  const [nProjects, nExperience, nTechs, nOrgs, nDocs, nArticles] = await Promise.all([
+    db.project.count(), db.experience.count(), db.tech.count(), db.org.count(), db.doc.count(), db.article.count(),
   ])
-  console.log(`seed → ${nProjects} projects · ${nExperience} experience · ${nTechs} techs · ${nOrgs} orgs · ${nDocs} docs`)
+  console.log(`seed -> ${nProjects} projects · ${nExperience} experience · ${nTechs} techs · ${nOrgs} orgs · ${nDocs} docs · ${nArticles} articles`)
 }
 
 main()
