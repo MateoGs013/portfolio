@@ -171,7 +171,13 @@ const words = computed<ParsedWord[]>(() => {
 }
 
 /* Hyperfocus or Reduced Motion instant display */
-.trv-bit.trv-instant,
+.trv-bit.trv-instant {
+  animation: none !important;
+  opacity: 1 !important;
+  filter: none !important;
+  transform: none !important;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .trv-bit {
     animation: none !important;
