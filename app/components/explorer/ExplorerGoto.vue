@@ -13,6 +13,7 @@ function formatWhere(w: string) {
     if (w === 'projects') return 'proyectos'
     if (w === 'experience') return 'experiencia'
     if (w === 'stack') return 'stack'
+    if (w === 'articles') return 'artículos'
     if (w === 'db') return 'db'
   }
   return w
@@ -21,14 +22,19 @@ function formatWhere(w: string) {
 interface Entry { label: string, where: string, to: RouteLocationRaw }
 
 const { data: entries } = await useAsyncData<Entry[]>('datos-goto', async () => {
-  const [schema, projects, experience, stack] = await Promise.all([
-    api.schema(), api.list('projects'), api.list('experience'), api.list('stack'),
+  const [schema, projects, experience, stack, articles] = await Promise.all([
+    api.schema(),
+    api.list('projects'),
+    api.list('experience'),
+    api.list('stack'),
+    api.list('articles').catch(() => ({ data: [] })),
   ])
   return [
     ...schema.data.map(e => ({ label: e.key, where: 'db', to: routeFor([e.key]) })),
     ...projects.data.map(p => ({ label: p.title, where: 'projects', to: routeFor(['projects', p.slug]) })),
     ...experience.data.map(e => ({ label: e.org ? `${e.role} · ${e.org.name}` : e.role, where: 'experience', to: routeFor(['experience', e.slug]) })),
     ...stack.data.map(t => ({ label: t.name, where: 'stack', to: routeFor(['stack', t.slug]) })),
+    ...articles.data.map(a => ({ label: a.title, where: 'articles', to: routeFor(['articles', a.slug]) })),
   ]
 }, { server: false })
 
@@ -82,7 +88,7 @@ onMounted(() => input.value?.focus())
           autocomplete="off"
           spellcheck="false"
           class="w-full border-0 p-0 bg-transparent text-ink font-sans text-base font-medium outline-none placeholder:text-faint placeholder:text-sm"
-          :placeholder="isEs ? 'buscar proyecto, tecnología, etapa…' : 'search project, tech, stage…'"
+          :placeholder="isEs ? 'buscar proyecto, artículo, tecnología, etapa…' : 'search project, article, tech, stage…'"
           :aria-label="isEs ? 'Buscar en todo el portafolio' : 'Search whole portfolio'"
           :aria-activedescendant="results[sel] ? `goto-${sel}` : undefined"
           aria-controls="goto-lista"

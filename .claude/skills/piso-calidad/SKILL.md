@@ -1,78 +1,16 @@
 ---
 name: piso-calidad
-description: Auditoría de accesibilidad, performance y degradación antes de cerrar una fase o hacer deploy. Usar cuando el usuario pida auditar, revisar accesibilidad, chequear performance, verificar que algo funcione sin JS, o preguntar si una fase está lista.
+description: Verifica que las vistas y componentes del Explorador Relacional cumplan los 7 requisitos de accesibilidad, SSR, teclado, rendimiento y resiliencia antes de dar por cerrada cualquier tarea visual o de frontend.
 ---
 
-# Piso de calidad
+# Piso de Calidad — Los 7 Requisitos No-Negociables
 
-En este proyecto la accesibilidad no es un requisito externo: **el mundo DATOS es el argumento de que se sabe hacer front bien**. Si falla, se cae la mitad de la tesis.
+Invocar esta skill antes de considerar terminada cualquier vista o componente en `app/`. Ningún cambio pasa a producción sin cumplir los 7 puntos. (Sincronizada con `.agents/skills/piso-calidad/SKILL.md`).
 
-Correr antes de cerrar una fase.
-
-## 1 · Sin JavaScript
-
-Deshabilitar JS y navegar el mundo DATOS.
-
-- ¿Llega contenido renderizado del servidor?
-- ¿Las rutas son links reales?
-- ¿Se puede llegar a cada record?
-
-Si no, el SSR está mal y nada de lo demás importa.
-
-## 2 · Solo teclado
-
-Desenchufar el mouse y recorrer el sitio entero.
-
-- `↑↓` `→` `←` `/` en DATOS.
-- ¿El foco es siempre visible? ¿`:focus-visible` tiene contraste suficiente contra el fondo de cada mundo?
-- Al entrar a un nivel, ¿el foco va al heading de ese nivel? Al salir, ¿vuelve al item del que se salió?
-- ¿Se puede cambiar de mundo con teclado?
-
-## 3 · Lector de pantalla
-
-- El explorador muestra una carpeta o una hoja; la carpeta es una `section` con su encabezado y los vecinos de la hoja son un `nav` con `aria-label`. Las baldosas son links comunes con el ícono en `aria-hidden`: el foco itinerante de las flechas se mueve entre ellos y el Tab también los recorre.
-- Los SVG decorativos con `aria-hidden="true"`.
-- Las imágenes con `alt` real, no el filename.
-
-## 4 · Reduced motion
-
-Activar `prefers-reduced-motion: reduce`.
-
-- ¿Toda animación o transición salta al estado final?
-- ¿El modo Focus y la alternancia de vistas se resuelven sin saltos bruscos?
-- **¿Se entiende todo el sitio sin una sola animación?** Si algo solo se comprende viéndolo moverse, está mal diseñado.
-
-## 5 · Layout shift y carga
-
-- CLS en cero. Las fuentes variables son pesadas: `font-display`, preload de las críticas, y reservar espacio.
-- Medir el bundle. El explorador puede exponer sus propias cifras y eso es presumir en su moneda.
-
-## 6 · Responsive
-
-- Explorador por debajo de ~900px: la grilla a dos columnas, las hojas apiladas, sin perspectiva ni ayudas de teclado.
-- Probar a 320px de ancho y en pantallas móviles.
-- Visor de CV en `/about` y exportación A4 comprobados en viewport mobile y desktop.
-
-## 7 · Degradación de contenido
-
-- Un record con `metrics: null`: ¿el explorador muestra `NULL` o queda un hueco?
-- Una colección vacía: ¿hay estado vacío o crashea?
-
-## Salida
-
-```
-FASE: n · listo | no listo
-
-Sin JS        ok | falla — [qué]
-Teclado       ok | falla — [qué]
-Lector        ok | falla — [qué]
-Reduced       ok | falla — [qué]
-CLS / carga   [cifras]
-Responsive    ok | falla — [qué]
-Degradación   ok | falla — [qué]
-
-BLOQUEANTES
-1. …
-```
-
-No dar una fase por cerrada con bloqueantes abiertos, aunque la feature "funcione".
+1. **Funciona sin JavaScript (SSR Real)**: Datos desde `useAsyncData`, nunca `opacity: 0` bloqueante sin fallback, `<NuxtLink>` con `href` real.
+2. **Navegable 100% con Teclado**: Atajos `0–5`, `↑/↓/←/→`, `Enter`, `Backspace`/`Escape`, `/`, `H`, `⌘K`, y `:focus-visible` claro.
+3. **Lector de Pantalla (ARIA)**: Jerarquía `<h1>`->`<h2>`->`<h3>` sin saltos, `aria-label` intacto en `ScrambleText`, estados `aria-pressed` / `aria-selected`.
+4. **`prefers-reduced-motion: reduce` y Modo Hyperfocus (`html[data-hyperfocus="true"]`)**: Desactivación instantánea de spotlights, scrambles y transiciones espaciales.
+5. **Cero Layout Shift (CLS = 0.00) y Anti-FOUC**: `font-variant-numeric: tabular-nums` en contadores/índices y resolución de tema pre-paint.
+6. **Responsive `320px–2560px`**: Sin overflow horizontal en `<body>`, áreas táctiles de `44×44px` en móvil.
+7. **Degradación Elegante (`NULL` / Fallback DB)**: Campos opcionales vacíos se ocultan o muestran `—` limpio; si PostgreSQL cae, `fallbackData.ts` responde sin romper el SSR.

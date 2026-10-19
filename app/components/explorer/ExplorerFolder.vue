@@ -5,6 +5,9 @@
 import ExplorerHeader from './ExplorerHeader.vue'
 import AppIcon from '~/components/ui/AppIcon.vue'
 import ExplorerBadge from './ExplorerBadge.vue'
+import UiCopyPill from '~/components/ui/UiCopyPill.vue'
+import UiSegmentedSwitch from '~/components/ui/UiSegmentedSwitch.vue'
+import UiSpotlightCard from '~/components/ui/UiSpotlightCard.vue'
 import { pad, type Folder } from '~/lib/explorer'
 import type { Project } from '~/lib/api'
 import { routeFor } from '~/lib/path'
@@ -16,6 +19,21 @@ const route = useRoute()
 const { isEs, tr, getProjectLocalization, getExperienceLocalization } = usePortfolioLocale()
 const { isHyperfocus } = useHyperfocus()
 const viewMode = ref<'grid' | 'table' | 'timeline'>(props.folder.head === 'experience' ? 'timeline' : 'grid')
+
+const viewOptions = computed(() => {
+  const opts = [
+    { value: 'grid', label: tr.value.collection.grid },
+    { value: 'table', label: tr.value.collection.table },
+  ]
+  if (props.folder.head === 'experience') {
+    opts.unshift({ value: 'timeline', label: tr.value.collection.timeline })
+  }
+  return opts
+})
+
+const countCommits = useCountUp(382, 460)
+const countLighthouse = useCountUp(99, 400)
+const countDeliverables = useCountUp(10, 360)
 
 watch(() => props.folder.head, (head) => {
   if (isHyperfocus.value) {
@@ -123,9 +141,10 @@ const { displayText: headline3, scramble: scramble3 } = useScrambleText(computed
 const homeAboutText = computed(() => (isEs.value ? (getHomeField('about_text') ?? tr.value.home.aboutText) : tr.value.home.aboutText))
 const homeGlobePill = computed(() => (isEs.value ? (getHomeField('globe_pill') ?? tr.value.home.globePill) : tr.value.home.globePill))
 const homeProfileRole = computed(() => (isEs.value ? (getHomeField('profile_role') ?? tr.value.home.profileRole) : tr.value.home.profileRole))
-const homeProfileStatus = computed(() => (isEs.value ? (getHomeField('profile_status') ?? tr.value.home.profileStatus) : tr.value.home.profileStatus))
-const homeManifestoQuote = computed(() => (isEs.value ? (getHomeField('manifesto_quote') ?? tr.value.home.manifestoQuote) : tr.value.home.manifestoQuote))
-const homeManifestoLead = computed(() => (isEs.value ? (getHomeField('manifesto_lead') ?? tr.value.home.manifestoLead) : tr.value.home.manifestoLead))
+const homeProfileStatus = computed(() => {
+  const raw = isEs.value ? (getHomeField('profile_status') ?? tr.value.home.profileStatus) : tr.value.home.profileStatus
+  return String(raw).replace(/^[●•·\s]+/, '')
+})
 
 const projectCounts = computed(() => {
   const list = props.folder.projects && props.folder.projects.length ? props.folder.projects : props.folder.items
@@ -362,15 +381,9 @@ const selectedWorkProjects = computed(() => {
   ]
 })
 
-// 3. Spotlight de cursor direccional en tarjetas
-function onCardMousemove(e: MouseEvent) {
-  const target = e.currentTarget as HTMLElement
-  if (!target) return
-  const rect = target.getBoundingClientRect()
-  const x = e.clientX - rect.left
-  const y = e.clientY - rect.top
-  target.style.setProperty('--mouse-x', `${x}px`)
-  target.style.setProperty('--mouse-y', `${y}px`)
+function openExternal(url?: string | null) {
+  if (!url || !import.meta.client) return
+  window.open(url, '_blank', 'noopener,noreferrer')
 }
 </script>
 
@@ -379,7 +392,7 @@ function onCardMousemove(e: MouseEvent) {
     <!-- ═══════════════════════════════════════════════════════════════════════ -->
     <!-- 1. MODO HIPERFOCO: DOSSIER EJECUTIVO DE ALTA DENSIDAD                   -->
     <!-- ═══════════════════════════════════════════════════════════════════════ -->
-    <div v-if="folder.head === 'db' && isHyperfocus" class="hiperfoco-dossier">
+    <div v-if="folder.head === 'db' && isHyperfocus" key="db-hyperfocus" class="hiperfoco-dossier">
       <!-- Encabezado de Identidad y Contacto Centrado -->
       <header class="hd-header">
         <div class="hd-badge-row">
@@ -392,7 +405,10 @@ function onCardMousemove(e: MouseEvent) {
         <p class="hd-role">{{ isEs ? 'Desarrollador Frontend & Full Stack · Creative Developer' : 'Frontend & Full Stack Developer · Creative Developer' }}</p>
 
         <nav class="hd-contact-bar" :aria-label="isEs ? 'Canales directos de contacto' : 'Direct contact channels'">
-          <a href="mailto:mateogabus@gmail.com" class="hd-link"><AppIcon name="mail" :size="12" /> mateogabus@gmail.com</a>
+          <div class="inline-flex items-center gap-1.5">
+            <a href="mailto:mateogabus@gmail.com" class="hd-link"><AppIcon name="mail" :size="12" /> mateogabus@gmail.com</a>
+            <UiCopyPill text="mateogabus@gmail.com" label="Copy" copied-label="Copied" />
+          </div>
           <span class="hd-sep">·</span>
           <a href="https://github.com/MateoGs013" target="_blank" rel="noopener noreferrer" class="hd-link"><AppIcon name="code" :size="12" /> github.com/MateoGs013</a>
           <span class="hd-sep">·</span>
@@ -540,470 +556,481 @@ function onCardMousemove(e: MouseEvent) {
     </div>
 
     <!-- ═══════════════════════════════════════════════════════════════════════ -->
-    <!-- 2. INICIO: DASHBOARD EJECUTIVO & SHOWCASE EN VIVO (folder.head === 'db' && !isHyperfocus) -->
+    <!-- 2. INICIO: ESTUDIO RELACIONAL MINIMALISTA (folder.head === 'db' && !isHyperfocus) -->
     <!-- ═══════════════════════════════════════════════════════════════════════ -->
-    <div v-else-if="folder.head === 'db'" class="inicio-dashboard poster-style">
-      <!-- 1.1 BARRA SUPERIOR DE BLUEPRINT & COORDENADAS TÉCNICAS -->
-      <header class="poster-topbar" aria-label="Coordenadas del sistema">
-        <div class="pt-item pt-left">
-          <span class="pt-mark" aria-hidden="true">⌖</span>
-          <span class="pt-role">{{ homeProfileRole }}</span>
-        </div>
-        <div class="pt-item pt-center">
-          <span class="pt-loc">PATAGONIA, AR · UTC-3</span>
-        </div>
-        <div class="pt-item pt-right">
-          <span class="pt-avail">{{ homeProfileStatus }}</span>
-        </div>
-      </header>
-
-      <!-- 1.2 POSTER HERO: CARTELERA MONUMENTAL + RETRATO CONSTRUCTIVISTA -->
-      <article class="poster-hero">
-        <div class="poster-hero-left">
-          <div class="poster-headline-wrap" @mouseenter="scrambleHeadline">
-            <h1 class="poster-headline" data-anchor>
-              <span class="ph-row ph-1">{{ headline1 }}</span>
-              <span class="ph-row ph-2">{{ headline2 }}</span>
-              <span class="ph-row ph-3">
-                <span class="ph-orange">{{ headline3 }}</span>
-                <span class="ph-dot" aria-hidden="true" />
-              </span>
-            </h1>
+    <div v-else-if="folder.head === 'db'" key="db-poster" class="inicio-studio max-w-[1060px] mx-auto flex flex-col gap-10 sm:gap-14 py-2 sm:py-5 w-full">
+      <!-- 2.1 HERO MINIMALISTA (Linear / Bencho.dev Craft) -->
+      <UiSpotlightCard as="article" class="rounded-2xl border border-rule bg-surface/65 p-6 sm:p-8 md:p-10 shadow-[0_1px_0_rgba(255,255,255,0.03)_inset]">
+        <!-- Fila superior de estado y coordenadas -->
+        <div class="flex flex-wrap items-center justify-between gap-3 mb-6 pb-4 border-b border-rule">
+          <div class="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-paper/70 border border-rule font-mono text-[11px] text-dim">
+            <span class="w-1.5 h-1.5 rounded-full bg-green shadow-[0_0_6px_var(--d-green)]" />
+            <span class="text-ink font-medium">{{ homeProfileStatus }}</span>
+            <span class="text-faint">·</span>
+            <span>Patagonia, AR (UTC-3)</span>
           </div>
+          <span class="font-mono text-[11px] text-faint hidden sm:inline">
+            {{ homeGlobePill }}
+          </span>
+        </div>
 
-          <div class="poster-about">
-            <div class="pa-tag-row">
-              <span class="pa-tag">{{ tr.home.aboutTag }}</span>
-            </div>
-            <p class="pa-text">
+        <!-- Cuerpo Hero en 2 columnas: Identidad + Retrato Minimalista -->
+        <div class="grid grid-cols-1 lg:grid-cols-[1fr_200px] gap-8 items-center">
+          <div class="flex flex-col items-start">
+            <span class="font-mono text-[11px] tracking-widest uppercase text-dim mb-2.5 flex items-center gap-2">
+              <span class="w-1.5 h-1.5 rounded-full bg-sig" />
+              <span>{{ homeProfileRole }}</span>
+            </span>
+
+            <h1
+              class="flex flex-wrap items-baseline gap-x-[0.26em] gap-y-1 font-sans font-semibold tracking-[-0.035em] text-[clamp(24px,4.2vw,46px)] leading-[1.08] text-ink m-0 mb-4 cursor-default select-none"
+              data-anchor
+              @mouseenter="scrambleHeadline"
+            >
+              <span>{{ headline1 }}</span>
+              <span>{{ headline2 }}</span>
+              <span><span class="text-ink underline decoration-sig decoration-2 underline-offset-[6px]">{{ headline3 }}</span><span class="text-sig">.</span></span>
+            </h1>
+
+            <p class="font-sans text-[14.5px] sm:text-[15.5px] text-dim leading-[1.68] max-w-[60ch] m-0 mb-6">
               {{ homeAboutText }}
             </p>
-            <div class="pa-globe-pill">
-              <AppIcon name="globe" :size="13" class="pa-globe-icon" />
-              <span class="pa-globe-text">{{ homeGlobePill }}</span>
+
+            <!-- Barra de Acciones Táctiles -->
+            <div class="flex flex-wrap items-center gap-2.5 w-full sm:w-auto">
+              <NuxtLink
+                to="/projects"
+                class="group inline-flex items-center justify-center gap-2 h-9 px-4 rounded-lg bg-ink text-paper font-sans text-[13px] font-medium no-underline hover:opacity-90 active:scale-[0.98] transition-all duration-150"
+                :title="isEs ? 'Explorar todas las aplicaciones en producción' : 'Explore all applications in production'"
+              >
+                <span>{{ tr.home.btnProjects }}</span>
+                <span class="font-mono text-[11px] opacity-65">({{ projectCountBadge }})</span>
+                <AppIcon name="arrow-right" :size="13" class="transition-transform duration-200 group-hover:translate-x-0.5" />
+              </NuxtLink>
+
+              <NuxtLink
+                to="/about"
+                class="inline-flex items-center justify-center gap-2 h-9 px-3.5 rounded-lg bg-surface-raised hover:bg-hover border border-rule hover:border-rule-strong text-ink font-sans text-[13px] font-medium no-underline active:scale-[0.98] transition-all duration-150"
+                :title="isEs ? 'Abrir currículum completo en formato Harvard ATS o Interactivo' : 'Open complete resume in Harvard ATS or Interactive format'"
+              >
+                <AppIcon name="file" :size="13" class="text-dim" />
+                <span>{{ isEs ? 'CV Harvard / Interactivo' : 'Harvard / Interactive CV' }}</span>
+              </NuxtLink>
+
+              <UiCopyPill
+                text="mateogabus@gmail.com"
+                label="mateogabus@gmail.com"
+                :copied-label="isEs ? 'Email copiado' : 'Email copied'"
+              />
             </div>
           </div>
 
-          <div class="poster-actions">
-            <NuxtLink to="/about" class="poster-btn primary" :title="isEs ? 'Abrir currículum completo en formato Harvard ATS o Moderno con foto' : 'Open complete resume in Harvard ATS or Modern format'">
-              <AppIcon name="file" :size="13" />
-              <span>{{ tr.home.btnCv }}</span>
-              <AppIcon name="chevron-right" :size="12" class="poster-btn-arr" />
-            </NuxtLink>
-            <NuxtLink to="/projects" class="poster-btn secondary" :title="isEs ? 'Explorar todas las aplicaciones en producción' : 'Explore all applications in production'">
-              <AppIcon name="folder" :size="13" />
-              <span>{{ tr.home.btnProjects }} ({{ projectCountBadge }})</span>
-              <AppIcon name="chevron-right" :size="12" class="poster-btn-arr" />
-            </NuxtLink>
-            <NuxtLink to="/contact" class="poster-btn tertiary" :title="isEs ? 'Canales de contacto directo' : 'Direct contact channels'">
-              <AppIcon name="mail" :size="13" />
-              <span>{{ tr.home.btnContact }}</span>
-              <AppIcon name="chevron-right" :size="12" class="poster-btn-arr" />
-            </NuxtLink>
-          </div>
-        </div>
-
-        <!-- Retrato de Perfil de Mateo (Sin efectos 3D, presentación limpia y técnica) -->
-        <div class="poster-hero-portrait">
-          <span class="corner-bracket tl" aria-hidden="true">┌</span>
-          <span class="corner-bracket tr" aria-hidden="true">┐</span>
-          <span class="corner-bracket bl" aria-hidden="true">└</span>
-          <span class="corner-bracket br" aria-hidden="true">┘</span>
-
-          <div class="portrait-card">
-            <div class="portrait-img-wrap">
+          <!-- Retrato Técnico Minimalista -->
+          <div class="relative mx-auto lg:mx-0 w-[176px] sm:w-[196px] rounded-xl overflow-hidden border border-rule bg-paper/80 p-1.5 group">
+            <div class="aspect-[4/4.6] rounded-lg overflow-hidden bg-surface">
               <img
                 src="/media/profile/mateo-front.png"
                 alt="Mateo Gabriel Sonzogni"
-                class="portrait-img"
+                class="w-full h-full object-cover grayscale-[20%] group-hover:grayscale-0 group-hover:scale-[1.03] transition-all duration-500 ease-out"
                 loading="eager"
               >
             </div>
-            <div class="portrait-meta">
-              <div class="portrait-name-row">
-                <span class="pm-name">MATEO GABRIEL SONZOGNI</span>
-                <span class="pm-badge">{{ homeProfileStatus }}</span>
-              </div>
-              <span class="pm-role">{{ homeProfileRole }}</span>
-              <span class="pm-loc">PATAGONIA, ARGENTINA · UTC-3</span>
+            <div class="pt-2 pb-1 px-1.5 flex items-center justify-between font-mono text-[10px] text-dim">
+              <span class="text-ink font-medium truncate">Mateo Sonzogni</span>
+              <span class="w-1.5 h-1.5 rounded-full bg-sig shrink-0" />
             </div>
           </div>
         </div>
-      </article>
+      </UiSpotlightCard>
 
-      <!-- 1.25 MARQUEE TELEMETRÍA CONTINUA -->
-      <div class="poster-ticker" aria-hidden="true">
-        <div class="ticker-track">
-          <template v-for="(item, idx) in [...tr.home.ticker, ...tr.home.ticker]" :key="idx">
-            <span class="ticker-item">{{ item }}</span>
-            <span class="ticker-dot">■</span>
-          </template>
-        </div>
-      </div>
-
-      <!-- 1.28 GUÍA CONTEXTUAL INLINE (NO INVASIVA / DISMISSIBLE) -->
-      <div v-if="showInlineTip" class="contextual-guide-bar" role="note">
-        <div class="cgb-left">
-          <span class="cgb-pulse" />
-          <span class="cgb-label">{{ isEs ? 'GUÍA RÁPIDA:' : 'QUICK GUIDE:' }}</span>
-          <span class="cgb-text">
-            {{ isEs ? 'Navega con clics o teclado: [0-5] secciones · [↑↓ + ↵] abrir hojas · [/] buscar' : 'Navigate with clicks or keyboard: [0-5] sections · [↑↓ + ↵] open sheets · [/] search' }}
+      <!-- 2.15 SUGERENCIA DE NAVEGACIÓN POR TECLADO (DISMISSIBLE) -->
+      <div v-if="showInlineTip" class="flex items-center justify-between gap-3 px-4 py-2.5 rounded-xl bg-surface/50 border border-rule font-mono text-[11px] text-dim -my-4" role="note">
+        <div class="flex items-center gap-2.5 min-w-0">
+          <span class="w-1.5 h-1.5 rounded-full bg-sig shrink-0" />
+          <span class="truncate">
+            {{ isEs ? 'Tip: usa [0-6] para saltar de sección, [↑↓ + ↵] para abrir registros, [/] para buscar y [H] para modo Hiperfoco.' : 'Tip: use [0-6] for sections, [↑↓ + ↵] to open records, [/] to search, and [H] for Hyperfocus mode.' }}
           </span>
         </div>
         <button
           type="button"
-          class="cgb-dismiss"
-          :title="isEs ? 'Ocultar sugerencia' : 'Dismiss tip'"
+          class="px-2 py-0.5 rounded bg-paper/80 border border-rule text-dim hover:text-ink hover:border-rule-strong text-[10px] font-mono cursor-pointer shrink-0 transition-colors"
           @click="dismissInlineTip"
         >
-          <span>{{ isEs ? 'Entendido' : 'Dismiss' }}</span>
-          <AppIcon name="close" :size="10" />
+          {{ isEs ? 'Ocultar' : 'Dismiss' }}
         </button>
       </div>
 
-      <!-- 1.3 SELECTED WORK / PRODUCCIÓN REAL CON RIBBON VERTICAL NARANJA -->
-      <section class="selected-work-wrapper" aria-label="Producción destacada">
-        <div class="sw-shell">
-          <!-- Ribbon Vertical Naranja -->
-          <div class="sw-ribbon" aria-hidden="true">
-            <span class="sw-ribbon-text">{{ tr.home.swRibbon }}</span>
+      <!-- 2.2 SELECTED WORK / PRODUCCIÓN DESTACADA -->
+      <section aria-label="Producción destacada" class="flex flex-col gap-5">
+        <div class="flex items-center justify-between border-b border-rule pb-3">
+          <div class="flex items-center gap-2.5">
+            <span class="font-mono text-[11px] text-sig font-semibold">01</span>
+            <h2 class="m-0 font-sans text-[18px] sm:text-[20px] font-semibold tracking-[-0.025em] text-ink">
+              {{ tr.home.swTitle }}
+            </h2>
           </div>
+          <NuxtLink
+            to="/projects"
+            class="group inline-flex items-center gap-1.5 font-mono text-[11.5px] text-dim hover:text-ink no-underline transition-colors"
+          >
+            <span>{{ tr.home.swViewAll }} ({{ projectCountBadge }})</span>
+            <AppIcon name="arrow-right" :size="12" class="text-sig transition-transform duration-200 group-hover:translate-x-0.5" />
+          </NuxtLink>
+        </div>
 
-          <div class="sw-body">
-            <div class="sw-header">
-              <div class="sw-h-left">
-                <span class="sw-h-num">01/</span>
-                <h2 class="sw-h-title">{{ tr.home.swTitle }}</h2>
-                <span class="sw-h-hint" aria-hidden="true">
-                  <span class="desktop-only"><kbd>↵</kbd> {{ isEs ? 'clic o enter para abrir' : 'click or enter to open' }}</span>
-                  <span class="mobile-only">{{ isEs ? 'toca para abrir' : 'tap to open' }}</span>
-                </span>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-5">
+          <UiSpotlightCard
+            v-for="p in selectedWorkProjects"
+            :key="p.slug"
+            class="rounded-xl border border-rule bg-surface/60 hover:border-rule-strong transition-all duration-200 flex flex-col"
+          >
+            <NuxtLink
+              :to="p.to"
+              :data-row="p.slug"
+              class="group flex flex-col h-full no-underline text-inherit focus:outline-none"
+            >
+              <!-- Miniatura limpia con zoom suave -->
+              <div class="relative aspect-[16/10] w-full overflow-hidden border-b border-rule bg-paper">
+                <img
+                  :src="p.cover"
+                  :alt="p.title"
+                  class="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.03]"
+                  loading="lazy"
+                >
+                <div class="absolute top-2.5 right-2.5 flex items-center gap-1.5 font-mono text-[10px]">
+                  <span class="px-2 py-0.5 rounded-full backdrop-blur-md bg-black/70 border border-white/10 text-white font-medium inline-flex items-center gap-1.5">
+                    <span class="w-1.5 h-1.5 rounded-full" :class="p.status === 'LIVE' ? 'bg-green' : 'bg-amber'" />
+                    <span>{{ p.status }} · {{ p.year }}</span>
+                  </span>
+                </div>
               </div>
-              <NuxtLink to="/projects" class="sw-h-link">
-                <span>{{ tr.home.swViewAll }} ({{ projectCountBadge }})</span>
-                <AppIcon name="chevron-right" :size="12" />
-              </NuxtLink>
+
+              <!-- Cuerpo de tarjeta con revelación sutil -->
+              <div class="flex flex-col flex-1 p-4 sm:p-5 gap-2">
+                <div class="flex items-center justify-between gap-2">
+                  <h3 class="m-0 font-sans text-[16px] font-semibold tracking-[-0.02em] text-ink group-hover:text-sig transition-colors">
+                    {{ p.title }}
+                  </h3>
+                  <span class="font-mono text-[12px] text-dim group-hover:text-sig group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all duration-200" aria-hidden="true">↗</span>
+                </div>
+                <p v-if="p.orgDesc" class="m-0 font-mono text-[11px] text-faint truncate">
+                  {{ p.orgDesc }}
+                </p>
+                <p v-if="p.summary" class="m-0 font-sans text-[13px] text-dim leading-relaxed line-clamp-2">
+                  {{ p.summary }}
+                </p>
+                <div v-if="p.chips && p.chips.length" class="mt-auto pt-3 flex flex-wrap gap-1.5">
+                  <span
+                    v-for="chip in p.chips"
+                    :key="chip"
+                    class="px-2 py-0.5 rounded-md bg-paper/70 border border-rule font-mono text-[10.5px] text-dim group-hover:border-rule-strong transition-colors"
+                  >
+                    {{ chip }}
+                  </span>
+                </div>
+              </div>
+            </NuxtLink>
+          </UiSpotlightCard>
+        </div>
+      </section>
+
+      <!-- 2.3 BENTO GRID DE INGENIERÍA: TELEMETRÍA + CAPACIDADES + STACK -->
+      <section aria-label="Arquitectura, métricas y stack" class="flex flex-col gap-5">
+        <div class="flex items-center justify-between border-b border-rule pb-3">
+          <div class="flex items-center gap-2.5">
+            <span class="font-mono text-[11px] text-sig font-semibold">02</span>
+            <h2 class="m-0 font-sans text-[18px] sm:text-[20px] font-semibold tracking-[-0.025em] text-ink">
+              {{ isEs ? 'Arquitectura, Telemetría & Stack' : 'Architecture, Telemetry & Stack' }}
+            </h2>
+          </div>
+          <NuxtLink
+            to="/stack"
+            class="group inline-flex items-center gap-1.5 font-mono text-[11.5px] text-dim hover:text-ink no-underline transition-colors"
+          >
+            <span>{{ isEs ? 'Explorar matriz de stack' : 'Explore stack matrix' }}</span>
+            <AppIcon name="arrow-right" :size="12" class="text-sig transition-transform duration-200 group-hover:translate-x-0.5" />
+          </NuxtLink>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-5">
+          <!-- Bento 1: Métricas Verificables (CountUp Tabular) -->
+          <UiSpotlightCard as="article" class="rounded-xl border border-rule bg-surface/60 p-5 sm:p-6 flex flex-col justify-between gap-4">
+            <div class="flex items-center justify-between">
+              <span class="font-mono text-[10.5px] uppercase tracking-wider text-dim font-medium">
+                {{ isEs ? 'Métricas en Producción' : 'Production Telemetry' }}
+              </span>
+              <span class="w-1.5 h-1.5 rounded-full bg-sig" />
             </div>
 
-            <div class="sw-grid">
-              <NuxtLink
-                v-for="p in selectedWorkProjects"
-                :key="p.slug"
-                :to="p.to"
-                class="sw-card spotlight"
-                :data-row="p.slug"
-                @mousemove="onCardMousemove"
+            <div class="grid grid-cols-2 gap-3 my-auto">
+              <div class="p-3 rounded-lg bg-paper/60 border border-rule">
+                <div class="font-sans text-[22px] sm:text-[24px] font-semibold tracking-[-0.03em] text-ink tabular-nums">
+                  {{ countLighthouse }}<span class="text-dim text-[13px] font-mono">/100</span>
+                </div>
+                <div class="font-mono text-[10px] text-dim mt-0.5">Lighthouse Perf</div>
+              </div>
+              <div class="p-3 rounded-lg bg-paper/60 border border-rule">
+                <div class="font-sans text-[22px] sm:text-[24px] font-semibold tracking-[-0.03em] text-ink tabular-nums">
+                  {{ countCommits }}
+                </div>
+                <div class="font-mono text-[10px] text-dim mt-0.5">{{ isEs ? 'Commits Tesis IA' : 'AI Thesis Commits' }}</div>
+              </div>
+              <div class="p-3 rounded-lg bg-paper/60 border border-rule">
+                <div class="font-sans text-[22px] sm:text-[24px] font-semibold tracking-[-0.03em] text-ink tabular-nums">
+                  {{ countDeliverables }}<span class="text-sig">+</span>
+                </div>
+                <div class="font-mono text-[10px] text-dim mt-0.5">{{ isEs ? 'Entregables Reales' : 'Live Deliverables' }}</div>
+              </div>
+              <div class="p-3 rounded-lg bg-paper/60 border border-rule">
+                <div class="font-sans text-[22px] sm:text-[24px] font-semibold tracking-[-0.03em] text-ink tabular-nums">
+                  &lt;100<span class="text-dim text-[12px] font-mono">ms</span>
+                </div>
+                <div class="font-mono text-[10px] text-dim mt-0.5">PostgreSQL 17</div>
+              </div>
+            </div>
+
+            <p class="m-0 font-sans text-[12.5px] text-dim leading-relaxed">
+              {{ isEs ? 'Cero plantillas genéricas. Software diseñado y desplegado de extremo a extremo.' : 'Zero generic templates. End-to-end engineered and deployed software.' }}
+            </p>
+          </UiSpotlightCard>
+
+          <!-- Bento 2: Capacidades de Ingeniería -->
+          <UiSpotlightCard as="article" class="rounded-xl border border-rule bg-surface/60 p-5 sm:p-6 flex flex-col justify-between gap-4">
+            <div class="flex items-center justify-between">
+              <span class="font-mono text-[10.5px] uppercase tracking-wider text-dim font-medium">
+                {{ tr.home.servicesTag }}
+              </span>
+              <span class="font-mono text-[10px] text-faint">01—05</span>
+            </div>
+
+            <ul class="list-none m-0 p-0 flex flex-col divide-y divide-rule my-auto">
+              <li
+                v-for="srv in tr.home.services"
+                :key="srv.n"
+                class="py-2.5 flex items-center justify-between gap-3 group cursor-default"
               >
-                <span class="corner-bracket tl" aria-hidden="true">┌</span>
-                <span class="corner-bracket tr" aria-hidden="true">┐</span>
-                <span class="corner-bracket bl" aria-hidden="true">└</span>
-                <span class="corner-bracket br" aria-hidden="true">┘</span>
-                <div class="sw-thumb-box">
-                  <img :src="p.cover" :alt="p.title" class="sw-img" loading="lazy">
-                  <div class="sw-corner-notch" aria-hidden="true" />
-                  <div class="sw-status-bar">
-                    <span class="sw-badge" :class="p.status.toLowerCase()">● {{ p.status }}</span>
-                    <span class="sw-year">{{ p.year }}</span>
-                  </div>
+                <div class="flex items-center gap-2.5 min-w-0">
+                  <span class="font-mono text-[10.5px] text-faint group-hover:text-sig transition-colors">{{ srv.n }}</span>
+                  <span class="font-sans text-[13px] text-ink font-medium truncate group-hover:translate-x-0.5 transition-transform duration-150">{{ srv.t }}</span>
                 </div>
-                <div class="sw-meta">
-                  <div class="sw-title-row">
-                    <span class="sw-idx">{{ p.idx }}/</span>
-                    <h3 class="sw-title">{{ p.title }}</h3>
-                  </div>
-                  <p v-if="p.orgDesc" class="sw-org">{{ p.orgDesc }}</p>
-                  <p v-if="p.summary" class="sw-desc">{{ p.summary }}</p>
-                  <div v-if="p.chips && p.chips.length" class="sw-chips">
-                    <span v-for="chip in p.chips" :key="chip" class="sw-chip">{{ chip }}</span>
-                  </div>
-                  <div class="sw-cta">
-                    <span>{{ tr.home.openDossier }}</span>
-                    <AppIcon name="chevron-right" :size="12" />
-                  </div>
-                </div>
+                <span class="w-1 h-1 rounded-full bg-rule-strong group-hover:bg-sig transition-colors shrink-0" />
+              </li>
+            </ul>
+          </UiSpotlightCard>
+
+          <!-- Bento 3: Arsenal Tecnológico Relacional -->
+          <UiSpotlightCard as="article" class="rounded-xl border border-rule bg-surface/60 p-5 sm:p-6 flex flex-col justify-between gap-4">
+            <div class="flex items-center justify-between">
+              <span class="font-mono text-[10.5px] uppercase tracking-wider text-dim font-medium">
+                {{ tr.home.stackTag }}
+              </span>
+              <NuxtLink to="/stack" class="font-mono text-[10.5px] text-sig hover:underline no-underline">
+                {{ getCount('stack', 22) }} techs →
               </NuxtLink>
             </div>
-          </div>
-        </div>
-      </section>
 
-      <!-- 1.4 TRÍADA BENTO EDITORIAL (SERVICES / MANIFESTO / TECH STACK) -->
-      <section class="bento-triad-grid" aria-label="Capacidades y Manifiesto">
-        <!-- Columna 1: Servicios / Capacidades -->
-        <article class="bento-col spotlight bento-services" @mousemove="onCardMousemove">
-          <span class="corner-bracket tl" aria-hidden="true">┌</span>
-          <span class="corner-bracket tr" aria-hidden="true">┐</span>
-          <span class="corner-bracket bl" aria-hidden="true">└</span>
-          <span class="corner-bracket br" aria-hidden="true">┘</span>
-          <div class="bento-col-head">
-            <h2 class="bento-heading">{{ tr.home.servicesTag }}</h2>
-            <span class="bento-cross" aria-hidden="true">⌖</span>
-          </div>
-          <ul class="bento-service-list">
-            <li v-for="srv in tr.home.services" :key="srv.n">
-              <span class="bs-n">{{ srv.n }}</span>
-              <span class="bs-t">{{ srv.t }}</span>
-              <span class="bs-p">+</span>
-            </li>
-          </ul>
-        </article>
-
-        <!-- Columna 2: Manifiesto Constructivista en Naranja Puro -->
-        <article class="bento-col bento-manifesto spotlight" @mousemove="onCardMousemove">
-          <span class="corner-bracket tl" aria-hidden="true">┌</span>
-          <span class="corner-bracket tr" aria-hidden="true">┐</span>
-          <span class="corner-bracket bl" aria-hidden="true">└</span>
-          <div class="bento-col-head">
-            <h2 class="bento-heading-dark">{{ tr.home.manifestoTag }}</h2>
-          </div>
-          <div class="manifesto-content">
-            <p class="manifesto-quote" v-html="homeManifestoQuote" />
-            <p class="manifesto-lead" v-html="homeManifestoLead" />
-            <div class="manifesto-footer">
-              <span>{{ tr.home.manifestoNoTrends }}</span>
-              <span>{{ tr.home.manifestoOnlySolutions }}</span>
+            <div class="flex flex-wrap gap-1.5 my-auto">
+              <NuxtLink
+                v-for="st in bentoStackList"
+                :key="st"
+                to="/stack"
+                class="px-2.5 py-1.5 rounded-lg bg-paper/75 border border-rule hover:border-sig/60 text-dim hover:text-ink font-mono text-[11px] no-underline hover:-translate-y-0.5 active:scale-[0.98] transition-all duration-150"
+              >
+                {{ st }}
+              </NuxtLink>
             </div>
-          </div>
-          <div class="manifesto-notch" aria-hidden="true" />
-        </article>
 
-        <!-- Columna 3: Tech Stack con Viñetas Cuadradas -->
-        <article class="bento-col bento-stack spotlight" @mousemove="onCardMousemove">
-          <span class="corner-bracket tl" aria-hidden="true">┌</span>
-          <span class="corner-bracket tr" aria-hidden="true">┐</span>
-          <span class="corner-bracket bl" aria-hidden="true">└</span>
-          <span class="corner-bracket br" aria-hidden="true">┘</span>
-          <div class="bento-col-head">
-            <h2 class="bento-heading">{{ tr.home.stackTag }}</h2>
-            <span class="bento-cross" aria-hidden="true">+ +</span>
-          </div>
-          <ul class="bento-stack-list">
-            <li v-for="st in bentoStackList" :key="st">
-              <span>{{ st }}</span><span class="sq-mark">▪</span>
-            </li>
-          </ul>
-        </article>
+            <div class="pt-2 border-t border-rule flex items-center justify-between font-mono text-[10.5px] text-faint">
+              <span>{{ tr.home.manifestoNoTrends }}</span>
+              <span class="text-dim">{{ tr.home.manifestoOnlySolutions }}</span>
+            </div>
+          </UiSpotlightCard>
+        </div>
       </section>
 
-      <!-- 1.5 FOOTER BANNER EDITORIAL (SELLO CIRCULAR + CÓDIGO DE BARRAS) -->
-      <footer class="poster-footer" aria-label="Pie de página editorial">
-        <div class="pf-ribbon" aria-hidden="true">
-          <span>{{ tr.home.footerRibbon }}</span>
+      <!-- 2.4 PIE DE PÁGINA MINIMALISTA -->
+      <footer class="rounded-xl border border-rule bg-surface/40 p-5 sm:p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8" aria-label="Contacto directo">
+        <div>
+          <h2 class="m-0 font-sans text-[16px] sm:text-[18px] font-semibold tracking-[-0.02em] text-ink">
+            {{ tr.home.footerTitle }}
+          </h2>
+          <p class="m-0 mt-1 font-sans text-[13px] text-dim">
+            {{ tr.home.footerSub }}
+          </p>
         </div>
 
-        <div class="pf-body">
-          <div class="pf-headline-box">
-            <h2 class="pf-title">{{ tr.home.footerTitle }}</h2>
-            <p class="pf-sub">{{ tr.home.footerSub }}</p>
-          </div>
-
-          <div class="pf-contact-box">
-            <span class="pf-c-tag">{{ tr.home.footerContact }}</span>
-            <ul class="pf-links">
-              <li><a href="mailto:mateogabus@gmail.com"><AppIcon name="mail" :size="12" /> mateogabus@gmail.com</a></li>
-              <li><a href="https://www.linkedin.com/in/mateo-sonzogni" target="_blank" rel="noopener noreferrer"><AppIcon name="briefcase" :size="12" /> linkedin.com/in/mateo-sonzogni</a></li>
-              <li><a href="https://github.com/MateoGs013" target="_blank" rel="noopener noreferrer"><AppIcon name="code" :size="12" /> github.com/MateoGs013</a></li>
-            </ul>
-          </div>
-        </div>
-
-        <div class="pf-stamp-zone">
-          <svg class="pf-stamp" viewBox="0 0 120 120" aria-label="Sello de Ingeniería Mateo Sonzogni">
-            <path id="stampCurve" d="M 60, 60 m -46, 0 a 46,46 0 1,1 92,0 a 46,46 0 1,1 -92,0" fill="none" />
-            <text font-family="Martian Mono Variable, monospace" font-size="8" font-weight="800" letter-spacing="1.2">
-              <textPath href="#stampCurve" fill="currentColor">
-                {{ tr.home.stampText }}
-              </textPath>
-            </text>
-            <circle cx="60" cy="60" r="32" fill="none" stroke="currentColor" stroke-width="1.5" />
-            <text x="60" y="69" text-anchor="middle" font-family="Bebas Neue, Impact, sans-serif" font-size="28" font-weight="700" fill="var(--d-orange)">M</text>
-          </svg>
-
-          <div class="pf-barcode-box" aria-hidden="true">
-            <div class="pf-barcode" />
-            <span class="pf-barcode-code">2026-MGS-SYSTEM-013</span>
-          </div>
+        <div class="flex flex-wrap items-center gap-2.5">
+          <UiCopyPill
+            text="mateogabus@gmail.com"
+            label="mateogabus@gmail.com"
+            :copied-label="isEs ? 'Copiado' : 'Copied'"
+          />
+          <a
+            href="https://github.com/MateoGs013"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg bg-surface hover:bg-hover border border-rule hover:border-rule-strong text-dim hover:text-ink font-mono text-[11.5px] no-underline transition-all"
+          >
+            <AppIcon name="code" :size="12" />
+            <span>GitHub ↗</span>
+          </a>
+          <a
+            href="https://www.linkedin.com/in/mateo-sonzogni"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg bg-surface hover:bg-hover border border-rule hover:border-rule-strong text-dim hover:text-ink font-mono text-[11.5px] no-underline transition-all"
+          >
+            <AppIcon name="briefcase" :size="12" />
+            <span>LinkedIn ↗</span>
+          </a>
         </div>
       </footer>
     </div>
 
     <!-- ═══════════════════════════════════════════════════════════════════════ -->
-    <!-- 2. COLECCIONES: VISTA DE CARPETA (folder.head !== 'db')                 -->
+    <!-- 3. COLECCIONES: VISTA DE CARPETA (folder.head !== 'db')                 -->
     <!-- ═══════════════════════════════════════════════════════════════════════ -->
     <template v-else>
       <!-- Cabecera de Carpeta -->
       <ExplorerHeader :id="uid" kind="folder" :badge="pad(folder.count)" :name="folder.head" :line="folder.line">
-        <div class="folder-header-actions">
+        <div class="folder-header-actions flex items-center gap-2.5 flex-wrap">
           <!-- Filtros Activos Facetados -->
           <template v-if="folder.facets.length">
             <NuxtLink
               v-for="f in folder.facets"
               :key="f.key"
               :to="f.remove"
-              class="facet"
+              class="inline-flex items-center gap-2 h-7 px-2.5 rounded-md border border-sig/40 bg-sig/10 font-mono text-[11px] text-ink no-underline hover:border-sig transition-colors"
               :title="`quitar el filtro ${f.key}`"
             >
-              <span class="facet-kv">{{ f.key }} = {{ f.value }}</span>
-              <span class="facet-x" aria-hidden="true">×</span>
+              <span>{{ f.key }}: <strong class="text-sig">{{ f.value }}</strong></span>
+              <span class="text-dim" aria-hidden="true">×</span>
             </NuxtLink>
           </template>
 
-          <!-- Hint de navegación por teclado -->
-          <span class="folder-header-hint" aria-hidden="true">
-            <span class="hidden sm:inline"><kbd>↵</kbd> {{ isEs ? 'enter / clic abre hoja' : 'enter / click opens sheet' }}</span>
-            <span class="sm:hidden">{{ isEs ? 'toca para abrir ficha' : 'tap to open sheet' }}</span>
-          </span>
-
-          <!-- Selector de Vista (Cronología vs Grilla vs Tabla) -->
-          <div v-if="folder.items.length" class="view-toggle" role="group" aria-label="Modo de visualización">
-            <button
-              v-if="folder.head === 'experience'"
-              type="button"
-              class="v-btn"
-              :class="{ active: viewMode === 'timeline' }"
-              :title="isEs ? 'Vista de cronología técnica' : 'Technical timeline view'"
-              @click="viewMode = 'timeline'"
-            >
-              <AppIcon name="clock" :size="12" />
-              <span>{{ tr.collection.timeline }}</span>
-            </button>
-            <button
-              type="button"
-              class="v-btn"
-              :class="{ active: viewMode === 'grid' }"
-              :title="isEs ? 'Vista de baldosas en cuadrícula' : 'Grid tile view'"
-              @click="viewMode = 'grid'"
-            >
-              <AppIcon name="grid" :size="12" />
-              <span>{{ tr.collection.grid }}</span>
-            </button>
-            <button
-              type="button"
-              class="v-btn"
-              :class="{ active: viewMode === 'table' }"
-              :title="isEs ? 'Vista de tabla técnica compacta' : 'Compact technical table view'"
-              @click="viewMode = 'table'"
-            >
-              <AppIcon name="table" :size="12" />
-              <span>{{ tr.collection.table }}</span>
-            </button>
-          </div>
+          <!-- Selector de Vista Táctil (Bencho UI Segmented Switch) -->
+          <UiSegmentedSwitch
+            v-if="folder.items.length"
+            v-model="viewMode"
+            :options="viewOptions"
+            :aria-label="isEs ? 'Modo de visualización' : 'View mode'"
+          />
         </div>
       </ExplorerHeader>
 
-      <!-- Barra de Filtros Rápidos de Proyectos -->
-      <div v-if="folder.head === 'projects'" class="projects-filter-bar flex items-center justify-between gap-2.5 sm:gap-3 p-2.5 px-3 sm:px-3.5 mb-4 bg-surface border border-rule flex-wrap w-full min-w-0">
-        <div class="flex items-center gap-1.5 flex-wrap w-full sm:w-auto min-w-0">
-          <span class="font-mono text-[10.5px] sm:text-[11px] text-dim font-bold mr-1 shrink-0 w-full sm:w-auto mb-0.5 sm:mb-0">{{ isEs ? 'FILTRAR POR ESTADO:' : 'FILTER BY STATUS:' }}</span>
-          <div class="flex items-center gap-1.5 flex-wrap">
-            <NuxtLink
-              :to="routeFor(['projects'])"
-              class="filter-pill font-mono text-[10.5px] sm:text-[11px] px-2 sm:px-2.5 py-1 border transition-colors duration-150 no-underline rounded-[2px] shrink-0"
-              :class="!hasStatusFilter ? 'border-sig bg-sig text-on-sig font-bold' : 'border-rule bg-paper text-dim hover:border-sig hover:text-ink'"
-            >
-              {{ tr.collection.filterAll }} ({{ projectCounts.all }})
-            </NuxtLink>
-            <NuxtLink
-              :to="routeFor(['projects'], { status: 'LIVE' })"
-              class="filter-pill font-mono text-[10.5px] sm:text-[11px] px-2 sm:px-2.5 py-1 border transition-colors duration-150 no-underline rounded-[2px] shrink-0"
-              :class="isStatusLive ? 'border-green bg-green/15 text-green font-bold' : 'border-rule bg-paper text-dim hover:border-green hover:text-green'"
-            >
-              ● {{ tr.collection.filterLive }} ({{ projectCounts.live }})
-            </NuxtLink>
-            <NuxtLink
-              :to="routeFor(['projects'], { status: 'WIP' })"
-              class="filter-pill font-mono text-[10.5px] sm:text-[11px] px-2 sm:px-2.5 py-1 border transition-colors duration-150 no-underline rounded-[2px] shrink-0"
-              :class="isStatusWip ? 'border-amber bg-amber/15 text-amber font-bold' : 'border-rule bg-paper text-dim hover:border-amber hover:text-amber'"
-            >
-              ○ {{ tr.collection.filterWip }} ({{ projectCounts.wip }})
-            </NuxtLink>
-          </div>
+      <!-- Barra de Filtros Rápidos de Proyectos (Minimalista) -->
+      <div v-if="folder.head === 'projects'" class="flex items-center justify-between gap-3 p-2 px-3 my-4 rounded-xl bg-surface/60 border border-rule flex-wrap w-full min-w-0">
+        <div class="flex items-center gap-1.5 flex-wrap">
+          <NuxtLink
+            :to="routeFor(['projects'])"
+            class="font-mono text-[11px] px-2.5 py-1 rounded-md transition-all duration-150 no-underline shrink-0"
+            :class="!hasStatusFilter ? 'bg-ink text-paper font-medium shadow-xs' : 'text-dim hover:text-ink hover:bg-hover/60'"
+          >
+            {{ tr.collection.filterAll }} ({{ projectCounts.all }})
+          </NuxtLink>
+          <NuxtLink
+            :to="routeFor(['projects'], { status: 'LIVE' })"
+            class="font-mono text-[11px] px-2.5 py-1 rounded-md transition-all duration-150 no-underline inline-flex items-center gap-1.5 shrink-0"
+            :class="isStatusLive ? 'bg-green/15 text-green border border-green/30 font-medium' : 'text-dim hover:text-ink hover:bg-hover/60'"
+          >
+            <span class="w-1.5 h-1.5 rounded-full bg-green" />
+            <span>{{ tr.collection.filterLive }} ({{ projectCounts.live }})</span>
+          </NuxtLink>
+          <NuxtLink
+            :to="routeFor(['projects'], { status: 'WIP' })"
+            class="font-mono text-[11px] px-2.5 py-1 rounded-md transition-all duration-150 no-underline inline-flex items-center gap-1.5 shrink-0"
+            :class="isStatusWip ? 'bg-amber/15 text-amber border border-amber/30 font-medium' : 'text-dim hover:text-ink hover:bg-hover/60'"
+          >
+            <span class="w-1.5 h-1.5 rounded-full bg-amber" />
+            <span>{{ tr.collection.filterWip }} ({{ projectCounts.wip }})</span>
+          </NuxtLink>
         </div>
-        <div class="text-faint font-mono text-[10.5px] hidden md:block">
-          {{ isEs ? 'PostgreSQL 17 · Rendimiento Lighthouse 98+ · Código Real' : 'PostgreSQL 17 · Lighthouse 98+ · Production Code' }}
+        <div class="text-faint font-mono text-[11px] hidden md:block">
+          {{ isEs ? 'PostgreSQL 17 · Lighthouse 98+' : 'PostgreSQL 17 · Lighthouse 98+' }}
         </div>
       </div>
 
       <!-- 1. Vista de Cronología Técnica (Timeline) para Experiencia -->
-      <div v-if="viewMode === 'timeline' && folder.head === 'experience'" class="experience-timeline relative pl-6 sm:pl-9 my-3 w-full max-w-full min-w-0">
-        <!-- Línea Vertical de Conexión del Timeline -->
-        <div class="timeline-axis absolute left-2 sm:left-3 top-3 bottom-3 w-[2px] bg-rule" aria-hidden="true" />
+      <div v-if="viewMode === 'timeline' && folder.head === 'experience'" class="experience-timeline relative pl-6 sm:pl-8 my-5 w-full max-w-[920px] min-w-0">
+        <!-- Línea Vertical Hairline del Timeline -->
+        <div class=" absolute left-2 sm:left-2.5 top-3 bottom-3 w-[1px] bg-rule-strong" aria-hidden="true" />
 
-        <div class="timeline-nodes flex flex-col gap-4 sm:gap-5 w-full min-w-0">
-          <article
+        <div class="flex flex-col gap-4 w-full min-w-0">
+          <UiSpotlightCard
             v-for="(it, idx) in folder.items"
             :key="it.key"
-            class="timeline-node relative bg-surface border border-rule border-l-[3px] border-l-sig p-3 sm:p-4.5 hover:border-sig transition-all duration-150 group rounded-[2px] w-full min-w-0"
+            as="article"
+            class="relative rounded-xl bg-surface/60 border border-rule hover:border-rule-strong p-4 sm:p-5 transition-all duration-200 group w-full min-w-0"
             :data-row="it.key"
           >
-            <!-- Pin del Nodo en el Eje -->
-            <div class="timeline-pin absolute -left-[20px] sm:-left-[27px] top-4 w-3.5 h-3.5 rounded-full border-2 border-surface bg-sig shadow-[0_0_8px_var(--d-sig)] group-hover:scale-125 transition-transform" aria-hidden="true" />
+            <!-- Pin Quirúrgico en el Eje -->
+            <div class="absolute -left-[19px] sm:-left-[25px] top-5 w-2.5 h-2.5 rounded-full border-2 border-paper bg-sig group-hover:scale-125 transition-transform" aria-hidden="true" />
 
             <!-- Cabecera del Hito -->
-            <div class="tl-head flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 sm:gap-2 mb-2 w-full min-w-0">
-              <div class="flex items-center gap-1.5 sm:gap-2 flex-wrap min-w-0 flex-1">
-                <span class="tl-num font-mono text-[11px] text-faint tabular-nums shrink-0">{{ pad(idx + 1) }}.</span>
-                <span class="tl-cat font-mono text-[10px] font-bold px-2 py-0.5 border border-rule bg-paper rounded-[2px] shrink-0" :class="getExpCategory(it.key).color">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 sm:gap-2 mb-2 w-full min-w-0">
+              <div class="flex items-center gap-2 flex-wrap min-w-0 flex-1">
+                <span class="font-mono text-[11px] text-faint tabular-nums shrink-0">{{ pad(idx + 1) }}</span>
+                <span class="font-mono text-[10px] font-medium px-2 py-0.5 rounded-md border border-rule bg-paper/70 shrink-0" :class="getExpCategory(it.key).color">
                   {{ getExpCategory(it.key).label }}
                 </span>
-                <span class="tl-org font-mono text-[12px] font-bold text-sig break-words">
+                <span class="font-mono text-[12px] font-medium text-ink break-words">
                   {{ it.org ?? it.label }}
                 </span>
               </div>
-              <div class="tl-period font-mono text-[10px] sm:text-[11px] px-2 py-0.5 border border-rule bg-paper text-dim font-bold rounded-[2px] self-start sm:self-auto shrink-0">
+              <div class="font-mono text-[11px] text-faint self-start sm:self-auto shrink-0">
                 {{ formatExpPeriod(it) }}
               </div>
             </div>
 
             <!-- Título del Rol -->
-            <h3 class="tl-role text-[15px] sm:text-[17px] font-bold text-ink mb-1.5 leading-snug break-words">
+            <h3 class="font-sans text-[16px] sm:text-[17px] font-semibold tracking-[-0.02em] text-ink mb-1.5 leading-snug break-words">
               {{ isEs ? (it.role || getExperienceLocalization(it.key)?.role || it.label) : (getExperienceLocalization(it.key)?.role || it.role || it.label) }}
             </h3>
 
             <!-- Resumen de Impacto -->
-            <p class="tl-summary text-[13px] sm:text-[13.5px] text-dim leading-relaxed mb-3 break-words">
+            <p class="font-sans text-[13.5px] text-dim leading-relaxed mb-3.5 break-words">
               {{ isEs ? (it.summary || getExperienceLocalization(it.key)?.summary) : (getExperienceLocalization(it.key)?.summary || it.summary) }}
             </p>
 
             <!-- Highlights Técnicos -->
-            <div v-if="getExpHighlights(it.key).length" class="tl-highlights flex items-center gap-1.5 sm:gap-2 flex-wrap mb-3 font-mono text-[10px] sm:text-[10.5px]">
-              <span v-for="h in getExpHighlights(it.key)" :key="h" class="tl-highlight px-2 py-0.5 bg-surface-raised border border-rule text-ink rounded-[2px] break-words">
-                ✓ {{ h }}
+            <div v-if="getExpHighlights(it.key).length" class="flex items-center gap-1.5 flex-wrap mb-3.5 font-mono text-[10.5px]">
+              <span v-for="h in getExpHighlights(it.key)" :key="h" class="px-2 py-0.5 rounded-md bg-paper/70 border border-rule text-dim break-words">
+                {{ h }}
               </span>
             </div>
 
             <!-- Pie del Hito: Stack + Proyecto Vinculado + Enlace al Dossier -->
-            <div class="tl-footer flex flex-col sm:flex-row sm:items-center justify-between gap-2 pt-2.5 border-t border-rule w-full min-w-0">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pt-3 border-t border-rule w-full min-w-0">
               <div class="flex items-center gap-1.5 flex-wrap min-w-0 w-full sm:w-auto flex-1">
-                <span v-for="t in (it.techs ?? []).slice(0, 4)" :key="t.slug" class="p-tech-chip">
+                <span v-for="t in (it.techs ?? []).slice(0, 4)" :key="t.slug" class="px-2 py-0.5 rounded-md bg-paper/60 border border-rule font-mono text-[10.5px] text-dim">
                   {{ t.name }}
                 </span>
                 <NuxtLink
                   v-if="getExpLinkedProject(it.key)"
                   :to="`/projects/${getExpLinkedProject(it.key)!.slug}`"
-                  class="font-mono text-[10px] font-bold text-sig px-2 py-0.5 border border-sig/40 bg-sig/10 hover:bg-sig hover:text-on-sig transition-colors no-underline inline-flex items-center gap-1 rounded-[2px] max-w-full"
+                  class="font-mono text-[10.5px] font-medium text-ink px-2 py-0.5 rounded-md border border-rule-strong bg-surface-raised hover:border-sig transition-colors no-underline inline-flex items-center gap-1 max-w-full"
                   :title="isEs ? 'Ver proyecto relacionado' : 'View related project'"
                 >
-                  <AppIcon name="folder" :size="10" class="shrink-0" />
-                  <span class="truncate">{{ isEs ? 'PROYECTO:' : 'PROJECT:' }} {{ getExpLinkedProject(it.key)!.title }} ↗</span>
+                  <AppIcon name="folder" :size="10" class="text-sig shrink-0" />
+                  <span class="truncate">{{ getExpLinkedProject(it.key)!.title }} ↗</span>
                 </NuxtLink>
               </div>
 
               <div class="flex items-center justify-end w-full sm:w-auto pt-1 sm:pt-0 shrink-0">
-                <NuxtLink :to="it.to" class="tl-cta inline-flex items-center gap-1 font-mono text-[11px] font-bold text-sig hover:text-sig-hover no-underline">
+                <NuxtLink :to="it.to" class="inline-flex items-center gap-1 font-mono text-[11px] font-medium text-dim group-hover:text-ink no-underline transition-colors">
                   <span>{{ tr.collection.technicalDetails }}</span>
-                  <AppIcon name="chevron-right" :size="12" class="cta-arrow" />
+                  <AppIcon name="arrow-right" :size="12" class="text-sig transition-transform duration-150 group-hover:translate-x-0.5" />
                 </NuxtLink>
               </div>
             </div>
-          </article>
+          </UiSpotlightCard>
         </div>
       </div>
 
-      <!-- 2. Vista de Cuadrícula (Especializada por Colección) -->
+      <!-- 2. Vista de Cuadrícula (Especializada por Colección con Revelación Progresiva) -->
       <ol
         v-else-if="viewMode === 'grid'"
-        class="folder-items-grid grid gap-4 sm:gap-5 w-full list-none p-0 m-0"
+        class="folder-items-grid grid gap-4 sm:gap-5 my-4 w-full list-none p-0 m-0"
         :class="{
           'grid-cols-1 md:grid-cols-2 xl:grid-cols-3': folder.head === 'projects',
           'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4': folder.head === 'stack' || folder.head === 'experience',
@@ -1011,195 +1038,185 @@ function onCardMousemove(e: MouseEvent) {
         }"
       >
         <li v-for="(it, n) in folder.items" :key="it.key" class="w-full min-w-0">
-          <!-- Tarjeta de Proyecto -->
-          <NuxtLink
+          <!-- Tarjeta de Proyecto (Minimalista con Spotlight y Revelación en Hover) -->
+          <UiSpotlightCard
             v-if="folder.head === 'projects'"
-            :to="it.to"
-            class="project-card group flex flex-col h-full border border-rule bg-surface hover:border-sig transition-all duration-150 rounded-[2px] overflow-hidden no-underline"
-            :data-row="it.key"
+            class="h-full rounded-xl border border-rule bg-surface/60 hover:border-rule-strong transition-all duration-200 overflow-hidden"
           >
-            <!-- Contenedor de Portada o Fallback Técnico -->
-            <div class="relative w-full aspect-[16/9.5] bg-black overflow-hidden border-b border-rule flex flex-col justify-between">
-              <img v-if="it.cover" :src="it.cover" :alt="it.label" class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-[1.02]" loading="lazy">
-              <!-- Blueprint Fallback Técnico cuando no hay cover raster -->
-              <div v-else class="project-blueprint-fallback flex flex-col justify-between p-3.5 sm:p-4 bg-surface-raised relative overflow-hidden h-full w-full">
-                <div class="flex items-center justify-between font-mono text-[10px] text-dim z-10 pr-24">
-                  <span class="text-sig font-bold truncate">// ARCHITECTURE SPEC</span>
-                  <span class="text-faint truncate hidden sm:inline">UTF-8 // SYS</span>
+            <NuxtLink
+              :to="it.to"
+              class="project-card group flex flex-col h-full no-underline text-inherit focus:outline-none"
+              :data-row="it.key"
+            >
+              <!-- Contenedor de Portada o Fallback Técnico Limpio -->
+              <div class="relative w-full aspect-[16/10] bg-paper overflow-hidden border-b border-rule flex flex-col justify-between">
+                <img v-if="it.cover" :src="it.cover" :alt="it.label" class="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.03]" loading="lazy">
+                <div v-else class="flex flex-col justify-between p-4 bg-surface-raised/60 relative overflow-hidden h-full w-full">
+                  <div class="flex items-center justify-between font-mono text-[10px] text-faint z-10 pr-20">
+                    <span>spec // {{ it.key }}</span>
+                  </div>
+                  <div class="flex flex-col items-center justify-center my-auto py-1 z-10 text-center">
+                    <AppIcon :name="it.key === 'ynara-web' ? 'zap' : 'code'" :size="24" class="text-sig/80 mb-1.5" />
+                    <span class="font-mono text-[11px] font-medium text-ink tracking-wider truncate max-w-full">{{ it.key === 'ynara-web' ? 'WEBGL / SHADERS / GLSL' : 'OBSIDIAN / AI VAULT' }}</span>
+                    <span class="font-mono text-[10px] text-dim mt-0.5 truncate max-w-full">{{ it.key === 'ynara-web' ? '60 FPS · 4 Draw Calls' : '1,420 Notes · 850 Nodes' }}</span>
+                  </div>
+                  <div class="flex items-center justify-between font-mono text-[9.5px] text-faint pt-1 z-10">
+                    <span>{{ it.key }}.ts</span>
+                    <span>READY</span>
+                  </div>
                 </div>
-                <div class="blueprint-graphic flex flex-col items-center justify-center my-auto py-1 z-10 text-center">
-                  <AppIcon :name="it.key === 'ynara-web' ? 'zap' : 'code'" :size="28" class="text-sig/70 mb-1" />
-                  <span class="font-mono text-[11px] sm:text-[11.5px] font-bold text-ink tracking-wider truncate max-w-full">{{ it.key === 'ynara-web' ? 'WEBGL / SHADERS / GLSL' : 'OBSIDIAN / AI VAULT' }}</span>
-                  <span class="font-mono text-[9.5px] sm:text-[10px] text-dim mt-0.5 truncate max-w-full">{{ it.key === 'ynara-web' ? '60 FPS · 4 Draw Calls' : '1,420 Notes · 850 Nodes' }}</span>
+
+                <!-- Píldora Flotante de Estado -->
+                <div class="absolute top-2.5 right-2.5 flex items-center gap-1.5 z-20 font-mono text-[10px]">
+                  <span class="px-2 py-0.5 rounded-full backdrop-blur-md bg-black/70 border border-white/10 text-white font-medium inline-flex items-center gap-1.5">
+                    <span class="w-1.5 h-1.5 rounded-full" :class="it.status === 'LIVE' ? 'bg-green' : 'bg-amber'" />
+                    <span>{{ it.status ?? 'LIVE' }} · {{ it.year ?? it.meta }}</span>
+                  </span>
                 </div>
-                <div class="flex items-center justify-between font-mono text-[9.5px] text-faint border-t border-rule/50 pt-1 z-10">
-                  <span>{{ it.key }}.ts</span>
-                  <span>UTF-8 // READY</span>
-                </div>
-                <div class="absolute inset-0 opacity-15 pointer-events-none [background-image:linear-gradient(to_right,var(--d-sig)_1px,transparent_1px),linear-gradient(to_bottom,var(--d-sig)_1px,transparent_1px)] [background-size:20px_20px]" />
               </div>
 
-              <!-- Barra de Estado Flotante (sin superposiciones) -->
-              <div class="absolute top-2 right-2 flex items-center gap-1.5 z-20 font-mono text-[10px]">
-                <span
-                  class="px-2 py-0.5 font-bold rounded-[2px] backdrop-blur-md shadow-sm border"
-                  :class="it.status === 'LIVE' ? 'text-green border-green/40 bg-black/85' : 'text-amber border-amber/40 bg-black/85'"
-                >
-                  ● {{ it.status ?? 'LIVE' }}
-                </span>
-                <span class="px-1.5 py-0.5 border border-rule bg-black/85 text-dim backdrop-blur-md rounded-[2px] hidden sm:inline">
-                  {{ it.year ?? it.meta }}
-                </span>
-              </div>
-            </div>
-
-            <!-- Cuerpo de la Tarjeta -->
-            <div class="project-info flex flex-col flex-1 p-3.5 sm:p-4 gap-2 min-w-0">
-              <div class="project-title-row flex items-baseline gap-2 min-w-0">
-                <span class="p-num font-mono text-[11px] text-faint tabular-nums shrink-0">{{ pad(n + 1) }}</span>
-                <h3 class="p-name font-sans text-[15px] sm:text-[16px] font-bold text-ink group-hover:text-sig transition-colors leading-snug line-clamp-2 m-0 break-words">
-                  {{ it.label }}
-                </h3>
-              </div>
-              <p v-if="it.org && it.org.toLowerCase() !== it.label.toLowerCase()" class="p-org font-mono text-[11px] text-sig font-medium line-clamp-1 m-0 break-words">
-                {{ isEs ? (it.org || getProjectLocalization(it.key)?.orgDesc) : (getProjectLocalization(it.key)?.orgDesc || it.org) }}
-              </p>
-              <p v-if="it.summary" class="p-summary font-sans text-[13px] text-dim leading-relaxed line-clamp-2 m-0 break-words">
-                {{ isEs ? (it.summary || getProjectLocalization(it.key)?.summary) : (getProjectLocalization(it.key)?.summary || it.summary) }}
-              </p>
-              <div v-if="it.techs && it.techs.length" class="p-techs flex flex-wrap gap-1 mt-auto pt-1">
-                <span v-for="t in it.techs.slice(0, 4)" :key="t.slug" class="p-tech-chip">
-                  {{ t.name }}
-                </span>
-                <span v-if="it.techs.length > 4" class="p-tech-chip more">
-                  +{{ it.techs.length - 4 }}
-                </span>
-              </div>
-
-              <!-- Footer de Acciones Rápidas en la Tarjeta -->
-              <div class="project-card-footer flex flex-col sm:flex-row sm:items-center justify-between pt-2.5 mt-auto border-t border-rule gap-2 w-full min-w-0">
-                <div class="project-quick-actions flex items-center gap-1.5 flex-wrap min-w-0">
-                  <a
-                    v-if="it.url"
-                    :href="it.url"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    class="quick-pill font-mono text-[10px] px-2 py-0.5 border border-rule bg-paper text-dim hover:border-sig hover:text-sig flex items-center gap-1 transition-colors rounded-[2px]"
-                    :title="isEs ? 'Visitar sitio en vivo' : 'Visit live site'"
-                    @click.stop
-                  >
-                    <span>{{ tr.collection.liveSite }}</span>
-                    <AppIcon name="external" :size="9" />
-                  </a>
-                  <a
-                    v-if="it.repo"
-                    :href="it.repo"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    class="quick-pill font-mono text-[10px] px-2 py-0.5 border border-rule bg-paper text-dim hover:border-sig hover:text-sig flex items-center gap-1 transition-colors rounded-[2px]"
-                    :title="isEs ? 'Ver repositorio en GitHub' : 'View GitHub repository'"
-                    @click.stop
-                  >
-                    <span>{{ tr.collection.sourceCode }}</span>
-                    <AppIcon name="code" :size="9" />
-                  </a>
+              <!-- Cuerpo de la Tarjeta -->
+              <div class="flex flex-col flex-1 p-4 sm:p-5 gap-2 min-w-0">
+                <div class="flex items-center justify-between gap-2 min-w-0">
+                  <h3 class="font-sans text-[16px] font-semibold tracking-[-0.02em] text-ink group-hover:text-sig transition-colors leading-snug truncate m-0">
+                    {{ it.label }}
+                  </h3>
+                  <span class="font-mono text-[12px] text-dim group-hover:text-sig group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all duration-200 shrink-0" aria-hidden="true">↗</span>
                 </div>
-                <div class="flex items-center justify-end w-full sm:w-auto pt-1 sm:pt-0 shrink-0">
-                  <div class="project-dossier-link inline-flex items-center gap-1 font-mono text-[11px] font-bold text-sig hover:text-sig-hover">
-                    <span>{{ tr.collection.openDossier }}</span>
-                    <AppIcon name="chevron-right" :size="12" class="cta-arrow" />
+
+                <p v-if="it.org && it.org.toLowerCase() !== it.label.toLowerCase()" class="font-mono text-[11px] text-faint truncate m-0">
+                  {{ isEs ? (it.org || getProjectLocalization(it.key)?.orgDesc) : (getProjectLocalization(it.key)?.orgDesc || it.org) }}
+                </p>
+
+                <p v-if="it.summary" class="font-sans text-[13px] text-dim leading-relaxed line-clamp-2 m-0 break-words">
+                  {{ isEs ? (it.summary || getProjectLocalization(it.key)?.summary) : (getProjectLocalization(it.key)?.summary || it.summary) }}
+                </p>
+
+                <!-- Footer con Chips y Acciones Rápidas -->
+                <div class="flex items-center justify-between gap-2 pt-3 mt-auto border-t border-rule/70 w-full min-w-0">
+                  <div v-if="it.techs && it.techs.length" class="flex flex-wrap gap-1 min-w-0">
+                    <span v-for="t in it.techs.slice(0, 3)" :key="t.slug" class="px-2 py-0.5 rounded-md bg-paper/70 border border-rule font-mono text-[10px] text-dim">
+                      {{ t.name }}
+                    </span>
+                    <span v-if="it.techs.length > 3" class="px-1.5 py-0.5 rounded-md bg-paper/50 font-mono text-[10px] text-faint">
+                      +{{ it.techs.length - 3 }}
+                    </span>
+                  </div>
+
+                  <div class="flex items-center gap-1.5 shrink-0">
+                    <button
+                      v-if="it.url"
+                      type="button"
+                      class="font-mono text-[10px] px-2 py-0.5 rounded-md border border-rule bg-paper/80 text-dim hover:border-rule-strong hover:text-ink inline-flex items-center gap-1 transition-colors cursor-pointer"
+                      :title="isEs ? 'Visitar sitio en vivo' : 'Visit live site'"
+                      @click.stop.prevent="openExternal(it.url)"
+                    >
+                      <span>Live</span>
+                      <AppIcon name="external" :size="9" />
+                    </button>
+                    <button
+                      v-if="it.repo"
+                      type="button"
+                      class="font-mono text-[10px] px-2 py-0.5 rounded-md border border-rule bg-paper/80 text-dim hover:border-rule-strong hover:text-ink inline-flex items-center gap-1 transition-colors cursor-pointer"
+                      :title="isEs ? 'Ver código en GitHub' : 'View source on GitHub'"
+                      @click.stop.prevent="openExternal(it.repo)"
+                    >
+                      <AppIcon name="code" :size="10" />
+                    </button>
                   </div>
                 </div>
               </div>
-            </div>
-          </NuxtLink>
+            </NuxtLink>
+          </UiSpotlightCard>
 
           <!-- Tarjeta de Experiencia -->
-          <NuxtLink
+          <UiSpotlightCard
             v-else-if="folder.head === 'experience'"
-            :to="it.to"
-            class="exp-card group flex flex-col h-full p-3.5 sm:p-4 border border-rule bg-surface hover:border-sig transition-all duration-150 rounded-[2px] no-underline min-w-0"
-            :data-row="it.key"
+            class="h-full rounded-xl border border-rule bg-surface/60 hover:border-rule-strong transition-all duration-200"
           >
-            <div class="exp-card-header flex items-center justify-between gap-2 mb-1.5 font-mono text-[11px] min-w-0">
-              <span class="exp-org text-sig font-bold break-words">{{ it.org ?? it.label }}</span>
-              <span class="exp-period text-dim shrink-0">{{ formatExpPeriod(it) }}</span>
-            </div>
-            <div class="flex items-center gap-1.5 mb-2">
-              <span class="font-mono text-[9.5px] font-bold px-1.5 py-0.5 border border-rule bg-paper rounded-[2px]" :class="getExpCategory(it.key).color">
-                {{ getExpCategory(it.key).label }}
-              </span>
-            </div>
-            <h3 class="exp-role text-[15px] font-bold text-ink group-hover:text-sig transition-colors leading-snug m-0 mb-2 line-clamp-2 break-words">
-              {{ isEs ? (it.role || getExperienceLocalization(it.key)?.role || it.label) : (getExperienceLocalization(it.key)?.role || it.role || it.label) }}
-            </h3>
-            <p v-if="it.summary" class="exp-summary text-[13px] text-dim leading-relaxed line-clamp-2 m-0 mb-3 break-words">
-              {{ isEs ? (it.summary || getExperienceLocalization(it.key)?.summary) : (getExperienceLocalization(it.key)?.summary || it.summary) }}
-            </p>
-            <div v-if="it.techs && it.techs.length" class="exp-techs flex flex-wrap gap-1 mt-auto mb-3">
-              <span v-for="t in it.techs.slice(0, 3)" :key="t.slug" class="p-tech-chip">
-                {{ t.name }}
-              </span>
-            </div>
-            <div class="exp-cta flex items-center justify-between pt-2 border-t border-rule font-mono text-[11px] font-bold text-sig group-hover:text-sig-hover">
-              <span>{{ tr.collection.technicalDetails }}</span>
-              <AppIcon name="chevron-right" :size="12" class="cta-arrow" />
-            </div>
-          </NuxtLink>
+            <NuxtLink
+              :to="it.to"
+              class="group flex flex-col h-full p-4 sm:p-5 no-underline text-inherit min-w-0"
+              :data-row="it.key"
+            >
+              <div class="flex items-center justify-between gap-2 mb-2 font-mono text-[11px] min-w-0">
+                <span class="text-ink font-medium truncate">{{ it.org ?? it.label }}</span>
+                <span class="text-faint shrink-0">{{ formatExpPeriod(it) }}</span>
+              </div>
+              <h3 class="font-sans text-[15.5px] font-semibold tracking-[-0.02em] text-ink group-hover:text-sig transition-colors leading-snug m-0 mb-2 line-clamp-2 break-words">
+                {{ isEs ? (it.role || getExperienceLocalization(it.key)?.role || it.label) : (getExperienceLocalization(it.key)?.role || it.role || it.label) }}
+              </h3>
+              <p v-if="it.summary" class="font-sans text-[13px] text-dim leading-relaxed line-clamp-2 m-0 mb-3 break-words">
+                {{ isEs ? (it.summary || getExperienceLocalization(it.key)?.summary) : (getExperienceLocalization(it.key)?.summary || it.summary) }}
+              </p>
+              <div class="flex items-center justify-between pt-3 mt-auto border-t border-rule/70 font-mono text-[11px] text-dim group-hover:text-ink">
+                <span>{{ tr.collection.technicalDetails }}</span>
+                <span class="text-sig transition-transform duration-150 group-hover:translate-x-0.5">→</span>
+              </div>
+            </NuxtLink>
+          </UiSpotlightCard>
 
           <!-- Tarjeta de Stack -->
-          <NuxtLink
+          <UiSpotlightCard
             v-else-if="folder.head === 'stack'"
-            :to="it.to"
-            class="stack-card"
-            :data-row="it.key"
+            class="h-full rounded-xl border border-rule bg-surface/60 hover:border-rule-strong transition-all duration-200"
           >
-            <div class="stack-card-header">
-              <span v-if="it.category" class="stack-category">{{ it.category }}</span>
-              <span v-if="it.since" class="stack-since">{{ isEs ? 'desde' : 'since' }} {{ it.since }}</span>
-            </div>
-            <h3 class="stack-name">{{ it.label }}</h3>
-            <p v-if="it.note" class="stack-note">{{ it.note }}</p>
-            <div class="stack-cta">
-              <span>{{ tr.collection.filterRecords }}</span>
-              <AppIcon name="chevron-right" :size="12" class="cta-arrow" />
-            </div>
-          </NuxtLink>
+            <NuxtLink
+              :to="it.to"
+              class="group flex flex-col h-full p-4 no-underline text-inherit"
+              :data-row="it.key"
+            >
+              <div class="flex items-center justify-between gap-2 mb-2">
+                <span v-if="it.category" class="px-2 py-0.5 rounded-md bg-paper/70 border border-rule font-mono text-[9.5px] text-dim uppercase">{{ it.category }}</span>
+                <span v-if="it.since" class="font-mono text-[10.5px] text-faint">{{ it.since }}</span>
+              </div>
+              <h3 class="font-sans text-[16px] font-semibold tracking-[-0.02em] text-ink group-hover:text-sig transition-colors m-0 mb-1.5">
+                {{ it.label }}
+              </h3>
+              <p v-if="it.note" class="font-sans text-[12.5px] text-dim leading-relaxed line-clamp-2 m-0 mb-3">
+                {{ it.note }}
+              </p>
+              <div class="flex items-center justify-between pt-2.5 mt-auto border-t border-rule/70 font-mono text-[10.5px] text-dim group-hover:text-ink">
+                <span>{{ tr.collection.filterRecords }}</span>
+                <span class="text-sig transition-transform duration-150 group-hover:translate-x-0.5">→</span>
+              </div>
+            </NuxtLink>
+          </UiSpotlightCard>
 
           <!-- Tarjeta de Artículos / Blog -->
-          <NuxtLink
+          <UiSpotlightCard
             v-else-if="folder.head === 'articles'"
-            :to="it.to"
-            class="article-card group flex flex-col h-full p-4 sm:p-5 border border-rule bg-surface hover:border-sig transition-all duration-150 rounded-[2px] no-underline min-w-0"
-            :data-row="it.key"
+            class="h-full rounded-xl border border-rule bg-surface/60 hover:border-rule-strong transition-all duration-200"
           >
-            <div class="article-card-header flex items-center justify-between gap-2 mb-2 font-mono text-[11px] min-w-0">
-              <span class="article-status font-bold px-1.5 py-0.5 rounded-[2px] bg-green/10 text-green border border-green/30">
-                ● {{ it.status ?? 'PUBLISHED' }}
-              </span>
-              <span v-if="it.readingTimeMin" class="article-reading-time text-dim shrink-0">
-                {{ pad(it.readingTimeMin) }} MIN READ
-              </span>
-            </div>
-            <h3 class="article-title text-[16px] sm:text-[17px] font-bold text-ink group-hover:text-sig transition-colors leading-snug m-0 mb-2 line-clamp-2 break-words">
-              {{ it.label }}
-            </h3>
-            <p v-if="it.summary" class="article-summary text-[13px] sm:text-[13.5px] text-dim leading-relaxed line-clamp-3 m-0 mb-3 break-words">
-              {{ it.summary }}
-            </p>
-            <div v-if="it.techs && it.techs.length" class="article-techs flex flex-wrap gap-1 mt-auto mb-3">
-              <span v-for="t in it.techs.slice(0, 4)" :key="t.slug" class="p-tech-chip">
-                {{ t.name }}
-              </span>
-            </div>
-            <div class="article-cta flex items-center justify-between pt-2.5 border-t border-rule font-mono text-[11px] font-bold text-sig group-hover:text-sig-hover">
-              <span>{{ isEs ? 'LEER ARTÍCULO' : 'READ ARTICLE' }}</span>
-              <AppIcon name="chevron-right" :size="12" class="cta-arrow" />
-            </div>
-          </NuxtLink>
+            <NuxtLink
+              :to="it.to"
+              class="group flex flex-col h-full p-4 sm:p-5 no-underline text-inherit min-w-0"
+              :data-row="it.key"
+            >
+              <div class="flex items-center justify-between gap-2 mb-2 font-mono text-[10.5px] min-w-0">
+                <span class="inline-flex items-center gap-1.5 text-green">
+                  <span class="w-1.5 h-1.5 rounded-full bg-green" />
+                  <span>{{ it.status ?? 'PUBLISHED' }}</span>
+                </span>
+                <span v-if="it.readingTimeMin" class="text-faint shrink-0">
+                  {{ pad(it.readingTimeMin) }} min
+                </span>
+              </div>
+              <h3 class="font-sans text-[16px] sm:text-[17px] font-semibold tracking-[-0.02em] text-ink group-hover:text-sig transition-colors leading-snug m-0 mb-2 line-clamp-2 break-words">
+                {{ it.label }}
+              </h3>
+              <p v-if="it.summary" class="font-sans text-[13px] text-dim leading-relaxed line-clamp-3 m-0 mb-3 break-words">
+                {{ it.summary }}
+              </p>
+              <div class="flex items-center justify-between pt-3 mt-auto border-t border-rule/70 font-mono text-[11px] text-dim group-hover:text-ink">
+                <span>{{ isEs ? 'Leer artículo' : 'Read article' }}</span>
+                <span class="text-sig transition-transform duration-150 group-hover:translate-x-0.5">→</span>
+              </div>
+            </NuxtLink>
+          </UiSpotlightCard>
 
           <!-- Baldosa Estándar -->
-          <NuxtLink v-else :to="it.to" class="tile" :class="it.kind" :data-row="it.key">
+          <NuxtLink v-else :to="it.to" class="tile rounded-xl" :class="it.kind" :data-row="it.key">
             <span class="n">{{ pad(n + 1) }}</span>
             <ExplorerBadge :kind="it.kind" :badge="it.badge" class="icono" />
             <span class="name">{{ it.label }}</span>
@@ -1209,7 +1226,7 @@ function onCardMousemove(e: MouseEvent) {
       </ol>
 
       <!-- Vista de Tabla Técnica Compacta -->
-      <div v-else-if="viewMode === 'table'" class="table-container">
+      <div v-else-if="viewMode === 'table'" class="table-container rounded-xl overflow-hidden my-4">
         <table class="data-table">
           <thead>
             <tr>
@@ -1228,15 +1245,15 @@ function onCardMousemove(e: MouseEvent) {
                 <NuxtLink :to="it.to" class="t-link" :data-row="it.key">
                   <AppIcon :name="it.kind === 'folder' ? 'folder' : 'file'" :size="13" class="t-icon" />
                   <span class="t-label">{{ it.label }}</span>
-                  <span v-if="it.badge" class="t-badge">{{ it.badge }}</span>
+                  <span v-if="it.badge" class="t-badge rounded">{{ it.badge }}</span>
                 </NuxtLink>
               </td>
               <td class="td-key"><code>{{ it.key }}</code></td>
               <td class="td-meta">{{ it.meta }}</td>
-              <td class="td-kind"><span class="badge-kind">{{ it.kind }}</span></td>
+              <td class="td-kind"><span class="badge-kind rounded">{{ it.kind }}</span></td>
               <td class="td-action">
-                <NuxtLink :to="it.to" class="btn-open">
-                  <span>{{ isEs ? 'ABRIR' : 'OPEN' }}</span>
+                <NuxtLink :to="it.to" class="btn-open rounded-md">
+                  <span>{{ isEs ? 'Abrir' : 'Open' }}</span>
                   <AppIcon name="chevron-right" :size="11" />
                 </NuxtLink>
               </td>

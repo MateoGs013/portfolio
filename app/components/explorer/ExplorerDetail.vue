@@ -9,6 +9,8 @@ import AppIcon from '~/components/ui/AppIcon.vue'
 import ExplorerValue from './ExplorerValue.vue'
 import ExplorerFileWindow from './ExplorerFileWindow.vue'
 import ArticleMarkdown from '~/components/blog/ArticleMarkdown.vue'
+import UiSpotlightCard from '~/components/ui/UiSpotlightCard.vue'
+import UiCopyPill from '~/components/ui/UiCopyPill.vue'
 import { pad, safeHref, type Detail, type Vecino, type Project } from '~/lib/explorer'
 import { routeFor } from '~/lib/path'
 
@@ -23,7 +25,6 @@ const { isEs, isEn, tr, localizeFieldLabel, getProjectLocalization, getExperienc
 const uid = useId()
 const showRawJson = ref(false)
 const showRawFields = ref(false)
-const copied = ref(false)
 
 const isAbout = computed(() => props.detail.name.toLowerCase() === 'about' || props.detail.type.includes('about'))
 const isProject = computed(() => props.detail.type.includes('projects') || props.detail.type.includes('Project'))
@@ -309,17 +310,6 @@ const line = computed(() => [
 const jsonContent = computed(() => {
   return JSON.stringify(props.detail.rawRecord ?? props.detail, null, 2)
 })
-
-async function copyJson() {
-  try {
-    await navigator.clipboard.writeText(jsonContent.value)
-    copied.value = true
-    setTimeout(() => { copied.value = false }, 2000)
-  }
-  catch {
-    // Fallback silencioso
-  }
-}
 </script>
 
 <template>
@@ -336,7 +326,7 @@ async function copyJson() {
           <button
             v-if="isAbout"
             type="button"
-            class="raw-btn inline-flex items-center gap-1.5 h-[30px] px-2.5 border border-rule bg-surface text-dim font-mono text-[12px] font-bold cursor-pointer transition-colors duration-150 hover:border-sig hover:text-sig hover:bg-hover"
+            class="raw-btn inline-flex items-center gap-1.5 rounded-md h-7.5 px-2.5 border border-rule bg-surface/80 text-dim font-mono text-[11px] font-medium hover:border-rule-strong hover:text-ink hover:bg-hover active:scale-[0.98] transition-all cursor-pointer"
             :class="{ '!border-sig !text-sig !bg-hover': showRawFields }"
             :title="isEs ? 'Alternar entre la vista de CV y la tabla de campos técnicos' : 'Toggle between CV view and technical fields table'"
             @click="showRawFields = !showRawFields"
@@ -350,7 +340,7 @@ async function copyJson() {
           <button
             v-else-if="isProject || isExperience"
             type="button"
-            class="raw-btn inline-flex items-center gap-1.5 h-[30px] px-2.5 border border-rule bg-surface text-dim font-mono text-[12px] font-bold cursor-pointer transition-colors duration-150 hover:border-sig hover:text-sig hover:bg-hover"
+            class="raw-btn inline-flex items-center gap-1.5 rounded-md h-7.5 px-2.5 border border-rule bg-surface/80 text-dim font-mono text-[11px] font-medium hover:border-rule-strong hover:text-ink hover:bg-hover active:scale-[0.98] transition-all cursor-pointer"
             :class="{ '!border-sig !text-sig !bg-hover': showRawFields }"
             :title="isEs ? 'Alternar entre el dossier editorial y la tabla de campos técnicos' : 'Toggle between editorial dossier and technical fields table'"
             @click="showRawFields = !showRawFields"
@@ -363,30 +353,50 @@ async function copyJson() {
           <!-- Botón de Inspección de JSON Crudo -->
           <button
             type="button"
-            class="raw-btn inline-flex items-center gap-1.5 h-[30px] px-2.5 border border-rule bg-surface text-dim font-mono text-[12px] font-bold cursor-pointer transition-colors duration-150 hover:border-sig hover:text-sig hover:bg-hover"
+            class="raw-btn inline-flex items-center gap-1.5 rounded-md h-7.5 px-2.5 border border-rule bg-surface/80 text-dim font-mono text-[11px] font-medium hover:border-rule-strong hover:text-ink hover:bg-hover active:scale-[0.98] transition-all cursor-pointer"
             :class="{ '!border-sig !text-sig !bg-hover': showRawJson }"
             :title="isEs ? 'Inspeccionar respuesta cruda de la API REST' : 'Inspect raw REST API response'"
             @click="showRawJson = !showRawJson"
           >
-            <span class="raw-icon font-black">{ }</span>
+            <span class="raw-icon font-mono font-bold">{ }</span>
             <span>{{ showRawJson ? (isEs ? 'CERRAR JSON' : 'CLOSE JSON') : 'RAW JSON' }}</span>
           </button>
 
           <!-- Navegación entre vecinos -->
-          <nav v-if="prev || next" class="vecinos flex items-center gap-1.5 font-sans text-[13px] flex-wrap max-md:w-full max-md:justify-between" :aria-label="isEs ? 'Registros vecinos' : 'Adjacent records'">
-            <NuxtLink v-if="prev" :to="prev.to" class="vecino group inline-flex items-center gap-1.5 max-w-[280px] max-md:max-w-none max-md:flex-1 h-[30px] px-2.5 border border-rule bg-surface text-dim no-underline whitespace-nowrap overflow-hidden text-ellipsis transition-colors duration-150 hover:border-sig hover:text-sig hover:bg-hover" rel="prev" :title="isEs ? 'Registro anterior' : 'Previous record'">
-              <AppIcon name="chevron-left" :size="11" class="group-hover:text-sig transition-colors duration-150" />
-              <span>{{ prev.label }}</span>
+          <nav v-if="prev || next" class="vecinos flex items-center gap-1.5 font-sans text-[12px] flex-wrap max-md:w-full max-md:justify-between" :aria-label="isEs ? 'Registros vecinos' : 'Adjacent records'">
+            <NuxtLink
+              v-if="prev"
+              :to="prev.to"
+              class="vecino group inline-flex items-center gap-1.5 max-w-[280px] max-md:max-w-none max-md:flex-1 rounded-md h-7.5 px-2.5 border border-rule bg-surface/80 text-dim font-mono text-[11px] font-medium no-underline whitespace-nowrap overflow-hidden text-ellipsis hover:border-rule-strong hover:text-ink hover:bg-hover active:scale-[0.98] transition-all"
+              rel="prev"
+              :title="isEs ? 'Registro anterior' : 'Previous record'"
+            >
+              <AppIcon name="chevron-left" :size="11" class="group-hover:text-ink transition-colors duration-150" />
+              <span class="truncate">{{ prev.label }}</span>
             </NuxtLink>
-            <span v-else class="vecino off inline-flex items-center gap-1.5 max-w-[280px] max-md:max-w-none max-md:flex-1 h-[30px] px-2.5 border border-rule bg-surface text-faint opacity-50 cursor-default" aria-hidden="true">
+            <span
+              v-else
+              class="vecino off inline-flex items-center gap-1.5 max-w-[280px] max-md:max-w-none max-md:flex-1 rounded-md h-7.5 px-2.5 border border-rule bg-surface/40 text-faint opacity-50 cursor-default"
+              aria-hidden="true"
+            >
               <AppIcon name="chevron-left" :size="11" />
             </span>
 
-            <NuxtLink v-if="next" :to="next.to" class="vecino group inline-flex items-center gap-1.5 max-w-[280px] max-md:max-w-none max-md:flex-1 h-[30px] px-2.5 border border-rule bg-surface text-dim no-underline whitespace-nowrap overflow-hidden text-ellipsis transition-colors duration-150 hover:border-sig hover:text-sig hover:bg-hover" rel="next" :title="isEs ? 'Registro siguiente' : 'Next record'">
-              <span>{{ next.label }}</span>
-              <AppIcon name="chevron-right" :size="11" class="group-hover:text-sig transition-colors duration-150" />
+            <NuxtLink
+              v-if="next"
+              :to="next.to"
+              class="vecino group inline-flex items-center gap-1.5 max-w-[280px] max-md:max-w-none max-md:flex-1 rounded-md h-7.5 px-2.5 border border-rule bg-surface/80 text-dim font-mono text-[11px] font-medium no-underline whitespace-nowrap overflow-hidden text-ellipsis hover:border-rule-strong hover:text-ink hover:bg-hover active:scale-[0.98] transition-all"
+              rel="next"
+              :title="isEs ? 'Registro siguiente' : 'Next record'"
+            >
+              <span class="truncate">{{ next.label }}</span>
+              <AppIcon name="chevron-right" :size="11" class="group-hover:text-ink transition-colors duration-150" />
             </NuxtLink>
-            <span v-else class="vecino off inline-flex items-center gap-1.5 max-w-[280px] max-md:max-w-none max-md:flex-1 h-[30px] px-2.5 border border-rule bg-surface text-faint opacity-50 cursor-default" aria-hidden="true">
+            <span
+              v-else
+              class="vecino off inline-flex items-center gap-1.5 max-w-[280px] max-md:max-w-none max-md:flex-1 rounded-md h-7.5 px-2.5 border border-rule bg-surface/40 text-faint opacity-50 cursor-default"
+              aria-hidden="true"
+            >
               <AppIcon name="chevron-right" :size="11" />
             </span>
           </nav>
@@ -394,18 +404,13 @@ async function copyJson() {
       </ExplorerHeader>
 
       <!-- Drawer de Inspección JSON Crudo -->
-      <div v-if="showRawJson" class="raw-drawer bg-surface border border-rule-strong mb-3 overflow-hidden shadow-lg w-full rounded-[2px]">
-        <div class="raw-toolbar flex items-center justify-between gap-2 p-2 px-3.5 bg-surface-raised border-b border-rule font-mono text-[11px]">
-          <span class="raw-endpoint text-sig font-bold">{{ apiEndpoint }}</span>
-          <button
-            type="button"
-            class="copy-btn inline-flex items-center gap-1.5 px-2.5 py-1 border border-rule bg-paper text-dim text-[10.5px] font-bold cursor-pointer transition-colors duration-150 hover:border-sig hover:text-sig"
-            :class="{ '!border-sig !text-sig': copied }"
-            @click="copyJson"
-          >
-            <AppIcon :name="copied ? 'check' : 'copy'" :size="12" />
-            <span>{{ copied ? (isEs ? '¡COPIADO AL PORTAPAPELES!' : 'COPIED TO CLIPBOARD!') : (isEs ? 'COPIAR PAYLOAD JSON' : 'COPY JSON PAYLOAD') }}</span>
-          </button>
+      <div v-if="showRawJson" class="raw-drawer bg-surface border border-rule mb-3 overflow-hidden shadow-md w-full rounded-xl">
+        <div class="raw-toolbar flex items-center justify-between gap-2 p-2 px-3.5 bg-surface-raised/80 border-b border-rule font-mono text-[11px]">
+          <div class="flex items-center gap-2 min-w-0">
+            <span class="w-1.5 h-1.5 rounded-full bg-sig shrink-0" aria-hidden="true" />
+            <span class="raw-endpoint text-sig font-bold truncate">{{ apiEndpoint }}</span>
+          </div>
+          <UiCopyPill :text="jsonContent" :label="isEs ? 'Copiar JSON' : 'Copy JSON'" :copied-label="isEs ? 'Copiado' : 'Copied'" />
         </div>
         <pre class="raw-code m-0 p-3.5 bg-black/70 text-ink font-mono text-[11.5px] leading-relaxed max-h-[360px] max-md:max-h-[260px] overflow-auto"><code>{{ jsonContent }}</code></pre>
       </div>
@@ -415,20 +420,21 @@ async function copyJson() {
 
       <!-- 2. Si es PROYECTO y está en modo Dossier Editorial (por defecto) -->
       <div v-else-if="isProject && !showRawFields" class="dossier-wrap project-dossier flex flex-col gap-5 sm:gap-6 w-full min-w-0">
-        <!-- Hero Bar del Proyecto -->
-        <div class="project-hero-bar w-full p-3.5 sm:p-4 bg-surface border border-rule border-l-4 border-l-sig flex flex-col md:flex-row md:items-center justify-between gap-3.5 rounded-[2px]">
-          <div class="ph-meta flex flex-wrap items-center gap-1.5 sm:gap-2.5 text-xs font-mono min-w-0 flex-1">
+        <!-- Hero Bar del Proyecto (Linear Properties Bar) -->
+        <div class="project-hero-bar w-full p-4 sm:p-5 rounded-xl border border-rule bg-surface/60 flex flex-col md:flex-row md:items-center justify-between gap-3.5">
+          <div class="ph-meta flex flex-wrap items-center gap-1.5 sm:gap-2 text-xs font-mono min-w-0 flex-1">
             <div class="flex items-center gap-1.5 shrink-0">
               <span
-                class="ph-status px-2.5 py-1 font-bold rounded-[2px]"
+                class="ph-status inline-flex items-center gap-1.5 px-2.5 py-1 font-medium rounded-lg text-[11px]"
                 :class="projectStatus === 'LIVE' ? 'text-green border border-green/30 bg-green/10' : 'text-amber border border-amber/30 bg-amber/10'"
               >
-                ● {{ projectStatus === 'LIVE' ? tr.detail.statusLive : tr.detail.statusWip }}
+                <span class="w-1.5 h-1.5 rounded-full" :class="projectStatus === 'LIVE' ? 'bg-green' : 'bg-amber'" />
+                <span>{{ (projectStatus === 'LIVE' ? tr.detail.statusLive : tr.detail.statusWip).replace(/^[●•·\s]+/, '') }}</span>
               </span>
-              <span v-if="projectYear" class="ph-pill px-2.5 py-1 border border-rule bg-paper text-dim text-[11px] sm:text-[11.5px] rounded-[2px]">{{ projectYear }}</span>
+              <span v-if="projectYear" class="ph-pill px-2.5 py-1 border border-rule bg-paper/80 text-dim text-[11px] rounded-lg">{{ projectYear }}</span>
             </div>
-            <span v-if="projectOrg" class="ph-pill org px-2.5 py-1 border border-rule bg-paper text-ink font-semibold text-[11px] sm:text-[11.5px] rounded-[2px] max-w-full break-words">{{ projectOrg }}</span>
-            <span v-if="projectRole" class="ph-pill role px-2.5 py-1 border border-rule bg-paper text-dim text-[11px] sm:text-[11.5px] rounded-[2px] max-w-full break-words">{{ projectRole }}</span>
+            <span v-if="projectOrg" class="ph-pill org px-2.5 py-1 border border-rule bg-paper/80 text-ink font-medium text-[11px] rounded-lg max-w-full break-words">{{ projectOrg }}</span>
+            <span v-if="projectRole" class="ph-pill role px-2.5 py-1 border border-rule bg-paper/80 text-dim text-[11px] rounded-lg max-w-full break-words">{{ projectRole }}</span>
           </div>
 
           <div class="ph-actions flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-2.5 w-full md:w-auto shrink-0">
@@ -437,7 +443,7 @@ async function copyJson() {
               :href="projectUrl"
               target="_blank"
               rel="noopener noreferrer"
-              class="ph-btn primary inline-flex items-center justify-center gap-2 px-3.5 sm:px-4 py-2 font-mono text-[11.5px] sm:text-[12px] font-bold no-underline cursor-pointer transition-all duration-150 rounded-[2px] bg-sig text-on-sig border border-sig hover:bg-sig-hover w-full sm:w-auto min-h-[38px]"
+              class="ph-btn primary bg-ink text-paper hover:opacity-90 active:scale-[0.98] rounded-md px-3.5 py-2 font-sans text-[12.5px] font-medium no-underline inline-flex items-center justify-center gap-2 transition-all w-full sm:w-auto"
             >
               <AppIcon name="external" :size="12" />
               <span>{{ tr.detail.visitOfficial }}</span>
@@ -447,20 +453,20 @@ async function copyJson() {
               :href="projectRepo"
               target="_blank"
               rel="noopener noreferrer"
-              class="ph-btn secondary group inline-flex items-center justify-center gap-2 px-3.5 sm:px-4 py-2 font-mono text-[11.5px] sm:text-[12px] font-bold no-underline cursor-pointer transition-all duration-150 rounded-[2px] bg-paper text-ink border border-rule-strong hover:bg-hover hover:border-sig hover:text-sig w-full sm:w-auto min-h-[38px]"
+              class="ph-btn secondary bg-surface hover:bg-hover text-ink border border-rule hover:border-rule-strong active:scale-[0.98] rounded-md px-3.5 py-2 font-sans text-[12.5px] font-medium no-underline inline-flex items-center justify-center gap-2 transition-all w-full sm:w-auto"
             >
-              <AppIcon name="code" :size="12" class="group-hover:text-sig transition-colors duration-150" />
+              <AppIcon name="code" :size="12" />
               <span>{{ tr.detail.sourceCode }}</span>
             </a>
           </div>
         </div>
 
         <!-- Telemetría & Scorecard de Rendimiento -->
-        <div v-if="projectMetricsRow" class="telemetry-bar p-3.5 sm:p-4 bg-surface border border-rule rounded-[2px] flex flex-col gap-2.5 w-full min-w-0">
-          <div class="flex items-center justify-between gap-2 border-b border-rule/60 pb-2 w-full min-w-0">
+        <div v-if="projectMetricsRow" class="telemetry-bar p-3.5 sm:p-4 bg-surface/60 border border-rule rounded-xl flex flex-col gap-2.5 w-full min-w-0">
+          <div class="flex items-center justify-between gap-2 border-b border-rule pb-2 w-full min-w-0">
             <div class="flex items-center gap-2 min-w-0">
               <span class="telemetry-dot w-2 h-2 rounded-full bg-green animate-pulse shrink-0" />
-              <span class="font-mono text-[11px] sm:text-[11.5px] font-bold text-ink tracking-wider truncate">{{ tr.detail.telemetrySection }}</span>
+              <span class="font-mono text-[11px] sm:text-[11.5px] font-medium text-ink tracking-wider truncate">{{ tr.detail.telemetrySection }}</span>
             </div>
             <span class="font-mono text-[10.5px] text-faint hidden sm:inline shrink-0">POSTGRESQL 17 · LATENCIA SUB-100MS</span>
           </div>
@@ -468,43 +474,55 @@ async function copyJson() {
         </div>
 
         <!-- Síntesis Ejecutiva Lead -->
-        <div v-if="projectSummaryRow?.value" class="summary-lead-card p-4 sm:p-5 bg-surface border-l-4 border-sig border-y border-r border-rule rounded-[2px] w-full min-w-0">
-          <span class="font-mono text-[11px] font-bold text-sig uppercase tracking-wider block mb-1.5">{{ tr.detail.executiveOverview }}</span>
+        <UiSpotlightCard
+          v-if="projectSummaryRow?.value"
+          class="summary-lead-card rounded-xl border border-rule bg-surface/60 p-4 sm:p-5 w-full min-w-0"
+        >
+          <div class="flex items-center gap-2 mb-2">
+            <span class="w-1.5 h-1.5 rounded-full bg-sig shrink-0" aria-hidden="true" />
+            <span class="font-mono text-[11px] font-medium text-sig uppercase tracking-wider">{{ tr.detail.executiveOverview }}</span>
+          </div>
           <p class="m-0 font-sans text-[14.5px] sm:text-[15.5px] text-ink leading-relaxed break-words">
             {{ projectSummaryRow.value }}
           </p>
-        </div>
+        </UiSpotlightCard>
 
         <!-- Split Editorial: El Encargo (Brief) vs Resultado en Producción (Outcome) -->
         <div v-if="projectBriefRow?.value || projectOutcomeRow?.value" class="split-cards grid grid-cols-1 md:grid-cols-2 gap-3.5 sm:gap-4 w-full min-w-0">
           <!-- Tarjeta Brief -->
-          <div v-if="projectBriefRow?.value" class="split-card brief-card p-4 sm:p-5 bg-surface border border-rule border-l-4 border-l-sig rounded-[2px] flex flex-col gap-2.5 min-w-0">
-            <div class="sc-header flex items-center gap-2 pb-2 border-b border-rule font-mono text-[11.5px] font-bold text-sig">
-              <AppIcon name="file" :size="13" class="shrink-0" />
+          <UiSpotlightCard
+            v-if="projectBriefRow?.value"
+            class="split-card brief-card rounded-xl border border-rule bg-surface/60 p-4 sm:p-5 flex flex-col gap-2.5 min-w-0"
+          >
+            <div class="sc-header flex items-center gap-2 pb-2 border-b border-rule font-mono text-[11.5px] font-medium text-sig">
+              <span class="w-1.5 h-1.5 rounded-full bg-sig shrink-0" aria-hidden="true" />
               <span class="truncate">{{ tr.detail.briefSection }}</span>
             </div>
             <div class="sc-body font-sans text-[13.5px] sm:text-[14px] text-ink leading-relaxed whitespace-pre-line break-words">
               {{ projectBriefRow.value }}
             </div>
-          </div>
+          </UiSpotlightCard>
 
           <!-- Tarjeta Resultado en Producción -->
-          <div v-if="projectOutcomeRow?.value" class="split-card outcome-card p-4 sm:p-5 bg-surface border border-rule border-l-4 border-l-green rounded-[2px] flex flex-col gap-2.5 min-w-0">
-            <div class="sc-header flex items-center gap-2 pb-2 border-b border-rule font-mono text-[11.5px] font-bold text-green">
-              <AppIcon name="check" :size="13" class="shrink-0" />
+          <UiSpotlightCard
+            v-if="projectOutcomeRow?.value"
+            class="split-card outcome-card rounded-xl border border-rule bg-surface/60 p-4 sm:p-5 flex flex-col gap-2.5 min-w-0"
+          >
+            <div class="sc-header flex items-center gap-2 pb-2 border-b border-rule font-mono text-[11.5px] font-medium text-green">
+              <span class="w-1.5 h-1.5 rounded-full bg-green shrink-0" aria-hidden="true" />
               <span class="truncate">{{ tr.detail.outcomeSection }}</span>
             </div>
             <div class="sc-body font-sans text-[13.5px] sm:text-[14px] text-ink leading-relaxed whitespace-pre-line break-words">
               {{ projectOutcomeRow.value }}
             </div>
-          </div>
+          </UiSpotlightCard>
         </div>
 
         <!-- Capturas Técnicas & Galería Multimedia -->
         <div v-if="projectMediaRow" class="media-section flex flex-col gap-3 w-full min-w-0">
           <div class="section-title-bar flex items-center justify-between gap-2 border-b border-rule pb-2 w-full min-w-0">
-            <span class="font-mono text-[11.5px] font-bold text-ink tracking-wider flex items-center gap-2 min-w-0">
-              <AppIcon name="grid" :size="12" class="text-sig shrink-0" />
+            <span class="font-mono text-[11.5px] font-medium text-ink tracking-wider flex items-center gap-2 min-w-0">
+              <span class="w-1.5 h-1.5 rounded-full bg-sig shrink-0" aria-hidden="true" />
               <span class="truncate">{{ tr.detail.gallerySection }}</span>
             </span>
             <span class="font-mono text-[10.5px] text-faint hidden sm:inline shrink-0">{{ isEs ? 'CLICK PARA INSPECCIONAR EN LIGHTBOX' : 'CLICK TO EXPAND IN LIGHTBOX' }}</span>
@@ -515,8 +533,8 @@ async function copyJson() {
         <!-- Proceso de Ingeniería (Taller de Pasos) -->
         <div v-if="projectStepsRow" class="steps-section flex flex-col gap-3 w-full min-w-0">
           <div class="section-title-bar flex items-center justify-between gap-2 border-b border-rule pb-2 w-full min-w-0">
-            <span class="font-mono text-[11.5px] font-bold text-ink tracking-wider flex items-center gap-2 min-w-0">
-              <AppIcon name="table" :size="12" class="text-sig shrink-0" />
+            <span class="font-mono text-[11.5px] font-medium text-ink tracking-wider flex items-center gap-2 min-w-0">
+              <span class="w-1.5 h-1.5 rounded-full bg-sig shrink-0" aria-hidden="true" />
               <span class="truncate">{{ tr.detail.workshopSection }}</span>
             </span>
             <span class="font-mono text-[10.5px] text-faint hidden sm:inline shrink-0">{{ isEs ? 'SECUENCIA ITERATIVA' : 'ITERATIVE SEQUENCE' }}</span>
@@ -525,10 +543,10 @@ async function copyJson() {
         </div>
 
         <!-- Arsenal Tecnológico -->
-        <div v-if="projectTechsRow" class="techs-section p-3.5 sm:p-4 bg-surface border border-rule rounded-[2px] flex flex-col gap-3 w-full min-w-0">
+        <div v-if="projectTechsRow" class="techs-section p-3.5 sm:p-4 bg-surface/60 border border-rule rounded-xl flex flex-col gap-3 w-full min-w-0">
           <div class="flex items-center justify-between gap-2 border-b border-rule pb-2 w-full min-w-0">
-            <span class="font-mono text-[11.5px] font-bold text-ink tracking-wider flex items-center gap-2 min-w-0">
-              <AppIcon name="code" :size="12" class="text-sig shrink-0" />
+            <span class="font-mono text-[11.5px] font-medium text-ink tracking-wider flex items-center gap-2 min-w-0">
+              <span class="w-1.5 h-1.5 rounded-full bg-sig shrink-0" aria-hidden="true" />
               <span class="truncate">{{ tr.detail.stackSection }}</span>
             </span>
             <span class="font-mono text-[10.5px] text-dim hidden sm:inline shrink-0">{{ isEs ? 'TECNOLOGÍAS CLAVE' : 'CORE TECHNOLOGIES' }}</span>
@@ -538,7 +556,7 @@ async function copyJson() {
               <NuxtLink
                 v-if="it.to"
                 :to="it.to"
-                class="tech-chip font-mono text-[11.5px] px-3 py-1.5 border border-rule bg-paper text-ink no-underline hover:border-sig hover:text-sig transition-colors rounded-[2px]"
+                class="tech-chip font-mono text-[11px] px-2.5 py-1 border border-rule bg-paper/80 text-dim hover:text-ink hover:border-sig/60 hover:-translate-y-0.5 transition-all rounded-md no-underline"
               >
                 {{ it.label }}
               </NuxtLink>
@@ -547,8 +565,8 @@ async function copyJson() {
         </div>
 
         <!-- Cajón Colapsable de Especificaciones Técnicas del Esquema Relacional -->
-        <details class="specs-accordion border border-rule bg-surface rounded-[2px] transition-all w-full min-w-0">
-          <summary class="p-3 px-3.5 sm:px-4 font-mono text-[12px] font-bold text-dim cursor-pointer select-none hover:text-sig flex items-center justify-between gap-2">
+        <details class="specs-accordion border border-rule bg-surface/60 rounded-xl transition-all w-full min-w-0 overflow-hidden">
+          <summary class="p-3 px-3.5 sm:px-4 font-mono text-[11.5px] font-medium text-dim cursor-pointer select-none hover:text-sig flex items-center justify-between gap-2">
             <span class="flex items-center gap-2 min-w-0">
               <AppIcon name="table" :size="12" class="shrink-0" />
               <span class="truncate">{{ tr.detail.specsSection }} ({{ pad(detail.rows.length) }} {{ isEs ? 'CAMPOS' : 'FIELDS' }})</span>
@@ -556,7 +574,7 @@ async function copyJson() {
             <span class="text-faint text-[10.5px] hidden sm:inline shrink-0">{{ isEs ? 'DESPLEGAR ESQUEMA' : 'EXPAND SCHEMA' }}</span>
           </summary>
           <div class="p-3 sm:p-4 pt-2 border-t border-rule bg-paper/50">
-            <dl class="campos flex flex-col border border-rule bg-surface divide-y divide-rule w-full m-0">
+            <dl class="campos flex flex-col border border-rule bg-surface rounded-lg divide-y divide-rule w-full m-0 overflow-hidden">
               <div
                 v-for="row in detail.rows"
                 :key="row.name"
@@ -586,21 +604,21 @@ async function copyJson() {
 
       <!-- 3. Si es EXPERIENCIA y está en modo Dossier Editorial (por defecto) -->
       <div v-else-if="isExperience && !showRawFields" class="dossier-wrap experience-dossier flex flex-col gap-5 sm:gap-6 w-full min-w-0">
-        <!-- Hero Bar de la Experiencia -->
-        <div class="experience-hero-bar w-full p-3.5 sm:p-4 bg-surface border border-rule border-l-4 border-l-sig flex flex-col md:flex-row md:items-center justify-between gap-3.5 rounded-[2px]">
-          <div class="eh-meta flex flex-wrap items-center gap-1.5 sm:gap-2.5 text-xs font-mono min-w-0 flex-1">
+        <!-- Hero Bar de la Experiencia (Linear Properties Bar) -->
+        <div class="experience-hero-bar w-full p-4 sm:p-5 rounded-xl border border-rule bg-surface/60 flex flex-col md:flex-row md:items-center justify-between gap-3.5">
+          <div class="eh-meta flex flex-wrap items-center gap-1.5 sm:gap-2 text-xs font-mono min-w-0 flex-1">
             <div class="flex items-center gap-1.5 shrink-0">
-              <span class="eh-category px-2.5 py-1 font-bold rounded-[2px] bg-sig/10 text-sig border border-sig/30">
+              <span class="eh-category px-2.5 py-1 font-medium rounded-lg text-[11px] bg-sig/10 text-sig border border-sig/30">
                 ● {{ expCategory.label }}
               </span>
-              <span v-if="expPeriod" class="eh-pill period px-2.5 py-1 border border-rule bg-paper text-ink font-bold text-[11px] sm:text-[11.5px] rounded-[2px]">
+              <span v-if="expPeriod" class="eh-pill period px-2.5 py-1 border border-rule bg-paper/80 text-ink font-medium text-[11px] rounded-lg">
                 {{ expPeriod }}
               </span>
             </div>
-            <span v-if="expOrg" class="eh-pill org px-2.5 py-1 border border-rule bg-paper text-dim text-[11px] sm:text-[11.5px] rounded-[2px] max-w-full break-words">
+            <span v-if="expOrg" class="eh-pill org px-2.5 py-1 border border-rule bg-paper/80 text-dim text-[11px] rounded-lg max-w-full break-words">
               {{ expOrg }}
             </span>
-            <span v-if="expRole" class="eh-pill role px-2.5 py-1 border border-rule bg-paper text-dim text-[11px] sm:text-[11.5px] rounded-[2px] max-w-full break-words">
+            <span v-if="expRole" class="eh-pill role px-2.5 py-1 border border-rule bg-paper/80 text-dim text-[11px] rounded-lg max-w-full break-words">
               {{ expRole }}
             </span>
           </div>
@@ -608,10 +626,10 @@ async function copyJson() {
           <div v-if="expLinkedProjects.length && expLinkedProjects[0]" class="eh-actions flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full md:w-auto shrink-0">
             <NuxtLink
               :to="routeFor(['projects', expLinkedProjects[0].slug])"
-              class="eh-btn group inline-flex items-center justify-center gap-2 px-3.5 sm:px-4 py-2 font-mono text-[11.5px] font-bold no-underline cursor-pointer transition-all duration-150 rounded-[2px] bg-paper text-ink border border-rule-strong hover:bg-hover hover:border-sig hover:text-sig w-full sm:w-auto min-h-[38px]"
+              class="eh-btn bg-surface hover:bg-hover text-ink border border-rule hover:border-rule-strong active:scale-[0.98] rounded-md px-3.5 py-2 font-sans text-[12.5px] font-medium no-underline inline-flex items-center justify-center gap-2 transition-all w-full sm:w-auto"
             >
               <span>{{ isEs ? 'VER PROYECTO ASOCIADO' : 'VIEW LINKED PROJECT' }}</span>
-              <AppIcon name="external" :size="11" class="group-hover:text-sig transition-colors" />
+              <AppIcon name="external" :size="11" />
             </NuxtLink>
           </div>
         </div>
@@ -621,7 +639,7 @@ async function copyJson() {
           <div
             v-for="(hl, i) in expHighlights"
             :key="i"
-            class="hl-card p-3 sm:px-3.5 bg-surface border border-rule flex flex-col justify-between gap-1 rounded-[2px] min-w-0"
+            class="hl-card p-3 sm:px-3.5 bg-surface/60 border border-rule flex flex-col justify-between gap-1 rounded-lg min-w-0"
           >
             <span class="hl-label font-mono text-[9px] sm:text-[10px] text-faint uppercase tracking-wider truncate">{{ hl.label }}</span>
             <span class="hl-value font-mono text-[12px] sm:text-[13px] md:text-[14px] font-bold text-ink break-words leading-tight">{{ hl.value }}</span>
@@ -629,11 +647,11 @@ async function copyJson() {
         </div>
 
         <!-- Telemetría & Rendimiento si existen -->
-        <div v-if="expMetricsRow" class="telemetry-bar p-3.5 sm:p-4 bg-surface border border-rule rounded-[2px] flex flex-col gap-2.5 w-full min-w-0">
+        <div v-if="expMetricsRow" class="telemetry-bar p-3.5 sm:p-4 bg-surface/60 border border-rule rounded-xl flex flex-col gap-2.5 w-full min-w-0">
           <div class="flex items-center justify-between gap-2 border-b border-rule/60 pb-2 w-full min-w-0">
             <div class="flex items-center gap-2 min-w-0">
               <span class="telemetry-dot w-2 h-2 rounded-full bg-green animate-pulse shrink-0" />
-              <span class="font-mono text-[11px] sm:text-[11.5px] font-bold text-ink tracking-wider truncate">{{ tr.detail.telemetrySection }}</span>
+              <span class="font-mono text-[11px] sm:text-[11.5px] font-medium text-ink tracking-wider truncate">{{ tr.detail.telemetrySection }}</span>
             </div>
             <span class="font-mono text-[10.5px] text-faint hidden sm:inline shrink-0">POSTGRESQL 17 · LATENCIA SUB-100MS</span>
           </div>
@@ -641,29 +659,38 @@ async function copyJson() {
         </div>
 
         <!-- Síntesis de Alcance / Resumen -->
-        <div v-if="expSummaryRow?.value" class="summary-lead-card p-4 sm:p-5 bg-surface border-l-4 border-sig border-y border-r border-rule rounded-[2px] w-full min-w-0">
-          <span class="font-mono text-[11px] font-bold text-sig uppercase tracking-wider block mb-1.5">{{ tr.detail.executiveOverview }}</span>
+        <UiSpotlightCard
+          v-if="expSummaryRow?.value"
+          class="summary-lead-card rounded-xl border border-rule bg-surface/60 p-4 sm:p-5 w-full min-w-0"
+        >
+          <div class="flex items-center gap-2 mb-2">
+            <span class="w-1.5 h-1.5 rounded-full bg-sig shrink-0" aria-hidden="true" />
+            <span class="font-mono text-[11px] font-medium text-sig uppercase tracking-wider">{{ tr.detail.executiveOverview }}</span>
+          </div>
           <p class="m-0 font-sans text-[14.5px] sm:text-[15.5px] text-ink leading-relaxed break-words">
             {{ expSummaryRow.value }}
           </p>
-        </div>
+        </UiSpotlightCard>
 
         <!-- Relato de Aprendizajes e Impacto de Ingeniería -->
-        <div v-if="expStoryRow?.value" class="story-section p-4 sm:p-5 bg-surface border border-rule rounded-[2px] flex flex-col gap-3 w-full min-w-0">
+        <UiSpotlightCard
+          v-if="expStoryRow?.value"
+          class="story-section rounded-xl border border-rule bg-surface/60 p-4 sm:p-5 flex flex-col gap-3 w-full min-w-0"
+        >
           <div class="flex items-center gap-2 pb-2.5 border-b border-rule w-full min-w-0">
-            <AppIcon name="file" :size="13" class="text-sig shrink-0" />
-            <span class="font-mono text-[11.5px] font-bold text-ink tracking-wider truncate">{{ tr.detail.storySection }}</span>
+            <span class="w-1.5 h-1.5 rounded-full bg-sig shrink-0" aria-hidden="true" />
+            <span class="font-mono text-[11.5px] font-medium text-ink tracking-wider truncate">{{ tr.detail.storySection }}</span>
           </div>
           <div class="story-content font-sans text-[13.5px] sm:text-[14.5px] text-ink leading-relaxed whitespace-pre-line break-words">
             {{ expStoryRow.value }}
           </div>
-        </div>
+        </UiSpotlightCard>
 
         <!-- Arsenal Tecnológico -->
-        <div v-if="expTechsRow" class="techs-section p-3.5 sm:p-4 bg-surface border border-rule rounded-[2px] flex flex-col gap-3 w-full min-w-0">
+        <div v-if="expTechsRow" class="techs-section p-3.5 sm:p-4 bg-surface/60 border border-rule rounded-xl flex flex-col gap-3 w-full min-w-0">
           <div class="flex items-center justify-between gap-2 border-b border-rule pb-2 w-full min-w-0">
-            <span class="font-mono text-[11.5px] font-bold text-ink tracking-wider flex items-center gap-2 min-w-0">
-              <AppIcon name="code" :size="12" class="text-sig shrink-0" />
+            <span class="font-mono text-[11.5px] font-medium text-ink tracking-wider flex items-center gap-2 min-w-0">
+              <span class="w-1.5 h-1.5 rounded-full bg-sig shrink-0" aria-hidden="true" />
               <span class="truncate">{{ tr.detail.stackSection }}</span>
             </span>
             <span class="font-mono text-[10.5px] text-dim hidden sm:inline shrink-0">{{ isEs ? 'TECNOLOGÍAS APLICADAS' : 'APPLIED TECHNOLOGIES' }}</span>
@@ -673,7 +700,7 @@ async function copyJson() {
               <NuxtLink
                 v-if="it.to"
                 :to="it.to"
-                class="tech-chip font-mono text-[11.5px] px-3 py-1.5 border border-rule bg-paper text-ink no-underline hover:border-sig hover:text-sig transition-colors rounded-[2px]"
+                class="tech-chip font-mono text-[11px] px-2.5 py-1 border border-rule bg-paper/80 text-dim hover:text-ink hover:border-sig/60 hover:-translate-y-0.5 transition-all rounded-md no-underline"
               >
                 {{ it.label }}
               </NuxtLink>
@@ -682,10 +709,10 @@ async function copyJson() {
         </div>
 
         <!-- Proyecto Relacionado Destacado -->
-        <div v-if="expLinkedProjects.length" class="linked-project-box p-4 sm:p-5 bg-surface border border-rule border-l-4 border-l-green rounded-[2px] flex flex-col gap-3 w-full min-w-0">
+        <div v-if="expLinkedProjects.length" class="linked-project-box p-4 sm:p-5 bg-surface/60 border border-rule rounded-xl flex flex-col gap-3 w-full min-w-0">
           <div class="flex items-center justify-between gap-2 border-b border-rule pb-2 w-full min-w-0">
-            <span class="font-mono text-[11.5px] font-bold text-green tracking-wider flex items-center gap-2 min-w-0">
-              <AppIcon name="check" :size="13" class="shrink-0" />
+            <span class="font-mono text-[11.5px] font-medium text-green tracking-wider flex items-center gap-2 min-w-0">
+              <span class="w-1.5 h-1.5 rounded-full bg-green shrink-0" aria-hidden="true" />
               <span class="truncate">{{ tr.detail.relatedProjects }}</span>
             </span>
             <span class="font-mono text-[10.5px] text-faint hidden sm:inline shrink-0">POSTGRESQL 17 RELATION</span>
@@ -694,13 +721,13 @@ async function copyJson() {
           <div
             v-for="lp in expLinkedProjects"
             :key="lp.slug"
-            class="lp-card p-3 sm:p-3.5 bg-paper border border-rule rounded-[2px] flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 w-full min-w-0"
+            class="lp-card p-3 sm:p-3.5 bg-paper/80 border border-rule rounded-lg flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 w-full min-w-0"
           >
             <div class="flex flex-col gap-1 min-w-0 flex-1">
               <div class="flex items-center gap-2 font-mono text-[12px] flex-wrap">
                 <span class="font-bold text-ink truncate">{{ lp.title }}</span>
                 <span class="text-faint">· {{ lp.year }}</span>
-                <span v-if="lp.status" class="text-green text-[11px] font-bold">● {{ lp.status }}</span>
+                <span v-if="lp.status" class="text-green text-[11px] font-medium">● {{ lp.status }}</span>
               </div>
               <p v-if="lp.summary" class="m-0 font-sans text-[13px] sm:text-[13.5px] text-dim line-clamp-2 break-words">
                 {{ lp.summary }}
@@ -710,9 +737,9 @@ async function copyJson() {
             <div class="flex items-center gap-2 w-full sm:w-auto shrink-0">
               <NuxtLink
                 :to="routeFor(['projects', lp.slug])"
-                class="ph-btn primary inline-flex items-center justify-center gap-1.5 px-3.5 py-1.5 font-mono text-[11.5px] font-bold no-underline rounded-[2px] bg-sig text-on-sig border border-sig hover:bg-sig-hover w-full sm:w-auto min-h-[34px]"
+                class="ph-btn primary bg-ink text-paper hover:opacity-90 active:scale-[0.98] rounded-md px-3.5 py-1.5 font-sans text-[12px] font-medium no-underline inline-flex items-center justify-center gap-1.5 transition-all w-full sm:w-auto"
               >
-                <span>{{ isEs ? 'VER DOSSIER' : 'VIEW DOSSIER' }}</span>
+                <span>{{ isEs ? 'Ver dossier' : 'View dossier' }}</span>
                 <AppIcon name="chevron-right" :size="11" />
               </NuxtLink>
             </div>
@@ -720,8 +747,8 @@ async function copyJson() {
         </div>
 
         <!-- Cajón Colapsable de Especificaciones Técnicas del Esquema Relacional -->
-        <details class="specs-accordion border border-rule bg-surface rounded-[2px] transition-all w-full min-w-0">
-          <summary class="p-3 px-3.5 sm:px-4 font-mono text-[12px] font-bold text-dim cursor-pointer select-none hover:text-sig flex items-center justify-between gap-2">
+        <details class="specs-accordion border border-rule bg-surface/60 rounded-xl transition-all w-full min-w-0 overflow-hidden">
+          <summary class="p-3 px-3.5 sm:px-4 font-mono text-[11.5px] font-medium text-dim cursor-pointer select-none hover:text-sig flex items-center justify-between gap-2">
             <span class="flex items-center gap-2 min-w-0">
               <AppIcon name="table" :size="12" class="shrink-0" />
               <span class="truncate">{{ tr.detail.specsSection }} ({{ pad(detail.rows.length) }} {{ isEs ? 'CAMPOS' : 'FIELDS' }})</span>
@@ -729,7 +756,7 @@ async function copyJson() {
             <span class="text-faint text-[10.5px] hidden sm:inline shrink-0">{{ isEs ? 'DESPLEGAR ESQUEMA' : 'EXPAND SCHEMA' }}</span>
           </summary>
           <div class="p-3 sm:p-4 pt-2 border-t border-rule bg-paper/50">
-            <dl class="campos flex flex-col border border-rule bg-surface divide-y divide-rule w-full m-0">
+            <dl class="campos flex flex-col border border-rule bg-surface rounded-lg divide-y divide-rule w-full m-0 overflow-hidden">
               <div
                 v-for="row in detail.rows"
                 :key="row.name"
@@ -759,24 +786,24 @@ async function copyJson() {
 
       <!-- 4. Si es ARTÍCULO / BLOG y está en modo Dossier Editorial (por defecto) -->
       <div v-else-if="isArticle && !showRawFields" class="dossier-wrap article-dossier flex flex-col gap-5 sm:gap-6 w-full min-w-0">
-        <!-- Hero Bar del Artículo -->
-        <div class="article-hero-bar w-full p-3.5 sm:p-4 bg-surface border border-rule border-l-4 border-l-sig flex flex-col md:flex-row md:items-center justify-between gap-3.5 rounded-[2px]">
-          <div class="ah-meta flex flex-wrap items-center gap-1.5 sm:gap-2.5 text-xs font-mono min-w-0 flex-1">
+        <!-- Hero Bar del Artículo (Linear Properties Bar) -->
+        <div class="article-hero-bar w-full p-4 sm:p-5 rounded-xl border border-rule bg-surface/60 flex flex-col md:flex-row md:items-center justify-between gap-3.5">
+          <div class="ah-meta flex flex-wrap items-center gap-1.5 sm:gap-2 text-xs font-mono min-w-0 flex-1">
             <div class="flex items-center gap-1.5 shrink-0">
               <span
-                class="ah-status px-2.5 py-1 font-bold rounded-[2px]"
+                class="ah-status px-2.5 py-1 font-medium rounded-lg text-[11px]"
                 :class="articleStatus === 'PUBLISHED' ? 'text-green border border-green/30 bg-green/10' : 'text-amber border border-amber/30 bg-amber/10'"
               >
                 ● {{ articleStatus }}
               </span>
-              <span class="ah-pill px-2.5 py-1 border border-rule bg-paper text-dim text-[11px] sm:text-[11.5px] rounded-[2px]">
+              <span class="ah-pill px-2.5 py-1 border border-rule bg-paper/80 text-dim text-[11px] rounded-lg">
                 {{ pad(articleReadingTime) }} MIN READ
               </span>
-              <span v-if="articlePublishedAt" class="ah-pill px-2.5 py-1 border border-rule bg-paper text-faint text-[11px] sm:text-[11.5px] rounded-[2px]">
+              <span v-if="articlePublishedAt" class="ah-pill px-2.5 py-1 border border-rule bg-paper/80 text-faint text-[11px] rounded-lg">
                 {{ articlePublishedAt }}
               </span>
             </div>
-            <span v-if="articleProjectRow?.value" class="ah-pill project px-2.5 py-1 border border-rule bg-paper text-sig font-semibold text-[11px] sm:text-[11.5px] rounded-[2px] max-w-full break-words">
+            <span v-if="articleProjectRow?.value" class="ah-pill project px-2.5 py-1 border border-rule bg-paper/80 text-sig font-medium text-[11px] rounded-lg max-w-full break-words">
               PROYECTO: {{ articleProjectRow.value }}
             </span>
           </div>
@@ -786,27 +813,33 @@ async function copyJson() {
               :href="articleCanonicalRow.href"
               target="_blank"
               rel="noopener noreferrer"
-              class="ph-btn secondary group inline-flex items-center justify-center gap-2 px-3.5 sm:px-4 py-2 font-mono text-[11.5px] font-bold no-underline cursor-pointer transition-all duration-150 rounded-[2px] bg-paper text-ink border border-rule-strong hover:bg-hover hover:border-sig hover:text-sig w-full sm:w-auto min-h-[38px]"
+              class="ph-btn secondary bg-surface hover:bg-hover text-ink border border-rule hover:border-rule-strong active:scale-[0.98] rounded-md px-3.5 py-2 font-sans text-[12.5px] font-medium no-underline inline-flex items-center justify-center gap-2 transition-all w-full sm:w-auto"
             >
-              <AppIcon name="external" :size="12" class="group-hover:text-sig transition-colors duration-150" />
+              <AppIcon name="external" :size="12" />
               <span>CANONICAL URL</span>
             </a>
           </div>
         </div>
 
         <!-- Síntesis Ejecutiva Lead -->
-        <div v-if="articleSummaryRow?.value" class="summary-lead-card p-4 sm:p-5 bg-surface border-l-4 border-sig border-y border-r border-rule rounded-[2px] w-full min-w-0">
-          <span class="font-mono text-[11px] font-bold text-sig uppercase tracking-wider block mb-1.5">{{ tr.detail.executiveOverview }}</span>
+        <UiSpotlightCard
+          v-if="articleSummaryRow?.value"
+          class="summary-lead-card rounded-xl border border-rule bg-surface/60 p-4 sm:p-5 w-full min-w-0"
+        >
+          <div class="flex items-center gap-2 mb-2">
+            <span class="w-1.5 h-1.5 rounded-full bg-sig shrink-0" aria-hidden="true" />
+            <span class="font-mono text-[11px] font-medium text-sig uppercase tracking-wider">{{ tr.detail.executiveOverview }}</span>
+          </div>
           <p class="m-0 font-sans text-[14.5px] sm:text-[15.5px] text-ink leading-relaxed break-words">
             {{ articleSummaryRow.value }}
           </p>
-        </div>
+        </UiSpotlightCard>
 
         <!-- Tecnologías Relacionadas -->
-        <div v-if="articleTechsRow" class="techs-section p-3.5 sm:p-4 bg-surface border border-rule rounded-[2px] flex flex-col gap-2.5 w-full min-w-0">
+        <div v-if="articleTechsRow" class="techs-section p-3.5 sm:p-4 bg-surface/60 border border-rule rounded-xl flex flex-col gap-2.5 w-full min-w-0">
           <div class="flex items-center justify-between gap-2 border-b border-rule pb-2 w-full min-w-0">
-            <span class="font-mono text-[11.5px] font-bold text-ink tracking-wider flex items-center gap-2 min-w-0">
-              <AppIcon name="code" :size="12" class="text-sig shrink-0" />
+            <span class="font-mono text-[11.5px] font-medium text-ink tracking-wider flex items-center gap-2 min-w-0">
+              <span class="w-1.5 h-1.5 rounded-full bg-sig shrink-0" aria-hidden="true" />
               <span class="truncate">{{ tr.detail.stackSection }}</span>
             </span>
             <span class="font-mono text-[10.5px] text-dim hidden sm:inline shrink-0">STACK APLICADO</span>
@@ -816,7 +849,7 @@ async function copyJson() {
               <NuxtLink
                 v-if="it.to"
                 :to="it.to"
-                class="tech-chip font-mono text-[11.5px] px-3 py-1.5 border border-rule bg-paper text-ink no-underline hover:border-sig hover:text-sig transition-colors rounded-[2px]"
+                class="tech-chip font-mono text-[11px] px-2.5 py-1 border border-rule bg-paper/80 text-dim hover:text-ink hover:border-sig/60 hover:-translate-y-0.5 transition-all rounded-md no-underline"
               >
                 {{ it.label }}
               </NuxtLink>
@@ -825,13 +858,13 @@ async function copyJson() {
         </div>
 
         <!-- Cuerpo del Artículo en Markdown Técnico -->
-        <div v-if="articleContentRow?.value" class="article-body-section p-4 sm:p-6 bg-surface border border-rule rounded-[2px] w-full min-w-0 shadow-sm">
+        <div v-if="articleContentRow?.value" class="article-body-section p-4 sm:p-6 bg-surface/60 border border-rule rounded-xl w-full min-w-0 shadow-sm">
           <ArticleMarkdown :content="String(articleContentRow.value)" />
         </div>
 
         <!-- Cajón Colapsable de Especificaciones Técnicas del Esquema Relacional -->
-        <details class="specs-accordion border border-rule bg-surface rounded-[2px] transition-all w-full min-w-0">
-          <summary class="p-3 px-3.5 sm:px-4 font-mono text-[12px] font-bold text-dim cursor-pointer select-none hover:text-sig flex items-center justify-between gap-2">
+        <details class="specs-accordion border border-rule bg-surface/60 rounded-xl transition-all w-full min-w-0 overflow-hidden">
+          <summary class="p-3 px-3.5 sm:px-4 font-mono text-[11.5px] font-medium text-dim cursor-pointer select-none hover:text-sig flex items-center justify-between gap-2">
             <span class="flex items-center gap-2 min-w-0">
               <AppIcon name="table" :size="12" class="shrink-0" />
               <span class="truncate">{{ tr.detail.specsSection }} ({{ pad(detail.rows.length) }} {{ isEs ? 'CAMPOS' : 'FIELDS' }})</span>
@@ -839,7 +872,7 @@ async function copyJson() {
             <span class="text-faint text-[10.5px] hidden sm:inline shrink-0">{{ isEs ? 'DESPLEGAR ESQUEMA' : 'EXPAND SCHEMA' }}</span>
           </summary>
           <div class="p-3 sm:p-4 pt-2 border-t border-rule bg-paper/50">
-            <dl class="campos flex flex-col border border-rule bg-surface divide-y divide-rule w-full m-0">
+            <dl class="campos flex flex-col border border-rule bg-surface rounded-lg divide-y divide-rule w-full m-0 overflow-hidden">
               <div
                 v-for="row in detail.rows"
                 :key="row.name"
@@ -862,12 +895,12 @@ async function copyJson() {
       <!-- 5. De lo contrario (o si se activó 'showRawFields'): Renderizar Esquema de Campos Estándar -->
       <template v-else>
         <!-- Barra de Acción Hero de Proyecto (para vista de campos crudos) -->
-        <div v-if="isProject" class="project-hero-bar w-full p-3.5 sm:p-4 bg-surface border border-rule border-l-4 border-l-sig flex flex-col md:flex-row md:items-center justify-between gap-3.5 rounded-[2px]">
-          <div class="ph-meta flex flex-wrap items-center gap-1.5 sm:gap-2.5 text-xs font-mono min-w-0 flex-1">
-            <span class="ph-status text-green font-bold shrink-0">● {{ projectStatus }}</span>
-            <span v-if="projectYear" class="ph-pill px-2.5 py-1 border border-rule bg-paper text-dim text-[11px] sm:text-[11.5px] rounded-[2px] shrink-0">{{ projectYear }}</span>
-            <span v-if="projectOrg" class="ph-pill org px-2.5 py-1 border border-rule bg-paper text-dim text-[11px] sm:text-[11.5px] rounded-[2px] max-w-full break-words">{{ projectOrg }}</span>
-            <span v-if="projectRole" class="ph-pill role px-2.5 py-1 border border-rule bg-paper text-dim text-[11px] sm:text-[11.5px] rounded-[2px] max-w-full break-words">{{ projectRole }}</span>
+        <div v-if="isProject" class="project-hero-bar w-full p-4 sm:p-5 rounded-xl border border-rule bg-surface/60 flex flex-col md:flex-row md:items-center justify-between gap-3.5">
+          <div class="ph-meta flex flex-wrap items-center gap-1.5 sm:gap-2 text-xs font-mono min-w-0 flex-1">
+            <span class="ph-status text-green font-medium text-[11px] px-2.5 py-1 rounded-lg border border-green/30 bg-green/10 shrink-0">● {{ projectStatus }}</span>
+            <span v-if="projectYear" class="ph-pill px-2.5 py-1 border border-rule bg-paper/80 text-dim text-[11px] rounded-lg shrink-0">{{ projectYear }}</span>
+            <span v-if="projectOrg" class="ph-pill org px-2.5 py-1 border border-rule bg-paper/80 text-dim text-[11px] rounded-lg max-w-full break-words">{{ projectOrg }}</span>
+            <span v-if="projectRole" class="ph-pill role px-2.5 py-1 border border-rule bg-paper/80 text-dim text-[11px] rounded-lg max-w-full break-words">{{ projectRole }}</span>
           </div>
 
           <div class="ph-actions flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-2.5 w-full md:w-auto shrink-0">
@@ -876,7 +909,7 @@ async function copyJson() {
               :href="projectUrl"
               target="_blank"
               rel="noopener noreferrer"
-              class="ph-btn primary inline-flex items-center justify-center gap-2 px-3.5 sm:px-4 py-2 font-mono text-[11.5px] sm:text-[12px] font-bold no-underline cursor-pointer transition-all duration-150 rounded-[2px] bg-sig text-on-sig border border-sig hover:bg-sig-hover w-full sm:w-auto min-h-[38px]"
+              class="ph-btn primary bg-ink text-paper hover:opacity-90 active:scale-[0.98] rounded-md px-3.5 py-2 font-sans text-[12.5px] font-medium no-underline inline-flex items-center justify-center gap-2 transition-all w-full sm:w-auto"
             >
               <AppIcon name="external" :size="12" />
               <span>{{ isEs ? 'VISITAR SITIO EN VIVO' : 'VISIT LIVE SITE' }}</span>
@@ -886,34 +919,34 @@ async function copyJson() {
               :href="projectRepo"
               target="_blank"
               rel="noopener noreferrer"
-              class="ph-btn secondary group inline-flex items-center justify-center gap-2 px-3.5 sm:px-4 py-2 font-mono text-[11.5px] sm:text-[12px] font-bold no-underline cursor-pointer transition-all duration-150 rounded-[2px] bg-paper text-ink border border-rule-strong hover:bg-hover hover:border-sig hover:text-sig w-full sm:w-auto min-h-[38px]"
+              class="ph-btn secondary bg-surface hover:bg-hover text-ink border border-rule hover:border-rule-strong active:scale-[0.98] rounded-md px-3.5 py-2 font-sans text-[12.5px] font-medium no-underline inline-flex items-center justify-center gap-2 transition-all w-full sm:w-auto"
             >
-              <AppIcon name="code" :size="12" class="group-hover:text-sig transition-colors duration-150" />
+              <AppIcon name="code" :size="12" />
               <span>{{ isEs ? 'CÓDIGO FUENTE EN GITHUB' : 'SOURCE CODE ON GITHUB' }}</span>
             </a>
           </div>
         </div>
 
         <!-- Barra de Acción Rápida de Contacto -->
-        <div v-if="isContact" class="contact-hero-bar w-full p-3.5 sm:p-4 bg-surface border border-rule border-l-4 border-l-green flex flex-col md:flex-row md:items-center justify-between gap-3.5 rounded-[2px]">
+        <div v-if="isContact" class="contact-hero-bar w-full p-4 sm:p-5 rounded-xl border border-rule bg-surface/60 flex flex-col md:flex-row md:items-center justify-between gap-3.5">
           <div class="ch-info flex flex-col gap-1 min-w-0 flex-1">
-            <span class="ch-badge text-green font-mono text-xs font-bold">● {{ isEs ? 'DISPONIBLE // CONTRATACIÓN DIRECTA' : 'AVAILABLE // DIRECT HIRE' }}</span>
+            <span class="ch-badge text-green font-mono text-xs font-medium">● {{ isEs ? 'DISPONIBLE // CONTRATACIÓN DIRECTA' : 'AVAILABLE // DIRECT HIRE' }}</span>
             <span class="ch-desc text-dim text-[13px] sm:text-[13.5px] font-sans break-words">{{ isEs ? 'Respondo habitualmente en menos de 24 horas laborables.' : 'I usually respond in less than 24 business hours.' }}</span>
           </div>
           <div class="ch-actions flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full md:w-auto shrink-0">
             <button
               type="button"
-              class="ch-btn copy group inline-flex items-center justify-center gap-2 px-3.5 sm:px-4 py-2 font-mono text-[11.5px] font-bold no-underline cursor-pointer transition-all duration-150 rounded-[2px] bg-paper border border-rule-strong text-ink hover:bg-hover hover:border-sig hover:text-sig w-full sm:w-auto min-h-[38px]"
+              class="ch-btn copy group inline-flex items-center justify-center gap-2 px-3.5 sm:px-4 py-2 font-mono text-[11px] font-medium no-underline cursor-pointer transition-all duration-150 rounded-md bg-paper/80 border border-rule text-ink hover:bg-hover hover:border-rule-strong w-full sm:w-auto"
               :class="{ '!border-green !text-green !bg-green/10': copiedEmail }"
               @click="copyEmail"
             >
-              <AppIcon :name="copiedEmail ? 'check' : 'copy'" :size="12" class="group-hover:text-sig transition-colors duration-150" />
+              <AppIcon :name="copiedEmail ? 'check' : 'copy'" :size="12" />
               <span>{{ copiedEmail ? (isEs ? '¡EMAIL COPIADO!' : 'EMAIL COPIED!') : (isEs ? 'COPIAR EMAIL DIRECTO' : 'COPY DIRECT EMAIL') }}</span>
             </button>
             <a
               v-if="emailRow?.value"
               :href="`mailto:${emailRow.value}`"
-              class="ch-btn primary inline-flex items-center justify-center gap-2 px-3.5 sm:px-4 py-2 font-mono text-[11.5px] font-bold no-underline cursor-pointer transition-all duration-150 rounded-[2px] bg-green text-white border border-green hover:bg-[#047857] w-full sm:w-auto min-h-[38px]"
+              class="ch-btn primary inline-flex items-center justify-center gap-2 px-3.5 sm:px-4 py-2 font-mono text-[11px] font-medium no-underline cursor-pointer transition-all duration-150 rounded-md bg-ink text-paper hover:opacity-90 w-full sm:w-auto"
             >
               <AppIcon name="mail" :size="12" />
               <span>{{ isEs ? 'ENVIAR CORREO' : 'SEND EMAIL' }}</span>
@@ -923,7 +956,7 @@ async function copyJson() {
         </div>
 
         <!-- Lista de Campos Técnicos Estándar -->
-        <dl class="campos flex flex-col border border-rule bg-surface divide-y divide-rule w-full m-0">
+        <dl class="campos flex flex-col border border-rule bg-surface rounded-xl divide-y divide-rule w-full m-0 overflow-hidden">
           <div
             v-for="row in detail.rows"
             :key="row.name"
@@ -963,103 +996,10 @@ async function copyJson() {
 .hoja-acciones {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
 }
 
-.raw-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  height: 30px;
-  padding: 0 10px;
-  border: 1px solid var(--d-rule);
-  background: var(--d-surface);
-  color: var(--d-dim);
-  font-family: var(--font-mono);
-  font-size: var(--d-fs-mono);
-  font-weight: 700;
-  cursor: pointer;
-  transition: all var(--d-dur) ease;
-}
-.raw-btn:hover, .raw-btn.active {
-  border-color: var(--d-sig);
-  color: var(--d-sig);
-  background: var(--d-hover);
-}
-.raw-icon { font-weight: 900; }
-
-.vecinos { display: flex; align-items: center; gap: 6px; font-family: var(--font-text); font-size: var(--d-fs-ui); flex-wrap: wrap; }
-.vecino {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  max-width: 280px;
-  height: 30px;
-  padding: 0 10px;
-  border: 1px solid var(--d-rule);
-  background: var(--d-surface);
-  color: var(--d-dim);
-  text-decoration: none;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  transition: all var(--d-dur) ease;
-}
-.vecino:hover { border-color: var(--d-sig); color: var(--d-sig); background: var(--d-hover); }
-.vecino.off { color: var(--d-faint); opacity: 0.5; cursor: default; }
-
-/* ─── Drawer JSON Crudo ────────────────────────────────────────────────────── */
-.raw-drawer {
-  background: var(--d-surface);
-  border: 1px solid var(--d-rule-strong);
-  margin-bottom: 12px;
-  overflow: hidden;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
-  width: 100%;
-}
-.raw-toolbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 8px 14px;
-  background: var(--d-surface-raised);
-  border-bottom: 1px solid var(--d-rule);
-}
-.raw-endpoint {
-  font-family: var(--font-mono);
-  font-size: 11px;
-  color: var(--d-sig);
-  font-weight: 700;
-}
-.copy-btn {
-  background: none;
-  border: 1px solid var(--d-rule);
-  color: var(--d-ink);
-  font-family: var(--font-mono);
-  font-size: 11px;
-  padding: 4px 10px;
-  cursor: pointer;
-  transition: all var(--d-dur) ease;
-}
-.copy-btn:hover {
-  border-color: var(--d-sig);
-  color: var(--d-sig);
-}
-.raw-code {
-  margin: 0;
-  padding: 14px 16px;
-  max-height: 360px;
-  overflow: auto;
-  font-family: var(--font-mono);
-  font-size: 12px;
-  line-height: 1.5;
-  color: var(--d-ink);
-  background: var(--d-paper);
-}
-
-.summary-lead-card {
-  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-}
+.raw-icon { font-weight: 700; }
 
 .specs-accordion summary {
   list-style: none;
@@ -1073,6 +1013,18 @@ async function copyJson() {
   .hoja-acciones { flex-wrap: wrap; width: 100%; gap: 8px; }
   .vecinos { width: 100%; justify-content: space-between; }
   .vecino { max-width: none; flex: 1 1 auto; }
-  .raw-code { max-height: 260px; font-size: 11px; }
+}
+
+@media print {
+  .hoja-acciones,
+  .raw-drawer,
+  .vecinos,
+  .ph-actions,
+  .eh-actions,
+  .ah-actions,
+  .ch-actions,
+  .specs-accordion {
+    display: none !important;
+  }
 }
 </style>

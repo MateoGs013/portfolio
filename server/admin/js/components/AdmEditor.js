@@ -12,7 +12,7 @@ import { OrgsForm } from './forms/OrgsForm.js'
 import { DocsForm } from './forms/DocsForm.js'
 import { ArticleForm } from './forms/ArticleForm.js'
 
-const { computed } = window.Vue
+const { ref, computed } = window.Vue
 
 export const AdmEditor = {
   name: 'AdmEditor',

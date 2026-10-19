@@ -6,6 +6,7 @@ import multer from 'multer'
 import { db } from '../db.js'
 import { ArticleStatus, MediaKind, MediaRole, Prisma, ProjectStatus, TechCategory } from '../../generated/prisma/client.js'
 import { requireAdmin } from './auth.js'
+import { fallbackExperience, fallbackOrgs, fallbackProjects, fallbackStack } from '../fallbackData.js'
 import { IMAGE_MIME, imageDims } from './image.js'
 import { HttpError, bool, date, enumOf, int, intList, json, list, optDate, optInt, optStr, optUrl, slug, str, url } from './input.js'
 import { hunterRouter } from './hunter.js'
@@ -15,6 +16,9 @@ import { radarRouter } from './radar.js'
 const require = createRequire(import.meta.url)
 const ADMIN_DIR = path.resolve('server/admin')
 const MEDIA_DIR = path.resolve('public/media/projects')
+
+const prisma = db
+export const requireAuth = requireAdmin
 
 // ─── UI estática ────────────────────────────────────────────────────────────
 
@@ -30,7 +34,7 @@ adminApi.use((req, _res, next) => {
   if (req.body === undefined || req.body === null) req.body = {}
   next()
 })
-adminApi.use(requireAdmin)
+adminApi.use(requireAuth)
 adminApi.use('/hunter', hunterRouter)
 adminApi.use('/content', contentRouter)
 adminApi.use('/radar', radarRouter)
@@ -47,14 +51,73 @@ function id(req: Request): number {
   return n
 }
 
-/** Enums y opciones para los selects de la UI. */
+/** Enums, opciones para los selects de la UI y conteos agregados vía transacción Prisma. */
 adminApi.get('/meta', async (_req, res) => {
-  const [orgs, techs, projects] = await Promise.all([
-    db.org.findMany({ select: { id: true, name: true }, orderBy: { name: 'asc' } }),
-    db.tech.findMany({ select: { id: true, name: true }, orderBy: { name: 'asc' } }),
-    db.project.findMany({ select: { id: true, title: true }, orderBy: { title: 'asc' } }),
-  ])
+  interface AdminCounts {
+    projects: number
+    experiences: number
+    experience: number
+    stack: number
+    orgs: number
+    education: number
+    certs: number
+    labs: number
+    articles: number
+    inbox: number
+  }
+
+  let counts: AdminCounts
+  try {
+    const [projectCount, experienceCount, techCount, orgCount, articleCount] = await prisma.$transaction([
+      prisma.project.count(),
+      prisma.experience.count(),
+      prisma.tech.count(),
+      prisma.org.count(),
+      prisma.article.count(),
+    ])
+    counts = {
+      projects: projectCount,
+      experiences: experienceCount,
+      experience: experienceCount,
+      stack: techCount,
+      orgs: orgCount,
+      education: 0,
+      certs: 0,
+      labs: 0,
+      articles: articleCount,
+      inbox: 0,
+    }
+  } catch {
+    counts = {
+      projects: fallbackProjects.length,
+      experiences: fallbackExperience.length,
+      experience: fallbackExperience.length,
+      stack: fallbackStack.length,
+      orgs: Object.keys(fallbackOrgs).length,
+      education: 0,
+      certs: 0,
+      labs: 0,
+      articles: 0,
+      inbox: 0,
+    }
+  }
+
+  let orgs: { id: number, name: string }[] = []
+  let techs: { id: number, name: string }[] = []
+  let projects: { id: number, title: string }[] = []
+
+  try {
+    [orgs, techs, projects] = await Promise.all([
+      prisma.org.findMany({ select: { id: true, name: true }, orderBy: { name: 'asc' } }),
+      prisma.tech.findMany({ select: { id: true, name: true }, orderBy: { name: 'asc' } }),
+      prisma.project.findMany({ select: { id: true, title: true }, orderBy: { title: 'asc' } }),
+    ])
+  } catch {
+    // Si la DB falla, se devuelven listas vacías sin interrumpir respuesta
+  }
+
   res.json({
+    counts,
     enums: { ProjectStatus: PROJECT_STATUS, ArticleStatus: ARTICLE_STATUS, TechCategory: TECH_CATEGORY, MediaKind: MEDIA_KIND, MediaRole: MEDIA_ROLE },
     options: { orgs, techs, projects },
   })

@@ -15,7 +15,7 @@
  * (brief, outcome, pasos de proceso, capturas técnicas y métricas).
  */
 import type { LocationQuery, RouteLocationRaw } from 'vue-router'
-import type { AnyRecord, Article, Doc, Experience, LinkRef, Org, Project, TechRef } from '~/lib/api'
+import type { AnyRecord, Article, Doc, Experience, LinkRef, Org, Project, SchemaEntry, TechRef } from '~/lib/api'
 import { fieldMeta, fieldsFor, type CollectionKey, type DocField, type DocKey, type FieldMeta } from '~/lib/fieldMeta'
 import { isDoc, isRoot, routeFor, type Path } from '~/lib/path'
 import { filtersFor, listEndpoint, listFilters, type Answer, type useApi } from '~/composables/useApi'
@@ -386,7 +386,7 @@ const fallbackDocData: Record<DocKey, Doc> = {
   },
 }
 
-export async function resolveExplorer(api: Api, path: Path, query: LocationQuery): Promise<Explorer> {
+export async function resolveExplorer(api: Api, path: Path, query: LocationQuery, preloadedSchema?: Answer<SchemaEntry[]> | null): Promise<Explorer> {
   const [root, slug, sub] = path
 
   let folder: Folder | null = null
@@ -399,7 +399,7 @@ export async function resolveExplorer(api: Api, path: Path, query: LocationQuery
   if (!root) {
     // La raíz es la base de datos completa: sus colecciones y documentos
     const [schema, projectsRes, expRes, homeRes] = await Promise.all([
-      api.schema(),
+      preloadedSchema ? Promise.resolve(preloadedSchema) : api.schema(),
       api.list('projects').catch(() => null),
       api.list('experience').catch(() => null),
       api.doc('home').catch(() => null),
@@ -614,14 +614,22 @@ export async function resolveExplorer(api: Api, path: Path, query: LocationQuery
   // Relaciones inversas
   const extra: Record<string, AnyRecord[]> = {}
   if (collection === 'stack') {
-    const [projects, experiences, articles] = await Promise.all([
-      api.list('projects', { stack: record.slug }),
-      api.list('experience', { stack: record.slug }),
-      api.list('articles', { stack: record.slug }).catch(() => ({ data: [] })),
-    ])
-    extra.projects = projects.data as AnyRecord[]
-    extra.experiences = experiences.data as AnyRecord[]
-    extra.articles = (articles?.data ?? []) as AnyRecord[]
+    const stackRecord = record as unknown as { projects?: AnyRecord[], experiences?: AnyRecord[], articles?: AnyRecord[] }
+    if (stackRecord.projects?.length || stackRecord.experiences?.length) {
+      extra.projects = stackRecord.projects ?? []
+      extra.experiences = stackRecord.experiences ?? []
+      extra.articles = stackRecord.articles ?? []
+    }
+    else {
+      const [projects, experiences, articles] = await Promise.all([
+        api.list('projects', { stack: record.slug }),
+        api.list('experience', { stack: record.slug }),
+        api.list('articles', { stack: record.slug }).catch(() => ({ data: [] })),
+      ])
+      extra.projects = projects.data as AnyRecord[]
+      extra.experiences = experiences.data as AnyRecord[]
+      extra.articles = (articles?.data ?? []) as AnyRecord[]
+    }
   }
   if (collection === 'projects') {
     const articlesRes = await api.list('articles', { project: record.slug }).catch(() => null)

@@ -226,6 +226,19 @@ export const store = reactive({
 
   async refreshCounts() {
     try {
+      try {
+        const res = typeof api.get === 'function'
+          ? await api.get('/admin/meta')
+          : await api.getMeta()
+
+        if (res?.counts) {
+          Object.assign(store.counts, res.counts)
+          return
+        }
+      } catch {
+        // Fallback al conteo individual si /api/admin/meta no responde o no expone counts
+      }
+
       const [projs, exps, stks, orgs, arts, dcs, jbs, cnts, rads] = await Promise.all([
         api.getCollection('projects').catch(() => []),
         api.getCollection('experience').catch(() => []),

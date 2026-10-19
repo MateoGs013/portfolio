@@ -4,6 +4,7 @@
  * Cada llamada devuelve el envelope de datos, el request ejecutado y la latencia en ms.
  */
 import type { LocationQuery } from 'vue-router'
+import { computed, toValue, type MaybeRefOrGetter } from 'vue'
 import type { Article, Doc, Envelope, Experience, Org, Project, SchemaEntry, Tech } from '~/lib/api'
 import type { CollectionKey, DocKey } from '~/lib/fieldMeta'
 
@@ -33,7 +34,7 @@ export const listEndpoint: Record<CollectionKey, string | null> = {
 
 /** Filtros que acepta cada lista. Es el contrato de URL: la query pública mapea uno a uno. */
 export const listFilters: Record<CollectionKey, readonly string[]> = {
-  projects: ['stack', 'year', 'role', 'featured', 'status'],
+  projects: ['stack', 'year', 'role', 'featured', 'status', 'org'],
   experience: ['stack', 'org'],
   stack: ['category'],
   articles: ['stack', 'featured', 'project'],
@@ -109,3 +110,37 @@ export function useApi() {
 
   return { apiBase, get, schema, list, record, doc }
 }
+
+export interface ProjectFilterParams {
+  stack?: string
+  year?: string | number
+  role?: string
+  featured?: string | boolean
+  status?: string
+  org?: string
+}
+
+/** Composable reactivo para consultar proyectos con filtros relacionales (incluyendo ?org=). */
+export function useProjects(filters?: MaybeRefOrGetter<ProjectFilterParams | undefined>) {
+  const api = useApi()
+  const filterParams = computed<Record<string, string>>(() => {
+    const raw = toValue(filters) ?? {}
+    const out: Record<string, string> = {}
+    if (raw.stack) out['stack'] = String(raw.stack)
+    if (raw.year !== undefined) out['year'] = String(raw.year)
+    if (raw.role) out['role'] = String(raw.role)
+    if (raw.featured !== undefined) out['featured'] = String(raw.featured)
+    if (raw.status) out['status'] = String(raw.status)
+    if (raw.org) out['org'] = String(raw.org)
+    return out
+  })
+
+  return useAsyncData(
+    () => `projects-${JSON.stringify(filterParams.value)}`,
+    () => api.list('projects', filterParams.value),
+    {
+      watch: [filterParams],
+    },
+  )
+}
+

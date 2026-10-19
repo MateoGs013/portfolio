@@ -5,11 +5,15 @@
 import { store } from '../store.js'
 import { api } from '../api.js'
 import { ICONS } from '../config.js'
+import { AdmAiTrace } from './AdmAiTrace.js'
 
 const { computed, ref } = window.Vue
 
 export const AdmContentManager = {
   name: 'AdmContentManager',
+  components: {
+    AdmAiTrace,
+  },
   setup() {
     const showGenModal = ref(false)
     const activeSubTab = ref('linkedin') // 'linkedin' | 'x' | 'devto' | 'carousel'
@@ -697,9 +701,21 @@ export const AdmContentManager = {
               @click="showGenModal = false"
               class="text-zinc-400 hover:text-white text-xs font-mono-code"
             >
-              ✕ Cerrar
+              [X] Cerrar
             </button>
           </div>
+
+          <!-- Traza de Razonamiento IA (Bencho UI) -->
+          <adm-ai-trace
+            :active="store.content.isGenerating"
+            title="EROS // GENERACIÓN OMNICANAL"
+            :steps="[
+              'Extrayendo tesis técnica y pilar editorial',
+              'Consultando contexto relacional en PostgreSQL 17',
+              'Estructurando desglose para LinkedIn, X y Blog',
+              'Optimizando diagramas técnicos y síntesis final con Gemini'
+            ]"
+          />
 
           <form @submit.prevent="handleGenerateSubmit" class="space-y-3.5 text-xs">
             <div>

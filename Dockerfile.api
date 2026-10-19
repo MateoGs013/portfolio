@@ -16,9 +16,9 @@ COPY tsconfig.json ./
 COPY prisma ./prisma
 COPY server ./server
 COPY public/media ./public/media
-RUN pnpm prisma generate
-RUN mkdir -p /app/public/media/projects && chown -R node:node /app
+RUN pnpm build:admin-css && pnpm prisma generate
+RUN mkdir -p /app/public/media/projects /app/uploads && chown -R node:node /app
 
 USER node
 EXPOSE 3001
-CMD ["pnpm", "start:api"]
+CMD ["sh", "-c", "npx prisma migrate deploy && pnpm start:api"]

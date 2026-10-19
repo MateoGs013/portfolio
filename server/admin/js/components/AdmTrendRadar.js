@@ -4,11 +4,15 @@
 
 import { store } from '../store.js'
 import { ICONS } from '../config.js'
+import { AdmAiTrace } from './AdmAiTrace.js'
 
 const { computed, ref } = window.Vue
 
 export const AdmTrendRadar = {
   name: 'AdmTrendRadar',
+  components: {
+    AdmAiTrace,
+  },
   setup() {
     const mobileRadarMode = ref(store.radar.selected ? 'detail' : 'list')
     const customAngleInput = ref('')
@@ -222,6 +226,20 @@ export const AdmTrendRadar = {
             </div>
           </div>
 
+          <!-- Traza de Razonamiento IA: Escaneo del Radar (Bencho UI) -->
+          <div class="px-3" v-if="store.radar.isScanning">
+            <adm-ai-trace
+              :active="store.radar.isScanning"
+              title="EROS // ESCANEO RADAR DE TENDENCIAS"
+              :steps="[
+                'Consultando feeds técnicos RSS y Hacker News API',
+                'Filtrando señales de alto impacto y relevancia para el stack',
+                'Calculando score heurístico de novedad técnica',
+                'Indexando nuevas tendencias en base de datos PostgreSQL 17'
+              ]"
+            />
+          </div>
+
           <!-- Lista de Items con Scroll -->
           <div class="flex-1 overflow-y-auto divide-y divide-white/5">
             <div
@@ -322,6 +340,19 @@ export const AdmTrendRadar = {
 
             <!-- Contenido con Scroll -->
             <div class="flex-1 overflow-y-auto p-5 sm:p-6 space-y-6">
+
+              <!-- Traza de Razonamiento IA: Generación de Post Omnicanal & Blog (Bencho UI) -->
+              <adm-ai-trace
+                :active="store.radar.isGenerating"
+                title="EROS // GENERACIÓN OMNICANAL & BLOG"
+                :steps="[
+                  'Extrayendo tesis técnica y fuentes del radar',
+                  'Cruzando con proyectos y experiencia del portfolio',
+                  'Redactando post de ingeniería y carrusel social',
+                  'Persistiendo borrador editorial en base de datos'
+                ]"
+              />
+
               <!-- Título de la Tendencia -->
               <div class="space-y-2">
                 <h2 class="text-base sm:text-xl font-bold text-white leading-snug font-sans">

@@ -16,29 +16,29 @@
   --d-orange-bg: rgba(255, 62, 0, 0.09);
 
   /* Obsidian Dark (Tema Nocturno Monocromático de Alta Precisión y Calma Visual) */
-  --d-paper: #09090b;
-  --d-surface: #121215;
-  --d-surface-raised: #19191e;
+  --d-paper: #0a0a0c;
+  --d-surface: #111114;
+  --d-surface-raised: #17171c;
   --d-ink: #f4f4f5;
-  --d-rule: rgba(255, 255, 255, 0.08);
-  --d-rule-strong: rgba(255, 255, 255, 0.15);
-  --d-dim: #929298;
-  --d-faint: #7c7c82;
-  --d-hover: #1c1c22;
+  --d-rule: rgba(255, 255, 255, 0.065);
+  --d-rule-strong: rgba(255, 255, 255, 0.13);
+  --d-dim: #9898a0;
+  --d-faint: #71717a;
+  --d-hover: #19191f;
   --d-sig: #ff3e00;
   --d-sig-hover: #ff551c;
-  --d-sig-glow: rgba(255, 62, 0, 0.28);
+  --d-sig-glow: rgba(255, 62, 0, 0.22);
   --d-accent: #ff3e00;
   --d-amber: #e5a00d;
   --d-green: #22c55e;
-  --d-inv-dim: #929298;
+  --d-inv-dim: #9898a0;
   --d-on-sig: #09090b;
 
-  --d-grid-cross: rgba(255, 255, 255, 0.022);
+  --d-grid-cross: rgba(255, 255, 255, 0.014);
 
   /* Densidad y marco de ventana (Full-bleed sin márgenes muertos) */
   --d-frame: 0px;
-  --d-inset: clamp(12px, 1.4vw, 18px);
+  --d-inset: clamp(16px, 2vw, 28px);
   --d-row: 44px;
   --d-tile: 184px;
   --d-tile-sm: 128px;
@@ -52,35 +52,35 @@
   --d-lh: 1.5;
 
   /* Ritmo y transiciones */
-  --d-dur: 150ms;
-  --d-ease: cubic-bezier(0.2, 0, 0, 1);
+  --d-dur: 160ms;
+  --d-ease: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 html[data-theme="light"] {
   /* Technical Poster Paper (Inspirado en papel cálido de imprenta suizo) */
   --d-orange: #c53000;
   --d-orange-deep: #a82900;
-  --d-orange-glow: rgba(197, 48, 0, 0.22);
-  --d-orange-bg: rgba(197, 48, 0, 0.08);
+  --d-orange-glow: rgba(197, 48, 0, 0.18);
+  --d-orange-bg: rgba(197, 48, 0, 0.06);
 
-  --d-paper: #f8f7f4;
-  --d-surface: #efeee9;
-  --d-surface-raised: #e5e3dc;
+  --d-paper: #faf9f6;
+  --d-surface: #f2f1ed;
+  --d-surface-raised: #e8e6e0;
   --d-ink: #111113;
-  --d-rule: rgba(0, 0, 0, 0.08);
-  --d-rule-strong: rgba(0, 0, 0, 0.16);
-  --d-dim: #55555c;
-  --d-faint: #64646b;
-  --d-hover: #e6e4dc;
+  --d-rule: rgba(0, 0, 0, 0.065);
+  --d-rule-strong: rgba(0, 0, 0, 0.13);
+  --d-dim: #52525b;
+  --d-faint: #71717a;
+  --d-hover: #eae8e1;
   --d-sig: #c53000;
   --d-sig-hover: #a82900;
-  --d-sig-glow: rgba(197, 48, 0, 0.22);
+  --d-sig-glow: rgba(197, 48, 0, 0.18);
   --d-accent: #c53000;
   --d-amber: #b45309;
   --d-green: #047857;
-  --d-inv-dim: #80808a;
+  --d-inv-dim: #71717a;
   --d-on-sig: #ffffff;
-  --d-grid-cross: rgba(0, 0, 0, 0.026);
+  --d-grid-cross: rgba(0, 0, 0, 0.018);
   color-scheme: light;
 }
 
@@ -284,7 +284,8 @@ html[data-hyperfocus="true"] .va-status-tag,
 html[data-hyperfocus="true"] .telemetria-badge,
 html[data-hyperfocus="true"] .clock-badge,
 html[data-hyperfocus="true"] .goto-btn kbd,
-html[data-hyperfocus="true"] .spotlight::after {
+html[data-hyperfocus="true"] .spotlight::after,
+html[data-hyperfocus="true"] .ui-spotlight-overlay {
   display: none !important;
 }
 

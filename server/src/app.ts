@@ -98,8 +98,9 @@ const corsMiddleware = cors({
 
 app.use('/api', corsMiddleware)
 app.use('/media', corsMiddleware)
+app.use('/uploads', corsMiddleware)
 
-app.use(express.json())
+app.use(express.json({ limit: '2mb' }))
 
 // Baja #1: Verificación de salud sin fuga de versión de la base de datos
 app.get('/api/health', async (_req, res) => {
@@ -109,8 +110,19 @@ app.get('/api/health', async (_req, res) => {
   res.status(dbOk ? 200 : 503).json(envelope({ ok: true, db: dbOk }))
 })
 
-// Archivos estáticos de media con protección contra MIME-sniffing
+// Archivos estáticos de media con protección contra MIME-sniffing y caché de 7 días
 app.use('/media', express.static(path.resolve('public/media'), {
+  maxAge: '7d',
+  immutable: false,
+  setHeaders: (res) => {
+    res.setHeader('X-Content-Type-Options', 'nosniff')
+  },
+}))
+
+// Archivos estáticos de uploads con protección contra MIME-sniffing y caché de 7 días
+app.use('/uploads', express.static(path.resolve('public/media'), {
+  maxAge: '7d',
+  immutable: false,
   setHeaders: (res) => {
     res.setHeader('X-Content-Type-Options', 'nosniff')
   },

@@ -7,6 +7,7 @@ import ExplorerFolder from './ExplorerFolder.vue'
 import ExplorerGoto from './ExplorerGoto.vue'
 import ExplorerGuide from './ExplorerGuide.vue'
 import AppIcon, { type IconName } from '~/components/ui/AppIcon.vue'
+import UiTelemetryPill from '~/components/ui/UiTelemetryPill.vue'
 import { pad, resolveExplorer, type Explorer } from '~/lib/explorer'
 import { routeFor } from '~/lib/path'
 
@@ -104,12 +105,22 @@ const liveCounts = computed<Record<string, number>>(() => {
       map[item.key] = item.count
     }
   }
+  const extraCounts = (schemaSummary.value as unknown as { counts?: Record<string, number> })?.counts
+  if (extraCounts) {
+    Object.assign(map, extraCounts)
+  }
   return map
 })
 
 const { data: ex, error } = await useAsyncData<Explorer>(
   computed(() => `explorer${route.fullPath}`),
-  () => resolveExplorer(api, path.value, route.query),
+  () => {
+    const q = { ...route.query }
+    if (typeof route.query.org === 'string') {
+      q.org = route.query.org
+    }
+    return resolveExplorer(api, path.value, q, schemaSummary.value)
+  },
   {
     getCachedData(key) {
       return nuxtApp.isHydrating ? nuxtApp.payload.data[key] : nuxtApp.static.data[key]
@@ -201,9 +212,13 @@ function onKey(e: KeyboardEvent) {
       break
     case '4':
       e.preventDefault()
-      go(routeFor(['about']))
+      go(routeFor(['articles']))
       break
     case '5':
+      e.preventDefault()
+      go(routeFor(['about']))
+      break
+    case '6':
       e.preventDefault()
       go(routeFor(['contact']))
       break
@@ -303,25 +318,36 @@ interface NavSection {
 
 const navSections = computed<NavSection[]>(() => [
   { root: '', label: isEs.value ? 'db / raíz' : 'db / root', shortLabel: isEs.value ? 'Inicio' : 'Home', to: [], badge: 'SYS', keyHint: '0', icon: 'db', desc: isEs.value ? 'Resumen del sistema y arquitectura' : 'System overview & architecture' },
-  { root: 'projects', label: isEs.value ? '01 · proyectos' : '01 · projects', shortLabel: isEs.value ? 'Proyectos' : 'Projects', to: ['projects'], badge: pad(liveCounts.value.projects ?? 6), keyHint: '1', icon: 'folder', desc: isEs.value ? 'Aplicaciones en producción' : 'Production applications' },
+  { root: 'projects', label: isEs.value ? '01 · proyectos' : '01 · projects', shortLabel: isEs.value ? 'Proy' : 'Work', to: ['projects'], badge: pad(liveCounts.value.projects ?? 6), keyHint: '1', icon: 'folder', desc: isEs.value ? 'Aplicaciones en producción' : 'Production applications' },
   { root: 'experience', label: isEs.value ? '02 · experiencia' : '02 · experience', shortLabel: 'Exp', to: ['experience'], badge: pad(liveCounts.value.experience ?? 6), keyHint: '2', icon: 'briefcase', desc: isEs.value ? 'Trayectoria profesional y roles' : 'Career history & roles' },
   { root: 'stack', label: isEs.value ? '03 · stack' : '03 · stack', shortLabel: 'Stack', to: ['stack'], badge: pad(liveCounts.value.stack ?? 22), keyHint: '3', icon: 'code', desc: isEs.value ? 'Tecnologías y lenguajes' : 'Technologies & languages' },
-  { root: 'about', label: isEs.value ? '04 · sobre mí' : '04 · about me', shortLabel: isEs.value ? 'CV' : 'About', to: ['about'], badge: pad(liveCounts.value.about ?? 13), keyHint: '4', icon: 'file', desc: isEs.value ? 'Perfil bio, formación y principios' : 'Bio, resume & principles' },
-  { root: 'contact', label: isEs.value ? '05 · contacto' : '05 · contact', shortLabel: isEs.value ? 'Contacto' : 'Contact', to: ['contact'], badge: pad(liveCounts.value.contact ?? 7), keyHint: '5', icon: 'mail', desc: isEs.value ? 'Canales y disponibilidad' : 'Channels & availability' },
+  { root: 'articles', label: isEs.value ? '04 · artículos' : '04 · articles', shortLabel: 'Blog', to: ['articles'], badge: pad(liveCounts.value.articles ?? 0), keyHint: '4', icon: 'file', desc: isEs.value ? 'Publicaciones técnicas y blog de ingeniería' : 'Technical articles & engineering blog' },
+  { root: 'about', label: isEs.value ? '05 · sobre mí' : '05 · about me', shortLabel: 'CV', to: ['about'], badge: pad(liveCounts.value.about ?? 13), keyHint: '5', icon: 'user', desc: isEs.value ? 'Perfil bio, formación y principios' : 'Bio, resume & principles' },
+  { root: 'contact', label: isEs.value ? '06 · contacto' : '06 · contact', shortLabel: isEs.value ? 'Mail' : 'Contact', to: ['contact'], badge: pad(liveCounts.value.contact ?? 7), keyHint: '6', icon: 'mail', desc: isEs.value ? 'Canales y disponibilidad' : 'Channels & availability' },
 ])
 
 const currentRoot = computed(() => path.value[0] ?? '')
+
+const activeQueryFilters = computed(() => {
+  const filters: Record<string, string | undefined> = {}
+  for (const [key, val] of Object.entries(route.query)) {
+    if (typeof val === 'string') {
+      filters[key] = val
+    }
+  }
+  return filters
+})
 </script>
 
 <template>
   <div class="datos flex flex-col h-dvh text-ink font-sans text-[13px] leading-normal tabular-nums bg-paper">
     <div class="ventana flex-1 min-h-0 w-full flex flex-col bg-paper [background-image:radial-gradient(var(--d-grid-cross)_1.2px,transparent_1.2px)] [background-size:32px_32px]">
-      <!-- Barra Superior de Herramientas -->
-      <header class="barra flex-none flex items-center justify-between gap-1.5 sm:gap-3 min-h-[46px] sm:min-h-[52px] px-2 sm:px-3.5 border-b border-rule bg-surface w-full max-w-full overflow-hidden">
+      <!-- Barra Superior de Herramientas (Linear / Bencho.dev Minimal Shell) -->
+      <header class="barra flex-none flex items-center justify-between gap-1.5 sm:gap-2.5 min-h-[46px] sm:min-h-[48px] px-2.5 sm:px-4 border-b border-rule bg-surface/75 backdrop-blur-md w-full max-w-full overflow-hidden">
         <nav class="historia flex gap-1" aria-label="Historial">
           <button
             type="button"
-            class="nav-btn inline-flex items-center justify-center w-7 h-7 sm:w-[30px] sm:h-[30px] border border-rule bg-paper text-ink text-sm no-underline cursor-pointer transition-colors duration-150 hover:border-sig hover:bg-hover hover:text-sig"
+            class="nav-btn inline-flex items-center justify-center w-7 h-7 rounded-md border border-rule bg-paper/70 text-dim text-sm no-underline cursor-pointer transition-all duration-150 hover:border-rule-strong hover:bg-hover hover:text-ink active:scale-[0.96]"
             aria-label="atrás"
             @click="router.back()"
           >
@@ -329,7 +355,7 @@ const currentRoot = computed(() => path.value[0] ?? '')
           </button>
           <button
             type="button"
-            class="nav-btn hidden sm:inline-flex items-center justify-center w-7 h-7 sm:w-[30px] sm:h-[30px] border border-rule bg-paper text-ink text-sm no-underline cursor-pointer transition-colors duration-150 hover:border-sig hover:bg-hover hover:text-sig"
+            class="nav-btn hidden sm:inline-flex items-center justify-center w-7 h-7 rounded-md border border-rule bg-paper/70 text-dim text-sm no-underline cursor-pointer transition-all duration-150 hover:border-rule-strong hover:bg-hover hover:text-ink active:scale-[0.96]"
             aria-label="adelante"
             @click="router.forward()"
           >
@@ -338,14 +364,14 @@ const currentRoot = computed(() => path.value[0] ?? '')
           <NuxtLink
             v-if="ex?.up"
             :to="ex.up"
-            class="nav-btn inline-flex items-center justify-center w-7 h-7 sm:w-[30px] sm:h-[30px] border border-rule bg-paper text-ink text-sm no-underline cursor-pointer transition-colors duration-150 hover:border-sig hover:bg-hover hover:text-sig"
+            class="nav-btn inline-flex items-center justify-center w-7 h-7 rounded-md border border-rule bg-paper/70 text-dim text-sm no-underline cursor-pointer transition-all duration-150 hover:border-rule-strong hover:bg-hover hover:text-ink active:scale-[0.96]"
             aria-label="subir un nivel"
           >
             <AppIcon name="arrow-up" :size="13" />
           </NuxtLink>
           <span
             v-else
-            class="nav-btn off inline-flex items-center justify-center w-7 h-7 sm:w-[30px] sm:h-[30px] border border-rule bg-paper text-faint opacity-40 cursor-default"
+            class="nav-btn off inline-flex items-center justify-center w-7 h-7 rounded-md border border-rule bg-paper/40 text-faint opacity-35 cursor-default"
             aria-hidden="true"
           >
             <AppIcon name="arrow-up" :size="13" />
@@ -353,46 +379,46 @@ const currentRoot = computed(() => path.value[0] ?? '')
         </nav>
 
         <!-- Ruta / Breadcrumb -->
-        <nav class="ruta flex-1 flex items-center min-w-0 h-7 sm:h-[30px] px-2 sm:px-2.5 border border-rule bg-paper whitespace-nowrap overflow-hidden text-[11px] sm:text-[12.5px] font-mono truncate" aria-label="Ruta">
+        <nav class="ruta flex-1 flex items-center min-w-0 h-7 px-2.5 rounded-md border border-rule bg-paper/60 whitespace-nowrap overflow-hidden text-[11px] sm:text-[12px] font-mono truncate" aria-label="Ruta">
+          <span class="w-1.5 h-1.5 rounded-full bg-sig mr-2 shrink-0 opacity-85" aria-hidden="true" />
           <template v-for="(seg, i) in segments" :key="seg.label + i">
-            <span v-if="i" class="sep text-faint px-1.5 sm:px-2" aria-hidden="true">/</span>
-            <NuxtLink v-if="i < segments.length - 1" :to="seg.to" class="text-sig hover:underline hover:text-sig-hover py-1.5">{{ seg.label }}</NuxtLink>
-            <span v-else class="here text-ink font-bold" aria-current="page">{{ seg.label }}</span>
+            <span v-if="i" class="sep text-faint px-1.5" aria-hidden="true">/</span>
+            <NuxtLink v-if="i < segments.length - 1" :to="seg.to" class="text-dim hover:text-ink no-underline transition-colors py-1">{{ seg.label }}</NuxtLink>
+            <span v-else class="here text-ink font-medium" aria-current="page">{{ seg.label }}</span>
           </template>
         </nav>
 
-        <!-- Botón de Búsqueda Rápida / Goto -->
+        <!-- Botón de Búsqueda Rápida / Goto (Estilo Linear ⌘K) -->
         <button
-          class="goto-btn group flex-[0_1_240px] min-w-[140px] hidden sm:flex items-center gap-2 h-[30px] px-2 border border-rule bg-paper text-dim text-left cursor-pointer transition-colors duration-150 hover:border-sig hover:text-ink"
+          class="goto-btn group flex-[0_1_230px] min-w-[140px] hidden sm:flex items-center gap-2 h-7 px-2.5 rounded-md border border-rule bg-paper/60 text-dim text-left cursor-pointer transition-all duration-150 hover:border-rule-strong hover:bg-hover/60 hover:text-ink active:scale-[0.99]"
           type="button"
           :title="isEs ? 'Abrir paleta de comandos (⌘K o /)' : 'Open command palette (⌘K or /)'"
           @click="gotoOpen = true"
         >
-          <AppIcon name="search" :size="12" class="goto-search-icon text-dim shrink-0 group-hover:text-sig transition-colors duration-150" />
-          <span class="goto-k text-sig font-bold font-mono text-[11px]">{{ isEs ? 'ir a' : 'goto' }}</span>
-          <span class="goto-ph flex-1 min-w-0 text-faint text-[12px] overflow-hidden text-ellipsis whitespace-nowrap">{{ isEs ? 'proyecto, tecnología, sección…' : 'project, tech, section…' }}</span>
-          <kbd class="font-mono text-[10px] text-dim border border-rule px-1.5 py-0.5 rounded-[2px] group-hover:border-sig group-hover:text-sig transition-colors duration-150">/</kbd>
+          <AppIcon name="search" :size="12" class="goto-search-icon text-faint shrink-0 group-hover:text-ink transition-colors duration-150" />
+          <span class="goto-ph flex-1 min-w-0 text-dim text-[11.5px] overflow-hidden text-ellipsis whitespace-nowrap">{{ isEs ? 'Buscar proyecto, stack…' : 'Search project, stack…' }}</span>
+          <kbd class="font-mono text-[10px] text-faint bg-surface px-1.5 py-0.5 rounded border border-rule group-hover:text-ink transition-colors duration-150">/</kbd>
         </button>
 
         <!-- Acciones Rápidas del Sistema: Idioma, Hiperfoco, Reloj UTC-3, Telemetría y Tema -->
-        <div class="barra-derecha flex items-center gap-1.5 sm:gap-2 shrink-0 ml-auto">
+        <div class="barra-derecha flex items-center gap-1.5 shrink-0 ml-auto">
           <!-- Switch de Idioma ES / EN -->
           <button
             type="button"
-            class="lang-btn inline-flex items-center gap-1 h-7 sm:h-[30px] px-1.5 sm:px-2 border border-rule bg-paper font-mono text-[10.5px] sm:text-[11px] font-bold text-dim cursor-pointer hover:border-sig hover:text-ink transition-colors duration-150"
+            class="lang-btn inline-flex items-center gap-1 h-7 px-2 rounded-md border border-rule bg-paper/60 font-mono text-[10.5px] font-medium text-dim cursor-pointer hover:border-rule-strong hover:text-ink active:scale-[0.97] transition-all duration-150"
             :title="isEs ? 'Switch interface to English' : 'Cambiar interfaz a Español'"
             :aria-label="isEs ? 'Switch to English' : 'Cambiar a Español'"
             @click="toggleLocale"
           >
-            <span class="lang-code" :class="{ 'text-sig font-bold': isEs }">ES</span>
+            <span class="lang-code" :class="{ 'text-ink font-semibold': isEs }">ES</span>
             <span class="lang-sep text-faint">/</span>
-            <span class="lang-code" :class="{ 'text-sig font-bold': !isEs }">EN</span>
+            <span class="lang-code" :class="{ 'text-ink font-semibold': !isEs }">EN</span>
           </button>
 
           <!-- Toggle de Modo Hiperfoco -->
           <button
             type="button"
-            class="tool-btn focus-btn hidden sm:inline-flex items-center justify-center w-7 h-7 sm:w-[30px] sm:h-[30px] border border-rule bg-paper text-dim cursor-pointer transition-colors duration-150 hover:border-sig hover:text-sig hover:bg-hover"
+            class="tool-btn focus-btn hidden sm:inline-flex items-center justify-center w-7 h-7 rounded-md border border-rule bg-paper/60 text-dim cursor-pointer transition-all duration-150 hover:border-rule-strong hover:text-ink hover:bg-hover active:scale-[0.96]"
             :class="{ '!border-sig !text-sig !bg-sig/10': isHyperfocus }"
             :title="isHyperfocus ? (isEs ? 'Desactivar Modo Hiperfoco (H)' : 'Disable Hyperfocus (H)') : (isEs ? 'Activar Modo Hiperfoco (H)' : 'Enable Hyperfocus (H)')"
             :aria-label="isHyperfocus ? 'Desactivar hiperfoco' : 'Activar hiperfoco'"
@@ -404,7 +430,7 @@ const currentRoot = computed(() => path.value[0] ?? '')
           <!-- Botón de Guía y Orientación Rápida -->
           <button
             type="button"
-            class="tool-btn help-btn hidden sm:inline-flex items-center justify-center w-7 h-7 sm:w-[30px] sm:h-[30px] border border-rule bg-paper text-dim cursor-pointer transition-colors duration-150 hover:border-sig hover:text-sig hover:bg-hover"
+            class="tool-btn help-btn hidden sm:inline-flex items-center justify-center w-7 h-7 rounded-md border border-rule bg-paper/60 text-dim cursor-pointer transition-all duration-150 hover:border-rule-strong hover:text-ink hover:bg-hover active:scale-[0.96]"
             :class="{ '!border-sig !text-sig !bg-sig/10': guideOpen }"
             :title="guideOpen ? (isEs ? 'Cerrar guía (?)' : 'Close guide (?)') : (isEs ? 'Guía rápida y atajos (?)' : 'Quick guide & shortcuts (?)')"
             :aria-label="isEs ? 'Guía rápida' : 'Quick guide'"
@@ -415,26 +441,26 @@ const currentRoot = computed(() => path.value[0] ?? '')
 
           <!-- Estado del Sistema Consolidado (PG-17 + Latencia + Hora Patagonia UTC-3) -->
           <div
-            class="sys-status-badge hidden sm:flex items-center gap-1.5 h-[30px] px-2 border border-rule bg-paper font-mono text-[10.5px] text-dim"
+            class="sys-status-badge hidden sm:flex items-center gap-1.5 h-7 px-2.5 rounded-md border border-rule bg-paper/60 font-mono text-[10.5px] text-dim"
             :title="`PostgreSQL 17 ACID (${ex?.request.ms ?? 0}ms) · Hora local: ${utcTime || 'UTC-3'} (Patagonia, Argentina)`"
           >
-            <span class="sys-dot w-1.5 h-1.5 rounded-full bg-green shadow-[0_0_6px_var(--d-green)] animate-pulse" />
-            <span class="sys-engine text-ink font-semibold">PG-17</span>
+            <span class="sys-dot w-1.5 h-1.5 rounded-full bg-green shadow-[0_0_5px_var(--d-green)]" />
+            <span class="sys-engine text-ink font-medium">PG-17</span>
             <span class="sys-sep text-faint">·</span>
-            <span class="sys-ms text-sig font-bold">{{ ex?.request.ms ?? 0 }}ms</span>
+            <span class="sys-ms text-dim">{{ ex?.request.ms ?? 0 }}ms</span>
             <span class="sys-sep text-faint">·</span>
-            <span class="sys-time text-dim">{{ utcTime?.split(' ')[0] || '12:00:00' }}</span>
+            <span class="sys-time text-faint">{{ utcTime?.split(' ')[0] || '12:00:00' }}</span>
           </div>
 
           <button
             type="button"
-            class="tool-btn theme-btn inline-flex items-center justify-center w-7 h-7 sm:w-[30px] sm:h-[30px] border border-rule bg-paper text-dim cursor-pointer transition-colors duration-150 hover:border-sig hover:text-sig hover:bg-hover"
+            class="tool-btn theme-btn inline-flex items-center justify-center w-7 h-7 rounded-md border border-rule bg-paper/60 text-dim cursor-pointer transition-all duration-150 hover:border-rule-strong hover:text-ink hover:bg-hover active:scale-[0.96]"
             :aria-label="theme === 'dark' ? 'Cambiar a modo claro (papel técnico)' : 'Cambiar a modo oscuro (obsidiana)'"
             :title="`Cambiar a modo ${theme === 'dark' ? 'claro (papel)' : 'oscuro (obsidiana)'}`"
             @click="toggleTheme"
           >
-            <AppIcon v-if="theme === 'dark'" name="sun" :size="14" />
-            <AppIcon v-else name="moon" :size="14" />
+            <AppIcon v-if="theme === 'dark'" name="sun" :size="13" />
+            <AppIcon v-else name="moon" :size="13" />
           </button>
         </div>
       </header>
@@ -457,49 +483,52 @@ const currentRoot = computed(() => path.value[0] ?? '')
       </div>
 
       <!-- Cuerpo de la Ventana: Sidebar Explorador + Escenario Central -->
-      <div class="cuerpo-ventana flex-1 min-h-0 grid grid-cols-[240px_1fr] max-lg:grid-cols-1 overflow-hidden">
-        <aside class="sidebar w-[240px] max-lg:hidden flex flex-col border-r border-rule bg-surface overflow-y-auto" aria-label="Explorador de Archivos">
-          <div class="sidebar-header p-3 px-3.5 border-b border-rule flex items-center justify-between font-mono text-[11px]">
-            <span class="sidebar-tag text-sig font-bold tracking-wider text-[10px]">{{ isEs ? 'EXPLORADOR' : 'EXPLORER' }}</span>
-            <span class="sidebar-status text-faint text-[10px]">PG-17 // DB</span>
+      <div class="cuerpo-ventana flex-1 min-h-0 grid grid-cols-[224px_1fr] max-lg:grid-cols-1 overflow-hidden">
+        <aside class="sidebar w-[224px] max-lg:hidden flex flex-col border-r border-rule bg-surface/40 overflow-y-auto" aria-label="Explorador de Archivos">
+          <div class="sidebar-header px-3.5 pt-3.5 pb-2 flex items-center justify-between font-mono text-[10px] tracking-widest uppercase text-faint">
+            <span>{{ isEs ? 'Workspace' : 'Workspace' }}</span>
+            <span>PG-17</span>
           </div>
 
-          <nav class="sidebar-tree p-2 flex flex-col gap-1" aria-label="Secciones del sistema">
+          <nav class="sidebar-tree px-2 py-1 flex flex-col gap-0.5" aria-label="Secciones del sistema">
             <NuxtLink
               v-for="s in navSections"
               :key="s.root"
               :to="routeFor(s.to)"
-              class="sidebar-item flex items-center gap-2.5 px-2.5 py-2 rounded-[2px] text-dim text-[12px] font-medium no-underline transition-colors duration-150 hover:bg-hover hover:text-ink group"
-              :class="{ 'active !bg-hover !text-ink font-semibold border-l-[3px] !border-sig': currentRoot === s.root }"
+              class="sidebar-item relative flex items-center gap-2.5 px-2.5 py-2 rounded-md text-dim text-[12.5px] font-sans font-normal no-underline transition-all duration-150 hover:bg-hover/70 hover:text-ink group"
+              :class="{ 'active !bg-surface-raised !text-ink !font-medium': currentRoot === s.root }"
               :title="`${s.desc} — Atajo [${s.keyHint}]`"
             >
-              <AppIcon :name="s.icon" :size="14" class="sidebar-icon shrink-0 transition-colors duration-150 text-dim group-hover:text-sig group-[.active]:!text-sig" />
-              <span class="sidebar-label flex-1 truncate group-[.active]:font-bold">{{ s.label }}</span>
-              <kbd class="sidebar-k font-mono text-[10px] opacity-60 group-hover:opacity-100 group-[.active]:opacity-100 group-hover:text-sig group-[.active]:text-sig border border-current px-1 py-0.5 rounded-[2px] transition-colors duration-150">{{ s.keyHint }}</kbd>
-              <span class="sidebar-badge font-mono text-[10px] px-1.5 py-0.5 bg-paper text-dim border border-rule rounded-[2px] transition-colors duration-150 group-[.active]:!border-sig group-[.active]:!text-sig group-[.active]:!bg-surface-raised">{{ s.badge }}</span>
+              <!-- Indicador quirúrgico de 1.5px en estado activo -->
+              <span
+                v-if="currentRoot === s.root"
+                class="w-[2px] h-3.5 bg-sig rounded-full absolute left-0.5 top-1/2 -translate-y-1/2"
+                aria-hidden="true"
+              />
+              <AppIcon :name="s.icon" :size="14" class="sidebar-icon shrink-0 transition-colors duration-150 text-faint group-hover:text-ink group-[.active]:!text-sig" />
+              <span class="sidebar-label flex-1 truncate">{{ s.label }}</span>
+              <kbd class="sidebar-k font-mono text-[10px] text-faint opacity-0 group-hover:opacity-100 transition-opacity duration-150">{{ s.keyHint }}</kbd>
+              <span class="sidebar-badge font-mono text-[10.5px] text-faint tabular-nums group-[.active]:text-dim">{{ s.badge }}</span>
             </NuxtLink>
           </nav>
 
-          <div class="sidebar-footer mt-auto p-3 border-t border-rule bg-surface-raised flex flex-col gap-1.5 font-mono text-[10px]">
-            <div class="sf-row flex items-center gap-1.5">
-              <span class="sf-dot w-1.5 h-1.5 rounded-full bg-green" />
-              <span class="sf-status text-green font-bold">{{ isEs ? 'DISPONIBLE // 2026' : 'AVAILABLE // 2026' }}</span>
-            </div>
-            <div class="sf-info flex justify-between items-center text-faint">
-              <span>{{ isEs ? 'MOTOR: POSTGRESQL 17' : 'ENGINE: POSTGRESQL 17' }}</span>
-              <button
-                type="button"
-                class="sf-guide-btn bg-transparent border-0 p-0 text-sig hover:underline cursor-pointer"
-                :title="isEs ? 'Abrir guía rápida de navegación (?)' : 'Open quick navigation guide (?)'"
-                @click="guideOpen = !guideOpen"
-              >
-                {{ isEs ? 'GUÍA RÁPIDA (?)' : 'QUICK GUIDE (?)' }}
-              </button>
-            </div>
+          <div class="sidebar-footer mt-auto px-3.5 py-3 border-t border-rule flex items-center justify-between font-mono text-[10.5px] text-faint">
+            <span class="inline-flex items-center gap-1.5">
+              <span class="w-1.5 h-1.5 rounded-full bg-green/80" />
+              <span>{{ isEs ? 'Activo · 2026' : 'Active · 2026' }}</span>
+            </span>
+            <button
+              type="button"
+              class="bg-transparent border-0 p-0 text-dim hover:text-ink transition-colors cursor-pointer font-mono text-[10.5px]"
+              :title="isEs ? 'Abrir guía rápida de navegación (?)' : 'Open quick navigation guide (?)'"
+              @click="guideOpen = !guideOpen"
+            >
+              {{ isEs ? 'Atajos (?)' : 'Keys (?)' }}
+            </button>
           </div>
         </aside>
 
-        <main id="contenido" class="exp flex-1 min-w-0 min-h-0 overflow-y-auto p-3 md:p-5 focus:outline-none" tabindex="-1">
+        <main id="contenido" class="exp flex-1 min-w-0 min-h-0 overflow-y-auto p-3 md:p-6 focus:outline-none" tabindex="-1">
           <div v-if="error" class="pane w-full">
             <ExplorerDetail
               :detail="{
@@ -523,49 +552,56 @@ const currentRoot = computed(() => path.value[0] ?? '')
       </div>
 
       <!-- Barra de Estado Inferior -->
-      <footer class="estado flex-none h-[30px] px-3.5 border-t border-rule bg-surface flex items-center justify-between text-[11px] font-mono text-dim select-none max-lg:hidden">
-        <span v-if="ex" class="medida">{{ pad(ex.request.count) }} {{ ex.request.count === 1 ? 'record' : 'records' }}</span>
-        <span v-if="ex" class="req">{{ ex.request.line }} · {{ ex.request.status }} · {{ ex.request.ms }} ms</span>
+      <footer class="estado flex-none h-[30px] px-4 border-t border-rule bg-surface/60 flex items-center justify-between text-[11px] font-mono text-faint select-none max-lg:hidden">
+        <span v-if="ex" class="medida text-dim">{{ pad(ex.request.count) }} {{ ex.request.count === 1 ? 'record' : 'records' }}</span>
+        <UiTelemetryPill
+          v-if="ex"
+          :collection="currentRoot || 'db'"
+          :record-slug="path[1] || null"
+          :filters="activeQueryFilters"
+          :count="ex.request.count"
+          :api-healthy="ex.request.status === 200"
+        />
         <span class="keys flex items-center gap-3" aria-hidden="true">
-          <template v-if="hoja && (ex?.prev || ex?.next)"><kbd class="border border-rule px-1 py-0.5 rounded-[2px]">←</kbd><kbd class="border border-rule px-1 py-0.5 rounded-[2px]">→</kbd> {{ isEs ? 'vecino' : 'adjacent' }}</template>
-          <template v-else-if="!hoja"><kbd class="border border-rule px-1 py-0.5 rounded-[2px]">←</kbd><kbd class="border border-rule px-1 py-0.5 rounded-[2px]">↑</kbd><kbd class="border border-rule px-1 py-0.5 rounded-[2px]">↓</kbd><kbd class="border border-rule px-1 py-0.5 rounded-[2px]">→</kbd> {{ isEs ? 'navegar' : 'navigate' }} <kbd class="border border-rule px-1 py-0.5 rounded-[2px]">↵</kbd> {{ isEs ? 'abrir' : 'open' }}</template>
-          <template v-if="ex?.up"><kbd class="border border-rule px-1 py-0.5 rounded-[2px]">⌫</kbd> {{ isEs ? 'volver' : 'back' }}</template>
-          <kbd class="border border-rule px-1 py-0.5 rounded-[2px]">0-5</kbd> {{ isEs ? 'secciones' : 'sections' }}
-          <kbd class="border border-rule px-1 py-0.5 rounded-[2px]">/</kbd> {{ isEs ? 'ir a' : 'goto' }}
-          <kbd class="border border-rule px-1 py-0.5 rounded-[2px]">H</kbd> {{ isEs ? 'hiperfoco' : 'hyperfocus' }}
+          <template v-if="hoja && (ex?.prev || ex?.next)"><kbd class="px-1 py-0.5 rounded bg-paper/60 border border-rule">←</kbd><kbd class="px-1 py-0.5 rounded bg-paper/60 border border-rule">→</kbd> {{ isEs ? 'vecino' : 'adjacent' }}</template>
+          <template v-else-if="!hoja"><kbd class="px-1 py-0.5 rounded bg-paper/60 border border-rule">↑↓</kbd> {{ isEs ? 'navegar' : 'navigate' }} <kbd class="px-1 py-0.5 rounded bg-paper/60 border border-rule">↵</kbd> {{ isEs ? 'abrir' : 'open' }}</template>
+          <template v-if="ex?.up"><kbd class="px-1 py-0.5 rounded bg-paper/60 border border-rule">⌫</kbd> {{ isEs ? 'volver' : 'back' }}</template>
+          <span><kbd class="px-1 py-0.5 rounded bg-paper/60 border border-rule">0-6</kbd> {{ isEs ? 'secciones' : 'sections' }}</span>
+          <span><kbd class="px-1 py-0.5 rounded bg-paper/60 border border-rule">/</kbd> {{ isEs ? 'buscar' : 'search' }}</span>
+          <span><kbd class="px-1 py-0.5 rounded bg-paper/60 border border-rule">H</kbd> {{ isEs ? 'hiperfoco' : 'hyperfocus' }}</span>
           <button
             type="button"
-            class="keys-guide-btn bg-transparent border-0 p-0 text-dim hover:text-sig cursor-pointer flex items-center gap-1 font-mono text-[11px]"
+            class="keys-guide-btn bg-transparent border-0 p-0 text-dim hover:text-ink cursor-pointer flex items-center gap-1 font-mono text-[11px]"
             :title="isEs ? 'Abrir guía rápida (?)' : 'Open quick guide (?)'"
             @click="guideOpen = !guideOpen"
           >
-            <kbd class="border border-rule px-1 py-0.5 rounded-[2px]">?</kbd> {{ isEs ? 'guía' : 'guide' }}
+            <kbd class="px-1 py-0.5 rounded bg-paper/60 border border-rule">?</kbd>
           </button>
         </span>
       </footer>
 
-      <!-- Barra de Navegación Inferior Móvil Estilo App Nativa / Redes Sociales -->
-      <nav class="mobile-nav lg:hidden flex-none fixed bottom-0 inset-x-0 z-50 h-[62px] pb-[env(safe-area-inset-bottom,0)] bg-surface/90 backdrop-blur-xl border-t border-rule flex items-center justify-around px-1 shadow-[0_-8px_24px_rgba(0,0,0,0.4)]" aria-label="Navegación rápida móvil">
+      <!-- Barra de Navegación Inferior Móvil Estilo App Nativa -->
+      <nav class="mobile-nav lg:hidden flex-none fixed bottom-0 inset-x-0 z-50 h-[60px] pb-[env(safe-area-inset-bottom,0)] bg-surface/90 backdrop-blur-xl border-t border-rule flex items-center justify-around px-1 shadow-[0_-8px_24px_rgba(0,0,0,0.35)]" aria-label="Navegación rápida móvil">
         <NuxtLink
           v-for="s in navSections"
           :key="s.root"
           :to="routeFor(s.to)"
           class="mobile-nav-item flex flex-col items-center justify-center flex-1 h-full text-dim no-underline transition-all duration-150 relative group py-1"
-          :class="{ 'active !text-sig font-bold': currentRoot === s.root }"
+          :class="{ 'active !text-ink font-medium': currentRoot === s.root }"
         >
-          <!-- Indicador superior activo con glow -->
+          <!-- Indicador superior activo quirúrgico -->
           <span
             v-if="currentRoot === s.root"
-            class="mn-indicator absolute top-0 inset-x-3.5 h-[2.5px] bg-sig rounded-full shadow-[0_0_8px_var(--d-sig)]"
+            class="mn-indicator absolute top-0 inset-x-4 h-[2px] bg-sig rounded-full"
             aria-hidden="true"
           />
           <div
-            class="mn-icon-wrap flex items-center justify-center w-8 h-6.5 rounded-full transition-all duration-150"
-            :class="currentRoot === s.root ? 'bg-sig/10 text-sig scale-110' : 'text-dim group-hover:text-ink'"
+            class="mn-icon-wrap flex items-center justify-center w-8 h-6 rounded-full transition-all duration-150"
+            :class="currentRoot === s.root ? 'text-sig' : 'text-dim group-hover:text-ink'"
           >
-            <AppIcon :name="s.icon" :size="17" class="mn-icon" />
+            <AppIcon :name="s.icon" :size="16" class="mn-icon" />
           </div>
-          <span class="mn-label text-[10px] font-mono mt-0.5 tracking-tight transition-colors" :class="currentRoot === s.root ? 'text-sig font-bold' : 'text-dim group-hover:text-ink'">
+          <span class="mn-label text-[10px] font-mono mt-0.5 tracking-tight transition-colors" :class="currentRoot === s.root ? 'text-ink font-semibold' : 'text-dim group-hover:text-ink'">
             {{ s.shortLabel }}
           </span>
         </NuxtLink>
@@ -610,214 +646,17 @@ const currentRoot = computed(() => path.value[0] ?? '')
 
 .barra {
   flex: none;
-  display: flex;
-  align-items: center;
-  gap: clamp(6px, 1.2vw, 12px);
-  min-height: 48px;
-  padding: 0 clamp(8px, 1.4vw, 16px);
-  border-bottom: 1px solid var(--d-rule);
-  background: var(--d-surface);
-  max-width: 100%;
-  overflow: hidden;
 }
 .historia { display: flex; gap: 4px; }
-.nav-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 30px;
-  height: 30px;
-  border: 1px solid var(--d-rule);
-  background: var(--d-paper);
-  color: var(--d-ink);
-  font: inherit;
-  font-size: 14px;
-  line-height: 1;
-  text-decoration: none;
-  cursor: pointer;
-  transition: all var(--d-dur) ease;
-}
-.nav-btn:hover { border-color: var(--d-sig); background: var(--d-hover); color: var(--d-sig); }
-.nav-btn.off { color: var(--d-faint); opacity: 0.4; cursor: default; }
-.nav-btn.off:hover { border-color: var(--d-rule); background: var(--d-paper); color: var(--d-faint); }
-
-/* Barra de dirección */
-.ruta {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  min-width: 0;
-  height: 30px;
-  padding: 0 10px;
-  border: 1px solid var(--d-rule);
-  background: var(--d-paper);
-  white-space: nowrap;
-  overflow: hidden;
-  font-size: 12.5px;
-}
-.ruta a { color: var(--d-sig); text-decoration: none; padding: 6px 0; }
-.ruta a:hover { text-decoration: underline; color: var(--d-sig-hover); }
-.sep { color: var(--d-faint); padding: 0 9px; }
-.here { color: var(--d-ink); font-weight: 700; }
-
-.goto-btn {
-  flex: 0 1 240px;
-  min-width: 140px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  height: 30px;
-  padding: 0 8px 0 10px;
-  border: 1px solid var(--d-rule);
-  background: var(--d-paper);
-  font: inherit;
-  color: var(--d-dim);
-  text-align: left;
-  cursor: pointer;
-  transition: all var(--d-dur) ease;
-}
-.goto-btn:hover { border-color: var(--d-sig); color: var(--d-ink); }
-.goto-k { font-family: var(--font-mono); font-size: var(--d-fs-mono); color: var(--d-sig); font-weight: 700; }
-.goto-ph { flex: 1; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; color: var(--d-faint); font-size: 12px; }
-
-/* Barra Derecha: Telemetría, Reloj y Tema */
-.barra-derecha {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-shrink: 0;
-}
-
-.sys-status-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  height: 30px;
-  padding: 0 10px;
-  background: var(--d-paper);
-  border: 1px solid var(--d-rule);
-  font-family: var(--font-mono);
-  font-size: 11px;
-  color: var(--d-dim);
-  user-select: none;
-  transition: all var(--d-dur) ease;
-}
-.sys-status-badge:hover {
-  border-color: var(--d-rule-strong);
-  color: var(--d-ink);
-}
-.sys-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--d-green);
-  box-shadow: 0 0 6px var(--d-green);
-  flex-shrink: 0;
-}
-.sys-engine {
-  font-weight: 800;
-  color: var(--d-ink);
-}
-.sys-sep {
-  color: var(--d-faint);
-  font-size: 10px;
-}
-.sys-ms {
-  color: var(--d-dim);
-}
-.sys-time {
-  font-variant-numeric: tabular-nums;
-  font-weight: 600;
-  color: var(--d-ink);
-}
-
-.tool-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 30px;
-  height: 30px;
-  background: var(--d-paper);
-  border: 1px solid var(--d-rule);
-  color: var(--d-ink);
-  font-size: 14px;
-  cursor: pointer;
-  transition: all var(--d-dur) ease;
-}
-.tool-btn:hover {
-  border-color: var(--d-sig);
-  color: var(--d-sig);
-}
-
-.focus-btn.active {
-  border-color: var(--d-sig);
-  color: var(--d-sig);
-  background: var(--d-hover);
-  box-shadow: 0 0 8px var(--d-sig-glow);
-}
-
-.help-btn.active {
-  border-color: var(--d-sig);
-  color: var(--d-sig);
-  background: var(--d-hover);
-  box-shadow: 0 0 8px var(--d-sig-glow);
-}
-
-.lang-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 2px;
-  height: 30px;
-  padding: 0 8px;
-  background: var(--d-paper);
-  border: 1px solid var(--d-rule);
-  font-family: var(--font-mono);
-  font-size: 11px;
-  font-weight: 800;
-  color: var(--d-dim);
-  cursor: pointer;
-  transition: all var(--d-dur) ease;
-}
-.lang-btn:hover {
-  border-color: var(--d-sig);
-}
-.lang-code.active {
-  color: var(--d-sig);
-}
-.lang-sep {
-  color: var(--d-faint);
-  margin: 0 1px;
-}
-
-.theme-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 30px;
-  height: 30px;
-  background: var(--d-paper);
-  border: 1px solid var(--d-rule);
-  color: var(--d-ink);
-  font-size: 14px;
-  cursor: pointer;
-  transition: all var(--d-dur) ease;
-}
-.theme-btn:hover {
-  border-color: var(--d-sig);
-  color: var(--d-sig);
-}
 
 kbd {
   display: inline-block;
   min-width: 18px;
   margin: 0 2px;
-  padding: 1px 4px 0;
-  border: 1px solid var(--d-rule);
-  border-radius: 2px;
-  line-height: 1.3;
+  padding: 1px 4px;
+  border-radius: 4px;
+  line-height: 1.25;
   text-align: center;
-  color: var(--d-dim);
-  background: var(--d-surface);
 }
 
 .exp {
@@ -825,7 +664,7 @@ kbd {
   min-height: 0;
   width: 100%;
   max-width: 100%;
-  padding: var(--d-inset) var(--d-inset) 28px;
+  padding: var(--d-inset) var(--d-inset) 32px;
   overflow-y: auto;
   overflow-x: hidden;
   scrollbar-width: thin;
@@ -850,11 +689,10 @@ kbd {
   overflow: hidden;
 }
 
-/* Sidebar Explorador de Archivos */
+/* Sidebar Explorador de Archivos (Linear Minimalist) */
 .sidebar {
-  flex: 0 0 264px;
-  width: 264px;
-  background: var(--d-surface);
+  flex: 0 0 224px;
+  width: 224px;
   border-right: 1px solid var(--d-rule);
   display: flex;
   flex-direction: column;
@@ -864,212 +702,17 @@ kbd {
   scrollbar-color: var(--d-rule) transparent;
 }
 
-.sidebar-header {
-  padding: 12px 14px 10px;
-  border-bottom: 1px solid var(--d-rule);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  background: var(--d-surface-raised);
-}
-.sidebar-tag {
-  font-family: var(--font-mono);
-  font-size: 10px;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  color: var(--d-sig);
-}
-.sidebar-status {
-  font-family: var(--font-mono);
-  font-size: 9.5px;
-  color: var(--d-dim);
-}
-
 .sidebar-tree {
   flex: 1;
-  padding: 8px 0;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.sidebar-item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 9px 14px;
-  color: var(--d-dim);
-  text-decoration: none;
-  font-family: var(--font-mono);
-  font-size: 12px;
-  border-left: 3px solid transparent;
-  transition: all var(--d-dur) ease;
-}
-.sidebar-item:hover {
-  background: var(--d-hover);
-  color: var(--d-ink);
-}
-.sidebar-item.active {
-  background: var(--d-hover);
-  color: var(--d-ink);
-  font-weight: 700;
-  border-left-color: var(--d-sig);
-}
-
-.sidebar-icon {
-  flex-shrink: 0;
-  opacity: 0.7;
-  color: var(--d-dim);
-  transition: all var(--d-dur) ease;
-}
-.sidebar-item:hover .sidebar-icon,
-.sidebar-item.active .sidebar-icon {
-  opacity: 1;
-  color: var(--d-sig);
-}
-
-.sidebar-label {
-  flex: 1;
-  min-width: 0;
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-}
-
-.sidebar-badge {
-  font-size: 10px;
-  padding: 1px 5px;
-  border: 1px solid var(--d-rule);
-  background: var(--d-paper);
-  color: var(--d-dim);
-  border-radius: 2px;
-  font-variant-numeric: tabular-nums;
-}
-.sidebar-item.active .sidebar-badge {
-  border-color: var(--d-sig);
-  color: var(--d-sig);
-  background: var(--d-surface-raised);
-}
-
-.sidebar-k {
-  font-size: 9.5px;
-  padding: 1px 4px;
-  min-width: 14px;
-  border: 1px solid var(--d-rule);
-  background: var(--d-paper);
-  color: var(--d-faint);
-  border-radius: 2px;
-  margin: 0;
-  line-height: 1.1;
-  text-align: center;
-  transition: all var(--d-dur) ease;
-}
-.sidebar-item:hover .sidebar-k,
-.sidebar-item.active .sidebar-k {
-  border-color: var(--d-sig);
-  color: var(--d-sig);
-  background: var(--d-hover);
-}
-
-.sidebar-footer {
-  padding: 12px 14px;
-  border-top: 1px solid var(--d-rule);
-  background: var(--d-surface-raised);
-  font-family: var(--font-mono);
-  font-size: 10px;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-.sf-row {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-.sf-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--d-green);
-  box-shadow: 0 0 5px var(--d-green);
-}
-.sf-status {
-  font-weight: 700;
-  color: var(--d-green);
-}
-.sf-info {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  color: var(--d-faint);
-}
-.sf-admin-link {
-  color: var(--d-dim);
-  text-decoration: none;
-  font-weight: 600;
-  transition: color 0.15s;
-  margin-top: 2px;
-}
-.sf-admin-link:hover {
-  color: var(--d-sig);
-}
-
-.sf-guide-btn {
-  background: transparent;
-  border: 1px solid var(--d-rule);
-  border-radius: 2px;
-  color: var(--d-sig);
-  font-family: inherit;
-  font-size: 9.5px;
-  font-weight: 700;
-  padding: 3px 6px;
-  cursor: pointer;
-  text-align: left;
-  transition: all var(--d-dur) ease;
-  margin-top: 2px;
-}
-.sf-guide-btn:hover {
-  background: var(--d-hover);
-  border-color: var(--d-sig);
 }
 
 /* Barra de estado */
 .estado {
   flex: none;
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  min-height: 34px;
-  padding: 0 var(--d-inset);
-  border-top: 1px solid var(--d-rule);
-  background: var(--d-surface);
-  color: var(--d-dim);
 }
 .medida { flex: none; font-family: var(--font-mono); font-size: 11px; white-space: nowrap; }
 .req { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 11px; }
 .keys { flex: none; margin-left: auto; display: flex; gap: 10px; align-items: center; flex-shrink: 0; }
-
-.keys-guide-btn {
-  background: transparent;
-  border: none;
-  font-family: inherit;
-  font-size: 11px;
-  color: var(--d-dim);
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 2px 4px;
-  cursor: pointer;
-  border-radius: 2px;
-  transition: color var(--d-dur) ease;
-}
-.keys-guide-btn:hover {
-  color: var(--d-sig);
-}
-.keys-guide-btn:hover kbd {
-  border-color: var(--d-sig);
-  color: var(--d-sig);
-}
 
 /* Mobile Bottom App Navigation (Oculto en Desktop) */
 .mobile-nav {

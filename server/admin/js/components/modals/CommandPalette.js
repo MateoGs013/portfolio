@@ -68,6 +68,16 @@ export const CommandPalette = {
           },
         },
         {
+          id: 'go-articles',
+          label: 'Artículos / Blog',
+          category: 'Secciones',
+          badge: `${store.counts.articles}`,
+          action: () => {
+            store.loadSection('articles')
+            emit('close')
+          },
+        },
+        {
           id: 'go-docs',
           label: 'Páginas & Textos (Docs)',
           category: 'Secciones',
@@ -94,6 +104,16 @@ export const CommandPalette = {
           badge: `${store.counts.content}`,
           action: () => {
             store.loadSection('content')
+            emit('close')
+          },
+        },
+        {
+          id: 'go-radar',
+          label: 'TrendRadar (Eros)',
+          category: 'Herramientas & IA',
+          badge: `${store.counts.radar}`,
+          action: () => {
+            store.loadSection('radar')
             emit('close')
           },
         },

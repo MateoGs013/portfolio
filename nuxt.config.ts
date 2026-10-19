@@ -78,6 +78,12 @@ export default defineNuxtConfig({
         { rel: 'apple-touch-icon', sizes: '180x180', href: '/apple-touch-icon.png' },
         { rel: 'canonical', href: 'https://mateogs.tech' },
       ],
+      script: [
+        {
+          innerHTML: `(function(){try{var t=localStorage.getItem('portfolio-theme');if(t==='light'||t==='dark'){document.documentElement.setAttribute('data-theme',t);}else{document.documentElement.setAttribute('data-theme','dark');}var h=localStorage.getItem('portfolio-hyperfocus');if(h==='true'){document.documentElement.setAttribute('data-hyperfocus','true');}}catch(e){}})()`,
+          type: 'text/javascript',
+        },
+      ],
     },
   },
 })

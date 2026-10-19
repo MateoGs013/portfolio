@@ -10,3 +10,6 @@ CLAUDE.local.md
 .omc/
 server/generated/
 *.tsbuildinfo
+test-results/
+playwright-report/
+tests/screenshots/

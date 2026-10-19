@@ -57,59 +57,73 @@ onBeforeUnmount(() => {
 
 <template>
   <div
-    class="ventana-archivo-chassis w-full border border-rule-strong bg-paper shadow-[0_16px_40px_rgba(0,0,0,0.45)] flex flex-col transition-all duration-200"
-    :class="{ 'maximized !fixed !inset-2.5 !z-[999] !w-auto !h-auto !shadow-[0_25px_60px_rgba(0,0,0,0.7)]': isMaximized }"
+    class="ventana-archivo-chassis w-full max-w-[1040px] mx-auto rounded-xl border border-rule bg-surface/40 backdrop-blur-sm flex flex-col transition-all duration-200 overflow-hidden"
+    :class="{ 'maximized !fixed !inset-2.5 !z-[999] !w-auto !max-w-none !h-auto !shadow-[0_25px_60px_rgba(0,0,0,0.7)]': isMaximized }"
   >
-    <!-- Barra Superior de la Ventana OS -->
-    <header class="va-titlebar flex-none h-[38px] flex items-center justify-between gap-3 px-3 bg-surface-raised border-b border-rule select-none">
-      <!-- Controles de Ventana (Semáforo / OS buttons) -->
-      <div class="va-controls flex items-center gap-1.5 group" role="group" :aria-label="isEs ? 'Controles de ventana' : 'Window controls'">
+    <!-- Barra Superior de la Ventana OS / Linear Document Surface -->
+    <header class="va-titlebar flex-none h-9 flex items-center justify-between gap-3 px-3.5 bg-surface/80 border-b border-rule select-none">
+      <!-- Botón Volver / Cerrar sutil y táctil con Esc -->
+      <div class="va-controls flex items-center gap-2">
         <button
           type="button"
-          class="va-btn close w-3.5 h-3.5 rounded-full border border-[#e0443e] bg-[#ff5f56] text-[#5c0000] flex items-center justify-center cursor-pointer p-0 transition-colors"
-          :title="isEs ? 'Cerrar archivo (Esc)' : 'Close file (Esc)'"
+          class="group inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-paper/80 border border-rule text-dim hover:text-ink hover:border-rule-strong active:scale-[0.98] transition-colors cursor-pointer shrink-0"
+          :title="isEs ? 'Volver / Cerrar archivo (Esc)' : 'Back / Close file (Esc)'"
           :aria-label="isEs ? 'Cerrar' : 'Close'"
           @click="onClose"
         >
-          <AppIcon name="close" :size="9" class="opacity-0 group-hover:opacity-100 transition-opacity duration-150" />
+          <AppIcon name="arrow-left" :size="12" />
+          <span class="font-mono text-[11px] text-dim group-hover:text-ink">esc</span>
         </button>
+      </div>
+
+      <!-- Título y Ruta del Archivo (Centro/Izquierda con punto quirúrgico bg-sig) -->
+      <div class="va-path-info flex items-center gap-2 min-w-0 overflow-hidden font-mono text-[11px] text-dim flex-1">
+        <span class="w-1.5 h-1.5 rounded-full bg-sig shrink-0" aria-hidden="true" />
+        <span class="va-filename font-semibold text-ink truncate">{{ title }}</span>
+        <span v-if="path" class="va-canonical-path text-dim/70 whitespace-nowrap overflow-hidden text-ellipsis hidden sm:inline">{{ path }}</span>
+      </div>
+
+      <!-- Lado Derecho: Status Tag y Botón Maximizar -->
+      <div class="flex items-center gap-2 shrink-0">
+        <div class="va-status-tag hidden sm:flex items-center gap-1.5 rounded-md bg-paper/70 border border-rule px-2 py-0.5 font-mono text-[10px] text-dim shrink-0">
+          <span class="va-dot w-1.5 h-1.5 rounded-full bg-green" />
+          <span class="va-status-text font-medium">{{ badge ?? 'READ-ONLY · UTF-8' }}</span>
+        </div>
         <button
           type="button"
-          class="va-btn minimize w-3.5 h-3.5 rounded-full border border-[#dea123] bg-[#ffbd2e] text-[#614400] flex items-center justify-center cursor-pointer p-0 transition-colors"
-          :title="isEs ? 'Minimizar archivo' : 'Minimize file'"
-          :aria-label="isEs ? 'Minimizar' : 'Minimize'"
-          @click="onClose"
-        >
-          <AppIcon name="minimize" :size="9" class="opacity-0 group-hover:opacity-100 transition-opacity duration-150" />
-        </button>
-        <button
-          type="button"
-          class="va-btn maximize w-3.5 h-3.5 rounded-full border border-[#1aab29] bg-[#27c93f] text-[#004d10] flex items-center justify-center cursor-pointer p-0 transition-colors"
+          class="va-btn maximize inline-flex items-center justify-center w-6 h-6 rounded bg-paper/80 border border-rule text-dim hover:text-ink hover:border-rule-strong active:scale-[0.98] transition-colors cursor-pointer"
           :title="isMaximized ? (isEs ? 'Restaurar tamaño normal' : 'Restore normal size') : (isEs ? 'Maximizar ventana' : 'Maximize window')"
           :aria-label="isEs ? 'Maximizar' : 'Maximize'"
           @click="isMaximized = !isMaximized"
         >
-          <AppIcon name="maximize" :size="9" class="opacity-0 group-hover:opacity-100 transition-opacity duration-150" />
+          <AppIcon :name="isMaximized ? 'minimize' : 'maximize'" :size="11" />
         </button>
-      </div>
-
-      <!-- Título y Ruta del Archivo -->
-      <div class="va-path-info flex items-center gap-1.5 sm:gap-2 flex-1 min-w-0 overflow-hidden font-mono text-[11px] sm:text-[11.5px]">
-        <AppIcon name="file" :size="13" class="va-file-icon text-sig shrink-0" />
-        <span class="va-filename font-bold text-ink truncate">{{ title }}</span>
-        <span v-if="path" class="va-canonical-path text-dim whitespace-nowrap overflow-hidden text-ellipsis text-[11px] hidden sm:inline">{{ path }}</span>
-      </div>
-
-      <!-- Badge de Estado en la Ventana -->
-      <div class="va-status-tag hidden sm:flex items-center gap-1.5 px-2 py-0.5 bg-paper border border-rule font-mono text-[10px] text-dim shrink-0">
-        <span class="va-dot w-1.5 h-1.5 rounded-full bg-green" />
-        <span class="va-status-text font-bold">{{ badge ?? 'READ-ONLY · UTF-8' }}</span>
       </div>
     </header>
 
     <!-- Contenido del Archivo -->
-    <div class="va-body flex-1 min-h-0 p-3 sm:p-5 overflow-y-auto">
+    <div class="va-body flex-1 min-h-0 p-4 sm:p-6 md:p-8 overflow-y-auto">
       <slot />
     </div>
   </div>
 </template>
+
+<style scoped>
+@media print {
+  .va-titlebar {
+    display: none !important;
+  }
+  .ventana-archivo-chassis {
+    border: none !important;
+    box-shadow: none !important;
+    background: transparent !important;
+    max-width: none !important;
+    border-radius: 0 !important;
+    overflow: visible !important;
+  }
+  .va-body {
+    padding: 0 !important;
+    overflow: visible !important;
+  }
+}
+</style>

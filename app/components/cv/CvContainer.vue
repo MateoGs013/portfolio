@@ -296,36 +296,38 @@ function printCV() {
       </div>
     </header>
 
-    <!-- Harvard ATS View -->
-    <CvHarvardAts
-      v-if="mode === 'harvard'"
-      :name="cvName"
-      :role="cvRole"
-      :location="cvLocation"
-      :bio="cvBio"
-      :email="cvEmail"
-      :github="cvGithub"
-      :github-text="cvGithubText"
-      :linkedin="cvLinkedin"
-      :linkedin-text="cvLinkedinText"
-      :deliverables="cvDeliverables"
-      :is-es="isEs"
-    />
+    <!-- Harvard ATS View (Siempre visible al imprimir para garantizar el Invariante #6 de 1 página A4 ATS) -->
+    <div :class="mode === 'harvard' ? 'block' : 'hidden print:block'">
+      <CvHarvardAts
+        :name="cvName"
+        :role="cvRole"
+        :location="cvLocation"
+        :bio="cvBio"
+        :email="cvEmail"
+        :github="cvGithub"
+        :github-text="cvGithubText"
+        :linkedin="cvLinkedin"
+        :linkedin-text="cvLinkedinText"
+        :deliverables="cvDeliverables"
+        :is-es="isEs"
+      />
+    </div>
 
-    <!-- Modern IDE / Code Editor View -->
-    <CvModernIde
-      v-else
-      :name="cvName"
-      :role="cvRole"
-      :location="cvLocation"
-      :bio="cvBio"
-      :email="cvEmail"
-      :github="cvGithub"
-      :github-text="cvGithubText"
-      :linkedin="cvLinkedin"
-      :timezone="cvTimezone"
-      :deliverables="cvDeliverables"
-      :is-es="isEs"
-    />
+    <!-- Modern IDE / Code Editor View (Vista interactiva en pantalla, oculta en impresión A4) -->
+    <div v-if="mode === 'modern'" class="print:hidden">
+      <CvModernIde
+        :name="cvName"
+        :role="cvRole"
+        :location="cvLocation"
+        :bio="cvBio"
+        :email="cvEmail"
+        :github="cvGithub"
+        :github-text="cvGithubText"
+        :linkedin="cvLinkedin"
+        :timezone="cvTimezone"
+        :deliverables="cvDeliverables"
+        :is-es="isEs"
+      />
+    </div>
   </section>
 </template>

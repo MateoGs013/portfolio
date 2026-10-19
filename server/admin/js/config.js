@@ -63,13 +63,20 @@ export const METRIC_PRESETS = [
 ]
 
 export const TECH_CATEGORY_MAP = {
-  FRONTEND: 'Frontend & UI',
-  BACKEND: 'Backend & APIs',
-  DATABASE: 'Bases de Datos & ORM',
-  DEVOPS: 'Cloud, Docker & VPS',
-  TOOLING: 'Herramientas & Bundlers',
   LANGUAGE: 'Lenguajes de Programación',
-  OTHER: 'Otras Herramientas',
+  FRAMEWORK: 'Frameworks & Librerías',
+  MOTION: 'Animación & Motion',
+  GRAPHICS: 'Gráficos & WebGL / 3D',
+  BACKEND: 'Backend & APIs',
+  DATA: 'Bases de Datos & ORM',
+  TOOLING: 'Herramientas & Tooling',
+  DESIGN: 'Diseño & UI/UX',
+}
+
+export const defaults = {
+  stack: {
+    category: 'FRAMEWORK',
+  },
 }
 
 export const MODELS = {
@@ -128,8 +135,23 @@ export const MODELS = {
     name: r => r.name,
     meta: r => `${r.category} · Desde ${r.since}${r._count ? ` · ${r._count.projects} proyectos` : ''}`,
     toForm: r => ({ ...r }),
-    blank: () => ({ slug: '', name: '', category: 'FRONTEND', since: new Date().getFullYear(), note: '', color: '' }),
+    blank: () => ({ slug: '', name: '', category: 'FRAMEWORK', since: new Date().getFullYear(), note: '', color: '' }),
     toPayload: f => f,
+    fields: {
+      category: {
+        type: 'select',
+        options: [
+          { value: 'LANGUAGE', label: 'Lenguajes de Programación' },
+          { value: 'FRAMEWORK', label: 'Frameworks & Librerías' },
+          { value: 'MOTION', label: 'Animación & Motion' },
+          { value: 'GRAPHICS', label: 'Gráficos & WebGL / 3D' },
+          { value: 'BACKEND', label: 'Backend & APIs' },
+          { value: 'DATA', label: 'Bases de Datos & ORM' },
+          { value: 'TOOLING', label: 'Herramientas & Tooling' },
+          { value: 'DESIGN', label: 'Diseño & UI/UX' },
+        ],
+      },
+    },
   },
 
   orgs: {

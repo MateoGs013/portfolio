@@ -180,6 +180,7 @@ export const fallbackProjects = [
     createdAt: '2026-03-17T00:00:00.000Z',
     updatedAt: '2026-07-20T00:00:00.000Z',
     org: { slug: 'la-rucula-gastrobar', name: 'La Rúcula Gastrobar' },
+    organization: { slug: 'la-rucula-gastrobar', name: 'La Rúcula Gastrobar' },
     techs: [
       { slug: 'gsap', name: 'GSAP' },
       { slug: 'lenis', name: 'Lenis' },
@@ -239,6 +240,7 @@ export const fallbackProjects = [
     createdAt: '2026-01-28T00:00:00.000Z',
     updatedAt: '2026-07-20T00:00:00.000Z',
     org: { slug: 'arg-piscinas', name: 'ARG Piscinas' },
+    organization: { slug: 'arg-piscinas', name: 'ARG Piscinas' },
     techs: [
       { slug: 'gsap', name: 'GSAP' },
       { slug: 'node', name: 'Node.js' },
@@ -297,6 +299,7 @@ export const fallbackProjects = [
     createdAt: '2026-05-18T00:00:00.000Z',
     updatedAt: '2026-06-28T00:00:00.000Z',
     org: { slug: 'escuela-da-vinci', name: 'Escuela Da Vinci' },
+    organization: { slug: 'escuela-da-vinci', name: 'Escuela Da Vinci' },
     techs: [
       { slug: 'fastapi', name: 'FastAPI' },
       { slug: 'next', name: 'Next.js' },
@@ -353,6 +356,7 @@ export const fallbackProjects = [
     createdAt: '2026-02-10T00:00:00.000Z',
     updatedAt: '2026-06-15T00:00:00.000Z',
     org: null,
+    organization: null,
     techs: [
       { slug: 'express', name: 'Express' },
       { slug: 'mongodb', name: 'MongoDB' },
@@ -403,6 +407,7 @@ export const fallbackProjects = [
     createdAt: '2026-04-01T00:00:00.000Z',
     updatedAt: '2026-05-15T00:00:00.000Z',
     org: null,
+    organization: null,
     techs: [
       { slug: 'gsap', name: 'GSAP' },
       { slug: 'lenis', name: 'Lenis' },
@@ -444,6 +449,7 @@ export const fallbackProjects = [
     createdAt: '2026-05-01T00:00:00.000Z',
     updatedAt: '2026-10-11T00:00:00.000Z',
     org: null,
+    organization: null,
     techs: [
       { slug: 'fastapi', name: 'FastAPI' },
       { slug: 'python', name: 'Python' },
@@ -485,6 +491,7 @@ export const fallbackProjects = [
     createdAt: '2026-06-01T00:00:00.000Z',
     updatedAt: '2026-08-15T00:00:00.000Z',
     org: null,
+    organization: null,
     techs: [
       { slug: 'vue', name: 'Vue 3' },
       { slug: 'supabase', name: 'Supabase' },
@@ -522,6 +529,7 @@ export const fallbackProjects = [
     createdAt: '2026-06-15T00:00:00.000Z',
     updatedAt: '2026-08-20T00:00:00.000Z',
     org: null,
+    organization: null,
     techs: [
       { slug: 'vue', name: 'Vue 3' },
       { slug: 'gsap', name: 'GSAP' },
@@ -563,3 +571,63 @@ export const fallbackStack = [
   { id: 21, slug: 'supabase', name: 'Supabase', category: 'DATA' as const, since: 2026, note: 'Backend-as-a-Service con Postgres en tiempo real, Row Level Security y storage S3.', color: '#3ecf8e', _count: { projects: 0, experiences: 0 } },
   { id: 22, slug: 'tailwind', name: 'Tailwind CSS', category: 'TOOLING' as const, since: 2026, note: 'Sistema de diseño componible y utilitario con purga agresiva para bundles ultra ligeros.', color: '#06b6d4', _count: { projects: 3, experiences: 2 } },
 ]
+
+export interface FallbackProjectFilters {
+  stack?: string
+  year?: string | number
+  role?: string
+  featured?: string | boolean
+  status?: string
+  org?: string
+}
+
+const VALID_PROJECT_STATUSES: readonly string[] = ['LIVE', 'ARCHIVED', 'WIP']
+
+/**
+ * Filtra los proyectos de fallback según los parámetros de consulta.
+ * Soporta de forma resiliente filtros relacionales por stack, year, role, featured, status y org.
+ */
+export function getFallbackProjects(filters?: FallbackProjectFilters) {
+  let data = [...fallbackProjects]
+  if (!filters) return data
+
+  if (filters.stack) {
+    data = data.filter(p => p.techs.some(t => t.slug === filters.stack))
+  }
+
+  const rawYear = filters.year
+  const year = typeof rawYear === 'number'
+    ? rawYear
+    : (typeof rawYear === 'string' && rawYear.trim() !== '' && Number.isInteger(Number(rawYear)) ? Number(rawYear) : undefined)
+  if (year !== undefined) {
+    data = data.filter(p => p.year === year)
+  }
+
+  if (filters.role) {
+    const q = filters.role.toLowerCase()
+    data = data.filter(p => p.role.toLowerCase().includes(q))
+  }
+
+  const rawFeatured = filters.featured
+  const featured = typeof rawFeatured === 'boolean'
+    ? rawFeatured
+    : (rawFeatured === 'true' ? true : rawFeatured === 'false' ? false : undefined)
+  if (featured !== undefined) {
+    data = data.filter(p => p.featured === featured)
+  }
+
+  if (filters.status) {
+    if (VALID_PROJECT_STATUSES.includes(filters.status)) {
+      data = data.filter(p => p.status === filters.status)
+    } else {
+      // Estado inválido ignorado de forma segura para no provocar fallos
+    }
+  }
+
+  if (filters.org) {
+    data = data.filter(p => p.organization?.slug === filters.org || p.org?.slug === filters.org)
+  }
+
+  return data
+}
+

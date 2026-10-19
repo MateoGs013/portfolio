@@ -3,6 +3,7 @@
 
 import { store } from './store.js'
 import { AdmApp } from './components/AdmApp.js'
+import { AdmAiTrace } from './components/AdmAiTrace.js'
 
 // Salvaguarda de Seguridad: Interceptar diálogos nativos bloqueantes
 window.confirm = (msg) => {
@@ -21,6 +22,10 @@ window.prompt = (msg) => {
 const { createApp } = window.Vue
 
 const app = createApp(AdmApp)
+
+// Registro de componentes globales
+app.component('AdmAiTrace', AdmAiTrace)
+app.component('adm-ai-trace', AdmAiTrace)
 
 // Inicialización de la sesión si ya existía un token
 if (store.token) {

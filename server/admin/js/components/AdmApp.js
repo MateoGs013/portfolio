@@ -17,6 +17,7 @@ import { ConfirmModal } from './modals/ConfirmModal.js'
 import { HelpModal } from './modals/HelpModal.js'
 import { LightboxModal } from './modals/LightboxModal.js'
 import { AdmToast } from './ui/AdmToast.js'
+import { AdmAiTrace } from './AdmAiTrace.js'
 
 export const AdmApp = {
   name: 'AdmApp',
@@ -36,6 +37,7 @@ export const AdmApp = {
     HelpModal,
     LightboxModal,
     AdmToast,
+    AdmAiTrace,
   },
   setup() {
     return {

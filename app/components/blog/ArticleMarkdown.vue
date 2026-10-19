@@ -3,7 +3,6 @@
 // Tipografía de alta precisión, bloques de código con selector de lenguaje y copiado en 1 clic.
 // Estética Obsidian Dark y acentos International Orange. Cero emojis.
 import AppIcon from '~/components/ui/AppIcon.vue'
-import { safeHref } from '~/lib/explorer'
 
 const props = defineProps<{
   content: string
@@ -142,6 +141,24 @@ async function copyCode(code: string, idx: number) {
   }
 }
 
+function sanitizeUrl(url?: string): string | null {
+  if (!url) return null
+  const trimmed = url.trim()
+  // Solo permitir http://, https://, mailto:, anclas (#) o rutas relativas (/)
+  // Rechazar terminantemente javascript:, data: y cualquier otro pseudo-protocolo
+  if (!/^(?:https?:\/\/|mailto:|\/|#)/i.test(trimmed)) {
+    return null
+  }
+
+  // Escapar caracteres peligrosos para evitar inyección en atributos HTML
+  return trimmed
+    .replace(/&/g, '&amp;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+}
+
 function renderInline(text?: string): string {
   if (!text) return ''
   // Escapar caracteres html básicos
@@ -156,11 +173,13 @@ function renderInline(text?: string): string {
   // Código en línea `código`
   out = out.replace(/`([^`]+)`/g, '<code class="px-1.5 py-0.5 font-mono text-[11.5px] bg-paper border border-rule text-sig rounded-[2px]">$1</code>')
 
-  // Enlaces [texto](url) sanitizados
+  // Enlaces [texto](url) sanitizados contra inyección XSS
   out = out.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (_match, label, href) => {
-    const sanitized = safeHref(href)
+    const sanitized = sanitizeUrl(href)
     if (!sanitized) return label
-    return `<a href="${sanitized}" target="_blank" rel="noopener noreferrer" class="text-sig underline underline-offset-2 hover:text-sig-hover hover:decoration-sig">${label} ↗</a>`
+    const isExternal = /^https?:\/\//i.test(sanitized)
+    const targetAttrs = isExternal ? ' target="_blank" rel="noopener noreferrer"' : ''
+    return `<a href="${sanitized}"${targetAttrs} class="text-sig underline underline-offset-2 hover:text-sig-hover hover:decoration-sig">${label}${isExternal ? ' ↗' : ''}</a>`
   })
 
   return out
@@ -205,18 +224,21 @@ function renderInline(text?: string): string {
 
       <!-- Cita Técnica -->
       <blockquote v-else-if="block.type === 'quote'" class="m-0 p-3.5 sm:p-4 bg-surface border-l-4 border-sig border-y border-r border-rule rounded-[2px] font-mono text-[13px] sm:text-[13.5px] text-dim leading-relaxed">
+        <!-- eslint-disable-next-line vue/no-v-html -->
         <span v-html="renderInline(block.content)" />
       </blockquote>
 
       <!-- Listas -->
       <ul v-else-if="block.type === 'list'" class="m-0 pl-5 flex flex-col gap-1.5 list-disc text-[14.5px] sm:text-[15px] text-ink leading-relaxed">
         <li v-for="(item, itemIdx) in block.items" :key="itemIdx" class="pl-1">
+          <!-- eslint-disable-next-line vue/no-v-html -->
           <span v-html="renderInline(item)" />
         </li>
       </ul>
 
       <!-- Párrafo estándar -->
       <p v-else-if="block.type === 'p'" class="m-0 text-[14.5px] sm:text-[15.5px] text-ink/95 leading-relaxed break-words">
+        <!-- eslint-disable-next-line vue/no-v-html -->
         <span v-html="renderInline(block.content)" />
       </p>
     </template>

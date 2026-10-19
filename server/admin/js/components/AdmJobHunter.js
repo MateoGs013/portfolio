@@ -3,11 +3,15 @@
 
 import { store } from '../store.js'
 import { api } from '../api.js'
+import { AdmAiTrace } from './AdmAiTrace.js'
 
 const { computed, ref, reactive } = window.Vue
 
 export const AdmJobHunter = {
   name: 'AdmJobHunter',
+  components: {
+    AdmAiTrace,
+  },
   setup() {
     const hunterPitch = ref(null)
     const currentTailoredCV = ref(null)
@@ -567,6 +571,23 @@ export const AdmJobHunter = {
             </button>
           </div>
 
+          <!-- Traza de Razonamiento IA: Escaneo y Evaluación de Cola (Bencho UI) -->
+          <adm-ai-trace
+            :active="store.hunter.isScanning || store.hunter.isEvaluating"
+            :title="store.hunter.isScanning ? 'EROS // ESCANEO DE PORTALES' : 'EROS // EVALUACIÓN DE COLA'"
+            :steps="store.hunter.isScanning ? [
+              'Conectando con fuentes de empleo remotas',
+              'Parseando oportunidades y metadatos',
+              'Filtrando duplicados contra PostgreSQL 17',
+              'Guardando nuevas vacantes en la cola'
+            ] : [
+              'Tomando vacantes no evaluadas de la cola',
+              'Cruzando requisitos con proyectos del portfolio',
+              'Calculando scores y veredictos con Gemini',
+              'Persistiendo análisis en base de datos'
+            ]"
+          />
+
           <!-- Buscador -->
           <div class="relative">
             <input
@@ -982,7 +1003,29 @@ export const AdmJobHunter = {
 
           <!-- Contenido con Scroll de Vacante -->
           <div class="flex-1 overflow-y-auto p-6 space-y-6">
-            
+
+            <!-- Traza de Razonamiento IA: CV, Pitch y Evaluación Individual (Bencho UI) -->
+            <adm-ai-trace
+              :active="store.hunter.isGeneratingCV || store.hunter.isPitching || store.hunter.isEvaluatingSingle"
+              :title="store.hunter.isGeneratingCV ? 'EROS // ADAPTACIÓN CV HARVARD ATS' : (store.hunter.isPitching ? 'EROS // SÍNTESIS DE PITCH EJECUTIVO' : 'EROS // EVALUACIÓN DE VACANTE CON GEMINI')"
+              :steps="store.hunter.isGeneratingCV ? [
+                'Analizando requisitos técnicos y seniority de la vacante',
+                'Seleccionando proyectos de máxima afinidad en PostgreSQL 17',
+                'Adaptando métricas e impacto con formato Harvard ATS',
+                'Optimizando tipografía y maquetación de 1 página A4'
+              ] : (store.hunter.isPitching ? [
+                'Extrayendo pain-points y rol del hiring manager',
+                'Cruzando logros técnicos comprobables del candidato',
+                'Estructurando propuesta directa con tono de ingeniería',
+                'Sintetizando cover letter ejecutiva con Gemini 2.5'
+              ] : [
+                'Scrapeando descripción completa de la oportunidad',
+                'Extrayendo tech stack, rango salarial y modalidad',
+                'Calculando score heurístico de match con el perfil',
+                'Estructurando bullet points y recomendación de postulación'
+              ])"
+            />
+
             <!-- Análisis Estratégico de Eros IA -->
             <div v-if="selectedAnalysis" class="p-4.5 bg-[#121318] border border-white/10 rounded-lg space-y-4">
               <div class="flex items-center justify-between border-b border-white/5 pb-2.5">
