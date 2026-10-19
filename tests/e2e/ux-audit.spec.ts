@@ -40,6 +40,21 @@ test.describe('Explorador Relacional — Auditoría Visual y UX/UI', () => {
       fullPage: false,
     })
 
+    // Captura de la Librería de Componentes Propia (Sonzogni × Bencho UI)
+    const benchLocator = page.locator('.bench-showcase')
+    if (await benchLocator.count() > 0) {
+      await benchLocator.scrollIntoViewIfNeeded()
+      await page.waitForTimeout(300)
+      await page.screenshot({
+        path: path.join(SCREENSHOT_DIR, `bench-showcase-${testInfo.project.name}.png`),
+        fullPage: false,
+      })
+      await page.evaluate(() => {
+        document.querySelector('.escenario')?.scrollTo(0, 0)
+      })
+      await page.waitForTimeout(150)
+    }
+
     // 3. Probar cambio a tema Technical Paper (Light)
     await page.evaluate(() => {
       document.documentElement.setAttribute('data-theme', 'light')

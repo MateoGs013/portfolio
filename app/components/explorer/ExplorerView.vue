@@ -7,7 +7,9 @@ import ExplorerFolder from './ExplorerFolder.vue'
 import ExplorerGoto from './ExplorerGoto.vue'
 import ExplorerGuide from './ExplorerGuide.vue'
 import AppIcon, { type IconName } from '~/components/ui/AppIcon.vue'
+import UiLineSidebar, { type LineSidebarItem } from '~/components/ui/UiLineSidebar.vue'
 import UiTelemetryPill from '~/components/ui/UiTelemetryPill.vue'
+import { useBenchoSound } from '~/composables/useBenchoSound'
 import { pad, resolveExplorer, type Explorer } from '~/lib/explorer'
 import { routeFor } from '~/lib/path'
 
@@ -28,9 +30,10 @@ function toggleTheme() {
   }
 }
 
-// Idioma y Modo Hiperfoco
+// Idioma, Modo Hiperfoco y Sonido Táctil Bencho
 const { toggleLocale, isEs } = usePortfolioLocale()
 const { isHyperfocus, toggleHyperfocus } = useHyperfocus()
+const { soundEnabled, toggleSound } = useBenchoSound()
 
 // Reloj dinámico en tiempo real (UTC-3 Patagonia, Argentina)
 const utcTime = ref('')
@@ -328,6 +331,18 @@ const navSections = computed<NavSection[]>(() => [
 
 const currentRoot = computed(() => path.value[0] ?? '')
 
+const lineSidebarItems = computed<LineSidebarItem[]>(() =>
+  navSections.value.map(s => ({
+    key: s.root,
+    num: s.root === '' ? '00' : s.keyHint.padStart(2, '0'),
+    label: s.label.replace(/^0\d\s*·\s*/, ''),
+    count: s.badge,
+    to: routeFor(s.to),
+    shortcut: s.keyHint,
+    isRoot: s.root === '',
+  })),
+)
+
 const activeQueryFilters = computed(() => {
   const filters: Record<string, string | undefined> = {}
   for (const [key, val] of Object.entries(route.query)) {
@@ -454,6 +469,21 @@ const activeQueryFilters = computed(() => {
 
           <button
             type="button"
+            class="tool-btn sound-btn hidden sm:inline-flex items-center justify-center w-7 h-7 rounded-md border border-rule bg-paper/60 text-dim cursor-pointer transition-all duration-150 hover:border-rule-strong hover:text-ink hover:bg-hover active:scale-[0.96]"
+            :class="{ '!text-ink': soundEnabled, 'opacity-50': !soundEnabled }"
+            :aria-label="soundEnabled ? (isEs ? 'Silenciar audio táctil' : 'Mute tactile audio') : (isEs ? 'Activar audio táctil' : 'Enable tactile audio')"
+            :title="soundEnabled ? (isEs ? 'Audio táctil Bencho: ON (click para silenciar)' : 'Bencho tactile audio: ON') : (isEs ? 'Audio táctil Bencho: OFF (click para activar)' : 'Bencho tactile audio: OFF')"
+            @click="toggleSound"
+          >
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+              <path v-if="soundEnabled" d="M15.54 8.46a5 5 0 0 1 0 7.07" />
+              <line v-else x1="22" y1="9" x2="16" y2="15" />
+            </svg>
+          </button>
+
+          <button
+            type="button"
             class="tool-btn theme-btn inline-flex items-center justify-center w-7 h-7 rounded-md border border-rule bg-paper/60 text-dim cursor-pointer transition-all duration-150 hover:border-rule-strong hover:text-ink hover:bg-hover active:scale-[0.96]"
             :aria-label="theme === 'dark' ? 'Cambiar a modo claro (papel técnico)' : 'Cambiar a modo oscuro (obsidiana)'"
             :title="`Cambiar a modo ${theme === 'dark' ? 'claro (papel)' : 'oscuro (obsidiana)'}`"
@@ -490,26 +520,13 @@ const activeQueryFilters = computed(() => {
             <span>PG-17</span>
           </div>
 
-          <nav class="sidebar-tree px-2 py-1 flex flex-col gap-0.5" aria-label="Secciones del sistema">
-            <NuxtLink
-              v-for="s in navSections"
-              :key="s.root"
-              :to="routeFor(s.to)"
-              class="sidebar-item relative flex items-center gap-2.5 px-2.5 py-2 rounded-md text-dim text-[12.5px] font-sans font-normal no-underline transition-all duration-150 hover:bg-hover/70 hover:text-ink group"
-              :class="{ 'active !bg-surface-raised !text-ink !font-medium': currentRoot === s.root }"
-              :title="`${s.desc} — Atajo [${s.keyHint}]`"
-            >
-              <!-- Indicador quirúrgico de 1.5px en estado activo -->
-              <span
-                v-if="currentRoot === s.root"
-                class="w-[2px] h-3.5 bg-sig rounded-full absolute left-0.5 top-1/2 -translate-y-1/2"
-                aria-hidden="true"
-              />
-              <AppIcon :name="s.icon" :size="14" class="sidebar-icon shrink-0 transition-colors duration-150 text-faint group-hover:text-ink group-[.active]:!text-sig" />
-              <span class="sidebar-label flex-1 truncate">{{ s.label }}</span>
-              <kbd class="sidebar-k font-mono text-[10px] text-faint opacity-0 group-hover:opacity-100 transition-opacity duration-150">{{ s.keyHint }}</kbd>
-              <span class="sidebar-badge font-mono text-[10.5px] text-faint tabular-nums group-[.active]:text-dim">{{ s.badge }}</span>
-            </NuxtLink>
+          <nav class="sidebar-tree px-2 py-1 flex flex-col" aria-label="Secciones del sistema">
+            <UiLineSidebar
+              :items="lineSidebarItems"
+              :active-key="currentRoot"
+              :reach="52"
+              :length="48"
+            />
           </nav>
 
           <div class="sidebar-footer mt-auto px-3.5 py-3 border-t border-rule flex items-center justify-between font-mono text-[10.5px] text-faint">

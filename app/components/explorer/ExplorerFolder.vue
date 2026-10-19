@@ -5,9 +5,11 @@
 import ExplorerHeader from './ExplorerHeader.vue'
 import AppIcon from '~/components/ui/AppIcon.vue'
 import ExplorerBadge from './ExplorerBadge.vue'
+import UiBenchShowcase from '~/components/ui/UiBenchShowcase.vue'
 import UiCopyPill from '~/components/ui/UiCopyPill.vue'
 import UiSegmentedSwitch from '~/components/ui/UiSegmentedSwitch.vue'
 import UiSpotlightCard from '~/components/ui/UiSpotlightCard.vue'
+import UiSweepButton from '~/components/ui/UiSweepButton.vue'
 import { pad, type Folder } from '~/lib/explorer'
 import type { Project } from '~/lib/api'
 import { routeFor } from '~/lib/path'
@@ -598,15 +600,14 @@ function openExternal(url?: string | null) {
 
             <!-- Barra de Acciones Táctiles -->
             <div class="flex flex-wrap items-center gap-2.5 w-full sm:w-auto">
-              <NuxtLink
+              <UiSweepButton
                 to="/projects"
-                class="group inline-flex items-center justify-center gap-2 h-9 px-4 rounded-lg bg-ink text-paper font-sans text-[13px] font-medium no-underline hover:opacity-90 active:scale-[0.98] transition-all duration-150"
                 :title="isEs ? 'Explorar todas las aplicaciones en producción' : 'Explore all applications in production'"
               >
                 <span>{{ tr.home.btnProjects }}</span>
                 <span class="font-mono text-[11px] opacity-65">({{ projectCountBadge }})</span>
                 <AppIcon name="arrow-right" :size="13" class="transition-transform duration-200 group-hover:translate-x-0.5" />
-              </NuxtLink>
+              </UiSweepButton>
 
               <NuxtLink
                 to="/about"
@@ -847,6 +848,9 @@ function openExternal(url?: string | null) {
           </UiSpotlightCard>
         </div>
       </section>
+
+      <!-- 2.35 LIBRERÍA DE COMPONENTES PROPIA // SONZOGNI × BENCHO UI -->
+      <UiBenchShowcase />
 
       <!-- 2.4 PIE DE PÁGINA MINIMALISTA -->
       <footer class="rounded-xl border border-rule bg-surface/40 p-5 sm:p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8" aria-label="Contacto directo">
