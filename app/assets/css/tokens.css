@@ -17,12 +17,15 @@
 
   /* Obsidian Dark (Tema Nocturno Monocromático de Alta Precisión y Calma Visual) */
   --d-paper: #0a0a0c;
+  --d-bg: #0a0a0c;
   --d-surface: #111114;
   --d-surface-raised: #17171c;
+  --d-card: #17171c;
   --d-ink: #f4f4f5;
   --d-rule: rgba(255, 255, 255, 0.065);
   --d-rule-strong: rgba(255, 255, 255, 0.13);
   --d-dim: #9898a0;
+  --d-mute: #9898a0;
   --d-faint: #71717a;
   --d-hover: #19191f;
   --d-sig: #ff3e00;
@@ -64,12 +67,15 @@ html[data-theme="light"] {
   --d-orange-bg: rgba(197, 48, 0, 0.06);
 
   --d-paper: #faf9f6;
+  --d-bg: #faf9f6;
   --d-surface: #f2f1ed;
   --d-surface-raised: #e8e6e0;
+  --d-card: #ffffff;
   --d-ink: #111113;
   --d-rule: rgba(0, 0, 0, 0.065);
   --d-rule-strong: rgba(0, 0, 0, 0.13);
   --d-dim: #52525b;
+  --d-mute: #52525b;
   --d-faint: #71717a;
   --d-hover: #eae8e1;
   --d-sig: #c53000;
@@ -147,7 +153,9 @@ html[data-theme="light"][data-hyperfocus="true"] {
 }
 
 /* Ocultar Barra Lateral en Hiperfoco (Zen / Reader Mode) */
-html[data-hyperfocus="true"] .sidebar {
+html[data-hyperfocus="true"] .sidebar,
+html[data-hyperfocus="true"] .rzp-pane-sidebar,
+html[data-hyperfocus="true"] .rzp-div {
   display: none !important;
 }
 html[data-hyperfocus="true"] .cuerpo-ventana {
@@ -514,4 +522,54 @@ html[data-hyperfocus="true"] .hb-dot {
   /* 7. Modo Moderno en Impresión eliminado (ahora en DatosCV.vue) */
 }
 
+/* ─── $10k Spatial Canvas: Iluminación Cenital Óptica & Refracción Especular ─── */
+:root {
+  --d-specular-top: rgba(255, 255, 255, 0.085);
+  --d-specular-edge: rgba(255, 255, 255, 0.065);
+  --d-ambient-bleed: rgba(255, 62, 0, 0.048);
+  --d-shadow-10k: 0 12px 36px -8px rgba(0, 0, 0, 0.52), inset 0 1px 0 0 var(--d-specular-top);
+  --d-shadow-pill: 0 10px 30px -6px rgba(0, 0, 0, 0.55), inset 0 1px 0 0 rgba(255, 255, 255, 0.11);
+}
 
+html[data-theme="light"] {
+  --d-specular-top: rgba(255, 255, 255, 0.85);
+  --d-specular-edge: rgba(0, 0, 0, 0.075);
+  --d-ambient-bleed: rgba(197, 48, 0, 0.04);
+  --d-shadow-10k: 0 8px 24px -6px rgba(0, 0, 0, 0.06), inset 0 1px 0 0 var(--d-specular-top);
+  --d-shadow-pill: 0 8px 26px -6px rgba(0, 0, 0, 0.08), inset 0 1px 0 0 rgba(255, 255, 255, 0.9);
+}
+
+.surface-10k {
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--d-surface-raised) 65%, var(--d-surface)) 0%,
+    var(--d-surface) 100%
+  );
+  border: 1px solid var(--d-specular-edge);
+  box-shadow: var(--d-shadow-10k);
+}
+
+.floating-pill-10k {
+  background: color-mix(in srgb, var(--d-surface) 82%, transparent);
+  backdrop-filter: blur(16px) saturate(140%);
+  -webkit-backdrop-filter: blur(16px) saturate(140%);
+  border: 1px solid var(--d-specular-edge);
+  box-shadow: var(--d-shadow-pill);
+}
+
+.ambient-canvas-10k {
+  background-image:
+    radial-gradient(760px 340px at 32% 0%, var(--d-ambient-bleed), transparent 72%),
+    radial-gradient(var(--d-grid-cross) 1px, transparent 1px);
+  background-size: 100% 100%, 24px 24px;
+}
+
+html[data-hyperfocus="true"] .surface-10k,
+html[data-hyperfocus="true"] .floating-pill-10k,
+html[data-hyperfocus="true"] .ambient-canvas-10k {
+  background: transparent !important;
+  background-image: none !important;
+  border: none !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+}

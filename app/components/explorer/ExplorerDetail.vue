@@ -9,8 +9,11 @@ import AppIcon from '~/components/ui/AppIcon.vue'
 import ExplorerValue from './ExplorerValue.vue'
 import ExplorerFileWindow from './ExplorerFileWindow.vue'
 import ArticleMarkdown from '~/components/blog/ArticleMarkdown.vue'
-import UiSpotlightCard from '~/components/ui/UiSpotlightCard.vue'
 import UiCopyPill from '~/components/ui/UiCopyPill.vue'
+import UiHubDiagram from '~/components/ui/UiHubDiagram.vue'
+import UiSharePill from '~/components/ui/UiSharePill.vue'
+import UiSlideConfirm from '~/components/ui/UiSlideConfirm.vue'
+import UiSpotlightCard from '~/components/ui/UiSpotlightCard.vue'
 import { pad, safeHref, type Detail, type Vecino, type Project } from '~/lib/explorer'
 import { routeFor } from '~/lib/path'
 
@@ -137,6 +140,22 @@ const projectMetricsRow = computed(() => {
 const projectTechsRow = computed(() => {
   return props.detail.rows.find(x => x.name === 'techs' && x.items && x.items.length) ?? null
 })
+
+const projectHubNodes = computed(() => {
+  const items = projectTechsRow.value?.items ?? []
+  return items.slice(0, 6).map((it, idx) => ({
+    id: `tech-${idx}`,
+    label: it.label,
+    metric: 'ACTIVE',
+  }))
+})
+
+function triggerMailto() {
+  if (import.meta.client) {
+    const email = emailRow.value?.value ?? 'mateogabus@gmail.com'
+    window.location.href = `mailto:${email}`
+  }
+}
 
 // Metadatos y filas computadas para Experiencia
 const expRole = computed(() => {
@@ -437,13 +456,14 @@ const jsonContent = computed(() => {
             <span v-if="projectRole" class="ph-pill role px-2.5 py-1 border border-rule bg-paper/80 text-dim text-[11px] rounded-lg max-w-full break-words">{{ projectRole }}</span>
           </div>
 
-          <div class="ph-actions flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-2.5 w-full md:w-auto shrink-0">
+          <div class="ph-actions flex flex-wrap items-center gap-2 sm:gap-2.5 w-full md:w-auto shrink-0">
+            <UiSharePill :title="isEs ? 'Compartir' : 'Share'" compact />
             <a
               v-if="projectUrl"
               :href="projectUrl"
               target="_blank"
               rel="noopener noreferrer"
-              class="ph-btn primary bg-ink text-paper hover:opacity-90 active:scale-[0.98] rounded-md px-3.5 py-2 font-sans text-[12.5px] font-medium no-underline inline-flex items-center justify-center gap-2 transition-all w-full sm:w-auto"
+              class="ph-btn primary bg-ink text-paper hover:opacity-90 active:scale-[0.98] rounded-md px-3.5 py-2 font-sans text-[12.5px] font-medium no-underline inline-flex items-center justify-center gap-2 transition-all"
             >
               <AppIcon name="external" :size="12" />
               <span>{{ tr.detail.visitOfficial }}</span>
@@ -453,7 +473,7 @@ const jsonContent = computed(() => {
               :href="projectRepo"
               target="_blank"
               rel="noopener noreferrer"
-              class="ph-btn secondary bg-surface hover:bg-hover text-ink border border-rule hover:border-rule-strong active:scale-[0.98] rounded-md px-3.5 py-2 font-sans text-[12.5px] font-medium no-underline inline-flex items-center justify-center gap-2 transition-all w-full sm:w-auto"
+              class="ph-btn secondary bg-surface hover:bg-hover text-ink border border-rule hover:border-rule-strong active:scale-[0.98] rounded-md px-3.5 py-2 font-sans text-[12.5px] font-medium no-underline inline-flex items-center justify-center gap-2 transition-all"
             >
               <AppIcon name="code" :size="12" />
               <span>{{ tr.detail.sourceCode }}</span>
@@ -542,14 +562,22 @@ const jsonContent = computed(() => {
           <ExplorerValue :cell="projectStepsRow" name="steps" />
         </div>
 
-        <!-- Arsenal Tecnológico -->
+        <!-- Arsenal Tecnológico + Diagrama Radial Interactivo -->
         <div v-if="projectTechsRow" class="techs-section p-3.5 sm:p-4 bg-surface/60 border border-rule rounded-xl flex flex-col gap-3 w-full min-w-0">
           <div class="flex items-center justify-between gap-2 border-b border-rule pb-2 w-full min-w-0">
             <span class="font-mono text-[11.5px] font-medium text-ink tracking-wider flex items-center gap-2 min-w-0">
               <span class="w-1.5 h-1.5 rounded-full bg-sig shrink-0" aria-hidden="true" />
               <span class="truncate">{{ tr.detail.stackSection }}</span>
             </span>
-            <span class="font-mono text-[10.5px] text-dim hidden sm:inline shrink-0">{{ isEs ? 'TECNOLOGÍAS CLAVE' : 'CORE TECHNOLOGIES' }}</span>
+            <span class="font-mono text-[10.5px] text-dim hidden sm:inline shrink-0">{{ isEs ? 'TOPOLOGÍA & DEPENDENCIAS' : 'TOPOLOGY & DEPENDENCIES' }}</span>
+          </div>
+          <div v-if="projectHubNodes.length >= 3" class="hidden sm:flex items-center justify-center py-2 border-b border-rule/60">
+            <UiHubDiagram
+              :core-label="detail.name.slice(0, 12)"
+              :nodes="projectHubNodes"
+              :spread="102"
+              :height="210"
+            />
           </div>
           <div class="flex flex-wrap gap-2 pt-1">
             <template v-for="(it, i) in projectTechsRow.items" :key="i">
@@ -933,20 +961,28 @@ const jsonContent = computed(() => {
             <span class="ch-badge text-green font-mono text-xs font-medium">● {{ isEs ? 'DISPONIBLE // CONTRATACIÓN DIRECTA' : 'AVAILABLE // DIRECT HIRE' }}</span>
             <span class="ch-desc text-dim text-[13px] sm:text-[13.5px] font-sans break-words">{{ isEs ? 'Respondo habitualmente en menos de 24 horas laborables.' : 'I usually respond in less than 24 business hours.' }}</span>
           </div>
-          <div class="ch-actions flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full md:w-auto shrink-0">
+          <div class="ch-actions flex flex-wrap items-center gap-2.5 w-full md:w-auto shrink-0">
             <button
               type="button"
-              class="ch-btn copy group inline-flex items-center justify-center gap-2 px-3.5 sm:px-4 py-2 font-mono text-[11px] font-medium no-underline cursor-pointer transition-all duration-150 rounded-md bg-paper/80 border border-rule text-ink hover:bg-hover hover:border-rule-strong w-full sm:w-auto"
+              class="ch-btn copy group inline-flex items-center justify-center gap-2 px-3.5 sm:px-4 py-2 font-mono text-[11px] font-medium no-underline cursor-pointer transition-all duration-150 rounded-md bg-paper/80 border border-rule text-ink hover:bg-hover hover:border-rule-strong"
               :class="{ '!border-green !text-green !bg-green/10': copiedEmail }"
               @click="copyEmail"
             >
               <AppIcon :name="copiedEmail ? 'check' : 'copy'" :size="12" />
               <span>{{ copiedEmail ? (isEs ? '¡EMAIL COPIADO!' : 'EMAIL COPIED!') : (isEs ? 'COPIAR EMAIL DIRECTO' : 'COPY DIRECT EMAIL') }}</span>
             </button>
+            <div v-if="emailRow?.value" class="hidden sm:block">
+              <UiSlideConfirm
+                :label="isEs ? 'Deslizá para redactar' : 'Slide to compose'"
+                :confirmed-label="isEs ? 'Abriendo cliente...' : 'Opening mail...'"
+                :width="230"
+                @confirm="triggerMailto"
+              />
+            </div>
             <a
               v-if="emailRow?.value"
               :href="`mailto:${emailRow.value}`"
-              class="ch-btn primary inline-flex items-center justify-center gap-2 px-3.5 sm:px-4 py-2 font-mono text-[11px] font-medium no-underline cursor-pointer transition-all duration-150 rounded-md bg-ink text-paper hover:opacity-90 w-full sm:w-auto"
+              class="ch-btn primary sm:hidden inline-flex items-center justify-center gap-2 px-3.5 py-2 font-mono text-[11px] font-medium no-underline cursor-pointer transition-all duration-150 rounded-md bg-ink text-paper hover:opacity-90 w-full"
             >
               <AppIcon name="mail" :size="12" />
               <span>{{ isEs ? 'ENVIAR CORREO' : 'SEND EMAIL' }}</span>

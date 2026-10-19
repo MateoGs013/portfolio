@@ -7,7 +7,10 @@ import ExplorerFolder from './ExplorerFolder.vue'
 import ExplorerGoto from './ExplorerGoto.vue'
 import ExplorerGuide from './ExplorerGuide.vue'
 import AppIcon, { type IconName } from '~/components/ui/AppIcon.vue'
+import UiDynamicIsland from '~/components/ui/UiDynamicIsland.vue'
 import UiLineSidebar, { type LineSidebarItem } from '~/components/ui/UiLineSidebar.vue'
+import UiProgressiveBlur from '~/components/ui/UiProgressiveBlur.vue'
+import UiResizablePanels from '~/components/ui/UiResizablePanels.vue'
 import UiTelemetryPill from '~/components/ui/UiTelemetryPill.vue'
 import { useBenchoSound } from '~/composables/useBenchoSound'
 import { pad, resolveExplorer, type Explorer } from '~/lib/explorer'
@@ -356,9 +359,9 @@ const activeQueryFilters = computed(() => {
 
 <template>
   <div class="datos flex flex-col h-dvh text-ink font-sans text-[13px] leading-normal tabular-nums bg-paper">
-    <div class="ventana flex-1 min-h-0 w-full flex flex-col bg-paper [background-image:radial-gradient(var(--d-grid-cross)_1.2px,transparent_1.2px)] [background-size:32px_32px]">
-      <!-- Barra Superior de Herramientas (Linear / Bencho.dev Minimal Shell) -->
-      <header class="barra flex-none flex items-center justify-between gap-1.5 sm:gap-2.5 min-h-[46px] sm:min-h-[48px] px-2.5 sm:px-4 border-b border-rule bg-surface/75 backdrop-blur-md w-full max-w-full overflow-hidden">
+    <div class="ventana ambient-canvas-10k flex-1 min-h-0 w-full flex flex-col bg-paper">
+      <!-- Barra Superior Flotante ($10k Spatial Capsule + Dynamic Island) -->
+      <header class="barra floating-pill-10k flex-none flex items-center justify-between gap-1.5 sm:gap-2.5 min-h-[46px] mx-2 sm:mx-4 mt-2 px-2.5 sm:px-3.5 rounded-xl relative z-40">
         <nav class="historia flex gap-1" aria-label="Historial">
           <button
             type="button"
@@ -405,7 +408,7 @@ const activeQueryFilters = computed(() => {
 
         <!-- Botón de Búsqueda Rápida / Goto (Estilo Linear ⌘K) -->
         <button
-          class="goto-btn group flex-[0_1_230px] min-w-[140px] hidden sm:flex items-center gap-2 h-7 px-2.5 rounded-md border border-rule bg-paper/60 text-dim text-left cursor-pointer transition-all duration-150 hover:border-rule-strong hover:bg-hover/60 hover:text-ink active:scale-[0.99]"
+          class="goto-btn group flex-[0_1_220px] min-w-[135px] hidden sm:flex items-center gap-2 h-7 px-2.5 rounded-md border border-rule bg-paper/60 text-dim text-left cursor-pointer transition-all duration-150 hover:border-rule-strong hover:bg-hover/60 hover:text-ink active:scale-[0.99]"
           type="button"
           :title="isEs ? 'Abrir paleta de comandos (⌘K o /)' : 'Open command palette (⌘K or /)'"
           @click="gotoOpen = true"
@@ -415,8 +418,19 @@ const activeQueryFilters = computed(() => {
           <kbd class="font-mono text-[10px] text-faint bg-surface px-1.5 py-0.5 rounded border border-rule group-hover:text-ink transition-colors duration-150">/</kbd>
         </button>
 
-        <!-- Acciones Rápidas del Sistema: Idioma, Hiperfoco, Reloj UTC-3, Telemetría y Tema -->
+        <!-- Acciones Rápidas del Sistema + Dynamic Island Bencho -->
         <div class="barra-derecha flex items-center gap-1.5 shrink-0 ml-auto">
+          <!-- Dynamic Island Interactiva 1:1 Bencho (Telemetría PG-17 expandible con resorte) -->
+          <div class="hidden md:flex items-center">
+            <UiDynamicIsland
+              :collection="currentRoot || 'db'"
+              :record-slug="path[1] || null"
+              :record-count="ex?.request.count ?? 8"
+              :api-healthy="ex?.request.status === 200"
+              :latency-ms="ex?.request.ms ?? 11"
+            />
+          </div>
+
           <!-- Switch de Idioma ES / EN -->
           <button
             type="button"
@@ -454,19 +468,6 @@ const activeQueryFilters = computed(() => {
             <AppIcon name="help" :size="13" />
           </button>
 
-          <!-- Estado del Sistema Consolidado (PG-17 + Latencia + Hora Patagonia UTC-3) -->
-          <div
-            class="sys-status-badge hidden sm:flex items-center gap-1.5 h-7 px-2.5 rounded-md border border-rule bg-paper/60 font-mono text-[10.5px] text-dim"
-            :title="`PostgreSQL 17 ACID (${ex?.request.ms ?? 0}ms) · Hora local: ${utcTime || 'UTC-3'} (Patagonia, Argentina)`"
-          >
-            <span class="sys-dot w-1.5 h-1.5 rounded-full bg-green shadow-[0_0_5px_var(--d-green)]" />
-            <span class="sys-engine text-ink font-medium">PG-17</span>
-            <span class="sys-sep text-faint">·</span>
-            <span class="sys-ms text-dim">{{ ex?.request.ms ?? 0 }}ms</span>
-            <span class="sys-sep text-faint">·</span>
-            <span class="sys-time text-faint">{{ utcTime?.split(' ')[0] || '12:00:00' }}</span>
-          </div>
-
           <button
             type="button"
             class="tool-btn sound-btn hidden sm:inline-flex items-center justify-center w-7 h-7 rounded-md border border-rule bg-paper/60 text-dim cursor-pointer transition-all duration-150 hover:border-rule-strong hover:text-ink hover:bg-hover active:scale-[0.96]"
@@ -496,7 +497,7 @@ const activeQueryFilters = computed(() => {
       </header>
 
       <!-- Barra de Notificación / Indicador de Modo Hiperfoco -->
-      <div v-if="isHyperfocus" class="hiperfoco-banner px-4 py-2 bg-sig text-on-sig border-b border-sig flex items-center justify-center text-xs font-mono font-bold" role="status" aria-live="polite">
+      <div v-if="isHyperfocus" class="hiperfoco-banner mx-2 sm:mx-4 mt-2 px-4 py-2 rounded-lg bg-sig text-on-sig border border-sig flex items-center justify-center text-xs font-mono font-bold" role="status" aria-live="polite">
         <div class="hb-center flex items-center gap-3">
           <span class="hb-title tracking-wider">{{ isEs ? 'HIPERFOCO // LECTURA ZEN' : 'HYPERFOCUS // ZEN READING' }}</span>
           <span class="hb-sep opacity-60">·</span>
@@ -512,60 +513,72 @@ const activeQueryFilters = computed(() => {
         </div>
       </div>
 
-      <!-- Cuerpo de la Ventana: Sidebar Explorador + Escenario Central -->
-      <div class="cuerpo-ventana flex-1 min-h-0 grid grid-cols-[224px_1fr] max-lg:grid-cols-1 overflow-hidden">
-        <aside class="sidebar w-[224px] max-lg:hidden flex flex-col border-r border-rule bg-surface/40 overflow-y-auto" aria-label="Explorador de Archivos">
-          <div class="sidebar-header px-3.5 pt-3.5 pb-2 flex items-center justify-between font-mono text-[10px] tracking-widest uppercase text-faint">
-            <span>{{ isEs ? 'Workspace' : 'Workspace' }}</span>
-            <span>PG-17</span>
-          </div>
+      <!-- Cuerpo de la Ventana: Split Espacial Redimensionable (UiResizablePanels) + Desenfoque Óptico (UiProgressiveBlur) -->
+      <div class="cuerpo-ventana flex-1 min-h-0 overflow-hidden relative">
+        <UiResizablePanels
+          :initial-width="224"
+          :min-width="180"
+          :max-width="310"
+          :shut-threshold="96"
+        >
+          <template #sidebar>
+            <aside class="sidebar w-full h-full flex flex-col bg-transparent overflow-y-auto pt-2" aria-label="Explorador de Archivos">
+              <div class="sidebar-header px-3.5 pt-2.5 pb-2 flex items-center justify-between font-mono text-[10px] tracking-widest uppercase text-faint">
+                <span>{{ isEs ? 'Workspace' : 'Workspace' }}</span>
+                <span class="text-sig/80">PG-17</span>
+              </div>
 
-          <nav class="sidebar-tree px-2 py-1 flex flex-col" aria-label="Secciones del sistema">
-            <UiLineSidebar
-              :items="lineSidebarItems"
-              :active-key="currentRoot"
-              :reach="52"
-              :length="48"
-            />
-          </nav>
+              <nav class="sidebar-tree px-2 py-1 flex flex-col" aria-label="Secciones del sistema">
+                <UiLineSidebar
+                  :items="lineSidebarItems"
+                  :active-key="currentRoot"
+                  :reach="52"
+                  :length="48"
+                />
+              </nav>
 
-          <div class="sidebar-footer mt-auto px-3.5 py-3 border-t border-rule flex items-center justify-between font-mono text-[10.5px] text-faint">
-            <span class="inline-flex items-center gap-1.5">
-              <span class="w-1.5 h-1.5 rounded-full bg-green/80" />
-              <span>{{ isEs ? 'Activo · 2026' : 'Active · 2026' }}</span>
-            </span>
-            <button
-              type="button"
-              class="bg-transparent border-0 p-0 text-dim hover:text-ink transition-colors cursor-pointer font-mono text-[10.5px]"
-              :title="isEs ? 'Abrir guía rápida de navegación (?)' : 'Open quick navigation guide (?)'"
-              @click="guideOpen = !guideOpen"
-            >
-              {{ isEs ? 'Atajos (?)' : 'Keys (?)' }}
-            </button>
-          </div>
-        </aside>
+              <div class="sidebar-footer mt-auto mx-2.5 mb-2.5 px-3 py-2 rounded-lg border border-rule bg-surface/40 flex items-center justify-between font-mono text-[10.5px] text-faint">
+                <span class="inline-flex items-center gap-1.5">
+                  <span class="w-1.5 h-1.5 rounded-full bg-green/80" />
+                  <span>{{ isEs ? 'Activo · 2026' : 'Active · 2026' }}</span>
+                </span>
+                <button
+                  type="button"
+                  class="bg-transparent border-0 p-0 text-dim hover:text-ink transition-colors cursor-pointer font-mono text-[10.5px]"
+                  :title="isEs ? 'Abrir guía rápida de navegación (?)' : 'Open quick navigation guide (?)'"
+                  @click="guideOpen = !guideOpen"
+                >
+                  {{ isEs ? 'Atajos (?)' : 'Keys (?)' }}
+                </button>
+              </div>
+            </aside>
+          </template>
 
-        <main id="contenido" class="exp flex-1 min-w-0 min-h-0 overflow-y-auto p-3 md:p-6 focus:outline-none" tabindex="-1">
-          <div v-if="error" class="pane w-full">
-            <ExplorerDetail
-              :detail="{
-                kind: 'document',
-                name: `error ${error.statusCode ?? 500}`,
-                type: 'response',
-                updated: null,
-                rows: [
-                  { name: 'status', type: 'int', value: String(error.statusCode ?? 500) },
-                  { name: 'message', type: 'string', value: error.statusMessage ?? error.message },
-                  { name: 'request', type: 'string', value: (error.data as { request?: string } | undefined)?.request ?? null },
-                ],
-              }"
-            />
-          </div>
-          <div v-else-if="ex" ref="pane" :key="route.fullPath" class="pane w-full" :class="dir">
-            <ExplorerFolder v-if="folder" :folder="folder" />
-            <ExplorerDetail v-else-if="detail" :detail="detail" :prev="ex.prev" :next="ex.next" />
-          </div>
-        </main>
+          <template #default>
+            <main id="contenido" class="exp w-full h-full min-w-0 min-h-0 overflow-y-auto p-3 md:p-6 focus:outline-none relative" tabindex="-1">
+              <div v-if="error" class="pane w-full">
+                <ExplorerDetail
+                  :detail="{
+                    kind: 'document',
+                    name: `error ${error.statusCode ?? 500}`,
+                    type: 'response',
+                    updated: null,
+                    rows: [
+                      { name: 'status', type: 'int', value: String(error.statusCode ?? 500) },
+                      { name: 'message', type: 'string', value: error.statusMessage ?? error.message },
+                      { name: 'request', type: 'string', value: (error.data as { request?: string } | undefined)?.request ?? null },
+                    ],
+                  }"
+                />
+              </div>
+              <div v-else-if="ex" ref="pane" :key="route.fullPath" class="pane w-full pb-6" :class="dir">
+                <ExplorerFolder v-if="folder" :folder="folder" />
+                <ExplorerDetail v-else-if="detail" :detail="detail" :prev="ex.prev" :next="ex.next" />
+              </div>
+              <UiProgressiveBlur position="bottom" :height="32" :strength="38" />
+            </main>
+          </template>
+        </UiResizablePanels>
       </div>
 
       <!-- Barra de Estado Inferior -->
@@ -706,11 +719,10 @@ kbd {
   overflow: hidden;
 }
 
-/* Sidebar Explorador de Archivos (Linear Minimalist) */
+/* Sidebar Explorador de Archivos (Flotante dentro de UiResizablePanels) */
 .sidebar {
-  flex: 0 0 224px;
-  width: 224px;
-  border-right: 1px solid var(--d-rule);
+  width: 100%;
+  height: 100%;
   display: flex;
   flex-direction: column;
   user-select: none;
@@ -761,10 +773,10 @@ kbd {
 
   /* Barra Superior de Herramientas Compacta y Móvil */
   .barra {
+    margin: 6px 6px 0;
     padding: 0 8px;
     gap: 6px;
-    min-height: 44px;
-    max-width: 100vw;
+    min-height: 42px;
     box-sizing: border-box;
     overflow: hidden;
   }

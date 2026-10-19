@@ -11,14 +11,25 @@ import UiMagneticDots from './UiMagneticDots.vue'
 import UiWakeSlider from './UiWakeSlider.vue'
 import UiTreeView, { type TreeNode } from './UiTreeView.vue'
 import UiDock from './UiDock.vue'
+import UiSegmentedSwitch from './UiSegmentedSwitch.vue'
+import UiSlideConfirm from './UiSlideConfirm.vue'
+import UiSharePill from './UiSharePill.vue'
+import UiHoloCard from './UiHoloCard.vue'
 
 const router = useRouter()
 const { isEs } = usePortfolioLocale()
 const { soundEnabled, toggleSound } = useBenchoSound()
 
+const activeCategory = ref<'springs' | 'tactile' | 'traces'>('springs')
 const commitCount = ref(382)
 const wakeValue = ref(72)
 const activeDockKey = ref('projects')
+
+const categoryOptions = computed(() => [
+  { value: 'springs', label: isEs.value ? 'Resortes & 3D' : 'Springs & 3D' },
+  { value: 'tactile', label: isEs.value ? 'Controles Táctiles' : 'Tactile Controls' },
+  { value: 'traces', label: isEs.value ? 'Trazas & Árbol' : 'Traces & Tree' },
+])
 
 const folderItems = computed(() => [
   {
@@ -44,35 +55,35 @@ const folderItems = computed(() => [
 const thinkingSteps = computed(() => isEs.value
   ? [
       'Consultando esquema relacional en PostgreSQL 17 (latencia < 28ms).',
-      'Hidratando primitivas táctiles con resortes amortiguados de 2.º orden.',
+      'Hidratando 24 primitivas con resortes amortiguados de 2.º orden.',
       'Sintetizando respuesta acústica procedural en Web Audio API.',
-      'Verificando cero overflow en 320px y modo Hiperfoco Zen.',
+      'Verificando iluminación especular cenital y modo Hiperfoco.',
     ]
   : [
       'Querying relational schema in PostgreSQL 17 (latency < 28ms).',
-      'Hydrating tactile primitives with 2nd-order damped springs.',
+      'Hydrating 24 primitives with 2nd-order damped springs.',
       'Synthesizing procedural acoustic feedback via Web Audio API.',
-      'Verifying zero overflow at 320px and Zen Hyperfocus mode.',
+      'Verifying top-lit specular lighting and Zen Hyperfocus mode.',
     ])
 
 const treeRoot = computed<TreeNode>(() => ({
-  name: 'portfolio-ui',
-  meta: '12 primitives',
+  name: 'sonzogni-bencho-ui',
+  meta: '24 primitives',
   kids: [
     {
       name: 'springs',
       kids: [
         { name: 'UiRollingCounter.vue', meta: 'odometer', to: '/projects/ynara' },
         { name: 'UiWakeSlider.vue', meta: 'kinetic', to: '/projects' },
-        { name: 'UiSegmentedSwitch.vue', meta: 'k=260', to: '/projects' },
+        { name: 'UiDynamicIsland.vue', meta: 'k=380', to: '/' },
       ],
     },
     {
-      name: 'spatial',
+      name: 'spatial-3d',
       kids: [
-        { name: 'UiFolderPreview.vue', meta: '3D fan', to: '/projects/la-rucula' },
-        { name: 'UiMagneticDots.vue', meta: 'canvas', to: '/stack' },
-        { name: 'UiLineSidebar.vue', meta: 'bell curve', to: '/experiences' },
+        { name: 'UiHubDiagram.vue', meta: 'packets', to: '/stack' },
+        { name: 'UiCodeReveal.vue', meta: 'x-ray', to: '/projects/la-rucula' },
+        { name: 'UiDotGlobe.vue', meta: '3D slerp', to: '/contact' },
       ],
     },
     { name: 'useBenchoSound.ts', meta: 'WebAudio' },
@@ -110,42 +121,50 @@ function onSelectDock(key: string) {
 </script>
 
 <template>
-  <section class="bench-showcase flex flex-col gap-4" aria-label="Librería de Componentes Interactivos">
-    <!-- Encabezado de la librería con switch de sonido Web Audio -->
-    <div class="flex flex-wrap items-center justify-between gap-3">
+  <section class="bench-showcase flex flex-col gap-3.5" aria-label="Librería de Componentes Interactivos">
+    <!-- Encabezado con selector de categoría con resorte y switch de audio -->
+    <div class="flex flex-wrap items-center justify-between gap-2.5">
       <div class="flex items-center gap-2.5">
-        <span class="font-mono text-[11px] font-semibold text-sig">03</span>
+        <span class="font-mono text-[11px] font-semibold text-sig">04</span>
         <h2 class="font-sans text-[15px] sm:text-[16px] font-semibold tracking-tight text-ink m-0">
-          {{ isEs ? 'Librería de Componentes Propia // Sonzogni × Bencho UI' : 'Custom Component Library // Sonzogni × Bencho UI' }}
+          {{ isEs ? 'Librería Propia // Sonzogni × Bencho UI v2.0' : 'Custom Library // Sonzogni × Bencho UI v2.0' }}
         </h2>
-        <span class="hidden sm:inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-surface-raised border border-rule font-mono text-[10px] text-dim">
-          <span>12 bloques Vue 3</span>
+        <span class="hidden md:inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-surface-raised border border-rule font-mono text-[10px] text-dim">
+          <span>24 bloques Vue 3</span>
           <span class="text-faint">·</span>
           <span>Spring Physics + Web Audio</span>
         </span>
       </div>
 
-      <button
-        type="button"
-        class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md border border-rule bg-surface/80 hover:bg-hover hover:border-rule-strong font-mono text-[11px] text-dim hover:text-ink transition-colors cursor-pointer"
-        :title="isEs ? 'Alternar síntesis acústica procedural (Web Audio API)' : 'Toggle procedural acoustic synthesis (Web Audio API)'"
-        @click="toggleSound"
-      >
-        <span class="w-1.5 h-1.5 rounded-full" :class="soundEnabled ? 'bg-green' : 'bg-faint'" />
-        <span>{{ isEs ? (soundEnabled ? 'Audio Táctil: ON' : 'Audio Táctil: OFF') : (soundEnabled ? 'Tactile Audio: ON' : 'Tactile Audio: OFF') }}</span>
-      </button>
+      <div class="flex flex-wrap items-center gap-2">
+        <UiSegmentedSwitch
+          v-model="activeCategory"
+          :options="categoryOptions"
+          :aria-label="isEs ? 'Categoría de componentes' : 'Component category'"
+        />
+
+        <button
+          type="button"
+          class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md border border-rule bg-surface/80 hover:bg-hover hover:border-rule-strong font-mono text-[10.5px] text-dim hover:text-ink transition-colors cursor-pointer"
+          :title="isEs ? 'Alternar síntesis acústica procedural (Web Audio API)' : 'Toggle procedural acoustic synthesis (Web Audio API)'"
+          @click="toggleSound"
+        >
+          <span class="w-1.5 h-1.5 rounded-full" :class="soundEnabled ? 'bg-green' : 'bg-faint'" />
+          <span>{{ soundEnabled ? 'Audio ON' : 'Audio OFF' }}</span>
+        </button>
+      </div>
     </div>
 
-    <!-- Grilla de 6 Bloques En Vivo (Todo es interactivo, nada es mockup) -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+    <!-- Pestaña 1: Resortes & 3D -->
+    <div v-if="activeCategory === 'springs'" class="grid grid-cols-1 md:grid-cols-3 gap-3.5">
       <!-- 1. Folder 3D Fan (.fdr-*) -->
-      <UiSpotlightCard class="rounded-xl border border-rule bg-surface/60 p-4 flex flex-col justify-between min-h-[230px]">
-        <div class="flex items-center justify-between gap-2 mb-2">
+      <UiSpotlightCard class="surface-10k rounded-xl p-4 flex flex-col justify-between min-h-[224px]">
+        <div class="flex items-center justify-between gap-2 mb-1">
           <div class="flex items-center gap-2">
             <span class="font-sans text-[13px] font-medium text-ink">UiFolderPreview</span>
             <span class="font-mono text-[10px] text-faint">.fdr-*</span>
           </div>
-          <span class="px-1.5 py-0.5 rounded bg-paper/70 border border-rule font-mono text-[9.5px] text-dim uppercase">Hover · Click</span>
+          <span class="px-1.5 py-0.5 rounded bg-paper/70 border border-rule font-mono text-[9.5px] text-dim uppercase">Hover · 3D</span>
         </div>
 
         <div class="flex-1 flex items-center justify-center py-1">
@@ -164,8 +183,8 @@ function onSelectDock(key: string) {
       </UiSpotlightCard>
 
       <!-- 2. Rolling Counter Odometer (.rct-*) + Wake Slider (.wks-*) -->
-      <UiSpotlightCard class="rounded-xl border border-rule bg-surface/60 p-4 flex flex-col justify-between min-h-[230px]">
-        <div class="flex items-center justify-between gap-2 mb-2">
+      <UiSpotlightCard class="surface-10k rounded-xl p-4 flex flex-col justify-between min-h-[224px]">
+        <div class="flex items-center justify-between gap-2 mb-1">
           <div class="flex items-center gap-2">
             <span class="font-sans text-[13px] font-medium text-ink">UiRollingCounter &amp; Wake</span>
             <span class="font-mono text-[10px] text-faint">.rct / .wks</span>
@@ -173,7 +192,7 @@ function onSelectDock(key: string) {
           <span class="px-1.5 py-0.5 rounded bg-paper/70 border border-rule font-mono text-[9.5px] text-dim uppercase">Drag · Hold</span>
         </div>
 
-        <div class="flex-1 flex flex-col items-center justify-center gap-4 py-1">
+        <div class="flex-1 flex flex-col items-center justify-center gap-3.5 py-1">
           <UiRollingCounter
             v-model="commitCount"
             :digits="3"
@@ -198,8 +217,8 @@ function onSelectDock(key: string) {
       </UiSpotlightCard>
 
       <!-- 3. Magnetic Dots Field (.mdg-*) -->
-      <UiSpotlightCard class="rounded-xl border border-rule bg-surface/60 p-4 flex flex-col justify-between min-h-[230px]">
-        <div class="flex items-center justify-between gap-2 mb-2">
+      <UiSpotlightCard class="surface-10k rounded-xl p-4 flex flex-col justify-between min-h-[224px]">
+        <div class="flex items-center justify-between gap-2 mb-1">
           <div class="flex items-center gap-2">
             <span class="font-sans text-[13px] font-medium text-ink">UiMagneticDots</span>
             <span class="font-mono text-[10px] text-faint">.mdg</span>
@@ -209,8 +228,8 @@ function onSelectDock(key: string) {
 
         <div class="flex-1 flex items-center justify-center py-1">
           <UiMagneticDots
-            :width="230"
-            :height="140"
+            :width="225"
+            :height="136"
             :pull="55"
             :radius="55"
             :spring="52"
@@ -223,10 +242,87 @@ function onSelectDock(key: string) {
           {{ isEs ? 'Campo de resortes (click alterna Líneas / Puntos)' : 'Spring field (click toggles Lines / Dots)' }}
         </p>
       </UiSpotlightCard>
+    </div>
 
-      <!-- 4. AI Thinking Trace (.thk-*) -->
-      <UiSpotlightCard class="rounded-xl border border-rule bg-surface/60 p-4 flex flex-col justify-between min-h-[220px]">
-        <div class="flex items-center justify-between gap-2 mb-2">
+    <!-- Pestaña 2: Controles Táctiles ($10k Micro-interactions) -->
+    <div v-else-if="activeCategory === 'tactile'" class="grid grid-cols-1 md:grid-cols-3 gap-3.5">
+      <!-- 4. Slide to Confirm (.sld-*) -->
+      <UiSpotlightCard class="surface-10k rounded-xl p-4 flex flex-col justify-between min-h-[224px]">
+        <div class="flex items-center justify-between gap-2 mb-1">
+          <div class="flex items-center gap-2">
+            <span class="font-sans text-[13px] font-medium text-ink">UiSlideConfirm</span>
+            <span class="font-mono text-[10px] text-faint">.sld-*</span>
+          </div>
+          <span class="px-1.5 py-0.5 rounded bg-paper/70 border border-rule font-mono text-[9.5px] text-dim uppercase">Drag · Morph</span>
+        </div>
+
+        <div class="flex-1 flex items-center justify-center py-2">
+          <UiSlideConfirm
+            :label="isEs ? 'Deslizá para confirmar' : 'Slide to confirm'"
+            :confirmed-label="isEs ? 'Confirmado · 200 OK' : 'Confirmed · 200 OK'"
+            :width="248"
+          />
+        </div>
+
+        <p class="font-mono text-[10.5px] text-dim m-0 text-center">
+          {{ isEs ? 'El tirador se expande hacia atrás rellenando la pista' : 'Handle morphs backward to fill the track on commit' }}
+        </p>
+      </UiSpotlightCard>
+
+      <!-- 5. Share Pill (.shp-*) -->
+      <UiSpotlightCard class="surface-10k rounded-xl p-4 flex flex-col justify-between min-h-[224px]">
+        <div class="flex items-center justify-between gap-2 mb-1">
+          <div class="flex items-center gap-2">
+            <span class="font-sans text-[13px] font-medium text-ink">UiSharePill</span>
+            <span class="font-mono text-[10px] text-faint">.shp-*</span>
+          </div>
+          <span class="px-1.5 py-0.5 rounded bg-paper/70 border border-rule font-mono text-[9.5px] text-dim uppercase">Hover · Expand</span>
+        </div>
+
+        <div class="flex-1 flex items-center justify-center py-2">
+          <UiSharePill
+            url="https://mateosonzogni.com"
+            :title="isEs ? 'Compartir' : 'Share'"
+          />
+        </div>
+
+        <p class="font-mono text-[10.5px] text-dim m-0 text-center">
+          {{ isEs ? 'Avatares con separación elástica + tooltip viajero' : 'Parting avatar stack + single travelling tooltip' }}
+        </p>
+      </UiSpotlightCard>
+
+      <!-- 6. Magnifying Dock (.gdock-*) -->
+      <UiSpotlightCard class="surface-10k rounded-xl p-4 flex flex-col justify-between min-h-[224px]">
+        <div class="flex items-center justify-between gap-2 mb-1">
+          <div class="flex items-center gap-2">
+            <span class="font-sans text-[13px] font-medium text-ink">UiDock</span>
+            <span class="font-mono text-[10px] text-faint">.gdock-*</span>
+          </div>
+          <span class="px-1.5 py-0.5 rounded bg-paper/70 border border-rule font-mono text-[9.5px] text-dim uppercase">Cosine · Hover</span>
+        </div>
+
+        <div class="flex-1 flex items-center justify-center w-full py-4">
+          <UiDock
+            v-model="activeDockKey"
+            :items="dockItems"
+            :magnify="1.36"
+            :spread="2"
+            :lift="8"
+            @select="onSelectDock"
+          />
+        </div>
+
+        <p class="font-mono text-[10.5px] text-dim m-0 text-center">
+          {{ isEs ? 'Magnificación por coseno elevado + tooltip viajero' : 'Raised-cosine magnification + travelling tooltip' }}
+        </p>
+      </UiSpotlightCard>
+    </div>
+
+    <!-- Pestaña 3: Trazas, Árbol & Foil 3D -->
+    <div v-else class="grid grid-cols-1 md:grid-cols-3 gap-3.5">
+      <!-- 7. AI Thinking Trace (.thk-*) -->
+      <UiSpotlightCard class="surface-10k rounded-xl p-4 flex flex-col justify-between min-h-[224px]">
+        <div class="flex items-center justify-between gap-2 mb-1">
           <div class="flex items-center gap-2">
             <span class="font-sans text-[13px] font-medium text-ink">UiThinkingTrace</span>
             <span class="font-mono text-[10px] text-faint">.thk-*</span>
@@ -248,9 +344,9 @@ function onSelectDock(key: string) {
         </p>
       </UiSpotlightCard>
 
-      <!-- 5. Animated File Tree (.tre-*) -->
-      <UiSpotlightCard class="rounded-xl border border-rule bg-surface/60 p-4 flex flex-col justify-between min-h-[220px]">
-        <div class="flex items-center justify-between gap-2 mb-2">
+      <!-- 8. Animated File Tree (.tre-*) -->
+      <UiSpotlightCard class="surface-10k rounded-xl p-4 flex flex-col justify-between min-h-[224px]">
+        <div class="flex items-center justify-between gap-2 mb-1">
           <div class="flex items-center gap-2">
             <span class="font-sans text-[13px] font-medium text-ink">UiTreeView</span>
             <span class="font-mono text-[10px] text-faint">.tre-*</span>
@@ -261,8 +357,8 @@ function onSelectDock(key: string) {
         <div class="flex-1 flex items-center justify-center w-full py-1">
           <UiTreeView
             :root="treeRoot"
-            :initial-open="['portfolio-ui', 'portfolio-ui/springs']"
-            initial-selected="portfolio-ui/springs/UiRollingCounter.vue"
+            :initial-open="['sonzogni-bencho-ui', 'sonzogni-bencho-ui/springs']"
+            initial-selected="sonzogni-bencho-ui/springs/UiRollingCounter.vue"
             @select="onSelectTreeNode"
           />
         </div>
@@ -272,29 +368,31 @@ function onSelectDock(key: string) {
         </p>
       </UiSpotlightCard>
 
-      <!-- 6. Magnifying Dock (.gdock-*) -->
-      <UiSpotlightCard class="rounded-xl border border-rule bg-surface/60 p-4 flex flex-col justify-between min-h-[220px]">
-        <div class="flex items-center justify-between gap-2 mb-2">
+      <!-- 9. Holographic 3D Tilt Card (.mb-holo-*) -->
+      <UiSpotlightCard class="surface-10k rounded-xl p-4 flex flex-col justify-between min-h-[224px]">
+        <div class="flex items-center justify-between gap-2 mb-1">
           <div class="flex items-center gap-2">
-            <span class="font-sans text-[13px] font-medium text-ink">UiDock</span>
-            <span class="font-mono text-[10px] text-faint">.gdock-*</span>
+            <span class="font-sans text-[13px] font-medium text-ink">UiHoloCard</span>
+            <span class="font-mono text-[10px] text-faint">.mb-holo-*</span>
           </div>
-          <span class="px-1.5 py-0.5 rounded bg-paper/70 border border-rule font-mono text-[9.5px] text-dim uppercase">Cosine · Hover</span>
+          <span class="px-1.5 py-0.5 rounded bg-paper/70 border border-rule font-mono text-[9.5px] text-dim uppercase">3D Foil · Glare</span>
         </div>
 
-        <div class="flex-1 flex items-center justify-center w-full py-4">
-          <UiDock
-            v-model="activeDockKey"
-            :items="dockItems"
-            :magnify="1.36"
-            :spread="2"
-            :lift="8"
-            @select="onSelectDock"
-          />
+        <div class="flex-1 flex items-center justify-center py-2">
+          <UiHoloCard :max-tilt="14" class="w-full max-w-[230px] rounded-xl border border-white/15 bg-paper/90 p-3.5">
+            <div class="flex flex-col gap-1.5">
+              <div class="flex items-center justify-between">
+                <span class="font-mono text-[9.5px] uppercase tracking-wider text-sig">Sonzogni · 2026</span>
+                <span class="w-1.5 h-1.5 rounded-full bg-green" />
+              </div>
+              <span class="font-sans text-[14px] font-semibold text-ink">Design Engineer Pass</span>
+              <span class="font-mono text-[10px] text-dim">Perspective 900px · Specular Foil</span>
+            </div>
+          </UiHoloCard>
         </div>
 
         <p class="font-mono text-[10.5px] text-dim m-0 text-center">
-          {{ isEs ? 'Magnificación por coseno elevado + tooltip viajero' : 'Raised-cosine magnification + travelling tooltip' }}
+          {{ isEs ? 'Inclinación 3D amortiguada + lámina holográfica' : 'Damped 3D tilt + holographic foil & glare' }}
         </p>
       </UiSpotlightCard>
     </div>
