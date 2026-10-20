@@ -331,6 +331,7 @@ const lineSidebarItems = computed<SidebarIslandItem[]>(() =>
     to: routeFor(s.to),
     shortcut: s.keyHint,
     isRoot: s.root === '',
+    icon: s.icon,
   })),
 )
 
@@ -347,175 +348,188 @@ const activeQueryFilters = computed(() => {
 
 <template>
   <div class="datos flex flex-col h-dvh text-ink font-sans text-[13px] leading-normal tabular-nums bg-paper">
-    <div class="ventana ambient-canvas-10k flex-1 min-h-0 w-full flex flex-col bg-paper relative">
-      <!-- Topbar Island: cápsula flotante fija (siempre presente, nunca encajonada) -->
-      <header class="barra topbar-island floating-pill-10k fixed z-40 top-2.5 left-2.5 right-2.5 sm:left-5 sm:right-5 lg:left-[86px] lg:right-[86px] max-w-[1280px] mx-auto flex items-center justify-between gap-1.5 sm:gap-2.5 min-h-[48px] px-2.5 sm:px-3.5 rounded-2xl">
-        <nav class="historia flex gap-1" aria-label="Historial">
-          <button
-            type="button"
-            class="nav-btn inline-flex items-center justify-center w-7 h-7 rounded-md border border-rule bg-paper/70 text-dim text-sm no-underline cursor-pointer transition-all duration-150 hover:border-rule-strong hover:bg-hover hover:text-ink active:scale-[0.96]"
-            aria-label="atrás"
-            @click="router.back()"
-          >
-            <AppIcon name="arrow-left" :size="13" />
-          </button>
-          <button
-            type="button"
-            class="nav-btn hidden sm:inline-flex items-center justify-center w-7 h-7 rounded-md border border-rule bg-paper/70 text-dim text-sm no-underline cursor-pointer transition-all duration-150 hover:border-rule-strong hover:bg-hover hover:text-ink active:scale-[0.96]"
-            aria-label="adelante"
-            @click="router.forward()"
-          >
-            <AppIcon name="arrow-right" :size="13" />
-          </button>
-          <NuxtLink
-            v-if="ex?.up"
-            :to="ex.up"
-            class="nav-btn inline-flex items-center justify-center w-7 h-7 rounded-md border border-rule bg-paper/70 text-dim text-sm no-underline cursor-pointer transition-all duration-150 hover:border-rule-strong hover:bg-hover hover:text-ink active:scale-[0.96]"
-            aria-label="subir un nivel"
-          >
-            <AppIcon name="arrow-up" :size="13" />
-          </NuxtLink>
-          <span
-            v-else
-            class="nav-btn off inline-flex items-center justify-center w-7 h-7 rounded-md border border-rule bg-paper/40 text-faint opacity-35 cursor-default"
-            aria-hidden="true"
-          >
-            <AppIcon name="arrow-up" :size="13" />
-          </span>
-        </nav>
+    <div class="ventana flex-1 min-h-0 w-full flex flex-col bg-paper relative">
+      <!-- Topbar Arquitectónico Full-Width (Linear 2026 h-12) -->
+      <header class="barra flex-none h-12 border-b border-rule bg-paper/85 backdrop-blur-md px-3 sm:px-4 flex items-center justify-between gap-2 z-20">
+        <!-- Modo Normal: Navegación, Breadcrumb, Búsqueda y Herramientas -->
+        <template v-if="!isHyperfocus">
+          <div class="flex items-center gap-1.5 sm:gap-2.5 min-w-0 flex-1">
+            <nav class="historia flex gap-1 shrink-0" aria-label="Historial">
+              <button
+                type="button"
+                class="nav-btn inline-flex items-center justify-center w-7 h-7 rounded-md border border-rule bg-paper/70 text-dim text-sm no-underline cursor-pointer transition-all duration-150 hover:border-rule-strong hover:bg-hover hover:text-ink active:scale-[0.96]"
+                aria-label="atrás"
+                @click="router.back()"
+              >
+                <AppIcon name="arrow-left" :size="13" />
+              </button>
+              <button
+                type="button"
+                class="nav-btn hidden sm:inline-flex items-center justify-center w-7 h-7 rounded-md border border-rule bg-paper/70 text-dim text-sm no-underline cursor-pointer transition-all duration-150 hover:border-rule-strong hover:bg-hover hover:text-ink active:scale-[0.96]"
+                aria-label="adelante"
+                @click="router.forward()"
+              >
+                <AppIcon name="arrow-right" :size="13" />
+              </button>
+              <NuxtLink
+                v-if="ex?.up"
+                :to="ex.up"
+                class="nav-btn inline-flex items-center justify-center w-7 h-7 rounded-md border border-rule bg-paper/70 text-dim text-sm no-underline cursor-pointer transition-all duration-150 hover:border-rule-strong hover:bg-hover hover:text-ink active:scale-[0.96]"
+                aria-label="subir un nivel"
+              >
+                <AppIcon name="arrow-up" :size="13" />
+              </NuxtLink>
+              <span
+                v-else
+                class="nav-btn off inline-flex items-center justify-center w-7 h-7 rounded-md border border-rule bg-paper/40 text-faint opacity-35 cursor-default"
+                aria-hidden="true"
+              >
+                <AppIcon name="arrow-up" :size="13" />
+              </span>
+            </nav>
 
-        <!-- Ruta / Breadcrumb -->
-        <nav class="ruta flex-1 flex items-center min-w-0 h-7 px-2.5 rounded-md border border-rule bg-paper/60 whitespace-nowrap overflow-hidden text-[11px] sm:text-[12px] font-mono truncate" aria-label="Ruta">
-          <span class="w-1.5 h-1.5 rounded-full bg-sig mr-2 shrink-0 opacity-85" aria-hidden="true" />
-          <template v-for="(seg, i) in segments" :key="seg.label + i">
-            <span v-if="i" class="sep text-faint px-1.5" aria-hidden="true">/</span>
-            <NuxtLink v-if="i < segments.length - 1" :to="seg.to" class="text-dim hover:text-ink no-underline transition-colors py-1">{{ seg.label }}</NuxtLink>
-            <span v-else class="here text-ink font-medium" aria-current="page">{{ seg.label }}</span>
-          </template>
-        </nav>
+            <!-- Ruta / Breadcrumb -->
+            <nav class="ruta flex items-center min-w-0 h-7 px-2.5 rounded-md border border-rule bg-paper/60 whitespace-nowrap overflow-hidden text-[11px] sm:text-[12px] font-mono truncate max-w-[280px] sm:max-w-none" aria-label="Ruta">
+              <span class="w-1.5 h-1.5 rounded-full bg-sig mr-2 shrink-0 opacity-85" aria-hidden="true" />
+              <template v-for="(seg, i) in segments" :key="seg.label + i">
+                <span v-if="i" class="sep text-faint px-1.5" aria-hidden="true">/</span>
+                <NuxtLink v-if="i < segments.length - 1" :to="seg.to" class="text-dim hover:text-ink no-underline transition-colors py-1">{{ seg.label }}</NuxtLink>
+                <span v-else class="here text-ink font-medium" aria-current="page">{{ seg.label }}</span>
+              </template>
+            </nav>
 
-        <!-- Botón de Búsqueda Rápida / Goto (Estilo Linear ⌘K) -->
-        <button
-          class="goto-btn group flex-[0_1_220px] min-w-[135px] hidden sm:flex items-center gap-2 h-7 px-2.5 rounded-md border border-rule bg-paper/60 text-dim text-left cursor-pointer transition-all duration-150 hover:border-rule-strong hover:bg-hover/60 hover:text-ink active:scale-[0.99]"
-          type="button"
-          :title="isEs ? 'Abrir paleta de comandos (⌘K o /)' : 'Open command palette (⌘K or /)'"
-          @click="gotoOpen = true"
-        >
-          <AppIcon name="search" :size="12" class="goto-search-icon text-faint shrink-0 group-hover:text-ink transition-colors duration-150" />
-          <span class="goto-ph flex-1 min-w-0 text-dim text-[11.5px] overflow-hidden text-ellipsis whitespace-nowrap">{{ isEs ? 'Buscar proyecto, stack…' : 'Search project, stack…' }}</span>
-          <kbd class="font-mono text-[10px] text-faint bg-surface px-1.5 py-0.5 rounded border border-rule group-hover:text-ink transition-colors duration-150">/</kbd>
-        </button>
-
-        <!-- Acciones Rápidas del Sistema + Dynamic Island Bencho -->
-        <div class="barra-derecha flex items-center gap-1.5 shrink-0 ml-auto">
-          <!-- Dynamic Island Interactiva 1:1 Bencho (Telemetría PG-17 expandible con resorte) -->
-          <div class="hidden md:flex items-center">
-            <UiDynamicIsland
-              :collection="currentRoot || 'db'"
-              :record-slug="path[1] || null"
-              :record-count="ex?.request.count ?? 8"
-              :api-healthy="ex?.request.status === 200"
-              :latency-ms="ex?.request.ms ?? 11"
-            />
+            <!-- Botón de Búsqueda Rápida / Goto (Estilo Linear ⌘K) -->
+            <button
+              class="goto-btn group flex-[0_1_220px] min-w-[135px] hidden md:flex items-center gap-2 h-7 px-2.5 rounded-md border border-rule bg-paper/60 text-dim text-left cursor-pointer transition-all duration-150 hover:border-rule-strong hover:bg-hover/60 hover:text-ink active:scale-[0.99]"
+              type="button"
+              :title="isEs ? 'Abrir paleta de comandos (⌘K o /)' : 'Open command palette (⌘K or /)'"
+              @click="gotoOpen = true"
+            >
+              <AppIcon name="search" :size="12" class="goto-search-icon text-faint shrink-0 group-hover:text-ink transition-colors duration-150" />
+              <span class="goto-ph flex-1 min-w-0 text-dim text-[11.5px] overflow-hidden text-ellipsis whitespace-nowrap">{{ isEs ? 'Buscar proyecto, stack…' : 'Search project, stack…' }}</span>
+              <kbd class="font-mono text-[10px] text-faint bg-surface px-1.5 py-0.5 rounded border border-rule group-hover:text-ink transition-colors duration-150">/</kbd>
+            </button>
           </div>
 
-          <!-- Switch de Idioma ES / EN -->
-          <button
-            type="button"
-            class="lang-btn inline-flex items-center gap-1 h-7 px-2 rounded-md border border-rule bg-paper/60 font-mono text-[10.5px] font-medium text-dim cursor-pointer hover:border-rule-strong hover:text-ink active:scale-[0.97] transition-all duration-150"
-            :title="isEs ? 'Switch interface to English' : 'Cambiar interfaz a Español'"
-            :aria-label="isEs ? 'Switch to English' : 'Cambiar a Español'"
-            @click="toggleLocale"
-          >
-            <span class="lang-code" :class="{ 'text-ink font-semibold': isEs }">ES</span>
-            <span class="lang-sep text-faint">/</span>
-            <span class="lang-code" :class="{ 'text-ink font-semibold': !isEs }">EN</span>
-          </button>
+          <!-- Acciones Rápidas del Sistema + Dynamic Island Bencho -->
+          <div class="barra-derecha flex items-center gap-1.5 shrink-0 ml-auto">
+            <!-- Dynamic Island Interactiva 1:1 Bencho (Telemetría PG-17) -->
+            <div class="hidden xl:flex items-center">
+              <UiDynamicIsland
+                :collection="currentRoot || 'db'"
+                :record-slug="path[1] || null"
+                :record-count="ex?.request.count ?? 8"
+                :api-healthy="ex?.request.status === 200"
+                :latency-ms="ex?.request.ms ?? 11"
+              />
+            </div>
 
-          <!-- Toggle de Modo Hiperfoco -->
-          <button
-            type="button"
-            class="tool-btn focus-btn hidden sm:inline-flex items-center justify-center w-7 h-7 rounded-md border border-rule bg-paper/60 text-dim cursor-pointer transition-all duration-150 hover:border-rule-strong hover:text-ink hover:bg-hover active:scale-[0.96]"
-            :class="{ '!border-sig !text-sig !bg-sig/10': isHyperfocus }"
-            :title="isHyperfocus ? (isEs ? 'Desactivar Modo Hiperfoco (H)' : 'Disable Hyperfocus (H)') : (isEs ? 'Activar Modo Hiperfoco (H)' : 'Enable Hyperfocus (H)')"
-            :aria-label="isHyperfocus ? 'Desactivar hiperfoco' : 'Activar hiperfoco'"
-            @click="toggleHyperfocus"
-          >
-            <AppIcon name="zap" :size="13" />
-          </button>
+            <!-- Switch de Idioma ES / EN -->
+            <button
+              type="button"
+              class="lang-btn inline-flex items-center gap-1 h-7 px-2 rounded-md border border-rule bg-paper/60 font-mono text-[10.5px] font-medium text-dim cursor-pointer hover:border-rule-strong hover:text-ink active:scale-[0.97] transition-all duration-150"
+              :title="isEs ? 'Switch interface to English' : 'Cambiar interfaz a Español'"
+              :aria-label="isEs ? 'Switch to English' : 'Cambiar a Español'"
+              @click="toggleLocale"
+            >
+              <span class="lang-code" :class="{ 'text-ink font-semibold': isEs }">ES</span>
+              <span class="lang-sep text-faint">/</span>
+              <span class="lang-code" :class="{ 'text-ink font-semibold': !isEs }">EN</span>
+            </button>
 
-          <!-- Botón de Guía y Orientación Rápida -->
-          <button
-            type="button"
-            class="tool-btn help-btn hidden sm:inline-flex items-center justify-center w-7 h-7 rounded-md border border-rule bg-paper/60 text-dim cursor-pointer transition-all duration-150 hover:border-rule-strong hover:text-ink hover:bg-hover active:scale-[0.96]"
-            :class="{ '!border-sig !text-sig !bg-sig/10': guideOpen }"
-            :title="guideOpen ? (isEs ? 'Cerrar guía (?)' : 'Close guide (?)') : (isEs ? 'Guía rápida y atajos (?)' : 'Quick guide & shortcuts (?)')"
-            :aria-label="isEs ? 'Guía rápida' : 'Quick guide'"
-            @click="guideOpen = !guideOpen"
-          >
-            <AppIcon name="help" :size="13" />
-          </button>
+            <!-- Toggle de Modo Hiperfoco -->
+            <button
+              type="button"
+              class="tool-btn focus-btn hidden sm:inline-flex items-center justify-center w-7 h-7 rounded-md border border-rule bg-paper/60 text-dim cursor-pointer transition-all duration-150 hover:border-rule-strong hover:text-ink hover:bg-hover active:scale-[0.96]"
+              :class="{ '!border-sig !text-sig !bg-sig/10': isHyperfocus }"
+              :title="isHyperfocus ? (isEs ? 'Desactivar Modo Hiperfoco (H)' : 'Disable Hyperfocus (H)') : (isEs ? 'Activar Modo Hiperfoco (H)' : 'Enable Hyperfocus (H)')"
+              :aria-label="isHyperfocus ? 'Desactivar hiperfoco' : 'Activar hiperfoco'"
+              @click="toggleHyperfocus"
+            >
+              <AppIcon name="zap" :size="13" />
+            </button>
 
-          <button
-            type="button"
-            class="tool-btn sound-btn hidden sm:inline-flex items-center justify-center w-7 h-7 rounded-md border border-rule bg-paper/60 text-dim cursor-pointer transition-all duration-150 hover:border-rule-strong hover:text-ink hover:bg-hover active:scale-[0.96]"
-            :class="{ '!text-ink': soundEnabled, 'opacity-50': !soundEnabled }"
-            :aria-label="soundEnabled ? (isEs ? 'Silenciar audio táctil' : 'Mute tactile audio') : (isEs ? 'Activar audio táctil' : 'Enable tactile audio')"
-            :title="soundEnabled ? (isEs ? 'Audio táctil Bencho: ON (click para silenciar)' : 'Bencho tactile audio: ON') : (isEs ? 'Audio táctil Bencho: OFF (click para activar)' : 'Bencho tactile audio: OFF')"
-            @click="toggleSound"
-          >
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
-              <path v-if="soundEnabled" d="M15.54 8.46a5 5 0 0 1 0 7.07" />
-              <line v-else x1="22" y1="9" x2="16" y2="15" />
-            </svg>
-          </button>
+            <!-- Botón de Guía y Orientación Rápida -->
+            <button
+              type="button"
+              class="tool-btn help-btn hidden sm:inline-flex items-center justify-center w-7 h-7 rounded-md border border-rule bg-paper/60 text-dim cursor-pointer transition-all duration-150 hover:border-rule-strong hover:text-ink hover:bg-hover active:scale-[0.96]"
+              :class="{ '!border-sig !text-sig !bg-sig/10': guideOpen }"
+              :title="guideOpen ? (isEs ? 'Cerrar guía (?)' : 'Close guide (?)') : (isEs ? 'Guía rápida y atajos (?)' : 'Quick guide & shortcuts (?)')"
+              :aria-label="isEs ? 'Guía rápida' : 'Quick guide'"
+              @click="guideOpen = !guideOpen"
+            >
+              <AppIcon name="help" :size="13" />
+            </button>
 
-          <button
-            type="button"
-            class="tool-btn theme-btn inline-flex items-center justify-center w-7 h-7 rounded-md border border-rule bg-paper/60 text-dim cursor-pointer transition-all duration-150 hover:border-rule-strong hover:text-ink hover:bg-hover active:scale-[0.96]"
-            :aria-label="theme === 'dark' ? 'Cambiar a modo claro (papel técnico)' : 'Cambiar a modo oscuro (obsidiana)'"
-            :title="`Cambiar a modo ${theme === 'dark' ? 'claro (papel)' : 'oscuro (obsidiana)'}`"
-            @click="toggleTheme"
-          >
-            <AppIcon v-if="theme === 'dark'" name="sun" :size="13" />
-            <AppIcon v-else name="moon" :size="13" />
-          </button>
-        </div>
+            <!-- Toggle de Audio Táctil -->
+            <button
+              type="button"
+              class="tool-btn sound-btn hidden sm:inline-flex items-center justify-center w-7 h-7 rounded-md border border-rule bg-paper/60 text-dim cursor-pointer transition-all duration-150 hover:border-rule-strong hover:text-ink hover:bg-hover active:scale-[0.96]"
+              :class="{ '!text-ink': soundEnabled, 'opacity-50': !soundEnabled }"
+              :aria-label="soundEnabled ? (isEs ? 'Silenciar audio táctil' : 'Mute tactile audio') : (isEs ? 'Activar audio táctil' : 'Enable tactile audio')"
+              :title="soundEnabled ? (isEs ? 'Audio táctil Bencho: ON (click para silenciar)' : 'Bencho tactile audio: ON') : (isEs ? 'Audio táctil Bencho: OFF (click para activar)' : 'Bencho tactile audio: OFF')"
+              @click="toggleSound"
+            >
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+                <path v-if="soundEnabled" d="M15.54 8.46a5 5 0 0 1 0 7.07" />
+                <line v-else x1="22" y1="9" x2="16" y2="15" />
+              </svg>
+            </button>
+
+            <!-- Selector de Tema Claro / Oscuro -->
+            <button
+              type="button"
+              class="tool-btn theme-btn inline-flex items-center justify-center w-7 h-7 rounded-md border border-rule bg-paper/60 text-dim cursor-pointer transition-all duration-150 hover:border-rule-strong hover:text-ink hover:bg-hover active:scale-[0.96]"
+              :aria-label="theme === 'dark' ? 'Cambiar a modo claro (papel técnico)' : 'Cambiar a modo oscuro (obsidiana)'"
+              :title="`Cambiar a modo ${theme === 'dark' ? 'claro (papel)' : 'oscuro (obsidiana)'}`"
+              @click="toggleTheme"
+            >
+              <AppIcon v-if="theme === 'dark'" name="sun" :size="13" />
+              <AppIcon v-else name="moon" :size="13" />
+            </button>
+          </div>
+        </template>
+
+        <!-- Topbar Zen en Modo Hiperfoco: Sin colisiones, minimalismo puro -->
+        <template v-else>
+          <div class="zen-topbar w-full flex items-center justify-between">
+            <div class="flex items-center gap-2.5 font-mono text-[11.5px]">
+              <span class="w-2 h-2 rounded-full bg-sig animate-pulse shrink-0" />
+              <span class="font-semibold text-ink tracking-wider uppercase">MATEO SONZOGNI // {{ isEs ? 'LECTURA ZEN' : 'ZEN READING' }}</span>
+              <span class="text-dim hidden sm:inline">· {{ folder ? (isEs ? 'DOSSIER EJECUTIVO 2026' : 'EXECUTIVE DOSSIER 2026') : (detail?.name ?? 'DOSSIER') }}</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <button
+                type="button"
+                class="inline-flex items-center gap-1.5 px-3 py-1 rounded-md bg-paper border border-sig text-sig font-mono text-[11px] font-semibold hover:bg-sig hover:text-on-sig transition-all cursor-pointer shadow-xs active:scale-[0.98]"
+                :title="isEs ? 'Desactivar Modo Hiperfoco (H o Esc)' : 'Exit Hyperfocus Mode (H or Esc)'"
+                @click="toggleHyperfocus"
+              >
+                <span>{{ isEs ? 'SALIR' : 'EXIT' }}</span>
+                <kbd class="px-1 py-0.2 rounded bg-black/10 dark:bg-white/10 text-[10px]">H / ESC</kbd>
+              </button>
+            </div>
+          </div>
+        </template>
       </header>
 
-      <!-- Barra de Notificación / Indicador de Modo Hiperfoco -->
-      <div v-if="isHyperfocus" class="hiperfoco-banner fixed top-[68px] left-1/2 -translate-x-1/2 z-30 px-4 py-2 rounded-lg bg-sig text-on-sig border border-sig flex items-center justify-center text-xs font-mono font-bold" role="status" aria-live="polite">
-        <div class="hb-center flex items-center gap-3">
-          <span class="hb-title tracking-wider">{{ isEs ? 'HIPERFOCO // LECTURA ZEN' : 'HYPERFOCUS // ZEN READING' }}</span>
-          <span class="hb-sep opacity-60">·</span>
-          <button
-            type="button"
-            class="hb-exit-btn inline-flex items-center gap-1.5 px-2 py-0.5 bg-black/25 dark:bg-white/20 border border-current text-on-sig text-[11px] font-mono cursor-pointer hover:opacity-80 rounded-[2px]"
-            :title="isEs ? 'Desactivar Modo Hiperfoco (H o Esc)' : 'Exit Hyperfocus Mode (H or Esc)'"
-            @click="toggleHyperfocus"
-          >
-            <span>{{ isEs ? 'SALIR' : 'EXIT' }}</span>
-            <kbd class="text-[9.5px] opacity-80">H / ESC</kbd>
-          </button>
-        </div>
-      </div>
+      <!-- Cuerpo de la Ventana: Sidebar Estructural Integrado + Canvas Principal -->
+      <div class="cuerpo-ventana flex-1 min-h-0 flex flex-row overflow-hidden relative">
+        <!-- Sidebar Linear / Bencho Rail Integrado -->
+        <UiSidebarIsland
+          :items="lineSidebarItems"
+          :active-key="currentRoot"
+          @open-guide="guideOpen = true"
+        />
 
-      <!-- Sidebar Flotante Island (Capsule vertical 56px fija en pantalla, expansible a 232px) -->
-      <UiSidebarIsland
-        :items="lineSidebarItems"
-        :active-key="currentRoot"
-        @open-guide="guideOpen = true"
-      />
-
-      <!-- Espacio Central de Visualización Espacial ($10K Canvas con margen ergonómico) -->
-      <div class="cuerpo-ventana flex-1 min-h-0 overflow-hidden relative">
+        <!-- Contenido Central Scrollable -->
         <main
           id="contenido"
-          class="exp w-full h-full min-w-0 min-h-0 overflow-y-auto focus:outline-none relative"
+          class="exp flex-1 min-w-0 h-full overflow-y-auto focus:outline-none relative"
           tabindex="-1"
         >
-          <div v-if="error" class="pane w-full">
+          <div v-if="error" class="pane w-full max-w-[1240px] mx-auto">
             <ExplorerDetail
               :detail="{
                 kind: 'document',
@@ -530,7 +544,7 @@ const activeQueryFilters = computed(() => {
               }"
             />
           </div>
-          <div v-else-if="ex" ref="pane" :key="route.fullPath" class="pane w-full pb-8" :class="dir">
+          <div v-else-if="ex" ref="pane" :key="route.fullPath" class="pane w-full max-w-[1240px] mx-auto pb-8" :class="dir">
             <ExplorerFolder v-if="folder" :folder="folder" />
             <ExplorerDetail v-else-if="detail" :detail="detail" :prev="ex.prev" :next="ex.next" />
           </div>
@@ -538,22 +552,25 @@ const activeQueryFilters = computed(() => {
         </main>
       </div>
 
-      <!-- Barra de Estado Inferior Flotante (HUD Capsule Centrada) -->
-      <footer class="estado floating-pill-10k fixed bottom-2.5 left-1/2 -translate-x-1/2 z-30 h-7 rounded-full px-3.5 items-center gap-3 hidden lg:flex border border-rule bg-surface/85 backdrop-blur-md shadow-[0_4px_20px_rgba(0,0,0,0.18)] text-[11px] font-mono text-faint select-none">
-        <span v-if="ex" class="medida text-dim">{{ pad(ex.request.count) }} {{ ex.request.count === 1 ? 'record' : 'records' }}</span>
-        <UiTelemetryPill
-          v-if="ex"
-          :collection="currentRoot || 'db'"
-          :record-slug="path[1] || null"
-          :filters="activeQueryFilters"
-          :count="ex.request.count"
-          :api-healthy="ex.request.status === 200"
-        />
-        <span class="keys flex items-center gap-3" aria-hidden="true">
+      <!-- Barra de Estado Inferior Integrada en el Marco (Desktop) -->
+      <footer class="estado flex-none h-7 border-t border-rule bg-surface/70 backdrop-blur-md px-3.5 hidden lg:flex items-center justify-between text-[11px] font-mono text-dim select-none z-20">
+        <div class="flex items-center gap-3">
+          <span v-if="ex" class="medida text-dim">{{ pad(ex.request.count) }} {{ ex.request.count === 1 ? 'record' : 'records' }}</span>
+          <UiTelemetryPill
+            v-if="ex"
+            :collection="currentRoot || 'db'"
+            :record-slug="path[1] || null"
+            :filters="activeQueryFilters"
+            :count="ex.request.count"
+            :api-healthy="ex.request.status === 200"
+          />
+        </div>
+        <div class="keys flex items-center gap-3" aria-hidden="true">
           <template v-if="hoja && (ex?.prev || ex?.next)"><kbd class="px-1 py-0.5 rounded bg-paper/60 border border-rule">←</kbd><kbd class="px-1 py-0.5 rounded bg-paper/60 border border-rule">→</kbd> {{ isEs ? 'vecino' : 'adjacent' }}</template>
           <template v-else-if="!hoja"><kbd class="px-1 py-0.5 rounded bg-paper/60 border border-rule">↑↓</kbd> {{ isEs ? 'navegar' : 'navigate' }} <kbd class="px-1 py-0.5 rounded bg-paper/60 border border-rule">↵</kbd> {{ isEs ? 'abrir' : 'open' }}</template>
           <template v-if="ex?.up"><kbd class="px-1 py-0.5 rounded bg-paper/60 border border-rule">⌫</kbd> {{ isEs ? 'volver' : 'back' }}</template>
           <span><kbd class="px-1 py-0.5 rounded bg-paper/60 border border-rule">0-6</kbd> {{ isEs ? 'secciones' : 'sections' }}</span>
+          <span><kbd class="px-1 py-0.5 rounded bg-paper/60 border border-rule">⌘B</kbd> sidebar</span>
           <span><kbd class="px-1 py-0.5 rounded bg-paper/60 border border-rule">/</kbd> {{ isEs ? 'buscar' : 'search' }}</span>
           <span><kbd class="px-1 py-0.5 rounded bg-paper/60 border border-rule">H</kbd> {{ isEs ? 'hiperfoco' : 'hyperfocus' }}</span>
           <button
@@ -564,7 +581,7 @@ const activeQueryFilters = computed(() => {
           >
             <kbd class="px-1 py-0.5 rounded bg-paper/60 border border-rule">?</kbd>
           </button>
-        </span>
+        </div>
       </footer>
 
       <!-- Barra de Navegación Inferior Móvil Estilo App Nativa -->
@@ -576,7 +593,6 @@ const activeQueryFilters = computed(() => {
           class="mobile-nav-item flex flex-col items-center justify-center flex-1 h-full text-dim no-underline transition-all duration-150 relative group py-1"
           :class="{ 'active !text-ink font-medium': currentRoot === s.root }"
         >
-          <!-- Indicador superior activo quirúrgico -->
           <span
             v-if="currentRoot === s.root"
             class="mn-indicator absolute top-0 inset-x-4 h-[2px] bg-sig rounded-full"
@@ -598,7 +614,7 @@ const activeQueryFilters = computed(() => {
     <!-- Modal de Búsqueda Rápida / Goto -->
     <ExplorerGoto v-if="gotoOpen" @close="gotoOpen = false" />
 
-    <!-- Guía de Orientación Rápida Flotante (No Invasiva) -->
+    <!-- Guía de Orientación Rápida Flotante -->
     <ExplorerGuide :open="guideOpen" @close="guideOpen = false" />
   </div>
 </template>
@@ -608,7 +624,7 @@ const activeQueryFilters = computed(() => {
   display: flex;
   flex-direction: column;
   height: 100dvh;
-  padding: var(--d-frame);
+  padding: 0;
   color: var(--d-ink);
   font-family: var(--font-text);
   font-size: var(--d-fs-ui);
@@ -618,7 +634,7 @@ const activeQueryFilters = computed(() => {
 }
 .ruta, .req, kbd { font-family: var(--font-mono); font-size: var(--d-fs-mono); }
 
-/* La ventana: consola fluida de ancho completo con retícula blueprint */
+/* La ventana: marco estructural de pantalla completa con retícula blueprint sutil */
 .ventana {
   flex: 1;
   min-height: 0;
@@ -646,12 +662,21 @@ kbd {
   text-align: center;
 }
 
+/* Espacio Central de Visualización */
+.cuerpo-ventana {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: row;
+  overflow: hidden;
+}
+
 .exp {
   flex: 1;
   min-height: 0;
   width: 100%;
   max-width: 100%;
-  padding: 82px 86px 64px 86px;
+  padding: 24px 32px 48px 32px;
   overflow-y: auto;
   overflow-x: hidden;
   scrollbar-width: thin;
@@ -661,7 +686,7 @@ kbd {
 }
 @media screen and (max-width: 1023px) {
   .exp {
-    padding: 76px 20px 72px 20px;
+    padding: 20px 20px 48px 20px;
   }
 }
 .exp:focus { outline: none; }
@@ -673,31 +698,7 @@ kbd {
 @keyframes alejar { from { transform: translateZ(var(--d-z)); opacity: 0; } }
 @keyframes correr { from { transform: translateX(12px); opacity: 0; } }
 
-/* Cuerpo de la Ventana: Split Horizontal Explorador + Contenido */
-.cuerpo-ventana {
-  flex: 1;
-  min-height: 0;
-  display: flex;
-  overflow: hidden;
-}
-
-/* Sidebar Explorador de Archivos (Flotante dentro de UiResizablePanels) */
-.sidebar {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  user-select: none;
-  overflow-y: auto;
-  scrollbar-width: thin;
-  scrollbar-color: var(--d-rule) transparent;
-}
-
-.sidebar-tree {
-  flex: 1;
-}
-
-/* Barra de estado */
+/* Barra de estado inferior */
 .estado {
   flex: none;
 }
@@ -729,19 +730,10 @@ kbd {
 /* NATIVE MOBILE SMARTPHONE EXPERIENCE (<= 768px)                              */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 @media screen and (max-width: 768px) {
-  .sidebar {
-    display: none !important;
-  }
-
-  /* Barra Superior de Herramientas Compacta y Móvil */
   .barra {
-    top: 6px !important;
-    left: 10px !important;
-    right: 10px !important;
-    margin: 0 !important;
-    padding: 0 8px;
+    padding: 0 10px;
     gap: 6px;
-    min-height: 44px;
+    height: 48px;
     box-sizing: border-box;
     overflow: hidden;
   }
@@ -749,12 +741,12 @@ kbd {
     gap: 3px;
   }
   .nav-btn {
-    width: 32px;
-    height: 32px;
+    width: 28px;
+    height: 28px;
   }
   .ruta {
     flex: 1;
-    height: 32px;
+    height: 28px;
     padding: 0 8px;
     font-size: 11px;
     min-width: 0;
@@ -774,18 +766,13 @@ kbd {
     display: none !important;
   }
   .lang-btn {
-    height: 32px;
+    height: 28px;
     padding: 0 8px;
     font-size: 11px;
   }
   .theme-btn {
-    width: 32px;
-    height: 32px;
-  }
-  .telemetria-badge,
-  .clock-badge,
-  .sys-status-badge {
-    display: none !important;
+    width: 28px;
+    height: 28px;
   }
 
   .cuerpo-ventana {
@@ -796,25 +783,13 @@ kbd {
   }
 
   .exp {
-    padding: 62px 10px calc(76px + env(safe-area-inset-bottom, 0px)) 10px !important;
+    padding: 16px 12px calc(76px + env(safe-area-inset-bottom, 0px)) 12px !important;
     overflow-y: auto !important;
     overflow-x: hidden !important;
     perspective: none;
     max-width: 100%;
     width: 100%;
     box-sizing: border-box;
-  }
-
-  .nav-btn, .lang-btn, .theme-btn {
-    position: relative;
-  }
-  .nav-btn::after, .lang-btn::after, .theme-btn::after {
-    content: '';
-    position: absolute;
-    top: -8px;
-    bottom: -8px;
-    left: -8px;
-    right: -8px;
   }
 
   /* Barra de Estado inferior se oculta en mobile en favor del Tab Bar */
@@ -896,65 +871,15 @@ kbd {
     display: none;
   }
   .ruta {
-    max-width: 100px;
+    max-width: 140px;
   }
   .focus-btn {
     display: none !important;
   }
   .barra {
     gap: 4px;
-    padding: 0 5px;
+    padding: 0 8px;
   }
-}
-
-/* ─── Banner Superior de Modo Hiperfoco ────────────────────────────────────── */
-.hiperfoco-banner {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 10px 16px;
-  background: transparent;
-  color: var(--d-dim);
-  font-family: var(--font-mono);
-  font-size: 11px;
-  z-index: 10;
-}
-.hb-center {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-.hb-title {
-  color: var(--d-dim);
-  font-weight: 700;
-  letter-spacing: 0.06em;
-}
-.hb-sep {
-  color: var(--d-faint);
-}
-.hb-exit-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 2px 6px;
-  background: transparent;
-  border: none;
-  color: var(--d-ink);
-  font-family: var(--font-mono);
-  font-size: 11px;
-  font-weight: 700;
-  text-decoration: underline;
-  cursor: pointer;
-  transition: opacity var(--d-dur) ease;
-}
-.hb-exit-btn:hover {
-  opacity: 0.7;
-}
-.hb-exit-btn kbd {
-  background: transparent;
-  border: none;
-  font-size: 10px;
-  color: var(--d-dim);
 }
 
 @media print {

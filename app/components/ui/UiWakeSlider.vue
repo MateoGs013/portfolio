@@ -210,10 +210,17 @@ const activeIndex = computed(() => Math.round((val.value / 100) * (count.value -
 </script>
 
 <template>
-  <div class="wks select-none inline-flex items-center gap-3">
-    <!-- Etiqueta opcional previa -->
+  <div class="wks select-none inline-flex items-center justify-center gap-3">
+    <!-- Etiqueta previa o espaciador de balance para centrado simétrico -->
     <span v-if="label" class="wks-label font-mono">
       {{ label }}
+    </span>
+    <span
+      v-else
+      class="wks-flank font-mono text-[11px] select-none invisible"
+      aria-hidden="true"
+    >
+      {{ val }}{{ unit }}
     </span>
 
     <!-- Pista de barras cinéticas (Bencho .wks-track) -->
@@ -246,7 +253,7 @@ const activeIndex = computed(() => Math.round((val.value / 100) * (count.value -
     </div>
 
     <!-- Valor actual numérico con unidad -->
-    <span class="wks-value font-mono">
+    <span class="wks-value font-mono text-[11px]">
       {{ val }}{{ unit }}
     </span>
   </div>
@@ -307,12 +314,16 @@ const activeIndex = computed(() => Math.round((val.value / 100) * (count.value -
   box-shadow: 0 0 6px color-mix(in srgb, var(--d-sig, #ff3e00) 40%, transparent);
 }
 
-.wks-value {
+.wks-value,
+.wks-flank {
   letter-spacing: -0.01em;
   font-variant-numeric: tabular-nums;
   min-width: 4ch;
-  color: var(--d-ink, #f4f4f5);
   font-size: 13px;
   font-weight: 600;
+}
+
+.wks-value {
+  color: var(--d-ink, #f4f4f5);
 }
 </style>

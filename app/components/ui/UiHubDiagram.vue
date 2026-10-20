@@ -20,7 +20,7 @@ const props = withDefaults(defineProps<{
   nodes: () => [
     { id: 'nuxt', label: 'Nuxt 4 SSR', metric: '18ms SSR', icon: 'zap' },
     { id: 'express', label: 'Express 5', metric: 'REST & SSE', icon: 'code' },
-    { id: 'postgres', label: 'PostgreSQL 17', metric: 'ACID / JSONB', icon: 'db' },
+    { id: 'postgres', label: 'Postgres 17', metric: 'ACID / JSONB', icon: 'db' },
     { id: 'prisma', label: 'Prisma 7', metric: 'TypeSafe ORM', icon: 'grid' },
     { id: 'eros', label: 'Eros AI', metric: 'Autonomous Agent', icon: 'target' },
     { id: 'playwright', label: 'Playwright', metric: 'Multi-Viewport', icon: 'check' },
@@ -59,10 +59,11 @@ const cy = computed(() => props.height / 2)
 
 function nodePos(index: number) {
   const count = n.value
-  const a = -Math.PI / 2 + (index / count) * 2 * Math.PI
+  // Distribución hexagonal simétrica: 2 nodos arriba, 2 en los flancos, 2 abajo
+  const a = -Math.PI / 3 + (index / count) * 2 * Math.PI
   return {
-    x: Math.cos(a) * props.spread,
-    y: Math.sin(a) * props.spread * 0.72,
+    x: Math.round(Math.cos(a) * (props.spread * 1.08) * 10) / 10,
+    y: Math.round(Math.sin(a) * (props.spread * 0.66) * 10) / 10,
   }
 }
 
@@ -154,10 +155,10 @@ onBeforeUnmount(() => {
       <line
         v-for="(node, idx) in nodes.slice(0, n)"
         :key="node.id"
-        :x1="cx"
-        :y1="cy"
-        :x2="cx + nodePos(idx).x"
-        :y2="cy + nodePos(idx).y"
+        :x1="Math.round(cx * 10) / 10"
+        :y1="Math.round(cy * 10) / 10"
+        :x2="Math.round((cx + nodePos(idx).x) * 10) / 10"
+        :y2="Math.round((cy + nodePos(idx).y) * 10) / 10"
         :data-on="hoveredIdx === idx || undefined"
       />
     </svg>
@@ -222,6 +223,7 @@ onBeforeUnmount(() => {
       :style="{
         left: `${cx + nodePos(idx).x}px`,
         top: `${cy + nodePos(idx).y}px`,
+        transform: hoveredIdx === idx ? 'translate(-50%, -50%) scale(1.06)' : 'translate(-50%, -50%)',
       }"
       @pointerenter="onNodeHover(idx)"
       @pointerleave="onNodeLeave(idx)"
@@ -269,12 +271,12 @@ onBeforeUnmount(() => {
 }
 
 .hub-core {
-  border-radius: min(var(--hub-r), 18px);
+  border-radius: min(var(--hub-r), 14px);
   background: var(--hub-slab);
   z-index: 3;
-  width: 64px;
-  height: 64px;
-  margin: -32px 0 0 -32px;
+  width: 46px;
+  height: 46px;
+  margin: -23px 0 0 -23px;
   display: flex;
   position: absolute;
   box-shadow: 0 0 0 1px var(--d-border, rgba(0, 0, 0, 0.08)), 0 4px 12px rgba(0, 0, 0, 0.05);
@@ -328,7 +330,7 @@ onBeforeUnmount(() => {
 .hub-node {
   border-radius: var(--hub-r);
   background: var(--hub-slab);
-  height: 32px;
+  height: 26px;
   color: var(--hub-ink);
   font: inherit;
   white-space: nowrap;
@@ -338,12 +340,18 @@ onBeforeUnmount(() => {
   letter-spacing: -0.01em;
   border: 0;
   align-items: center;
-  gap: 6px;
-  padding: 0 11px;
+  gap: 5px;
+  padding: 0 8px;
   display: inline-flex;
   position: absolute;
   transform: translate(-50%, -50%);
+  -webkit-transform: translate(-50%, -50%);
+  translate: -50% -50%;
   box-shadow: 0 0 0 1px var(--d-border, rgba(0, 0, 0, 0.08)), 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.hub-label {
+  font-size: 10px;
 }
 
 .hub-bullet {
