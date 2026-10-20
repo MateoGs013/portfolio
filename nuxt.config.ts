@@ -6,7 +6,7 @@ const apiOrigin = apiBase.replace(/\/api\/?$/, '')
 
 export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
-  devtools: { enabled: true },
+  devtools: { enabled: process.env.NUXT_DEVTOOLS === 'true' },
   modules: ['@nuxt/eslint'],
   vite: {
     plugins: [tailwindcss()],

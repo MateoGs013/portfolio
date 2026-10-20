@@ -8,9 +8,8 @@ import ExplorerGoto from './ExplorerGoto.vue'
 import ExplorerGuide from './ExplorerGuide.vue'
 import AppIcon, { type IconName } from '~/components/ui/AppIcon.vue'
 import UiDynamicIsland from '~/components/ui/UiDynamicIsland.vue'
-import UiLineSidebar, { type LineSidebarItem } from '~/components/ui/UiLineSidebar.vue'
 import UiProgressiveBlur from '~/components/ui/UiProgressiveBlur.vue'
-import UiResizablePanels from '~/components/ui/UiResizablePanels.vue'
+import UiSidebarIsland, { type SidebarIslandItem } from '~/components/ui/UiSidebarIsland.vue'
 import UiTelemetryPill from '~/components/ui/UiTelemetryPill.vue'
 import { useBenchoSound } from '~/composables/useBenchoSound'
 import { pad, resolveExplorer, type Explorer } from '~/lib/explorer'
@@ -334,7 +333,7 @@ const navSections = computed<NavSection[]>(() => [
 
 const currentRoot = computed(() => path.value[0] ?? '')
 
-const lineSidebarItems = computed<LineSidebarItem[]>(() =>
+const lineSidebarItems = computed<SidebarIslandItem[]>(() =>
   navSections.value.map(s => ({
     key: s.root,
     num: s.root === '' ? '00' : s.keyHint.padStart(2, '0'),
@@ -359,9 +358,9 @@ const activeQueryFilters = computed(() => {
 
 <template>
   <div class="datos flex flex-col h-dvh text-ink font-sans text-[13px] leading-normal tabular-nums bg-paper">
-    <div class="ventana ambient-canvas-10k flex-1 min-h-0 w-full flex flex-col bg-paper">
-      <!-- Barra Superior Flotante ($10k Spatial Capsule + Dynamic Island) -->
-      <header class="barra floating-pill-10k flex-none flex items-center justify-between gap-1.5 sm:gap-2.5 min-h-[46px] mx-2 sm:mx-4 mt-2 px-2.5 sm:px-3.5 rounded-xl relative z-40">
+    <div class="ventana ambient-canvas-10k flex-1 min-h-0 w-full flex flex-col bg-paper relative">
+      <!-- Topbar Island: cápsula flotante fija (siempre presente, nunca encajonada) -->
+      <header class="barra topbar-island floating-pill-10k fixed z-40 top-2.5 left-2 right-2 sm:left-4 sm:right-4 lg:left-[86px] lg:right-5 flex items-center justify-between gap-1.5 sm:gap-2.5 min-h-[48px] px-2.5 sm:px-3.5 rounded-2xl">
         <nav class="historia flex gap-1" aria-label="Historial">
           <button
             type="button"
@@ -497,7 +496,7 @@ const activeQueryFilters = computed(() => {
       </header>
 
       <!-- Barra de Notificación / Indicador de Modo Hiperfoco -->
-      <div v-if="isHyperfocus" class="hiperfoco-banner mx-2 sm:mx-4 mt-2 px-4 py-2 rounded-lg bg-sig text-on-sig border border-sig flex items-center justify-center text-xs font-mono font-bold" role="status" aria-live="polite">
+      <div v-if="isHyperfocus" class="hiperfoco-banner fixed top-[68px] left-1/2 -translate-x-1/2 z-30 px-4 py-2 rounded-lg bg-sig text-on-sig border border-sig flex items-center justify-center text-xs font-mono font-bold" role="status" aria-live="polite">
         <div class="hb-center flex items-center gap-3">
           <span class="hb-title tracking-wider">{{ isEs ? 'HIPERFOCO // LECTURA ZEN' : 'HYPERFOCUS // ZEN READING' }}</span>
           <span class="hb-sep opacity-60">·</span>
@@ -513,76 +512,45 @@ const activeQueryFilters = computed(() => {
         </div>
       </div>
 
-      <!-- Cuerpo de la Ventana: Split Espacial Redimensionable (UiResizablePanels) + Desenfoque Óptico (UiProgressiveBlur) -->
+      <!-- Sidebar Flotante Island (Capsule vertical 56px fija en pantalla, expansible a 232px) -->
+      <UiSidebarIsland
+        :items="lineSidebarItems"
+        :active-key="currentRoot"
+        @open-guide="guideOpen = true"
+      />
+
+      <!-- Espacio Central de Visualización Espacial ($10K Canvas con margen ergonómico) -->
       <div class="cuerpo-ventana flex-1 min-h-0 overflow-hidden relative">
-        <UiResizablePanels
-          :initial-width="224"
-          :min-width="180"
-          :max-width="310"
-          :shut-threshold="96"
+        <main
+          id="contenido"
+          class="exp w-full h-full min-w-0 min-h-0 overflow-y-auto px-3 sm:px-6 lg:pl-[84px] lg:pr-6 pt-[64px] pb-14 focus:outline-none relative"
+          tabindex="-1"
         >
-          <template #sidebar>
-            <aside class="sidebar w-full h-full flex flex-col bg-transparent overflow-y-auto pt-2" aria-label="Explorador de Archivos">
-              <div class="sidebar-header px-3.5 pt-2.5 pb-2 flex items-center justify-between font-mono text-[10px] tracking-widest uppercase text-faint">
-                <span>{{ isEs ? 'Workspace' : 'Workspace' }}</span>
-                <span class="text-sig/80">PG-17</span>
-              </div>
-
-              <nav class="sidebar-tree px-2 py-1 flex flex-col" aria-label="Secciones del sistema">
-                <UiLineSidebar
-                  :items="lineSidebarItems"
-                  :active-key="currentRoot"
-                  :reach="52"
-                  :length="48"
-                />
-              </nav>
-
-              <div class="sidebar-footer mt-auto mx-2.5 mb-2.5 px-3 py-2 rounded-lg border border-rule bg-surface/40 flex items-center justify-between font-mono text-[10.5px] text-faint">
-                <span class="inline-flex items-center gap-1.5">
-                  <span class="w-1.5 h-1.5 rounded-full bg-green/80" />
-                  <span>{{ isEs ? 'Activo · 2026' : 'Active · 2026' }}</span>
-                </span>
-                <button
-                  type="button"
-                  class="bg-transparent border-0 p-0 text-dim hover:text-ink transition-colors cursor-pointer font-mono text-[10.5px]"
-                  :title="isEs ? 'Abrir guía rápida de navegación (?)' : 'Open quick navigation guide (?)'"
-                  @click="guideOpen = !guideOpen"
-                >
-                  {{ isEs ? 'Atajos (?)' : 'Keys (?)' }}
-                </button>
-              </div>
-            </aside>
-          </template>
-
-          <template #default>
-            <main id="contenido" class="exp w-full h-full min-w-0 min-h-0 overflow-y-auto p-3 md:p-6 focus:outline-none relative" tabindex="-1">
-              <div v-if="error" class="pane w-full">
-                <ExplorerDetail
-                  :detail="{
-                    kind: 'document',
-                    name: `error ${error.statusCode ?? 500}`,
-                    type: 'response',
-                    updated: null,
-                    rows: [
-                      { name: 'status', type: 'int', value: String(error.statusCode ?? 500) },
-                      { name: 'message', type: 'string', value: error.statusMessage ?? error.message },
-                      { name: 'request', type: 'string', value: (error.data as { request?: string } | undefined)?.request ?? null },
-                    ],
-                  }"
-                />
-              </div>
-              <div v-else-if="ex" ref="pane" :key="route.fullPath" class="pane w-full pb-6" :class="dir">
-                <ExplorerFolder v-if="folder" :folder="folder" />
-                <ExplorerDetail v-else-if="detail" :detail="detail" :prev="ex.prev" :next="ex.next" />
-              </div>
-              <UiProgressiveBlur position="bottom" :height="32" :strength="38" />
-            </main>
-          </template>
-        </UiResizablePanels>
+          <div v-if="error" class="pane w-full">
+            <ExplorerDetail
+              :detail="{
+                kind: 'document',
+                name: `error ${error.statusCode ?? 500}`,
+                type: 'response',
+                updated: null,
+                rows: [
+                  { name: 'status', type: 'int', value: String(error.statusCode ?? 500) },
+                  { name: 'message', type: 'string', value: error.statusMessage ?? error.message },
+                  { name: 'request', type: 'string', value: (error.data as { request?: string } | undefined)?.request ?? null },
+                ],
+              }"
+            />
+          </div>
+          <div v-else-if="ex" ref="pane" :key="route.fullPath" class="pane w-full pb-8" :class="dir">
+            <ExplorerFolder v-if="folder" :folder="folder" />
+            <ExplorerDetail v-else-if="detail" :detail="detail" :prev="ex.prev" :next="ex.next" />
+          </div>
+          <UiProgressiveBlur position="bottom" :height="34" :strength="40" />
+        </main>
       </div>
 
-      <!-- Barra de Estado Inferior -->
-      <footer class="estado flex-none h-[30px] px-4 border-t border-rule bg-surface/60 flex items-center justify-between text-[11px] font-mono text-faint select-none max-lg:hidden">
+      <!-- Barra de Estado Inferior Flotante (HUD Capsule Centrada) -->
+      <footer class="estado floating-pill-10k fixed bottom-2.5 left-1/2 -translate-x-1/2 z-30 h-7 rounded-full px-3.5 items-center gap-3 hidden lg:flex border border-rule bg-surface/85 backdrop-blur-md shadow-[0_4px_20px_rgba(0,0,0,0.18)] text-[11px] font-mono text-faint select-none">
         <span v-if="ex" class="medida text-dim">{{ pad(ex.request.count) }} {{ ex.request.count === 1 ? 'record' : 'records' }}</span>
         <UiTelemetryPill
           v-if="ex"
@@ -694,13 +662,18 @@ kbd {
   min-height: 0;
   width: 100%;
   max-width: 100%;
-  padding: var(--d-inset) var(--d-inset) 32px;
+  padding: 68px 24px 56px 88px;
   overflow-y: auto;
   overflow-x: hidden;
   scrollbar-width: thin;
   scrollbar-color: var(--d-rule) transparent;
   perspective: 1200px;
   perspective-origin: 50% 40%;
+}
+@media screen and (max-width: 1023px) {
+  .exp {
+    padding: 64px 16px 72px 16px;
+  }
 }
 .exp:focus { outline: none; }
 .pane { animation: var(--d-dur) var(--d-ease) both; }
@@ -773,7 +746,10 @@ kbd {
 
   /* Barra Superior de Herramientas Compacta y Móvil */
   .barra {
-    margin: 6px 6px 0;
+    top: 6px !important;
+    left: 6px !important;
+    right: 6px !important;
+    margin: 0 !important;
     padding: 0 8px;
     gap: 6px;
     min-height: 42px;
@@ -831,7 +807,7 @@ kbd {
   }
 
   .exp {
-    padding: 10px 10px calc(76px + env(safe-area-inset-bottom, 0px)) !important;
+    padding: 56px 10px calc(76px + env(safe-area-inset-bottom, 0px)) !important;
     overflow-y: auto !important;
     overflow-x: hidden !important;
     perspective: none;
