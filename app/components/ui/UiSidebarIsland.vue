@@ -170,20 +170,29 @@ function togglePin() {
 .sdi-shell {
   width: 56px;
   border-radius: 20px;
+  background: color-mix(in srgb, var(--d-paper) 92%, var(--d-surface) 8%);
+  backdrop-filter: blur(28px) saturate(180%);
+  -webkit-backdrop-filter: blur(28px) saturate(180%);
+  border: 1px solid var(--d-rule);
+  box-shadow:
+    0 16px 40px -10px rgba(0, 0, 0, 0.45),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.08);
   transition:
     width 380ms cubic-bezier(0.22, 1, 0.36, 1),
     border-radius 380ms cubic-bezier(0.22, 1, 0.36, 1),
-    box-shadow 280ms ease;
+    box-shadow 280ms ease,
+    background-color 200ms ease;
   will-change: width;
 }
 
 .sdi[data-expanded] .sdi-shell {
   width: 232px;
   border-radius: 22px;
+  background: var(--d-paper);
   box-shadow:
-    0 24px 60px -12px rgba(0, 0, 0, 0.65),
-    0 0 0 1px rgba(255, 255, 255, 0.08),
-    inset 0 1px 0 0 rgba(255, 255, 255, 0.14);
+    0 32px 80px -12px rgba(0, 0, 0, 0.85),
+    0 0 0 1px var(--d-rule-strong),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.16);
 }
 
 .sdi-reveal {

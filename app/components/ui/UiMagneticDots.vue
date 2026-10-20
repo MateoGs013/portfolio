@@ -11,6 +11,7 @@ const props = withDefaults(defineProps<{
   spring?: number
   initialShape?: 'Lines' | 'Dots'
   spacing?: number
+  showBadge?: boolean
 }>(), {
   width: 240,
   height: 160,
@@ -19,6 +20,7 @@ const props = withDefaults(defineProps<{
   spring: 50,
   initialShape: 'Lines',
   spacing: 12,
+  showBadge: true,
 })
 
 const { isHyperfocus } = useHyperfocus()
@@ -286,7 +288,7 @@ onBeforeUnmount(() => {
     />
 
     <!-- Indicador de modo en la esquina inferior derecha -->
-    <span class="mdg-badge font-mono" aria-hidden="true">
+    <span v-if="showBadge" class="mdg-badge font-mono" aria-hidden="true">
       {{ currentShape }}
     </span>
   </div>

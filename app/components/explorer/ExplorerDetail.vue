@@ -973,9 +973,9 @@ const jsonContent = computed(() => {
             </button>
             <div v-if="emailRow?.value" class="hidden sm:block">
               <UiSlideConfirm
-                :label="isEs ? 'Deslizá para redactar' : 'Slide to compose'"
+                :label="isEs ? 'Deslizar para redactar' : 'Slide to compose'"
                 :confirmed-label="isEs ? 'Abriendo cliente...' : 'Opening mail...'"
-                :width="230"
+                :width="250"
                 @confirm="triggerMailto"
               />
             </div>

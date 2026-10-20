@@ -234,6 +234,7 @@ onBeforeUnmount(() => {
         </span>
       </div>
 
+      <!-- eslint-disable-next-line vue/no-v-html -->
       <pre class="font-mono text-[11px] leading-relaxed text-zinc-300 overflow-hidden"><code v-for="(line, idx) in highlightedLines" :key="idx" class="block" v-html="line" /></pre>
     </div>
 

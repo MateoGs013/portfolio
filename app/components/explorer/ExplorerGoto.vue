@@ -74,7 +74,7 @@ onMounted(() => input.value?.focus())
     @click.self="emit('close')"
   >
     <div
-      class="w-[min(580px,calc(100vw-32px))] bg-surface border border-rule-strong shadow-[0_24px_60px_rgba(0,0,0,0.6)] rounded-[2px] overflow-hidden"
+      class="w-[min(580px,calc(100vw-32px))] bg-surface border border-rule-strong shadow-[0_32px_70px_rgba(0,0,0,0.65)] rounded-xl overflow-hidden"
       role="dialog"
       :aria-label="isEs ? 'Ir a' : 'Goto'"
       @keydown="onKey"
@@ -102,14 +102,14 @@ onMounted(() => input.value?.focus())
           :key="`${r.where}/${r.label}`"
           role="option"
           :aria-selected="i === sel"
-          class="grid grid-cols-[100px_1fr_auto] gap-3 items-center h-[42px] px-4 border-b border-rule last:border-b-0 cursor-pointer transition-colors duration-150"
-          :class="i === sel ? 'bg-sig text-on-sig font-semibold' : 'text-ink hover:bg-hover'"
+          class="grid grid-cols-[100px_1fr_auto] gap-3 items-center h-[42px] px-4 border-b border-rule last:border-b-0 cursor-pointer transition-all duration-150"
+          :class="i === sel ? 'bg-surface-raised border-l-[3px] border-l-sig pl-[13px] text-ink' : 'text-dim hover:text-ink hover:bg-hover border-l-[3px] border-l-transparent pl-[13px]'"
           @mouseenter="sel = i"
           @click="go(r)"
         >
-          <span class="font-mono text-[11px] text-right" :class="i === sel ? 'text-on-sig/80 font-medium' : 'text-dim'">{{ formatWhere(r.where) }} /</span>
-          <span class="font-sans text-[14px] font-medium overflow-hidden text-ellipsis whitespace-nowrap">{{ r.label }}</span>
-          <span v-if="i === sel" class="font-mono text-[12px] text-on-sig font-bold">↵</span>
+          <span class="font-mono text-[11px] text-right" :class="i === sel ? 'text-sig font-semibold' : 'text-dim'">{{ formatWhere(r.where) }} /</span>
+          <span class="font-sans text-[14px] font-medium overflow-hidden text-ellipsis whitespace-nowrap text-ink">{{ r.label }}</span>
+          <span v-if="i === sel" class="font-mono text-[11px] text-faint px-1.5 py-0.5 rounded bg-surface border border-rule">↵</span>
         </li>
         <li v-if="entries && !results.length" class="grid grid-cols-1 px-4 py-3 text-faint font-mono text-[12px] cursor-default">
           {{ isEs ? `00 resultados para "${q}"` : `00 results for "${q}"` }}

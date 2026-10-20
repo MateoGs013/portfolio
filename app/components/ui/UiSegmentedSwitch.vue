@@ -165,7 +165,7 @@ onBeforeUnmount(() => {
     role="tablist"
     :aria-label="ariaLabel"
     class="tbb relative inline-flex items-center p-[3px] bg-paper/90 border border-rule rounded-lg select-none"
-    :class="size === 'md' ? 'h-8.5' : 'h-7.5'"
+    :class="size === 'md' ? 'h-9' : 'h-8'"
   >
     <!-- Tile deslizante con física de resorte real de Bencho (260 stiffness) -->
     <span

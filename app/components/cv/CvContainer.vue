@@ -247,8 +247,8 @@ function printCV() {
 <template>
   <section class="cv-wrapper w-full" :class="`mode-${mode}`">
     <!-- Barra de Herramientas del CV -->
-    <header class="cv-toolbar flex items-center justify-between gap-3 px-4 py-2.5 mb-5 bg-surface border border-rule max-[820px]:flex-col max-[820px]:items-stretch max-[820px]:gap-2.5 max-[820px]:p-3 no-print">
-      <div class="cv-selector inline-flex border border-rule bg-paper max-[820px]:w-full" role="group" :aria-label="isEs ? 'Estilo de Currículum Vitae' : 'Resume format style'">
+    <header class="cv-toolbar flex items-center justify-between gap-3 px-4 py-2.5 mb-5 bg-surface border border-rule rounded-xl max-[820px]:flex-col max-[820px]:items-stretch max-[820px]:gap-2.5 max-[820px]:p-3 no-print">
+      <div class="cv-selector inline-flex border border-rule bg-paper rounded-lg overflow-hidden max-[820px]:w-full" role="group" :aria-label="isEs ? 'Estilo de Currículum Vitae' : 'Resume format style'">
         <button
           type="button"
           class="cv-btn group inline-flex items-center gap-1.5 px-3.5 py-1.5 border-0 font-mono text-[11.5px] font-bold cursor-pointer transition-colors duration-150 max-[820px]:flex-1 max-[820px]:justify-center max-[820px]:text-[11px] max-[820px]:py-2"
@@ -276,7 +276,7 @@ function printCV() {
         <a
           :href="cvPdfUrl"
           :download="cvDownloadFileName"
-          class="cv-action-btn cv-download-btn inline-flex items-center gap-1.5 px-3 py-1.5 bg-sig border border-sig text-on-sig font-mono text-[11px] font-bold no-underline cursor-pointer transition-colors duration-150 hover:bg-sig-hover max-[820px]:flex-1 max-[820px]:justify-center max-[820px]:text-[10.5px] max-[820px]:py-2"
+          class="cv-action-btn cv-download-btn inline-flex items-center gap-1.5 px-3 py-1.5 bg-sig border border-sig text-on-sig font-mono text-[11px] font-bold no-underline cursor-pointer transition-colors duration-150 hover:bg-sig-hover rounded-md max-[820px]:flex-1 max-[820px]:justify-center max-[820px]:text-[10.5px] max-[820px]:py-2"
           :title="isEs ? `Descargar archivo PDF (${cvDownloadFileName})` : `Download PDF file (${cvDownloadFileName})`"
         >
           <AppIcon name="download" :size="13" />
@@ -286,7 +286,7 @@ function printCV() {
         <!-- Botón de Impresión Navegador -->
         <button
           type="button"
-          class="cv-action-btn cv-print-btn group inline-flex items-center gap-1.5 px-3 py-1.5 bg-paper border border-rule-strong text-ink font-mono text-[11px] font-bold no-underline cursor-pointer transition-colors duration-150 hover:bg-hover hover:text-sig hover:border-sig max-[820px]:flex-1 max-[820px]:justify-center max-[820px]:text-[10.5px] max-[820px]:py-2"
+          class="cv-action-btn cv-print-btn group inline-flex items-center gap-1.5 px-3 py-1.5 bg-paper border border-rule-strong text-ink font-mono text-[11px] font-bold no-underline cursor-pointer transition-colors duration-150 hover:bg-hover hover:text-sig hover:border-sig rounded-md max-[820px]:flex-1 max-[820px]:justify-center max-[820px]:text-[10.5px] max-[820px]:py-2"
           :title="isEs ? 'Imprimir en papel o guardar como PDF desde el navegador (Ctrl+P)' : 'Print to paper or save as PDF via browser (Ctrl+P)'"
           @click="printCV"
         >

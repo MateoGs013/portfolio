@@ -309,13 +309,20 @@ const masterProjects = computed(() => {
 })
 
 // 2.1 Proyectos destacados para Selected Work
+const knownProjectCovers: Record<string, string> = {
+  'la-rucula': '/media/projects/la-rucula.jpg',
+  'argpiscinas': '/media/projects/argpiscinas.jpg',
+  'ynara': '/media/projects/ynara-mtucqc2j.png',
+  'barberpole': '/media/projects/barberpole.png',
+}
+
 const selectedWorkProjects = computed(() => {
   if (props.folder.projects && props.folder.projects.length > 0) {
     const featured = props.folder.projects.filter((p: Project) => p.featured)
     const list = featured.length ? featured : props.folder.projects.slice(0, 3)
     return list.map((p: Project, idx: number) => {
       const coverMedia = p.media?.find((m: { role: string, src: string }) => m.role === 'COVER')
-      const cover = coverMedia?.src ?? `/media/projects/${p.slug}.jpg`
+      const cover = coverMedia?.src ?? knownProjectCovers[p.slug] ?? ''
       const loc = getProjectLocalization(p.slug)
       return {
         idx: pad(idx + 1),
@@ -399,7 +406,7 @@ function openExternal(url?: string | null) {
 </script>
 
 <template>
-  <section class="carpeta" :aria-labelledby="uid">
+  <section class="carpeta max-w-[1140px] mx-auto w-full" :aria-labelledby="uid">
     <!-- ═══════════════════════════════════════════════════════════════════════ -->
     <!-- 1. MODO HIPERFOCO: DOSSIER EJECUTIVO DE ALTA DENSIDAD                   -->
     <!-- ═══════════════════════════════════════════════════════════════════════ -->
@@ -588,6 +595,7 @@ function openExternal(url?: string | null) {
               :radius="50"
               :spacing="16"
               initial-shape="Dots"
+              :show-badge="false"
             />
           </div>
 
@@ -838,11 +846,16 @@ function openExternal(url?: string | null) {
             >
               <div class="relative aspect-[16/10] w-full overflow-hidden border-b border-rule bg-paper">
                 <img
+                  v-if="p.cover"
                   :src="p.cover"
                   :alt="p.title"
                   class="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.03]"
                   loading="lazy"
                 >
+                <div v-else class="w-full h-full flex flex-col justify-between p-4 bg-surface-raised">
+                  <span class="font-mono text-[10px] text-faint uppercase">{{ p.year }}</span>
+                  <span class="font-sans text-[18px] font-semibold text-ink">{{ p.title }}</span>
+                </div>
                 <div class="absolute top-2.5 right-2.5 flex items-center gap-1.5 font-mono text-[10px]">
                   <span class="px-2 py-0.5 rounded-full backdrop-blur-md bg-black/75 border border-white/10 text-white font-medium inline-flex items-center gap-1.5">
                     <span class="w-1.5 h-1.5 rounded-full" :class="p.status === 'LIVE' ? 'bg-green' : 'bg-amber'" />

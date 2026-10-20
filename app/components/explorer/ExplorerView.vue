@@ -40,7 +40,6 @@ const { soundEnabled, toggleSound } = useBenchoSound()
 // Reloj dinámico en tiempo real (UTC-3 Patagonia, Argentina)
 const utcTime = ref('')
 let clockTimer: ReturnType<typeof setInterval> | null = null
-let guideTimer: ReturnType<typeof setTimeout> | null = null
 
 function updateClock() {
   const now = new Date()
@@ -67,21 +66,11 @@ onMounted(() => {
     else {
       document.documentElement.setAttribute('data-theme', 'dark')
     }
-
-    // Orientación inicial no invasiva: abrir tras 1.8s únicamente si es desktop amplio y primera visita
-    const guideSeen = localStorage.getItem('portfolio-guide-seen')
-    if (!guideSeen && typeof window !== 'undefined' && window.innerWidth >= 1024) {
-      guideTimer = setTimeout(() => {
-        guideOpen.value = true
-        localStorage.setItem('portfolio-guide-seen', 'true')
-      }, 1800)
-    }
   }
 })
 
 onBeforeUnmount(() => {
   if (clockTimer) clearInterval(clockTimer)
-  if (guideTimer) clearTimeout(guideTimer)
 })
 
 useHead({
@@ -360,7 +349,7 @@ const activeQueryFilters = computed(() => {
   <div class="datos flex flex-col h-dvh text-ink font-sans text-[13px] leading-normal tabular-nums bg-paper">
     <div class="ventana ambient-canvas-10k flex-1 min-h-0 w-full flex flex-col bg-paper relative">
       <!-- Topbar Island: cápsula flotante fija (siempre presente, nunca encajonada) -->
-      <header class="barra topbar-island floating-pill-10k fixed z-40 top-2.5 left-2 right-2 sm:left-4 sm:right-4 lg:left-[86px] lg:right-5 flex items-center justify-between gap-1.5 sm:gap-2.5 min-h-[48px] px-2.5 sm:px-3.5 rounded-2xl">
+      <header class="barra topbar-island floating-pill-10k fixed z-40 top-2.5 left-2.5 right-2.5 sm:left-5 sm:right-5 lg:left-[86px] lg:right-[86px] max-w-[1280px] mx-auto flex items-center justify-between gap-1.5 sm:gap-2.5 min-h-[48px] px-2.5 sm:px-3.5 rounded-2xl">
         <nav class="historia flex gap-1" aria-label="Historial">
           <button
             type="button"
@@ -523,7 +512,7 @@ const activeQueryFilters = computed(() => {
       <div class="cuerpo-ventana flex-1 min-h-0 overflow-hidden relative">
         <main
           id="contenido"
-          class="exp w-full h-full min-w-0 min-h-0 overflow-y-auto px-3 sm:px-6 lg:pl-[84px] lg:pr-6 pt-[64px] pb-14 focus:outline-none relative"
+          class="exp w-full h-full min-w-0 min-h-0 overflow-y-auto focus:outline-none relative"
           tabindex="-1"
         >
           <div v-if="error" class="pane w-full">
@@ -662,7 +651,7 @@ kbd {
   min-height: 0;
   width: 100%;
   max-width: 100%;
-  padding: 68px 24px 56px 88px;
+  padding: 82px 86px 64px 86px;
   overflow-y: auto;
   overflow-x: hidden;
   scrollbar-width: thin;
@@ -672,7 +661,7 @@ kbd {
 }
 @media screen and (max-width: 1023px) {
   .exp {
-    padding: 64px 16px 72px 16px;
+    padding: 76px 20px 72px 20px;
   }
 }
 .exp:focus { outline: none; }
@@ -747,12 +736,12 @@ kbd {
   /* Barra Superior de Herramientas Compacta y Móvil */
   .barra {
     top: 6px !important;
-    left: 6px !important;
-    right: 6px !important;
+    left: 10px !important;
+    right: 10px !important;
     margin: 0 !important;
     padding: 0 8px;
     gap: 6px;
-    min-height: 42px;
+    min-height: 44px;
     box-sizing: border-box;
     overflow: hidden;
   }
@@ -760,12 +749,12 @@ kbd {
     gap: 3px;
   }
   .nav-btn {
-    width: 28px;
-    height: 28px;
+    width: 32px;
+    height: 32px;
   }
   .ruta {
     flex: 1;
-    height: 28px;
+    height: 32px;
     padding: 0 8px;
     font-size: 11px;
     min-width: 0;
@@ -777,7 +766,7 @@ kbd {
     display: none !important;
   }
   .barra-derecha {
-    gap: 5px;
+    gap: 6px;
     flex-shrink: 0;
   }
   .focus-btn,
@@ -785,13 +774,13 @@ kbd {
     display: none !important;
   }
   .lang-btn {
-    height: 28px;
-    padding: 0 6px;
-    font-size: 10.5px;
+    height: 32px;
+    padding: 0 8px;
+    font-size: 11px;
   }
   .theme-btn {
-    width: 28px;
-    height: 28px;
+    width: 32px;
+    height: 32px;
   }
   .telemetria-badge,
   .clock-badge,
@@ -807,13 +796,25 @@ kbd {
   }
 
   .exp {
-    padding: 56px 10px calc(76px + env(safe-area-inset-bottom, 0px)) !important;
+    padding: 62px 10px calc(76px + env(safe-area-inset-bottom, 0px)) 10px !important;
     overflow-y: auto !important;
     overflow-x: hidden !important;
     perspective: none;
     max-width: 100%;
     width: 100%;
     box-sizing: border-box;
+  }
+
+  .nav-btn, .lang-btn, .theme-btn {
+    position: relative;
+  }
+  .nav-btn::after, .lang-btn::after, .theme-btn::after {
+    content: '';
+    position: absolute;
+    top: -8px;
+    bottom: -8px;
+    left: -8px;
+    right: -8px;
   }
 
   /* Barra de Estado inferior se oculta en mobile en favor del Tab Bar */

@@ -87,20 +87,20 @@ function dismiss() {
   >
     <aside
       v-if="open"
-      class="datos-guia fixed bottom-8 max-sm:bottom-[68px] right-4 max-sm:left-2 max-sm:right-2 w-[min(390px,calc(100vw-32px))] max-sm:w-auto bg-surface border border-rule-strong rounded shadow-[0_12px_32px_rgba(0,0,0,0.45),0_2px_8px_rgba(0,0,0,0.25)] z-[85] font-mono overflow-hidden backdrop-blur-md flex flex-col"
+      class="datos-guia fixed bottom-8 max-sm:bottom-[68px] right-4 max-sm:left-2 max-sm:right-2 w-[min(390px,calc(100vw-32px))] max-sm:w-auto bg-surface border border-rule-strong rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.55)] z-[85] font-mono overflow-hidden backdrop-blur-md flex flex-col"
       role="region"
       :aria-label="isEs ? 'Guía rápida de orientación' : 'Quick orientation guide'"
     >
       <!-- Cabecera de la Guía -->
-      <div class="flex items-center justify-between px-3 py-2 bg-surface-raised border-b border-rule">
+      <div class="flex items-center justify-between px-3.5 py-2.5 bg-surface-raised border-b border-rule">
         <div class="flex items-center gap-2">
           <span class="w-1.5 h-1.5 rounded-full bg-sig shadow-[0_0_8px_var(--d-sig)] animate-pulse" />
           <span class="text-[10px] font-bold tracking-[0.08em] text-ink">{{ isEs ? 'GUÍA RÁPIDA' : 'QUICK GUIDE' }}</span>
-          <span class="text-[9px] px-1.5 py-0.5 rounded-[2px] bg-rule text-dim font-semibold">{{ step + 1 }}/{{ steps.length }}</span>
+          <span class="text-[9px] px-1.5 py-0.5 rounded-md bg-rule text-dim font-semibold">{{ step + 1 }}/{{ steps.length }}</span>
         </div>
         <button
           type="button"
-          class="inline-flex items-center justify-center w-[22px] h-[22px] rounded-[2px] border-none bg-transparent text-dim hover:bg-rule-strong hover:text-sig cursor-pointer transition-colors duration-150"
+          class="inline-flex items-center justify-center w-[22px] h-[22px] rounded-md border-none bg-transparent text-dim hover:bg-rule-strong hover:text-sig cursor-pointer transition-colors duration-150"
           :title="isEs ? 'Cerrar guía (no volverá a aparecer automáticamente)' : 'Close guide (will not show automatically again)'"
           :aria-label="isEs ? 'Cerrar guía' : 'Close guide'"
           @click="dismiss"

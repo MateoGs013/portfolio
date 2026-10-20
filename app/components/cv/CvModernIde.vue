@@ -21,10 +21,9 @@ defineProps<{
     <div class="ide-container flex max-md:flex-col bg-paper border border-rule-strong text-ink font-mono text-[11px]">
       <!-- Sidebar -->
       <aside class="ide-sidebar w-[260px] max-md:w-full bg-surface border-r max-md:border-r-0 max-md:border-b border-rule-strong flex flex-col shrink-0">
-        <div class="ide-window-controls p-3 px-3.5 flex items-center gap-1.5 border-b border-rule-strong bg-surface-raised">
-          <span class="ide-dot red w-2.5 h-2.5 rounded-full bg-[#ff5f56]" aria-hidden="true" />
-          <span class="ide-dot yellow w-2.5 h-2.5 rounded-full bg-[#ffbd2e]" aria-hidden="true" />
-          <span class="ide-dot green w-2.5 h-2.5 rounded-full bg-[#27c93f]" aria-hidden="true" />
+        <div class="ide-window-controls p-3 px-3.5 flex items-center gap-2 border-b border-rule-strong bg-surface-raised">
+          <span class="w-1.5 h-1.5 rounded-full bg-sig shrink-0" aria-hidden="true" />
+          <span class="font-mono text-[10px] uppercase tracking-wider text-dim">IDE // DOSSIER</span>
           <span class="ide-file-title ml-auto text-sig text-[11px]">package.json</span>
         </div>
 
@@ -241,14 +240,6 @@ defineProps<{
     gap: 4.5pt !important;
     box-sizing: border-box !important;
   }
-  .cv-modern .ide-dot {
-    width: 5.5pt !important;
-    height: 5.5pt !important;
-    border-radius: 50% !important;
-  }
-  .cv-modern .ide-dot.red { background: #ff5f56 !important; }
-  .cv-modern .ide-dot.yellow { background: #ffbd2e !important; }
-  .cv-modern .ide-dot.green { background: #27c93f !important; }
   .cv-modern .ide-file-title {
     color: #ff3e00 !important;
     font-weight: 700 !important;

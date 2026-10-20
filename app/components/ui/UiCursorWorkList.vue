@@ -182,7 +182,7 @@ onBeforeUnmount(() => {
       class="cwl-modal hidden lg:block pointer-events-none absolute top-0 left-0 z-30 overflow-hidden rounded-2xl border border-white/15 bg-black shadow-[0_28px_70px_rgba(0,0,0,0.75)]"
       :data-open="activeIdx !== null || undefined"
       :style="{
-        transform: `translate3d(${curX - 155}px, ${curY - 105}px, 0) rotate(${tiltDeg.toFixed(2)}deg) scale(${activeIdx !== null ? 1 : 0.72})`,
+        transform: `translate3d(${curX - 155}px, ${Math.max(12, curY - 105)}px, 0) rotate(${tiltDeg.toFixed(2)}deg) scale(${activeIdx !== null ? 1 : 0.72})`,
       }"
       aria-hidden="true"
     >

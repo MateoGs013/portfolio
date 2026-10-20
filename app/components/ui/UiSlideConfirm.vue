@@ -9,9 +9,9 @@ const props = withDefaults(defineProps<{
   width?: number
   disabled?: boolean
 }>(), {
-  label: 'Deslizá para transmitir',
-  confirmedLabel: 'Transmitido · 200 OK',
-  width: 280,
+  label: 'Deslizar para confirmar',
+  confirmedLabel: 'Confirmado · 200 OK',
+  width: 260,
   disabled: false,
 })
 
@@ -417,20 +417,26 @@ onBeforeUnmount(() => {
   background: var(--d-sig, #ff3e00);
 }
 
-/* Texto instructivo central */
+/* Texto instructivo central en el área visible a la derecha del handle en reposo */
 .sld-say {
   color: var(--d-dim, #9898a0);
   pointer-events: none;
   white-space: nowrap;
-  place-items: center;
-  font-size: 12.5px;
-  font-weight: 600;
+  font-size: 11.5px;
+  font-weight: 500;
   letter-spacing: 0.02em;
-  display: grid;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   position: absolute;
-  inset: 0;
+  top: 0;
+  bottom: 0;
+  left: 60px;
+  right: 14px;
   z-index: 2;
   will-change: opacity;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* Mango con metamorfosis Bencho */
