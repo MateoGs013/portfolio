@@ -138,11 +138,6 @@ const homeHeadlineWords = computed(() => {
   return tr.value.home.headline
 })
 
-// 1. Scramble Text interactivo en el titular constructivista
-const { displayText: headline1, scramble: scramble1 } = useScrambleText(computed(() => homeHeadlineWords.value[0] ?? ''), 300)
-const { displayText: headline2, scramble: scramble2 } = useScrambleText(computed(() => homeHeadlineWords.value[1] ?? ''), 220)
-const { displayText: headline3, scramble: scramble3 } = useScrambleText(computed(() => homeHeadlineWords.value[2] ?? ''), 360)
-
 const _homeAboutText = computed(() => (isEs.value ? (getHomeField('about_text') ?? tr.value.home.aboutText) : tr.value.home.aboutText))
 const homeProfileRole = computed(() => (isEs.value ? (getHomeField('profile_role') ?? tr.value.home.profileRole) : tr.value.home.profileRole))
 const homeProfileStatus = computed(() => {
@@ -267,18 +262,6 @@ const bentoStackList = computed(() => {
     if (techSet.size >= 6) return Array.from(techSet).slice(0, 9)
   }
   return defaults
-})
-
-function scrambleHeadline() {
-  scramble1()
-  scramble2()
-  scramble3()
-}
-
-onMounted(() => {
-  if (import.meta.client) {
-    setTimeout(scrambleHeadline, 150)
-  }
 })
 
 // 2. Matriz maestra de proyectos para vista hiperfoco
@@ -831,13 +814,15 @@ function openExternal(url?: string | null) {
               </div>
 
               <h1
-                class="flex flex-wrap items-baseline gap-x-[0.26em] gap-y-1 font-sans font-semibold tracking-[-0.038em] text-[clamp(26px,3.8vw,44px)] leading-[1.04] text-ink m-0 cursor-default select-none"
+                class="group/title flex flex-wrap items-baseline gap-x-[0.26em] gap-y-1 font-sans font-semibold tracking-[-0.038em] text-[clamp(26px,3.8vw,44px)] leading-[1.04] text-ink m-0 cursor-default select-none"
                 data-anchor
-                @mouseenter="scrambleHeadline"
               >
-                <span>{{ headline1 }}</span>
-                <span>{{ headline2 }}</span>
-                <span><span class="text-ink underline decoration-sig decoration-2 underline-offset-[6px]">{{ headline3 }}</span><span class="text-sig">.</span></span>
+                <span>{{ homeHeadlineWords[0] }}</span>
+                <span>{{ homeHeadlineWords[1] }}</span>
+                <span class="inline-flex items-baseline">
+                  <span class="text-ink underline decoration-sig decoration-2 underline-offset-[6px] transition-all duration-200 group-hover/title:decoration-[3px]">{{ homeHeadlineWords[2] }}</span>
+                  <span class="text-sig ml-[1px] inline-block transition-transform duration-200 group-hover/title:scale-125 group-hover/title:translate-x-0.5">.</span>
+                </span>
               </h1>
             </div>
 

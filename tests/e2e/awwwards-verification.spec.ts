@@ -45,6 +45,14 @@ test('Verification: Linear Structural Sidebar, Hub Spokes, Wake Slider & Zen Hyp
       await feTab.click()
       await page.waitForTimeout(300)
     }
+
+    // Hover over H1 title to verify zero jitter and rock-solid stability
+    const h1Title = heroCard.locator('h1')
+    if (await h1Title.isVisible()) {
+      await h1Title.hover()
+      await page.waitForTimeout(250)
+      await heroCard.screenshot({ path: path.join(AUDIT_DIR, 'verify-title-hover-stable.png') })
+    }
   }
 
   // 2. Expand Sidebar
