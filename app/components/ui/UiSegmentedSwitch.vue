@@ -6,6 +6,7 @@ import { useBenchoSound } from '~/composables/useBenchoSound'
 export interface SegmentedOption {
   value: string
   label: string
+  shortLabel?: string
   ariaLabel?: string
   shortcut?: string
   icon?: string
@@ -198,8 +199,11 @@ onBeforeUnmount(() => {
       @click="selectOption(opt.value, idx)"
       @keydown="onKeyDown"
     >
-      <span class="w-1 h-1 rounded-full transition-colors duration-150" :class="modelValue === opt.value ? 'bg-sig' : 'bg-transparent'" />
-      <span v-if="!expandLabel">{{ opt.label }}</span>
+      <span class="w-1 h-1 rounded-full transition-colors duration-150 shrink-0" :class="modelValue === opt.value ? 'bg-sig' : 'bg-transparent'" />
+      <span v-if="!expandLabel" class="whitespace-nowrap">
+        <span v-if="opt.shortLabel" class="sm:hidden">{{ opt.shortLabel }}</span>
+        <span :class="{ 'hidden sm:inline': !!opt.shortLabel }">{{ opt.label }}</span>
+      </span>
       <span v-else class="tbb-name">
         <span>{{ opt.label }}</span>
       </span>

@@ -15,8 +15,37 @@ test('Verification: Linear Structural Sidebar, Hub Spokes, Wake Slider & Zen Hyp
   await page.goto('/', { waitUntil: 'networkidle' })
   await page.waitForTimeout(600)
 
-  // 1. Desktop Root with collapsed Linear Sidebar Rail (56px)
+  // 1. Desktop Root with collapsed Linear Sidebar Rail (56px) & Hero Micro-Pitch Frontend
   await page.screenshot({ path: path.join(AUDIT_DIR, 'verify-sidebar-collapsed.png'), fullPage: false })
+
+  // 1b. Capture Hero Card with Frontend specialty
+  const heroCard = page.locator('article').first()
+  if (await heroCard.isVisible()) {
+    await heroCard.screenshot({ path: path.join(AUDIT_DIR, 'verify-hero-micro-pitch-frontend.png') })
+
+    // Click Arquitectura & DB tab
+    const archTab = heroCard.getByRole('tab', { name: /Arquitectura/i })
+    if (await archTab.isVisible()) {
+      await archTab.click()
+      await page.waitForTimeout(300)
+      await heroCard.screenshot({ path: path.join(AUDIT_DIR, 'verify-hero-micro-pitch-architecture.png') })
+    }
+
+    // Click Agentes & IA tab
+    const aiTab = heroCard.getByRole('tab', { name: /Agentes/i })
+    if (await aiTab.isVisible()) {
+      await aiTab.click()
+      await page.waitForTimeout(300)
+      await heroCard.screenshot({ path: path.join(AUDIT_DIR, 'verify-hero-micro-pitch-ai.png') })
+    }
+
+    // Switch back to Frontend
+    const feTab = heroCard.getByRole('tab', { name: /Frontend/i })
+    if (await feTab.isVisible()) {
+      await feTab.click()
+      await page.waitForTimeout(300)
+    }
+  }
 
   // 2. Expand Sidebar
   const toggleBtn = page.locator('.sbr-toggle')

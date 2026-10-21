@@ -17,7 +17,6 @@ import UiRollingCounter from '~/components/ui/UiRollingCounter.vue'
 import UiSegmentedSwitch from '~/components/ui/UiSegmentedSwitch.vue'
 import UiSpotlightCard from '~/components/ui/UiSpotlightCard.vue'
 import UiSweepButton from '~/components/ui/UiSweepButton.vue'
-import UiTextBlurReveal from '~/components/ui/UiTextBlurReveal.vue'
 import { pad, type Folder } from '~/lib/explorer'
 import type { Project } from '~/lib/api'
 import { routeFor } from '~/lib/path'
@@ -144,12 +143,91 @@ const { displayText: headline1, scramble: scramble1 } = useScrambleText(computed
 const { displayText: headline2, scramble: scramble2 } = useScrambleText(computed(() => homeHeadlineWords.value[1] ?? ''), 220)
 const { displayText: headline3, scramble: scramble3 } = useScrambleText(computed(() => homeHeadlineWords.value[2] ?? ''), 360)
 
-const homeAboutText = computed(() => (isEs.value ? (getHomeField('about_text') ?? tr.value.home.aboutText) : tr.value.home.aboutText))
+const _homeAboutText = computed(() => (isEs.value ? (getHomeField('about_text') ?? tr.value.home.aboutText) : tr.value.home.aboutText))
 const homeProfileRole = computed(() => (isEs.value ? (getHomeField('profile_role') ?? tr.value.home.profileRole) : tr.value.home.profileRole))
 const homeProfileStatus = computed(() => {
   const raw = isEs.value ? (getHomeField('profile_status') ?? tr.value.home.profileStatus) : tr.value.home.profileStatus
   return String(raw).replace(/^[●•·\s]+/, '')
 })
+
+// ─── Micro-Pitch Interactivo con Switch de Especialidad (Bencho UI) ──────────
+type SpecialtyKey = 'frontend' | 'architecture' | 'ai'
+const activeSpecialty = ref<SpecialtyKey>('frontend')
+
+const specialtyOptions = computed(() => [
+  {
+    value: 'frontend',
+    label: isEs.value ? 'Frontend & Creative' : 'Frontend & Creative',
+    shortLabel: 'Frontend',
+    icon: 'zap',
+  },
+  {
+    value: 'architecture',
+    label: isEs.value ? 'Arquitectura & DB' : 'Architecture & DB',
+    shortLabel: isEs.value ? 'Arquitectura' : 'Architecture',
+    icon: 'db',
+  },
+  {
+    value: 'ai',
+    label: isEs.value ? 'Agentes & IA' : 'Agents & AI',
+    shortLabel: isEs.value ? 'Agentes IA' : 'AI Agents',
+    icon: 'target',
+  },
+])
+
+interface SpecialtyPitch {
+  title: string
+  tagline: string
+  spec: string
+  techs: Array<{ name: string; slug: string; highlight?: boolean }>
+}
+
+const specialties = computed<Record<SpecialtyKey, SpecialtyPitch>>(() => ({
+  frontend: {
+    title: isEs.value ? 'Frontend Reactivo & Micro-interacciones' : 'Reactive Frontend & Micro-interactions',
+    tagline: isEs.value
+      ? 'Interfaces reactivas de ultra-alta fidelidad con física de resortes, animaciones espaciales y rendimiento sub-segundo con 99+ en Lighthouse.'
+      : 'Ultra-high fidelity reactive interfaces with spring physics, spatial micro-interactions and sub-second 99+ Lighthouse score.',
+    spec: isEs.value ? 'SSR HÍBRIDO · CERO CLS · 60FPS' : 'HYBRID SSR · ZERO CLS · 60FPS',
+    techs: [
+      { name: 'Vue 3', slug: 'vue', highlight: true },
+      { name: 'Nuxt 4', slug: 'nuxt', highlight: true },
+      { name: 'TypeScript', slug: 'typescript' },
+      { name: 'Tailwind CSS', slug: 'tailwind' },
+      { name: 'GSAP & Lenis', slug: 'gsap' },
+    ],
+  },
+  architecture: {
+    title: isEs.value ? 'Arquitectura de Datos & APIs Tipadas' : 'Data Architecture & Typed APIs',
+    tagline: isEs.value
+      ? 'Modelado relacional ACID en PostgreSQL 17, contratos de API tipados de punta a punta y resiliencia offline-first con sincronización segura.'
+      : 'ACID relational modeling on PostgreSQL 17, end-to-end typed API contracts and offline-first resilience with safe synchronization.',
+    spec: isEs.value ? 'ACID TRANSACTIONS · REST/SSE · PRISMA 7' : 'ACID TRANSACTIONS · REST/SSE · PRISMA 7',
+    techs: [
+      { name: 'PostgreSQL 17', slug: 'postgresql', highlight: true },
+      { name: 'Prisma 7', slug: 'prisma', highlight: true },
+      { name: 'Express 5', slug: 'express' },
+      { name: 'FastAPI / Python', slug: 'python' },
+      { name: 'Docker CI/CD', slug: 'docker' },
+    ],
+  },
+  ai: {
+    title: isEs.value ? 'Sistemas Autónomos & Agentes de IA' : 'Autonomous Systems & AI Agents',
+    tagline: isEs.value
+      ? 'Desarrollo del agente Eros (Tesis Da Vinci): razonamiento contextual on-premise, tool-calling estructurado y memoria semántica vectorial.'
+      : 'Engineering Eros agent (Da Vinci Thesis): on-premise contextual reasoning, structured tool-calling and semantic vector memory.',
+    spec: isEs.value ? 'PGVECTOR · LOCAL LLM · 382 COMMITS' : 'PGVECTOR · LOCAL LLM · 382 COMMITS',
+    techs: [
+      { name: 'Eros AI Agent', slug: 'eros', highlight: true },
+      { name: 'pgvector ACID', slug: 'pgvector', highlight: true },
+      { name: 'Python / FastAPI', slug: 'python' },
+      { name: 'Tool Calling', slug: 'ai' },
+      { name: 'Tesis Da Vinci', slug: 'thesis' },
+    ],
+  },
+}))
+
+const currentSpecialty = computed(() => specialties.value[activeSpecialty.value])
 
 const projectCounts = computed(() => {
   const list = props.folder.projects && props.folder.projects.length ? props.folder.projects : props.folder.items
@@ -706,31 +784,35 @@ function openExternal(url?: string | null) {
       <section class="grid grid-cols-1 lg:grid-cols-12 gap-4 w-full" aria-label="Introducción e infraestructura técnica">
         
         <!-- Col 1-7: Hero Principal de Ingeniería con Magnetic Dots Canvas -->
+        <!-- Col 1-7: Tarjeta Hero Principal (Micro-Pitch Interactivo Bencho UI) -->
         <UiSpotlightCard
           as="article"
-          class="lg:col-span-7 surface-10k rounded-2xl p-5 sm:p-7 relative overflow-hidden flex flex-col justify-between"
+          class="lg:col-span-7 surface-10k rounded-2xl p-5 sm:p-6 sm:p-7 relative overflow-hidden flex flex-col justify-between gap-5"
         >
-          <!-- Magnetic Dots Field interactivo sutil de fondo -->
-          <div class="pointer-events-none absolute inset-0 opacity-[0.22] dark:opacity-[0.28] flex items-center justify-center overflow-hidden">
+          <!-- Canvas de Puntos Magnéticos sutil en flanco derecho (Cero interferencia detrás del texto) -->
+          <div
+            class="pointer-events-none absolute right-0 top-0 bottom-0 w-[380px] opacity-[0.14] dark:opacity-[0.20] flex items-center justify-end overflow-hidden [mask-image:radial-gradient(ellipse_at_center,black_25%,transparent_75%)]"
+            aria-hidden="true"
+          >
             <UiMagneticDots
-              :width="540"
-              :height="320"
-              :pull="42"
-              :radius="50"
+              :width="380"
+              :height="360"
+              :pull="40"
+              :radius="48"
               :spacing="16"
               initial-shape="Dots"
               :show-badge="false"
             />
           </div>
 
-          <div class="relative z-10 flex flex-col h-full justify-between gap-5">
+          <div class="relative z-10 flex flex-col h-full justify-between gap-4 sm:gap-5">
             <!-- Barra superior: Estado en Vivo + Ubicación + Latencia -->
             <div class="flex flex-wrap items-center justify-between gap-2.5 pb-3 border-b border-rule">
-              <div class="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-paper/85 border border-rule font-mono text-[11px] text-dim shadow-sm">
+              <div class="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-paper/90 border border-rule font-mono text-[11px] text-ink shadow-xs">
                 <span class="w-1.5 h-1.5 rounded-full bg-green shadow-[0_0_6px_var(--d-green)]" />
-                <span class="text-ink font-medium">{{ homeProfileStatus }}</span>
+                <span class="text-ink font-semibold tracking-wide">{{ homeProfileStatus }}</span>
                 <span class="text-faint">·</span>
-                <span>Paraná / Patagonia, AR</span>
+                <span class="text-dim">Paraná / Patagonia, AR</span>
               </div>
               <div class="hidden sm:inline-flex items-center gap-2 font-mono text-[11px] text-dim">
                 <span class="text-sig font-semibold">UTC-3</span>
@@ -740,14 +822,16 @@ function openExternal(url?: string | null) {
             </div>
 
             <!-- Titular Monumental con Scramble Cinético -->
-            <div>
-              <span class="font-mono text-[11px] tracking-widest uppercase text-dim mb-2 flex items-center gap-2">
-                <span class="w-1.5 h-1.5 rounded-full bg-sig" />
-                <span>{{ homeProfileRole }}</span>
-              </span>
+            <div class="flex flex-col gap-2">
+              <div class="flex items-center gap-2">
+                <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-sig/10 border border-sig/30 text-sig font-mono text-[10.5px] font-semibold uppercase tracking-wider">
+                  <span class="w-1.5 h-1.5 rounded-full bg-sig" />
+                  {{ homeProfileRole }}
+                </span>
+              </div>
 
               <h1
-                class="flex flex-wrap items-baseline gap-x-[0.26em] gap-y-1 font-sans font-semibold tracking-[-0.038em] text-[clamp(26px,4.2vw,46px)] leading-[1.06] text-ink m-0 mb-3 cursor-default select-none"
+                class="flex flex-wrap items-baseline gap-x-[0.26em] gap-y-1 font-sans font-semibold tracking-[-0.038em] text-[clamp(26px,3.8vw,44px)] leading-[1.04] text-ink m-0 cursor-default select-none"
                 data-anchor
                 @mouseenter="scrambleHeadline"
               >
@@ -755,20 +839,49 @@ function openExternal(url?: string | null) {
                 <span>{{ headline2 }}</span>
                 <span><span class="text-ink underline decoration-sig decoration-2 underline-offset-[6px]">{{ headline3 }}</span><span class="text-sig">.</span></span>
               </h1>
+            </div>
 
-              <div class="font-sans text-[14px] sm:text-[15px] text-dim leading-[1.62] max-w-[56ch] m-0">
-                <UiTextBlurReveal
-                  :text="homeAboutText"
-                  split="words"
-                  look="blur"
-                  :stagger-ms="16"
-                  :duration-ms="540"
+            <!-- Micro-Pitch Interactivo con Switch de Especialidad (Bencho UI) -->
+            <div class="flex flex-col gap-3 rounded-xl border border-rule/90 bg-surface/70 backdrop-blur-md p-3.5 sm:p-4 shadow-xs">
+              <!-- Selector Segmentado Bencho UI -->
+              <div class="flex flex-wrap items-center justify-between gap-2">
+                <UiSegmentedSwitch
+                  v-model="activeSpecialty"
+                  :options="specialtyOptions"
+                  :aria-label="isEs ? 'Especialidad técnica' : 'Technical specialty'"
+                  size="sm"
                 />
+                <span class="font-mono text-[9.5px] px-2 py-0.5 rounded bg-paper/90 border border-rule text-sig font-bold tracking-wider uppercase">
+                  {{ currentSpecialty.spec }}
+                </span>
+              </div>
+
+              <!-- Pitch conciso de 2 líneas con alto contraste (fácil de leer en 2 segundos) -->
+              <p class="font-sans text-[13.5px] sm:text-[14px] text-ink dark:text-zinc-100 leading-[1.54] m-0 font-normal">
+                {{ currentSpecialty.tagline }}
+              </p>
+
+              <!-- Chips de Stack Relacionado (Interactivos y escaneables) -->
+              <div class="flex flex-wrap items-center gap-1.5 pt-2 border-t border-rule/60">
+                <span class="font-mono text-[10px] text-dim uppercase tracking-wider mr-1">Stack:</span>
+                <NuxtLink
+                  v-for="t in currentSpecialty.techs"
+                  :key="t.slug"
+                  :to="'/stack/' + t.slug"
+                  class="inline-flex items-center gap-1 font-mono text-[10.5px] px-2.5 py-0.5 rounded-md border transition-all no-underline"
+                  :class="t.highlight
+                    ? 'border-sig/40 bg-sig/10 text-ink font-semibold hover:border-sig hover:bg-sig/20'
+                    : 'border-rule bg-paper/80 text-dim hover:text-ink hover:border-rule-strong hover:bg-hover'"
+                  :title="`Ver tecnología: ${t.name}`"
+                >
+                  <span v-if="t.highlight" class="w-1 h-1 rounded-full bg-sig" aria-hidden="true" />
+                  {{ t.name }}
+                </NuxtLink>
               </div>
             </div>
 
             <!-- Barra de Acciones Táctiles: Botón $10k Sweep + CV Harvard + Bencho Copy Pill -->
-            <div class="flex flex-wrap items-center gap-2.5 pt-2">
+            <div class="flex flex-wrap items-center gap-2.5 pt-1">
               <UiSweepButton
                 to="/projects"
                 :title="isEs ? 'Explorar todas las aplicaciones en producción' : 'Explore all applications in production'"
@@ -789,8 +902,8 @@ function openExternal(url?: string | null) {
 
               <UiCopyPill
                 text="mateogabus@gmail.com"
-                label="mateogabus@gmail.com"
-                :copied-label="isEs ? 'Email copiado' : 'Email copied'"
+                :label="isEs ? 'Copiar email' : 'Copy email'"
+                :copied-label="isEs ? '¡Email copiado!' : 'Email copied!'"
               />
             </div>
           </div>
