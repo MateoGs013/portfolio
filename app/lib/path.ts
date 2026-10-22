@@ -45,6 +45,12 @@ const PATH_ALIASES: Record<string, string> = {
   articulo: 'articles',
   posts: 'articles',
   post: 'articles',
+  lab: 'lab',
+  library: 'lab',
+  libreria: 'lab',
+  componentes: 'lab',
+  components: 'lab',
+  showcase: 'lab',
 }
 
 /** Del param catch-all de Nuxt (`string | string[] | undefined`) al path limpio con soporte de alias. */

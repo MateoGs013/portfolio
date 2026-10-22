@@ -14,6 +14,7 @@ function formatWhere(w: string) {
     if (w === 'experience') return 'experiencia'
     if (w === 'stack') return 'stack'
     if (w === 'articles') return 'artículos'
+    if (w === 'lab') return 'lab ui'
     if (w === 'db') return 'db'
   }
   return w
@@ -30,6 +31,7 @@ const { data: entries } = await useAsyncData<Entry[]>('datos-goto', async () => 
     api.list('articles').catch(() => ({ data: [] })),
   ])
   return [
+    { label: isEs.value ? 'laboratorio ui · 31 componentes interactivos' : 'ui lab · 31 interactive components', where: 'lab', to: routeFor(['lab']) },
     ...schema.data.map(e => ({ label: e.key, where: 'db', to: routeFor([e.key]) })),
     ...projects.data.map(p => ({ label: p.title, where: 'projects', to: routeFor(['projects', p.slug]) })),
     ...experience.data.map(e => ({ label: e.org ? `${e.role} · ${e.org.name}` : e.role, where: 'experience', to: routeFor(['experience', e.slug]) })),

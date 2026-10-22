@@ -1,11 +1,15 @@
 // Sonzogni × Bencho UI v2.0 — Librería de Componentes Táctiles, 3D & Micro-interacciones (Vue 3 / Nuxt 4)
 // Portada 1:1 desde las físicas de resortes, geometría SVG, Canvas 3D y síntesis Web Audio de bencho.dev
 
+export { default as UiAudioVisualizer } from './UiAudioVisualizer.vue'
 export { default as UiBenchShowcase } from './UiBenchShowcase.vue'
 export { default as UiBlueprintCard } from './UiBlueprintCard.vue'
+export { default as UiBorderBeam } from './UiBorderBeam.vue'
+export { default as UiClickSpark } from './UiClickSpark.vue'
 export { default as UiCodeReveal } from './UiCodeReveal.vue'
 export { default as UiCopyPill } from './UiCopyPill.vue'
 export { default as UiCursorWorkList } from './UiCursorWorkList.vue'
+export { default as UiDecryptedText } from './UiDecryptedText.vue'
 export { default as UiDock } from './UiDock.vue'
 export { default as UiDotGlobe } from './UiDotGlobe.vue'
 export { default as UiDynamicIsland } from './UiDynamicIsland.vue'

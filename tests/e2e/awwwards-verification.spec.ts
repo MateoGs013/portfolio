@@ -105,4 +105,25 @@ test('Verification: Linear Structural Sidebar, Hub Spokes, Wake Slider & Zen Hyp
   await page.goto('/', { waitUntil: 'networkidle' })
   await page.waitForTimeout(400)
   await page.screenshot({ path: path.join(AUDIT_DIR, 'verify-mobile-375.png'), fullPage: false })
+
+  // 7. UI Lab Section Desktop (1440x900)
+  await page.setViewportSize({ width: 1440, height: 900 })
+  await page.goto('/lab', { waitUntil: 'networkidle' })
+  await page.waitForTimeout(600)
+  await page.screenshot({ path: path.join(AUDIT_DIR, 'verify-lab-desktop.png'), fullPage: false })
+
+  // 7b. Filter UI Lab by Search
+  const searchInput = page.locator('input[type="search"]')
+  if (await searchInput.isVisible()) {
+    await searchInput.fill('laser')
+    await page.waitForTimeout(300)
+    await page.screenshot({ path: path.join(AUDIT_DIR, 'verify-lab-search-laser.png'), fullPage: false })
+    await searchInput.fill('')
+  }
+
+  // 7c. UI Lab Mobile (375x812)
+  await page.setViewportSize({ width: 375, height: 812 })
+  await page.goto('/lab', { waitUntil: 'networkidle' })
+  await page.waitForTimeout(500)
+  await page.screenshot({ path: path.join(AUDIT_DIR, 'verify-lab-mobile.png'), fullPage: false })
 })

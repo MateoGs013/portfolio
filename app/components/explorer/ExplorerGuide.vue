@@ -30,8 +30,8 @@ const steps = computed(() => [
     title: isEs.value ? 'Control por Teclado y Clics' : 'Keyboard & Click Control',
     icon: 'code' as const,
     desc: isEs.value
-      ? 'Diseñado para alta productividad: pulsa [0-5] para saltar de sección, flechas [↑ ↓] y [Enter] para abrir registros, o [/] (⌘K) para buscar cualquier tecnología o proyecto al instante.'
-      : 'Built for high productivity: press [0-5] to jump sections, arrow keys [↑ ↓] and [Enter] to open records, or [/] (⌘K) to instantly search any project or tech.',
+      ? 'Diseñado para alta productividad: pulsa [0-7] para saltar de sección, flechas [↑ ↓] y [Enter] para abrir registros, o [/] (⌘K) para buscar cualquier tecnología o proyecto al instante.'
+      : 'Built for high productivity: press [0-7] to jump sections, arrow keys [↑ ↓] and [Enter] to open records, or [/] (⌘K) to instantly search any project or tech.',
     badge: 'KBD',
   },
   {
@@ -39,14 +39,14 @@ const steps = computed(() => [
     title: isEs.value ? 'Modo Hiperfoco y CV Harvard' : 'Hyperfocus & Harvard CV',
     icon: 'zap' as const,
     desc: isEs.value
-      ? 'Pulsa [H] o el icono [FOCUS] para modo zen de lectura pura. En la sección 04 (/about) encontrarás el currículum técnico con formato dual (ATS Harvard y moderno) listo para imprimir en PDF.'
-      : 'Press [H] or [FOCUS] for zen reading without chrome. In section 04 (/about) you will find the dual-format resume (Harvard ATS & Modern) ready to export as PDF.',
+      ? 'Pulsa [H] o el icono [FOCUS] para modo zen de lectura pura. En la sección 05 (/about) encontrarás el currículum técnico con formato dual (ATS Harvard y moderno) listo para imprimir en PDF.'
+      : 'Press [H] or [FOCUS] for zen reading without chrome. In section 05 (/about) you will find the dual-format resume (Harvard ATS & Modern) ready to export as PDF.',
     badge: 'ZEN',
   },
 ])
 
 const shortcuts = computed(() => [
-  { key: '0 - 5', label: isEs.value ? 'Saltar entre secciones (db, proyectos, exp, stack...)' : 'Jump between sections (db, projects, exp, stack...)' },
+  { key: '0 - 7', label: isEs.value ? 'Saltar entre secciones (db, proyectos, exp, stack, blog, cv, contacto, lab)' : 'Jump between sections (db, projects, exp, stack, blog, cv, contact, lab)' },
   { key: '↑ ↓ ← →', label: isEs.value ? 'Mover foco entre filas / registros vecinos' : 'Move focus between rows / adjacent records' },
   { key: 'Enter', label: isEs.value ? 'Abrir carpeta o detalle del proyecto enfocado' : 'Open selected folder or project sheet' },
   { key: 'Backspace', label: isEs.value ? 'Subir un nivel en el árbol de directorios' : 'Go up one directory level' },

@@ -25,7 +25,7 @@ export interface FieldMeta {
 }
 
 export type CollectionKey = 'projects' | 'experience' | 'stack' | 'articles' | 'orgs'
-export type DocKey = 'about' | 'contact' | 'home'
+export type DocKey = 'about' | 'contact' | 'home' | 'lab'
 
 export interface CollectionMeta {
   label: string
@@ -137,7 +137,7 @@ export type DocField = {
 
 /** Orden de navegación en el explorador. */
 export const collectionOrder: CollectionKey[] = ['projects', 'experience', 'stack', 'articles', 'orgs']
-export const docOrder: DocKey[] = ['about', 'contact', 'home']
+export const docOrder: DocKey[] = ['about', 'contact', 'home', 'lab']
 
 export function fieldsFor(collection: CollectionKey, _world?: string): string[] {
   return Object.keys(fieldMeta[collection].fields)

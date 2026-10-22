@@ -143,6 +143,14 @@ function onSelectDock(key: string) {
           :aria-label="isEs ? 'Categoría de componentes' : 'Component category'"
         />
 
+        <NuxtLink
+          to="/lab"
+          class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md border border-sig/40 bg-sig/10 hover:bg-sig hover:text-on-sig font-mono text-[10.5px] font-semibold text-sig transition-all cursor-pointer no-underline active:scale-[0.98]"
+          :title="isEs ? 'Explorar catálogo completo de componentes interactivos' : 'Explore full interactive component catalog'"
+        >
+          <span>{{ isEs ? 'Laboratorio UI (31) →' : 'UI Lab (31) →' }}</span>
+        </NuxtLink>
+
         <button
           type="button"
           class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md border border-rule bg-surface/80 hover:bg-hover hover:border-rule-strong font-mono text-[10.5px] text-dim hover:text-ink transition-colors cursor-pointer"

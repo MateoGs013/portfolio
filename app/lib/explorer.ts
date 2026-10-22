@@ -384,6 +384,17 @@ const fallbackDocData: Record<DocKey, Doc> = {
       { name: 'manifesto_lead', type: 'text', wide: true, value: 'DISEÑO CON PROPÓSITO.<br>CONSTRUYO CON PRECISIÓN.<br>ENTREGO CON ORGULLO.' },
     ],
   },
+  lab: {
+    key: 'lab',
+    title: 'lab ui',
+    updatedAt: new Date().toISOString(),
+    fields: [
+      { name: 'catalog', type: 'string', value: 'Sonzogni × Bencho UI / Vue Bits v2.0' },
+      { name: 'components_count', type: 'string', value: '31' },
+      { name: 'architecture', type: 'string', value: 'Vue 3 · Nuxt 4 · Tailwind CSS v4 · Web Audio API · 2nd-order Springs' },
+      { name: 'philosophy', type: 'text', wide: true, value: 'Laboratorio de micro-interacciones de alta fidelidad: resortes amortiguados de segundo orden, deformaciones cinéticas, x-ray canvas, audio sintético procedimental y respeto estricto a accesibilidad y modo hiperfoco.' },
+    ],
+  },
 }
 
 export async function resolveExplorer(api: Api, path: Path, query: LocationQuery, preloadedSchema?: Answer<SchemaEntry[]> | null): Promise<Explorer> {
@@ -416,6 +427,7 @@ export async function resolveExplorer(api: Api, path: Path, query: LocationQuery
       articles: { label: 'artículos & blog', desc: n => `${pad(n)} publicaciones técnicas de ingeniería` },
       about: { label: 'sobre mí', desc: n => `${pad(n)} campos de perfil, formación y principios` },
       contact: { label: 'contacto', desc: n => `${pad(n)} canales de contacto y disponibilidad` },
+      lab: { label: 'lab ui', desc: n => `${pad(n)} primitivas interactivas y físicas de resortes` },
       orgs: { label: 'organizaciones', desc: n => `${pad(n)} empresas e instituciones clientes` },
       home: { label: 'portada', desc: n => `${pad(n)} campos de especificación editorial` },
     }
@@ -450,6 +462,25 @@ export async function resolveExplorer(api: Api, path: Path, query: LocationQuery
   // Documento: es una hoja directa
   if (isDoc(root)) {
     if (slug) throw notFound()
+    if (root === 'lab') {
+      const fallbackLab = fallbackDocData.lab
+      last = {
+        data: fallbackLab,
+        meta: { count: fallbackLab.fields.length, filters: {} },
+        request: 'GET /api/docs/lab',
+        status: 200,
+        ms: 0,
+      }
+      detail = {
+        kind: 'document',
+        name: '07 · lab ui · componentes',
+        type: 'laboratory · UI Primitives & Springs',
+        updated: new Date().toISOString().slice(0, 10),
+        rawRecord: fallbackLab,
+        rows: fallbackLab.fields.map((f: DocField) => docRow(f)),
+      }
+      return done()
+    }
     if (root === 'about') {
       const [answerRes, expRes, projRes, contactRes] = await Promise.all([
         api.doc(root).catch(() => null),

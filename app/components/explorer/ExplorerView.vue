@@ -6,6 +6,7 @@ import ExplorerDetail from './ExplorerDetail.vue'
 import ExplorerFolder from './ExplorerFolder.vue'
 import ExplorerGoto from './ExplorerGoto.vue'
 import ExplorerGuide from './ExplorerGuide.vue'
+import ExplorerLab from './ExplorerLab.vue'
 import AppIcon, { type IconName } from '~/components/ui/AppIcon.vue'
 import UiDynamicIsland from '~/components/ui/UiDynamicIsland.vue'
 import UiProgressiveBlur from '~/components/ui/UiProgressiveBlur.vue'
@@ -216,6 +217,10 @@ function onKey(e: KeyboardEvent) {
       e.preventDefault()
       go(routeFor(['contact']))
       break
+    case '7':
+      e.preventDefault()
+      go(routeFor(['lab']))
+      break
     case '0':
       e.preventDefault()
       go(routeFor([]))
@@ -318,6 +323,7 @@ const navSections = computed<NavSection[]>(() => [
   { root: 'articles', label: isEs.value ? '04 · artículos' : '04 · articles', shortLabel: 'Blog', to: ['articles'], badge: pad(liveCounts.value.articles ?? 0), keyHint: '4', icon: 'file', desc: isEs.value ? 'Publicaciones técnicas y blog de ingeniería' : 'Technical articles & engineering blog' },
   { root: 'about', label: isEs.value ? '05 · sobre mí' : '05 · about me', shortLabel: 'CV', to: ['about'], badge: pad(liveCounts.value.about ?? 13), keyHint: '5', icon: 'user', desc: isEs.value ? 'Perfil bio, formación y principios' : 'Bio, resume & principles' },
   { root: 'contact', label: isEs.value ? '06 · contacto' : '06 · contact', shortLabel: isEs.value ? 'Mail' : 'Contact', to: ['contact'], badge: pad(liveCounts.value.contact ?? 7), keyHint: '6', icon: 'mail', desc: isEs.value ? 'Canales y disponibilidad' : 'Channels & availability' },
+  { root: 'lab', label: isEs.value ? '07 · lab ui' : '07 · ui lab', shortLabel: 'Lab', to: ['lab'], badge: '31', keyHint: '7', icon: 'cpu', desc: isEs.value ? 'Laboratorio de componentes y físicas' : 'Component laboratory & spring physics' },
 ])
 
 const currentRoot = computed(() => path.value[0] ?? '')
@@ -545,7 +551,8 @@ const activeQueryFilters = computed(() => {
             />
           </div>
           <div v-else-if="ex" ref="pane" :key="route.fullPath" class="pane w-full max-w-[1240px] mx-auto pb-8" :class="dir">
-            <ExplorerFolder v-if="folder" :folder="folder" />
+            <ExplorerLab v-if="currentRoot === 'lab'" />
+            <ExplorerFolder v-else-if="folder" :folder="folder" />
             <ExplorerDetail v-else-if="detail" :detail="detail" :prev="ex.prev" :next="ex.next" />
           </div>
           <UiProgressiveBlur position="bottom" :height="34" :strength="40" />
@@ -569,7 +576,7 @@ const activeQueryFilters = computed(() => {
           <template v-if="hoja && (ex?.prev || ex?.next)"><kbd class="px-1 py-0.5 rounded bg-paper/60 border border-rule">←</kbd><kbd class="px-1 py-0.5 rounded bg-paper/60 border border-rule">→</kbd> {{ isEs ? 'vecino' : 'adjacent' }}</template>
           <template v-else-if="!hoja"><kbd class="px-1 py-0.5 rounded bg-paper/60 border border-rule">↑↓</kbd> {{ isEs ? 'navegar' : 'navigate' }} <kbd class="px-1 py-0.5 rounded bg-paper/60 border border-rule">↵</kbd> {{ isEs ? 'abrir' : 'open' }}</template>
           <template v-if="ex?.up"><kbd class="px-1 py-0.5 rounded bg-paper/60 border border-rule">⌫</kbd> {{ isEs ? 'volver' : 'back' }}</template>
-          <span><kbd class="px-1 py-0.5 rounded bg-paper/60 border border-rule">0-6</kbd> {{ isEs ? 'secciones' : 'sections' }}</span>
+          <span><kbd class="px-1 py-0.5 rounded bg-paper/60 border border-rule">0-7</kbd> {{ isEs ? 'secciones' : 'sections' }}</span>
           <span><kbd class="px-1 py-0.5 rounded bg-paper/60 border border-rule">⌘B</kbd> sidebar</span>
           <span><kbd class="px-1 py-0.5 rounded bg-paper/60 border border-rule">/</kbd> {{ isEs ? 'buscar' : 'search' }}</span>
           <span><kbd class="px-1 py-0.5 rounded bg-paper/60 border border-rule">H</kbd> {{ isEs ? 'hiperfoco' : 'hyperfocus' }}</span>
