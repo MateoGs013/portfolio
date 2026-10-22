@@ -6,6 +6,7 @@
 import type { Detail } from '~/lib/explorer'
 import type { CvDeliverable } from './types'
 import AppIcon from '~/components/ui/AppIcon.vue'
+import UiSegmentedSwitch from '~/components/ui/UiSegmentedSwitch.vue'
 import CvHarvardAts from './CvHarvardAts.vue'
 import CvModernIde from './CvModernIde.vue'
 
@@ -246,52 +247,42 @@ function printCV() {
 
 <template>
   <section class="cv-wrapper w-full" :class="`mode-${mode}`">
-    <!-- Barra de Herramientas del CV -->
-    <header class="cv-toolbar flex items-center justify-between gap-3 px-4 py-2.5 mb-5 bg-surface border border-rule rounded-xl max-[820px]:flex-col max-[820px]:items-stretch max-[820px]:gap-2.5 max-[820px]:p-3 no-print">
-      <div class="cv-selector inline-flex border border-rule bg-paper rounded-lg overflow-hidden max-[820px]:w-full" role="group" :aria-label="isEs ? 'Estilo de Currículum Vitae' : 'Resume format style'">
-        <button
-          type="button"
-          class="cv-btn group inline-flex items-center gap-1.5 px-3.5 py-1.5 border-0 font-mono text-[11.5px] font-bold cursor-pointer transition-colors duration-150 max-[820px]:flex-1 max-[820px]:justify-center max-[820px]:text-[11px] max-[820px]:py-2"
-          :class="mode === 'modern' ? 'bg-sig text-on-sig' : 'bg-transparent text-dim hover:text-ink hover:bg-hover'"
-          :title="isEs ? 'Ver CV moderno editorial con fotografía técnica' : 'View modern editorial tech resume with photo'"
-          @click="mode = 'modern'"
-        >
-          <AppIcon name="user" :size="13" class="cv-btn-icon shrink-0 transition-colors duration-150 group-hover:text-sig group-[.bg-sig]:text-on-sig" />
-          <span>{{ isEs ? 'MODERNO + FOTO' : 'MODERN + PHOTO' }}</span>
-        </button>
-        <button
-          type="button"
-          class="cv-btn group inline-flex items-center gap-1.5 px-3.5 py-1.5 border-0 font-mono text-[11.5px] font-bold cursor-pointer transition-colors duration-150 max-[820px]:flex-1 max-[820px]:justify-center max-[820px]:text-[11px] max-[820px]:py-2"
-          :class="mode === 'harvard' ? 'bg-sig text-on-sig' : 'bg-transparent text-dim hover:text-ink hover:bg-hover'"
-          :title="isEs ? 'Ver CV formato clásico Harvard ATS en blanco y negro' : 'View classic black & white Harvard ATS resume'"
-          @click="mode = 'harvard'"
-        >
-          <AppIcon name="academic" :size="13" class="cv-btn-icon shrink-0 transition-colors duration-150 group-hover:text-sig group-[.bg-sig]:text-on-sig" />
-          <span>HARVARD ATS</span>
-        </button>
+    <!-- Barra de Herramientas del CV (Segmented Switch + Export Actions) -->
+    <header class="cv-toolbar flex flex-wrap items-center justify-between gap-3 px-3.5 py-2.5 mb-5 bg-surface/70 border border-rule rounded-xl no-print">
+      <div class="flex items-center gap-2.5">
+        <span class="font-mono text-[10.5px] text-dim uppercase tracking-wider hidden sm:inline">{{ isEs ? 'Formato:' : 'Format:' }}</span>
+        <UiSegmentedSwitch
+          v-model="mode"
+          :options="[
+            { value: 'modern', label: isEs ? 'Moderno + Foto' : 'Modern + Photo', shortLabel: isEs ? 'Moderno' : 'Modern' },
+            { value: 'harvard', label: 'Harvard ATS', shortLabel: 'ATS' },
+          ]"
+          :aria-label="isEs ? 'Formato de CV' : 'CV format'"
+          size="sm"
+        />
       </div>
 
-      <div class="cv-actions flex items-center gap-2 max-[820px]:w-full">
+      <div class="cv-actions flex items-center gap-2 max-sm:w-full">
         <!-- Botón de Descarga Directa PDF -->
         <a
           :href="cvPdfUrl"
           :download="cvDownloadFileName"
-          class="cv-action-btn cv-download-btn inline-flex items-center gap-1.5 px-3 py-1.5 bg-sig border border-sig text-on-sig font-mono text-[11px] font-bold no-underline cursor-pointer transition-colors duration-150 hover:bg-sig-hover rounded-md max-[820px]:flex-1 max-[820px]:justify-center max-[820px]:text-[10.5px] max-[820px]:py-2"
+          class="cv-action-btn inline-flex items-center justify-center gap-1.5 h-8 px-3 bg-paper/80 hover:bg-hover border border-rule hover:border-rule-strong text-ink font-mono text-[11px] font-semibold no-underline cursor-pointer transition-all active:scale-[0.98] rounded-lg max-sm:flex-1"
           :title="isEs ? `Descargar archivo PDF (${cvDownloadFileName})` : `Download PDF file (${cvDownloadFileName})`"
         >
-          <AppIcon name="download" :size="13" />
-          <span>{{ isEs ? 'DESCARGAR PDF' : 'DOWNLOAD PDF' }}</span>
+          <AppIcon name="download" :size="12" class="text-sig" />
+          <span>{{ isEs ? 'Descargar PDF' : 'Download PDF' }}</span>
         </a>
 
         <!-- Botón de Impresión Navegador -->
         <button
           type="button"
-          class="cv-action-btn cv-print-btn group inline-flex items-center gap-1.5 px-3 py-1.5 bg-paper border border-rule-strong text-ink font-mono text-[11px] font-bold no-underline cursor-pointer transition-colors duration-150 hover:bg-hover hover:text-sig hover:border-sig rounded-md max-[820px]:flex-1 max-[820px]:justify-center max-[820px]:text-[10.5px] max-[820px]:py-2"
-          :title="isEs ? 'Imprimir en papel o guardar como PDF desde el navegador (Ctrl+P)' : 'Print to paper or save as PDF via browser (Ctrl+P)'"
+          class="cv-action-btn group inline-flex items-center justify-center gap-1.5 h-8 px-3 bg-paper/80 hover:bg-hover border border-rule hover:border-rule-strong text-ink font-mono text-[11px] font-semibold no-underline cursor-pointer transition-all active:scale-[0.98] rounded-lg max-sm:flex-1"
+          :title="isEs ? 'Imprimir en papel o guardar como PDF (Ctrl+P)' : 'Print or save as PDF (Ctrl+P)'"
           @click="printCV"
         >
-          <AppIcon name="printer" :size="13" class="group-hover:text-sig transition-colors duration-150" />
-          <span>{{ isEs ? 'IMPRIMIR' : 'PRINT' }}</span>
+          <AppIcon name="printer" :size="12" class="text-dim group-hover:text-ink" />
+          <span>{{ isEs ? 'Imprimir' : 'Print' }}</span>
         </button>
       </div>
     </header>

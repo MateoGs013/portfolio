@@ -39,6 +39,7 @@ export type IconName =
   | 'sparkles'
   | 'cpu'
   | 'refresh'
+  | 'menu'
 
 const props = withDefaults(defineProps<{
   name: IconName
@@ -284,6 +285,13 @@ const px = computed(() => (typeof props.size === 'number' ? `${props.size}px` : 
       <path d="M3 3v5h5" />
       <path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16" />
       <path d="M16 16h5v5" />
+    </template>
+
+    <!-- Menú Hamburguesa / Drawer -->
+    <template v-else-if="name === 'menu'">
+      <line x1="4" x2="20" y1="12" y2="12" />
+      <line x1="4" x2="20" y1="6" y2="6" />
+      <line x1="4" x2="20" y1="18" y2="18" />
     </template>
   </svg>
 </template>

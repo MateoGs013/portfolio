@@ -161,7 +161,12 @@ watch(() => ex.value?.level, (now, before) => {
 })
 
 const gotoOpen = ref(false)
+const mobileMenuOpen = ref(false)
 const pane = ref<HTMLElement | null>(null)
+
+watch(() => route.fullPath, () => {
+  mobileMenuOpen.value = false
+})
 
 /** Las filas que el teclado recorre en el panel actual, en orden de lectura. */
 const rows = () => Array.from(pane.value?.querySelectorAll<HTMLElement>('[data-row]') ?? [])
@@ -286,6 +291,10 @@ function onKey(e: KeyboardEvent) {
         e.preventDefault()
         guideOpen.value = false
       }
+      else if (mobileMenuOpen.value) {
+        e.preventDefault()
+        mobileMenuOpen.value = false
+      }
       else if (gotoOpen.value) {
         e.preventDefault()
         gotoOpen.value = false
@@ -394,6 +403,18 @@ const activeQueryFilters = computed(() => {
               </span>
             </nav>
 
+            <!-- Menú Móvil Táctil (lg:hidden) -->
+            <button
+              type="button"
+              class="lg:hidden inline-flex items-center gap-1.5 h-7 px-2.5 rounded-md border border-rule bg-paper/80 font-mono text-[11px] text-dim hover:text-ink hover:border-rule-strong active:scale-[0.96] transition-all cursor-pointer shrink-0"
+              :title="isEs ? 'Abrir menú de navegación' : 'Open navigation menu'"
+              :aria-label="isEs ? 'Menú de navegación' : 'Navigation menu'"
+              @click="mobileMenuOpen = true"
+            >
+              <AppIcon name="menu" :size="12" class="text-sig" />
+              <span class="uppercase font-semibold tracking-wider text-[10.5px]">{{ currentRoot || 'db' }}</span>
+            </button>
+
             <!-- Ruta / Breadcrumb -->
             <nav class="ruta flex items-center min-w-0 h-7 px-2.5 rounded-md border border-rule bg-paper/60 whitespace-nowrap overflow-hidden text-[11px] sm:text-[12px] font-mono truncate max-w-[280px] sm:max-w-none" aria-label="Ruta">
               <span class="w-1.5 h-1.5 rounded-full bg-sig mr-2 shrink-0 opacity-85" aria-hidden="true" />
@@ -419,6 +440,17 @@ const activeQueryFilters = computed(() => {
 
           <!-- Acciones Rápidas del Sistema + Dynamic Island Bencho -->
           <div class="barra-derecha flex items-center gap-1.5 shrink-0 ml-auto">
+            <!-- Búsqueda Rápida Móvil (md:hidden) -->
+            <button
+              type="button"
+              class="md:hidden inline-flex items-center justify-center w-7 h-7 rounded-md border border-rule bg-paper/60 text-dim cursor-pointer transition-all duration-150 hover:border-rule-strong hover:text-ink hover:bg-hover active:scale-[0.96]"
+              :title="isEs ? 'Buscar (⌘K o /)' : 'Search (⌘K or /)'"
+              :aria-label="isEs ? 'Buscar' : 'Search'"
+              @click="gotoOpen = true"
+            >
+              <AppIcon name="search" :size="12" />
+            </button>
+
             <!-- Dynamic Island Interactiva 1:1 Bencho (Telemetría PG-17) -->
             <div class="hidden xl:flex items-center">
               <UiDynamicIsland
@@ -591,32 +623,135 @@ const activeQueryFilters = computed(() => {
         </div>
       </footer>
 
-      <!-- Barra de Navegación Inferior Móvil Estilo App Nativa -->
-      <nav class="mobile-nav lg:hidden flex-none fixed bottom-0 inset-x-0 z-50 h-[60px] pb-[env(safe-area-inset-bottom,0)] bg-surface/90 backdrop-blur-xl border-t border-rule flex items-center justify-around px-1 shadow-[0_-8px_24px_rgba(0,0,0,0.35)]" aria-label="Navegación rápida móvil">
-        <NuxtLink
-          v-for="s in navSections"
-          :key="s.root"
-          :to="routeFor(s.to)"
-          class="mobile-nav-item flex flex-col items-center justify-center flex-1 h-full text-dim no-underline transition-all duration-150 relative group py-1"
-          :class="{ 'active !text-ink font-medium': currentRoot === s.root }"
+    <!-- Modal Drawer de Navegación Móvil (Linear 2026 / Bencho UI) -->
+    <Teleport to="body">
+      <Transition name="m-drawer">
+        <div
+          v-if="mobileMenuOpen"
+          class="fixed inset-0 z-[120] flex flex-col justify-end sm:justify-center p-3 sm:p-6 bg-black/70 backdrop-blur-md"
+          role="dialog"
+          aria-modal="true"
+          :aria-label="isEs ? 'Menú de navegación' : 'Navigation menu'"
+          @click.self="mobileMenuOpen = false"
         >
-          <span
-            v-if="currentRoot === s.root"
-            class="mn-indicator absolute top-0 inset-x-4 h-[2px] bg-sig rounded-full"
-            aria-hidden="true"
-          />
-          <div
-            class="mn-icon-wrap flex items-center justify-center w-8 h-6 rounded-full transition-all duration-150"
-            :class="currentRoot === s.root ? 'text-sig' : 'text-dim group-hover:text-ink'"
-          >
-            <AppIcon :name="s.icon" :size="16" class="mn-icon" />
+          <div class="w-full max-w-[420px] mx-auto bg-paper border border-rule-strong rounded-2xl p-4 sm:p-5 shadow-2xl flex flex-col gap-4 max-h-[88vh] overflow-y-auto">
+            <!-- Cabecera del Drawer -->
+            <div class="flex items-center justify-between pb-3 border-b border-rule">
+              <div class="flex items-center gap-2 font-mono text-[11px]">
+                <span class="w-1.5 h-1.5 rounded-full bg-sig" />
+                <span class="font-bold text-ink uppercase tracking-wider">MATEO SONZOGNI // SISTEMA</span>
+              </div>
+              <button
+                type="button"
+                class="inline-flex items-center justify-center w-7 h-7 rounded-md border border-rule bg-paper text-dim hover:text-ink hover:border-rule-strong active:scale-[0.96] cursor-pointer"
+                :aria-label="isEs ? 'Cerrar menú' : 'Close menu'"
+                @click="mobileMenuOpen = false"
+              >
+                <AppIcon name="close" :size="12" />
+              </button>
+            </div>
+
+            <!-- Acceso Directo de Búsqueda ⌘K -->
+            <button
+              type="button"
+              class="flex items-center gap-2.5 h-9 px-3 rounded-xl border border-rule bg-surface/80 text-dim text-left cursor-pointer hover:border-rule-strong hover:text-ink transition-all active:scale-[0.99]"
+              @click="mobileMenuOpen = false; gotoOpen = true"
+            >
+              <AppIcon name="search" :size="13" class="text-faint" />
+              <span class="flex-1 text-[12px] font-sans text-dim">{{ isEs ? 'Buscar proyecto, stack, artículo…' : 'Search projects, stack, articles…' }}</span>
+              <kbd class="font-mono text-[10px] text-faint bg-paper px-1.5 py-0.5 rounded border border-rule">⌘K</kbd>
+            </button>
+
+            <!-- Secciones de Navegación (00 a 07) -->
+            <div class="flex flex-col gap-1 py-1" role="menu">
+              <NuxtLink
+                v-for="s in navSections"
+                :key="s.root"
+                :to="routeFor(s.to)"
+                class="flex items-center justify-between p-2.5 rounded-xl border no-underline transition-all active:scale-[0.98]"
+                :class="currentRoot === s.root
+                  ? 'bg-sig/10 border-sig/40 text-ink shadow-xs'
+                  : 'bg-paper/40 border-transparent text-dim hover:bg-hover hover:text-ink hover:border-rule'"
+                role="menuitem"
+                @click="mobileMenuOpen = false"
+              >
+                <div class="flex items-center gap-3 min-w-0">
+                  <div
+                    class="w-7 h-7 rounded-lg flex items-center justify-center border shrink-0 transition-colors"
+                    :class="currentRoot === s.root
+                      ? 'bg-sig border-sig text-on-sig font-bold'
+                      : 'bg-paper border-rule text-dim'"
+                  >
+                    <AppIcon :name="s.icon" :size="13" />
+                  </div>
+                  <div class="flex flex-col min-w-0">
+                    <div class="flex items-center gap-1.5">
+                      <span class="font-mono text-[10.5px] font-bold" :class="currentRoot === s.root ? 'text-sig' : 'text-dim'">
+                        {{ s.root === '' ? '00' : s.keyHint.padStart(2, '0') }}.
+                      </span>
+                      <span class="font-sans text-[13px] font-semibold text-ink truncate capitalize">
+                        {{ s.label.replace(/^0\d\s*·\s*/, '') }}
+                      </span>
+                    </div>
+                    <span class="font-sans text-[11px] text-faint truncate">{{ s.desc }}</span>
+                  </div>
+                </div>
+                <span class="font-mono text-[10.5px] px-2 py-0.5 rounded-md border shrink-0 ml-2" :class="currentRoot === s.root ? 'bg-sig/20 border-sig/40 text-sig font-bold' : 'bg-surface border-rule text-dim'">
+                  {{ s.badge }}
+                </span>
+              </NuxtLink>
+            </div>
+
+            <!-- Barra de Controles Rápidos del Sistema -->
+            <div class="pt-3 border-t border-rule flex items-center justify-between gap-2">
+              <!-- Idioma -->
+              <button
+                type="button"
+                class="flex-1 inline-flex items-center justify-center gap-1.5 h-8 px-2 rounded-lg border border-rule bg-paper font-mono text-[11px] text-dim hover:text-ink active:scale-[0.97]"
+                @click="toggleLocale"
+              >
+                <span :class="{ 'text-ink font-bold': isEs }">ES</span>
+                <span class="text-faint">/</span>
+                <span :class="{ 'text-ink font-bold': !isEs }">EN</span>
+              </button>
+
+              <!-- Tema -->
+              <button
+                type="button"
+                class="flex-1 inline-flex items-center justify-center gap-1.5 h-8 px-2 rounded-lg border border-rule bg-paper font-mono text-[11px] text-dim hover:text-ink active:scale-[0.97]"
+                @click="toggleTheme"
+              >
+                <AppIcon :name="theme === 'dark' ? 'sun' : 'moon'" :size="12" />
+                <span>{{ theme === 'dark' ? (isEs ? 'Claro' : 'Light') : (isEs ? 'Oscuro' : 'Dark') }}</span>
+              </button>
+
+              <!-- Audio Táctil -->
+              <button
+                type="button"
+                class="flex-1 inline-flex items-center justify-center gap-1.5 h-8 px-2 rounded-lg border border-rule bg-paper font-mono text-[11px] text-dim hover:text-ink active:scale-[0.97]"
+                :class="{ '!text-sig !border-sig/40': soundEnabled }"
+                @click="toggleSound"
+              >
+                <span class="text-[10px]">SFX</span>
+                <span>{{ soundEnabled ? 'ON' : 'OFF' }}</span>
+              </button>
+
+              <!-- Hiperfoco -->
+              <button
+                type="button"
+                class="inline-flex items-center justify-center w-8 h-8 rounded-lg border border-rule bg-paper text-dim hover:text-ink active:scale-[0.97]"
+                :class="{ '!text-sig !border-sig !bg-sig/10': isHyperfocus }"
+                :title="isEs ? 'Modo Hiperfoco' : 'Hyperfocus Mode'"
+                @click="mobileMenuOpen = false; toggleHyperfocus()"
+              >
+                <AppIcon name="zap" :size="13" />
+              </button>
+            </div>
           </div>
-          <span class="mn-label text-[10px] font-mono mt-0.5 tracking-tight transition-colors" :class="currentRoot === s.root ? 'text-ink font-semibold' : 'text-dim group-hover:text-ink'">
-            {{ s.shortLabel }}
-          </span>
-        </NuxtLink>
-      </nav>
-    </div>
+        </div>
+      </Transition>
+    </Teleport>
+  </div>
 
     <!-- Modal de Búsqueda Rápida / Goto -->
     <ExplorerGoto v-if="gotoOpen" @close="gotoOpen = false" />
@@ -713,9 +848,26 @@ kbd {
 .req { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 11px; }
 .keys { flex: none; margin-left: auto; display: flex; gap: 10px; align-items: center; flex-shrink: 0; }
 
-/* Mobile Bottom App Navigation (Oculto en Desktop) */
-.mobile-nav {
-  display: none;
+/* Transición del Drawer Móvil */
+.m-drawer-enter-active,
+.m-drawer-leave-active {
+  transition: opacity 0.22s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.m-drawer-enter-active > div,
+.m-drawer-leave-active > div {
+  transition: transform 0.26s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.22s ease;
+}
+.m-drawer-enter-from,
+.m-drawer-leave-to {
+  opacity: 0;
+}
+.m-drawer-enter-from > div {
+  transform: translateY(16px) scale(0.98);
+  opacity: 0;
+}
+.m-drawer-leave-to > div {
+  transform: translateY(12px) scale(0.98);
+  opacity: 0;
 }
 
 @media screen and (max-width: 900px) {
@@ -790,7 +942,7 @@ kbd {
   }
 
   .exp {
-    padding: 16px 12px calc(76px + env(safe-area-inset-bottom, 0px)) 12px !important;
+    padding: 16px 14px calc(24px + env(safe-area-inset-bottom, 0px)) 14px !important;
     overflow-y: auto !important;
     overflow-x: hidden !important;
     perspective: none;
@@ -799,76 +951,9 @@ kbd {
     box-sizing: border-box;
   }
 
-  /* Barra de Estado inferior se oculta en mobile en favor del Tab Bar */
+  /* Barra de Estado inferior se oculta en mobile */
   .estado {
     display: none !important;
-  }
-
-  /* Fixed Bottom Tab Bar: Ergonomía del pulgar, Safe Area, Blurring */
-  .mobile-nav {
-    display: flex;
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    height: calc(54px + env(safe-area-inset-bottom, 0px));
-    padding-bottom: env(safe-area-inset-bottom, 0px);
-    background: rgba(10, 10, 10, 0.94);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    border-top: 1px solid var(--d-rule-strong);
-    z-index: 100;
-    align-items: stretch;
-    justify-content: space-around;
-    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.4);
-  }
-  html[data-theme="light"] .mobile-nav {
-    background: rgba(247, 246, 242, 0.96);
-    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.08);
-  }
-
-  .mobile-nav-item {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 3px;
-    color: var(--d-dim);
-    text-decoration: none;
-    font-family: var(--font-mono);
-    font-size: 10px;
-    font-weight: 700;
-    letter-spacing: 0.02em;
-    position: relative;
-    padding: 6px 2px;
-    transition: all var(--d-dur) ease;
-    user-select: none;
-    -webkit-tap-highlight-color: transparent;
-  }
-  .mobile-nav-item:active {
-    background: var(--d-hover);
-    transform: scale(0.96);
-  }
-  .mobile-nav-item.active {
-    color: var(--d-sig);
-  }
-  .mn-icon {
-    font-size: 17px;
-    transition: transform 0.15s ease;
-  }
-  .mobile-nav-item.active .mn-icon {
-    transform: translateY(-1px);
-    color: var(--d-sig);
-  }
-  .mn-indicator {
-    position: absolute;
-    top: 0;
-    left: 18%;
-    right: 18%;
-    height: 2px;
-    background: var(--d-sig);
-    border-radius: 0 0 2px 2px;
   }
 }
 

@@ -19,7 +19,7 @@ export default defineConfig({
       command: 'pnpm start:api',
       url: 'http://localhost:3001/api/schema',
       reuseExistingServer: true,
-      timeout: 30000,
+      timeout: 60000,
       env: {
         DATABASE_URL: process.env.DATABASE_URL || 'postgresql://portfolio:portfolio@localhost:5432/portfolio?schema=public',
         API_PORT: '3001',
@@ -30,7 +30,7 @@ export default defineConfig({
       command: 'pnpm dev',
       url: 'http://localhost:3000',
       reuseExistingServer: true,
-      timeout: 60000,
+      timeout: 120000,
       env: {
         NUXT_PUBLIC_API_BASE: 'http://localhost:3001/api',
       },

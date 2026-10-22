@@ -7,10 +7,12 @@ const props = withDefaults(defineProps<{
   label?: string
   copiedLabel?: string
   variant?: 'pill' | 'field'
+  size?: 'sm' | 'md'
 }>(), {
   label: 'Copy',
   copiedLabel: 'Copied',
   variant: 'pill',
+  size: 'sm',
 })
 
 const copied = ref(false)
@@ -60,10 +62,13 @@ onBeforeUnmount(() => {
 <template>
   <button
     type="button"
-    class="cpy inline-flex items-center gap-2 rounded-lg border px-2.5 h-8 font-mono text-[11px] font-medium select-none cursor-pointer transition-all duration-200 focus-visible:outline-2 focus-visible:outline-sig focus-visible:outline-offset-2 active:scale-[0.97]"
-    :class="copied
-      ? 'border-green/40 bg-green/10 text-green'
-      : 'border-rule bg-surface-raised/80 text-ink/85 hover:text-ink hover:border-rule-strong hover:bg-hover'"
+    class="cpy inline-flex items-center gap-2 rounded-lg border font-mono font-medium select-none cursor-pointer transition-all duration-200 focus-visible:outline-2 focus-visible:outline-sig focus-visible:outline-offset-2 active:scale-[0.97]"
+    :class="[
+      size === 'md' ? 'h-9 px-3.5 text-[12px]' : 'h-8 px-2.5 text-[11px]',
+      copied
+        ? 'border-green/40 bg-green/10 text-green'
+        : 'border-rule bg-surface-raised/80 text-ink/85 hover:text-ink hover:border-rule-strong hover:bg-hover'
+    ]"
     :data-done="copied || undefined"
     :aria-label="copied ? copiedLabel : `${label}: ${text}`"
     @click.stop="handleCopy"

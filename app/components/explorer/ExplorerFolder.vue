@@ -152,20 +152,20 @@ const activeSpecialty = ref<SpecialtyKey>('frontend')
 const specialtyOptions = computed(() => [
   {
     value: 'frontend',
-    label: isEs.value ? 'Frontend & Creative' : 'Frontend & Creative',
-    shortLabel: 'Frontend',
+    label: 'Frontend & Creative',
+    shortLabel: 'Front',
     icon: 'zap',
   },
   {
     value: 'architecture',
     label: isEs.value ? 'Arquitectura & DB' : 'Architecture & DB',
-    shortLabel: isEs.value ? 'Arquitectura' : 'Architecture',
+    shortLabel: isEs.value ? 'Arqui' : 'Arch',
     icon: 'db',
   },
   {
     value: 'ai',
     label: isEs.value ? 'Agentes & IA' : 'Agents & AI',
-    shortLabel: isEs.value ? 'Agentes IA' : 'AI Agents',
+    shortLabel: isEs.value ? 'IA' : 'AI',
     icon: 'target',
   },
 ])
@@ -791,11 +791,11 @@ function openExternal(url?: string | null) {
           <div class="relative z-10 flex flex-col h-full justify-between gap-4 sm:gap-5">
             <!-- Barra superior: Estado en Vivo + Ubicación + Latencia -->
             <div class="flex flex-wrap items-center justify-between gap-2.5 pb-3 border-b border-rule">
-              <div class="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-paper/90 border border-rule font-mono text-[11px] text-ink shadow-xs">
-                <span class="w-1.5 h-1.5 rounded-full bg-green shadow-[0_0_6px_var(--d-green)]" />
-                <span class="text-ink font-semibold tracking-wide">{{ homeProfileStatus }}</span>
+              <div class="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-paper/90 border border-rule font-mono text-[11px] text-ink shadow-xs whitespace-nowrap">
+                <span class="w-1.5 h-1.5 rounded-full bg-green shadow-[0_0_6px_var(--d-green)] shrink-0" />
+                <span class="text-ink font-semibold tracking-wide shrink-0">{{ homeProfileStatus }}</span>
                 <span class="text-faint">·</span>
-                <span class="text-dim">Paraná / Patagonia, AR</span>
+                <span class="text-dim shrink-0"><span class="hidden sm:inline">Patagonia · </span>Paraná, AR</span>
               </div>
               <div class="hidden sm:inline-flex items-center gap-2 font-mono text-[11px] text-dim">
                 <span class="text-sig font-semibold">UTC-3</span>
@@ -805,11 +805,11 @@ function openExternal(url?: string | null) {
             </div>
 
             <!-- Titular Monumental con Scramble Cinético -->
-            <div class="flex flex-col gap-2">
+            <div class="flex flex-col items-start gap-2">
               <div class="flex items-center gap-2">
-                <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-sig/10 border border-sig/30 text-sig font-mono text-[10.5px] font-semibold uppercase tracking-wider">
-                  <span class="w-1.5 h-1.5 rounded-full bg-sig" />
-                  {{ homeProfileRole }}
+                <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-sig/10 border border-sig/30 text-sig font-mono text-[10.5px] font-semibold uppercase tracking-wider w-fit">
+                  <span class="w-1.5 h-1.5 rounded-full bg-sig shrink-0" />
+                  <span>{{ homeProfileRole }}</span>
                 </span>
               </div>
 
@@ -819,9 +819,8 @@ function openExternal(url?: string | null) {
               >
                 <span>{{ homeHeadlineWords[0] }}</span>
                 <span>{{ homeHeadlineWords[1] }}</span>
-                <span class="inline-flex items-baseline">
-                  <span class="text-ink underline decoration-sig decoration-2 underline-offset-[6px] transition-all duration-200 group-hover/title:decoration-[3px]">{{ homeHeadlineWords[2] }}</span>
-                  <span class="text-sig ml-[1px] inline-block transition-transform duration-200 group-hover/title:scale-125 group-hover/title:translate-x-0.5">.</span>
+                <span class="inline-flex items-baseline relative">
+                  <span class="border-b-2 border-sig pb-0.5 transition-colors duration-200">{{ homeHeadlineWords[2] }}</span><span class="text-sig inline-block ml-0.5 font-bold transition-transform duration-200 group-hover/title:scale-125 group-hover/title:translate-x-0.5">.</span>
                 </span>
               </h1>
             </div>
@@ -829,14 +828,14 @@ function openExternal(url?: string | null) {
             <!-- Micro-Pitch Interactivo con Switch de Especialidad (Bencho UI) -->
             <div class="flex flex-col gap-3 rounded-xl border border-rule/90 bg-surface/70 backdrop-blur-md p-3.5 sm:p-4 shadow-xs">
               <!-- Selector Segmentado Bencho UI -->
-              <div class="flex flex-wrap items-center justify-between gap-2">
+              <div class="flex flex-wrap items-center justify-between gap-2 overflow-x-auto no-scrollbar max-w-full">
                 <UiSegmentedSwitch
                   v-model="activeSpecialty"
                   :options="specialtyOptions"
                   :aria-label="isEs ? 'Especialidad técnica' : 'Technical specialty'"
                   size="sm"
                 />
-                <span class="font-mono text-[9.5px] px-2 py-0.5 rounded bg-paper/90 border border-rule text-sig font-bold tracking-wider uppercase">
+                <span class="font-mono text-[9.5px] px-2 py-0.5 rounded bg-paper/90 border border-rule text-sig font-bold tracking-wider uppercase shrink-0">
                   {{ currentSpecialty.spec }}
                 </span>
               </div>
@@ -886,6 +885,7 @@ function openExternal(url?: string | null) {
               </NuxtLink>
 
               <UiCopyPill
+                size="md"
                 text="mateogabus@gmail.com"
                 :label="isEs ? 'Copiar email' : 'Copy email'"
                 :copied-label="isEs ? '¡Email copiado!' : 'Email copied!'"
@@ -936,17 +936,17 @@ function openExternal(url?: string | null) {
         </UiSpotlightCard>
 
         <!-- Fila 2: Credencial 3D HoloCard + Topología en Vivo + Schema X-Ray -->
-        <div class="lg:col-span-4 surface-10k rounded-2xl p-4 flex flex-col justify-between gap-3">
+        <UiSpotlightCard as="article" class="lg:col-span-4 surface-10k rounded-2xl p-4 flex flex-col justify-between gap-2 min-h-[260px]">
           <div class="flex items-center justify-between font-mono text-[10.5px] text-dim">
             <span class="flex items-center gap-2 font-medium text-ink">
               <span class="w-1.5 h-1.5 rounded-full bg-green" />
               <span>{{ isEs ? 'Credencial Técnica' : 'Technical Credential' }}</span>
             </span>
-            <span class="text-faint">3D TILT</span>
+            <span class="px-2 py-0.5 rounded bg-paper/80 border border-rule font-mono text-[9.5px] text-dim uppercase">3D TILT</span>
           </div>
-          <div class="flex items-center justify-center py-1">
-            <UiHoloCard :max-tilt="12" class="w-[176px] rounded-xl overflow-hidden border border-rule bg-paper/90 p-1.5 group">
-              <div class="aspect-[4/4.5] rounded-lg overflow-hidden bg-surface relative">
+          <div class="flex-1 flex items-center justify-center py-0.5">
+            <UiHoloCard :max-tilt="12" class="w-[164px] rounded-xl overflow-hidden border border-rule bg-paper/90 p-1.5 group shadow-xs">
+              <div class="aspect-[4/4.2] rounded-lg overflow-hidden bg-surface relative">
                 <img
                   src="/media/profile/mateo-front.png"
                   alt="Mateo Gabriel Sonzogni"
@@ -957,16 +957,16 @@ function openExternal(url?: string | null) {
                   Design Eng · 2026
                 </span>
               </div>
-              <div class="pt-2 pb-0.5 px-1 flex items-center justify-between font-mono text-[10px] text-dim">
-                <span class="text-ink font-medium truncate">Mateo Sonzogni</span>
-                <span class="text-sig">✓</span>
+              <div class="pt-1.5 pb-0.5 px-1 flex items-center justify-between font-mono text-[10px] text-dim">
+                <span class="text-ink font-semibold truncate">Mateo Sonzogni</span>
+                <span class="text-sig font-bold">✓</span>
               </div>
             </UiHoloCard>
           </div>
           <p class="m-0 font-mono text-[10px] text-dim text-center">
             {{ isEs ? 'Incliná el cursor para activar reflejo especular holográfico' : 'Tilt cursor to activate holographic specular glare' }}
           </p>
-        </div>
+        </UiSpotlightCard>
 
         <UiSpotlightCard as="article" class="lg:col-span-4 surface-10k rounded-2xl p-4 flex flex-col justify-between gap-2 min-h-[260px]">
           <div class="flex items-center justify-between">

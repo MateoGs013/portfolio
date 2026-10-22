@@ -37,7 +37,7 @@ const isContact = computed(() => props.detail.name.toLowerCase() === 'contact' |
 
 const canonicalFilePath = computed(() => {
   const t = props.detail.type.toLowerCase()
-  const n = props.detail.name.toLowerCase().replace(/\s+/g, '-')
+  const n = props.detail.name.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-')
   if (t.includes('project')) return `file://portfolio/projects/${n}.ts`
   if (t.includes('about')) return `file://portfolio/profile/mateo-cv.md`
   if (t.includes('contact')) return `file://portfolio/contact/channels.json`
@@ -382,7 +382,7 @@ const jsonContent = computed(() => {
           </button>
 
           <!-- Navegación entre vecinos -->
-          <nav v-if="prev || next" class="vecinos flex items-center gap-1.5 font-sans text-[12px] flex-wrap max-md:w-full max-md:justify-between" :aria-label="isEs ? 'Registros vecinos' : 'Adjacent records'">
+          <nav v-if="prev || next" class="vecinos flex items-center gap-1.5 font-sans text-[12px] flex-wrap max-md:w-full" :aria-label="isEs ? 'Registros vecinos' : 'Adjacent records'">
             <NuxtLink
               v-if="prev"
               :to="prev.to"
@@ -393,13 +393,6 @@ const jsonContent = computed(() => {
               <AppIcon name="chevron-left" :size="11" class="group-hover:text-ink transition-colors duration-150" />
               <span class="truncate">{{ prev.label }}</span>
             </NuxtLink>
-            <span
-              v-else
-              class="vecino off inline-flex items-center gap-1.5 max-w-[280px] max-md:max-w-none max-md:flex-1 rounded-md h-7.5 px-2.5 border border-rule bg-surface/40 text-faint opacity-50 cursor-default"
-              aria-hidden="true"
-            >
-              <AppIcon name="chevron-left" :size="11" />
-            </span>
 
             <NuxtLink
               v-if="next"
@@ -411,13 +404,6 @@ const jsonContent = computed(() => {
               <span class="truncate">{{ next.label }}</span>
               <AppIcon name="chevron-right" :size="11" class="group-hover:text-ink transition-colors duration-150" />
             </NuxtLink>
-            <span
-              v-else
-              class="vecino off inline-flex items-center gap-1.5 max-w-[280px] max-md:max-w-none max-md:flex-1 rounded-md h-7.5 px-2.5 border border-rule bg-surface/40 text-faint opacity-50 cursor-default"
-              aria-hidden="true"
-            >
-              <AppIcon name="chevron-right" :size="11" />
-            </span>
           </nav>
         </div>
       </ExplorerHeader>

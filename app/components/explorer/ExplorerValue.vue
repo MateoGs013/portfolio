@@ -152,6 +152,8 @@ function formatMetricKey(key: string | number): string {
             </template>
           </span>
           <span v-if="String(k).toLowerCase().includes('score') && typeof val === 'number'" class="font-mono text-[9px] text-faint shrink-0">/100</span>
+          <span v-else-if="(String(k).toLowerCase().includes('bundlesize') || String(k).toLowerCase().includes('sizekb')) && typeof val === 'number'" class="font-mono text-[9px] text-faint shrink-0">KB</span>
+          <span v-else-if="String(k).toLowerCase() === 'lcp' && typeof val === 'number'" class="font-mono text-[9px] text-faint shrink-0">s</span>
         </div>
       </div>
     </div>
