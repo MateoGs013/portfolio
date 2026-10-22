@@ -13,7 +13,7 @@ const orgSelect = { select: { slug: true, name: true } } satisfies Prisma.Projec
 const techSelect = { select: { slug: true, name: true }, orderBy: { name: 'asc' } } satisfies Prisma.Project$techsArgs
 
 /** GET /api/projects?stack=&year=&role=&featured=&status=&org= */
-projects.get('/projects', async (req, res) => {
+projects.get(['/projects', '/project'], async (req, res) => {
   const filters = readFilters(req, FILTERS)
   const org = typeof req.query.org === 'string' ? req.query.org : undefined
   if (org) {
@@ -61,10 +61,18 @@ projects.get('/projects', async (req, res) => {
 })
 
 /** GET /api/projects/:slug → record + subvistas (steps) + media + links */
-projects.get('/projects/:slug', async (req, res) => {
+projects.get(['/projects/:slug', '/project/:slug'], async (req, res) => {
+  const reqSlug = Array.isArray(req.params.slug) ? req.params.slug[0] ?? '' : String(req.params.slug ?? '')
+  const altSlug = reqSlug === 'arg-piscinas' ? 'argpiscinas' : reqSlug === 'argpiscinas' ? 'arg-piscinas' : reqSlug
+
   try {
-    const data = await db.project.findUnique({
-      where: { slug: req.params.slug },
+    const data = await db.project.findFirst({
+      where: {
+        OR: [
+          { slug: reqSlug },
+          { slug: altSlug },
+        ],
+      },
       include: {
         org: orgSelect,
         techs: techSelect,
@@ -78,7 +86,7 @@ projects.get('/projects/:slug', async (req, res) => {
     })
 
     if (!data) {
-      const fb = fallbackProjects.find(p => p.slug === req.params.slug)
+      const fb = fallbackProjects.find(p => p.slug === reqSlug || p.slug === altSlug)
       if (fb) {
         res.json(envelope(fb))
         return
@@ -88,7 +96,7 @@ projects.get('/projects/:slug', async (req, res) => {
     }
     res.json(envelope(data))
   } catch {
-    const fb = fallbackProjects.find(p => p.slug === req.params.slug)
+    const fb = fallbackProjects.find(p => p.slug === reqSlug || p.slug === altSlug)
     if (fb) {
       res.json(envelope(fb))
       return

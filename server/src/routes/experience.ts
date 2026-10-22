@@ -9,8 +9,8 @@ export const experience = Router()
 
 const FILTERS = ['stack', 'org'] as const
 
-/** GET /api/experience?stack=&org= — ordenada de la más reciente a la más vieja. */
-experience.get('/experience', async (req, res) => {
+/** GET /api/experience (or /api/experiences) — ordenada de la más reciente a la más vieja. */
+experience.get(['/experience', '/experiences'], async (req, res) => {
   const filters = readFilters(req, FILTERS)
 
   try {
@@ -42,11 +42,12 @@ experience.get('/experience', async (req, res) => {
   }
 })
 
-/** GET /api/experience/:slug → detalle de una etapa de experiencia por su slug. */
-experience.get('/experience/:slug', async (req, res) => {
+/** GET /api/experience/:slug (or /api/experiences/:slug) → detalle de una etapa de experiencia por su slug. */
+experience.get(['/experience/:slug', '/experiences/:slug'], async (req, res) => {
+  const slug = Array.isArray(req.params.slug) ? req.params.slug[0] ?? '' : String(req.params.slug ?? '')
   try {
     const data = await db.experience.findUnique({
-      where: { slug: req.params.slug },
+      where: { slug },
       include: {
         org: { select: { slug: true, name: true, city: true } },
         techs: { select: { slug: true, name: true }, orderBy: { name: 'asc' } },
@@ -54,7 +55,7 @@ experience.get('/experience/:slug', async (req, res) => {
     })
 
     if (!data) {
-      const fb = fallbackExperience.find(e => e.slug === req.params.slug)
+      const fb = fallbackExperience.find(e => e.slug === slug)
       if (fb) {
         res.json(envelope(fb))
         return

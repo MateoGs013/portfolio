@@ -20,13 +20,13 @@ interface ApiResponse<T> {
 const STATIC_ROUTES: SitemapUrl[] = [
   { loc: '/', changefreq: 'daily', priority: '1.0' },
   { loc: '/projects', changefreq: 'daily', priority: '0.9' },
-  { loc: '/experiences', changefreq: 'weekly', priority: '0.8' },
+  { loc: '/experience', changefreq: 'weekly', priority: '0.8' },
   { loc: '/stack', changefreq: 'weekly', priority: '0.8' },
   { loc: '/orgs', changefreq: 'weekly', priority: '0.7' },
   { loc: '/articles', changefreq: 'daily', priority: '0.9' },
-  { loc: '/schema', changefreq: 'monthly', priority: '0.6' },
   { loc: '/about', changefreq: 'monthly', priority: '0.7' },
   { loc: '/contact', changefreq: 'monthly', priority: '0.7' },
+  { loc: '/lab', changefreq: 'weekly', priority: '0.8' },
 ]
 
 function formatDate(dateInput?: string | Date): string {
@@ -74,7 +74,7 @@ export default defineEventHandler(async (event) => {
 
   const [projects, experiences, stack, orgs, articles] = await Promise.all([
     fetchCollection('/projects'),
-    fetchCollection('/experiences'),
+    fetchCollection('/experience'),
     fetchCollection('/stack'),
     fetchCollection('/orgs'),
     fetchCollection('/articles'),
@@ -88,7 +88,7 @@ export default defineEventHandler(async (event) => {
       priority: '0.8',
     })),
     ...experiences.map(e => ({
-      loc: `/experiences/${e.slug}`,
+      loc: `/experience/${e.slug}`,
       lastmod: formatDate(e.updatedAt),
       changefreq: 'monthly' as const,
       priority: '0.7',

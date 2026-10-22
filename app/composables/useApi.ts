@@ -69,7 +69,8 @@ export function useApi() {
       return { ...body, request, status: res.status, ms: Math.round(performance.now() - t0) }
     }
     catch (err) {
-      const status = (err as { statusCode?: number, status?: number }).statusCode ?? (err as { status?: number }).status
+      const errObj = err as { statusCode?: number, status?: number, response?: { status?: number } }
+      const status = errObj.statusCode ?? errObj.status ?? errObj.response?.status
       throw createError({
         statusCode: status === 404 ? 404 : 502,
         statusMessage: status === 404 ? 'no existe' : 'el API no respondio',

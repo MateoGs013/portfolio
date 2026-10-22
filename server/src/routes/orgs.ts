@@ -6,7 +6,7 @@ import { fallbackOrgs } from '../fallbackData.js'
 export const orgs = Router()
 
 /** GET /api/orgs → lista de todas las organizaciones con conteo de proyectos y experiencias. */
-orgs.get('/orgs', async (_req, res) => {
+orgs.get(['/orgs', '/org'], async (_req, res) => {
   try {
     const data = await db.org.findMany({
       orderBy: { name: 'asc' },
@@ -31,10 +31,11 @@ orgs.get('/orgs', async (_req, res) => {
 /**
  * GET /api/orgs/:slug → la organización con sus proyectos y experiencias.
  */
-orgs.get('/orgs/:slug', async (req, res) => {
+orgs.get(['/orgs/:slug', '/org/:slug'], async (req, res) => {
+  const slug = Array.isArray(req.params.slug) ? req.params.slug[0] ?? '' : String(req.params.slug ?? '')
   try {
     const data = await db.org.findUnique({
-      where: { slug: req.params.slug },
+      where: { slug },
       include: {
         projects: {
           select: { slug: true, title: true, year: true },
@@ -47,7 +48,7 @@ orgs.get('/orgs/:slug', async (req, res) => {
       },
     })
     if (!data) {
-      const fb = fallbackOrgs[req.params.slug]
+      const fb = fallbackOrgs[slug]
       if (fb) {
         res.json(envelope(fb))
         return
@@ -57,7 +58,7 @@ orgs.get('/orgs/:slug', async (req, res) => {
     }
     res.json(envelope(data))
   } catch {
-    const fb = fallbackOrgs[req.params.slug]
+    const fb = fallbackOrgs[slug]
     if (fb) {
       res.json(envelope(fb))
       return

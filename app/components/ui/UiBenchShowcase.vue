@@ -93,10 +93,11 @@ const treeRoot = computed<TreeNode>(() => ({
 const dockItems = computed(() => [
   { key: 'home', label: isEs.value ? 'Inicio (db)' : 'Home (db)', icon: 'db', to: '/' },
   { key: 'projects', label: isEs.value ? 'Proyectos (06)' : 'Projects (06)', icon: 'folder', to: '/projects' },
-  { key: 'experience', label: isEs.value ? 'Experiencia (06)' : 'Experience (06)', icon: 'briefcase', to: '/experiences' },
+  { key: 'experience', label: isEs.value ? 'Experiencia (06)' : 'Experience (06)', icon: 'briefcase', to: '/experience' },
   { key: 'stack', label: 'Stack (22)', icon: 'code', to: '/stack' },
   { key: 'about', label: 'CV Harvard ATS', icon: 'user', to: '/about' },
   { key: 'contact', label: isEs.value ? 'Contacto' : 'Contact', icon: 'mail', to: '/contact' },
+  { key: 'lab', label: 'Lab UI (31)', icon: 'cpu', to: '/lab' },
 ])
 
 function onSelectFolderCard(item: { id: string }) {

@@ -69,7 +69,7 @@ La especialización de agentes satélites desacoplados del CMS principal permite
 }
 
 /** GET /api/articles?stack=&featured=&status= */
-articles.get('/articles', async (req, res) => {
+articles.get(['/articles', '/article'], async (req, res) => {
   const filters = readFilters(req, FILTERS)
 
   try {
@@ -109,8 +109,9 @@ articles.get('/articles', async (req, res) => {
 })
 
 /** GET /api/articles/:slug */
-articles.get('/articles/:slug', async (req, res) => {
-  const slug = req.params['slug']
+articles.get(['/articles/:slug', '/article/:slug'], async (req, res) => {
+  const rawSlug = req.params['slug']
+  const slug = Array.isArray(rawSlug) ? rawSlug[0] ?? '' : String(rawSlug ?? '')
   if (!slug) return res.status(400).json({ error: 'slug requerido' })
 
   try {
