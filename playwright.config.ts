@@ -24,6 +24,7 @@ export default defineConfig({
         DATABASE_URL: process.env.DATABASE_URL || 'postgresql://portfolio:portfolio@localhost:5432/portfolio?schema=public',
         API_PORT: '3001',
         PORT: '3001',
+        ADMIN_TOKEN: process.env.ADMIN_TOKEN || 'eYqFZFx0mqFXT6L2hFlTrUvYAfB-4ZU5',
       },
     },
     {

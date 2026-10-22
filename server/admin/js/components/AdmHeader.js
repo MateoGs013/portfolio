@@ -1,12 +1,12 @@
 // Componente Estructural: AdmHeader
-// Cabecera global de 52px con identidad minimalista, Command Palette trigger y breadcrumb
+// Cabecera global de 48px con identidad minimalista Linear 2026, Command Palette trigger y telemetría
 
 import { store } from '../store.js'
-import { MODELS } from '../config.js'
+import { MODELS, ICONS } from '../config.js'
 
 export const AdmHeader = {
   name: 'AdmHeader',
-  emits: ['openPalette', 'openHelp', 'logout'],
+  emits: ['openPalette', 'openHelp', 'openMenu', 'logout'],
   setup() {
     function logout() {
       store.token = ''
@@ -17,29 +17,45 @@ export const AdmHeader = {
     return {
       store,
       models: MODELS,
+      icons: ICONS,
       logout,
     }
   },
   template: `
-    <header class="h-[52px] bg-[#0c0d10] border-b border-white/10 px-4 sm:px-5 flex items-center justify-between shrink-0 select-none z-30">
+    <header class="h-12 bg-[#080808]/90 backdrop-blur-md border-b border-white/10 px-3 sm:px-4 flex items-center justify-between gap-2 shrink-0 select-none z-30">
       <!-- Identidad y Monograma -->
-      <div class="flex items-center gap-3 sm:gap-4 min-w-0">
-        <div class="flex items-center gap-2 sm:gap-2.5">
-          <div class="w-6 h-6 rounded bg-[#ff3e00] text-[#09090b] flex items-center justify-center font-bold text-xs font-mono-code tracking-tighter shrink-0">
+      <div class="flex items-center gap-2 sm:gap-3 min-w-0">
+        <div class="flex items-center gap-2 shrink-0">
+          <div class="w-6 h-6 rounded bg-[#ff3e00] text-[#09090b] flex items-center justify-center font-bold text-[11px] font-mono-code tracking-tight shrink-0 shadow-xs">
             MS
           </div>
-          <span class="text-xs font-bold text-white tracking-tight truncate">Mateo Sonzogni</span>
-          <span class="text-[10px] font-mono-code bg-white/5 text-zinc-400 px-1.5 py-0.5 rounded border border-white/10 shrink-0">
+          <span class="text-xs font-semibold text-white tracking-tight truncate hidden sm:inline">Mateo Sonzogni</span>
+          <span class="hidden sm:inline-block text-[10px] font-mono-code bg-white/5 text-zinc-400 px-1.5 py-0.5 rounded border border-white/10 shrink-0">
             CMS 2026
           </span>
         </div>
 
-        <span class="h-3.5 w-px bg-white/10 hidden sm:inline-block"></span>
+        <!-- Botón Menú Móvil Táctil (md:hidden) -->
+        <button
+          type="button"
+          @click="$emit('openMenu')"
+          class="md:hidden inline-flex items-center gap-1.5 h-7 px-2 rounded-md border border-white/15 bg-white/5 font-mono-code text-[11px] text-zinc-300 hover:text-white active:scale-[0.96] transition-all cursor-pointer max-w-[130px]"
+          aria-label="Abrir menú de navegación"
+        >
+          <span class="text-[#ff3e00] flex items-center shrink-0" v-html="icons.menu"></span>
+          <span class="uppercase font-semibold tracking-wider text-[10.5px] truncate">{{ store.section }}</span>
+        </button>
 
-        <!-- Status VPS -->
-        <div class="hidden md:flex items-center gap-1.5 text-[11px] font-mono-code text-zinc-400">
-          <span class="status-dot live"></span>
-          <span>VPS Coolify · Conectado</span>
+        <!-- Breadcrumb Activo Desktop (lg:flex) -->
+        <div class="hidden lg:flex items-center gap-2 h-7 px-2.5 rounded-md border border-white/10 bg-white/[0.03] font-mono-code text-[11px] text-zinc-400">
+          <span class="w-1.5 h-1.5 rounded-full bg-[#ff3e00] shrink-0"></span>
+          <span class="text-zinc-500">cms</span>
+          <span class="text-zinc-600">/</span>
+          <span class="text-white font-medium">{{ store.section }}</span>
+          <template v-if="store.current">
+            <span class="text-zinc-600">/</span>
+            <span class="text-zinc-300 truncate max-w-[140px]">{{ store.current.slug || store.current.title || store.current.key }}</span>
+          </template>
         </div>
       </div>
 
@@ -47,59 +63,68 @@ export const AdmHeader = {
       <button
         type="button"
         @click="$emit('openPalette')"
-        class="hidden sm:flex items-center gap-3 bg-[#14151b] hover:bg-[#1a1b24] border border-white/10 hover:border-white/20 text-zinc-400 hover:text-white px-3.5 py-1 rounded-md text-xs font-mono-code transition-all cursor-pointer shadow-inner"
-        title="Buscador global y atajos rápidos"
+        class="hidden sm:flex items-center gap-2.5 h-7 px-3 rounded-md border border-white/10 bg-white/[0.04] hover:bg-white/[0.08] hover:border-white/20 text-zinc-400 hover:text-white text-xs font-mono-code transition-all cursor-pointer shadow-xs active:scale-[0.99]"
+        title="Buscador global y atajos rápidos (⌘K)"
       >
-        <span class="flex items-center gap-1.5">
-          <svg class="adm-icon sm text-zinc-500" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-          <span class="text-zinc-500">Buscar o saltar a...</span>
-        </span>
-        <kbd class="text-[9.5px] bg-black/50 border border-white/10 px-1.5 py-0.2 rounded text-zinc-400">
+        <svg class="adm-icon sm text-zinc-500" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+        <span class="text-zinc-400 text-[11px]">Buscar o saltar a...</span>
+        <kbd class="text-[9.5px] bg-black/40 border border-white/10 px-1.5 py-0.2 rounded text-zinc-500 font-mono-code ml-1">
           Ctrl + K
         </kbd>
       </button>
 
-      <!-- Botón de Búsqueda Móvil -->
-      <button
-        type="button"
-        @click="$emit('openPalette')"
-        class="sm:hidden p-1.5 text-zinc-400 hover:text-white rounded bg-white/5 border border-white/10 cursor-pointer"
-        title="Buscar o saltar a..."
-      >
-        <svg class="adm-icon sm" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-      </button>
+      <!-- Acciones de Cabecera Derecha -->
+      <div class="flex items-center gap-1.5 sm:gap-2 text-xs">
+        <!-- Telemetría ACID en Vivo -->
+        <div class="hidden xl:flex items-center gap-2 h-7 px-2.5 rounded-md border border-white/10 bg-white/[0.02] font-mono-code text-[10.5px] text-zinc-400">
+          <span class="status-dot live"></span>
+          <span>PG-17 ACID</span>
+          <span class="text-zinc-600">·</span>
+          <span class="text-emerald-400 font-medium">ONLINE</span>
+        </div>
 
-      <!-- Enlaces y Acciones de Cabecera (Desktop) -->
-      <div class="hidden sm:flex items-center gap-2.5 text-xs">
+        <!-- Botón de Búsqueda Móvil (sm:hidden) -->
+        <button
+          type="button"
+          @click="$emit('openPalette')"
+          class="sm:hidden inline-flex items-center justify-center w-7 h-7 text-zinc-400 hover:text-white rounded-md bg-white/5 border border-white/10 cursor-pointer active:scale-[0.96]"
+          title="Buscar (Ctrl+K)"
+        >
+          <svg class="adm-icon sm" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+        </button>
+
+        <!-- Enlace al Portafolio Público -->
         <a
           href="/"
           target="_blank"
-          class="btn-secondary !h-[28px] !text-[11px] !px-2.5"
+          class="inline-flex items-center gap-1.5 h-7 px-2.5 rounded-md border border-white/10 bg-white/[0.04] hover:bg-white/[0.08] hover:border-white/20 text-zinc-300 hover:text-white font-mono-code text-[11px] no-underline transition-all active:scale-[0.98]"
           title="Abrir portafolio en una nueva pestaña"
         >
-          <span>Ver Portafolio</span>
-          <svg class="adm-icon sm" viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+          <span class="hidden sm:inline">Ver Portafolio</span>
+          <span class="sm:hidden">Web</span>
+          <span class="text-zinc-500 font-bold">↗</span>
         </a>
 
+        <!-- Guía Operativa -->
         <button
           type="button"
           @click="$emit('openHelp')"
-          class="btn-secondary !h-[28px] !text-[11px] !px-2"
-          title="Guía operativa para colaboradores"
+          class="hidden sm:inline-flex items-center justify-center h-7 px-2 rounded-md border border-white/10 bg-white/[0.04] hover:bg-white/[0.08] text-zinc-400 hover:text-white font-mono-code text-[11px] cursor-pointer transition-all active:scale-[0.96]"
+          title="Guía operativa y atajos (?)"
         >
-          <span>Guía Asistente</span>
+          <span>?</span>
         </button>
 
+        <!-- Salir -->
         <button
           type="button"
           @click="logout"
-          class="text-zinc-500 hover:text-red-400 text-xs px-2 py-1 transition-colors cursor-pointer"
+          class="inline-flex items-center h-7 px-2 text-zinc-500 hover:text-red-400 text-xs font-mono-code transition-colors cursor-pointer"
           title="Cerrar sesión administrativa"
         >
           Salir
         </button>
       </div>
     </header>
-
   `,
 }

@@ -19,6 +19,8 @@ import { LightboxModal } from './modals/LightboxModal.js'
 import { AdmToast } from './ui/AdmToast.js'
 import { AdmAiTrace } from './AdmAiTrace.js'
 
+const { ref } = window.Vue
+
 export const AdmApp = {
   name: 'AdmApp',
   components: {
@@ -40,12 +42,15 @@ export const AdmApp = {
     AdmAiTrace,
   },
   setup() {
+    const mobileMenuOpen = ref(false)
+
     return {
       store,
+      mobileMenuOpen,
     }
   },
   template: `
-    <div class="h-screen w-screen overflow-hidden bg-[#08090a] text-[#f4f4f6] font-sans antialiased flex flex-col select-none">
+    <div class="h-screen w-screen overflow-hidden bg-[#080808] text-[#f4f4f6] font-sans antialiased flex flex-col select-none">
       
       <!-- PANTALLA DE LOGIN -->
       <AdmLogin v-if="!store.token" />
@@ -56,6 +61,7 @@ export const AdmApp = {
         <AdmHeader
           @openPalette="store.modals.commandPalette = true"
           @openHelp="store.modals.help = true"
+          @openMenu="mobileMenuOpen = true"
         />
 
         <!-- 2. Cuerpo Principal con Navegación y Lienzo -->
@@ -63,8 +69,8 @@ export const AdmApp = {
           <!-- Sidebar Fijo (240px) en Desktop -->
           <AdmSidebar />
 
-          <!-- Lienzo Principal Dinámico con padding inferior en móvil para bottom nav -->
-          <main class="flex-1 flex overflow-hidden bg-[#08090a] pb-[62px] md:pb-0">
+          <!-- Lienzo Principal Dinámico -->
+          <main class="flex-1 flex overflow-hidden bg-[#080808]">
             <!-- A. Modo Dashboard: Contenedor fluido completo -->
             <AdmDashboard v-if="store.section === 'dashboard'" />
 
@@ -85,8 +91,13 @@ export const AdmApp = {
           </main>
         </div>
 
-        <!-- 3. Barra de Navegación Inferior Móvil (Redes Sociales Style) -->
-        <AdmBottomNav />
+        <!-- 3. Drawer Táctil Móvil Bajo Demanda (sin barra fija de 62px) -->
+        <AdmBottomNav
+          :open="mobileMenuOpen"
+          @close="mobileMenuOpen = false"
+          @openPalette="store.modals.commandPalette = true"
+          @openHelp="store.modals.help = true"
+        />
       </div>
 
       <!-- ════════════════════════════════════════════════════════════════════ -->
