@@ -1,9 +1,10 @@
 import { Router, type Request, type Response } from 'express'
 import { forwardToEros, getParamId } from './proxy.js'
+import { generateContentPostHeuristic } from './fallbackContentData.js'
 
 export const radarRouter = Router()
 
-const fallbackTrends = [
+export const fallbackTrends = [
   {
     id: 'trend_pgvector_hn',
     title: 'PostgreSQL 17 as a Universal Vector and Relational Database in Production',
@@ -15,7 +16,7 @@ const fallbackTrends = [
     tags: ['postgresql', 'pgvector', 'database', 'rag', 'architecture'],
     detected_at: new Date().toISOString(),
     status: 'DISCOVERED',
-    post_id: null,
+    post_id: null as string | null,
   },
   {
     id: 'trend_fastapi_agents_devto',
@@ -28,7 +29,7 @@ const fallbackTrends = [
     tags: ['fastapi', 'python', 'agents', 'architecture', 'api'],
     detected_at: new Date(Date.now() - 3600000).toISOString(),
     status: 'DISCOVERED',
-    post_id: null,
+    post_id: null as string | null,
   },
   {
     id: 'trend_nuxt4_perf_gh',
@@ -41,7 +42,7 @@ const fallbackTrends = [
     tags: ['nuxt', 'vue', 'performance', 'typescript', 'frontend'],
     detected_at: new Date(Date.now() - 7200000).toISOString(),
     status: 'DISCOVERED',
-    post_id: null,
+    post_id: null as string | null,
   },
 ]
 
@@ -85,19 +86,64 @@ radarRouter.get('/trends/:id', async (req: Request, res: Response) => {
 /** PATCH /api/admin/radar/trends/:id/status - Actualiza estado de tendencia */
 radarRouter.patch('/trends/:id/status', async (req: Request, res: Response) => {
   const id = getParamId(req)
+  if (!id) {
+    res.status(400).json({ error: 'ID de tendencia requerido' })
+    return
+  }
   const result = await forwardToEros(`api/radar/trends/${encodeURIComponent(id)}/status`, {
     method: 'PATCH',
     body: JSON.stringify(req.body),
   })
+  if (result.ok) {
+    return res.status(result.status).json(result.data)
+  }
+  const trend = fallbackTrends.find(t => t.id === id)
+  if (trend && req.body?.status) {
+    trend.status = req.body.status
+    return res.json({ ok: true, id, status: req.body.status })
+  }
   res.status(result.status).json(result.data)
 })
 
 /** POST /api/admin/radar/trends/:id/generate - Genera post omnicanal a partir de una tendencia */
 radarRouter.post('/trends/:id/generate', async (req: Request, res: Response) => {
   const id = getParamId(req)
+  if (!id) {
+    res.status(400).json({ error: 'ID de tendencia requerido' })
+    return
+  }
   const result = await forwardToEros(`api/radar/trends/${encodeURIComponent(id)}/generate`, {
     method: 'POST',
     body: JSON.stringify(req.body),
   })
-  res.status(result.status).json(result.data)
+  if (result.ok) {
+    return res.status(result.status).json(result.data)
+  }
+
+  // Fallback heurístico
+  const trend = fallbackTrends.find(t => t.id === id)
+  if (!trend) {
+    res.status(404).json({ error: 'Tendencia no encontrada' })
+    return
+  }
+  const angle = req.body?.custom_angle || trend.engineering_angle
+  const post = generateContentPostHeuristic({
+    topic: trend.title,
+    pillar: req.body?.pillar || 'TECHNICAL_BREAKDOWN',
+    project_slug: req.body?.project_slug,
+    custom_angle: angle,
+    key_points: [
+      `Referencia original: ${trend.url}`,
+      `Síntesis: ${trend.summary}`,
+      `Ángulo de ingeniería: ${angle}`,
+    ],
+  })
+  trend.status = 'GENERATED'
+  trend.post_id = post.id
+
+  res.json({
+    ok: true,
+    trend_id: id,
+    post,
+  })
 })

@@ -117,4 +117,75 @@ test.describe('Admin Console 2026 Audit', () => {
     // Screenshot Job Hunter in action
     await page.screenshot({ path: 'tests/e2e/screenshots/admin-job-hunter.png' })
   })
+
+  test('Contenido Omnicanal renders posts, platform tabs, and carousel preview', async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 })
+    await page.goto('http://localhost:3001/admin', { waitUntil: 'networkidle' })
+
+    // Login
+    const devTokenBtn = page.locator('button:has-text("dev-token rápido")')
+    if (await devTokenBtn.isVisible()) {
+      await devTokenBtn.click()
+    } else {
+      await page.fill('input[type="password"], input[type="text"]', 'dev-token')
+      await page.click('button[type="submit"]')
+    }
+
+    await expect(page.locator('text=Panel Ejecutivo y Telemetría')).toBeVisible({ timeout: 10000 })
+
+    // Click Contenido Omnicanal in sidebar
+    await page.click('aside button:has-text("Contenido Omnicanal")')
+
+    // Wait for Content view to load
+    await expect(page.locator('text=Gestión de Contenido Omnicanal')).toBeVisible({ timeout: 10000 })
+    await page.waitForTimeout(500)
+
+    // Verify platform tabs and action buttons
+    await expect(page.locator('button:has-text("LinkedIn Post")')).toBeVisible()
+    await expect(page.locator('button:has-text("Hilo de X")')).toBeVisible()
+    await expect(page.locator('button:has-text("Dev.to Markdown")')).toBeVisible()
+    await expect(page.locator('button:has-text("Carrusel PDF")')).toBeVisible()
+    await expect(page.locator('button:has-text("Ver Carrusel Web")')).toBeVisible()
+
+    // Screenshot Content Omnicanal
+    await page.screenshot({ path: 'tests/e2e/screenshots/admin-content-omnichannel.png' })
+  })
+
+  test('TrendRadar renders technical trends and allows 1-click post generation', async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 })
+    await page.goto('http://localhost:3001/admin', { waitUntil: 'networkidle' })
+
+    // Login
+    const devTokenBtn = page.locator('button:has-text("dev-token rápido")')
+    if (await devTokenBtn.isVisible()) {
+      await devTokenBtn.click()
+    } else {
+      await page.fill('input[type="password"], input[type="text"]', 'dev-token')
+      await page.click('button[type="submit"]')
+    }
+
+    await expect(page.locator('text=Panel Ejecutivo y Telemetría')).toBeVisible({ timeout: 10000 })
+
+    // Click TrendRadar in sidebar
+    await page.click('aside button:has-text("TrendRadar (Eros)")')
+
+    // Wait for Radar view to load
+    await expect(page.locator('text=TrendRadar · Exploración de Tendencias')).toBeVisible({ timeout: 10000 })
+    await page.waitForTimeout(500)
+
+    // Verify trends list has items
+    const trendItems = page.locator('aside .cursor-pointer')
+    await expect(trendItems.first()).toBeVisible()
+
+    // Select first trend
+    await trendItems.first().click()
+    await page.waitForTimeout(300)
+
+    // Verify engineering angle and generator box
+    await expect(page.locator('text=Ángulo de Ingeniería Sugerido')).toBeVisible()
+    await expect(page.locator('text=Generador Omnicanal de Publicación & Blog')).toBeVisible()
+
+    // Screenshot TrendRadar
+    await page.screenshot({ path: 'tests/e2e/screenshots/admin-trend-radar.png' })
+  })
 })
