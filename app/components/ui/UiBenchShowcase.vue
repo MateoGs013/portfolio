@@ -131,7 +131,7 @@ function onSelectDock(key: string) {
           {{ isEs ? 'Librería Propia // Sonzogni × Bencho UI v2.0' : 'Custom Library // Sonzogni × Bencho UI v2.0' }}
         </h2>
         <span class="hidden md:inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-surface-raised border border-rule font-mono text-[10px] text-dim">
-          <span>24 bloques Vue 3</span>
+          <span>28 bloques Vue 3</span>
           <span class="text-faint">·</span>
           <span>Spring Physics + Web Audio</span>
         </span>
@@ -149,7 +149,7 @@ function onSelectDock(key: string) {
           class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md border border-sig/40 bg-sig/10 hover:bg-sig hover:text-on-sig font-mono text-[10.5px] font-semibold text-sig transition-all cursor-pointer no-underline active:scale-[0.98]"
           :title="isEs ? 'Explorar catálogo completo de componentes interactivos' : 'Explore full interactive component catalog'"
         >
-          <span>{{ isEs ? 'Laboratorio UI (31) →' : 'UI Lab (31) →' }}</span>
+          <span>{{ isEs ? 'Laboratorio UI (28) →' : 'UI Lab (28) →' }}</span>
         </NuxtLink>
 
         <button

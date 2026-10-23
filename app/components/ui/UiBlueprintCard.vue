@@ -56,9 +56,10 @@ const k = computed(() => {
   return 2 ** ((50 - s) / 50)
 })
 
-const patternId = ref(`bpl-dots-${Math.random().toString(36).slice(2, 8)}`)
-const filterId = ref(`bpl-blur-${Math.random().toString(36).slice(2, 8)}`)
-const maskId = ref(`bpl-soft-${Math.random().toString(36).slice(2, 8)}`)
+const baseId = useId()
+const patternId = computed(() => `bpl-dots-${baseId}`)
+const filterId = computed(() => `bpl-blur-${baseId}`)
+const maskId = computed(() => `bpl-soft-${baseId}`)
 
 const timeouts: number[] = []
 

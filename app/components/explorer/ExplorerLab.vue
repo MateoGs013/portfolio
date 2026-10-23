@@ -29,6 +29,9 @@ import UiDynamicIsland from '~/components/ui/UiDynamicIsland.vue'
 import UiThinkingTrace from '~/components/ui/UiThinkingTrace.vue'
 import UiTreeView, { type TreeNode } from '~/components/ui/UiTreeView.vue'
 import UiTextBlurReveal from '~/components/ui/UiTextBlurReveal.vue'
+import UiProgressiveBlur from '~/components/ui/UiProgressiveBlur.vue'
+import UiResizablePanels from '~/components/ui/UiResizablePanels.vue'
+import UiCursorWorkList, { type CursorWorkItem } from '~/components/ui/UiCursorWorkList.vue'
 
 const { isEs } = usePortfolioLocale()
 const { isHyperfocus } = useHyperfocus()
@@ -40,14 +43,23 @@ const activeCategory = ref<Category>('all')
 const searchQuery = ref('')
 const copiedSnippet = ref<string | null>(null)
 
-const categories = computed(() => [
-  { value: 'all', label: isEs.value ? 'Todos (31)' : 'All (31)', count: 31 },
-  { value: 'springs', label: isEs.value ? 'Física & Resortes' : 'Springs & Physics', count: 7 },
-  { value: 'tactile', label: isEs.value ? 'Controles Táctiles' : 'Tactile Controls', count: 7 },
-  { value: 'spatial', label: isEs.value ? 'Spatial 3D & Canvas' : 'Spatial 3D & Canvas', count: 5 },
-  { value: 'surfaces', label: isEs.value ? 'Superficies & Lentes' : 'Surfaces & Optics', count: 6 },
-  { value: 'audio', label: isEs.value ? 'Audio & Trazas' : 'Audio & Traces', count: 6 },
-])
+const categories = computed(() => {
+  const allCount = catalog.length
+  const springsCount = catalog.filter(c => c.category === 'springs').length
+  const tactileCount = catalog.filter(c => c.category === 'tactile').length
+  const spatialCount = catalog.filter(c => c.category === 'spatial').length
+  const surfacesCount = catalog.filter(c => c.category === 'surfaces').length
+  const audioCount = catalog.filter(c => c.category === 'audio').length
+
+  return [
+    { value: 'all', label: isEs.value ? `Todos (${allCount})` : `All (${allCount})`, count: allCount },
+    { value: 'springs', label: isEs.value ? `Física & Resortes (${springsCount})` : `Springs & Physics (${springsCount})`, count: springsCount },
+    { value: 'tactile', label: isEs.value ? `Controles Táctiles (${tactileCount})` : `Tactile Controls (${tactileCount})`, count: tactileCount },
+    { value: 'spatial', label: isEs.value ? `Spatial 3D & Canvas (${spatialCount})` : `Spatial 3D & Canvas (${spatialCount})`, count: spatialCount },
+    { value: 'surfaces', label: isEs.value ? `Superficies & Lentes (${surfacesCount})` : `Surfaces & Optics (${surfacesCount})`, count: surfacesCount },
+    { value: 'audio', label: isEs.value ? `Audio & Trazas (${audioCount})` : `Audio & Traces (${audioCount})`, count: audioCount },
+  ]
+})
 
 // Componentes catalogados con metadatos
 interface CatalogItem {
@@ -122,6 +134,16 @@ const catalog: CatalogItem[] = [
     descEn: 'Tactile segmented control with sliding active pill calculating 3D translate matrix on click.',
     file: 'UiSegmentedSwitch.vue',
     tags: ['Morphing Pill', 'Accessible Tablist', 'Audio notch'],
+  },
+  {
+    id: 'resizable-panels',
+    name: 'UiResizablePanels',
+    tag: 'TACTILE SPLIT · SPRING SNAP',
+    category: 'springs',
+    descEs: 'Divisor de paneles interactivo con resistencia elástica, snap magnético bajo el umbral y control por teclado.',
+    descEn: 'Interactive split pane divider with spring resistance, magnetic snap shut under threshold, and keyboard navigation.',
+    file: 'UiResizablePanels.vue',
+    tags: ['Split Panels', 'Spring Snap', 'Keyboard Accessible'],
   },
 
   // 2. Controles Táctiles
@@ -236,6 +258,16 @@ const catalog: CatalogItem[] = [
     descEn: 'CAD architectural container drawing dot grid, guide rulers, and wireframe wipe before card reveal.',
     file: 'UiBlueprintCard.vue',
     tags: ['CAD Grid', 'Blueprint Reveal', 'Dimension Guide'],
+  },
+  {
+    id: 'cursor-work-list',
+    name: 'UiCursorWorkList',
+    tag: 'AWWWARDS KINETIC HOVER REEL',
+    category: 'spatial',
+    descEs: 'Lista interactiva de proyectos con carrete vertical de imágenes que sigue al cursor con física de resorte y tilt.',
+    descEn: 'Interactive work list with vertical image reel tracking cursor via damped spring physics and tilt.',
+    file: 'UiCursorWorkList.vue',
+    tags: ['Awwwards', 'Kinetic Reel', 'Spring Follow'],
   },
 
   // 4. Superficies & Lentes
@@ -371,6 +403,31 @@ const demoFolderItems = [
   { id: 'p3', title: 'Ynara IA', subtitle: 'Tesis Da Vinci', badge: 'WIP' },
 ]
 
+const demoWorkListItems = computed<CursorWorkItem[]>(() => [
+  {
+    slug: 'la-rucula',
+    num: '01',
+    title: 'La Rúcula',
+    role: 'Design Eng',
+    year: '2026',
+    status: 'LIVE',
+    cover: '/media/projects/la-rucula.png',
+    to: '/projects/la-rucula',
+    chips: ['Nuxt 4', 'GSAP'],
+  },
+  {
+    slug: 'arg-piscinas',
+    num: '02',
+    title: 'ARG Piscinas',
+    role: 'Fullstack CMS',
+    year: '2026',
+    status: 'LIVE',
+    cover: '/media/projects/arg-piscinas.png',
+    to: '/projects/arg-piscinas',
+    chips: ['Express 5', 'PostgreSQL 17'],
+  },
+])
+
 const demoThinkingSteps = computed(() => isEs.value ? [
   'Inicializando osciladores Web Audio API (frecuencia portadora 880 Hz).',
   'Resolviendo resortes amortiguados de segundo orden en requestAnimationFrame.',
@@ -424,13 +481,23 @@ function copyImport(componentName: string) {
   const snippet = `import { ${componentName} } from '~/components/ui'`
   if (import.meta.client && navigator.clipboard) {
     navigator.clipboard.writeText(snippet)
-    copiedSnippet.value = componentName
-    playSound('pop')
-    setTimeout(() => {
-      if (copiedSnippet.value === componentName) {
-        copiedSnippet.value = null
-      }
-    }, 1800)
+      .then(() => {
+        copiedSnippet.value = componentName
+        playSound('pop')
+        setTimeout(() => {
+          if (copiedSnippet.value === componentName) {
+            copiedSnippet.value = null
+          }
+        }, 1800)
+      })
+      .catch(() => {
+        copiedSnippet.value = componentName
+        setTimeout(() => {
+          if (copiedSnippet.value === componentName) {
+            copiedSnippet.value = null
+          }
+        }, 1800)
+      })
   }
 }
 
@@ -456,7 +523,7 @@ function onSlideConfirmed() {
             <span>{{ isEs ? '07 · LABORATORIO DE INTERFACES // SONZOGNI × BENCHO UI v2.0' : '07 · UI INTERACTION LAB // SONZOGNI × BENCHO UI v2.0' }}</span>
           </span>
           <span class="px-2 py-0.5 rounded-full bg-surface-raised border border-rule font-mono text-[10px] text-dim shrink-0">
-            31 Primitives
+            {{ catalog.length }} Primitives
           </span>
           <span v-if="isHyperfocus" class="px-2 py-0.5 rounded-full bg-sig/10 border border-sig text-sig font-mono text-[10px] font-semibold shrink-0">
             ZEN HYPERFOCUS
@@ -495,7 +562,7 @@ function onSlideConfirmed() {
             v-model="searchQuery"
             type="search"
             :placeholder="isEs ? 'Buscar componente (ej: spring, audio)...' : 'Search component (e.g. spring, audio)...'"
-            class="w-full h-8.5 pl-8 pr-3 rounded-lg border border-rule bg-surface/60 hover:bg-surface focus:bg-surface focus:border-sig text-ink font-mono text-[11px] outline-none transition-all placeholder:text-faint"
+            class="lab-search-input w-full h-8.5 pl-8 pr-3 rounded-lg border border-rule bg-surface/60 hover:bg-surface focus:bg-surface focus:border-sig text-ink font-mono text-[11px] outline-none transition-all placeholder:text-faint"
           >
           <AppIcon name="search" :size="13" class="absolute left-2.5 top-1/2 -translate-y-1/2 text-dim pointer-events-none" />
         </div>
@@ -543,7 +610,7 @@ function onSlideConfirmed() {
             <div class="flex items-center gap-1.5 shrink-0">
               <button
                 type="button"
-                class="inline-flex items-center gap-1 px-2 py-0.5 rounded border font-mono text-[10px] transition-all cursor-pointer"
+                class="copy-import-btn inline-flex items-center gap-1 px-2 py-0.5 rounded border font-mono text-[10px] transition-all cursor-pointer"
                 :class="copiedSnippet === item.name
                   ? 'border-green bg-green/10 text-green font-semibold'
                   : 'border-rule bg-paper/60 text-dim hover:text-ink hover:border-rule-strong hover:bg-hover active:scale-[0.97]'"
@@ -805,6 +872,65 @@ function onSlideConfirmed() {
                   :stagger-ms="40"
                   replay-on-click
                 />
+              </div>
+            </template>
+
+            <!-- 24. UiSpotlightCard -->
+            <template v-else-if="item.id === 'spotlight-card'">
+              <div class="w-full flex items-center justify-center py-2">
+                <UiSpotlightCard class="w-full max-w-[280px] p-4 rounded-xl border border-rule bg-surface/80 flex flex-col gap-2">
+                  <div class="flex items-center justify-between">
+                    <span class="font-mono text-[9.5px] uppercase tracking-wider text-sig">Radial Spotlight</span>
+                    <span class="w-1.5 h-1.5 rounded-full bg-sig" />
+                  </div>
+                  <span class="font-sans text-[13.5px] font-semibold text-ink">Cursor Proximity Glow</span>
+                  <span class="font-mono text-[10px] text-dim">Mové el cursor sobre la tarjeta para revelar el haz de luz</span>
+                </UiSpotlightCard>
+              </div>
+            </template>
+
+            <!-- 25. UiProgressiveBlur -->
+            <template v-else-if="item.id === 'progressive-blur'">
+              <div class="relative w-full max-w-[280px] h-36 rounded-xl border border-rule bg-surface/80 overflow-hidden flex flex-col justify-between p-3.5 select-none">
+                <div class="space-y-1 font-mono text-[10px] text-dim">
+                  <div class="text-ink font-semibold">Optical Camera-Depth Vignette</div>
+                  <div>6 capas progresivas con máscaras difuminadas.</div>
+                  <div>Disuelve los bordes del scroll de forma analógica.</div>
+                  <div class="text-sig">100% fijo sobre el borde de salida.</div>
+                </div>
+                <UiProgressiveBlur position="bottom" :height="44" :strength="50" />
+              </div>
+            </template>
+
+            <!-- 26. UiResizablePanels -->
+            <template v-else-if="item.id === 'resizable-panels'">
+              <div class="w-full max-w-[320px] h-36 rounded-xl border border-rule bg-surface/80 overflow-hidden">
+                <UiResizablePanels :initial-width="120" :min-width="90" :max-width="180" :shut-threshold="60">
+                  <template #sidebar>
+                    <div class="h-full p-2.5 font-mono text-[9.5px] text-dim flex flex-col gap-1 border-r border-rule bg-paper/50">
+                      <span class="text-sig font-bold">SIDEBAR</span>
+                      <span>01 · proy</span>
+                      <span>02 · stack</span>
+                      <span>03 · exp</span>
+                    </div>
+                  </template>
+                  <template #default>
+                    <div class="h-full p-2.5 font-mono text-[10px] text-ink flex flex-col justify-between bg-surface/40">
+                      <div>
+                        <div class="font-semibold text-[11px]">Contenido Principal</div>
+                        <div class="text-dim text-[9.5px] mt-1">Arrastrá el divisor para redimensionar o colapsar con resorte.</div>
+                      </div>
+                      <div class="text-faint text-[9px]">Soporta ← / → y Enter</div>
+                    </div>
+                  </template>
+                </UiResizablePanels>
+              </div>
+            </template>
+
+            <!-- 27. UiCursorWorkList -->
+            <template v-else-if="item.id === 'cursor-work-list'">
+              <div class="w-full max-w-[320px] py-1">
+                <UiCursorWorkList :items="demoWorkListItems" />
               </div>
             </template>
 

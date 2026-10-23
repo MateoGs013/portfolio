@@ -332,7 +332,7 @@ const navSections = computed<NavSection[]>(() => [
   { root: 'articles', label: isEs.value ? '04 · artículos' : '04 · articles', shortLabel: 'Blog', to: ['articles'], badge: pad(liveCounts.value.articles ?? 0), keyHint: '4', icon: 'file', desc: isEs.value ? 'Publicaciones técnicas y blog de ingeniería' : 'Technical articles & engineering blog' },
   { root: 'about', label: isEs.value ? '05 · sobre mí' : '05 · about me', shortLabel: 'CV', to: ['about'], badge: pad(liveCounts.value.about ?? 13), keyHint: '5', icon: 'user', desc: isEs.value ? 'Perfil bio, formación y principios' : 'Bio, resume & principles' },
   { root: 'contact', label: isEs.value ? '06 · contacto' : '06 · contact', shortLabel: isEs.value ? 'Mail' : 'Contact', to: ['contact'], badge: pad(liveCounts.value.contact ?? 7), keyHint: '6', icon: 'mail', desc: isEs.value ? 'Canales y disponibilidad' : 'Channels & availability' },
-  { root: 'lab', label: isEs.value ? '07 · lab ui' : '07 · ui lab', shortLabel: 'Lab', to: ['lab'], badge: '31', keyHint: '7', icon: 'cpu', desc: isEs.value ? 'Laboratorio de componentes y físicas' : 'Component laboratory & spring physics' },
+  { root: 'lab', label: isEs.value ? '07 · lab ui' : '07 · ui lab', shortLabel: 'Lab', to: ['lab'], badge: '28', keyHint: '7', icon: 'cpu', desc: isEs.value ? 'Laboratorio de componentes y físicas' : 'Component laboratory & spring physics' },
 ])
 
 const currentRoot = computed(() => path.value[0] ?? '')

@@ -95,7 +95,7 @@ const cardStyle = computed(() => {
 
 const overlayStyle = computed(() => ({
   opacity: 'var(--spot-opacity, 0)',
-  background: `radial-gradient(360px circle at var(--spot-x, 50%) var(--spot-y, 50%), var(--spot-color, rgba(99, 102, 241, 0.09)), transparent 70%)`,
+  background: `radial-gradient(360px circle at var(--spot-x, 50%) var(--spot-y, 50%), var(--spot-color, rgba(255, 62, 0, 0.09)), transparent 70%)`,
 }))
 </script>
 
