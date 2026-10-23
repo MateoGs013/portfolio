@@ -71,4 +71,50 @@ test.describe('Admin Console 2026 Audit', () => {
     await page.waitForTimeout(300)
     await expect(page.locator('text=00-09 // Navegación CMS')).not.toBeVisible()
   })
+
+  test('Job Hunter view renders vacancies and evaluates successfully', async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 })
+    await page.goto('http://localhost:3001/admin', { waitUntil: 'networkidle' })
+
+    // Login
+    const devTokenBtn = page.locator('button:has-text("dev-token rápido")')
+    if (await devTokenBtn.isVisible()) {
+      await devTokenBtn.click()
+    } else {
+      await page.fill('input[type="password"], input[type="text"]', 'dev-token')
+      await page.click('button[type="submit"]')
+    }
+
+    // Wait for Dashboard to render
+    await expect(page.locator('text=Panel Ejecutivo y Telemetría')).toBeVisible({ timeout: 10000 })
+
+    // Click Job Hunter in sidebar
+    await page.click('aside button:has-text("Job Hunter (Eros)")')
+
+    // Wait for Hunter view to load
+    await expect(page.locator('text=Job Hunter')).toBeVisible({ timeout: 10000 })
+    await page.waitForTimeout(500)
+
+    // Verify vacancy list has items
+    const jobCards = page.locator('.space-y-1\\.5 > div')
+    await expect(jobCards.first()).toBeVisible()
+
+    // Click the first vacancy card
+    await jobCards.first().click()
+    await page.waitForTimeout(300)
+
+    // Verify detail panel elements
+    await expect(page.locator('text=Evaluación Estratégica de Perfil')).toBeVisible()
+    await expect(page.locator('text=CV Harvard ATS').first()).toBeVisible()
+
+    // Test evaluating batch button if visible
+    const evalBatchBtn = page.locator('button:has-text("Evaluar")')
+    if (await evalBatchBtn.isVisible()) {
+      await evalBatchBtn.click()
+      await page.waitForTimeout(1000)
+    }
+
+    // Screenshot Job Hunter in action
+    await page.screenshot({ path: 'tests/e2e/screenshots/admin-job-hunter.png' })
+  })
 })

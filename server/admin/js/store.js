@@ -555,7 +555,31 @@ export const store = reactive({
     try {
       const res = await api.evaluateHunterJobs(limit)
       const count = res?.evaluated_count ?? res?.data?.evaluated_count ?? (Array.isArray(res?.evaluated) ? res.evaluated.length : 0)
-      s.toast('ok', `Evaluación completada: ${count} vacantes analizadas con Gemini`)
+
+      if (Array.isArray(res?.evaluated)) {
+        for (const item of res.evaluated) {
+          const matchJob = s.hunter.jobs.find(j => j.id === item.id || j.external_id === item.id)
+          if (matchJob) {
+            matchJob.match_score = item.score
+            if (item.verdict === 'DESCARTAR') {
+              matchJob.status = 'discarded'
+            } else if (item.score >= 70) {
+              matchJob.status = 'saved'
+            } else {
+              matchJob.status = 'evaluated'
+            }
+          }
+        }
+        if (s.hunter.selected) {
+          const updatedSel = s.hunter.jobs.find(j => j.id === s.hunter.selected.id || j.external_id === s.hunter.selected.id)
+          if (updatedSel) {
+            s.hunter.selected = { ...updatedSel }
+          }
+        }
+        s._persistHunterJobs()
+      }
+
+      s.toast('ok', `Evaluación completada: ${count} vacantes analizadas`)
       await s.loadHunterJobs()
     } catch (err) {
       s.toast('err', `Error al evaluar vacantes: ${err.message}`)
@@ -570,15 +594,47 @@ export const store = reactive({
     s.hunter.isEvaluatingSingle = true
     try {
       const res = await api.evaluateHunterJob(id)
-      const job = res?.job || res?.data?.job || res
-      if (job) {
-        const idx = s.hunter.jobs.findIndex(j => j.id === id)
-        if (idx !== -1) {
-          s.hunter.jobs[idx] = { ...s.hunter.jobs[idx], ...job }
+      const job = res?.job || res?.data?.job || (res?.id ? res : null)
+      const match = res?.match || res?.data?.match || null
+
+      const idx = s.hunter.jobs.findIndex(j => j.id === id || j.external_id === id)
+      if (idx !== -1) {
+        const current = s.hunter.jobs[idx]
+        const updated = {
+          ...current,
+          ...(job || {}),
         }
-        if (s.hunter.selected && s.hunter.selected.id === id) {
-          s.hunter.selected = { ...s.hunter.selected, ...job }
+        if (match) {
+          updated.match_score = match.score ?? updated.match_score
+          updated.match_analysis = typeof match === 'string' ? match : JSON.stringify(match)
+          if (match.recruiter_note) {
+            updated.connection_note = match.recruiter_note
+          }
+          if (match.salary_estimate && !updated.salary) {
+            updated.salary = match.salary_estimate
+          }
+          if (match.verdict === 'DESCARTAR') {
+            updated.status = 'discarded'
+          } else if ((match.score ?? 0) >= 70) {
+            updated.status = 'saved'
+          } else {
+            updated.status = 'evaluated'
+          }
+        } else if (updated.match_analysis && typeof updated.match_analysis !== 'string') {
+          updated.match_analysis = JSON.stringify(updated.match_analysis)
         }
+        s.hunter.jobs[idx] = updated
+        if (s.hunter.selected && (s.hunter.selected.id === id || s.hunter.selected.external_id === id)) {
+          s.hunter.selected = { ...updated }
+        }
+        s._persistHunterJobs()
+        s.toast('ok', `Vacante evaluada: ${updated.match_score ?? 0}% de compatibilidad`)
+      } else if (job) {
+        if (match && !job.match_analysis) {
+          job.match_analysis = typeof match === 'string' ? match : JSON.stringify(match)
+        }
+        s.hunter.jobs.unshift(job)
+        s.hunter.selected = { ...job }
         s._persistHunterJobs()
         s.toast('ok', `Vacante evaluada: ${job.match_score ?? 0}% de compatibilidad`)
       }

@@ -45,15 +45,54 @@ export async function forwardToEros<T = unknown>(
   try {
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
-      ...(env.erosApiKey ? { Authorization: `Bearer ${env.erosApiKey}` } : {}),
+      ...(env.erosApiKey ? {
+        Authorization: `Bearer ${env.erosApiKey}`,
+        'X-Eros-Key': env.erosApiKey,
+      } : {}),
       ...((init?.headers as Record<string, string>) || {}),
     }
 
-    const res = await fetch(fullUrl, {
-      ...init,
-      headers,
-      signal: AbortSignal.timeout(timeoutMs),
-    })
+    let res: Response
+    try {
+      res = await fetch(fullUrl, {
+        ...init,
+        headers,
+        signal: AbortSignal.timeout(timeoutMs),
+      })
+    } catch (fetchErr) {
+      // En desarrollo, si la URL remota no responde, intentar con el agente local si está levantado en 8000
+      if (process.env.NODE_ENV !== 'production' && !baseUrl.includes('127.0.0.1') && !baseUrl.includes('localhost')) {
+        try {
+          const localUrl = `http://127.0.0.1:8000/${urlPath.replace(/^\//, '')}`
+          res = await fetch(localUrl, {
+            ...init,
+            headers,
+            signal: AbortSignal.timeout(4000),
+          })
+        } catch {
+          throw fetchErr
+        }
+      } else {
+        throw fetchErr
+      }
+    }
+
+    // Si la URL remota da 401/403 en desarrollo, intentar también fallback hacia local en 8000
+    if ((res.status === 401 || res.status === 403) && process.env.NODE_ENV !== 'production' && !baseUrl.includes('127.0.0.1') && !baseUrl.includes('localhost')) {
+      try {
+        const localUrl = `http://127.0.0.1:8000/${urlPath.replace(/^\//, '')}`
+        const localRes = await fetch(localUrl, {
+          ...init,
+          headers,
+          signal: AbortSignal.timeout(3000),
+        })
+        if (localRes.ok) {
+          res = localRes
+        }
+      } catch {
+        // Silencioso, continúa con res original
+      }
+    }
 
     const isJson = res.headers.get('content-type')?.includes('application/json')
     const data = (isJson ? await res.json().catch(() => null) : await res.text()) as T

@@ -68,7 +68,7 @@ export const AdmJobHunter = {
 
     const pendingJobsCount = computed(() => {
       const list = store.hunter.jobs || []
-      return list.filter(j => (j.match_score === null || j.match_score === undefined) && j.status !== 'discarded').length
+      return list.filter(j => (j.match_score === null || j.match_score === undefined || j.status === 'new') && j.status !== 'discarded').length
     })
 
     const selectedAnalysis = computed(() => {
@@ -323,10 +323,10 @@ export const AdmJobHunter = {
 
     function getVerdictClass(verdict) {
       const v = (verdict || '').toUpperCase()
-      if (v.includes('BUEN') || v.includes('HIGH') || v.includes('ALTO')) {
+      if (v.includes('BUEN') || v.includes('EXCELENTE') || v.includes('HIGH') || v.includes('ALTO')) {
         return 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20'
       }
-      if (v.includes('MEDIO') || v.includes('MID')) {
+      if (v.includes('MEDIO') || v.includes('MID') || v.includes('REGULAR')) {
         return 'text-amber-400 bg-amber-500/10 border-amber-500/20'
       }
       return 'text-zinc-400 bg-white/5 border-white/10'

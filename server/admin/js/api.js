@@ -134,7 +134,7 @@ export class ApiClient {
   }
 
   async evaluateHunterJobs(limit = 15) {
-    return this.fetch('hunter/evaluate', {
+    return this.fetch(`hunter/evaluate?limit=${encodeURIComponent(limit)}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ limit }),
