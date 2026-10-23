@@ -6,6 +6,7 @@ import helmet from 'helmet'
 import { db } from './db.js'
 import { env } from './env.js'
 import { adminApi, adminUi } from './admin/router.js'
+import { isAdminAuthorized } from './admin/auth.js'
 import { envelope } from './envelope.js'
 import { docs } from './routes/docs.js'
 import { experience } from './routes/experience.js'
@@ -53,11 +54,21 @@ const publicApiLimiter = rateLimit({
   message: { error: 'demasiadas peticiones, por favor reintente más tarde' },
 })
 
-// M2: Rate limiting estricto para fallos de autenticación en el admin (10 fallos 401 por IP cada 15 min en producción)
+// M2: Rate limiting estricto para fallos de autenticación en el admin (30 fallos 401 por IP cada 15 min en producción)
 const adminAuthFailuresLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  limit: 10,
-  skip: (req) => process.env['NODE_ENV'] !== 'production' || req.ip === '127.0.0.1' || req.ip === '::1',
+  limit: 30,
+  skip: (req) => {
+    // 1. En desarrollo o pruebas locales, omitir rate limiting
+    if (process.env['NODE_ENV'] !== 'production') return true
+    const ip = req.ip || ''
+    if (ip === '127.0.0.1' || ip === '::1' || ip.includes('127.0.0.1')) return true
+
+    // 2. Si la petición ya incluye un Bearer token legítimo y verificado, jamás bloquear al administrador
+    if (isAdminAuthorized(req)) return true
+
+    return false
+  },
   requestWasSuccessful: (_req, res) => res.statusCode !== 401,
   standardHeaders: 'draft-8',
   legacyHeaders: false,
