@@ -46,7 +46,7 @@ const layers = computed(() => {
 <template>
   <div
     v-if="!isHyperfocus"
-    class="pbl select-none"
+    class="pbl select-none pointer-events-none"
     :class="position === 'top' ? 'pbl-top' : 'pbl-bottom'"
     :style="{ height: `${height}px` }"
     aria-hidden="true"
@@ -62,6 +62,7 @@ const layers = computed(() => {
         WebkitMaskImage: layer.mask,
       }"
     />
+    <span class="pbl-tint" />
   </div>
 </template>
 
@@ -78,6 +79,7 @@ const layers = computed(() => {
 
 .pbl-bottom {
   bottom: 0;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 
 .pbl-top {
@@ -89,6 +91,32 @@ const layers = computed(() => {
   inset: 0;
   pointer-events: none;
   will-change: backdrop-filter;
+}
+
+.pbl-tint {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.pbl-bottom .pbl-tint {
+  background: linear-gradient(
+    to bottom,
+    transparent 0%,
+    color-mix(in srgb, var(--d-paper) 25%, transparent) 40%,
+    color-mix(in srgb, var(--d-paper) 70%, transparent) 80%,
+    var(--d-paper) 100%
+  );
+}
+
+.pbl-top .pbl-tint {
+  background: linear-gradient(
+    to top,
+    transparent 0%,
+    color-mix(in srgb, var(--d-paper) 25%, transparent) 40%,
+    color-mix(in srgb, var(--d-paper) 70%, transparent) 80%,
+    var(--d-paper) 100%
+  );
 }
 
 @media print {

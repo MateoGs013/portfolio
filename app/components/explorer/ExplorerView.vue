@@ -561,34 +561,39 @@ const activeQueryFilters = computed(() => {
           @open-guide="guideOpen = true"
         />
 
-        <!-- Contenido Central Scrollable -->
-        <main
-          id="contenido"
-          class="exp flex-1 min-w-0 h-full overflow-y-auto focus:outline-none relative"
-          tabindex="-1"
-        >
-          <div v-if="error" class="pane w-full max-w-[1240px] mx-auto">
-            <ExplorerDetail
-              :detail="{
-                kind: 'document',
-                name: `error ${error.statusCode ?? 500}`,
-                type: 'response',
-                updated: null,
-                rows: [
-                  { name: 'status', type: 'int', value: String(error.statusCode ?? 500) },
-                  { name: 'message', type: 'string', value: error.statusMessage ?? error.message },
-                  { name: 'request', type: 'string', value: (error.data as { request?: string } | undefined)?.request ?? null },
-                ],
-              }"
-            />
-          </div>
-          <div v-else-if="ex" ref="pane" :key="route.fullPath" class="pane w-full max-w-[1240px] mx-auto pb-8" :class="dir">
-            <ExplorerLab v-if="currentRoot === 'lab'" />
-            <ExplorerFolder v-else-if="folder" :folder="folder" />
-            <ExplorerDetail v-else-if="detail" :detail="detail" :prev="ex.prev" :next="ex.next" />
-          </div>
-          <UiProgressiveBlur position="bottom" :height="34" :strength="40" />
-        </main>
+        <!-- Canvas Central: Contenedor con Desenfoque Progresivo Fijo (Bencho UI Optical Lens) -->
+        <div class="canvas-viewport flex-1 min-w-0 h-full relative overflow-hidden flex flex-col">
+          <!-- Contenido Central Scrollable -->
+          <main
+            id="contenido"
+            class="exp flex-1 min-w-0 h-full overflow-y-auto focus:outline-none"
+            tabindex="-1"
+          >
+            <div v-if="error" class="pane w-full max-w-[1240px] mx-auto">
+              <ExplorerDetail
+                :detail="{
+                  kind: 'document',
+                  name: `error ${error.statusCode ?? 500}`,
+                  type: 'response',
+                  updated: null,
+                  rows: [
+                    { name: 'status', type: 'int', value: String(error.statusCode ?? 500) },
+                    { name: 'message', type: 'string', value: error.statusMessage ?? error.message },
+                    { name: 'request', type: 'string', value: (error.data as { request?: string } | undefined)?.request ?? null },
+                  ],
+                }"
+              />
+            </div>
+            <div v-else-if="ex" ref="pane" :key="route.fullPath" class="pane w-full max-w-[1240px] mx-auto pb-14" :class="dir">
+              <ExplorerLab v-if="currentRoot === 'lab'" />
+              <ExplorerFolder v-else-if="folder" :folder="folder" />
+              <ExplorerDetail v-else-if="detail" :detail="detail" :prev="ex.prev" :next="ex.next" />
+            </div>
+          </main>
+
+          <!-- Desenfoque Progresivo Fijo en el Borde Inferior (Bencho Optical Lens) -->
+          <UiProgressiveBlur position="bottom" :height="42" :strength="48" />
+        </div>
       </div>
 
       <!-- Barra de Estado Inferior Integrada en el Marco (Desktop) -->
@@ -813,6 +818,16 @@ kbd {
   overflow: hidden;
 }
 
+.canvas-viewport {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
 .exp {
   flex: 1;
   min-height: 0;
@@ -941,6 +956,13 @@ kbd {
     width: 100%;
   }
 
+  .canvas-viewport {
+    width: 100%;
+    max-width: 100%;
+    height: 100%;
+    overflow: hidden;
+  }
+
   .exp {
     padding: 16px 14px calc(24px + env(safe-area-inset-bottom, 0px)) 14px !important;
     overflow-y: auto !important;
@@ -978,6 +1000,7 @@ kbd {
   .datos,
   .ventana,
   .cuerpo-ventana,
+  .canvas-viewport,
   .exp,
   .pane {
     padding: 0 !important;
