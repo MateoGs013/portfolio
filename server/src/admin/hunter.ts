@@ -299,6 +299,46 @@ hunterRouter.get(['/cv/:id/html', '/jobs/:id/cv/html'], async (req: Request, res
   res.status(200).type('html').send(html)
 })
 
+/** GET /api/admin/hunter/cv/:id/pdf */
+hunterRouter.get(['/cv/:id/pdf', '/jobs/:id/cv/pdf'], async (req: Request, res: Response) => {
+  const id = getParamId(req)
+  if (!id) {
+    res.status(400).json({ error: 'ID de vacante requerido' })
+    return
+  }
+  const ticketParam = req.query['ticket']
+  const hasValidTicket = typeof ticketParam === 'string' && validateCvTicket(ticketParam, id)
+  if (!hasValidTicket && !isAdminAuthorized(req)) {
+    res.status(401).json({ error: 'Acceso no autorizado al CV PDF' })
+    return
+  }
+
+  const baseUrl = getErosBaseUrl()
+  if (baseUrl && !isCircuitOpen()) {
+    try {
+      const upstreamRes = await fetch(`${baseUrl}/api/cv/${encodeURIComponent(id)}/pdf`, {
+        headers: {
+          ...(env.erosApiKey ? { Authorization: `Bearer ${env.erosApiKey}`, 'X-Eros-Key': env.erosApiKey } : {}),
+        },
+        signal: AbortSignal.timeout(15000),
+      })
+      if (upstreamRes.ok) {
+        const buffer = await upstreamRes.arrayBuffer()
+        res.setHeader('Content-Type', 'application/pdf')
+        const disposition = req.query['download'] === 'true' ? 'attachment' : 'inline'
+        res.setHeader('Content-Disposition', `${disposition}; filename="CV_Mateo_Sonzogni.pdf"`)
+        res.send(Buffer.from(buffer))
+        return
+      }
+      recordErosFailure()
+    } catch {
+      recordErosFailure()
+    }
+  }
+
+  res.status(503).json({ error: 'Generación nativa de PDF no disponible en modo offline o contingencia' })
+})
+
 /** PATCH /api/admin/hunter/jobs/:id/status */
 hunterRouter.patch(['/jobs/:id/status', '/status/:id'], async (req: Request, res: Response) => {
   const id = getParamId(req)

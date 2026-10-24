@@ -252,6 +252,10 @@ export class ApiClient {
     return this.fetchBlob(`hunter/cv/${encodeURIComponent(id)}/html?download=true`)
   }
 
+  async downloadHunterCVPdf(id) {
+    return this.fetchBlob(`hunter/cv/${encodeURIComponent(id)}/pdf?download=true`)
+  }
+
   async getHunterJobApplyPreview(id) {
     return this.fetch(`hunter/jobs/${encodeURIComponent(id)}/apply-preview`)
   }
