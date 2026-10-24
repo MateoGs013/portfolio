@@ -101,19 +101,28 @@ test.describe('Architectural Route Loader & Relational HUD (Fusion)', () => {
     await page.goto('/')
     await page.waitForLoadState('networkidle')
 
-    // Navegar a /projects/la-rucula haciendo click
-    const projectLink = page.locator('a[href="/projects/la-rucula"]').first()
-    if (await projectLink.count() > 0) {
-      await projectLink.click()
-      await page.waitForLoadState('networkidle')
-      await expect(page).toHaveURL(/.*la-rucula/)
+    const backdrop = page.locator('.route-loader-backdrop')
+    const hud = page.locator('.route-loader-hud')
+
+    // 1. Navegar a /projects haciendo click en el enlace o atajo
+    const projectsLink = page.locator('a[href="/projects"]').first()
+    if (await projectsLink.count() > 0) {
+      await projectsLink.click()
+      // En el instante de navegación, el HUD contextual debe activarse de inmediato
+      await expect(backdrop).toBeVisible()
+      await expect(hud).toContainText('INDEX // PRODUCTION APPLICATIONS')
+      // Esperar a que concluya la transición y el backdrop se disuelva
+      await expect(backdrop).not.toBeVisible({ timeout: 5000 })
+      await expect(page).toHaveURL(/.*projects/)
     }
 
-    // Navegar de vuelta a /lab
+    // 2. Navegar a /lab
     const labLink = page.locator('a[href="/lab"]').first()
     if (await labLink.count() > 0) {
       await labLink.click()
-      await page.waitForLoadState('networkidle')
+      await expect(backdrop).toBeVisible()
+      await expect(hud).toContainText('CALIBRATE // BENCHO UI v2.0')
+      await expect(backdrop).not.toBeVisible({ timeout: 5000 })
       await expect(page).toHaveURL(/.*lab/)
     }
   })

@@ -135,35 +135,49 @@ const elapsedMs = ref(0)
 const isResolved = ref(false)
 const routeMeta = ref<RouteLoaderMeta>(resolveRouteMetadata('/'))
 
-let debounceTimer: ReturnType<typeof setTimeout> | null = null
 let rafProgress: number | null = null
 let timerMs: ReturnType<typeof setInterval> | null = null
+let finishTimer: ReturnType<typeof setTimeout> | null = null
+let hideTimer: ReturnType<typeof setTimeout> | null = null
+let resetTimer: ReturnType<typeof setTimeout> | null = null
 let startTime = 0
+
+const MIN_DISPLAY_MS = 380
+const RESOLVE_DELAY_MS = 180
+const HIDE_TRANSITION_MS = 220
 
 export function useRouteLoader() {
   const { isHyperfocus } = useHyperfocus()
   const { playSound } = useBenchoSound()
 
+  function clearAllTimers() {
+    if (finishTimer) {
+      clearTimeout(finishTimer)
+      finishTimer = null
+    }
+    if (hideTimer) {
+      clearTimeout(hideTimer)
+      hideTimer = null
+    }
+    if (resetTimer) {
+      clearTimeout(resetTimer)
+      resetTimer = null
+    }
+  }
+
   function startLoading(destinationPath: string) {
     if (!import.meta.client) return
 
-    // Cancelar cualquier transición previa pendiente
-    if (debounceTimer) {
-      clearTimeout(debounceTimer)
-      debounceTimer = null
-    }
+    clearAllTimers()
 
     routeMeta.value = resolveRouteMetadata(destinationPath)
     isResolved.value = false
     startTime = performance.now()
     elapsedMs.value = 0
-    progress.value = 12
+    progress.value = 16
+    visible.value = true
 
-    // Umbral anti-parpadeo: si la página carga en menos de 75ms (caché/in-memory), no mostrar loader
-    debounceTimer = setTimeout(() => {
-      visible.value = true
-      startProgressLoop()
-    }, 75)
+    startProgressLoop()
   }
 
   function startProgressLoop() {
@@ -172,6 +186,7 @@ export function useRouteLoader() {
       elapsedMs.value = Math.round(performance.now() - startTime)
     }, 32)
 
+    if (rafProgress) cancelAnimationFrame(rafProgress)
     const step = () => {
       if (!visible.value || isResolved.value) return
 
@@ -189,44 +204,41 @@ export function useRouteLoader() {
 
   function finishLoading() {
     if (!import.meta.client) return
+    if (!visible.value) return
+    if (isResolved.value) return
 
-    // Si terminó antes del debounce (75ms), cancelar sin mostrar nada
-    if (debounceTimer) {
-      clearTimeout(debounceTimer)
-      debounceTimer = null
-    }
+    const elapsed = performance.now() - startTime
+    const remaining = Math.max(0, MIN_DISPLAY_MS - elapsed)
 
-    if (!visible.value) {
-      progress.value = 0
-      elapsedMs.value = 0
-      return
-    }
+    if (finishTimer) clearTimeout(finishTimer)
+    finishTimer = setTimeout(() => {
+      // Completar barra y activar estado resuelto (200 OK)
+      progress.value = 100
+      isResolved.value = true
+      elapsedMs.value = Math.round(performance.now() - startTime)
 
-    // Completar barra y activar estado resuelto (200 OK)
-    progress.value = 100
-    isResolved.value = true
-    elapsedMs.value = Math.round(performance.now() - startTime)
+      if (rafProgress) {
+        cancelAnimationFrame(rafProgress)
+        rafProgress = null
+      }
+      if (timerMs) {
+        clearInterval(timerMs)
+        timerMs = null
+      }
 
-    if (rafProgress) {
-      cancelAnimationFrame(rafProgress)
-      rafProgress = null
-    }
-    if (timerMs) {
-      clearInterval(timerMs)
-      timerMs = null
-    }
+      playSound('poke')
 
-    playSound('poke')
+      // Disolución óptica suave tras 180ms de confirmación visual (200 OK)
+      hideTimer = setTimeout(() => {
+        visible.value = false
 
-    // Disolución óptica suave tras 160ms de confirmación visual
-    setTimeout(() => {
-      visible.value = false
-      setTimeout(() => {
-        isResolved.value = false
-        progress.value = 0
-        elapsedMs.value = 0
-      }, 220)
-    }, 160)
+        resetTimer = setTimeout(() => {
+          isResolved.value = false
+          progress.value = 0
+          elapsedMs.value = 0
+        }, HIDE_TRANSITION_MS)
+      }, RESOLVE_DELAY_MS)
+    }, remaining)
   }
 
   return {

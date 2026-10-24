@@ -11,8 +11,14 @@ export default defineNuxtPlugin((nuxtApp) => {
   const router = useRouter()
   const { startLoading, finishLoading } = useRouteLoader()
 
+  // 1. Estado de arranque inicial en frío / F5 / recarga directa
+  startLoading(router.currentRoute.value.path || '/')
+  nuxtApp.hook('app:mounted', () => {
+    finishLoading()
+  })
+
+  // 2. Navegación reactiva entre rutas del portafolio
   router.beforeEach((to, from) => {
-    // Si la ruta cambia, iniciar carga con metadata contextual
     if (to.fullPath !== from.fullPath) {
       startLoading(to.path)
     }

@@ -107,7 +107,7 @@ const liveCounts = computed<Record<string, number>>(() => {
   return map
 })
 
-const { data: ex, error } = await useAsyncData<Explorer>(
+const { data: ex, error, status } = await useAsyncData<Explorer>(
   computed(() => `explorer${route.fullPath}`),
   () => {
     const q = { ...route.query }
@@ -122,6 +122,16 @@ const { data: ex, error } = await useAsyncData<Explorer>(
     }
   }
 )
+
+const { startLoading, finishLoading } = useRouteLoader()
+watch(status, (newStatus) => {
+  if (newStatus === 'pending') {
+    startLoading(route.path)
+  }
+  else if (newStatus === 'success' || newStatus === 'error') {
+    finishLoading()
+  }
+})
 
 // Manejo de errores HTTP
 if (import.meta.server && error.value) {
