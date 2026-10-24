@@ -2,7 +2,7 @@
 
 > Explorador relacional de base de datos técnica, CV dual interactivo (**Harvard ATS** / **Modern IDE**) y sistema de micro-interacciones espaciales de 60 FPS.
 
-[![Production](https://img.shields.io/badge/Status-Live_Production-10b981?style=flat-square)](https://portfolio-phi-rust-14.vercel.app)
+[![Production](https://img.shields.io/badge/Status-Live_Production-10b981?style=flat-square)](https://mateogs.tech)
 [![Nuxt 4](https://img.shields.io/badge/Nuxt-4.x-00DC82?style=flat-square&logo=nuxtdotjs&logoColor=white)](https://nuxt.com)
 [![Vue 3](https://img.shields.io/badge/Vue-3.x-42b883?style=flat-square&logo=vuedotjs&logoColor=white)](https://vuejs.org)
 [![Express 5](https://img.shields.io/badge/Express-5.x-000000?style=flat-square&logo=express&logoColor=white)](https://expressjs.com)
