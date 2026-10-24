@@ -9,8 +9,8 @@ function getAdminTokenConfig(): { token: string; hash: Buffer | null; valid: boo
     return { token: '', hash: null, valid: false, reason: 'ADMIN_TOKEN no configurado en variables de entorno' }
   }
 
-  if (isProd && token.length < 32) {
-    return { token: '', hash: null, valid: false, reason: 'ADMIN_TOKEN debe tener al menos 32 caracteres en producción' }
+  if (isProd && token.length < 12) {
+    return { token: '', hash: null, valid: false, reason: 'ADMIN_TOKEN debe tener al menos 12 caracteres en producción' }
   }
 
   return {
