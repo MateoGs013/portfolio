@@ -4,6 +4,11 @@
 export class ApiClient {
   constructor() {
     this.token = sessionStorage.getItem('admin-token') || ''
+    this.onAuthError = null
+  }
+
+  setOnAuthError(fn) {
+    this.onAuthError = fn
   }
 
   setToken(t) {
@@ -34,6 +39,9 @@ export class ApiClient {
 
     if (res.status === 401) {
       this.setToken('')
+      if (typeof this.onAuthError === 'function') {
+        this.onAuthError()
+      }
       throw new Error('Sesión expirada o token no autorizado. Ingresá la clave de acceso nuevamente.')
     }
 
@@ -52,7 +60,46 @@ export class ApiClient {
       throw new Error(errorMsg)
     }
 
+    // Detección de fallback de Eros Agent vía cabecera HTTP
+    const isFallbackHeader = res.headers.get('x-eros-source') === 'fallback'
+    if (body && typeof body === 'object') {
+      if (isFallbackHeader && !body._source) {
+        body._source = 'fallback'
+      }
+      if (Array.isArray(body) && isFallbackHeader) {
+        for (const item of body) {
+          if (item && typeof item === 'object' && !item._source) {
+            item._source = 'fallback'
+          }
+        }
+      }
+    }
+
     return body
+  }
+
+  async fetchBlob(path, init = {}) {
+    const headers = {
+      Authorization: `Bearer ${this.token}`,
+      ...(init.headers || {}),
+    }
+
+    const url = `/api/admin/${path.replace(/^\//, '')}`
+    const res = await window.fetch(url, { ...init, headers })
+
+    if (res.status === 401) {
+      this.setToken('')
+      if (typeof this.onAuthError === 'function') {
+        this.onAuthError()
+      }
+      throw new Error('Sesión expirada o token no autorizado. Ingresá la clave de acceso nuevamente.')
+    }
+
+    if (!res.ok) {
+      throw new Error(`Error en la solicitud (código ${res.status})`)
+    }
+
+    return res.blob()
   }
 
   // Métodos de Metadatos
@@ -193,6 +240,16 @@ export class ApiClient {
     return this.fetch(`hunter/jobs/${encodeURIComponent(id)}/cv`, {
       method: 'POST',
     })
+  }
+
+  async getHunterCVTicket(id) {
+    return this.fetch(`hunter/cv/${encodeURIComponent(id)}/ticket`, {
+      method: 'POST',
+    })
+  }
+
+  async downloadHunterCVHtml(id) {
+    return this.fetchBlob(`hunter/cv/${encodeURIComponent(id)}/html?download=true`)
   }
 
   async getHunterJobApplyPreview(id) {

@@ -14,7 +14,10 @@ import UiSidebarIsland, { type SidebarIslandItem } from '~/components/ui/UiSideb
 import UiTelemetryPill from '~/components/ui/UiTelemetryPill.vue'
 import { useBenchoSound } from '~/composables/useBenchoSound'
 import { pad, resolveExplorer, type Explorer } from '~/lib/explorer'
+import { fallbackSchemaData } from '~/lib/fallbackData'
 import { routeFor } from '~/lib/path'
+
+const siteUrl = 'https://mateogs.tech'
 
 const api = useApi()
 const route = useRoute()
@@ -74,18 +77,13 @@ onBeforeUnmount(() => {
   if (clockTimer) clearInterval(clockTimer)
 })
 
-useHead({
-  htmlAttrs: { 'data-portfolio': 'mateo-sonzogni' },
-  meta: [{ name: 'theme-color', content: computed(() => (theme.value === 'dark' ? '#080808' : '#f7f6f2')) }],
-  title: computed(() => ['mateo sonzogni', ...path.value].join(' / ')),
-})
 usePreloadFonts('datos')
 
 const nuxtApp = useNuxtApp()
 
 const { data: schemaSummary } = await useAsyncData(
   'schema-summary',
-  () => api.schema(),
+  () => api.schema().catch(() => fallbackSchemaData),
   {
     getCachedData(key) {
       return nuxtApp.isHydrating ? nuxtApp.payload.data[key] : nuxtApp.static.data[key]
@@ -135,8 +133,11 @@ watch(status, (newStatus) => {
 
 // Manejo de errores HTTP
 if (import.meta.server && error.value) {
-  const event = useRequestEvent()
-  if (event) setResponseStatus(event, error.value.statusCode ?? 500)
+  const code = error.value.statusCode ?? 500
+  if (code === 404) {
+    const event = useRequestEvent()
+    if (event) setResponseStatus(event, 404)
+  }
 }
 
 const folder = computed(() => ex.value?.folder ?? null)
@@ -149,12 +150,119 @@ const detailSummary = computed(() => {
   return summaryRow?.value || `${detail.value.name} — Dossier de ingeniería y especificación técnica en el portafolio de Mateo Sonzogni.`
 })
 
+// Metadatos unificados de SEO, OpenGraph y Datos Estructurados JSON-LD
+const pageTitle = computed(() => {
+  if (detail.value) return `${detail.value.name} — Mateo Sonzogni`
+  if (folder.value && folder.value.head && folder.value.head !== 'db') {
+    return `${folder.value.head} — Mateo Sonzogni`
+  }
+  if (path.value.length > 0) return `${path.value.join(' / ')} — Mateo Sonzogni`
+  return 'Mateo Sonzogni · Software Engineer & Creative Developer'
+})
+
+const pageCanonical = computed(() => `${siteUrl}${route.path}`)
+
+const pageOgImage = computed(() => {
+  if (detail.value?.rawRecord) {
+    const raw = detail.value.rawRecord as Record<string, unknown>
+    let candidate: string | undefined
+    if (Array.isArray(raw.media) && raw.media.length > 0) {
+      const coverMedia = (raw.media as Array<{ role?: string, src?: string }>).find(m => m.role === 'COVER') || raw.media[0]
+      if (coverMedia?.src) candidate = coverMedia.src
+    }
+    if (!candidate && typeof raw.coverImage === 'string') candidate = raw.coverImage
+    if (!candidate && typeof raw.cover === 'string') candidate = raw.cover
+    if (candidate) {
+      if (candidate.startsWith('http')) return candidate
+      return `${siteUrl}${candidate.startsWith('/') ? candidate : `/${candidate}`}`
+    }
+  }
+  return `${siteUrl}/media/profile/mateo-front.png`
+})
+
+const schemaJsonLd = computed(() => {
+  const isArticle = detail.value && (path.value[0] === 'articles' || detail.value.type.toLowerCase().includes('article'))
+  const isProject = detail.value && (path.value[0] === 'projects' || detail.value.type.toLowerCase().includes('project'))
+
+  if (isArticle && detail.value) {
+    const raw = (detail.value.rawRecord || {}) as Record<string, unknown>
+    return {
+      '@context': 'https://schema.org',
+      '@type': 'TechArticle',
+      headline: detail.value.name,
+      description: detailSummary.value || `${detail.value.name} — Artículo técnico en el portafolio de Mateo Sonzogni`,
+      image: pageOgImage.value,
+      datePublished: raw.publishedAt ? String(raw.publishedAt) : (detail.value.updated ? `${detail.value.updated}T00:00:00.000Z` : undefined),
+      dateModified: raw.updatedAt ? String(raw.updatedAt) : (detail.value.updated ? `${detail.value.updated}T00:00:00.000Z` : undefined),
+      author: {
+        '@type': 'Person',
+        name: 'Mateo Gabriel Sonzogni',
+        url: siteUrl,
+      },
+      url: pageCanonical.value,
+      mainEntityOfPage: pageCanonical.value,
+    }
+  }
+
+  if (isProject && detail.value) {
+    const raw = (detail.value.rawRecord || {}) as Record<string, unknown>
+    return {
+      '@context': 'https://schema.org',
+      '@type': 'SoftwareSourceCode',
+      name: detail.value.name,
+      description: detailSummary.value || `${detail.value.name} — Proyecto de software de Mateo Sonzogni`,
+      codeRepository: typeof raw.repo === 'string' ? raw.repo : undefined,
+      url: typeof raw.url === 'string' ? raw.url : pageCanonical.value,
+      image: pageOgImage.value,
+      author: {
+        '@type': 'Person',
+        name: 'Mateo Gabriel Sonzogni',
+        url: siteUrl,
+      },
+    }
+  }
+
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'Person',
+    name: 'Mateo Gabriel Sonzogni',
+    url: siteUrl,
+    jobTitle: 'Software Engineer & Creative Developer',
+    image: `${siteUrl}/media/profile/mateo-front.png`,
+    sameAs: [
+      'https://github.com/MateoGs013',
+      'https://www.linkedin.com/in/mateo-sonzogni',
+    ],
+    description: 'Portafolio técnico de Mateo Gabriel Sonzogni: Desarrollador Full Stack y Creative Developer. Arquitecturas relacionales sobre PostgreSQL 17, APIs tipadas en TypeScript y Python, e interfaces reactivas contemporáneas.',
+  }
+})
+
+useHead({
+  htmlAttrs: { 'data-portfolio': 'mateo-sonzogni' },
+  meta: [{ name: 'theme-color', content: computed(() => (theme.value === 'dark' ? '#080808' : '#f7f6f2')) }],
+  link: [
+    { rel: 'canonical', href: pageCanonical },
+    { rel: 'alternate', hreflang: 'es', href: pageCanonical },
+    { rel: 'alternate', hreflang: 'x-default', href: pageCanonical },
+  ],
+  script: [
+    {
+      type: 'application/ld+json',
+      innerHTML: computed(() => JSON.stringify(schemaJsonLd.value)),
+    },
+  ],
+})
+
 useSeoMeta({
-  title: computed(() => detail.value ? `${detail.value.name} — Mateo Sonzogni` : ['mateo sonzogni', ...path.value].join(' / ')),
-  ogTitle: computed(() => detail.value ? `${detail.value.name} — Mateo Sonzogni` : ['mateo sonzogni', ...path.value].join(' / ')),
+  title: pageTitle,
+  ogTitle: pageTitle,
+  twitterTitle: pageTitle,
   description: computed(() => detailSummary.value || 'Portafolio técnico y base de datos relacional de ingeniería de Mateo Sonzogni.'),
   ogDescription: computed(() => detailSummary.value || 'Portafolio técnico y base de datos relacional de ingeniería de Mateo Sonzogni.'),
-  ogType: computed(() => (detail.value?.type === 'Article' ? 'article' : 'website')),
+  ogUrl: pageCanonical,
+  ogImage: pageOgImage,
+  twitterImage: pageOgImage,
+  ogType: computed(() => (detail.value?.type?.toLowerCase().includes('article') ? 'article' : 'website')),
 })
 
 // Breadcrumbs de ruta

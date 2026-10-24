@@ -26,6 +26,7 @@ export default defineNuxtConfig({
     routeRules: {
       '/**': {
         headers: {
+          'Content-Security-Policy': "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline' https://api.fontshare.com https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com https://cdn.fontshare.com data:; img-src 'self' data: https: blob:; connect-src 'self' blob: https://api.github.com http://localhost:* ws://localhost:*; frame-ancestors 'none'; base-uri 'self'; form-action 'self';",
           'X-Content-Type-Options': 'nosniff',
           'X-Frame-Options': 'DENY',
           'Referrer-Policy': 'strict-origin-when-cross-origin',
@@ -62,6 +63,8 @@ export default defineNuxtConfig({
         { name: 'author', content: 'Mateo Gabriel Sonzogni' },
         { property: 'og:site_name', content: 'Mateo Sonzogni · Portfolio' },
         { property: 'og:type', content: 'website' },
+        { property: 'og:locale', content: 'es_ES' },
+        { property: 'og:locale:alternate', content: 'en_US' },
         { property: 'og:url', content: 'https://mateogs.tech' },
         { property: 'og:title', content: 'Mateo Sonzogni · Software Engineer & Creative Developer' },
         { property: 'og:description', content: 'Portafolio técnico y explorador de datos relacional sobre PostgreSQL 17. Proyectos reales en producción, métricas de rendimiento y CV en 1 página A4.' },
@@ -76,7 +79,8 @@ export default defineNuxtConfig({
         { rel: 'icon', type: 'image/png', sizes: '32x32', href: '/favicon-32x32.png' },
         { rel: 'icon', type: 'image/png', sizes: '16x16', href: '/favicon-16x16.png' },
         { rel: 'apple-touch-icon', sizes: '180x180', href: '/apple-touch-icon.png' },
-        { rel: 'canonical', href: 'https://mateogs.tech' },
+        { rel: 'alternate', hreflang: 'es', href: 'https://mateogs.tech' },
+        { rel: 'alternate', hreflang: 'x-default', href: 'https://mateogs.tech' },
       ],
       script: [
         {

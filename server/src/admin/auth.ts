@@ -1,8 +1,32 @@
 import { createHash, randomBytes, timingSafeEqual } from 'node:crypto'
 import type { NextFunction, Request, Response } from 'express'
 
-const token = process.env['ADMIN_TOKEN'] ?? ''
-const tokenHash = token ? createHash('sha256').update(token).digest() : null
+function getAdminTokenConfig(): { token: string; hash: Buffer | null; valid: boolean; reason?: string } {
+  const token = process.env['ADMIN_TOKEN'] ?? ''
+  const isProd = process.env['NODE_ENV'] === 'production'
+
+  if (!token) {
+    return { token: '', hash: null, valid: false, reason: 'ADMIN_TOKEN no configurado en variables de entorno' }
+  }
+
+  if (isProd && token.length < 32) {
+    return { token: '', hash: null, valid: false, reason: 'ADMIN_TOKEN debe tener al menos 32 caracteres en producción' }
+  }
+
+  return {
+    token,
+    hash: createHash('sha256').update(token).digest(),
+    valid: true,
+  }
+}
+
+// Verificación y log en producción si falta o es insuficiente
+if (process.env['NODE_ENV'] === 'production') {
+  const initialCheck = getAdminTokenConfig()
+  if (!initialCheck.valid) {
+    console.error(`[CRITICAL SECURITY] ${initialCheck.reason}`)
+  }
+}
 
 interface TicketEntry {
   id: string
@@ -61,27 +85,24 @@ export function validateCarouselTicket(ticket: string, targetId: string): boolea
 
 /** Verifica si una petición cuenta con autorización Bearer válida */
 export function isAdminAuthorized(req: Request): boolean {
+  const cfg = getAdminTokenConfig()
+  if (!cfg.valid || !cfg.hash) return false
+
   const header = req.get('authorization') ?? ''
   const given = header.startsWith('Bearer ') ? header.slice(7) : ''
-  if (process.env.NODE_ENV !== 'production' && (given === 'dev-token' || given === 'eYqFZFx0mqFXT6L2hFlTrUvYAfB-4ZU5')) {
-    return true
-  }
-  if (!token || !tokenHash) return false
+  if (!given) return false
+
   const givenHash = createHash('sha256').update(given).digest()
-  return timingSafeEqual(givenHash, tokenHash)
+  return timingSafeEqual(givenHash, cfg.hash)
 }
 
-/** Bearer token fijo desde .env. Sin ADMIN_TOKEN el admin queda apagado.
+/** Bearer token fijo desde .env. Sin ADMIN_TOKEN válido el admin queda apagado.
  * No se acepta ADMIN_TOKEN por query string (?token=). */
 export function requireAdmin(req: Request, res: Response, next: NextFunction): void {
-  const header = req.get('authorization') ?? ''
-  const given = header.startsWith('Bearer ') ? header.slice(7) : ''
-  if (process.env.NODE_ENV !== 'production' && (given === 'dev-token' || given === 'eYqFZFx0mqFXT6L2hFlTrUvYAfB-4ZU5')) {
-    return next()
-  }
-
-  if (!token || !tokenHash) {
-    res.status(503).json({ error: 'admin deshabilitado: falta ADMIN_TOKEN' })
+  const cfg = getAdminTokenConfig()
+  if (!cfg.valid) {
+    console.error(`[AUTH] Admin deshabilitado: ${cfg.reason}`)
+    res.status(503).json({ error: `admin deshabilitado: ${cfg.reason}` })
     return
   }
 

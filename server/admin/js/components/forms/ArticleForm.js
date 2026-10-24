@@ -235,7 +235,7 @@ export const ArticleForm = {
             class="px-2 py-0.5 rounded text-[10.5px] font-mono-code border transition-colors cursor-pointer"
             :class="hasTech(t.id) ? 'bg-cyan-500/15 text-cyan-300 border-cyan-500/30 font-bold' : 'bg-white/5 text-zinc-400 border-white/5 hover:text-white'"
           >
-            {{ hasTech(t.id) ? '[✓]' : '[+]' }} {{ t.name }}
+            {{ hasTech(t.id) ? '[x]' : '[+]' }} {{ t.name }}
           </button>
         </div>
       </div>

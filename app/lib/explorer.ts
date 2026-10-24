@@ -19,6 +19,16 @@ import type { AnyRecord, Article, Doc, Experience, LinkRef, Org, Project, Schema
 import { fieldMeta, fieldsFor, type CollectionKey, type DocField, type DocKey, type FieldMeta } from '~/lib/fieldMeta'
 import { isDoc, isRoot, routeFor, type Path } from '~/lib/path'
 import { filtersFor, listEndpoint, listFilters, type Answer, type useApi } from '~/composables/useApi'
+import {
+  fallbackArticles,
+  fallbackExperience,
+  fallbackProjects,
+  fallbackSchemaData,
+  fallbackStack,
+  getFallbackOrgsList,
+  getFallbackProjects,
+  getFallbackRecord,
+} from '~/lib/fallbackData'
 
 export type { AnyRecord, Article, Doc, Experience, LinkRef, Org, Project, TechRef }
 
@@ -410,9 +420,9 @@ export async function resolveExplorer(api: Api, path: Path, query: LocationQuery
   if (!root) {
     // La raíz es la base de datos completa: sus colecciones y documentos
     const [schema, projectsRes, expRes, homeRes] = await Promise.all([
-      preloadedSchema ? Promise.resolve(preloadedSchema) : api.schema(),
-      api.list('projects').catch(() => null),
-      api.list('experience').catch(() => null),
+      (preloadedSchema ? Promise.resolve(preloadedSchema) : api.schema()).catch(() => fallbackSchemaData),
+      api.list('projects').catch(() => ({ data: fallbackProjects, meta: { count: fallbackProjects.length, filters: {} }, request: 'GET /api/projects [fallback]', status: 200, ms: 0 })),
+      api.list('experience').catch(() => ({ data: fallbackExperience, meta: { count: fallbackExperience.length, filters: {} }, request: 'GET /api/experience [fallback]', status: 200, ms: 0 })),
       api.doc('home').catch(() => null),
     ])
     last = schema
@@ -546,11 +556,17 @@ export async function resolveExplorer(api: Api, path: Path, query: LocationQuery
   let record: AnyRecord | null = null
   if (listEndpoint[collection]) {
     const answer = await api.list(collection, query).catch((err) => {
-      console.warn(`[explorer] api.list failed for ${collection}:`, err)
+      console.warn(`[explorer] api.list failed for ${collection}, using fallback:`, err)
+      let fbData: AnyRecord[] = []
+      if (collection === 'projects') fbData = getFallbackProjects(filtersFor('projects', query)) as unknown as AnyRecord[]
+      else if (collection === 'experience') fbData = fallbackExperience as unknown as AnyRecord[]
+      else if (collection === 'stack') fbData = fallbackStack as unknown as AnyRecord[]
+      else if (collection === 'articles') fbData = fallbackArticles as unknown as AnyRecord[]
+      else if (collection === 'orgs') fbData = getFallbackOrgsList() as unknown as AnyRecord[]
       return {
-        data: [] as AnyRecord[],
-        meta: { count: 0, filters: {} },
-        request: `/${collection}`,
+        data: fbData,
+        meta: { count: fbData.length, filters: filtersFor(collection, query) },
+        request: `GET /api/${collection} [fallback]`,
         status: 200,
         ms: 0,
       } as unknown as Answer<Project[] | Experience[]>
@@ -626,18 +642,42 @@ export async function resolveExplorer(api: Api, path: Path, query: LocationQuery
     next = vecino(records[at + 1])
 
     if (collection === 'projects' || collection === 'articles') {
-      const one = await api.record(collection, slug)
+      const one = await api.record(collection, slug).catch((err) => {
+        const fb = getFallbackRecord(collection, slug)
+        if (fb) {
+          return {
+            data: fb as AnyRecord,
+            meta: { count: 1, filters: {} },
+            request: `GET /api/${collection}/${slug} [fallback]`,
+            status: 200,
+            ms: 0,
+          } as Answer<AnyRecord>
+        }
+        throw err
+      })
       last = one
       record = one.data
     }
     else {
-      record = records[at] ?? null
+      record = records[at] ?? (getFallbackRecord(collection, slug) as AnyRecord | null)
       if (!record) throw notFound()
     }
   }
   else {
     if (!slug) throw notFound(`${collection} no tiene lista: se llega desde un record`)
-    const one = await api.record(collection, slug)
+    const one = await api.record(collection, slug).catch((err) => {
+      const fb = getFallbackRecord(collection, slug)
+      if (fb) {
+        return {
+          data: fb as AnyRecord,
+          meta: { count: 1, filters: {} },
+          request: `GET /api/${collection}/${slug} [fallback]`,
+          status: 200,
+          ms: 0,
+        } as Answer<AnyRecord>
+      }
+      throw err
+    })
     last = one
     record = one.data
   }

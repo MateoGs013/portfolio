@@ -45,10 +45,11 @@ app.use(['/admin', '/api/admin'], helmet.contentSecurityPolicy({
   },
 }))
 
-// M2: Rate limiting general para la API pública
+// M2: Rate limiting general para la API pública (desacoplado de /api/admin)
 const publicApiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   limit: 300,
+  skip: (req) => req.baseUrl.startsWith('/api/admin') || req.path.startsWith('/admin') || (Boolean(req.originalUrl) && req.originalUrl.startsWith('/api/admin')),
   standardHeaders: 'draft-8',
   legacyHeaders: false,
   message: { error: 'demasiadas peticiones, por favor reintente más tarde' },
@@ -59,10 +60,14 @@ const adminAuthFailuresLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   limit: 30,
   skip: (req) => {
-    // 1. En desarrollo o pruebas locales, omitir rate limiting
+    // 1. En desarrollo o pruebas locales, omitir rate limiting salvo si es producción
     if (process.env['NODE_ENV'] !== 'production') return true
-    const ip = req.ip || ''
-    if (ip === '127.0.0.1' || ip === '::1' || ip.includes('127.0.0.1')) return true
+
+    // En producción, solo omitir localhost bajo configuración explícita
+    if (process.env['ADMIN_RATE_LIMIT_ALLOW_LOCALHOST'] === 'true') {
+      const ip = req.ip || ''
+      if (ip === '127.0.0.1' || ip === '::1' || ip.includes('127.0.0.1')) return true
+    }
 
     // 2. Si la petición ya incluye un Bearer token legítimo y verificado, jamás bloquear al administrador
     if (isAdminAuthorized(req)) return true
@@ -112,14 +117,17 @@ app.use('/api', corsMiddleware)
 app.use('/media', corsMiddleware)
 app.use('/uploads', corsMiddleware)
 
-app.use(express.json({ limit: '2mb' }))
+// Liveness probe ligero (sin consulta a base de datos)
+app.get('/api/live', (_req, res) => {
+  res.status(200).json(envelope({ ok: true }))
+})
 
-// Baja #1: Verificación de salud sin fuga de versión de la base de datos
+// Verificación de salud real de la base de datos (ok refleja dbOk real)
 app.get('/api/health', async (_req, res) => {
   const dbOk = await db.$queryRaw`select 1`
     .then(() => true)
     .catch(() => false)
-  res.status(dbOk ? 200 : 503).json(envelope({ ok: true, db: dbOk }))
+  res.status(dbOk ? 200 : 503).json(envelope({ ok: dbOk, db: dbOk }))
 })
 
 // Archivos estáticos de media con protección contra MIME-sniffing y caché de 7 días
@@ -140,12 +148,12 @@ app.use('/uploads', express.static(path.resolve('public/media'), {
   },
 }))
 
-// Rutas de API pública con rate limiter
-app.use('/api', publicApiLimiter, schema, projects, experience, stack, orgs, docs, articles)
-
-// Rutas de administración con rate limiter para fallos de auth
-app.use('/api/admin', adminAuthFailuresLimiter, adminApi)
+// Rutas de administración: parser de 2mb y rate limiter de auth desacoplado
+app.use('/api/admin', express.json({ limit: '2mb' }), adminAuthFailuresLimiter, adminApi)
 app.use('/admin', adminUi)
+
+// Rutas de API pública: parser de 100kb y publicApiLimiter desacoplado del admin
+app.use('/api', express.json({ limit: '100kb' }), publicApiLimiter, schema, projects, experience, stack, orgs, docs, articles)
 
 app.use((_req, res) => {
   res.status(404).json({ error: 'not found' })

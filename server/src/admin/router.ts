@@ -245,7 +245,14 @@ adminApi.delete('/projects/:id', async (req, res) => {
 
 // ─── media ──────────────────────────────────────────────────────────────────
 
-const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 * 1024 * 1024 } })
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: {
+    files: 1,
+    fields: 10,
+    fileSize: 10 * 1024 * 1024,
+  },
+})
 
 async function removeFile(src: string) {
   const abs = path.resolve('public', '.' + src)
@@ -534,8 +541,16 @@ adminApi.delete('/articles/:id', async (req, res) => {
 // ─── errores del admin ──────────────────────────────────────────────────────
 
 adminApi.use((err: unknown, _req: Request, res: Response, next: NextFunction) => {
-  if (err instanceof multer.MulterError && err.code === 'LIMIT_FILE_SIZE') {
-    res.status(413).json({ error: 'el archivo supera el límite de 10MB' })
+  if (err instanceof multer.MulterError) {
+    if (err.code === 'LIMIT_FILE_SIZE') {
+      res.status(413).json({ error: 'el archivo supera el límite de 10MB' })
+      return
+    }
+    if (err.code === 'LIMIT_FILE_COUNT') {
+      res.status(400).json({ error: 'solo se permite subir 1 archivo' })
+      return
+    }
+    res.status(400).json({ error: `error en subida de archivo: ${err.message}` })
     return
   }
   if (err instanceof HttpError) {

@@ -54,20 +54,24 @@ radarRouter.get('/trends', async (req: Request, res: Response) => {
     return res.status(result.status).json(result.data)
   }
   // Fallback si Eros está desconectado o en inicialización
-  res.json(fallbackTrends)
+  res.setHeader('X-Eros-Source', 'fallback')
+  res.json(fallbackTrends.map(t => ({ ...t, _source: 'fallback' })))
 })
 
 /** POST /api/admin/radar/scan - Dispara un escaneo de fuentes tecnológicas */
 radarRouter.post('/scan', async (req: Request, res: Response) => {
-  const limit = req.query['limit'] ? String(req.query['limit']) : '15'
-  const result = await forwardToEros(`api/radar/scan?limit=${limit}`, { method: 'POST' })
+  const rawLimit = Number.parseInt(String(req.query['limit'] ?? '15'), 10)
+  const limit = Number.isFinite(rawLimit) && rawLimit > 0 ? Math.min(rawLimit, 100) : 15
+  const result = await forwardToEros(`api/radar/scan?limit=${encodeURIComponent(String(limit))}`, { method: 'POST' })
   if (result.ok) {
     return res.status(result.status).json(result.data)
   }
+  res.setHeader('X-Eros-Source', 'fallback')
   res.json({
+    _source: 'fallback',
     total_found: fallbackTrends.length,
     new_trends: fallbackTrends.length,
-    trends: fallbackTrends,
+    trends: fallbackTrends.map(t => ({ ...t, _source: 'fallback' })),
   })
 })
 
@@ -79,7 +83,10 @@ radarRouter.get('/trends/:id', async (req: Request, res: Response) => {
     return res.status(result.status).json(result.data)
   }
   const found = fallbackTrends.find(t => t.id === id)
-  if (found) return res.json(found)
+  if (found) {
+    res.setHeader('X-Eros-Source', 'fallback')
+    return res.json({ ...found, _source: 'fallback' })
+  }
   res.status(404).json({ error: 'Tendencia no encontrada' })
 })
 

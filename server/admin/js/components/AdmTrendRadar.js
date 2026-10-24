@@ -96,6 +96,12 @@ export const AdmTrendRadar = {
       return 'text-zinc-400 border-zinc-500/30 bg-zinc-500/10'
     }
 
+    const isFallback = computed(() => {
+      if (store.radar.selected && store.radar.selected._source === 'fallback') return true
+      if (Array.isArray(store.radar.trends) && store.radar.trends.some(t => t._source === 'fallback')) return true
+      return false
+    })
+
     return {
       store,
       icons: ICONS,
@@ -109,6 +115,7 @@ export const AdmTrendRadar = {
       handleGenerate,
       formatSource,
       formatScoreColor,
+      isFallback,
     }
   },
   template: `
@@ -147,12 +154,20 @@ export const AdmTrendRadar = {
             :disabled="store.radar.isScanning"
             class="btn-primary !h-[34px] !px-3.5 !text-xs cursor-pointer inline-flex items-center gap-1.5 font-mono-code bg-cyan-600 hover:bg-cyan-500 border-cyan-500"
           >
-            <span v-if="store.radar.isScanning" class="animate-spin text-xs">↻</span>
+            <svg v-if="store.radar.isScanning" class="adm-icon sm animate-spin" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
             <svg v-else class="adm-icon sm" viewBox="0 0 24 24"><path d="M19.07 4.93A10 10 0 0 0 4.93 19.07"/><path d="M16.24 7.76A6 6 0 0 0 7.76 16.24"/><path d="M13.41 10.59a2 2 0 0 0-2.82 2.82"/><line x1="12" y1="12" x2="21" y2="3"/></svg>
             <span>{{ store.radar.isScanning ? 'Escaneando Fuentes...' : 'Escanear Tendencias Ahora' }}</span>
           </button>
         </div>
       </header>
+
+      <!-- Banner Sutil de Snapshot Local / Eros Desconectado -->
+      <div v-if="isFallback" class="flex items-center gap-2 px-4 py-1.5 bg-amber-500/10 border-b border-amber-500/25 text-amber-300 font-mono-code text-[11px] shrink-0">
+        <span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span>
+        <span class="font-semibold uppercase tracking-wider">SNAPSHOT LOCAL // EROS AGENT EN REPOSO</span>
+        <span class="text-zinc-600">·</span>
+        <span class="text-zinc-400 truncate">Visualizando datos locales de contingencia porque Eros Agent está desconectado</span>
+      </div>
 
       <!-- 2. CONTENIDO PRINCIPAL: MASTER-DETAIL DUAL PANE -->
       <div class="flex-1 flex overflow-hidden">
@@ -280,9 +295,10 @@ export const AdmTrendRadar = {
                 </div>
                 <span
                   v-if="trend.status === 'GENERATED'"
-                  class="text-emerald-400 font-bold"
+                  class="text-emerald-400 font-bold inline-flex items-center gap-1"
                 >
-                  ✓ GENERADA
+                  <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                  <span>GENERADA</span>
                 </span>
               </div>
             </div>

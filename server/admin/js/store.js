@@ -875,3 +875,10 @@ for (const key of Object.keys(store)) {
   }
 }
 
+// Deslogueo unificado y limpio ante respuesta 401 de la API
+api.setOnAuthError(() => {
+  store.token = ''
+  store.tokenInput = ''
+  store.toast('err', 'Sesión expirada o token no autorizado.')
+})
+

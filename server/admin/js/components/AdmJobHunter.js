@@ -266,16 +266,8 @@ export const AdmJobHunter = {
     async function getCVTicket() {
       if (!store.hunter.selected) return null
       try {
-        const res = await fetch(`/api/admin/hunter/cv/${encodeURIComponent(store.hunter.selected.id)}/ticket`, {
-          method: 'POST',
-          headers: { Authorization: `Bearer ${store.token}` },
-        })
-        if (!res.ok) {
-          store.toast('err', 'No se pudo generar ticket para el CV')
-          return null
-        }
-        const data = await res.json()
-        return data.ticket || null
+        const data = await api.getHunterCVTicket(store.hunter.selected.id)
+        return data?.ticket || null
       } catch {
         store.toast('err', 'Error al solicitar ticket para el CV')
         return null
@@ -299,14 +291,7 @@ export const AdmJobHunter = {
     async function downloadTailoredCVHtml() {
       if (!store.hunter.selected) return
       try {
-        const res = await fetch(`/api/admin/hunter/cv/${encodeURIComponent(store.hunter.selected.id)}/html?download=true`, {
-          headers: { Authorization: `Bearer ${store.token}` },
-        })
-        if (!res.ok) {
-          store.toast('err', 'Error al descargar CV')
-          return
-        }
-        const blob = await res.blob()
+        const blob = await api.downloadHunterCVHtml(store.hunter.selected.id)
         const url = URL.createObjectURL(blob)
         const a = document.createElement('a')
         a.href = url
@@ -440,6 +425,12 @@ export const AdmJobHunter = {
       isEditingEmail.value = false
     }
 
+    const isFallback = computed(() => {
+      if (store.hunter.selected && store.hunter.selected._source === 'fallback') return true
+      if (Array.isArray(store.hunter.jobs) && store.hunter.jobs.some(j => j._source === 'fallback')) return true
+      return false
+    })
+
     return {
       store,
       hunterPitch,
@@ -450,6 +441,7 @@ export const AdmJobHunter = {
       filteredJobs,
       pendingJobsCount,
       selectedAnalysis,
+      isFallback,
       selectJob,
       setJobStatus,
       generatePitch,
@@ -484,92 +476,101 @@ export const AdmJobHunter = {
     }
   },
   template: `
-    <div class="flex-1 flex overflow-hidden bg-[#08090a]">
-      <!-- Lista Lateral de Vacantes (340px) -->
-      <div
-        class="bg-[#101114] border-r border-white/10 flex-col shrink-0 overflow-hidden select-none"
-        :class="hunterMobileView === 'list' ? 'flex w-full md:w-84' : 'hidden md:flex md:w-84'"
-      >
-        <div class="p-3 border-b border-white/10 space-y-2.5 bg-[#0c0d10]">
-          <!-- Fila 1: Título y Acción Secundaria (Depurar) -->
-          <div class="flex items-center justify-between gap-2">
-            <div class="flex items-center gap-2 min-w-0">
-              <span class="w-2 h-2 rounded-full bg-emerald-400 shrink-0"></span>
-              <h2 class="text-xs font-bold text-white uppercase font-mono-code tracking-wide truncate">
-                Eros Hunter
-              </h2>
-              <span 
-                class="text-[10px] font-mono-code bg-white/5 text-zinc-400 px-1.5 py-0.5 rounded border border-white/10 shrink-0"
-                :title="'Mostrando ' + filteredJobs.length + ' de ' + store.hunter.jobs.length + ' vacantes'"
-              >
-                {{ filteredJobs.length }}<span v-if="filteredJobs.length !== store.hunter.jobs.length" class="text-zinc-500">/{{ store.hunter.jobs.length }}</span>
-              </span>
+    <div class="flex-1 flex flex-col overflow-hidden bg-[#08090a]">
+      <!-- Banner Sutil de Snapshot Local / Eros Desconectado -->
+      <div v-if="isFallback" class="flex items-center gap-2 px-3.5 py-1.5 bg-amber-500/10 border-b border-amber-500/25 text-amber-300 font-mono-code text-[11px] shrink-0">
+        <span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span>
+        <span class="font-semibold uppercase tracking-wider">SNAPSHOT LOCAL // EROS AGENT EN REPOSO</span>
+        <span class="text-zinc-600">·</span>
+        <span class="text-zinc-400 truncate">Visualizando datos locales de contingencia porque Eros Agent está desconectado</span>
+      </div>
+
+      <div class="flex-1 flex overflow-hidden">
+        <!-- Lista Lateral de Vacantes (340px) -->
+        <div
+          class="bg-[#101114] border-r border-white/10 flex-col shrink-0 overflow-hidden select-none"
+          :class="hunterMobileView === 'list' ? 'flex w-full md:w-84' : 'hidden md:flex md:w-84'"
+        >
+          <div class="p-3 border-b border-white/10 space-y-2.5 bg-[#0c0d10]">
+            <!-- Fila 1: Título y Acción Secundaria (Depurar) -->
+            <div class="flex items-center justify-between gap-2">
+              <div class="flex items-center gap-2 min-w-0">
+                <span class="w-2 h-2 rounded-full bg-emerald-400 shrink-0"></span>
+                <h2 class="text-xs font-bold text-white uppercase font-mono-code tracking-wide truncate">
+                  Eros Hunter
+                </h2>
+                <span 
+                  class="text-[10px] font-mono-code bg-white/5 text-zinc-400 px-1.5 py-0.5 rounded border border-white/10 shrink-0"
+                  :title="'Mostrando ' + filteredJobs.length + ' de ' + store.hunter.jobs.length + ' vacantes'"
+                >
+                  {{ filteredJobs.length }}<span v-if="filteredJobs.length !== store.hunter.jobs.length" class="text-zinc-500">/{{ store.hunter.jobs.length }}</span>
+                </span>
+              </div>
+
+              <div class="flex items-center gap-1 shrink-0">
+                <button
+                  type="button"
+                  @click="vectorizeJobs"
+                  :disabled="store.hunter.isVectorizing"
+                  title="Vectorizar vacantes con Gemini text-embedding"
+                  class="btn-ghost !h-[26px] !px-1.5 !text-[11px] cursor-pointer text-zinc-400 hover:text-cyan-300 font-mono-code inline-flex items-center gap-1 shrink-0 disabled:opacity-50"
+                >
+                  <svg v-if="store.hunter.isVectorizing" class="adm-icon xs animate-spin text-cyan-400" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
+                  <svg v-else class="adm-icon xs text-zinc-400" viewBox="0 0 24 24"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+                  <span class="hidden sm:inline">{{ store.hunter.isVectorizing ? 'Indexando...' : 'Vectorizar' }}</span>
+                </button>
+                <button
+                  type="button"
+                  @click="purgeJobs"
+                  :disabled="store.hunter.isPurging"
+                  title="Depurar vacantes incompatibles (W2 / EE.UU. Only / Obsoletas / Descartadas)"
+                  class="btn-ghost !h-[26px] !px-1.5 !text-[11px] cursor-pointer text-zinc-400 hover:text-white font-mono-code inline-flex items-center gap-1 shrink-0 disabled:opacity-50"
+                >
+                  <svg v-if="store.hunter.isPurging" class="adm-icon xs animate-spin text-zinc-400" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
+                  <svg v-else class="adm-icon xs text-zinc-400" viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+                  <span>{{ store.hunter.isPurging ? 'Depurando...' : 'Depurar' }}</span>
+                </button>
+                <button
+                  type="button"
+                  @click="deleteAllJobs"
+                  :disabled="store.hunter.isDeletingAll || store.hunter.jobs.length === 0"
+                  title="Eliminar todas las vacantes escaneadas para escanear todo desde cero"
+                  class="btn-ghost !h-[26px] !px-1.5 !text-[11px] cursor-pointer text-zinc-400 hover:text-rose-400 font-mono-code inline-flex items-center gap-1 shrink-0 disabled:opacity-40"
+                >
+                  <svg v-if="store.hunter.isDeletingAll" class="adm-icon xs animate-spin text-rose-400" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
+                  <svg v-else class="adm-icon xs text-zinc-400 hover:text-rose-400" viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+                  <span>{{ store.hunter.isDeletingAll ? 'Borrando...' : 'Vaciar' }}</span>
+                </button>
+              </div>
             </div>
 
-            <div class="flex items-center gap-1 shrink-0">
+            <!-- Fila 2: Acciones Principales (Escanear & Evaluar con IA) -->
+            <div class="grid grid-cols-2 gap-2">
               <button
                 type="button"
-                @click="vectorizeJobs"
-                :disabled="store.hunter.isVectorizing"
-                title="Vectorizar vacantes con Gemini text-embedding"
-                class="btn-ghost !h-[26px] !px-1.5 !text-[11px] cursor-pointer text-zinc-400 hover:text-cyan-300 font-mono-code inline-flex items-center gap-1 shrink-0 disabled:opacity-50"
+                @click="scanJobs"
+                :disabled="store.hunter.isScanning"
+                class="btn-primary !h-[30px] !px-2 text-xs font-semibold cursor-pointer disabled:opacity-50 inline-flex items-center justify-center gap-1.5"
               >
-                <svg v-if="store.hunter.isVectorizing" class="adm-icon xs animate-spin text-cyan-400" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
-                <svg v-else class="adm-icon xs text-zinc-400" viewBox="0 0 24 24"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
-                <span class="hidden sm:inline">{{ store.hunter.isVectorizing ? 'Indexando...' : 'Vectorizar' }}</span>
+                <svg v-if="store.hunter.isScanning" class="adm-icon xs animate-spin" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
+                <svg v-else class="adm-icon xs" viewBox="0 0 24 24"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+                <span>{{ store.hunter.isScanning ? 'Escaneando...' : 'Escanear' }}</span>
               </button>
               <button
                 type="button"
-                @click="purgeJobs"
-                :disabled="store.hunter.isPurging"
-                title="Depurar vacantes incompatibles (W2 / EE.UU. Only / Obsoletas / Descartadas)"
-                class="btn-ghost !h-[26px] !px-1.5 !text-[11px] cursor-pointer text-zinc-400 hover:text-white font-mono-code inline-flex items-center gap-1 shrink-0 disabled:opacity-50"
+                @click="evaluatePendingJobs"
+                :disabled="store.hunter.isEvaluating"
+                :title="pendingJobsCount > 0 ? ('Evaluar con IA las ' + pendingJobsCount + ' vacantes pendientes') : 'Evaluar vacantes pendientes'"
+                class="btn-secondary !h-[30px] !px-2 text-xs font-semibold cursor-pointer text-amber-300 border-amber-500/30 hover:bg-amber-500/10 disabled:opacity-50 inline-flex items-center justify-center gap-1.5"
               >
-                <svg v-if="store.hunter.isPurging" class="adm-icon xs animate-spin text-zinc-400" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
-                <svg v-else class="adm-icon xs text-zinc-400" viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
-                <span>{{ store.hunter.isPurging ? 'Depurando...' : 'Depurar' }}</span>
-              </button>
-              <button
-                type="button"
-                @click="deleteAllJobs"
-                :disabled="store.hunter.isDeletingAll || store.hunter.jobs.length === 0"
-                title="Eliminar todas las vacantes escaneadas para escanear todo desde cero"
-                class="btn-ghost !h-[26px] !px-1.5 !text-[11px] cursor-pointer text-zinc-400 hover:text-rose-400 font-mono-code inline-flex items-center gap-1 shrink-0 disabled:opacity-40"
-              >
-                <svg v-if="store.hunter.isDeletingAll" class="adm-icon xs animate-spin text-rose-400" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
-                <svg v-else class="adm-icon xs text-zinc-400 hover:text-rose-400" viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
-                <span>{{ store.hunter.isDeletingAll ? 'Borrando...' : 'Vaciar' }}</span>
+                <svg v-if="store.hunter.isEvaluating" class="adm-icon xs animate-spin text-amber-300" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
+                <svg v-else class="adm-icon xs text-amber-300" viewBox="0 0 24 24"><path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3L12 3z"/></svg>
+                <span>{{ store.hunter.isEvaluating ? 'Evaluando...' : 'Evaluar' }}</span>
+                <span v-if="!store.hunter.isEvaluating && pendingJobsCount > 0" class="text-[10px] bg-amber-500/20 text-amber-300 px-1 py-0.2 rounded font-mono-code">
+                  {{ pendingJobsCount }}
+                </span>
               </button>
             </div>
-          </div>
-
-          <!-- Fila 2: Acciones Principales (Escanear & Evaluar con IA) -->
-          <div class="grid grid-cols-2 gap-2">
-            <button
-              type="button"
-              @click="scanJobs"
-              :disabled="store.hunter.isScanning"
-              class="btn-primary !h-[30px] !px-2 text-xs font-semibold cursor-pointer disabled:opacity-50 inline-flex items-center justify-center gap-1.5"
-            >
-              <span v-if="store.hunter.isScanning" class="animate-spin inline-block text-[11px]">↻</span>
-              <svg v-else class="adm-icon xs" viewBox="0 0 24 24"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/></svg>
-              <span>{{ store.hunter.isScanning ? 'Escaneando...' : 'Escanear' }}</span>
-            </button>
-            <button
-              type="button"
-              @click="evaluatePendingJobs"
-              :disabled="store.hunter.isEvaluating"
-              :title="pendingJobsCount > 0 ? ('Evaluar con IA las ' + pendingJobsCount + ' vacantes pendientes') : 'Evaluar vacantes pendientes'"
-              class="btn-secondary !h-[30px] !px-2 text-xs font-semibold cursor-pointer text-amber-300 border-amber-500/30 hover:bg-amber-500/10 disabled:opacity-50 inline-flex items-center justify-center gap-1.5"
-            >
-              <span v-if="store.hunter.isEvaluating" class="animate-spin inline-block text-[11px]">↻</span>
-              <svg v-else class="adm-icon xs text-amber-300" viewBox="0 0 24 24"><path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3L12 3z"/></svg>
-              <span>{{ store.hunter.isEvaluating ? 'Evaluando...' : 'Evaluar' }}</span>
-              <span v-if="!store.hunter.isEvaluating && pendingJobsCount > 0" class="text-[10px] bg-amber-500/20 text-amber-300 px-1 py-0.2 rounded font-mono-code">
-                {{ pendingJobsCount }}
-              </span>
-            </button>
-          </div>
 
           <!-- Traza de Razonamiento IA: Escaneo y Evaluación de Cola (Bencho UI) -->
           <adm-ai-trace
@@ -1205,7 +1206,7 @@ export const AdmJobHunter = {
                     @click="copyConnectionNoteText"
                     class="btn-primary !h-[28px] !text-xs inline-flex items-center gap-1.5 cursor-pointer font-mono-code"
                   >
-                    <span v-if="copiedNote" class="text-emerald-300 font-bold">[Copiado ✓]</span>
+                    <span v-if="copiedNote" class="text-emerald-300 font-bold">[COPIADO OK]</span>
                     <span v-else>Copiar Nota de Conexión</span>
                   </button>
                 </div>
@@ -1683,7 +1684,7 @@ export const AdmJobHunter = {
                 :disabled="store.hunter.isApplying"
                 class="btn-primary !h-[32px] !px-4 text-xs font-mono-code font-bold cursor-pointer inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white border-blue-400 disabled:opacity-50"
               >
-                <span v-if="store.hunter.isApplying" class="animate-spin inline-block text-[11px]">↻</span>
+                <svg v-if="store.hunter.isApplying" class="adm-icon xs animate-spin" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
                 <svg v-else class="adm-icon xs" viewBox="0 0 24 24"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>
                 <span>{{ store.hunter.isApplying ? 'Despachando...' : 'Despachar Postulacion' }}</span>
               </button>
@@ -1692,5 +1693,6 @@ export const AdmJobHunter = {
         </div>
       </div>
     </div>
+  </div>
   `,
 }

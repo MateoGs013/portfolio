@@ -1,7 +1,7 @@
 import { Router, type Request, type Response } from 'express'
 import { env } from '../env.js'
 import { createCvTicket, isAdminAuthorized, validateCvTicket } from './auth.js'
-import { forwardToEros, getParamId, getErosBaseUrl } from './proxy.js'
+import { forwardToEros, getParamId, getErosBaseUrl, isCircuitOpen, recordErosFailure } from './proxy.js'
 import {
   fallbackHunterJobs,
   evaluateJobHeuristic,
@@ -31,7 +31,11 @@ hunterRouter.get('/stats', async (_req: Request, res: Response) => {
   if (result.ok) {
     res.status(result.status).json(result.data)
   } else {
-    res.json(computeHunterStats())
+    res.setHeader('X-Eros-Source', 'fallback')
+    res.json({
+      ...computeHunterStats(),
+      _source: 'fallback',
+    })
   }
 })
 
@@ -51,7 +55,8 @@ hunterRouter.get('/jobs', async (req: Request, res: Response) => {
   }
 
   // Fallback si Eros está desconectado o no autorizado
-  let jobs = [...fallbackHunterJobs]
+  res.setHeader('X-Eros-Source', 'fallback')
+  let jobs = fallbackHunterJobs.map(j => ({ ...j, _source: 'fallback' }))
   const statusFilter = req.query['status'] as string | undefined
   if (statusFilter && statusFilter !== 'all') {
     jobs = jobs.filter(j => j.status === statusFilter)
@@ -78,11 +83,13 @@ hunterRouter.post('/scan', async (req: Request, res: Response) => {
     res.status(result.status).json(result.data)
     return
   }
+  res.setHeader('X-Eros-Source', 'fallback')
   res.json({
     ok: true,
+    _source: 'fallback',
     scanned_count: fallbackHunterJobs.length,
     new_jobs_count: fallbackHunterJobs.filter(j => j.status === 'new').length,
-    message: 'Escaneo sincronizado con snapshot de vacantes activas',
+    message: 'Escaneo sincronizado con snapshot de vacantes activas (modo contingencia)',
   })
 })
 
@@ -98,7 +105,8 @@ hunterRouter.post('/evaluate', async (req: Request, res: Response) => {
     return
   }
   const fallbackResult = evaluateMultipleJobsHeuristic(Number(limit) || 15)
-  res.json(fallbackResult)
+  res.setHeader('X-Eros-Source', 'fallback')
+  res.json({ ...fallbackResult, _source: 'fallback' })
 })
 
 /** POST /api/admin/hunter/jobs/:id/evaluate */
@@ -119,9 +127,11 @@ hunterRouter.post(['/evaluate/:id', '/jobs/:id/evaluate'], async (req: Request, 
     return
   }
   const evalResult = evaluateJobHeuristic(job)
+  res.setHeader('X-Eros-Source', 'fallback')
   res.json({
     ok: true,
-    job: evalResult.job,
+    _source: 'fallback',
+    job: { ...evalResult.job, _source: 'fallback' },
     match: evalResult.match,
   })
 })
@@ -133,7 +143,10 @@ hunterRouter.post('/purge', async (_req: Request, res: Response) => {
     res.status(result.status).json(result.data)
     return
   }
-  res.json({ ok: true, purged_count: 0 })
+  res.status(503).json({
+    ok: false,
+    error: 'Eros Agent no disponible para purgar vacantes',
+  })
 })
 
 /** POST /api/admin/hunter/search/semantic */
@@ -152,10 +165,13 @@ hunterRouter.post(['/search/semantic', '/semantic-search'], async (req: Request,
     j.company.toLowerCase().includes(q) ||
     j.tags.some(t => t.toLowerCase().includes(q))
   )
+  res.setHeader('X-Eros-Source', 'fallback')
   res.json({
     ok: true,
+    _source: 'fallback',
     results: matches.map(j => ({
       ...j,
+      _source: 'fallback',
       semantic_score: 0.85,
     })),
   })
@@ -171,7 +187,10 @@ hunterRouter.post('/vectorize', async (req: Request, res: Response) => {
     res.status(result.status).json(result.data)
     return
   }
-  res.json({ ok: true, vectorized_count: fallbackHunterJobs.length })
+  res.status(503).json({
+    ok: false,
+    error: 'Eros Agent no disponible para vectorizar vacantes',
+  })
 })
 
 /** POST /api/admin/hunter/pitch/:id */
@@ -191,7 +210,8 @@ hunterRouter.post(['/pitch/:id', '/jobs/:id/pitch'], async (req: Request, res: R
     res.status(404).json({ error: 'Vacante no encontrada' })
     return
   }
-  res.json(generatePitchHeuristic(job))
+  res.setHeader('X-Eros-Source', 'fallback')
+  res.json({ ...generatePitchHeuristic(job), _source: 'fallback' })
 })
 
 /** POST /api/admin/hunter/cv/:id */
@@ -211,7 +231,8 @@ hunterRouter.post(['/cv/:id', '/jobs/:id/cv'], async (req: Request, res: Respons
     res.status(404).json({ error: 'Vacante no encontrada' })
     return
   }
-  res.json(generateCvHeuristic(job))
+  res.setHeader('X-Eros-Source', 'fallback')
+  res.json({ ...generateCvHeuristic(job), _source: 'fallback' })
 })
 
 /** GET /api/admin/hunter/cv/:id/html */
@@ -229,8 +250,9 @@ hunterRouter.get(['/cv/:id/html', '/jobs/:id/cv/html'], async (req: Request, res
   }
   const baseUrl = getErosBaseUrl()
   let html: string | null = null
+  let isFallbackHtml = false
 
-  if (baseUrl) {
+  if (baseUrl && !isCircuitOpen()) {
     try {
       const upstreamRes = await fetch(`${baseUrl}/api/cv/${encodeURIComponent(id)}/html`, {
         headers: {
@@ -240,9 +262,11 @@ hunterRouter.get(['/cv/:id/html', '/jobs/:id/cv/html'], async (req: Request, res
       })
       if (upstreamRes.ok) {
         html = await upstreamRes.text()
+      } else {
+        recordErosFailure()
       }
     } catch {
-      // Upstream failed, fallback abajo
+      recordErosFailure()
     }
   }
 
@@ -250,12 +274,17 @@ hunterRouter.get(['/cv/:id/html', '/jobs/:id/cv/html'], async (req: Request, res
     const job = fallbackHunterJobs.find(j => j.id === id || j.external_id === id)
     if (job) {
       html = renderCvHtmlHeuristic(job)
+      isFallbackHtml = true
     }
   }
 
   if (!html) {
     res.status(404).type('html').send('<h1>CV no disponible</h1><p>Vacante no encontrada en Eros ni en snapshot local.</p>')
     return
+  }
+
+  if (isFallbackHtml) {
+    res.setHeader('X-Eros-Source', 'fallback')
   }
 
   if (req.query['auto_print'] === 'true') {
@@ -342,8 +371,10 @@ hunterRouter.get(['/jobs/:id/apply-preview', '/apply-preview/:id'], async (req: 
     return
   }
   const pitch = generatePitchHeuristic(job).data
+  res.setHeader('X-Eros-Source', 'fallback')
   res.json({
     ok: true,
+    _source: 'fallback',
     to_email: job.contact_email || 'hr@company.com',
     subject: pitch.subject,
     body: `${pitch.elevator_pitch}\n\n${pitch.cover_letter}`,
@@ -366,15 +397,9 @@ hunterRouter.post(['/jobs/:id/apply-email', '/apply-email/:id'], async (req: Req
     res.status(result.status).json(result.data)
     return
   }
-  const job = fallbackHunterJobs.find(j => j.id === id || j.external_id === id)
-  if (job) {
-    job.status = 'applied'
-  }
-  res.json({
-    ok: true,
-    dispatched_to: req.body?.to_email || job?.contact_email || 'destinatario',
-    provider: 'dispatcher',
-    applied_at: new Date().toISOString(),
+  res.status(503).json({
+    ok: false,
+    error: 'Eros Agent no disponible para despachar postulación',
   })
 })
 

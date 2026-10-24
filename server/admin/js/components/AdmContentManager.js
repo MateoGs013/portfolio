@@ -499,7 +499,7 @@ export const AdmContentManager = {
                       @click="copyText(store.content.selected.hook, 'hook')"
                       class="btn-secondary !h-[26px] !text-xs font-mono-code"
                     >
-                      <span v-if="copiedKeys['hook']" class="text-emerald-400">[Copiado ✓]</span>
+                      <span v-if="copiedKeys['hook']" class="text-emerald-400 font-bold">[COPIADO OK]</span>
                       <span v-else>Copiar Hook</span>
                     </button>
                   </div>
@@ -519,7 +519,7 @@ export const AdmContentManager = {
                       @click="copyText(store.content.selected.body, 'body')"
                       class="btn-primary !h-[28px] !text-xs font-mono-code cursor-pointer"
                     >
-                      <span v-if="copiedKeys['body']" class="text-emerald-300 font-bold">[Copiado ✓]</span>
+                      <span v-if="copiedKeys['body']" class="text-emerald-300 font-bold">[COPIADO OK]</span>
                       <span v-else>Copiar Post Completo</span>
                     </button>
                   </div>
@@ -539,7 +539,7 @@ export const AdmContentManager = {
                       @click="copyText(store.content.selected.first_comment, 'first_comment')"
                       class="btn-secondary !h-[26px] !text-xs font-mono-code"
                     >
-                      <span v-if="copiedKeys['first_comment']" class="text-emerald-400">[Copiado ✓]</span>
+                      <span v-if="copiedKeys['first_comment']" class="text-emerald-400 font-bold">[COPIADO OK]</span>
                       <span v-else>Copiar 1er Comentario</span>
                     </button>
                   </div>
@@ -560,7 +560,7 @@ export const AdmContentManager = {
                     @click="copyFullThread"
                     class="btn-secondary !h-[28px] !text-xs font-mono-code"
                   >
-                    <span v-if="copiedKeys['thread']" class="text-emerald-400">[Copiado ✓]</span>
+                    <span v-if="copiedKeys['thread']" class="text-emerald-400 font-bold">[COPIADO OK]</span>
                     <span v-else>Copiar Hilo Completo</span>
                   </button>
                 </div>
@@ -578,7 +578,7 @@ export const AdmContentManager = {
                         @click="copyText(tw, 'tw_' + twIdx)"
                         class="text-zinc-400 hover:text-white text-[11px]"
                       >
-                        <span v-if="copiedKeys['tw_' + twIdx]" class="text-emerald-400">[Copiado ✓]</span>
+                        <span v-if="copiedKeys['tw_' + twIdx]" class="text-emerald-400 font-bold">[COPIADO OK]</span>
                         <span v-else>Copiar</span>
                       </button>
                     </div>
@@ -603,7 +603,7 @@ export const AdmContentManager = {
                       class="btn-primary !h-[28px] !text-xs font-mono-code cursor-pointer bg-emerald-600 hover:bg-emerald-500 border-emerald-500 text-white"
                       title="Publicar directamente como artículo en mateogs.tech/blog"
                     >
-                      <span v-if="isPublishingToBlog" class="animate-spin text-xs">↻</span>
+                      <svg v-if="isPublishingToBlog" class="adm-icon xs animate-spin inline-block mr-1" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
                       <span>{{ isPublishingToBlog ? 'Publicando...' : 'Publicar en Blog del Portafolio' }}</span>
                     </button>
                     <button
@@ -611,7 +611,7 @@ export const AdmContentManager = {
                       @click="copyText(store.content.selected.devto_markdown, 'devto')"
                       class="btn-secondary !h-[28px] !text-xs font-mono-code cursor-pointer"
                     >
-                      <span v-if="copiedKeys['devto']" class="text-emerald-300 font-bold">[Copiado ✓]</span>
+                      <span v-if="copiedKeys['devto']" class="text-emerald-300 font-bold">[COPIADO OK]</span>
                       <span v-else>Copiar Markdown Dev.to</span>
                     </button>
                   </div>

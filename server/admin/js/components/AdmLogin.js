@@ -30,9 +30,12 @@ export const AdmLogin = {
       }
     }
 
-    const isLocal = ['localhost', '127.0.0.1', '::1'].includes(window.location.hostname)
+    // Ambiente de desarrollo: ocultar estrictamente en producción (HTTPS o dominios no locales)
+    const isProduction = window.location.protocol === 'https:' || !['localhost', '127.0.0.1', '::1'].includes(window.location.hostname)
+    const showDevToken = !isProduction
 
     function useDevToken() {
+      if (!showDevToken) return
       store.tokenInput = 'dev-token'
       login()
     }
@@ -42,7 +45,7 @@ export const AdmLogin = {
       icons: ICONS,
       login,
       useDevToken,
-      isLocal,
+      showDevToken,
       isAuthenticating,
     }
   },
@@ -109,8 +112,8 @@ export const AdmLogin = {
           </button>
         </form>
 
-        <!-- Ambiente Local / Dev Helper -->
-        <div v-if="isLocal" class="pt-3 border-t border-white/10 flex items-center justify-between text-[11px] font-mono-code text-zinc-400">
+        <!-- Ambiente Local / Dev Helper (Oculto estrictamente en producción) -->
+        <div v-if="showDevToken" class="pt-3 border-t border-white/10 flex items-center justify-between text-[11px] font-mono-code text-zinc-400">
           <span class="flex items-center gap-1.5">
             <span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
             <span>Localhost</span>

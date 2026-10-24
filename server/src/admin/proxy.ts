@@ -26,11 +26,71 @@ export interface ForwardResult<T = unknown> {
   data: T
 }
 
+// ─── Circuit Breaker para peticiones upstream a Eros ───────────────────────────
+interface CircuitBreakerState {
+  failures: number
+  state: 'CLOSED' | 'OPEN' | 'HALF_OPEN'
+  nextAttemptTime: number
+}
+
+const circuitBreaker: CircuitBreakerState = {
+  failures: 0,
+  state: 'CLOSED',
+  nextAttemptTime: 0,
+}
+
+const FAILURE_THRESHOLD = 3
+const COOLDOWN_MS = 30_000
+
+export function isCircuitOpen(): boolean {
+  if (circuitBreaker.state === 'OPEN') {
+    if (Date.now() >= circuitBreaker.nextAttemptTime) {
+      circuitBreaker.state = 'HALF_OPEN'
+      return false
+    }
+    return true
+  }
+  return false
+}
+
+export function recordErosSuccess(): void {
+  circuitBreaker.failures = 0
+  circuitBreaker.state = 'CLOSED'
+}
+
+export function recordErosFailure(): void {
+  circuitBreaker.failures += 1
+  if (circuitBreaker.failures >= FAILURE_THRESHOLD || circuitBreaker.state === 'HALF_OPEN') {
+    circuitBreaker.state = 'OPEN'
+    circuitBreaker.nextAttemptTime = Date.now() + COOLDOWN_MS
+  }
+}
+
+export function getCircuitBreakerStatus() {
+  const remainingMs = Math.max(0, circuitBreaker.nextAttemptTime - Date.now())
+  return {
+    state: circuitBreaker.state,
+    failures: circuitBreaker.failures,
+    cooldownRemainingSeconds: circuitBreaker.state === 'OPEN' ? Math.ceil(remainingMs / 1000) : 0,
+  }
+}
+
 export async function forwardToEros<T = unknown>(
   urlPath: string,
   init?: RequestInit,
   timeoutMs = 60000
 ): Promise<ForwardResult<T>> {
+  if (isCircuitOpen()) {
+    const remainingSec = Math.ceil((circuitBreaker.nextAttemptTime - Date.now()) / 1000)
+    return {
+      ok: false,
+      status: 503,
+      data: {
+        error: `Eros Agent en cooldown (Circuit Breaker OPEN por fallos consecutivos). Reintentando en ${remainingSec}s`,
+      } as T,
+    }
+  }
+
   const baseUrl = getErosBaseUrl()
   if (!baseUrl) {
     return {
@@ -98,6 +158,7 @@ export async function forwardToEros<T = unknown>(
     const data = (isJson ? await res.json().catch(() => null) : await res.text()) as T
 
     if (res.status === 401 || res.status === 403) {
+      recordErosFailure()
       return {
         ok: false,
         status: 502,
@@ -105,8 +166,16 @@ export async function forwardToEros<T = unknown>(
       }
     }
 
+    if (res.status >= 500) {
+      recordErosFailure()
+      return { ok: false, status: res.status, data }
+    }
+
+    // Éxito o respuesta válida de Eros (< 500)
+    recordErosSuccess()
     return { ok: res.ok, status: res.status, data }
   } catch (err: unknown) {
+    recordErosFailure()
     const isTimeout =
       err instanceof Error &&
       (err.name === 'TimeoutError' || err.name === 'AbortError' || err.message.toLowerCase().includes('timeout'))
