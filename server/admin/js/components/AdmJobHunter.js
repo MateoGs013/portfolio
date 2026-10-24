@@ -18,14 +18,14 @@ export const AdmJobHunter = {
     const activePitchTab = ref('elevator') // 'elevator' | 'cover' | 'subject'
     const hunterMobileView = ref(store.hunter.selected ? 'detail' : 'list')
 
-    // Modal de Postulación Automatizada por Email
+    // Modal de Postulación Rápida (1 Input, 1 Clic)
     const applyModalOpen = ref(false)
     const isLoadingApplyPreview = ref(false)
+    const isCustomizingText = ref(false)
     const applyForm = reactive({
       toEmail: '',
       subject: '',
       body: '',
-      channel: 'auto',
     })
     const isEditingEmail = ref(false)
     const editEmailVal = ref('')
@@ -364,6 +364,7 @@ export const AdmJobHunter = {
       if (!store.hunter.selected) return
       applyModalOpen.value = true
       isLoadingApplyPreview.value = true
+      isCustomizingText.value = false
       applyForm.toEmail = store.hunter.selected.contact_email || ''
       applyForm.subject = ''
       applyForm.body = ''
@@ -383,12 +384,13 @@ export const AdmJobHunter = {
 
     function closeApplyModal() {
       applyModalOpen.value = false
+      isCustomizingText.value = false
     }
 
     async function submitApplyEmail() {
       if (!store.hunter.selected) return
       if (!applyForm.toEmail || !applyForm.toEmail.includes('@')) {
-        store.toast('err', 'Por favor ingresá una dirección de correo válida')
+        store.toast('err', 'Ingresá un correo de destino válido')
         return
       }
       try {
@@ -396,9 +398,11 @@ export const AdmJobHunter = {
           to_email: applyForm.toEmail.trim(),
           subject: applyForm.subject.trim(),
           body: applyForm.body,
-          channel: applyForm.channel,
+          channel: 'auto',
+          confirmed: true,
         })
         applyModalOpen.value = false
+        store.toast('ok', 'Postulación despachada por correo exitosamente')
       } catch {
         // error mostrado por el store
       }
@@ -464,6 +468,7 @@ export const AdmJobHunter = {
       copyConnectionNoteText,
       applyModalOpen,
       isLoadingApplyPreview,
+      isCustomizingText,
       applyForm,
       isEditingEmail,
       editEmailVal,
@@ -1561,20 +1566,20 @@ export const AdmJobHunter = {
         </div>
       </div>
 
-      <!-- Modal de Postulacion Automatizada por Email -->
+      <!-- Modal de Postulación Rápida (1 Input, 1 Clic) -->
       <div
         v-if="applyModalOpen"
         class="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-sm select-none"
         @click.self="closeApplyModal"
       >
-        <div class="bg-[#101115] border border-white/10 rounded-xl shadow-2xl max-w-2xl w-full max-h-[92vh] flex flex-col overflow-hidden text-zinc-200">
-          <!-- Cabecera del Modal -->
-          <div class="px-5 py-3.5 border-b border-white/10 flex items-center justify-between bg-[#14151b] shrink-0">
+        <div class="bg-[#0f1013] border border-white/10 rounded-xl shadow-2xl max-w-xl w-full max-h-[90vh] flex flex-col overflow-hidden text-zinc-200">
+          <!-- Cabecera Limpia -->
+          <div class="px-5 py-3 border-b border-white/10 flex items-center justify-between bg-[#131418] shrink-0">
             <div class="flex items-center gap-2.5 min-w-0">
-              <span class="w-2.5 h-2.5 rounded-full bg-blue-500 shrink-0"></span>
+              <span class="w-2 h-2 rounded-full bg-emerald-400 shrink-0"></span>
               <div class="min-w-0">
-                <h3 class="text-xs sm:text-sm font-bold text-white font-mono-code uppercase tracking-wider truncate">
-                  Postulacion Automatizada por Email
+                <h3 class="text-xs font-bold text-white font-mono-code uppercase tracking-wider truncate">
+                  Despacho Rápido de Postulación
                 </h3>
                 <p class="text-[11px] text-zinc-400 font-mono-code truncate">
                   {{ store.hunter.selected?.title }} · {{ store.hunter.selected?.company }}
@@ -1585,109 +1590,131 @@ export const AdmJobHunter = {
               type="button"
               @click="closeApplyModal"
               class="text-zinc-400 hover:text-white p-1 rounded hover:bg-white/5 transition-colors cursor-pointer"
-              title="Cerrar ventana"
+              title="Cerrar"
             >
               <svg class="adm-icon sm" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
             </button>
           </div>
 
-          <!-- Spinner si carga la vista previa -->
-          <div v-if="isLoadingApplyPreview" class="p-10 flex flex-col items-center justify-center space-y-3 font-mono-code">
-            <div class="w-7 h-7 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-            <p class="text-xs text-zinc-400">Preparando borrador de pitch y compilando CV Harvard ATS...</p>
+          <!-- Spinner al preparar borrador -->
+          <div v-if="isLoadingApplyPreview" class="p-12 flex flex-col items-center justify-center space-y-3 font-mono-code">
+            <div class="w-6 h-6 border-2 border-emerald-400 border-t-transparent rounded-full animate-spin"></div>
+            <p class="text-xs text-zinc-400">Compilando CV Harvard y ajustando pitch de ingeniería...</p>
           </div>
 
-          <!-- Formulario de Postulacion -->
+          <!-- Contenido Rápido -->
           <form v-else @submit.prevent="submitApplyEmail" class="flex-1 flex flex-col overflow-hidden p-5 space-y-4 font-mono-code text-xs">
-            <!-- Destinatario & Canal -->
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              <div class="sm:col-span-2 space-y-1">
-                <label class="block text-[11px] text-zinc-400 font-semibold">Destinatario (Email de Seleccion / Hiring Lead):</label>
-                <div class="relative">
-                  <input
-                    type="email"
-                    required
-                    v-model="applyForm.toEmail"
-                    placeholder="reclutador@empresa.com"
-                    class="text-input !h-[34px] !pl-8 text-xs font-mono-code w-full placeholder:text-zinc-600 focus:border-blue-500"
-                  />
-                  <svg class="adm-icon xs text-zinc-500 absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" viewBox="0 0 24 24"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
-                </div>
-              </div>
-
-              <div class="space-y-1">
-                <label class="block text-[11px] text-zinc-400 font-semibold">Canal de Despacho:</label>
-                <select
-                  v-model="applyForm.channel"
-                  class="text-input !h-[34px] text-xs font-mono-code w-full bg-[#16171d] border-white/10"
-                >
-                  <option value="auto">Auto (n8n &gt; SMTP &gt; Local)</option>
-                  <option value="n8n">n8n Webhook</option>
-                  <option value="smtp">Directo (SMTP)</option>
-                  <option value="local">Solo Registro Local</option>
-                </select>
-              </div>
-            </div>
-
-            <!-- Asunto -->
-            <div class="space-y-1">
-              <label class="block text-[11px] text-zinc-400 font-semibold">Asunto del Correo:</label>
-              <input
-                type="text"
-                required
-                v-model="applyForm.subject"
-                placeholder="Postulacion a [Puesto] - Mateo Barale"
-                class="text-input !h-[34px] text-xs font-mono-code w-full placeholder:text-zinc-600 focus:border-blue-500"
-              />
-            </div>
-
-            <!-- Cuerpo / Pitch -->
-            <div class="flex-1 flex flex-col space-y-1 min-h-[160px]">
+            <!-- Único Input Requerido: Destinatario -->
+            <div class="space-y-1.5">
               <div class="flex items-center justify-between">
-                <label class="block text-[11px] text-zinc-400 font-semibold">Carta de Presentacion / Pitch Adaptado:</label>
-                <span class="text-[10px] text-zinc-500">Se adjunta enlace directo al CV ATS Harvard</span>
+                <label class="text-[11px] text-zinc-300 font-semibold uppercase tracking-wider">
+                  Destinatario (Email de Selección / Recruiter):
+                </label>
+                <span v-if="applyForm.toEmail && applyForm.toEmail.includes('@')" class="text-[10px] text-emerald-400 font-mono-code flex items-center gap-1">
+                  <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span> Listo para despachar
+                </span>
+                <span v-else class="text-[10px] text-amber-400 font-mono-code">
+                  Requerido para enviar
+                </span>
               </div>
-              <textarea
-                required
-                v-model="applyForm.body"
-                rows="7"
-                class="text-input !h-full text-xs font-mono-code w-full p-2.5 resize-none leading-relaxed focus:border-blue-500"
-                placeholder="Estimado equipo de seleccion..."
-              ></textarea>
+              <div class="relative">
+                <input
+                  type="email"
+                  required
+                  v-model="applyForm.toEmail"
+                  placeholder="reclutador@empresa.com o jobs@company.com"
+                  class="text-input !h-[38px] !pl-9 text-xs font-mono-code w-full bg-[#16171d] border-white/15 placeholder:text-zinc-600 focus:border-emerald-400 focus:bg-[#1a1b22] text-white"
+                  autofocus
+                />
+                <svg class="adm-icon xs text-zinc-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" viewBox="0 0 24 24"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+              </div>
             </div>
 
-            <!-- Resumen de Adjuntos e Info de Enlace -->
-            <div class="p-3 rounded-lg bg-blue-500/5 border border-blue-500/20 text-[11px] flex items-center justify-between gap-3 text-zinc-300">
+            <!-- Fila de Adjunto Automatizado -->
+            <div class="flex items-center justify-between p-2.5 rounded-lg bg-white/3 border border-white/10 text-[11px]">
               <div class="flex items-center gap-2 min-w-0">
-                <svg class="adm-icon sm text-blue-400 shrink-0" viewBox="0 0 24 24"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+                <svg class="adm-icon sm text-emerald-400 shrink-0" viewBox="0 0 24 24"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
                 <div class="truncate">
-                  <span class="text-white font-semibold">Adjunto automatico:</span>
-                  <span class="text-zinc-400 ml-1">CV Harvard ATS adaptado (HTML con soporte para impresion PDF) y resumen estructurado.</span>
+                  <span class="text-white font-medium">CV_Mateo_Sonzogni.pdf</span>
+                  <span class="text-zinc-500 ml-1.5">(Harvard ATS · 1 pág A4 nativa)</span>
                 </div>
               </div>
-              <span class="text-[10px] font-mono-code text-blue-300 bg-blue-500/10 px-1.5 py-0.5 rounded border border-blue-500/20 shrink-0">
-                ATS Ready
-              </span>
-            </div>
-
-            <!-- Botones de Accion -->
-            <div class="pt-2 flex items-center justify-end gap-2.5 border-t border-white/10 shrink-0">
               <button
                 type="button"
-                @click="closeApplyModal"
-                class="btn-secondary !h-[32px] !px-3 text-xs font-mono-code cursor-pointer"
+                @click="openTailoredCVHtml"
+                class="text-[10px] text-zinc-400 hover:text-white px-2 py-1 rounded bg-white/5 hover:bg-white/10 transition-colors shrink-0 cursor-pointer"
+                title="Previsualizar el CV que se enviará adjunto"
               >
-                Cancelar
+                Previsualizar
               </button>
-              <button
-                type="submit"
-                :disabled="store.hunter.isApplying"
-                class="btn-primary !h-[32px] !px-4 text-xs font-mono-code font-bold cursor-pointer inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white border-blue-400 disabled:opacity-50"
-              >
-                <svg v-if="store.hunter.isApplying" class="adm-icon xs animate-spin" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
-                <svg v-else class="adm-icon xs" viewBox="0 0 24 24"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>
-                <span>{{ store.hunter.isApplying ? 'Despachando...' : 'Despachar Postulacion' }}</span>
-              </button>
+            </div>
+
+            <!-- Vista Previa del Mensaje (Modo Lectura por Defecto) -->
+            <div class="flex-1 flex flex-col space-y-2 min-h-0">
+              <div class="flex items-center justify-between">
+                <span class="text-[11px] text-zinc-400 font-semibold uppercase tracking-wider">
+                  Vista Previa del Correo:
+                </span>
+                <button
+                  type="button"
+                  @click="isCustomizingText = !isCustomizingText"
+                  class="text-[10px] text-zinc-400 hover:text-emerald-400 transition-colors cursor-pointer"
+                >
+                  {{ isCustomizingText ? 'Fijar texto' : 'Modificar texto' }}
+                </button>
+              </div>
+
+              <!-- Si está en modo edición -->
+              <div v-if="isCustomizingText" class="space-y-2 flex-1 flex flex-col min-h-0">
+                <input
+                  type="text"
+                  v-model="applyForm.subject"
+                  class="text-input !h-[32px] text-xs font-mono-code w-full bg-[#16171d]"
+                  placeholder="Asunto del correo"
+                />
+                <textarea
+                  v-model="applyForm.body"
+                  class="text-input flex-1 min-h-[140px] text-xs font-mono-code w-full p-2.5 resize-none bg-[#16171d]"
+                  placeholder="Cuerpo del mensaje"
+                ></textarea>
+              </div>
+
+              <!-- Modo Lectura Estilo Carta (Cero Fricción) -->
+              <div v-else class="flex-1 flex flex-col min-h-0 bg-[#0a0b0d] border border-white/5 rounded-lg p-3 overflow-y-auto space-y-2 text-zinc-300 text-[11px] leading-relaxed select-text">
+                <div class="text-white font-semibold pb-1.5 border-b border-white/5">
+                  <span class="text-zinc-500 mr-1.5">Asunto:</span>{{ applyForm.subject }}
+                </div>
+                <div class="whitespace-pre-line text-zinc-300 font-sans text-xs pt-1">
+                  {{ applyForm.body }}
+                </div>
+              </div>
+            </div>
+
+            <!-- Botones de Acción -->
+            <div class="pt-3 flex items-center justify-between border-t border-white/10 shrink-0">
+              <div class="flex items-center gap-1.5 text-[11px] text-zinc-500">
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500/60"></span>
+                <span>Salida: <span class="text-zinc-300 font-mono-code">mateogabus@gmail.com</span></span>
+              </div>
+
+              <div class="flex items-center gap-2">
+                <button
+                  type="button"
+                  @click="closeApplyModal"
+                  class="btn-secondary !h-[32px] !px-3 text-xs font-mono-code cursor-pointer"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  :disabled="store.hunter.isApplying || !applyForm.toEmail"
+                  class="btn-primary !h-[34px] !px-4 text-xs font-mono-code font-bold cursor-pointer inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white border-emerald-400 disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  <svg v-if="store.hunter.isApplying" class="adm-icon xs animate-spin" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
+                  <svg v-else class="adm-icon xs" viewBox="0 0 24 24"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>
+                  <span>{{ store.hunter.isApplying ? 'Enviando...' : 'Enviar Postulación' }}</span>
+                </button>
+              </div>
             </div>
           </form>
         </div>
