@@ -142,9 +142,9 @@ let hideTimer: ReturnType<typeof setTimeout> | null = null
 let resetTimer: ReturnType<typeof setTimeout> | null = null
 let startTime = 0
 
-const MIN_DISPLAY_MS = 380
-const RESOLVE_DELAY_MS = 180
-const HIDE_TRANSITION_MS = 220
+const MIN_DISPLAY_MS = 850
+const RESOLVE_DELAY_MS = 340
+const HIDE_TRANSITION_MS = 240
 
 export function useRouteLoader() {
   const { isHyperfocus } = useHyperfocus()
@@ -174,7 +174,7 @@ export function useRouteLoader() {
     isResolved.value = false
     startTime = performance.now()
     elapsedMs.value = 0
-    progress.value = 16
+    progress.value = 14
     visible.value = true
 
     startProgressLoop()
@@ -190,10 +190,10 @@ export function useRouteLoader() {
     const step = () => {
       if (!visible.value || isResolved.value) return
 
-      // Avance asintótico elástico hacia el 85%
+      // Avance asintótico elástico calibrado para lectura (alcanza ~82% cerca de los 850ms)
       const target = 85
       const diff = target - progress.value
-      progress.value += Math.max(0.4, diff * 0.08)
+      progress.value += Math.max(0.18, diff * 0.045)
 
       if (progress.value < target) {
         rafProgress = requestAnimationFrame(step)
@@ -228,7 +228,7 @@ export function useRouteLoader() {
 
       playSound('poke')
 
-      // Disolución óptica suave tras 180ms de confirmación visual (200 OK)
+      // Disolución óptica suave tras 340ms de confirmación visual para lectura nítida (200 OK)
       hideTimer = setTimeout(() => {
         visible.value = false
 

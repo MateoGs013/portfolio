@@ -92,9 +92,8 @@ test.describe('Architectural Route Loader & Relational HUD (Fusion)', () => {
       fullPage: false,
     })
 
-    // Esperar a que la cortina se desvanezca por completo
-    await page.waitForTimeout(400)
-    await expect(backdrop).not.toBeVisible()
+    // Esperar a que la cortina se desvanezca por completo tras la resolución
+    await expect(backdrop).not.toBeVisible({ timeout: 5000 })
   })
 
   test('verifies live navigation transitions across routes', async ({ page }) => {

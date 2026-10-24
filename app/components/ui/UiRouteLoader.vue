@@ -81,8 +81,8 @@ const {
             </div>
 
             <!-- Caja de Código / Consulta SQL en vivo -->
-            <div class="rounded-lg border border-rule/80 bg-paper/75 p-2.5 font-mono text-[10px] leading-relaxed text-dim overflow-hidden truncate">
-              <code class="text-ink/80 block truncate">{{ routeMeta.query }}</code>
+            <div class="rounded-lg border border-rule/80 bg-paper/85 p-2.5 sm:p-3 font-mono text-[10.5px] sm:text-[11px] leading-relaxed text-ink/90 overflow-hidden shadow-inner">
+              <code class="block font-mono tracking-tight text-ink/90 truncate">{{ routeMeta.query }}</code>
             </div>
           </div>
 
