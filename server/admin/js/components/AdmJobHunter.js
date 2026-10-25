@@ -277,15 +277,15 @@ export const AdmJobHunter = {
     async function openTailoredCVHtml() {
       if (!store.hunter.selected) return
       const ticket = await getCVTicket()
-      if (!ticket) return
-      window.open(`/api/admin/hunter/cv/${encodeURIComponent(store.hunter.selected.id)}/html?ticket=${encodeURIComponent(ticket)}`, '_blank', 'noopener')
+      const query = ticket ? `?ticket=${encodeURIComponent(ticket)}` : ''
+      window.open(`/api/admin/hunter/cv/${encodeURIComponent(store.hunter.selected.id)}/html${query}`, '_blank', 'noopener')
     }
 
     async function printTailoredCV() {
       if (!store.hunter.selected) return
       const ticket = await getCVTicket()
-      if (!ticket) return
-      window.open(`/api/admin/hunter/cv/${encodeURIComponent(store.hunter.selected.id)}/html?ticket=${encodeURIComponent(ticket)}&auto_print=true`, '_blank', 'noopener')
+      const query = ticket ? `?ticket=${encodeURIComponent(ticket)}&auto_print=true` : '?auto_print=true'
+      window.open(`/api/admin/hunter/cv/${encodeURIComponent(store.hunter.selected.id)}/html${query}`, '_blank', 'noopener')
     }
 
     const isDownloadingPdf = ref(false)
@@ -426,18 +426,54 @@ export const AdmJobHunter = {
       applyModalOpen.value = true
       isLoadingApplyPreview.value = true
       isCustomizingText.value = false
-      applyForm.toEmail = store.hunter.selected.contact_email || ''
-      applyForm.subject = ''
-      applyForm.body = ''
+
+      const sel = store.hunter.selected
+      const isEn = !((sel.title + ' ' + (sel.description || '')).toLowerCase().includes('desarrollador') || (sel.title + ' ' + (sel.description || '')).toLowerCase().includes('experiencia'))
+
+      // 1. Asunto y cuerpo por defecto inmediatos (garantizan que jamás quede en blanco)
+      const defaultSubject = isEn
+        ? `Application: ${sel.title} — Mateo Sonzogni`
+        : `Postulación: ${sel.title} — Mateo Gabriel Sonzogni`
+
+      const defaultBody = isEn
+        ? `Dear Hiring Team at ${sel.company},\n\nI am writing to express my strong interest in the ${sel.title} position. With hands-on experience designing and operating production full-stack systems using TypeScript, Node.js, and PostgreSQL 17, my background aligns closely with your technical requirements.\n\nYou can review my production code and live portfolio at https://mateogs.tech.\n\nBest regards,\nMateo Sonzogni`
+        : `Estimado equipo de selección de ${sel.company},\n\nMe pongo en contacto para presentar mi postulación a la búsqueda de ${sel.title}. Mi perfil combina desarrollo full stack riguroso, arquitectura de bases de datos relacionales (PostgreSQL 17) y micro-interacciones accesibles en producción.\n\nEn mi portafolio (https://mateogs.tech) pueden explorar casos de estudio reales con código abierto y métricas de producción.\n\nSaludos cordiales,\nMateo Gabriel Sonzogni`
+
+      applyForm.toEmail = sel.contact_email || ''
+      applyForm.subject = defaultSubject
+      applyForm.body = defaultBody
+
+      // 2. Si la vacante ya tenía un pitch guardado en pitch_draft, utilizarlo
+      if (sel.pitch_draft) {
+        try {
+          const parsed = typeof sel.pitch_draft === 'string' ? JSON.parse(sel.pitch_draft) : sel.pitch_draft
+          if (parsed.subject && parsed.subject.trim()) applyForm.subject = parsed.subject.trim()
+          if (parsed.cover_letter && parsed.cover_letter.trim()) applyForm.body = parsed.cover_letter.trim()
+          else if (parsed.elevator_pitch && parsed.elevator_pitch.trim()) applyForm.body = parsed.elevator_pitch.trim()
+        } catch {
+          if (typeof sel.pitch_draft === 'string' && sel.pitch_draft.trim()) {
+            applyForm.body = sel.pitch_draft.trim()
+          }
+        }
+      }
+
+      // 3. Consultar a la API para obtener el preview enriquecido desde Eros AI o fallback del servidor
       try {
-        const preview = await api.getHunterJobApplyPreview(store.hunter.selected.id)
-        if (preview && preview.ok) {
-          applyForm.toEmail = preview.contact_email || store.hunter.selected.contact_email || ''
-          applyForm.subject = preview.subject || ''
-          applyForm.body = preview.body || ''
+        const preview = await api.getHunterJobApplyPreview(sel.id)
+        if (preview && (preview.ok || preview.subject || preview.body)) {
+          if (preview.subject && preview.subject.trim()) {
+            applyForm.subject = preview.subject.trim()
+          }
+          if (preview.body && preview.body.trim()) {
+            applyForm.body = preview.body.trim()
+          }
+          const email = preview.to_email || preview.contact_email
+          if (email && email.trim() && !applyForm.toEmail) {
+            applyForm.toEmail = email.trim()
+          }
         }
       } catch (err) {
-        console.warn('Error al cargar vista previa de postulación:', err)
+        console.warn('Error al cargar vista previa enriquecida de postulación, utilizando plantilla determinista:', err)
       } finally {
         isLoadingApplyPreview.value = false
       }
@@ -454,10 +490,16 @@ export const AdmJobHunter = {
         store.toast('err', 'Ingresá un correo de destino válido')
         return
       }
+      const sel = store.hunter.selected
+      const isEn = !((sel.title + ' ' + (sel.description || '')).toLowerCase().includes('desarrollador') || (sel.title + ' ' + (sel.description || '')).toLowerCase().includes('experiencia'))
+      const fallbackSubject = isEn
+        ? `Application: ${sel.title} — Mateo Sonzogni`
+        : `Postulación: ${sel.title} — Mateo Gabriel Sonzogni`
+
       try {
         await store.applyHunterJobByEmail(store.hunter.selected.id, {
           to_email: applyForm.toEmail.trim(),
-          subject: applyForm.subject.trim(),
+          subject: (applyForm.subject || fallbackSubject).trim(),
           body: applyForm.body,
           channel: 'auto',
           confirmed: true,

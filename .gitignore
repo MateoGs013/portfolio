@@ -13,3 +13,6 @@ server/generated/
 test-results/
 playwright-report/
 tests/screenshots/
+data/
+*.db
+

@@ -271,16 +271,18 @@ hunterRouter.get(['/cv/:id/html', '/jobs/:id/cv/html'], async (req: Request, res
   }
 
   if (!html) {
-    const job = fallbackHunterJobs.find(j => j.id === id || j.external_id === id)
-    if (job) {
-      html = renderCvHtmlHeuristic(job)
-      isFallbackHtml = true
+    const job = fallbackHunterJobs.find(j => j.id === id || j.external_id === id) || {
+      id,
+      title: (req.query['title'] as string) || 'Full Stack Software Engineer',
+      company: (req.query['company'] as string) || 'Hiring Team',
+      description: '',
+      contact_email: (req.query['email'] as string) || '',
+      status: 'active' as const,
+      match_score: 90,
+      url: 'https://mateogs.tech',
     }
-  }
-
-  if (!html) {
-    res.status(404).type('html').send('<h1>CV no disponible</h1><p>Vacante no encontrada en Eros ni en snapshot local.</p>')
-    return
+    html = renderCvHtmlHeuristic(job as unknown as import('./fallbackHunterData.js').HunterJob)
+    isFallbackHtml = true
   }
 
   if (isFallbackHtml) {
@@ -401,21 +403,27 @@ hunterRouter.get(['/jobs/:id/apply-preview', '/apply-preview/:id'], async (req: 
     return
   }
   const result = await forwardToEros(`api/jobs/${encodeURIComponent(id)}/apply-preview`, { method: 'GET' }, 20000)
-  if (result.ok) {
+  if (result.ok && result.data && typeof result.data === 'object' && ((result.data as Record<string, unknown>)['subject'] || (result.data as Record<string, unknown>)['body'])) {
     res.status(result.status).json(result.data)
     return
   }
-  const job = fallbackHunterJobs.find(j => j.id === id || j.external_id === id)
-  if (!job) {
-    res.status(404).json({ error: 'Vacante no encontrada' })
-    return
+  const job = fallbackHunterJobs.find(j => j.id === id || j.external_id === id) || {
+    id,
+    title: (req.query['title'] as string) || 'Full Stack Software Engineer',
+    company: (req.query['company'] as string) || 'Hiring Team',
+    contact_email: (req.query['email'] as string) || '',
+    description: '',
+    status: 'active' as const,
+    match_score: 90,
+    url: 'https://mateogs.tech',
   }
-  const pitch = generatePitchHeuristic(job).data
+  const pitch = generatePitchHeuristic(job as any).data
   res.setHeader('X-Eros-Source', 'fallback')
   res.json({
     ok: true,
     _source: 'fallback',
     to_email: job.contact_email || 'hr@company.com',
+    contact_email: job.contact_email || 'hr@company.com',
     subject: pitch.subject,
     body: `${pitch.elevator_pitch}\n\n${pitch.cover_letter}`,
     channel: 'email',
