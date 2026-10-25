@@ -104,6 +104,10 @@ export const MODELS = {
     }),
     toPayload: f => ({
       ...f,
+      year: Number(f.year) || new Date().getFullYear(),
+      sortOrder: Number(f.sortOrder) || 0,
+      orgId: f.orgId ? Number(f.orgId) : null,
+      techIds: (f.techIds || []).map(Number),
       publishedAt: f.publishedAt ? new Date(f.publishedAt).toISOString() : null,
       metrics: f.metrics && typeof f.metrics === 'string' && f.metrics.trim() !== '' ? f.metrics : null,
       media: undefined,
@@ -124,7 +128,12 @@ export const MODELS = {
       techIds: (r.techs || []).map(t => t.id),
     }),
     blank: () => ({ slug: '', role: '', startedAt: '', endedAt: '', orgId: null, techIds: [], summary: '', story: '' }),
-    toPayload: f => ({ ...f, endedAt: f.endedAt || null }),
+    toPayload: f => ({
+      ...f,
+      orgId: f.orgId ? Number(f.orgId) : null,
+      techIds: (f.techIds || []).map(Number),
+      endedAt: f.endedAt || null,
+    }),
   },
 
   stack: {
@@ -136,7 +145,10 @@ export const MODELS = {
     meta: r => `${r.category} · Desde ${r.since}${r._count ? ` · ${r._count.projects} proyectos` : ''}`,
     toForm: r => ({ ...r }),
     blank: () => ({ slug: '', name: '', category: 'FRAMEWORK', since: new Date().getFullYear(), note: '', color: '' }),
-    toPayload: f => f,
+    toPayload: f => ({
+      ...f,
+      since: Number(f.since) || new Date().getFullYear(),
+    }),
     fields: {
       category: {
         type: 'select',

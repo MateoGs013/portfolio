@@ -13,8 +13,8 @@ export const AdmStatusDot = {
     <span
       class="status-dot inline-block shrink-0"
       :class="[
-        status === 'LIVE' || status === 'live' ? 'live' : '',
-        status === 'WIP' || status === 'wip' ? 'wip' : '',
+        status === 'LIVE' || status === 'live' || status === 'PUBLISHED' || status === 'published' ? 'live' : '',
+        status === 'WIP' || status === 'wip' || status === 'DRAFT' || status === 'draft' ? 'wip' : '',
         status === 'ARCHIVED' || status === 'archived' ? 'archived' : '',
         status === 'sig' ? 'sig' : '',
         status === 'danger' ? '!bg-red-500 shadow-[0_0_6px_rgba(239,68,68,0.5)]' : '',

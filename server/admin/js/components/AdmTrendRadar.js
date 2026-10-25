@@ -452,9 +452,13 @@ export const AdmTrendRadar = {
                       class="w-full bg-[#121318] border border-white/10 rounded px-3 py-2 text-xs text-white focus:outline-none focus:border-cyan-400 font-mono-code"
                     >
                       <option value="">Sin vincular a proyecto específico</option>
-                      <option value="ynara">Ynara AI (RAG, pgvector, FastAPI)</option>
-                      <option value="la-rucula">La Rúcula Gastrobar (Vue 3, GSAP, Offline-first)</option>
-                      <option value="argpiscinas">ARG Piscinas (Prisma, Nuxt 4, Multilingüe)</option>
+                      <option
+                        v-for="p in (store.meta.options.projects || [])"
+                        :key="p.id"
+                        :value="p.slug || p.id"
+                      >
+                        {{ p.title }}
+                      </option>
                     </select>
                   </div>
                 </div>

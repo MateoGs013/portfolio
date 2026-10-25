@@ -41,12 +41,18 @@ export const ArticleForm = {
       return (store.form?.techIds || []).includes(Number(id))
     }
 
+    const availableTechs = computed(() => {
+      if (store.allTechs && store.allTechs.length) return store.allTechs
+      return store.meta.options?.techs || []
+    })
+
     return {
       store,
       isLocked,
       updateTitle,
       toggleTech,
       hasTech,
+      availableTechs,
     }
   },
   template: `
@@ -173,7 +179,7 @@ export const ArticleForm = {
               :key="p.id"
               :value="p.id"
             >
-              {{ p.title }} ({{ p.slug }})
+              {{ p.title }}{{ p.slug ? ' (' + p.slug + ')' : '' }}
             </option>
           </select>
           <span class="field-hint">Vincula el artículo con el caso de estudio correspondiente.</span>
@@ -228,7 +234,7 @@ export const ArticleForm = {
         </div>
         <div class="flex items-center gap-1.5 flex-wrap p-3 bg-[#0c0d10] border border-white/10 rounded-lg max-h-40 overflow-y-auto">
           <button
-            v-for="t in store.allTechs"
+            v-for="t in availableTechs"
             :key="t.id"
             type="button"
             @click="toggleTech(t.id)"

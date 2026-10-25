@@ -37,9 +37,7 @@ export const AdmBottomNav = {
 
     function logout() {
       emit('close')
-      store.token = ''
-      sessionStorage.removeItem('admin-token')
-      store.toast('ok', 'Sesión cerrada correctamente')
+      store.logout()
     }
 
     return {

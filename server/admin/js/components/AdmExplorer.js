@@ -17,9 +17,9 @@ export const AdmExplorer = {
 
       // Filtro por píldoras
       if (store.filter === 'live') {
-        list = list.filter(r => r.status === 'LIVE')
+        list = list.filter(r => r.status === 'LIVE' || r.status === 'PUBLISHED')
       } else if (store.filter === 'wip') {
-        list = list.filter(r => r.status === 'WIP')
+        list = list.filter(r => r.status === 'WIP' || r.status === 'DRAFT')
       } else if (store.filter === 'featured') {
         list = list.filter(r => !!r.featured)
       }
@@ -106,8 +106,8 @@ export const AdmExplorer = {
           <svg class="adm-icon sm text-zinc-500 absolute left-2 top-1/2 -translate-y-1/2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
         </div>
 
-        <!-- Filtros Rápidos en Píldoras Sobrias (Solo para modelos con estado/featured) -->
-        <div v-if="store.section === 'projects'" class="flex items-center gap-1 text-[10.5px] font-mono-code">
+        <!-- Filtros Rápidos en Píldoras Sobrias (Para proyectos y artículos) -->
+        <div v-if="store.section === 'projects' || store.section === 'articles'" class="flex items-center gap-1 text-[10.5px] font-mono-code">
           <button
             type="button"
             @click="store.filter = 'all'"
@@ -122,7 +122,7 @@ export const AdmExplorer = {
             class="px-2 py-0.5 rounded transition-colors cursor-pointer flex items-center gap-1"
             :class="store.filter === 'live' ? 'bg-emerald-500/15 text-emerald-300 font-semibold' : 'text-zinc-500 hover:text-white'"
           >
-            <span class="status-dot live"></span> LIVE
+            <span class="status-dot live"></span> {{ store.section === 'articles' ? 'Publicados' : 'LIVE' }}
           </button>
           <button
             type="button"
@@ -130,7 +130,7 @@ export const AdmExplorer = {
             class="px-2 py-0.5 rounded transition-colors cursor-pointer flex items-center gap-1"
             :class="store.filter === 'wip' ? 'bg-amber-500/15 text-amber-300 font-semibold' : 'text-zinc-500 hover:text-white'"
           >
-            <span class="status-dot wip"></span> WIP
+            <span class="status-dot wip"></span> {{ store.section === 'articles' ? 'Borradores' : 'WIP' }}
           </button>
           <button
             type="button"
@@ -156,7 +156,7 @@ export const AdmExplorer = {
             <span class="truncate pr-2">{{ model?.name ? model.name(r) : (r.title || r.name || r.role || r.key) }}</span>
             <div class="flex items-center gap-1.5 shrink-0">
               <span v-if="r.featured" class="text-[9.5px] font-mono-code px-1 rounded bg-[#ff3e00]/15 text-[#ff3e00]">DEST</span>
-              <span v-if="r.status" class="status-dot" :class="r.status === 'LIVE' ? 'live' : r.status === 'WIP' ? 'wip' : 'archived'"></span>
+              <span v-if="r.status" class="status-dot" :class="(r.status === 'LIVE' || r.status === 'PUBLISHED') ? 'live' : (r.status === 'WIP' || r.status === 'DRAFT') ? 'wip' : 'archived'"></span>
             </div>
           </div>
 

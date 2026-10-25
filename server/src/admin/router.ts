@@ -6,7 +6,7 @@ import multer from 'multer'
 import { db } from '../db.js'
 import { ArticleStatus, MediaKind, MediaRole, Prisma, ProjectStatus, TechCategory } from '../../generated/prisma/client.js'
 import { requireAdmin } from './auth.js'
-import { fallbackExperience, fallbackOrgs, fallbackProjects, fallbackStack } from '../fallbackData.js'
+import { fallbackArticles, fallbackExperience, fallbackOrgs, fallbackProjects, fallbackStack } from '../fallbackData.js'
 import { IMAGE_MIME, imageDims } from './image.js'
 import { HttpError, bool, date, enumOf, int, intList, json, list, optDate, optInt, optStr, optUrl, slug, str, url } from './input.js'
 import { hunterRouter } from './hunter.js'
@@ -63,17 +63,19 @@ adminApi.get('/meta', async (_req, res) => {
     certs: number
     labs: number
     articles: number
+    docs: number
     inbox: number
   }
 
   let counts: AdminCounts
   try {
-    const [projectCount, experienceCount, techCount, orgCount, articleCount] = await prisma.$transaction([
+    const [projectCount, experienceCount, techCount, orgCount, articleCount, docCount] = await prisma.$transaction([
       prisma.project.count(),
       prisma.experience.count(),
       prisma.tech.count(),
       prisma.org.count(),
       prisma.article.count(),
+      prisma.doc.count(),
     ])
     counts = {
       projects: projectCount,
@@ -85,6 +87,7 @@ adminApi.get('/meta', async (_req, res) => {
       certs: 0,
       labs: 0,
       articles: articleCount,
+      docs: docCount,
       inbox: 0,
     }
   } catch {
@@ -97,23 +100,27 @@ adminApi.get('/meta', async (_req, res) => {
       education: 0,
       certs: 0,
       labs: 0,
-      articles: 0,
+      articles: fallbackArticles.length,
+      docs: 2,
       inbox: 0,
     }
   }
 
   let orgs: { id: number, name: string }[] = []
   let techs: { id: number, name: string }[] = []
-  let projects: { id: number, title: string }[] = []
+  let projects: { id: number, title: string, slug?: string }[] = []
 
   try {
     [orgs, techs, projects] = await Promise.all([
       prisma.org.findMany({ select: { id: true, name: true }, orderBy: { name: 'asc' } }),
       prisma.tech.findMany({ select: { id: true, name: true }, orderBy: { name: 'asc' } }),
-      prisma.project.findMany({ select: { id: true, title: true }, orderBy: { title: 'asc' } }),
+      prisma.project.findMany({ select: { id: true, title: true, slug: true }, orderBy: { title: 'asc' } }),
     ])
   } catch {
-    // Si la DB falla, se devuelven listas vacías sin interrumpir respuesta
+    // Si la DB falla, se devuelven opciones derivadas de los datos de fallback
+    orgs = Object.values(fallbackOrgs).map((o, i) => ({ id: i + 1, name: o.name }))
+    techs = fallbackStack.map(s => ({ id: s.id, name: s.name }))
+    projects = fallbackProjects.map(p => ({ id: p.id, title: p.title, slug: p.slug }))
   }
 
   res.json({
@@ -165,13 +172,29 @@ function projectNested(b: Record<string, unknown>) {
 }
 
 adminApi.get('/projects', async (_req, res) => {
-  res.json(await db.project.findMany({ include: projectInclude, orderBy: [{ sortOrder: 'asc' }, { year: 'desc' }] }))
+  try {
+    res.json(await db.project.findMany({ include: projectInclude, orderBy: [{ sortOrder: 'asc' }, { year: 'desc' }] }))
+  } catch {
+    res.json(fallbackProjects)
+  }
 })
 
 adminApi.get('/projects/:id', async (req, res) => {
-  const row = await db.project.findUnique({ where: { id: id(req) }, include: projectInclude })
-  if (!row) throw new HttpError(404, 'not found')
-  res.json(row)
+  const pid = id(req)
+  try {
+    const row = await db.project.findUnique({ where: { id: pid }, include: projectInclude })
+    if (!row) {
+      const fb = fallbackProjects.find(p => p.id === pid)
+      if (fb) return res.json(fb)
+      throw new HttpError(404, 'not found')
+    }
+    res.json(row)
+  } catch (err) {
+    if (err instanceof HttpError) throw err
+    const fb = fallbackProjects.find(p => p.id === pid)
+    if (fb) return res.json(fb)
+    throw new HttpError(404, 'not found')
+  }
 })
 
 adminApi.post('/projects', async (req, res) => {
@@ -347,7 +370,11 @@ function techData(b: Record<string, unknown>) {
 }
 
 adminApi.get('/techs', async (_req, res) => {
-  res.json(await db.tech.findMany({ orderBy: [{ since: 'asc' }, { name: 'asc' }], include: { _count: { select: { projects: true, experiences: true } } } }))
+  try {
+    res.json(await db.tech.findMany({ orderBy: [{ since: 'asc' }, { name: 'asc' }], include: { _count: { select: { projects: true, experiences: true } } } }))
+  } catch {
+    res.json(fallbackStack)
+  }
 })
 adminApi.post('/techs', async (req, res) => {
   res.status(201).json(await db.tech.create({ data: techData(req.body) }))
@@ -367,7 +394,19 @@ function orgData(b: Record<string, unknown>) {
 }
 
 adminApi.get('/orgs', async (_req, res) => {
-  res.json(await db.org.findMany({ orderBy: { name: 'asc' }, include: { _count: { select: { projects: true, experiences: true } } } }))
+  try {
+    res.json(await db.org.findMany({ orderBy: { name: 'asc' }, include: { _count: { select: { projects: true, experiences: true } } } }))
+  } catch {
+    const list = Object.values(fallbackOrgs).map((o, i) => ({
+      id: i + 1,
+      slug: o.slug,
+      name: o.name,
+      url: o.url,
+      city: o.city,
+      _count: { projects: o.projects.length, experiences: o.experiences.length },
+    }))
+    res.json(list)
+  }
 })
 adminApi.post('/orgs', async (req, res) => {
   res.status(201).json(await db.org.create({ data: orgData(req.body) }))
@@ -400,7 +439,11 @@ function experienceData(b: Record<string, unknown>) {
 }
 
 adminApi.get('/experience', async (_req, res) => {
-  res.json(await db.experience.findMany({ orderBy: { startedAt: 'desc' }, include: experienceInclude }))
+  try {
+    res.json(await db.experience.findMany({ orderBy: { startedAt: 'desc' }, include: experienceInclude }))
+  } catch {
+    res.json(fallbackExperience)
+  }
 })
 adminApi.post('/experience', async (req, res) => {
   const techIds = intList(req.body, 'techIds')
@@ -445,7 +488,14 @@ function docFields(b: Record<string, unknown>): Prisma.InputJsonValue {
 }
 
 adminApi.get('/docs', async (_req, res) => {
-  res.json(await db.doc.findMany({ orderBy: { key: 'asc' } }))
+  try {
+    res.json(await db.doc.findMany({ orderBy: { key: 'asc' } }))
+  } catch {
+    res.json([
+      { key: 'about', title: 'Sobre Mí (About)', fields: [] },
+      { key: 'contact', title: 'Contacto (Contact)', fields: [] },
+    ])
+  }
 })
 adminApi.put('/docs/:key', async (req, res) => {
   const key = slug({ key: req.params['key'] }, 'key')
@@ -478,25 +528,41 @@ function articleData(b: Record<string, unknown>) {
 }
 
 adminApi.get('/articles', async (_req, res) => {
-  res.json(await db.article.findMany({
-    orderBy: [{ sortOrder: 'asc' }, { createdAt: 'desc' }],
-    include: {
-      techs: { select: { id: true, name: true, slug: true } },
-      project: { select: { id: true, title: true, slug: true } },
-    },
-  }))
+  try {
+    res.json(await db.article.findMany({
+      orderBy: [{ sortOrder: 'asc' }, { createdAt: 'desc' }],
+      include: {
+        techs: { select: { id: true, name: true, slug: true } },
+        project: { select: { id: true, title: true, slug: true } },
+      },
+    }))
+  } catch {
+    res.json(fallbackArticles)
+  }
 })
 
 adminApi.get('/articles/:id', async (req, res) => {
-  const row = await db.article.findUnique({
-    where: { id: id(req) },
-    include: {
-      techs: { select: { id: true, name: true, slug: true } },
-      project: { select: { id: true, title: true, slug: true } },
-    },
-  })
-  if (!row) throw new HttpError(404, 'artículo inexistente')
-  res.json(row)
+  const aid = id(req)
+  try {
+    const row = await db.article.findUnique({
+      where: { id: aid },
+      include: {
+        techs: { select: { id: true, name: true, slug: true } },
+        project: { select: { id: true, title: true, slug: true } },
+      },
+    })
+    if (!row) {
+      const fb = fallbackArticles.find(a => a.id === aid)
+      if (fb) return res.json(fb)
+      throw new HttpError(404, 'artículo inexistente')
+    }
+    res.json(row)
+  } catch (err) {
+    if (err instanceof HttpError) throw err
+    const fb = fallbackArticles.find(a => a.id === aid)
+    if (fb) return res.json(fb)
+    throw new HttpError(404, 'artículo inexistente')
+  }
 })
 
 adminApi.post('/articles', async (req, res) => {

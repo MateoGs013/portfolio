@@ -12,13 +12,15 @@ export const ExperienceForm = {
     const categorizedTechs = computed(() => {
       const q = store.techSearchQuery.trim().toLowerCase()
       const groups = {
-        FRONTEND: { label: 'Frontend & UI', items: [] },
-        BACKEND: { label: 'Backend & APIs', items: [] },
-        DATABASE: { label: 'Bases de Datos & ORM', items: [] },
-        DEVOPS: { label: 'Cloud, Docker & VPS', items: [] },
-        TOOLING: { label: 'Herramientas & Tooling', items: [] },
         LANGUAGE: { label: 'Lenguajes de Programación', items: [] },
-        OTHER: { label: 'Otras Herramientas', items: [] },
+        FRAMEWORK: { label: 'Frameworks & Librerías', items: [] },
+        MOTION: { label: 'Animación & Motion', items: [] },
+        GRAPHICS: { label: 'Gráficos & WebGL / 3D', items: [] },
+        BACKEND: { label: 'Backend & APIs', items: [] },
+        DATA: { label: 'Bases de Datos & ORM', items: [] },
+        TOOLING: { label: 'Herramientas & Tooling', items: [] },
+        DESIGN: { label: 'Diseño & UI/UX', items: [] },
+        OTHER: { label: 'Otras Tecnologías', items: [] },
       }
 
       const all = (store.allTechs && store.allTechs.length ? store.allTechs : store.meta.options.techs) || []

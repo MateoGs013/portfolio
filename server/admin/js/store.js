@@ -233,6 +233,15 @@ export const store = reactive({
 
         if (res?.counts) {
           Object.assign(store.counts, res.counts)
+          if (!this.counts.hunter && this.hunter.jobs.length) {
+            this.counts.hunter = this.hunter.jobs.length
+          }
+          if (!this.counts.content && this.content.posts.length) {
+            this.counts.content = this.content.posts.length
+          }
+          if (!this.counts.radar && this.radar.trends.length) {
+            this.counts.radar = this.radar.trends.length
+          }
           return
         }
       } catch {
@@ -870,6 +879,16 @@ export const store = reactive({
       s.radar.isGenerating = false
     }
   },
+
+  logout() {
+    api.setToken('')
+    this.token = ''
+    this.tokenInput = ''
+    this.isDirty = false
+    this.current = null
+    this.form = null
+    this.toast('ok', 'Sesión cerrada correctamente')
+  },
 })
 
 // Blindaje de métodos contra invocaciones desvinculadas de this (callbacks de eventos o event handlers)
@@ -881,6 +900,7 @@ for (const key of Object.keys(store)) {
 
 // Deslogueo unificado y limpio ante respuesta 401 de la API
 api.setOnAuthError(() => {
+  api.setToken('')
   store.token = ''
   store.tokenInput = ''
   store.toast('err', 'Sesión expirada o token no autorizado.')

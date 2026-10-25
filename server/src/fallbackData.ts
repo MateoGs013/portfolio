@@ -631,3 +631,77 @@ export function getFallbackProjects(filters?: FallbackProjectFilters) {
   return data
 }
 
+export interface FallbackArticle {
+  id: number
+  slug: string
+  title: string
+  summary: string
+  content: string
+  readingTimeMin: number
+  status: 'DRAFT' | 'PUBLISHED' | 'ARCHIVED'
+  featured: boolean
+  coverImage: string | null
+  canonicalUrl: string | null
+  sortOrder: number
+  publishedAt: string | null
+  createdAt: string
+  updatedAt: string
+  projectId: number | null
+  techs: { id?: number; slug: string; name: string }[]
+  project: { id?: number; slug: string; title: string } | null
+}
+
+export const fallbackArticles: FallbackArticle[] = [
+  {
+    id: 1,
+    slug: 'postgresql-17-universal-vector-relational-production',
+    title: 'PostgreSQL 17 como Base Relacional y Vectorial Universal en Producción',
+    summary: 'Análisis de arquitectura y trade-offs: cómo consolidar pgvector y datos relacionales en PostgreSQL 17 reduciendo latencia y complejidad operativa.',
+    content: `# PostgreSQL 17 como Base Relacional y Vectorial Universal en Producción\n\nLa proliferación de bases de datos especializadas para vectores resolvió necesidades iniciales en la adopción de modelos de lenguaje. Sin embargo, en arquitecturas de ingeniería de producción introduce una sobrecarga crítica: la sincronización bidireccional entre el sistema transaccional de registro y el índice vectorial externo.\n\n## El Problema del Estado Desacoplado\n\nCuando el catálogo de vacantes o publicaciones reside en PostgreSQL y los embeddings se sincronizan de forma asíncrona hacia un cluster vectorial externo:\n1. Las operaciones no son atómicas.\n2. Los filtros estructurados requieren un pipeline de dos fases con serialización intermedia.\n3. Las fallas de red generan estados inconsistentes o huérfanos.\n\n## La Solución: pgvector en PostgreSQL 17\n\nCon las mejoras de indexación HNSW en pgvector y la gestión de memoria en PostgreSQL 17:\n- Las consultas semánticas se ejecutan dentro del mismo planificador de consultas SQL.\n- Los joins entre la tabla vectorial y metadatos relacionales se procesan en memoria compartida sin sobrecarga de red.\n- Las garantías ACID se mantienen en cada inserción y mutación de embeddings.\n\n\`\`\`sql\nSELECT j.id, j.title, j.company, 1 - (j.embedding <=> $1) AS similarity\nFROM "Job" j\nWHERE j.status = 'ACTIVE'\nORDER BY j.embedding <=> $1\nLIMIT 10;\n\`\`\`\n\n## Conclusión\n\nConsolidar la persistencia relacional y vectorial en un único nodo de PostgreSQL 17 reduce costos operativos a cero sobrecosto, elimina workers de sincronización redundantes y garantiza consistencia transaccional estricta.`,
+    readingTimeMin: 4,
+    status: 'PUBLISHED',
+    featured: true,
+    publishedAt: '2026-10-24T00:00:00.000Z',
+    canonicalUrl: 'https://mateogs.tech/blog/postgresql-17-universal-vector-relational-production',
+    coverImage: '/media/articles/pg17-hero.webp',
+    sortOrder: 1,
+    createdAt: '2026-10-24T00:00:00.000Z',
+    updatedAt: '2026-10-24T00:00:00.000Z',
+    project: null,
+    projectId: null,
+    techs: [
+      { id: 19, slug: 'postgresql', name: 'PostgreSQL' },
+      { id: 18, slug: 'prisma', name: 'Prisma' },
+    ],
+  },
+  {
+    id: 2,
+    slug: 'arquitectura-agentes-autonomos-rag-fastapi-postgresql',
+    title: 'Arquitectura de Agentes Autónomos y RAG con FastAPI, PostgreSQL y Gemini',
+    summary: 'Diseño e implementación de un sistema de agentes para reclutamiento técnico y curaduría omnicanal con pgvector y streaming.',
+    content: `## Introducción\n\nLa construcción de agentes autónomos orientados a tareas específicas requiere resolver tres problemas fundamentales: **determinismo en la extracción estructurada**, **persistencia eficiente de contexto** y **control de latencia**.\n\nEn este artículo desglosamos la arquitectura interna de Eros, el agente satélite que potencia la automatización y curaduría del portafolio.\n\n## 1. El Pipeline de Extracción y Scoring Semántico\n\nEn lugar de delegar todo el flujo a un único prompt masivo, el sistema divide la operación en fases discretas:\n\n1. **Captura y Normalización:** Procesamiento de fuentes primarias (APIs de empleo, feeds RSS técnicos y repositorios).\n2. **Vectorización con pgvector:** Generación de embeddings densos de 768 dimensiones para indexación semántica.\n3. **Evaluación de Afinidad:** Cálculo de similitud coseno combinada con heurísticas deterministas de stack.\n\n\`\`\`python\n# Eros Engine · Cálculo de similitud coseno con embeddings\ndef compute_cosine_similarity(vec_a: list[float], vec_b: list[float]) -> float:
+    dot = sum(a * b for a, b in zip(vec_a, vec_b))
+    norm_a = sum(a * a for a in vec_a) ** 0.5
+    norm_b = sum(b * b for b in vec_b) ** 0.5
+    if norm_a == 0 or norm_b == 0:
+        return 0.0
+    return dot / (norm_a * norm_b)\n\`\`\`\n\n## 2. Trade-offs y Decisiones Técnicas\n\n- **PostgreSQL 17 en lugar de base vectorial dedicada:** Mantener los datos relacionales y los vectores en la misma instancia elimina la sobrecarga de sincronización entre servicios y simplifica el despliegue en un único VPS.\n- **FastAPI + Nuxt 4 Nitro:** El backend satélite expone endpoints asíncronos protegidos por Bearer tokens, consumidos de forma transparente por el panel administrativo.\n\n## Conclusión\n\nLa especialización de agentes satélites desacoplados del CMS principal permite iterar modelos y prompts sin alterar la estabilidad de la plataforma central.`,
+    readingTimeMin: 6,
+    status: 'PUBLISHED',
+    featured: true,
+    publishedAt: '2026-10-10T12:00:00.000Z',
+    canonicalUrl: 'https://mateogs.tech/blog/arquitectura-agentes-autonomos-rag-fastapi-postgresql',
+    coverImage: null,
+    sortOrder: 2,
+    createdAt: '2026-10-10T12:00:00.000Z',
+    updatedAt: '2026-10-10T12:00:00.000Z',
+    project: null,
+    projectId: null,
+    techs: [
+      { id: 10, slug: 'python', name: 'Python' },
+      { id: 19, slug: 'postgresql', name: 'PostgreSQL' },
+      { id: 17, slug: 'fastapi', name: 'FastAPI' },
+    ],
+  },
+]
+

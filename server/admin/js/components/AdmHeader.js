@@ -9,9 +9,7 @@ export const AdmHeader = {
   emits: ['openPalette', 'openHelp', 'openMenu', 'logout'],
   setup() {
     function logout() {
-      store.token = ''
-      sessionStorage.removeItem('admin-token')
-      store.toast('ok', 'Sesión cerrada correctamente')
+      store.logout()
     }
 
     return {

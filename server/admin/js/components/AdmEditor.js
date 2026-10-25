@@ -27,12 +27,13 @@ export const AdmEditor = {
   setup() {
     const model = computed(() => MODELS[store.section])
 
-    function setProjectStatus(status) {
+    function setStatus(status) {
       if (store.form) {
         store.form.status = status
         store.checkDirty()
       }
     }
+    const setProjectStatus = setStatus
 
     async function duplicateRecord() {
       if (!store.form) return
@@ -45,7 +46,7 @@ export const AdmEditor = {
       if (cloned.title) cloned.title = `${cloned.title} (Copia)`
       if (cloned.name) cloned.name = `${cloned.name} (Copia)`
       if (cloned.role) cloned.role = `${cloned.role} (Copia)`
-      cloned.status = 'WIP'
+      cloned.status = store.section === 'articles' ? 'DRAFT' : 'WIP'
       cloned.featured = false
 
       store.current = null
@@ -159,6 +160,7 @@ export const AdmEditor = {
       store,
       model,
       isSaving,
+      setStatus,
       setProjectStatus,
       duplicateRecord,
       save,
@@ -206,10 +208,10 @@ export const AdmEditor = {
             </button>
 
             <!-- Selector de Estado Pill para Proyectos -->
-            <div v-if="store.form.status !== undefined" class="flex items-center gap-1 bg-[#121318] p-0.5 rounded border border-white/10">
+            <div v-if="store.form.status !== undefined && store.section === 'projects'" class="flex items-center gap-1 bg-[#121318] p-0.5 rounded border border-white/10">
               <button
                 type="button"
-                @click="setProjectStatus('LIVE')"
+                @click="setStatus('LIVE')"
                 class="px-2 py-0.5 rounded text-[10px] sm:text-[10.5px] font-mono-code transition-colors flex items-center gap-1 cursor-pointer"
                 :class="store.form.status === 'LIVE' ? 'bg-emerald-500/15 text-emerald-300 font-bold border border-emerald-500/30' : 'text-zinc-500 hover:text-white'"
               >
@@ -217,7 +219,7 @@ export const AdmEditor = {
               </button>
               <button
                 type="button"
-                @click="setProjectStatus('WIP')"
+                @click="setStatus('WIP')"
                 class="px-2 py-0.5 rounded text-[10px] sm:text-[10.5px] font-mono-code transition-colors flex items-center gap-1 cursor-pointer"
                 :class="store.form.status === 'WIP' ? 'bg-amber-500/15 text-amber-300 font-bold border border-amber-500/30' : 'text-zinc-500 hover:text-white'"
               >
@@ -225,7 +227,35 @@ export const AdmEditor = {
               </button>
               <button
                 type="button"
-                @click="setProjectStatus('ARCHIVED')"
+                @click="setStatus('ARCHIVED')"
+                class="hidden sm:flex px-2 py-0.5 rounded text-[10.5px] font-mono-code transition-colors items-center gap-1 cursor-pointer"
+                :class="store.form.status === 'ARCHIVED' ? 'bg-zinc-500/15 text-zinc-300 font-bold border border-zinc-500/30' : 'text-zinc-500 hover:text-white'"
+              >
+                <span class="status-dot archived"></span> ARCHIVED
+              </button>
+            </div>
+
+            <!-- Selector de Estado Pill para Artículos -->
+            <div v-else-if="store.form.status !== undefined && store.section === 'articles'" class="flex items-center gap-1 bg-[#121318] p-0.5 rounded border border-white/10">
+              <button
+                type="button"
+                @click="setStatus('PUBLISHED')"
+                class="px-2 py-0.5 rounded text-[10px] sm:text-[10.5px] font-mono-code transition-colors flex items-center gap-1 cursor-pointer"
+                :class="store.form.status === 'PUBLISHED' ? 'bg-emerald-500/15 text-emerald-300 font-bold border border-emerald-500/30' : 'text-zinc-500 hover:text-white'"
+              >
+                <span class="status-dot live"></span> PUBLISHED
+              </button>
+              <button
+                type="button"
+                @click="setStatus('DRAFT')"
+                class="px-2 py-0.5 rounded text-[10px] sm:text-[10.5px] font-mono-code transition-colors flex items-center gap-1 cursor-pointer"
+                :class="store.form.status === 'DRAFT' ? 'bg-amber-500/15 text-amber-300 font-bold border border-amber-500/30' : 'text-zinc-500 hover:text-white'"
+              >
+                <span class="status-dot wip"></span> DRAFT
+              </button>
+              <button
+                type="button"
+                @click="setStatus('ARCHIVED')"
                 class="hidden sm:flex px-2 py-0.5 rounded text-[10.5px] font-mono-code transition-colors items-center gap-1 cursor-pointer"
                 :class="store.form.status === 'ARCHIVED' ? 'bg-zinc-500/15 text-zinc-300 font-bold border border-zinc-500/30' : 'text-zinc-500 hover:text-white'"
               >
