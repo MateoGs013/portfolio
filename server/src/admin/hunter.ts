@@ -422,6 +422,21 @@ hunterRouter.get(['/jobs/:id/apply-preview', '/apply-preview/:id'], async (req: 
   })
 })
 
+/** POST /api/admin/hunter/jobs/:id/find-email - Búsqueda y resolución automática de email con Hunter.io / guessing */
+hunterRouter.post(['/jobs/:id/find-email', '/find-email/:id'], async (req: Request, res: Response) => {
+  const id = getParamId(req)
+  if (!id) {
+    res.status(400).json({ error: 'ID de vacante requerido' })
+    return
+  }
+  const result = await forwardToEros(`api/jobs/${encodeURIComponent(id)}/find-email`, { method: 'POST' }, 25000)
+  if (result.ok) {
+    res.status(result.status).json(result.data)
+    return
+  }
+  res.status(result.status).json(result.data)
+})
+
 /** POST /api/admin/hunter/jobs/:id/apply-email - Despacho de postulación por email / n8n */
 hunterRouter.post(['/jobs/:id/apply-email', '/apply-email/:id'], async (req: Request, res: Response) => {
   const id = getParamId(req)

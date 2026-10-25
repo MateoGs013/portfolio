@@ -260,6 +260,12 @@ export class ApiClient {
     return this.fetch(`hunter/jobs/${encodeURIComponent(id)}/apply-preview`)
   }
 
+  async findHunterJobEmail(id) {
+    return this.fetch(`hunter/jobs/${encodeURIComponent(id)}/find-email`, {
+      method: 'POST',
+    })
+  }
+
   async applyHunterJobByEmail(id, data = {}) {
     return this.fetch(`hunter/jobs/${encodeURIComponent(id)}/apply-email`, {
       method: 'POST',
