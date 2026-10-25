@@ -652,8 +652,12 @@ export const store = reactive({
     try {
       const res = await api.applyHunterJobByEmail(id, payload)
       const recipient = res?.dispatched_to || payload.to_email || 'destinatario'
-      const provider = res?.provider ? ` vía ${res.provider.toUpperCase()}` : ''
-      s.toast('ok', `Postulación enviada exitosamente a ${recipient}${provider}`)
+      if (res?.provider === 'local_registered') {
+        s.toast('info', `Postulación registrada localmente para ${recipient}. Configurá credenciales SMTP en eros-agent para envío real.`)
+      } else {
+        const provider = res?.provider ? ` vía ${res.provider.toUpperCase()}` : ''
+        s.toast('ok', `Postulación enviada exitosamente a ${recipient}${provider}`)
+      }
       const job = s.hunter.jobs.find(j => j.id === id)
       if (job) {
         job.status = 'applied'
