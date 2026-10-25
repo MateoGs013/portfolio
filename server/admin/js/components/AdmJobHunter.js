@@ -288,6 +288,67 @@ export const AdmJobHunter = {
       window.open(`/api/admin/hunter/cv/${encodeURIComponent(store.hunter.selected.id)}/html?ticket=${encodeURIComponent(ticket)}&auto_print=true`, '_blank', 'noopener')
     }
 
+    const isDownloadingPdf = ref(false)
+    const cvZoom = ref('fit') // 'fit' | '100%'
+    const cvPreviewModalOpen = ref(false)
+    const cvPreviewUrl = ref('')
+    const cvPreviewLoading = ref(false)
+    const cvModalZoom = ref('fit') // 'fit' | '100%'
+
+    async function downloadTailoredCVPdf() {
+      if (!store.hunter.selected || isDownloadingPdf.value) return
+      isDownloadingPdf.value = true
+      try {
+        const blob = await api.downloadHunterCVPdf(store.hunter.selected.id)
+        const url = URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        const comp = (store.hunter.selected.company || 'Job').replace(/[^a-zA-Z0-9_-]/g, '_')
+        a.download = `CV_Mateo_Sonzogni_Harvard_ATS_${comp}.pdf`
+        document.body.appendChild(a)
+        a.click()
+        a.remove()
+        URL.revokeObjectURL(url)
+        store.toast('ok', 'PDF nativo descargado exitosamente')
+      } catch {
+        store.toast('info', 'Generación directa no disponible en offline. Abriendo diálogo de impresión A4...')
+        await printTailoredCV()
+      } finally {
+        isDownloadingPdf.value = false
+      }
+    }
+
+    async function openCvPreviewModal() {
+      if (!store.hunter.selected) return
+      cvPreviewLoading.value = true
+      cvPreviewModalOpen.value = true
+      try {
+        const ticket = await getCVTicket()
+        if (ticket) {
+          cvPreviewUrl.value = `/api/admin/hunter/cv/${encodeURIComponent(store.hunter.selected.id)}/html?ticket=${encodeURIComponent(ticket)}`
+        } else {
+          cvPreviewUrl.value = `/api/admin/hunter/cv/${encodeURIComponent(store.hunter.selected.id)}/html`
+        }
+      } catch {
+        cvPreviewUrl.value = `/api/admin/hunter/cv/${encodeURIComponent(store.hunter.selected.id)}/html`
+      } finally {
+        cvPreviewLoading.value = false
+      }
+    }
+
+    function closeCvPreviewModal() {
+      cvPreviewModalOpen.value = false
+      cvPreviewUrl.value = ''
+    }
+
+    function toggleCvModalZoom() {
+      cvModalZoom.value = cvModalZoom.value === 'fit' ? '100%' : 'fit'
+    }
+
+    function setCvZoom(z) {
+      cvZoom.value = z
+    }
+
     async function downloadTailoredCVHtml() {
       if (!store.hunter.selected) return
       try {
@@ -455,6 +516,17 @@ export const AdmJobHunter = {
       openTailoredCVHtml,
       printTailoredCV,
       downloadTailoredCVHtml,
+      downloadTailoredCVPdf,
+      isDownloadingPdf,
+      cvZoom,
+      setCvZoom,
+      cvPreviewModalOpen,
+      cvPreviewUrl,
+      cvPreviewLoading,
+      cvModalZoom,
+      toggleCvModalZoom,
+      openCvPreviewModal,
+      closeCvPreviewModal,
       getVerdictClass,
       scanJobs,
       evaluatePendingJobs,
@@ -1354,22 +1426,34 @@ export const AdmJobHunter = {
                 <div class="flex items-center flex-wrap gap-2">
                   <button 
                     type="button" 
-                    @click="printTailoredCV" 
+                    @click="downloadTailoredCVPdf" 
+                    :disabled="isDownloadingPdf"
                     class="btn-primary !h-[30px] !text-xs cursor-pointer inline-flex items-center gap-1.5 shadow-sm"
-                    title="Imprimir o Descargar directamente en PDF A4 nativo del navegador"
+                    title="Descargar documento PDF compilado nativo (A4)"
                   >
-                    <svg class="adm-icon sm" viewBox="0 0 24 24"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
-                    <span>Descargar / Imprimir PDF (A4)</span>
+                    <svg v-if="!isDownloadingPdf" class="adm-icon sm" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                    <span v-else class="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                    <span>{{ isDownloadingPdf ? 'Generando PDF...' : 'Descargar PDF' }}</span>
                   </button>
 
                   <button 
                     type="button" 
-                    @click="downloadTailoredCVHtml" 
+                    @click="printTailoredCV" 
                     class="btn-secondary !h-[30px] !text-xs cursor-pointer inline-flex items-center gap-1.5 text-zinc-200 hover:text-white"
-                    title="Descargar archivo HTML independiente listo para enviar o editar"
+                    title="Imprimir o exportar mediante diálogo A4 del sistema"
                   >
-                    <svg class="adm-icon sm" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                    <span>Guardar HTML</span>
+                    <svg class="adm-icon sm" viewBox="0 0 24 24"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+                    <span>Imprimir en A4</span>
+                  </button>
+
+                  <button 
+                    type="button" 
+                    @click="openCvPreviewModal" 
+                    class="btn-secondary !h-[30px] !text-xs cursor-pointer inline-flex items-center gap-1.5 text-zinc-200 hover:text-white"
+                    title="Previsualizador de alta fidelidad a pantalla completa con zoom"
+                  >
+                    <svg class="adm-icon sm" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                    <span>Previsualizar</span>
                   </button>
 
                   <button 
@@ -1404,9 +1488,69 @@ export const AdmJobHunter = {
                 </div>
               </div>
 
-              <!-- Staging Canvas A4 con Sombra Realista y Proporción A4 -->
-              <div class="bg-[#08090b] p-3 sm:p-6 md:p-8 rounded-lg border border-white/5 flex justify-center overflow-x-auto">
-                <div class="w-full max-w-[700px] min-h-[960px] bg-white text-[#111111] p-8 sm:p-11 md:p-12 shadow-[0_25px_50px_-12px_rgba(0,0,0,0.95),0_0_0_1px_rgba(0,0,0,0.08)] rounded-sm font-serif text-xs select-text flex flex-col justify-between">
+              <!-- Staging Canvas A4 Estilo Obsidian / Linear Document Preview -->
+              <div class="rounded-lg border border-white/10 overflow-hidden shadow-2xl">
+                <!-- Barra de Control del Canvas Staging -->
+                <div class="flex items-center justify-between px-3.5 py-2 bg-[#0e1015] border-b border-white/5 text-[11px] font-mono-code text-zinc-400 select-none flex-wrap gap-2">
+                  <div class="flex items-center gap-2.5">
+                    <span class="w-1.5 h-1.5 rounded-full bg-cyan-400"></span>
+                    <span class="text-white font-medium">CANVAS ATS // HARVARD 1-PAGE</span>
+                    <span class="hidden sm:inline-block text-zinc-600">·</span>
+                    <span class="hidden sm:inline-block text-zinc-500 text-[10px]">A4 · 210 × 297 mm · aspect-[1/1.4142]</span>
+                  </div>
+
+                  <div class="flex items-center gap-2">
+                    <!-- Selector de Zoom Rápido: Fit vs 100% -->
+                    <div class="inline-flex items-center p-0.5 rounded bg-black/40 border border-white/10">
+                      <button 
+                        type="button" 
+                        @click="setCvZoom('fit')" 
+                        class="px-2 py-0.5 text-[10px] rounded transition-colors cursor-pointer"
+                        :class="cvZoom === 'fit' ? 'bg-white/15 text-white font-semibold' : 'text-zinc-400 hover:text-white'"
+                      >
+                        Fit
+                      </button>
+                      <button 
+                        type="button" 
+                        @click="setCvZoom('100%')" 
+                        class="px-2 py-0.5 text-[10px] rounded transition-colors cursor-pointer"
+                        :class="cvZoom === '100%' ? 'bg-white/15 text-white font-semibold' : 'text-zinc-400 hover:text-white'"
+                      >
+                        100%
+                      </button>
+                    </div>
+
+                    <!-- Botón directo Descargar PDF -->
+                    <button 
+                      type="button" 
+                      @click="downloadTailoredCVPdf"
+                      :disabled="isDownloadingPdf"
+                      class="px-2 py-0.5 rounded bg-white/5 hover:bg-white/10 border border-white/10 text-[10px] text-zinc-300 hover:text-white transition-colors cursor-pointer inline-flex items-center gap-1"
+                      title="Descargar PDF compilado nativo"
+                    >
+                      <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                      <span>PDF</span>
+                    </button>
+
+                    <!-- Botón Expandir a Modal Fullscreen -->
+                    <button 
+                      type="button" 
+                      @click="openCvPreviewModal"
+                      class="px-2 py-0.5 rounded bg-white/5 hover:bg-white/10 border border-white/10 text-[10px] text-zinc-300 hover:text-white transition-colors cursor-pointer inline-flex items-center gap-1"
+                      title="Expandir previsualizador de alta fidelidad"
+                    >
+                      <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
+                      <span>Expandir</span>
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Canvas Editorial Gris Neutro con Sombra Volumétrica -->
+                <div class="bg-[#0c0d10] p-4 sm:p-8 flex justify-center overflow-x-auto transition-all">
+                  <div 
+                    class="bg-white text-[#111111] p-8 sm:p-11 md:p-12 shadow-[0_30px_60px_-15px_rgba(0,0,0,0.85),0_0_0_1px_rgba(255,255,255,0.08),0_10px_20px_-5px_rgba(0,0,0,0.4)] rounded-[2px] font-serif text-xs select-text flex flex-col justify-between transition-all"
+                    :class="cvZoom === 'fit' ? 'w-full max-w-[680px] aspect-[1/1.4142] overflow-y-auto' : 'w-[210mm] min-h-[297mm]'"
+                  >
                   <div>
                     <!-- Cabecera Harvard -->
                     <div class="text-center pb-2">
@@ -1510,6 +1654,7 @@ export const AdmJobHunter = {
                 </div>
               </div>
             </div>
+          </div>
 
             <!-- Botones de Estado de Postulación y Eliminación -->
             <div class="pt-2 flex items-center justify-between select-none border-t border-white/5 flex-wrap gap-2">
@@ -1718,6 +1863,112 @@ export const AdmJobHunter = {
             </div>
           </form>
         </div>
+      </div>
+
+      <!-- Modal de Previsualización de Alta Fidelidad (PDF / HTML Renderizado) -->
+      <div 
+        v-if="cvPreviewModalOpen" 
+        class="fixed inset-0 z-50 flex flex-col bg-black/85 backdrop-blur-md overflow-hidden select-none"
+        @keydown.esc="closeCvPreviewModal"
+      >
+        <!-- Barra Superior del Visor de Documentos (macOS Studio / Linear 2026) -->
+        <header class="h-14 bg-[#0f1117]/95 border-b border-white/10 px-4 sm:px-6 flex items-center justify-between text-xs font-mono-code text-white select-none gap-4 shrink-0">
+          <div class="flex items-center gap-3 min-w-0">
+            <span class="w-2 h-2 rounded-full bg-cyan-400"></span>
+            <span class="font-bold tracking-wider uppercase text-white truncate">VISOR HARVARD ATS // ALTA FIDELIDAD</span>
+            <span class="hidden md:inline-block px-2 py-0.5 rounded-full text-[10px] bg-white/5 border border-white/10 text-zinc-400">A4 · 210 × 297 mm</span>
+            <span v-if="store.hunter.selected && store.hunter.selected.company" class="hidden sm:inline-block px-2 py-0.5 rounded text-[10px] bg-cyan-500/10 border border-cyan-500/20 text-cyan-300 truncate max-w-[200px]">
+              {{ store.hunter.selected.company }}
+            </span>
+          </div>
+
+          <!-- Acciones del Visor -->
+          <div class="flex items-center gap-2">
+            <!-- Selector de Zoom en Modal -->
+            <div class="inline-flex items-center p-0.5 rounded bg-black/50 border border-white/10">
+              <button 
+                type="button" 
+                @click="cvModalZoom = 'fit'" 
+                class="px-2.5 py-1 text-[11px] rounded transition-colors cursor-pointer"
+                :class="cvModalZoom === 'fit' ? 'bg-white/15 text-white font-semibold' : 'text-zinc-400 hover:text-white'"
+              >
+                Fit
+              </button>
+              <button 
+                type="button" 
+                @click="cvModalZoom = '100%'" 
+                class="px-2.5 py-1 text-[11px] rounded transition-colors cursor-pointer"
+                :class="cvModalZoom === '100%' ? 'bg-white/15 text-white font-semibold' : 'text-zinc-400 hover:text-white'"
+              >
+                100%
+              </button>
+            </div>
+
+            <!-- Descargar PDF Nativo -->
+            <button 
+              type="button" 
+              @click="downloadTailoredCVPdf"
+              :disabled="isDownloadingPdf"
+              class="btn-primary !h-[30px] !text-xs cursor-pointer inline-flex items-center gap-1.5"
+              title="Descargar documento PDF compilado nativo"
+            >
+              <svg v-if="!isDownloadingPdf" class="adm-icon sm" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              <span v-else class="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+              <span>{{ isDownloadingPdf ? 'Descargando...' : 'Descargar PDF' }}</span>
+            </button>
+
+            <!-- Imprimir A4 -->
+            <button 
+              type="button" 
+              @click="printTailoredCV" 
+              class="btn-secondary !h-[30px] !text-xs cursor-pointer inline-flex items-center gap-1.5 text-zinc-200 hover:text-white"
+              title="Imprimir en A4"
+            >
+              <svg class="adm-icon sm" viewBox="0 0 24 24"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+              <span class="hidden sm:inline">Imprimir A4</span>
+            </button>
+
+            <!-- Copiar Texto Plano ATS -->
+            <button 
+              type="button" 
+              @click="copyTailoredCVText" 
+              class="btn-secondary !h-[30px] !text-xs cursor-pointer inline-flex items-center gap-1.5 text-zinc-200 hover:text-white"
+              title="Copiar texto plano ATS"
+            >
+              <svg class="adm-icon sm" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+              <span class="hidden md:inline">Copiar ATS</span>
+            </button>
+
+            <!-- Cerrar Modal -->
+            <button 
+              type="button" 
+              @click="closeCvPreviewModal" 
+              class="h-[30px] w-[30px] rounded hover:bg-white/10 text-zinc-400 hover:text-white flex items-center justify-center cursor-pointer transition-colors ml-1"
+              title="Cerrar visor (Esc)"
+            >
+              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+          </div>
+        </header>
+
+        <!-- Cuerpo del Visor con Canvas Editorial Neutro -->
+        <main class="flex-1 overflow-auto bg-[#0c0d10] flex justify-center items-start p-4 sm:p-8">
+          <div 
+            class="bg-white rounded-[2px] shadow-[0_30px_60px_-15px_rgba(0,0,0,0.95),0_0_0_1px_rgba(255,255,255,0.08),0_10px_20px_-5px_rgba(0,0,0,0.5)] transition-all duration-200 flex flex-col overflow-hidden"
+            :class="cvModalZoom === 'fit' ? 'w-full max-w-[820px] aspect-[1/1.4142] h-[calc(100vh-110px)]' : 'w-[210mm] min-h-[297mm] h-[297mm]'"
+          >
+            <iframe 
+              v-if="cvPreviewUrl"
+              :src="cvPreviewUrl" 
+              class="w-full h-full border-none"
+              title="Vista previa del CV Harvard ATS"
+              sandbox="allow-scripts allow-modals allow-same-origin allow-popups"
+            ></iframe>
+            <div v-else class="flex-1 flex items-center justify-center text-zinc-500 font-mono-code text-xs">
+              Cargando documento...
+            </div>
+          </div>
+        </main>
       </div>
     </div>
   </div>

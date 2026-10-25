@@ -580,6 +580,10 @@ export const fallbackArticles: Article[] = [
     publishedAt: '2026-10-24T00:00:00.000Z',
     canonicalUrl: 'https://mateogs.tech/blog/postgresql-17-universal-vector-relational-production',
     coverImage: '/media/articles/pg17-hero.webp',
+    sortOrder: 1,
+    createdAt: '2026-10-24T00:00:00.000Z',
+    updatedAt: '2026-10-24T00:00:00.000Z',
+    project: null,
     techs: [
       { slug: 'postgresql', name: 'PostgreSQL' },
       { slug: 'prisma', name: 'Prisma' },
