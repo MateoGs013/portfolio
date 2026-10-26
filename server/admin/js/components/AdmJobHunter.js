@@ -484,6 +484,42 @@ export const AdmJobHunter = {
       isCustomizingText.value = false
     }
 
+    async function openGmailDirectCompose() {
+      if (!store.hunter.selected) return
+      if (!applyForm.toEmail || !applyForm.toEmail.includes('@')) {
+        store.toast('err', 'Ingresá un correo de destino válido')
+        return
+      }
+
+      const sel = store.hunter.selected
+      const isEn = !((sel.title + ' ' + (sel.description || '')).toLowerCase().includes('desarrollador') || (sel.title + ' ' + (sel.description || '')).toLowerCase().includes('experiencia'))
+      const fallbackSubject = isEn
+        ? `Application: ${sel.title} — Mateo Sonzogni`
+        : `Postulación: ${sel.title} — Mateo Gabriel Sonzogni`
+      const finalSubject = (applyForm.subject || fallbackSubject).trim()
+      const finalBody = applyForm.body || ''
+
+      // 1. Descarga en paralelo del CV Harvard ATS nativo para adjuntar
+      downloadTailoredCVPdf()
+
+      // 2. Apertura de pestaña nativa de Gmail pre-cargada con destinatario, asunto y carta
+      const params = new URLSearchParams({
+        view: 'cm',
+        fs: '1',
+        to: applyForm.toEmail.trim(),
+        su: finalSubject,
+        body: finalBody,
+      })
+      const composeUrl = `https://mail.google.com/mail/?${params.toString()}`
+      window.open(composeUrl, '_blank', 'noopener,noreferrer')
+
+      // 3. Marcar la postulación como aplicada en el sistema
+      await setJobStatus('applied')
+
+      applyModalOpen.value = false
+      store.toast('ok', 'Gmail abierto con propuesta lista y CV PDF descargado')
+    }
+
     async function submitApplyEmail() {
       if (!store.hunter.selected) return
       if (!applyForm.toEmail || !applyForm.toEmail.includes('@')) {
@@ -501,11 +537,10 @@ export const AdmJobHunter = {
           to_email: applyForm.toEmail.trim(),
           subject: (applyForm.subject || fallbackSubject).trim(),
           body: applyForm.body,
-          channel: 'auto',
+          channel: 'n8n',
           confirmed: true,
         })
         applyModalOpen.value = false
-        store.toast('ok', 'Postulación despachada por correo exitosamente')
       } catch {
         // error mostrado por el store
       }
@@ -588,6 +623,7 @@ export const AdmJobHunter = {
       editEmailVal,
       openApplyModal,
       closeApplyModal,
+      openGmailDirectCompose,
       submitApplyEmail,
       startEditContactEmail,
       saveContactEmail,
@@ -1878,28 +1914,40 @@ export const AdmJobHunter = {
             </div>
 
             <!-- Botones de Acción -->
-            <div class="pt-3 flex items-center justify-between border-t border-white/10 shrink-0">
+            <div class="pt-3 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 border-t border-white/10 shrink-0">
               <div class="flex items-center gap-1.5 text-[11px] text-zinc-500">
                 <span class="w-1.5 h-1.5 rounded-full bg-emerald-500/60"></span>
-                <span>Salida: <span class="text-zinc-300 font-mono-code">mateogabus@gmail.com</span></span>
+                <span>Remitente: <span class="text-zinc-300 font-mono-code">mateogabus@gmail.com</span></span>
               </div>
 
-              <div class="flex items-center gap-2">
+              <div class="flex items-center justify-end gap-2">
                 <button
                   type="button"
                   @click="closeApplyModal"
-                  class="btn-secondary !h-[32px] !px-3 text-xs font-mono-code cursor-pointer"
+                  class="btn-secondary !h-[34px] !px-3 text-xs font-mono-code cursor-pointer"
                 >
                   Cancelar
                 </button>
                 <button
-                  type="submit"
+                  type="button"
+                  @click="submitApplyEmail"
                   :disabled="store.hunter.isApplying || !applyForm.toEmail"
-                  class="btn-primary !h-[34px] !px-4 text-xs font-mono-code font-bold cursor-pointer inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white border-emerald-400 disabled:opacity-40 disabled:cursor-not-allowed"
+                  class="btn-secondary !h-[34px] !px-3 text-xs font-mono-code cursor-pointer inline-flex items-center gap-1.5 text-zinc-300 hover:text-white border-white/10 disabled:opacity-40"
+                  title="Despachar automáticamente en segundo plano mediante webhook de n8n"
                 >
                   <svg v-if="store.hunter.isApplying" class="adm-icon xs animate-spin" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
-                  <svg v-else class="adm-icon xs" viewBox="0 0 24 24"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>
-                  <span>{{ store.hunter.isApplying ? 'Enviando...' : 'Enviar Postulación' }}</span>
+                  <svg v-else class="adm-icon xs text-purple-400" viewBox="0 0 24 24"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>
+                  <span>{{ store.hunter.isApplying ? 'Despachando...' : 'Despachar (n8n)' }}</span>
+                </button>
+                <button
+                  type="button"
+                  @click="openGmailDirectCompose"
+                  :disabled="!applyForm.toEmail"
+                  class="btn-primary !h-[34px] !px-4 text-xs font-mono-code font-bold cursor-pointer inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white border-emerald-400 disabled:opacity-40 disabled:cursor-not-allowed shadow-[0_0_12px_rgba(16,185,129,0.2)]"
+                  title="Abre la redacción directa en Gmail y descarga automáticamente el CV en PDF"
+                >
+                  <svg class="adm-icon xs" viewBox="0 0 24 24"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+                  <span>Postular en Gmail (1-Click)</span>
                 </button>
               </div>
             </div>

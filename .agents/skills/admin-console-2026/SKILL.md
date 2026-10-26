@@ -37,3 +37,18 @@ Dado que `/admin` no pasa por Vite ni TypeScript en build-time, los errores de i
 En `JobHunterView.js` (y su contraparte pública en `/about`):
 - El contenedor `#cv-print-area` debe producir un PDF de **exactamente 1 página A4** (`210mm × 297mm`) al invocar `window.print()`.
 - Tipografía serif clásica (`EB Garamond` / `Times New Roman`), negro puro `#000` sobre blanco `#fff`, sin columnas laterales complejas ni gráficos que confundan parsers ATS (Workday, Greenhouse, Lever).
+
+## 5. Arquitectura de Despacho de Postulaciones y CVs (Anti-SMTP VPS)
+
+Está estrictamente prohibido utilizar sockets directos `smtplib` con contraseñas de aplicación de Gmail desde contenedores VPS (Hetzner / Coolify) debido a bloqueos de rDNS IPv6 de Google (`550-5.7.1`), ausencia de sincronización en la carpeta "Enviados" y penalización en filtros ATS corporativos.
+
+Todo flujo de despacho de postulaciones debe seguir uno de los dos canales autorizados:
+
+1. **Canal Primario: 1-Click Direct Compose (Human-in-the-Loop)**:
+   - Al pulsar "Postular en Gmail", el modal descarga en paralelo el PDF nativo Harvard ATS (`api.downloadHunterCVPdf(id)`) y abre la ventana nativa de redacción de Gmail:
+     `https://mail.google.com/mail/?view=cm&fs=1&to=${to}&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`
+   - Garantiza entrega 100% legítima desde la sesión personal autenticada del usuario en su navegador, registro instantáneo en "Enviados" y cero caídas de servidor.
+
+2. **Canal Secundario: Automatización vía n8n OAuth2 (`flow.mateogs.tech`)**:
+   - Cuando se requiere despacho en segundo plano o programado, la API satélite envía el payload vía HTTPS (puerto 443) al webhook de aplicaciones de n8n (`N8N_APPLICATION_WEBHOOK_URL`).
+   - n8n ejecuta el despacho mediante el nodo oficial **Gmail OAuth2** de Google Cloud (`users.messages.send`), logueando el estado en PostgreSQL y notificando al bot de Telegram.
