@@ -39,11 +39,12 @@ const cvLocation = computed(() => isEs.value
   : 'Río Negro, Patagonia, Argentina',
 )
 const cvBio = computed(() => {
-  const customBio = getDocField('engineering_philosophy') || getDocField('bio')
-  if (customBio) return customBio
-  return isEs.value
-    ? 'Desarrollador de software especializado en ingeniería frontend reactiva, arquitectura de APIs y experiencia de usuario. Tesis de grado preaprobada en Escuela Da Vinci con 382 commits liderando la arquitectura de un asistente de IA on-premise. Trayectoria verificable en producción con más de 10 entregables para clientes en España y Argentina (La Rúcula Gastrobar, ARG Piscinas). Dominio de TypeScript, Vue 3, Nuxt 4, React, Next.js, Node.js, FastAPI y PostgreSQL. Criterio integral de producto y diseño de punta a punta.'
-    : 'Software engineer specialized in reactive frontend engineering, API architecture, and user experience. Pre-approved degree thesis at Da Vinci School with 382 commits leading system architecture for an on-premise AI assistant. Verifiable production track record with 10+ deliverables for clients across Spain and Argentina (La Rúcula Gastrobar, ARG Piscinas). Proficient in TypeScript, Vue 3, Nuxt 4, React, Next.js, Node.js, FastAPI, and PostgreSQL. End-to-end product design mindset.'
+  if (isEs.value) {
+    const customBio = getDocField('engineering_philosophy') || getDocField('bio')
+    if (customBio) return customBio
+    return 'Desarrollador de software especializado en ingeniería frontend reactiva, arquitectura de APIs y experiencia de usuario. Tesis de grado preaprobada en Escuela Da Vinci con 382 commits liderando la arquitectura de un asistente de IA on-premise. Trayectoria verificable en producción con más de 10 entregables para clientes en España y Argentina (La Rúcula Gastrobar, ARG Piscinas). Dominio de TypeScript, Vue 3, Nuxt 4, React, Next.js, Node.js, FastAPI y PostgreSQL. Criterio integral de producto y diseño de punta a punta.'
+  }
+  return 'Software engineer specialized in reactive frontend engineering, API architecture, and user experience. Pre-approved degree thesis at Da Vinci School with 382 commits leading system architecture for an on-premise AI assistant. Verifiable production track record with 10+ deliverables for clients across Spain and Argentina (La Rúcula Gastrobar, ARG Piscinas). Proficient in TypeScript, Vue 3, Nuxt 4, React, Next.js, Node.js, FastAPI, and PostgreSQL. End-to-end product design mindset.'
 })
 
 const cvEmail = computed(() => props.detail?.contact?.email || 'mateogabus@gmail.com')
@@ -54,41 +55,19 @@ const cvLinkedinText = computed(() => cvLinkedin.value.replace(/^https?:\/\/(www
 const cvTimezone = computed(() => props.detail?.contact?.timezone || 'UTC-3')
 
 const cvDeliverables = computed<CvDeliverable[]>(() => {
-  if (props.detail?.projects && props.detail.projects.length) {
-    return props.detail.projects.map((p) => {
-      const isYnara = p.slug === 'ynara'
-      const isThesis = isYnara || p.title?.toLowerCase().includes('ynara')
-      const badge = isThesis
-        ? (isEs.value ? 'Tesis Da Vinci' : 'Da Vinci Thesis')
-        : (p.status === 'LIVE' ? (isEs.value ? 'Producción' : 'Production') : 'WIP')
+  const dbProjects = props.detail?.projects || []
+  const findDb = (slugKeywords: string[]) =>
+    dbProjects.find(p => slugKeywords.some(k => p.slug?.toLowerCase().includes(k) || p.title?.toLowerCase().includes(k)))
 
-      const bullets: string[] = []
-      if (p.brief) bullets.push(p.brief)
-      if (p.outcome) bullets.push(p.outcome)
-      if (!bullets.length && p.summary) bullets.push(p.summary)
-
-      const orgObj = p.org && typeof p.org === 'object' ? (p.org as { city?: string, name?: string }) : null
-      const loc = orgObj?.city || orgObj?.name || (isEs.value ? 'Remoto' : 'Remote')
-
-      return {
-        slug: p.slug,
-        title: p.title,
-        badge,
-        date: p.year ? String(p.year) : (isEs.value ? '2026' : '2026'),
-        role: p.role || (isEs.value ? 'Desarrollador Full Stack' : 'Full Stack Developer'),
-        location: loc,
-        description: p.summary || '',
-        bullets,
-        tags: Array.isArray(p.techs) ? p.techs.map(t => t.name) : [],
-      }
-    })
-  }
+  const pYnara = findDb(['ynara'])
+  const pRucula = findDb(['rucula', 'la-rucula'])
+  const pArg = findDb(['argpiscinas', 'arg-piscinas', 'arg piscinas'])
 
   if (isEs.value) {
     return [
       {
         slug: 'ynara',
-        title: 'Ynara AI Assistant',
+        title: pYnara?.title || 'Ynara AI Assistant',
         badge: 'Tesis Da Vinci',
         date: '05/2026 – 07/2026',
         role: 'Arquitecto de Software & Lead Frontend',
@@ -98,12 +77,12 @@ const cvDeliverables = computed<CvDeliverable[]>(() => {
           'Lideré la arquitectura técnica y el frontend reactivo con 382 commits a lo largo de 6 semanas.',
           'Diseñé pipelines de inferencia y memoria vectorial persistente en Next.js y FastAPI con latencia sub-100ms en local.',
         ],
-        tags: ['FastAPI', 'Next.js', 'PostgreSQL', 'pgvector', 'TypeScript', 'Python'],
+        tags: Array.isArray(pYnara?.techs) && pYnara.techs.length ? pYnara.techs.map(t => t.name) : ['FastAPI', 'Next.js', 'PostgreSQL', 'pgvector', 'TypeScript', 'Python'],
       },
       {
         slug: 'la-rucula',
-        title: 'La Rúcula Gastrobar',
-        badge: 'Freelance',
+        title: pRucula?.title || 'La Rúcula Gastrobar',
+        badge: 'Producción',
         date: '03/2026 – 07/2026',
         role: 'Desarrollador Full Stack & Diseñador UI',
         location: 'Cádiz, España',
@@ -112,31 +91,33 @@ const cvDeliverables = computed<CvDeliverable[]>(() => {
           'Puntuación Lighthouse de 99 en Performance y 100 en SEO y Accesibilidad con bundle de 42 KB.',
           'Integración con CMS propio y fallback en caché para operación continua ante caídas de red.',
         ],
-        tags: ['Vue 3', 'Vite', 'Tailwind CSS', 'GSAP', 'Lenis'],
+        tags: Array.isArray(pRucula?.techs) && pRucula.techs.length ? pRucula.techs.map(t => t.name) : ['Vue 3', 'Vite', 'Tailwind CSS', 'GSAP', 'Lenis'],
       },
       {
         slug: 'arg-piscinas',
-        title: 'ARG Piscinas',
-        badge: 'Freelance',
+        title: pArg?.title || 'ARG Piscinas',
+        badge: 'Producción',
         date: '01/2026 – 07/2026',
         role: 'Desarrollador Full Stack',
         location: 'Andalucía, España',
         description: 'Plataforma corporativa multi-idioma (ES/EN/DE) con panel de control autónomo para carga de obras y blog.',
         bullets: [
+          'Plataforma corporativa multi-idioma (ES/EN/DE) con panel de control autónomo para carga de obras y blog.',
           'Modelado relacional y tipado estricto de extremo a extremo con Prisma ORM, Node.js y TypeScript.',
         ],
-        tags: ['Vue 3', 'Node.js', 'Prisma', 'Tailwind CSS', 'TypeScript'],
+        tags: Array.isArray(pArg?.techs) && pArg.techs.length ? pArg.techs.map(t => t.name) : ['Vue 3', 'Node.js', 'Prisma', 'Tailwind CSS', 'TypeScript'],
       },
       {
         slug: 'freelance',
-        title: 'Freelance',
-        badge: 'Freelance',
+        title: 'Desarrollo Freelance',
+        badge: 'Producción',
         date: '2023 – Presente',
         role: 'Desarrollador Full Stack',
         location: 'Remoto',
         description: 'Desarrollo de software y soluciones web llave en mano para clientes de diversos rubros con arquitectura integral y APIs REST.',
         bullets: [
-          'Desarrollo de punta a punta: arquitectura de sistemas, diseño en Figma y despliegue a producción en ~10 proyectos reales.',
+          'Desarrollo de punta a punta: arquitectura de sistemas, diseño UI en Figma y despliegue a producción en ~10 proyectos reales.',
+          'Diseño y consumo de APIs REST modulares con micro-interacciones, tipado estricto y testing automatizado.',
         ],
         tags: ['TypeScript', 'Vue 3', 'Node.js', 'PostgreSQL', 'Docker'],
       },
@@ -146,7 +127,7 @@ const cvDeliverables = computed<CvDeliverable[]>(() => {
   return [
     {
       slug: 'ynara',
-      title: 'Ynara AI Assistant',
+      title: pYnara?.title || 'Ynara AI Assistant',
       badge: 'Da Vinci Thesis',
       date: '05/2026 – 07/2026',
       role: 'Software Architect & Lead Frontend',
@@ -156,12 +137,12 @@ const cvDeliverables = computed<CvDeliverable[]>(() => {
         'Led technical architecture and reactive frontend with 382 commits across 6 weeks of engineering.',
         'Engineered inference pipelines and persistent vector memory with Next.js and FastAPI achieving sub-100ms response times locally.',
       ],
-      tags: ['FastAPI', 'Next.js', 'PostgreSQL', 'pgvector', 'TypeScript', 'Python'],
+      tags: Array.isArray(pYnara?.techs) && pYnara.techs.length ? pYnara.techs.map(t => t.name) : ['FastAPI', 'Next.js', 'PostgreSQL', 'pgvector', 'TypeScript', 'Python'],
     },
     {
       slug: 'la-rucula',
-      title: 'La Rúcula Gastrobar',
-      badge: 'Freelance',
+      title: pRucula?.title || 'La Rúcula Gastrobar',
+      badge: 'Production',
       date: '03/2026 – 07/2026',
       role: 'Full Stack Developer & UI Designer',
       location: 'Cadiz, Spain',
@@ -170,31 +151,33 @@ const cvDeliverables = computed<CvDeliverable[]>(() => {
         'Achieved 99 Performance and 100 SEO & Accessibility Lighthouse scores with a compact 42 KB bundle.',
         'Integrated proprietary CMS and cached offline fallbacks ensuring uninterrupted service during outages.',
       ],
-      tags: ['Vue 3', 'Vite', 'Tailwind CSS', 'GSAP', 'Lenis'],
+      tags: Array.isArray(pRucula?.techs) && pRucula.techs.length ? pRucula.techs.map(t => t.name) : ['Vue 3', 'Vite', 'Tailwind CSS', 'GSAP', 'Lenis'],
     },
     {
       slug: 'arg-piscinas',
-      title: 'ARG Piscinas',
-      badge: 'Freelance',
+      title: pArg?.title || 'ARG Piscinas',
+      badge: 'Production',
       date: '01/2026 – 07/2026',
       role: 'Full Stack Developer',
       location: 'Andalucia, Spain',
       description: 'Multilingual corporate web platform (ES/EN/DE) with custom CMS dashboard for projects and blog.',
       bullets: [
+        'Multilingual corporate web platform (ES/EN/DE) with custom CMS dashboard for projects and blog.',
         'Modeled relational schemas and end-to-end type safety using Prisma ORM, Node.js, and TypeScript.',
       ],
-      tags: ['Vue 3', 'Node.js', 'Prisma', 'Tailwind CSS', 'TypeScript'],
+      tags: Array.isArray(pArg?.techs) && pArg.techs.length ? pArg.techs.map(t => t.name) : ['Vue 3', 'Node.js', 'Prisma', 'Tailwind CSS', 'TypeScript'],
     },
     {
       slug: 'freelance',
-      title: 'Freelance',
-      badge: 'Freelance',
+      title: 'Freelance Solutions',
+      badge: 'Production',
       date: '2023 – Present',
       role: 'Full Stack Developer',
       location: 'Remote',
       description: 'Full-stack software development and turnkey web solutions for diverse clients with end-to-end architecture and REST APIs.',
       bullets: [
         'End-to-end turnkey web solutions combining Figma UI design and production deployments across ~10 real-world projects.',
+        'Engineered decoupled REST APIs with micro-interactions, strict type-safety, and automated test coverage.',
       ],
       tags: ['TypeScript', 'Vue 3', 'Node.js', 'PostgreSQL', 'Docker'],
     },
@@ -203,10 +186,7 @@ const cvDeliverables = computed<CvDeliverable[]>(() => {
 
 const cvDownloadBaseName = computed(() => {
   const lang = isEs.value ? 'ES' : 'EN'
-  if (mode.value === 'harvard') {
-    return `CV-${lang}-Mateo-Sonzogni-ATS`
-  }
-  return `CV-${lang}-Mateo-Sonzogni`
+  return `CV-${lang}-Mateo-Sonzogni-ATS`
 })
 
 const cvDownloadFileName = computed(() => `${cvDownloadBaseName.value}.pdf`)
@@ -255,11 +235,15 @@ function printCV() {
           v-model="mode"
           :options="[
             { value: 'modern', label: isEs ? 'Moderno + Foto' : 'Modern + Photo', shortLabel: isEs ? 'Moderno' : 'Modern' },
-            { value: 'harvard', label: 'Harvard ATS', shortLabel: 'ATS' },
+            { value: 'harvard', label: 'Harvard ATS (A4)', shortLabel: 'ATS (A4)' },
           ]"
           :aria-label="isEs ? 'Formato de CV' : 'CV format'"
           size="sm"
         />
+        <span class="hidden sm:inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-mono font-medium bg-sig/10 text-sig border border-sig/20">
+          <span class="w-1.5 h-1.5 rounded-full bg-sig" />
+          {{ isEs ? '1 PÁGINA A4' : '1 PAGE A4' }}
+        </span>
       </div>
 
       <div class="cv-actions flex items-center gap-2 max-sm:w-full">
