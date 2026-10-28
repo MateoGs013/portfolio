@@ -23,15 +23,18 @@ defineProps<{
       <h1 class="h-name">{{ name }}</h1>
       <p class="h-role">{{ role }}</p>
       <div class="h-contact">
-        <span>{{ location }}</span>
-        <span class="h-sep">|</span>
-        <a :href="`mailto:${email}`">{{ email }}</a>
-        <span class="h-sep">|</span>
-        <a :href="github" target="_blank" rel="noopener noreferrer">{{ githubText }}</a>
-        <span class="h-sep">|</span>
-        <a :href="linkedin" target="_blank" rel="noopener noreferrer">{{ linkedinText }}</a>
-        <span class="h-sep">|</span>
-        <span>{{ isEs ? 'Disponibilidad Inmediata · Remoto / Híbrido' : 'Immediate Availability · Remote / Hybrid' }}</span>
+        <div class="h-contact-row">
+          <span>{{ location }}</span>
+          <span class="h-sep">•</span>
+          <a :href="`mailto:${email}`">{{ email }}</a>
+          <span class="h-sep">•</span>
+          <a :href="github" target="_blank" rel="noopener noreferrer">{{ githubText }}</a>
+          <span class="h-sep">•</span>
+          <a :href="linkedin" target="_blank" rel="noopener noreferrer">{{ linkedinText }}</a>
+        </div>
+        <div class="h-contact-sub">
+          <span>{{ isEs ? 'Remoto / Híbrido · Disponibilidad Inmediata' : 'Remote / Hybrid · Immediate Availability' }}</span>
+        </div>
       </div>
     </header>
 
@@ -87,7 +90,10 @@ defineProps<{
       <template v-if="deliverables && deliverables.length">
         <div v-for="d in deliverables" :key="d.slug" class="h-entry">
           <div class="h-entry-header">
-            <span class="h-org">{{ d.title.toUpperCase() }} {{ d.badge ? `(${d.badge.toUpperCase()})` : '' }}</span>
+            <span class="h-org">
+              {{ d.title.toUpperCase() }}
+              <span v-if="d.badge && (d.badge.toLowerCase().includes('tesis') || d.badge.toLowerCase().includes('thesis'))" class="h-badge font-normal"> ({{ d.badge }})</span>
+            </span>
             <span class="h-date">{{ d.date }}</span>
           </div>
           <div class="h-entry-sub">
@@ -229,11 +235,22 @@ defineProps<{
 }
 .h-contact {
   display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  font-size: 12.5px;
+}
+.h-contact-row {
+  display: flex;
   flex-wrap: wrap;
   justify-content: center;
   align-items: center;
   gap: 8px;
-  font-size: 12.5px;
+}
+.h-contact-sub {
+  font-size: 11.5px;
+  color: #333333;
+  font-style: italic;
 }
 .h-sep {
   color: #666666;
@@ -338,14 +355,18 @@ defineProps<{
     margin: 10.5mm 12mm 10.5mm 12mm;
   }
 
-  /* 2. Reseteo del canvas del navegador */
+  /* 2. Reseteo del canvas del navegador (100% blanco puro anti-márgenes negros) */
   html, body {
-    width: 210mm !important;
-    height: 297mm !important;
+    width: 100% !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
     margin: 0 !important;
     padding: 0 !important;
     background: #ffffff !important;
+    background-color: #ffffff !important;
     color: #000000 !important;
+    color-scheme: light !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
   }
@@ -375,15 +396,15 @@ defineProps<{
   /* 4. Encabezado de Identidad */
   .cv-harvard .h-header {
     text-align: center !important;
-    border-bottom: 1.2pt solid #000000 !important;
-    padding-bottom: 3pt !important;
-    margin-bottom: 6pt !important;
+    border-bottom: 1.5pt solid #000000 !important;
+    padding-bottom: 3.5pt !important;
+    margin-bottom: 5.5pt !important;
   }
   .cv-harvard .h-name {
-    font-size: 19pt !important;
+    font-size: 19.5pt !important;
     font-weight: 700 !important;
     letter-spacing: 0.03em !important;
-    line-height: 22pt !important;
+    line-height: 22.5pt !important;
     margin: 0 0 2pt !important;
     text-transform: uppercase !important;
   }
@@ -395,39 +416,51 @@ defineProps<{
   }
   .cv-harvard .h-contact {
     display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    gap: 1.5pt !important;
+    font-size: 9.2pt !important;
+    line-height: 12pt !important;
+  }
+  .cv-harvard .h-contact-row {
+    display: flex !important;
     flex-wrap: wrap !important;
     justify-content: center !important;
     align-items: center !important;
     gap: 4pt !important;
-    font-size: 9.2pt !important;
-    line-height: 12pt !important;
+  }
+  .cv-harvard .h-contact-sub {
+    font-size: 8.8pt !important;
+    line-height: 11pt !important;
+    font-style: italic !important;
+    color: #222222 !important;
   }
   .cv-harvard .h-sep {
     color: #000000 !important;
-    padding: 0 1pt !important;
+    padding: 0 1.5pt !important;
   }
 
   /* 5. Secciones Semánticas */
   .cv-harvard .h-section {
     margin-top: 0 !important;
-    margin-bottom: 6pt !important;
+    margin-bottom: 5.5pt !important;
     break-inside: avoid !important;
     page-break-inside: avoid !important;
   }
   .cv-harvard .h-title {
-    font-size: 11.5pt !important;
+    font-size: 11pt !important;
     font-weight: 700 !important;
     text-transform: uppercase !important;
-    letter-spacing: 0.04em !important;
-    border-bottom: 0.75pt solid #000000 !important;
+    letter-spacing: 0.05em !important;
+    border-bottom: 1pt solid #000000 !important;
     padding-bottom: 1.5pt !important;
-    margin-top: 0 !important;
-    margin-bottom: 4pt !important;
-    line-height: 14pt !important;
+    margin-top: 5pt !important;
+    margin-bottom: 3.5pt !important;
+    line-height: 13.5pt !important;
   }
   .cv-harvard .h-summary {
     font-size: 9.5pt !important;
-    line-height: 12.8pt !important;
+    line-height: 13pt !important;
     margin: 0 !important;
     text-align: justify !important;
   }
@@ -435,7 +468,7 @@ defineProps<{
   /* 6. Entradas (Educación y Proyectos) */
   .cv-harvard .h-entry {
     margin-top: 0 !important;
-    margin-bottom: 4pt !important;
+    margin-bottom: 3.5pt !important;
     break-inside: avoid !important;
     page-break-inside: avoid !important;
   }
@@ -443,7 +476,7 @@ defineProps<{
     display: flex !important;
     justify-content: space-between !important;
     align-items: baseline !important;
-    font-size: 10.5pt !important;
+    font-size: 10.2pt !important;
     line-height: 13pt !important;
     margin: 0 !important;
   }
@@ -460,7 +493,7 @@ defineProps<{
     display: flex !important;
     justify-content: space-between !important;
     align-items: baseline !important;
-    font-size: 9.8pt !important;
+    font-size: 9.6pt !important;
     font-style: italic !important;
     line-height: 12.5pt !important;
     margin-top: 0 !important;
@@ -477,8 +510,8 @@ defineProps<{
 
   /* 7. Viñetas */
   .cv-harvard .h-bullets {
-    font-size: 9.5pt !important;
-    line-height: 12.5pt !important;
+    font-size: 9.3pt !important;
+    line-height: 12.6pt !important;
     margin-top: 1pt !important;
     margin-bottom: 0 !important;
     padding-left: 13pt !important;
@@ -486,18 +519,19 @@ defineProps<{
   }
   .cv-harvard .h-bullets li {
     margin-top: 0 !important;
-    margin-bottom: 2.5pt !important;
+    margin-bottom: 2pt !important;
+    text-align: justify !important;
   }
 
   /* 8. Habilidades Técnicas */
   .cv-harvard .h-skills p {
     font-size: 9.2pt !important;
-    line-height: 12.5pt !important;
+    line-height: 12.6pt !important;
     margin-top: 0 !important;
     margin-bottom: 2pt !important;
   }
   .cv-harvard .h-skills strong {
-    font-size: 9.5pt !important;
+    font-size: 9.4pt !important;
     font-weight: 700 !important;
   }
 }

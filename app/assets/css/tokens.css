@@ -320,7 +320,7 @@ html[data-hyperfocus="true"] .hb-dot {
     margin: 10.5mm 12mm 10.5mm 12mm;
   }
 
-  /* 1. Configuración del lienzo A4 y fondos contextuales según modo */
+  /* 1. Configuración del lienzo A4: Fondo 100% blanco puro anti-márgenes negros */
   html,
   body {
     margin: 0 !important;
@@ -329,22 +329,12 @@ html[data-hyperfocus="true"] .hb-dot {
     height: auto !important;
     min-height: 0 !important;
     max-height: none !important;
-    -webkit-print-color-adjust: exact !important;
-    print-color-adjust: exact !important;
-  }
-
-  html:has(.cv-harvard),
-  body:has(.cv-harvard) {
     background: #ffffff !important;
+    background-color: #ffffff !important;
     color: #000000 !important;
     color-scheme: light !important;
-  }
-
-  html:has(.cv-modern),
-  body:has(.cv-modern) {
-    background: #09090b !important;
-    color: #f4f4f5 !important;
-    color-scheme: dark !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
   }
 
   /* 2. Ocultar el 100% de la interfaz de la aplicación, chrome, ventanas y navegación */
@@ -424,104 +414,6 @@ html[data-hyperfocus="true"] .hb-dot {
     padding: 0 !important;
     background: transparent !important;
   }
-
-  /* 6. Modo Harvard ATS en Impresión (100% B&W Académico, 1 Página A4 Exacta) */
-  @page {
-    size: A4 portrait;
-    margin: 10mm 14mm 10mm 14mm;
-  }
-  .cv-harvard {
-    border: none !important;
-    box-shadow: none !important;
-    padding: 0 !important;
-    margin: 0 !important;
-    width: 100% !important;
-    max-width: 100% !important;
-    min-height: auto !important;
-    background: #ffffff !important;
-    color: #000000 !important;
-    font-family: 'Times New Roman', Times, Garamond, Georgia, serif !important;
-  }
-  .cv-harvard * {
-    color: #000000 !important;
-  }
-  .cv-harvard .h-header {
-    border-bottom: 1.25pt solid #000000 !important;
-    padding-bottom: 4pt !important;
-    margin-bottom: 6pt !important;
-    text-align: center !important;
-  }
-  .cv-harvard .h-name {
-    font-size: 18pt !important;
-    font-weight: 700 !important;
-    letter-spacing: 0.03em !important;
-    margin-bottom: 2pt !important;
-    color: #000000 !important;
-  }
-  .cv-harvard .h-role {
-    font-size: 9.5pt !important;
-    font-style: italic !important;
-    margin-bottom: 2pt !important;
-    color: #222222 !important;
-  }
-  .cv-harvard .h-contact {
-    font-size: 8.5pt !important;
-    gap: 5pt !important;
-  }
-  .cv-harvard .h-contact a {
-    color: #000000 !important;
-    text-decoration: underline !important;
-  }
-  .cv-harvard .h-section {
-    margin-bottom: 5pt !important;
-    break-inside: avoid !important;
-    page-break-inside: avoid !important;
-  }
-  .cv-harvard .h-title {
-    font-size: 9.5pt !important;
-    border-bottom: 0.75pt solid #000000 !important;
-    color: #000000 !important;
-    padding-bottom: 1.5pt !important;
-    margin-top: 5pt !important;
-    margin-bottom: 3pt !important;
-    letter-spacing: 0.04em !important;
-  }
-  .cv-harvard .h-summary {
-    font-size: 8.25pt !important;
-    line-height: 1.35 !important;
-    margin: 0 !important;
-  }
-  .cv-harvard .h-entry {
-    margin-bottom: 3.5pt !important;
-    break-inside: avoid !important;
-    page-break-inside: avoid !important;
-  }
-  .cv-harvard .h-entry-header {
-    font-size: 8.5pt !important;
-    line-height: 1.3 !important;
-  }
-  .cv-harvard .h-entry-sub {
-    font-size: 8pt !important;
-    margin-bottom: 1pt !important;
-    line-height: 1.25 !important;
-  }
-  .cv-harvard .h-bullets {
-    font-size: 8pt !important;
-    line-height: 1.3 !important;
-    margin-top: 1pt !important;
-    margin-bottom: 0 !important;
-    padding-left: 12pt !important;
-  }
-  .cv-harvard .h-bullets li {
-    margin-bottom: 1pt !important;
-  }
-  .cv-harvard .h-skills p {
-    font-size: 8pt !important;
-    line-height: 1.3 !important;
-    margin: 0 0 2pt !important;
-  }
-
-  /* 7. Modo Moderno en Impresión eliminado (ahora en DatosCV.vue) */
 }
 
 /* ─── $10k Spatial Canvas & Swiss Architectural Grid (Awwwards 2026) ─── */
