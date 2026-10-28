@@ -40,6 +40,28 @@ test.describe('Explorador Relacional — Auditoría Visual y UX/UI', () => {
       fullPage: false,
     })
 
+    // Captura de Selected Works ’26 (Buser 2-Col Frames) y capacidades
+    const swLocator = page.locator('[aria-label="Producción destacada"]')
+    if (await swLocator.count() > 0) {
+      await swLocator.scrollIntoViewIfNeeded()
+      await page.waitForTimeout(200)
+      await page.screenshot({
+        path: path.join(SCREENSHOT_DIR, `home-selected-works-${testInfo.project.name}.png`),
+        fullPage: false,
+      })
+    }
+
+    // Captura del Pie de Página Monumental ("Hablemos.")
+    const footerLocator = page.locator('footer[aria-label="Contacto directo"]')
+    if (await footerLocator.count() > 0) {
+      await footerLocator.scrollIntoViewIfNeeded()
+      await page.waitForTimeout(200)
+      await page.screenshot({
+        path: path.join(SCREENSHOT_DIR, `home-footer-${testInfo.project.name}.png`),
+        fullPage: false,
+      })
+    }
+
     // Captura de la Librería de Componentes Propia (Sonzogni × Bencho UI)
     const benchLocator = page.locator('.bench-showcase')
     if (await benchLocator.count() > 0) {
@@ -50,7 +72,8 @@ test.describe('Explorador Relacional — Auditoría Visual y UX/UI', () => {
         fullPage: false,
       })
       await page.evaluate(() => {
-        document.querySelector('.escenario')?.scrollTo(0, 0)
+        document.querySelector('#contenido')?.scrollTo(0, 0)
+        window.scrollTo(0, 0)
       })
       await page.waitForTimeout(150)
     }

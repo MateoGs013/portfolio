@@ -56,4 +56,6 @@ Por debajo de ~900px la ventana sigue siendo una ventana: el mismo marco, y crec
 
 ## Defaults a evitar
 
-Cosplay innecesario de terminal con textos ficticios o efectos que obstruyan la lectura. Cero animaciones gratuitas. Imágenes a sangre evitadas: van con datos (thumbnail con filename y dimensiones).
+- **Cero cosplay de terminal o consola de servidor:** Prohibido usar prefijos `//` en títulos, falsas consolas SQL que bloqueen la navegación (`UiRouteLoader` solo se invoca programáticamente en tests, nunca bloqueando clics del usuario), o ventanas OS anidadas con `READ-ONLY · UTF-8`.
+- **Cero síndrome de "cajas dentro de cajas" ni "sopa de píldoras":** Evitar encerrar tarjetas dentro de tarjetas con bordes duros o apilar 8 badges con borde por proyecto. Usar la grilla suiza de 1px (`border-rule`), superíndices tabulares (`⁰⁶`) y bloques verticales de créditos alineados a la derecha estilo Awwwards (`danielebuser.com` / `dennissnellenberg.com`).
+- **Uso quirúrgico del color de acento (`--d-sig: #ff3e00`):** Solo como signo gráfico puntual (apóstrofe `'26`, punto cuadrado final en `Say Hello.`, o indicador activo), nunca en bordes estructurales masivos.

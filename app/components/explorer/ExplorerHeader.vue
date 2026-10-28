@@ -1,31 +1,48 @@
 <script setup lang="ts">
-// La cabecera de lo que está abierto, igual en todos los niveles: el ícono
-// (carpeta o archivo) con el dato dominante adentro, el nombre a escala de
-// interfaz y la línea de tipo debajo. A la derecha, lo que acompaña: los
-// filtros activos de una carpeta o los vecinos de un archivo.
-import ExplorerBadge from './ExplorerBadge.vue'
+// Cabecera Arquitectónica Awwwards 2026 (Daniele Buser / Dennis Snellenberg / Basement Studio):
+// Tipografía monumental a la izquierda con sello ’26 en colecciones principales y acciones a la derecha.
 
-defineProps<{
+const props = defineProps<{
   /** Id del h1, para el aria-labelledby del panel. */
   id: string
   kind: 'folder' | 'file'
   badge: string
   name: string
-  /** Partes de la línea de tipo, separadas por aire: `record`, `Project`, `updatedAt 2026-09-05`. */
+  /** Partes de la línea de tipo, preservadas por compatibilidad de datos. */
   line: string[]
 }>()
+
+const { isEs } = usePortfolioLocale()
+
+const displayTitle = computed(() => {
+  if (props.kind !== 'folder') return props.name
+  const k = props.name.toLowerCase()
+  if (k === 'projects') return isEs.value ? 'proyectos' : 'projects'
+  if (k === 'experience') return isEs.value ? 'experiencia' : 'experience'
+  if (k === 'stack') return 'stack'
+  if (k === 'articles') return isEs.value ? 'artículos' : 'articles'
+  if (k === 'orgs') return isEs.value ? 'organizaciones' : 'organizations'
+  return props.name
+})
 </script>
 
 <template>
-  <header class="cabecera grid grid-cols-[auto_minmax(0,1fr)] md:grid-cols-[auto_minmax(0,1fr)_auto] gap-x-3 sm:gap-x-3.5 gap-y-3 items-center pt-0.5 pb-5 border-b border-rule w-full min-w-0">
-    <ExplorerBadge :kind="kind" :badge="badge" class="icono !w-10 sm:!w-11 !h-[44px] sm:!h-[48px] shrink-0" />
+  <header class="cabecera flex flex-col md:flex-row md:items-end justify-between gap-4 pt-3 pb-6 border-b border-rule w-full min-w-0">
     <div class="quien min-w-0 flex flex-col justify-center">
-      <h1 :id="id" class="titulo m-0 mb-1 font-sans text-[clamp(20px,2.4vw,28px)] font-semibold tracking-[-0.03em] leading-tight text-ink [overflow-wrap:anywhere] outline-none" tabindex="-1" data-anchor>{{ name }}</h1>
-      <p class="linea flex flex-wrap items-center gap-x-2.5 gap-y-1 m-0 font-mono text-[11px] text-dim tabular-nums">
-        <span v-for="(part, i) in line" :key="i">{{ part }}</span>
-      </p>
+      <div class="flex items-baseline gap-3 flex-wrap">
+        <h1
+          :id="id"
+          class="titulo m-0 font-sans font-semibold tracking-[-0.042em] leading-[0.98] text-ink capitalize [overflow-wrap:anywhere] outline-none"
+          :class="kind === 'folder' ? 'text-[clamp(36px,5.2vw,68px)]' : 'text-[clamp(28px,4vw,52px)]'"
+          tabindex="-1"
+          data-anchor
+        >
+          {{ displayTitle }}<span v-if="kind === 'file'" class="inline-block w-2.5 h-2.5 bg-sig ml-1.5 align-baseline" aria-hidden="true" />
+        </h1>
+        <sup v-if="kind === 'folder' && badge" class="font-mono text-[13px] sm:text-[14px] text-dim font-normal tabular-nums">({{ badge }})</sup>
+      </div>
     </div>
-    <div v-if="$slots.default" class="lado flex items-center gap-2 flex-wrap col-span-full mt-2 justify-start md:col-span-1 md:mt-0 md:justify-end min-w-0">
+    <div v-if="$slots.default" class="lado flex items-center gap-3 flex-wrap justify-start md:justify-end min-w-0">
       <slot />
     </div>
   </header>

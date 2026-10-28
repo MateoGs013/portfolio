@@ -241,6 +241,13 @@ export function useRouteLoader() {
     }, remaining)
   }
 
+  if (import.meta.client) {
+    ;(window as Window & { __ROUTE_LOADER__?: { startLoading: (path: string) => void, finishLoading: () => void } }).__ROUTE_LOADER__ = {
+      startLoading,
+      finishLoading,
+    }
+  }
+
   return {
     visible: computed(() => visible.value),
     progress: computed(() => progress.value),

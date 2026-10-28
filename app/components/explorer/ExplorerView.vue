@@ -8,10 +8,7 @@ import ExplorerGoto from './ExplorerGoto.vue'
 import ExplorerGuide from './ExplorerGuide.vue'
 import ExplorerLab from './ExplorerLab.vue'
 import AppIcon, { type IconName } from '~/components/ui/AppIcon.vue'
-import UiDynamicIsland from '~/components/ui/UiDynamicIsland.vue'
 import UiProgressiveBlur from '~/components/ui/UiProgressiveBlur.vue'
-import UiSidebarIsland, { type SidebarIslandItem } from '~/components/ui/UiSidebarIsland.vue'
-import UiTelemetryPill from '~/components/ui/UiTelemetryPill.vue'
 import { useBenchoSound } from '~/composables/useBenchoSound'
 import { pad, resolveExplorer, type Explorer } from '~/lib/explorer'
 import { fallbackSchemaData } from '~/lib/fallbackData'
@@ -21,7 +18,6 @@ const siteUrl = 'https://mateogs.tech'
 
 const api = useApi()
 const route = useRoute()
-const router = useRouter()
 const { path, query } = useExplorerRoute()
 
 // Selector reactivo de Tema (Obsidian Dark / Technical Paper)
@@ -105,7 +101,7 @@ const liveCounts = computed<Record<string, number>>(() => {
   return map
 })
 
-const { data: ex, error, status } = await useAsyncData<Explorer>(
+const { data: ex, error } = await useAsyncData<Explorer>(
   computed(() => `explorer${route.fullPath}`),
   () => {
     const q = { ...route.query }
@@ -121,15 +117,9 @@ const { data: ex, error, status } = await useAsyncData<Explorer>(
   }
 )
 
-const { startLoading, finishLoading } = useRouteLoader()
-watch(status, (newStatus) => {
-  if (newStatus === 'pending') {
-    startLoading(route.path)
-  }
-  else if (newStatus === 'success' || newStatus === 'error') {
-    finishLoading()
-  }
-})
+// Invocación de Route Loader reservada para API programática (window.__ROUTE_LOADER__)
+// Sin bloqueo visual en clics normales de navegación (Estándar Awwwards 0ms bloqueo)
+useRouteLoader()
 
 // Manejo de errores HTTP
 if (import.meta.server && error.value) {
@@ -265,9 +255,9 @@ useSeoMeta({
   ogType: computed(() => (detail.value?.type?.toLowerCase().includes('article') ? 'article' : 'website')),
 })
 
-// Breadcrumbs de ruta
+// Breadcrumbs de ruta (Sin metáfora db: Inicio / sección)
 const segments = computed(() => [
-  { label: 'db', to: routeFor([]) },
+  { label: isEs.value ? 'inicio' : 'home', to: routeFor([]) },
   ...path.value.map((seg, i) => ({ label: seg, to: routeFor(path.value.slice(0, i + 1), query.value) })),
 ])
 
@@ -443,207 +433,150 @@ interface NavSection {
 }
 
 const navSections = computed<NavSection[]>(() => [
-  { root: '', label: isEs.value ? 'db / raíz' : 'db / root', shortLabel: isEs.value ? 'Inicio' : 'Home', to: [], badge: 'SYS', keyHint: '0', icon: 'db', desc: isEs.value ? 'Resumen del sistema y arquitectura' : 'System overview & architecture' },
-  { root: 'projects', label: isEs.value ? '01 · proyectos' : '01 · projects', shortLabel: isEs.value ? 'Proy' : 'Work', to: ['projects'], badge: pad(liveCounts.value.projects ?? 6), keyHint: '1', icon: 'folder', desc: isEs.value ? 'Aplicaciones en producción' : 'Production applications' },
+  { root: '', label: isEs.value ? 'inicio' : 'home', shortLabel: isEs.value ? 'Inicio' : 'Home', to: [], badge: '26', keyHint: '0', icon: 'db', desc: isEs.value ? 'Resumen del sistema y arquitectura' : 'System overview & architecture' },
+  { root: 'projects', label: isEs.value ? '01 · proyectos' : '01 · projects', shortLabel: isEs.value ? 'Proy' : 'Work', to: ['projects'], badge: pad(liveCounts.value.projects ?? 8), keyHint: '1', icon: 'folder', desc: isEs.value ? 'Aplicaciones en producción' : 'Production applications' },
   { root: 'experience', label: isEs.value ? '02 · experiencia' : '02 · experience', shortLabel: 'Exp', to: ['experience'], badge: pad(liveCounts.value.experience ?? 6), keyHint: '2', icon: 'briefcase', desc: isEs.value ? 'Trayectoria profesional y roles' : 'Career history & roles' },
   { root: 'stack', label: isEs.value ? '03 · stack' : '03 · stack', shortLabel: 'Stack', to: ['stack'], badge: pad(liveCounts.value.stack ?? 22), keyHint: '3', icon: 'code', desc: isEs.value ? 'Tecnologías y lenguajes' : 'Technologies & languages' },
-  { root: 'articles', label: isEs.value ? '04 · artículos' : '04 · articles', shortLabel: 'Blog', to: ['articles'], badge: pad(liveCounts.value.articles ?? 0), keyHint: '4', icon: 'file', desc: isEs.value ? 'Publicaciones técnicas y blog de ingeniería' : 'Technical articles & engineering blog' },
+  { root: 'articles', label: isEs.value ? '04 · artículos' : '04 · articles', shortLabel: 'Blog', to: ['articles'], badge: pad(liveCounts.value.articles ?? 1), keyHint: '4', icon: 'file', desc: isEs.value ? 'Publicaciones técnicas y blog de ingeniería' : 'Technical articles & engineering blog' },
   { root: 'about', label: isEs.value ? '05 · sobre mí' : '05 · about me', shortLabel: 'CV', to: ['about'], badge: pad(liveCounts.value.about ?? 13), keyHint: '5', icon: 'user', desc: isEs.value ? 'Perfil bio, formación y principios' : 'Bio, resume & principles' },
   { root: 'contact', label: isEs.value ? '06 · contacto' : '06 · contact', shortLabel: isEs.value ? 'Mail' : 'Contact', to: ['contact'], badge: pad(liveCounts.value.contact ?? 7), keyHint: '6', icon: 'mail', desc: isEs.value ? 'Canales y disponibilidad' : 'Channels & availability' },
   { root: 'lab', label: isEs.value ? '07 · lab ui' : '07 · ui lab', shortLabel: 'Lab', to: ['lab'], badge: '28', keyHint: '7', icon: 'cpu', desc: isEs.value ? 'Laboratorio de componentes y físicas' : 'Component laboratory & spring physics' },
 ])
 
 const currentRoot = computed(() => path.value[0] ?? '')
-
-const lineSidebarItems = computed<SidebarIslandItem[]>(() =>
-  navSections.value.map(s => ({
-    key: s.root,
-    num: s.root === '' ? '00' : s.keyHint.padStart(2, '0'),
-    label: s.label.replace(/^0\d\s*·\s*/, ''),
-    count: s.badge,
-    to: routeFor(s.to),
-    shortcut: s.keyHint,
-    isRoot: s.root === '',
-    icon: s.icon,
-  })),
-)
-
-const activeQueryFilters = computed(() => {
-  const filters: Record<string, string | undefined> = {}
-  for (const [key, val] of Object.entries(route.query)) {
-    if (typeof val === 'string') {
-      filters[key] = val
-    }
-  }
-  return filters
-})
 </script>
 
 <template>
   <div class="datos flex flex-col h-dvh text-ink font-sans text-[13px] leading-normal tabular-nums bg-paper">
-    <div class="ventana flex-1 min-h-0 w-full flex flex-col bg-paper relative">
-      <!-- Topbar Arquitectónico Full-Width (Linear 2026 h-12) -->
-      <header class="barra flex-none h-12 border-b border-rule bg-paper/85 backdrop-blur-md px-3 sm:px-4 flex items-center justify-between gap-2 z-20">
-        <!-- Modo Normal: Navegación, Breadcrumb, Búsqueda y Herramientas -->
+    <div class="ventana swiss-grid-canvas flex-1 min-h-0 w-full flex flex-col bg-paper relative">
+      <!-- Topbar Arquitectónico Awwwards 2026 (Corner-Pinned Swiss Header) -->
+      <header class="barra flex-none h-14 border-b border-rule bg-paper/90 backdrop-blur-md px-4 sm:px-7 flex items-center justify-between gap-4 z-20">
+        <!-- Modo Normal: Identidad Anclada a la Izquierda + Navegación Editorial con Superíndice a la Derecha -->
         <template v-if="!isHyperfocus">
-          <div class="flex items-center gap-1.5 sm:gap-2.5 min-w-0 flex-1">
-            <nav class="historia flex gap-1 shrink-0" aria-label="Historial">
-              <button
-                type="button"
-                class="nav-btn inline-flex items-center justify-center w-7 h-7 rounded-md border border-rule bg-paper/70 text-dim text-sm no-underline cursor-pointer transition-all duration-150 hover:border-rule-strong hover:bg-hover hover:text-ink active:scale-[0.96]"
-                aria-label="atrás"
-                @click="router.back()"
-              >
-                <AppIcon name="arrow-left" :size="13" />
-              </button>
-              <button
-                type="button"
-                class="nav-btn hidden sm:inline-flex items-center justify-center w-7 h-7 rounded-md border border-rule bg-paper/70 text-dim text-sm no-underline cursor-pointer transition-all duration-150 hover:border-rule-strong hover:bg-hover hover:text-ink active:scale-[0.96]"
-                aria-label="adelante"
-                @click="router.forward()"
-              >
-                <AppIcon name="arrow-right" :size="13" />
-              </button>
-              <NuxtLink
-                v-if="ex?.up"
-                :to="ex.up"
-                class="nav-btn inline-flex items-center justify-center w-7 h-7 rounded-md border border-rule bg-paper/70 text-dim text-sm no-underline cursor-pointer transition-all duration-150 hover:border-rule-strong hover:bg-hover hover:text-ink active:scale-[0.96]"
-                aria-label="subir un nivel"
-              >
-                <AppIcon name="arrow-up" :size="13" />
-              </NuxtLink>
-              <span
-                v-else
-                class="nav-btn off inline-flex items-center justify-center w-7 h-7 rounded-md border border-rule bg-paper/40 text-faint opacity-35 cursor-default"
-                aria-hidden="true"
-              >
-                <AppIcon name="arrow-up" :size="13" />
-              </span>
-            </nav>
-
+          <div class="flex items-center gap-3 sm:gap-5 min-w-0">
             <!-- Menú Móvil Táctil (lg:hidden) -->
             <button
               type="button"
-              class="lg:hidden inline-flex items-center gap-1.5 h-7 px-2.5 rounded-md border border-rule bg-paper/80 font-mono text-[11px] text-dim hover:text-ink hover:border-rule-strong active:scale-[0.96] transition-all cursor-pointer shrink-0"
+              class="lg:hidden inline-flex items-center gap-1.5 h-8 px-2.5 rounded-md border border-rule bg-paper/80 font-mono text-[11px] text-dim hover:text-ink hover:border-rule-strong active:scale-[0.96] transition-all cursor-pointer shrink-0"
               :title="isEs ? 'Abrir menú de navegación' : 'Open navigation menu'"
               :aria-label="isEs ? 'Menú de navegación' : 'Navigation menu'"
               @click="mobileMenuOpen = true"
             >
-              <AppIcon name="menu" :size="12" class="text-sig" />
-              <span class="uppercase font-semibold tracking-wider text-[10.5px]">{{ currentRoot || 'db' }}</span>
+              <AppIcon name="menu" :size="12" class="text-ink" />
+              <span class="uppercase font-semibold tracking-wider text-[10.5px]">{{ currentRoot || 'Menu' }}</span>
             </button>
 
-            <!-- Ruta / Breadcrumb -->
-            <nav class="ruta flex items-center min-w-0 h-7 px-2.5 rounded-md border border-rule bg-paper/60 whitespace-nowrap overflow-hidden text-[11px] sm:text-[12px] font-mono truncate max-w-[280px] sm:max-w-none" aria-label="Ruta">
-              <span class="w-1.5 h-1.5 rounded-full bg-sig mr-2 shrink-0 opacity-85" aria-hidden="true" />
-              <template v-for="(seg, i) in segments" :key="seg.label + i">
+            <!-- Identidad Awwwards (Daniele Buser / Dennis Snellenberg Corner Lockup) -->
+            <NuxtLink
+              to="/"
+              class="group flex flex-col no-underline leading-tight shrink-0"
+              :aria-label="isEs ? 'Inicio — Mateo Sonzogni' : 'Home — Mateo Sonzogni'"
+            >
+              <span class="font-sans text-[13px] sm:text-[13.5px] font-bold tracking-[-0.02em] text-ink uppercase group-hover:text-sig transition-colors">
+                MATEO SONZOGNI
+              </span>
+              <span class="font-sans text-[11px] text-dim tracking-[-0.01em] hidden sm:inline">
+                {{ isEs ? 'Creative Developer & Product Architect' : 'Creative Developer & Product Architect' }}
+              </span>
+            </NuxtLink>
+
+            <!-- Miga de Pan Contextual (Solo visible en vistas de detalle profundo, sin 'db /') -->
+            <nav
+              v-if="path.length > 1"
+              class="ruta hidden sm:flex items-center min-w-0 pl-3 sm:pl-4 border-l border-rule whitespace-nowrap overflow-hidden text-[11.5px] font-mono truncate max-w-[260px] md:max-w-[340px]"
+              aria-label="Ruta"
+            >
+              <template v-for="(seg, i) in segments.slice(1)" :key="seg.label + i">
                 <span v-if="i" class="sep text-faint px-1.5" aria-hidden="true">/</span>
-                <NuxtLink v-if="i < segments.length - 1" :to="seg.to" class="text-dim hover:text-ink no-underline transition-colors py-1">{{ seg.label }}</NuxtLink>
-                <span v-else class="here text-ink font-medium" aria-current="page">{{ seg.label }}</span>
+                <NuxtLink v-if="i < segments.slice(1).length - 1" :to="seg.to" class="text-dim hover:text-ink no-underline transition-colors py-0.5">{{ seg.label }}</NuxtLink>
+                <span v-else class="here text-ink font-medium truncate" aria-current="page">{{ seg.label }}</span>
               </template>
             </nav>
-
-            <!-- Botón de Búsqueda Rápida / Goto (Estilo Linear ⌘K) -->
-            <button
-              class="goto-btn group flex-[0_1_220px] min-w-[135px] hidden md:flex items-center gap-2 h-7 px-2.5 rounded-md border border-rule bg-paper/60 text-dim text-left cursor-pointer transition-all duration-150 hover:border-rule-strong hover:bg-hover/60 hover:text-ink active:scale-[0.99]"
-              type="button"
-              :title="isEs ? 'Abrir paleta de comandos (⌘K o /)' : 'Open command palette (⌘K or /)'"
-              @click="gotoOpen = true"
-            >
-              <AppIcon name="search" :size="12" class="goto-search-icon text-faint shrink-0 group-hover:text-ink transition-colors duration-150" />
-              <span class="goto-ph flex-1 min-w-0 text-dim text-[11.5px] overflow-hidden text-ellipsis whitespace-nowrap">{{ isEs ? 'Buscar proyecto, stack…' : 'Search project, stack…' }}</span>
-              <kbd class="font-mono text-[10px] text-faint bg-surface px-1.5 py-0.5 rounded border border-rule group-hover:text-ink transition-colors duration-150">/</kbd>
-            </button>
           </div>
 
-          <!-- Acciones Rápidas del Sistema + Dynamic Island Bencho -->
-          <div class="barra-derecha flex items-center gap-1.5 shrink-0 ml-auto">
-            <!-- Búsqueda Rápida Móvil (md:hidden) -->
-            <button
-              type="button"
-              class="md:hidden inline-flex items-center justify-center w-7 h-7 rounded-md border border-rule bg-paper/60 text-dim cursor-pointer transition-all duration-150 hover:border-rule-strong hover:text-ink hover:bg-hover active:scale-[0.96]"
-              :title="isEs ? 'Buscar (⌘K o /)' : 'Search (⌘K or /)'"
-              :aria-label="isEs ? 'Buscar' : 'Search'"
-              @click="gotoOpen = true"
-            >
-              <AppIcon name="search" :size="12" />
-            </button>
+          <!-- Navegación Editorial Derecha (Daniele Buser / Dennis Snellenberg Style) + Controles sin bordes pesados -->
+          <div class="barra-derecha flex items-center gap-5 xl:gap-7 shrink-0 ml-auto">
+            <!-- Links Editoriales Directos (Desktop) -->
+            <nav class="hidden lg:flex items-center gap-6 xl:gap-7" aria-label="Navegación principal">
+              <NuxtLink
+                to="/projects"
+                class="relative py-1 font-sans text-[12px] font-semibold uppercase tracking-[0.04em] no-underline transition-colors"
+                :class="currentRoot === 'projects' ? 'text-ink' : 'text-dim hover:text-ink'"
+              >
+                <span class="uppercase">{{ isEs ? 'proyectos' : 'projects' }}</span>
+                <sup class="font-mono text-[9.5px] text-faint ml-0.5 font-normal">({{ pad(liveCounts.projects ?? 8) }})</sup>
+                <span v-if="currentRoot === 'projects'" class="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-sig" />
+              </NuxtLink>
 
-            <!-- Dynamic Island Interactiva 1:1 Bencho (Telemetría PG-17) -->
-            <div class="hidden xl:flex items-center">
-              <UiDynamicIsland
-                :collection="currentRoot || 'db'"
-                :record-slug="path[1] || null"
-                :record-count="ex?.request.count ?? 8"
-                :api-healthy="ex?.request.status === 200"
-                :latency-ms="ex?.request.ms ?? 11"
-              />
+              <NuxtLink
+                to="/experience"
+                class="relative py-1 font-sans text-[12px] font-semibold uppercase tracking-[0.04em] no-underline transition-colors"
+                :class="currentRoot === 'experience' ? 'text-ink' : 'text-dim hover:text-ink'"
+              >
+                <span class="uppercase">{{ isEs ? 'experiencia' : 'experience' }}</span>
+                <sup class="font-mono text-[9.5px] text-faint ml-0.5 font-normal">({{ pad(liveCounts.experience ?? 6) }})</sup>
+                <span v-if="currentRoot === 'experience'" class="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-sig" />
+              </NuxtLink>
+
+              <NuxtLink
+                to="/stack"
+                class="relative py-1 font-sans text-[12px] font-semibold uppercase tracking-[0.04em] no-underline transition-colors"
+                :class="currentRoot === 'stack' ? 'text-ink' : 'text-dim hover:text-ink'"
+              >
+                <span class="uppercase">stack</span>
+                <sup class="font-mono text-[9.5px] text-faint ml-0.5 font-normal">({{ pad(liveCounts.stack ?? 22) }})</sup>
+                <span v-if="currentRoot === 'stack'" class="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-sig" />
+              </NuxtLink>
+
+              <NuxtLink
+                to="/about"
+                class="relative py-1 font-sans text-[12px] font-semibold uppercase tracking-[0.04em] no-underline transition-colors"
+                :class="currentRoot === 'about' ? 'text-ink' : 'text-dim hover:text-ink'"
+              >
+                <span class="uppercase">{{ isEs ? 'sobre mí' : 'about' }}</span>
+                <span v-if="currentRoot === 'about'" class="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-sig" />
+              </NuxtLink>
+
+              <NuxtLink
+                to="/contact"
+                class="relative py-1 font-sans text-[12px] font-semibold uppercase tracking-[0.04em] no-underline transition-colors"
+                :class="currentRoot === 'contact' ? 'text-ink' : 'text-dim hover:text-ink'"
+              >
+                <span class="uppercase">{{ isEs ? 'contacto' : 'contacts' }}</span>
+                <span v-if="currentRoot === 'contact'" class="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-sig" />
+              </NuxtLink>
+            </nav>
+
+            <!-- Separador Vertical Sutil -->
+            <span class="hidden lg:block h-3.5 w-[1px] bg-rule" aria-hidden="true" />
+
+            <!-- Utilidades Ultra-Limpias sin cajas con bordes (ES/EN + Tema) -->
+            <div class="flex items-center gap-3">
+              <!-- Switch de Idioma ES / EN Puro Tipográfico -->
+              <button
+                type="button"
+                class="lang-btn inline-flex items-center gap-1 bg-transparent border-0 p-0 font-mono text-[11px] font-medium text-dim cursor-pointer hover:text-ink transition-colors duration-150"
+                :title="isEs ? 'Switch interface to English' : 'Cambiar interfaz a Español'"
+                :aria-label="isEs ? 'Switch to English' : 'Cambiar a Español'"
+                @click="toggleLocale"
+              >
+                <span class="lang-code" :class="{ 'text-ink font-semibold': isEs }">ES</span>
+                <span class="lang-sep text-faint">/</span>
+                <span class="lang-code" :class="{ 'text-ink font-semibold': !isEs }">EN</span>
+              </button>
+
+              <!-- Selector de Tema Claro / Oscuro -->
+              <button
+                type="button"
+                class="tool-btn theme-btn inline-flex items-center justify-center w-6 h-6 rounded-full bg-transparent border-0 text-dim cursor-pointer transition-colors duration-150 hover:text-ink"
+                :aria-label="theme === 'dark' ? 'Cambiar a modo claro (papel técnico)' : 'Cambiar a modo oscuro (obsidiana)'"
+                :title="`Cambiar a modo ${theme === 'dark' ? 'claro (papel)' : 'oscuro (obsidiana)'}`"
+                @click="toggleTheme"
+              >
+                <AppIcon v-if="theme === 'dark'" name="sun" :size="13" />
+                <AppIcon v-else name="moon" :size="13" />
+              </button>
             </div>
-
-            <!-- Switch de Idioma ES / EN -->
-            <button
-              type="button"
-              class="lang-btn inline-flex items-center gap-1 h-7 px-2 rounded-md border border-rule bg-paper/60 font-mono text-[10.5px] font-medium text-dim cursor-pointer hover:border-rule-strong hover:text-ink active:scale-[0.97] transition-all duration-150"
-              :title="isEs ? 'Switch interface to English' : 'Cambiar interfaz a Español'"
-              :aria-label="isEs ? 'Switch to English' : 'Cambiar a Español'"
-              @click="toggleLocale"
-            >
-              <span class="lang-code" :class="{ 'text-ink font-semibold': isEs }">ES</span>
-              <span class="lang-sep text-faint">/</span>
-              <span class="lang-code" :class="{ 'text-ink font-semibold': !isEs }">EN</span>
-            </button>
-
-            <!-- Toggle de Modo Hiperfoco -->
-            <button
-              type="button"
-              class="tool-btn focus-btn hidden sm:inline-flex items-center justify-center w-7 h-7 rounded-md border border-rule bg-paper/60 text-dim cursor-pointer transition-all duration-150 hover:border-rule-strong hover:text-ink hover:bg-hover active:scale-[0.96]"
-              :class="{ '!border-sig !text-sig !bg-sig/10': isHyperfocus }"
-              :title="isHyperfocus ? (isEs ? 'Desactivar Modo Hiperfoco (H)' : 'Disable Hyperfocus (H)') : (isEs ? 'Activar Modo Hiperfoco (H)' : 'Enable Hyperfocus (H)')"
-              :aria-label="isHyperfocus ? 'Desactivar hiperfoco' : 'Activar hiperfoco'"
-              @click="toggleHyperfocus"
-            >
-              <AppIcon name="zap" :size="13" />
-            </button>
-
-            <!-- Botón de Guía y Orientación Rápida -->
-            <button
-              type="button"
-              class="tool-btn help-btn hidden sm:inline-flex items-center justify-center w-7 h-7 rounded-md border border-rule bg-paper/60 text-dim cursor-pointer transition-all duration-150 hover:border-rule-strong hover:text-ink hover:bg-hover active:scale-[0.96]"
-              :class="{ '!border-sig !text-sig !bg-sig/10': guideOpen }"
-              :title="guideOpen ? (isEs ? 'Cerrar guía (?)' : 'Close guide (?)') : (isEs ? 'Guía rápida y atajos (?)' : 'Quick guide & shortcuts (?)')"
-              :aria-label="isEs ? 'Guía rápida' : 'Quick guide'"
-              @click="guideOpen = !guideOpen"
-            >
-              <AppIcon name="help" :size="13" />
-            </button>
-
-            <!-- Toggle de Audio Táctil -->
-            <button
-              type="button"
-              class="tool-btn sound-btn hidden sm:inline-flex items-center justify-center w-7 h-7 rounded-md border border-rule bg-paper/60 text-dim cursor-pointer transition-all duration-150 hover:border-rule-strong hover:text-ink hover:bg-hover active:scale-[0.96]"
-              :class="{ '!text-ink': soundEnabled, 'opacity-50': !soundEnabled }"
-              :aria-label="soundEnabled ? (isEs ? 'Silenciar audio táctil' : 'Mute tactile audio') : (isEs ? 'Activar audio táctil' : 'Enable tactile audio')"
-              :title="soundEnabled ? (isEs ? 'Audio táctil Bencho: ON (click para silenciar)' : 'Bencho tactile audio: ON') : (isEs ? 'Audio táctil Bencho: OFF (click para activar)' : 'Bencho tactile audio: OFF')"
-              @click="toggleSound"
-            >
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
-                <path v-if="soundEnabled" d="M15.54 8.46a5 5 0 0 1 0 7.07" />
-                <line v-else x1="22" y1="9" x2="16" y2="15" />
-              </svg>
-            </button>
-
-            <!-- Selector de Tema Claro / Oscuro -->
-            <button
-              type="button"
-              class="tool-btn theme-btn inline-flex items-center justify-center w-7 h-7 rounded-md border border-rule bg-paper/60 text-dim cursor-pointer transition-all duration-150 hover:border-rule-strong hover:text-ink hover:bg-hover active:scale-[0.96]"
-              :aria-label="theme === 'dark' ? 'Cambiar a modo claro (papel técnico)' : 'Cambiar a modo oscuro (obsidiana)'"
-              :title="`Cambiar a modo ${theme === 'dark' ? 'claro (papel)' : 'oscuro (obsidiana)'}`"
-              @click="toggleTheme"
-            >
-              <AppIcon v-if="theme === 'dark'" name="sun" :size="13" />
-              <AppIcon v-else name="moon" :size="13" />
-            </button>
           </div>
         </template>
 
@@ -670,15 +603,8 @@ const activeQueryFilters = computed(() => {
         </template>
       </header>
 
-      <!-- Cuerpo de la Ventana: Sidebar Estructural Integrado + Canvas Principal -->
+      <!-- Cuerpo de la Ventana: Lienzo Arquitectónico Completo (Sin Chrome de IDE) -->
       <div class="cuerpo-ventana flex-1 min-h-0 flex flex-row overflow-hidden relative">
-        <!-- Sidebar Linear / Bencho Rail Integrado -->
-        <UiSidebarIsland
-          :items="lineSidebarItems"
-          :active-key="currentRoot"
-          @open-guide="guideOpen = true"
-        />
-
         <!-- Canvas Central: Contenedor con Desenfoque Progresivo Fijo (Bencho UI Optical Lens) -->
         <div class="canvas-viewport flex-1 min-w-0 h-full relative overflow-hidden flex flex-col">
           <!-- Contenido Central Scrollable -->
@@ -687,7 +613,7 @@ const activeQueryFilters = computed(() => {
             class="exp flex-1 min-w-0 h-full overflow-y-auto focus:outline-none"
             tabindex="-1"
           >
-            <div v-if="error" class="pane w-full max-w-[1240px] mx-auto">
+            <div v-if="error" class="pane w-full max-w-[1280px] mx-auto">
               <ExplorerDetail
                 :detail="{
                   kind: 'document',
@@ -702,7 +628,7 @@ const activeQueryFilters = computed(() => {
                 }"
               />
             </div>
-            <div v-else-if="ex" ref="pane" :key="route.fullPath" class="pane w-full max-w-[1240px] mx-auto pb-14" :class="dir">
+            <div v-else-if="ex" ref="pane" :key="route.fullPath" class="pane w-full max-w-[1280px] mx-auto pb-14" :class="dir">
               <ExplorerLab v-if="currentRoot === 'lab'" />
               <ExplorerFolder v-else-if="folder" :folder="folder" />
               <ExplorerDetail v-else-if="detail" :detail="detail" :prev="ex.prev" :next="ex.next" />
@@ -714,34 +640,40 @@ const activeQueryFilters = computed(() => {
         </div>
       </div>
 
-      <!-- Barra de Estado Inferior Integrada en el Marco (Desktop) -->
-      <footer class="estado flex-none h-7 border-t border-rule bg-surface/70 backdrop-blur-md px-3.5 hidden lg:flex items-center justify-between text-[11px] font-mono text-dim select-none z-20">
+      <!-- Barra Inferior Arquitectónica Awwwards (Coordenadas & Hora en Vivo · Daniele Buser / Dennis Snellenberg) -->
+      <footer class="estado flex-none h-7 border-t border-rule bg-paper/85 backdrop-blur-md px-4 sm:px-7 hidden lg:flex items-center justify-between text-[11px] font-mono text-dim select-none z-20">
         <div class="flex items-center gap-3">
-          <span v-if="ex" class="medida text-dim">{{ pad(ex.request.count) }} {{ ex.request.count === 1 ? 'record' : 'records' }}</span>
-          <UiTelemetryPill
-            v-if="ex"
-            :collection="currentRoot || 'db'"
-            :record-slug="path[1] || null"
-            :filters="activeQueryFilters"
-            :count="ex.request.count"
-            :api-healthy="ex.request.status === 200"
-          />
+          <span class="inline-flex items-center gap-2 text-ink font-medium">
+            <span class="w-1.5 h-1.5 rounded-full bg-green shrink-0" />
+            <span>PARANÁ, AR</span>
+          </span>
+          <span class="text-faint">—</span>
+          <span class="tabular-nums text-dim">{{ utcTime || 'UTC-3' }}</span>
         </div>
-        <div class="keys flex items-center gap-3" aria-hidden="true">
-          <template v-if="hoja && (ex?.prev || ex?.next)"><kbd class="px-1 py-0.5 rounded bg-paper/60 border border-rule">←</kbd><kbd class="px-1 py-0.5 rounded bg-paper/60 border border-rule">→</kbd> {{ isEs ? 'vecino' : 'adjacent' }}</template>
-          <template v-else-if="!hoja"><kbd class="px-1 py-0.5 rounded bg-paper/60 border border-rule">↑↓</kbd> {{ isEs ? 'navegar' : 'navigate' }} <kbd class="px-1 py-0.5 rounded bg-paper/60 border border-rule">↵</kbd> {{ isEs ? 'abrir' : 'open' }}</template>
-          <template v-if="ex?.up"><kbd class="px-1 py-0.5 rounded bg-paper/60 border border-rule">⌫</kbd> {{ isEs ? 'volver' : 'back' }}</template>
-          <span><kbd class="px-1 py-0.5 rounded bg-paper/60 border border-rule">0-7</kbd> {{ isEs ? 'secciones' : 'sections' }}</span>
-          <span><kbd class="px-1 py-0.5 rounded bg-paper/60 border border-rule">⌘B</kbd> sidebar</span>
-          <span><kbd class="px-1 py-0.5 rounded bg-paper/60 border border-rule">/</kbd> {{ isEs ? 'buscar' : 'search' }}</span>
-          <span><kbd class="px-1 py-0.5 rounded bg-paper/60 border border-rule">H</kbd> {{ isEs ? 'hiperfoco' : 'hyperfocus' }}</span>
+        <div class="keys flex items-center gap-4 text-[10.5px] text-dim" aria-hidden="true">
           <button
             type="button"
-            class="keys-guide-btn bg-transparent border-0 p-0 text-dim hover:text-ink cursor-pointer flex items-center gap-1 font-mono text-[11px]"
-            :title="isEs ? 'Abrir guía rápida (?)' : 'Open quick guide (?)'"
+            class="bg-transparent border-0 p-0 text-dim hover:text-ink cursor-pointer transition-colors font-mono text-[10.5px]"
+            @click="gotoOpen = true"
+          >
+            {{ isEs ? 'Búsqueda rápida (⌘K)' : 'Quick search (⌘K)' }}
+          </button>
+          <span class="text-faint">·</span>
+          <button
+            type="button"
+            class="bg-transparent border-0 p-0 text-dim hover:text-ink cursor-pointer transition-colors font-mono text-[10.5px]"
+            @click="toggleHyperfocus"
+          >
+            {{ isEs ? 'Modo Lectura (H)' : 'Reading Mode (H)' }}
+          </button>
+          <span class="text-faint">·</span>
+          <button
+            type="button"
+            class="keys-guide-btn bg-transparent border-0 p-0 text-dim hover:text-ink cursor-pointer transition-colors font-mono text-[10.5px]"
+            :title="isEs ? 'Abrir guía de atajos (?)' : 'Open shortcuts guide (?)'"
             @click="guideOpen = !guideOpen"
           >
-            <kbd class="px-1 py-0.5 rounded bg-paper/60 border border-rule">?</kbd>
+            {{ isEs ? 'Atajos (?)' : 'Shortcuts (?)' }}
           </button>
         </div>
       </footer>
@@ -762,7 +694,7 @@ const activeQueryFilters = computed(() => {
             <div class="flex items-center justify-between pb-3 border-b border-rule">
               <div class="flex items-center gap-2 font-mono text-[11px]">
                 <span class="w-1.5 h-1.5 rounded-full bg-sig" />
-                <span class="font-bold text-ink uppercase tracking-wider">MATEO SONZOGNI // SISTEMA</span>
+                <span class="font-bold text-ink uppercase tracking-wider">MATEO SONZOGNI · NAVIGATION</span>
               </div>
               <button
                 type="button"
@@ -899,7 +831,7 @@ const activeQueryFilters = computed(() => {
 }
 .ruta, .req, kbd { font-family: var(--font-mono); font-size: var(--d-fs-mono); }
 
-/* La ventana: marco estructural de pantalla completa con retícula blueprint sutil */
+/* La ventana: marco estructural de pantalla completa con retícula suiza de 12 columnas */
 .ventana {
   flex: 1;
   min-height: 0;
@@ -908,8 +840,6 @@ const activeQueryFilters = computed(() => {
   flex-direction: column;
   border: none;
   background-color: var(--d-paper);
-  background-image: radial-gradient(var(--d-grid-cross) 1.2px, transparent 1.2px);
-  background-size: 32px 32px;
 }
 
 .barra {

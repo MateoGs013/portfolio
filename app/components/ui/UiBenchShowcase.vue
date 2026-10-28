@@ -122,19 +122,21 @@ function onSelectDock(key: string) {
 </script>
 
 <template>
-  <section class="bench-showcase flex flex-col gap-3.5" aria-label="Librería de Componentes Interactivos">
-    <!-- Encabezado con selector de categoría con resorte y switch de audio -->
-    <div class="flex flex-wrap items-center justify-between gap-2.5">
-      <div class="flex items-center gap-2.5">
-        <span class="font-mono text-[11px] font-semibold text-sig">04</span>
-        <h2 class="font-sans text-[15px] sm:text-[16px] font-semibold tracking-tight text-ink m-0">
-          {{ isEs ? 'Librería Propia // Sonzogni × Bencho UI v2.0' : 'Custom Library // Sonzogni × Bencho UI v2.0' }}
-        </h2>
-        <span class="hidden md:inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-surface-raised border border-rule font-mono text-[10px] text-dim">
-          <span>28 bloques Vue 3</span>
-          <span class="text-faint">·</span>
-          <span>Spring Physics + Web Audio</span>
+  <section class="bench-showcase flex flex-col gap-5 pt-4" aria-label="Librería de Componentes Interactivos">
+    <!-- Encabezado Editorial con selector de categoría con resorte y switch de audio -->
+    <div class="flex flex-wrap items-end justify-between gap-3 border-b border-rule pb-3">
+      <div class="flex flex-col gap-1">
+        <span class="font-mono text-[10.5px] text-dim uppercase tracking-[0.14em]">
+          03 / {{ isEs ? 'SISTEMA DE DISEÑO & FÍSICAS INTERACTIVAS' : 'DESIGN SYSTEM & INTERACTIVE PHYSICS' }}
         </span>
+        <div class="flex items-baseline gap-2.5 flex-wrap">
+          <h2 class="font-sans text-[clamp(22px,3vw,34px)] font-semibold tracking-[-0.03em] text-ink m-0 leading-tight">
+            {{ isEs ? 'Librería Propia · Sonzogni × Bencho UI v2.0' : 'Custom Library · Sonzogni × Bencho UI v2.0' }}
+          </h2>
+          <span class="hidden md:inline-flex items-center gap-1.5 font-mono text-[11px] text-dim">
+            <span>(28 primitives · Spring Physics + Web Audio)</span>
+          </span>
+        </div>
       </div>
 
       <div class="flex flex-wrap items-center gap-2">
@@ -146,7 +148,7 @@ function onSelectDock(key: string) {
 
         <NuxtLink
           to="/lab"
-          class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md border border-sig/40 bg-sig/10 hover:bg-sig hover:text-on-sig font-mono text-[10.5px] font-semibold text-sig transition-all cursor-pointer no-underline active:scale-[0.98]"
+          class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-ink text-paper hover:opacity-90 font-sans text-[11.5px] font-semibold transition-all cursor-pointer no-underline active:scale-[0.98]"
           :title="isEs ? 'Explorar catálogo completo de componentes interactivos' : 'Explore full interactive component catalog'"
         >
           <span>{{ isEs ? 'Laboratorio UI (28) →' : 'UI Lab (28) →' }}</span>
@@ -154,7 +156,7 @@ function onSelectDock(key: string) {
 
         <button
           type="button"
-          class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md border border-rule bg-surface/80 hover:bg-hover hover:border-rule-strong font-mono text-[10.5px] text-dim hover:text-ink transition-colors cursor-pointer"
+          class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-rule bg-surface/80 hover:bg-hover hover:border-rule-strong font-mono text-[10.5px] text-dim hover:text-ink transition-colors cursor-pointer"
           :title="isEs ? 'Alternar síntesis acústica procedural (Web Audio API)' : 'Toggle procedural acoustic synthesis (Web Audio API)'"
           @click="toggleSound"
         >

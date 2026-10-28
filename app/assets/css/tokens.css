@@ -522,21 +522,46 @@ html[data-hyperfocus="true"] .hb-dot {
   /* 7. Modo Moderno en Impresión eliminado (ahora en DatosCV.vue) */
 }
 
-/* ─── $10k Spatial Canvas: Iluminación Cenital Óptica & Refracción Especular ─── */
+/* ─── $10k Spatial Canvas & Swiss Architectural Grid (Awwwards 2026) ─── */
 :root {
   --d-specular-top: rgba(255, 255, 255, 0.085);
   --d-specular-edge: rgba(255, 255, 255, 0.065);
-  --d-ambient-bleed: rgba(255, 62, 0, 0.048);
-  --d-shadow-10k: 0 12px 36px -8px rgba(0, 0, 0, 0.52), inset 0 1px 0 0 var(--d-specular-top);
+  --d-ambient-bleed: rgba(255, 62, 0, 0.032);
+  --d-shadow-10k: 0 12px 36px -8px rgba(0, 0, 0, 0.45), inset 0 1px 0 0 var(--d-specular-top);
   --d-shadow-pill: 0 10px 30px -6px rgba(0, 0, 0, 0.55), inset 0 1px 0 0 rgba(255, 255, 255, 0.11);
+  --d-swiss-line: rgba(255, 255, 255, 0.038);
+  --d-buser-frame: #131316;
+  --d-buser-frame-text: #f4f4f5;
+  --d-buser-frame-dim: #8e8e96;
 }
 
 html[data-theme="light"] {
   --d-specular-top: rgba(255, 255, 255, 0.85);
   --d-specular-edge: rgba(0, 0, 0, 0.075);
-  --d-ambient-bleed: rgba(197, 48, 0, 0.04);
-  --d-shadow-10k: 0 8px 24px -6px rgba(0, 0, 0, 0.06), inset 0 1px 0 0 var(--d-specular-top);
+  --d-ambient-bleed: rgba(197, 48, 0, 0.025);
+  --d-shadow-10k: 0 8px 24px -6px rgba(0, 0, 0, 0.05), inset 0 1px 0 0 var(--d-specular-top);
   --d-shadow-pill: 0 8px 26px -6px rgba(0, 0, 0, 0.08), inset 0 1px 0 0 rgba(255, 255, 255, 0.9);
+  --d-swiss-line: rgba(0, 0, 0, 0.045);
+  --d-buser-frame: #141414;
+  --d-buser-frame-text: #f4f4f5;
+  --d-buser-frame-dim: #9898a0;
+}
+
+/* Grilla Suiza de 12 Columnas Expuesta (Daniele Buser / Basement Studio) */
+.swiss-grid-canvas {
+  background-image: linear-gradient(to right, var(--d-swiss-line) 1px, transparent 1px);
+  background-size: calc(100% / 12) 100%;
+}
+
+/* Marco Arquitectónico de Proyecto (Daniele Buser Awwwards SOTD Card) */
+.buser-project-frame {
+  background-color: var(--d-buser-frame);
+  color: var(--d-buser-frame-text);
+  border: 1px solid var(--d-rule);
+  transition: border-color 0.25s var(--d-ease), transform 0.25s var(--d-ease);
+}
+.buser-project-frame:hover {
+  border-color: var(--d-rule-strong);
 }
 
 .surface-10k {
@@ -566,10 +591,13 @@ html[data-theme="light"] {
 
 html[data-hyperfocus="true"] .surface-10k,
 html[data-hyperfocus="true"] .floating-pill-10k,
-html[data-hyperfocus="true"] .ambient-canvas-10k {
+html[data-hyperfocus="true"] .ambient-canvas-10k,
+html[data-hyperfocus="true"] .swiss-grid-canvas,
+html[data-hyperfocus="true"] .buser-project-frame {
   background: transparent !important;
   background-image: none !important;
   border: none !important;
   box-shadow: none !important;
   backdrop-filter: none !important;
+  color: var(--d-ink) !important;
 }

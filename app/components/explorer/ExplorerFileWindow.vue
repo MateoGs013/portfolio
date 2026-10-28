@@ -57,42 +57,38 @@ onBeforeUnmount(() => {
 
 <template>
   <div
-    class="ventana-archivo-chassis w-full max-w-[1040px] mx-auto rounded-xl border border-rule bg-surface/40 backdrop-blur-sm flex flex-col transition-all duration-200 overflow-hidden"
-    :class="{ 'maximized !fixed !inset-2.5 !z-[999] !w-auto !max-w-none !h-auto !shadow-[0_25px_60px_rgba(0,0,0,0.7)]': isMaximized }"
+    class="ventana-archivo-chassis w-full max-w-[1140px] mx-auto flex flex-col transition-all duration-200"
+    :class="{ 'maximized !fixed !inset-2.5 !z-[999] !w-auto !max-w-none !h-auto !bg-paper !border !border-rule !rounded-2xl !shadow-[0_25px_60px_rgba(0,0,0,0.7)]': isMaximized }"
   >
-    <!-- Barra Superior de la Ventana OS / Linear Document Surface -->
-    <header class="va-titlebar flex-none h-9 flex items-center justify-between gap-3 px-3.5 bg-surface/80 border-b border-rule select-none">
-      <!-- Botón Volver / Cerrar sutil y táctil con Esc -->
-      <div class="va-controls flex items-center gap-2">
+    <!-- Barra Editorial Superior Awwwards Case Study (Swiss Architectural Header) -->
+    <header class="va-titlebar flex-none h-11 flex items-center justify-between gap-4 pb-3 mb-2 border-b border-rule select-none">
+      <!-- Botón Volver Editorial (← Volver / Back) -->
+      <div class="va-controls flex items-center gap-3">
         <button
           type="button"
-          class="group inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-paper/80 border border-rule text-dim hover:text-ink hover:border-rule-strong active:scale-[0.98] transition-colors cursor-pointer shrink-0"
-          :title="isEs ? 'Volver / Cerrar archivo (Esc)' : 'Back / Close file (Esc)'"
+          class="group inline-flex items-center gap-2 px-3 py-1 rounded-full bg-surface hover:bg-hover border border-rule hover:border-rule-strong text-dim hover:text-ink active:scale-[0.98] transition-all cursor-pointer shrink-0"
+          :title="isEs ? 'Volver al índice (Esc)' : 'Back to index (Esc)'"
           :aria-label="isEs ? 'Cerrar' : 'Close'"
           @click="onClose"
         >
-          <AppIcon name="arrow-left" :size="12" />
-          <span class="font-mono text-[11px] text-dim group-hover:text-ink">esc</span>
+          <AppIcon name="arrow-left" :size="12" class="transition-transform group-hover:-translate-x-0.5" />
+          <span class="font-sans text-[12px] font-medium text-ink">{{ isEs ? 'Volver' : 'Back' }}</span>
+          <kbd class="font-mono text-[10px] text-faint ml-0.5">esc</kbd>
         </button>
       </div>
 
-      <!-- Título y Ruta del Archivo (Centro/Izquierda con punto quirúrgico bg-sig) -->
+      <!-- Identificador Contextual del Caso de Estudio (Sin rutas file:// de IDE) -->
       <div class="va-path-info flex items-center gap-2 min-w-0 overflow-hidden font-mono text-[11px] text-dim flex-1">
         <span class="w-1.5 h-1.5 rounded-full bg-sig shrink-0" aria-hidden="true" />
-        <span class="va-filename font-semibold text-ink truncate">{{ title }}</span>
-        <span v-if="path" class="va-canonical-path text-dim/70 whitespace-nowrap overflow-hidden text-ellipsis hidden sm:inline">{{ path }}</span>
+        <span class="va-filename font-medium text-dim uppercase tracking-wider truncate">{{ title }}</span>
       </div>
 
-      <!-- Lado Derecho: Status Tag y Botón Maximizar -->
+      <!-- Lado Derecho: Maximizar Vista -->
       <div class="flex items-center gap-2 shrink-0">
-        <div class="va-status-tag hidden sm:flex items-center gap-1.5 rounded-md bg-paper/70 border border-rule px-2 py-0.5 font-mono text-[10px] text-dim shrink-0">
-          <span class="va-dot w-1.5 h-1.5 rounded-full bg-green" />
-          <span class="va-status-text font-medium">{{ badge ?? 'READ-ONLY · UTF-8' }}</span>
-        </div>
         <button
           type="button"
-          class="va-btn maximize inline-flex items-center justify-center w-6 h-6 rounded bg-paper/80 border border-rule text-dim hover:text-ink hover:border-rule-strong active:scale-[0.98] transition-colors cursor-pointer"
-          :title="isMaximized ? (isEs ? 'Restaurar tamaño normal' : 'Restore normal size') : (isEs ? 'Maximizar ventana' : 'Maximize window')"
+          class="va-btn maximize inline-flex items-center justify-center w-7 h-7 rounded-full bg-surface hover:bg-hover border border-rule text-dim hover:text-ink hover:border-rule-strong active:scale-[0.98] transition-colors cursor-pointer"
+          :title="isMaximized ? (isEs ? 'Restaurar tamaño normal' : 'Restore normal size') : (isEs ? 'Expandir vista' : 'Expand view')"
           :aria-label="isEs ? 'Maximizar' : 'Maximize'"
           @click="isMaximized = !isMaximized"
         >
@@ -101,8 +97,8 @@ onBeforeUnmount(() => {
       </div>
     </header>
 
-    <!-- Contenido del Archivo -->
-    <div class="va-body flex-1 min-h-0 p-4 sm:p-6 md:p-8 overflow-y-auto">
+    <!-- Contenido Editorial del Caso de Estudio -->
+    <div class="va-body flex-1 min-h-0 py-3 sm:py-5 overflow-y-auto">
       <slot />
     </div>
   </div>

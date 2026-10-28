@@ -74,3 +74,32 @@ Toda micro-interacción implementada con esta skill DEBE cumplir las siguientes 
    - Prohibido hardcodear colores mágicos fuera de la paleta semántica (`--bg-base`, `--bg-surface`, `--text-primary`, `--accent-primary`). El spotlight debe adaptar su opacidad tanto en modo oscuro (`rgba(99, 102, 241, 0.09)`) como en modo papel técnico (`rgba(79, 70, 229, 0.05)`).
 4. **Invariante de Rendimiento**:
    - Solo animar propiedades compuestas por GPU (`transform`, `opacity`) o variables CSS consumidas por gradientes sin disparar `layout`/`reflow`.
+
+---
+
+## 4. Estándar Awwwards 2026: "Swiss Architectural Portfolio" (Daniele Buser, Dennis Snellenberg, Basement Studio, Daksh Gajjar)
+
+Para evitar tanto el **Extremo A (Cliché de terminal/consola ruidosa llena de cajas naranjas y etiquetas `//`)** como el **Extremo B (Texto plano sin dirección de arte)**, toda vista pública del portafolio debe regirse por las **6 Leyes de Dirección de Arte Awwwards**:
+
+### Ley 1: Uso Quirúrgico del Naranja Constructivista (`#ff3e00`) como Signo Gráfico Único
+- El color `--d-sig` (`#ff3e00` / `#c53000`) **jamás** se usa para pintar bordes de cajas ni etiquetas en mayúsculas tipo `TIER_01 //`.
+- Se reserva al **< 5% de la interfaz** como puntuación gráfica monumental: el bloque de apóstrofe en el año (`’26`), el punto cuadrado final en el cierre (`Say Hello.` / `Hablemos.`), o un indicador puntual de estado activo. El 95% restante es monocromo arquitectónico de alto contraste.
+
+### Ley 2: Grilla Suiza de 12 Columnas Expuesta vs. "Cajas dentro de Cajas"
+- Prohibido anidar cajas redondeadas con bordes duros dentro de otras cajas.
+- La estructura visual se construye mediante líneas divisorias continuas (`1px solid var(--d-rule)`) —columnas verticales sutiles de fondo y reglas horizontales limpias— combinadas con generoso espacio negativo.
+
+### Ley 3: Anatomía Awwwards para `Selected Works` (Cero "Sopa de Píldoras")
+- **Vista Escenario Editorial (2 Columnas estilo *Daniele Buser*)**: Marcos arquitectónicos amplios con imagen `16:10` protagonista. Al pie del marco: **Título del proyecto a escala `22px–28px` a la izquierda**, y a la derecha una **columna vertical alineada a la derecha con las 4 tecnologías principales en micro-uppercase sin bordes de píldora** (`VUE 3 / TAILWIND / GSAP / VITE` a `10.5px`, `leading-[1.35]`, `text-dim`).
+- **Vista Índice Arquitectónico (Tabla 4 Columnas estilo *Dennis Snellenberg*)**: Cabecera limpia (`CLIENT / PROJECT`, `LOCATION`, `SERVICES & STACK`, `YEAR`) con filas amplias separadas por hairlines de `1px` y ventana flotante cinética (`UiCursorWorkList`).
+
+### Ley 4: Contraste de Escala Tipográfica 12:1 y Filtros con Superíndice
+- Titulares display monumentales (`clamp(42px, 6.8vw, 92px)`, `tracking-[-0.04em]`, `leading-[0.94]`) en `General Sans Variable`.
+- Los filtros y enlaces de colección expresan su conteo mediante **superíndices tabulares limpios** (`All ⁰⁶`, `Live ⁰⁴`, `Work ⁰⁶`, `Lab ²⁸`) en lugar de badges pesados.
+
+### Ley 5: Navegación Limpia sin Bloqueo de Rutas
+- La navegación entre rutas del portafolio debe ser **instantánea (`0ms` bloqueo)**: nunca disparar cortinas o modales de carga (`UiRouteLoader`) que tapen la pantalla al hacer clic en enlaces internos.
+- En vistas de detalle (`ExplorerDetail.vue` / `ExplorerFileWindow.vue`), evitar el falso cromo de ventana OS (`READ-ONLY · UTF-8`) y presentar un **Case Study Editorial** limpio con tira de créditos de 4 columnas.
+
+### Ley 6: Cierre Monumental (`Say Hello.` / `Hablemos.`)
+- El pie de página actúa como un segundo Hero tipográfico: titular gigante con punto final cuadrado en `#ff3e00` y el correo directo (`mateogabus@gmail.com`) a escala display (`clamp(20px, 2.8vw, 36px)`) con copiado táctil en 1 clic.

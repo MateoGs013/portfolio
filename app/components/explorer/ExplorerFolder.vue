@@ -5,18 +5,10 @@
 import ExplorerHeader from './ExplorerHeader.vue'
 import AppIcon from '~/components/ui/AppIcon.vue'
 import ExplorerBadge from './ExplorerBadge.vue'
-import UiBenchShowcase from '~/components/ui/UiBenchShowcase.vue'
-import UiCodeReveal from '~/components/ui/UiCodeReveal.vue'
 import UiCopyPill from '~/components/ui/UiCopyPill.vue'
 import UiCursorWorkList, { type CursorWorkItem } from '~/components/ui/UiCursorWorkList.vue'
-import UiDotGlobe from '~/components/ui/UiDotGlobe.vue'
-import UiHoloCard from '~/components/ui/UiHoloCard.vue'
-import UiHubDiagram from '~/components/ui/UiHubDiagram.vue'
-import UiMagneticDots from '~/components/ui/UiMagneticDots.vue'
-import UiRollingCounter from '~/components/ui/UiRollingCounter.vue'
 import UiSegmentedSwitch from '~/components/ui/UiSegmentedSwitch.vue'
 import UiSpotlightCard from '~/components/ui/UiSpotlightCard.vue'
-import UiSweepButton from '~/components/ui/UiSweepButton.vue'
 import { pad, type Folder } from '~/lib/explorer'
 import type { Project } from '~/lib/api'
 import { routeFor } from '~/lib/path'
@@ -127,7 +119,7 @@ function getHomeField(name: string): string | null {
   return f ? String(f.value) : null
 }
 
-const homeHeadlineWords = computed(() => {
+const _homeHeadlineWords = computed(() => {
   if (isEs.value) {
     const raw = getHomeField('headline')
     if (raw) {
@@ -139,36 +131,14 @@ const homeHeadlineWords = computed(() => {
 })
 
 const _homeAboutText = computed(() => (isEs.value ? (getHomeField('about_text') ?? tr.value.home.aboutText) : tr.value.home.aboutText))
-const homeProfileRole = computed(() => (isEs.value ? (getHomeField('profile_role') ?? tr.value.home.profileRole) : tr.value.home.profileRole))
+const _homeProfileRole = computed(() => (isEs.value ? (getHomeField('profile_role') ?? tr.value.home.profileRole) : tr.value.home.profileRole))
 const homeProfileStatus = computed(() => {
   const raw = isEs.value ? (getHomeField('profile_status') ?? tr.value.home.profileStatus) : tr.value.home.profileStatus
   return String(raw).replace(/^[●•·\s]+/, '')
 })
 
-// ─── Micro-Pitch Interactivo con Switch de Especialidad (Bencho UI) ──────────
+// ─── Especialidades Técnicas & Capacidades (Basement 3-Col Matrix) ──────────
 type SpecialtyKey = 'frontend' | 'architecture' | 'ai'
-const activeSpecialty = ref<SpecialtyKey>('frontend')
-
-const specialtyOptions = computed(() => [
-  {
-    value: 'frontend',
-    label: 'Frontend & Creative',
-    shortLabel: 'Front',
-    icon: 'zap',
-  },
-  {
-    value: 'architecture',
-    label: isEs.value ? 'Arquitectura & DB' : 'Architecture & DB',
-    shortLabel: isEs.value ? 'Arqui' : 'Arch',
-    icon: 'db',
-  },
-  {
-    value: 'ai',
-    label: isEs.value ? 'Agentes & IA' : 'Agents & AI',
-    shortLabel: isEs.value ? 'IA' : 'AI',
-    icon: 'target',
-  },
-])
 
 interface SpecialtyPitch {
   title: string
@@ -222,8 +192,6 @@ const specialties = computed<Record<SpecialtyKey, SpecialtyPitch>>(() => ({
   },
 }))
 
-const currentSpecialty = computed(() => specialties.value[activeSpecialty.value])
-
 const projectCounts = computed(() => {
   const list = props.folder.projects && props.folder.projects.length ? props.folder.projects : props.folder.items
   const all = list.length
@@ -246,23 +214,6 @@ const _getCount = (key: string, fallbackNum: number) => {
   const parsed = typeof c === 'number' ? c : (c ? Number(c) : fallbackNum)
   return isNaN(parsed) ? pad(fallbackNum) : pad(parsed)
 }
-
-const bentoStackList = computed(() => {
-  const defaults = [
-    'VUE 3 / NUXT 4', 'TYPESCRIPT', 'REACT / NEXT.JS', 'PYTHON / FASTAPI',
-    'POSTGRESQL 17 ACID', 'PRISMA ORM', 'GSAP & LENIS', 'TAILWIND CSS', 'DOCKER & CI/CD'
-  ]
-  if (props.folder.projects && props.folder.projects.length) {
-    const techSet = new Set<string>()
-    for (const p of props.folder.projects) {
-      if (p.techs) {
-        for (const t of p.techs) techSet.add(t.name.toUpperCase())
-      }
-    }
-    if (techSet.size >= 6) return Array.from(techSet).slice(0, 9)
-  }
-  return defaults
-})
 
 // 2. Matriz maestra de proyectos para vista hiperfoco
 const masterProjects = computed(() => {
@@ -369,18 +320,22 @@ const masterProjects = computed(() => {
   ]
 })
 
-// 2.1 Proyectos destacados para Selected Work
+// 2.1 Proyectos destacados para Selected Work (Prioriza siempre los 4 casos con portada real tipo Daniele Buser)
 const knownProjectCovers: Record<string, string> = {
   'la-rucula': '/media/projects/la-rucula.jpg',
   'argpiscinas': '/media/projects/argpiscinas.jpg',
+  'arg-piscinas': '/media/projects/argpiscinas.jpg',
   'ynara': '/media/projects/ynara-mtucqc2j.png',
   'barberpole': '/media/projects/barberpole.png',
 }
 
 const selectedWorkProjects = computed(() => {
   if (props.folder.projects && props.folder.projects.length > 0) {
-    const featured = props.folder.projects.filter((p: Project) => p.featured)
-    const list = featured.length ? featured : props.folder.projects.slice(0, 3)
+    const withCovers = props.folder.projects.filter((p: Project) => {
+      const coverMedia = p.media?.find((m: { role: string, src: string }) => m.role === 'COVER')
+      return Boolean(coverMedia?.src || knownProjectCovers[p.slug])
+    })
+    const list = withCovers.length >= 4 ? withCovers.slice(0, 4) : props.folder.projects.slice(0, 4)
     return list.map((p: Project, idx: number) => {
       const coverMedia = p.media?.find((m: { role: string, src: string }) => m.role === 'COVER')
       const cover = coverMedia?.src ?? knownProjectCovers[p.slug] ?? ''
@@ -430,19 +385,31 @@ const selectedWorkProjects = computed(() => {
     {
       idx: '03',
       slug: 'ynara',
-      title: 'Ynara',
+      title: 'Ynara AI Assistant',
       to: '/projects/ynara',
       cover: '/media/projects/ynara-mtucqc2j.png',
       status: 'WIP',
       year: '2026',
       orgDesc: isEs.value ? 'Tesis Da Vinci (Preaprobada 2026) · 382 commits' : (getProjectLocalization('ynara')?.orgDesc ?? 'Da Vinci Thesis · 382 commits'),
       summary: isEs.value ? 'Asistente de IA adaptativo on-premise, con memoria cifrada vectorial sobre Postgres y pgvector.' : (getProjectLocalization('ynara')?.summary ?? 'Adaptive on-premise AI assistant with encrypted vector memory.'),
-      chips: ['FastAPI', 'Next.js', 'PostgreSQL', 'Python'],
+      chips: ['FastAPI', 'Next.js', 'PostgreSQL', 'pgvector'],
+    },
+    {
+      idx: '04',
+      slug: 'barberpole',
+      title: 'Barberpole SaaS',
+      to: '/projects/barberpole',
+      cover: '/media/projects/barberpole.png',
+      status: 'LIVE',
+      year: '2025',
+      orgDesc: isEs.value ? 'SaaS Multi-Negocio · Producto Propio' : (getProjectLocalization('barberpole')?.orgDesc ?? 'Multi-tenant SaaS · Proprietary Product'),
+      summary: isEs.value ? 'SaaS de gestión para peluquerías y barberías: turnos, clientes y caja en tiempo real.' : (getProjectLocalization('barberpole')?.summary ?? 'Management SaaS for barbershops: bookings, clients, and revenue tracking in realtime.'),
+      chips: ['React', 'Node.js', 'Express', 'MongoDB'],
     },
   ]
 })
 
-const selectedWorkMode = ref<'reel' | 'grid'>('reel')
+const selectedWorkMode = ref<'reel' | 'grid'>('grid')
 
 const cursorWorkProjects = computed<CursorWorkItem[]>(() => {
   return selectedWorkProjects.value.map(p => ({
@@ -759,417 +726,311 @@ function openExternal(url?: string | null) {
     </div>
 
     <!-- ═══════════════════════════════════════════════════════════════════════ -->
-    <!-- 2. INICIO: ACTIVE BENTO GRID 2.0 & AWWWARDS CURSOR WORK (folder.head === 'db' && !isHyperfocus) -->
+    <!-- 2. INICIO: AWWWARDS 2026 SWISS ARCHITECTURAL & CREATIVE DEVELOPER PORTFOLIO -->
     <!-- ═══════════════════════════════════════════════════════════════════════ -->
-    <div v-else-if="folder.head === 'db'" key="db-poster" class="inicio-studio max-w-[1140px] mx-auto flex flex-col gap-8 sm:gap-11 py-1 sm:py-2 w-full">
-      
-      <!-- 2.1 ACTIVE BENTO GRID 2.0 (ABOVE-THE-FOLD LIVING STAGE) -->
-      <section class="grid grid-cols-1 lg:grid-cols-12 gap-4 w-full" aria-label="Introducción e infraestructura técnica">
-        
-        <!-- Col 1-7: Hero Principal de Ingeniería con Magnetic Dots Canvas -->
-        <!-- Col 1-7: Tarjeta Hero Principal (Micro-Pitch Interactivo Bencho UI) -->
-        <UiSpotlightCard
-          as="article"
-          class="lg:col-span-7 surface-10k rounded-2xl p-5 sm:p-6 sm:p-7 relative overflow-hidden flex flex-col justify-between gap-5"
-        >
-          <!-- Canvas de Puntos Magnéticos sutil en flanco derecho (Cero interferencia detrás del texto) -->
-          <div
-            class="pointer-events-none absolute right-0 top-0 bottom-0 w-[380px] opacity-[0.14] dark:opacity-[0.20] flex items-center justify-end overflow-hidden [mask-image:radial-gradient(ellipse_at_center,black_25%,transparent_75%)]"
-            aria-hidden="true"
-          >
-            <UiMagneticDots
-              :width="380"
-              :height="360"
-              :pull="40"
-              :radius="48"
-              :spacing="16"
-              initial-shape="Dots"
-              :show-badge="false"
-            />
-          </div>
+    <div v-else-if="folder.head === 'db'" key="db-poster" class="inicio-studio max-w-[1220px] mx-auto flex flex-col gap-10 sm:gap-14 py-1 sm:py-2 w-full">
 
-          <div class="relative z-10 flex flex-col h-full justify-between gap-4 sm:gap-5">
-            <!-- Barra superior: Estado en Vivo + Ubicación + Latencia -->
-            <div class="flex flex-wrap items-center justify-between gap-2.5 pb-3 border-b border-rule">
-              <div class="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-paper/90 border border-rule font-mono text-[11px] text-ink shadow-xs whitespace-nowrap">
-                <span class="w-1.5 h-1.5 rounded-full bg-green shadow-[0_0_6px_var(--d-green)] shrink-0" />
-                <span class="text-ink font-semibold tracking-wide shrink-0">{{ homeProfileStatus }}</span>
-                <span class="text-faint">·</span>
-                <span class="text-dim shrink-0"><span class="hidden sm:inline">Patagonia · </span>Paraná, AR</span>
-              </div>
-              <div class="hidden sm:inline-flex items-center gap-2 font-mono text-[11px] text-dim">
-                <span class="text-sig font-semibold">UTC-3</span>
-                <span class="text-faint">·</span>
-                <span>PG-17 ACID</span>
-              </div>
-            </div>
-
-            <!-- Titular Monumental con Scramble Cinético -->
-            <div class="flex flex-col items-start gap-2">
-              <div class="flex items-center gap-2">
-                <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-sig/10 border border-sig/30 text-sig font-mono text-[10.5px] font-semibold uppercase tracking-wider w-fit">
-                  <span class="w-1.5 h-1.5 rounded-full bg-sig shrink-0" />
-                  <span>{{ homeProfileRole }}</span>
-                </span>
-              </div>
-
-              <h1
-                class="group/title flex flex-wrap items-baseline gap-x-[0.26em] gap-y-1 font-sans font-semibold tracking-[-0.038em] text-[clamp(26px,3.8vw,44px)] leading-[1.04] text-ink m-0 cursor-default select-none"
-                data-anchor
-              >
-                <span>{{ homeHeadlineWords[0] }}</span>
-                <span>{{ homeHeadlineWords[1] }}</span>
-                <span class="inline-flex items-baseline relative">
-                  <span class="border-b-2 border-sig pb-0.5 transition-colors duration-200">{{ homeHeadlineWords[2] }}</span><span class="text-sig inline-block ml-0.5 font-bold transition-transform duration-200 group-hover/title:scale-125 group-hover/title:translate-x-0.5">.</span>
-                </span>
-              </h1>
-            </div>
-
-            <!-- Micro-Pitch Interactivo con Switch de Especialidad (Bencho UI) -->
-            <div class="flex flex-col gap-3 rounded-xl border border-rule/90 bg-surface/70 backdrop-blur-md p-3.5 sm:p-4 shadow-xs">
-              <!-- Selector Segmentado Bencho UI -->
-              <div class="flex flex-wrap items-center justify-between gap-2 overflow-x-auto no-scrollbar max-w-full">
-                <UiSegmentedSwitch
-                  v-model="activeSpecialty"
-                  :options="specialtyOptions"
-                  :aria-label="isEs ? 'Especialidad técnica' : 'Technical specialty'"
-                  size="sm"
-                />
-                <span class="font-mono text-[9.5px] px-2 py-0.5 rounded bg-paper/90 border border-rule text-sig font-bold tracking-wider uppercase shrink-0">
-                  {{ currentSpecialty.spec }}
-                </span>
-              </div>
-
-              <!-- Pitch conciso de 2 líneas con alto contraste (fácil de leer en 2 segundos) -->
-              <p class="font-sans text-[13.5px] sm:text-[14px] text-ink dark:text-zinc-100 leading-[1.54] m-0 font-normal">
-                {{ currentSpecialty.tagline }}
-              </p>
-
-              <!-- Chips de Stack Relacionado (Interactivos y escaneables) -->
-              <div class="flex flex-wrap items-center gap-1.5 pt-2 border-t border-rule/60">
-                <span class="font-mono text-[10px] text-dim uppercase tracking-wider mr-1">Stack:</span>
-                <NuxtLink
-                  v-for="t in currentSpecialty.techs"
-                  :key="t.slug"
-                  :to="'/stack/' + t.slug"
-                  class="inline-flex items-center gap-1 font-mono text-[10.5px] px-2.5 py-0.5 rounded-md border transition-all no-underline"
-                  :class="t.highlight
-                    ? 'border-sig/40 bg-sig/10 text-ink font-semibold hover:border-sig hover:bg-sig/20'
-                    : 'border-rule bg-paper/80 text-dim hover:text-ink hover:border-rule-strong hover:bg-hover'"
-                  :title="`Ver tecnología: ${t.name}`"
-                >
-                  <span v-if="t.highlight" class="w-1 h-1 rounded-full bg-sig" aria-hidden="true" />
-                  {{ t.name }}
-                </NuxtLink>
-              </div>
-            </div>
-
-            <!-- Barra de Acciones Táctiles: Botón $10k Sweep + CV Harvard + Bencho Copy Pill -->
-            <div class="flex flex-wrap items-center gap-2.5 pt-1">
-              <UiSweepButton
-                to="/projects"
-                :title="isEs ? 'Explorar todas las aplicaciones en producción' : 'Explore all applications in production'"
-              >
-                <span>{{ tr.home.btnProjects }}</span>
-                <span class="font-mono text-[11px] opacity-70">({{ projectCountBadge }})</span>
-                <AppIcon name="arrow-right" :size="13" class="transition-transform duration-200 group-hover:translate-x-0.5" />
-              </UiSweepButton>
-
-              <NuxtLink
-                to="/about"
-                class="inline-flex items-center justify-center gap-2 h-9 px-3.5 rounded-lg bg-surface-raised hover:bg-hover border border-rule hover:border-rule-strong text-ink font-sans text-[13px] font-medium no-underline active:scale-[0.98] transition-all duration-150"
-                :title="isEs ? 'Abrir currículum completo en formato Harvard ATS o Interactivo' : 'Open complete resume in Harvard ATS or Interactive format'"
-              >
-                <AppIcon name="file" :size="13" class="text-dim" />
-                <span>{{ isEs ? 'CV Harvard / ATS' : 'Harvard ATS CV' }}</span>
-              </NuxtLink>
-
-              <UiCopyPill
-                size="md"
-                text="mateogabus@gmail.com"
-                :label="isEs ? 'Copiar email' : 'Copy email'"
-                :copied-label="isEs ? '¡Email copiado!' : 'Email copied!'"
-              />
-            </div>
-          </div>
-        </UiSpotlightCard>
-
-        <!-- Col 8-12: Live 3D Globe + Odómetros Rolling Counter -->
-        <UiSpotlightCard
-          as="article"
-          class="lg:col-span-5 surface-10k rounded-2xl p-5 flex flex-col justify-between gap-4 overflow-hidden"
-        >
-          <div class="flex items-center justify-between">
-            <div class="flex items-center gap-2">
-              <span class="w-1.5 h-1.5 rounded-full bg-sig" />
-              <span class="font-sans text-[13px] font-medium text-ink">{{ isEs ? 'Red Global & Telemetría' : 'Global Mesh & Telemetry' }}</span>
-            </div>
-            <span class="px-2 py-0.5 rounded-full bg-paper/80 border border-rule font-mono text-[10px] text-dim uppercase">
-              3D Live Sphere
+      <!-- 2.1 AWWWARDS MONUMENTAL SWISS HERO STAGE (Daniele Buser 1:1 Proportion — Above-the-fold Project Peek) -->
+      <section class="flex flex-col gap-5 sm:gap-6 pt-1 sm:pt-3 border-b border-rule pb-6 sm:pb-7 w-full" aria-label="Introducción y arquitectura de producto">
+        <!-- Bloque Tipográfico Monumental Escala 12:1 + Índice ’26 con Acento Quirúrgico #ff3e00 -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-8 items-end">
+          <div class="lg:col-span-9 flex flex-col gap-2">
+            <span class="font-mono text-[10.5px] uppercase tracking-[0.14em] text-dim flex items-center gap-2">
+              <span class="w-1.5 h-1.5 rounded-full bg-green shrink-0" />
+              <span>{{ isEs ? 'CONSTRUIR CON PROPÓSITO · ' : 'PURPOSEFUL ENGINEERING · ' }}{{ homeProfileStatus }}</span>
             </span>
+            <h1
+              class="font-sans font-semibold tracking-[-0.044em] text-[clamp(38px,5.8vw,78px)] leading-[0.94] text-ink m-0 select-none"
+              data-anchor
+            >
+              <template v-if="isEs">
+                Ingeniería creativa &amp;<br>
+                sistemas relacionales<span class="inline-block w-2.5 h-2.5 sm:w-3.5 sm:h-3.5 bg-sig ml-1.5 align-baseline" aria-hidden="true" />
+              </template>
+              <template v-else>
+                Creative engineering &amp;<br>
+                relational systems<span class="inline-block w-2.5 h-2.5 sm:w-3.5 sm:h-3.5 bg-sig ml-1.5 align-baseline" aria-hidden="true" />
+              </template>
+            </h1>
           </div>
 
-          <!-- Globo 3D Interactivo Visible de Inmediato -->
-          <div class="flex-1 flex items-center justify-center my-auto min-h-[190px] py-1 overflow-hidden">
-            <UiDotGlobe
-              :size="210"
-              home-city="Paraná, AR"
-              :speed="28"
+          <!-- Índice Monumental ’26 (Daniele Buser Signature Mark) -->
+          <div class="lg:col-span-3 flex lg:justify-end items-end">
+            <div class="inline-flex items-start leading-none select-none" aria-hidden="true">
+              <span class="w-2.5 sm:w-3.5 h-8 sm:h-11 bg-sig inline-block mr-1.5 mt-1 sm:mt-2 shrink-0" />
+              <span class="font-sans font-semibold tracking-[-0.05em] text-[clamp(48px,6.8vw,92px)] text-ink leading-[0.88]">26</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Fila Inferior Compacta del Hero: Síntesis en 2 Líneas (Izquierda) + Acciones & Telemetría en Línea (Derecha) -->
+        <div class="flex flex-col lg:flex-row lg:items-end justify-between gap-5 pt-4 border-t border-rule">
+          <p class="font-sans text-[14.5px] sm:text-[15.5px] text-dim leading-[1.52] max-w-[60ch] m-0 font-normal">
+            <template v-if="isEs">
+              Desarrollador Full Stack y Creative Developer especializado en <strong class="text-ink font-medium">Vue 3 / Nuxt 4</strong>, arquitecturas tipadas sobre <strong class="text-ink font-medium">PostgreSQL 17</strong> y agentes de IA on-premise (<strong class="text-ink font-medium">382 commits</strong> en Tesis Da Vinci · <strong class="text-ink font-medium">Lighthouse 99/100</strong> en producción).
+            </template>
+            <template v-else>
+              Full Stack &amp; Creative Developer specializing in <strong class="text-ink font-medium">Vue 3 / Nuxt 4</strong>, typed architectures on <strong class="text-ink font-medium">PostgreSQL 17</strong>, and on-premise AI agents (<strong class="text-ink font-medium">382 commits</strong> in Da Vinci Thesis · <strong class="text-ink font-medium">99/100 Lighthouse</strong> in production).
+            </template>
+          </p>
+
+          <!-- Acciones Táctiles Concisas -->
+          <div class="flex flex-wrap items-center gap-2.5 shrink-0">
+            <NuxtLink
+              to="/projects"
+              class="group inline-flex items-center gap-2 h-9 px-4 rounded-full bg-ink text-paper font-sans text-[12.5px] font-semibold tracking-[-0.01em] no-underline hover:opacity-90 active:scale-[0.98] transition-all"
+            >
+              <span>{{ tr.home.btnProjects }}</span>
+              <span class="font-mono text-[10.5px] opacity-70">({{ projectCountBadge }})</span>
+              <AppIcon name="arrow-right" :size="12" class="transition-transform duration-200 group-hover:translate-x-0.5" />
+            </NuxtLink>
+
+            <NuxtLink
+              to="/about"
+              class="inline-flex items-center justify-center gap-1.5 h-9 px-3.5 rounded-full bg-surface hover:bg-hover border border-rule hover:border-rule-strong text-ink font-sans text-[12.5px] font-medium no-underline active:scale-[0.98] transition-all duration-150"
+              :title="isEs ? 'Abrir currículum completo en formato Harvard ATS o Interactivo' : 'Open complete resume in Harvard ATS or Interactive format'"
+            >
+              <span>{{ isEs ? 'CV Harvard ATS' : 'Harvard ATS CV' }}</span>
+            </NuxtLink>
+
+            <UiCopyPill
+              size="sm"
+              text="mateogabus@gmail.com"
+              :label="isEs ? 'Copiar email' : 'Copy email'"
+              :copied-label="isEs ? '¡Copiado!' : 'Copied!'"
             />
           </div>
-
-          <!-- Métricas Odómetro Rodante (Rolling Counter Bencho) -->
-          <div class="grid grid-cols-3 gap-2 pt-3 border-t border-rule font-mono text-center">
-            <div class="flex flex-col items-center">
-              <UiRollingCounter :model-value="99" :digits="2" :interactive="false" suffix="/100" />
-              <span class="text-dim text-[10px] uppercase">Lighthouse</span>
-            </div>
-            <div class="flex flex-col items-center border-x border-rule px-1">
-              <UiRollingCounter :model-value="382" :digits="3" :interactive="false" />
-              <span class="text-dim text-[10px] uppercase">Commits IA</span>
-            </div>
-            <div class="flex flex-col items-center">
-              <UiRollingCounter :model-value="10" :digits="2" :interactive="false" suffix="+" />
-              <span class="text-dim text-[10px] uppercase">{{ isEs ? 'Entregas' : 'Shipped' }}</span>
-            </div>
-          </div>
-        </UiSpotlightCard>
-
-        <!-- Fila 2: Credencial 3D HoloCard + Topología en Vivo + Schema X-Ray -->
-        <UiSpotlightCard as="article" class="lg:col-span-4 surface-10k rounded-2xl p-4 flex flex-col justify-between gap-2 min-h-[260px]">
-          <div class="flex items-center justify-between font-mono text-[10.5px] text-dim">
-            <span class="flex items-center gap-2 font-medium text-ink">
-              <span class="w-1.5 h-1.5 rounded-full bg-green" />
-              <span>{{ isEs ? 'Credencial Técnica' : 'Technical Credential' }}</span>
-            </span>
-            <span class="px-2 py-0.5 rounded bg-paper/80 border border-rule font-mono text-[9.5px] text-dim uppercase">3D TILT</span>
-          </div>
-          <div class="flex-1 flex items-center justify-center py-0.5">
-            <UiHoloCard :max-tilt="12" class="w-[164px] rounded-xl overflow-hidden border border-rule bg-paper/90 p-1.5 group shadow-xs">
-              <div class="aspect-[4/4.2] rounded-lg overflow-hidden bg-surface relative">
-                <img
-                  src="/media/profile/mateo-front.png"
-                  alt="Mateo Gabriel Sonzogni"
-                  class="w-full h-full object-cover grayscale-[15%] group-hover:grayscale-0 group-hover:scale-[1.04] transition-all duration-500 ease-out"
-                  loading="eager"
-                >
-                <span class="absolute bottom-1.5 left-1.5 px-1.5 py-0.5 rounded bg-black/75 backdrop-blur-md border border-white/15 font-mono text-[8.5px] text-white uppercase tracking-wider">
-                  Design Eng · 2026
-                </span>
-              </div>
-              <div class="pt-1.5 pb-0.5 px-1 flex items-center justify-between font-mono text-[10px] text-dim">
-                <span class="text-ink font-semibold truncate">Mateo Sonzogni</span>
-                <span class="text-sig font-bold">✓</span>
-              </div>
-            </UiHoloCard>
-          </div>
-          <p class="m-0 font-mono text-[10px] text-dim text-center">
-            {{ isEs ? 'Incliná el cursor para activar reflejo especular holográfico' : 'Tilt cursor to activate holographic specular glare' }}
-          </p>
-        </UiSpotlightCard>
-
-        <UiSpotlightCard as="article" class="lg:col-span-4 surface-10k rounded-2xl p-4 flex flex-col justify-between gap-2 min-h-[260px]">
-          <div class="flex items-center justify-between">
-            <div class="flex items-center gap-2">
-              <span class="w-1.5 h-1.5 rounded-full bg-sig" />
-              <span class="font-sans text-[13px] font-medium text-ink">{{ isEs ? 'Topología Full-Stack' : 'Full-Stack Topology' }}</span>
-            </div>
-            <span class="px-2 py-0.5 rounded bg-paper/80 border border-rule font-mono text-[9.5px] text-dim uppercase">Live Packets</span>
-          </div>
-
-          <div class="flex-1 flex items-center justify-center overflow-hidden">
-            <UiHubDiagram
-              core-label="PG-17"
-              :spread="96"
-              :height="192"
-            />
-          </div>
-
-          <p class="m-0 font-mono text-[10px] text-dim text-center [text-wrap:balance] max-w-[280px] mx-auto">
-            {{ isEs ? 'Puntero sobre un nodo para emitir paquetes' : 'Hover any node to fire kinetic packet streaks' }}
-          </p>
-        </UiSpotlightCard>
-
-        <UiSpotlightCard as="article" class="lg:col-span-4 surface-10k rounded-2xl p-4 flex flex-col justify-between gap-2 min-h-[260px]">
-          <div class="flex items-center justify-between">
-            <div class="flex items-center gap-2">
-              <span class="w-1.5 h-1.5 rounded-full bg-sig" />
-              <span class="font-sans text-[13px] font-medium text-ink">{{ isEs ? 'Lente Rayos X: UI → SQL' : 'X-Ray Lens: UI → SQL' }}</span>
-            </div>
-            <span class="px-2 py-0.5 rounded bg-paper/80 border border-rule font-mono text-[9.5px] text-dim uppercase">X-Ray Lens</span>
-          </div>
-
-          <div class="flex-1 flex items-center justify-center w-full">
-            <UiCodeReveal
-              :title="isEs ? 'Esquema ACID' : 'ACID Schema'"
-              :subtitle="isEs ? 'Inspeccionar Prisma 7' : 'Inspect Prisma 7'"
-              :radius="115"
-            />
-          </div>
-
-          <p class="m-0 font-mono text-[10px] text-dim text-center">
-            {{ isEs ? 'Mové el cursor o clic para rasgar la UI y ver SQL real' : 'Move cursor or click to peel the UI into SQL code' }}
-          </p>
-        </UiSpotlightCard>
-
+        </div>
       </section>
 
-      <!-- 2.2 SELECTED WORK CON FLOTACIÓN POR RESORTE (DENNIS SNELLENBERG / OLIVIER LAROSE) -->
-      <section aria-label="Producción destacada" class="flex flex-col gap-4">
-        <div class="flex flex-wrap items-center justify-between gap-3 border-b border-rule pb-3">
+      <!-- 2.2 SELECTED WORKS ’26 (Daniele Buser 2-Col Frames 1:1 + Dennis Snellenberg Table Toggle) -->
+      <section aria-label="Producción destacada" class="flex flex-col gap-5 sm:gap-6">
+        <div class="flex flex-wrap items-center justify-between gap-4">
           <div class="flex items-center gap-2.5">
-            <span class="font-mono text-[11px] text-sig font-semibold">01</span>
-            <h2 class="m-0 font-sans text-[18px] sm:text-[20px] font-semibold tracking-[-0.025em] text-ink">
-              {{ tr.home.swTitle }}
-            </h2>
-            <span class="hidden sm:inline-flex items-center px-2 py-0.5 rounded-full bg-paper/80 border border-rule font-mono text-[10px] text-dim">
-              {{ isEs ? 'Previsualización cinética flotante' : 'Kinetic floating preview' }}
+            <span class="font-mono text-[11px] font-semibold uppercase tracking-[0.14em] text-dim">
+              {{ isEs ? 'OBRA SELECCIONADA' : 'SELECTED WORKS' }}
             </span>
+            <span class="font-mono text-[11px] text-faint">({{ pad(selectedWorkProjects.length) }})</span>
           </div>
 
-          <div class="flex items-center gap-3">
-            <!-- Selector de Vista: Carrete Flotante (Reel) vs Baldosas 3D (Grid) -->
+          <div class="flex flex-wrap items-center gap-3">
+            <!-- Selector de Vista: Galería Arquitectónica (Buser 2-Col) vs Índice (Snellenberg Table) -->
             <UiSegmentedSwitch
               v-model="selectedWorkMode"
               :options="[
-                { value: 'reel', label: isEs ? 'Carrete Awwwards' : 'Cursor Reel' },
-                { value: 'grid', label: isEs ? 'Baldosas 3D' : '3D Grid' }
+                { value: 'grid', label: isEs ? 'Galería (2-Col)' : 'Gallery (2-Col)' },
+                { value: 'reel', label: isEs ? 'Índice Tabular' : 'Table Index' }
               ]"
             />
 
             <NuxtLink
               to="/projects"
-              class="group inline-flex items-center gap-1.5 font-mono text-[11.5px] text-dim hover:text-ink no-underline transition-colors ml-2"
+              class="group inline-flex items-center gap-1.5 font-mono text-[11px] text-ink hover:text-sig no-underline transition-colors ml-1 uppercase tracking-wider"
             >
               <span>{{ tr.home.swViewAll }} ({{ projectCountBadge }})</span>
-              <AppIcon name="arrow-right" :size="12" class="text-sig transition-transform duration-200 group-hover:translate-x-0.5" />
+              <AppIcon name="arrow-right" :size="11" class="text-sig transition-transform duration-200 group-hover:translate-x-0.5" />
             </NuxtLink>
           </div>
         </div>
 
-        <!-- Modo 1: Carrete Tipográfico Awwwards con Resorte y Ventana Flotante (UiCursorWorkList) -->
-        <div v-if="selectedWorkMode === 'reel'" class="w-full">
-          <UiCursorWorkList :items="cursorWorkProjects" />
-        </div>
-
-        <!-- Modo 2: Cuadrícula de Tarjetas 3D con Inclinación Giroscópica (UiHoloCard) -->
-        <div v-else class="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <UiHoloCard
+        <!-- Modo 1 (Default): Galería Arquitectónica de 2 Columnas (Daniele Buser Pure Frame Pattern 1:1) -->
+        <div v-if="selectedWorkMode === 'grid'" class="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-7">
+          <article
             v-for="p in selectedWorkProjects"
             :key="p.slug"
-            :max-tilt="5"
-            :foil="false"
-            class="surface-10k rounded-xl hover:border-rule-strong transition-all duration-200 flex flex-col overflow-hidden"
+            class="buser-project-frame group rounded-[2px] p-5 sm:p-7 flex flex-col justify-between gap-6"
           >
             <NuxtLink
               :to="p.to"
               :data-row="p.slug"
-              class="group flex flex-col h-full no-underline text-inherit focus:outline-none"
+              class="flex flex-col h-full justify-between gap-6 no-underline text-inherit focus:outline-none"
             >
-              <div class="relative aspect-[16/10] w-full overflow-hidden border-b border-rule bg-paper">
+              <!-- Contenedor Superior: Mockup 16:10 Puro sin Píldoras Flotantes (Daniele Buser 1:1) -->
+              <div class="relative aspect-[16/10] w-full overflow-hidden rounded-[2px] bg-black/50">
                 <img
                   v-if="p.cover"
                   :src="p.cover"
                   :alt="p.title"
-                  class="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.03]"
+                  class="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.02]"
                   loading="lazy"
                 >
-                <div v-else class="w-full h-full flex flex-col justify-between p-4 bg-surface-raised">
-                  <span class="font-mono text-[10px] text-faint uppercase">{{ p.year }}</span>
-                  <span class="font-sans text-[18px] font-semibold text-ink">{{ p.title }}</span>
-                </div>
-                <div class="absolute top-2.5 right-2.5 flex items-center gap-1.5 font-mono text-[10px]">
-                  <span class="px-2 py-0.5 rounded-full backdrop-blur-md bg-black/75 border border-white/10 text-white font-medium inline-flex items-center gap-1.5">
-                    <span class="w-1.5 h-1.5 rounded-full" :class="p.status === 'LIVE' ? 'bg-green' : 'bg-amber'" />
-                    <span>{{ p.status }} · {{ p.year }}</span>
-                  </span>
+                <div v-else class="w-full h-full flex flex-col justify-between p-6 bg-surface-raised">
+                  <span class="font-mono text-[10px] opacity-60 uppercase">{{ p.year }}</span>
+                  <span class="font-sans text-[22px] font-semibold">{{ p.title }}</span>
                 </div>
               </div>
 
-              <div class="flex flex-col flex-1 p-4 sm:p-5 gap-2">
-                <div class="flex items-center justify-between gap-2">
-                  <h3 class="m-0 font-sans text-[15.5px] font-semibold tracking-[-0.02em] text-ink group-hover:text-sig transition-colors">
+              <!-- Pie Arquitectónico Puro: Solo Título Grande a la Izquierda + 4 Líneas de Stack Vertical a la Derecha -->
+              <div class="flex items-end justify-between gap-4 pt-1">
+                <div class="flex flex-col gap-1 min-w-0 flex-1">
+                  <h3 class="m-0 font-sans text-[clamp(22px,2.5vw,32px)] font-semibold tracking-[-0.035em] leading-[1.05] group-hover:text-sig transition-colors">
                     {{ p.title }}
                   </h3>
-                  <span class="font-mono text-[12px] text-dim group-hover:text-sig group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all duration-200" aria-hidden="true">↗</span>
                 </div>
-                <p v-if="p.orgDesc" class="m-0 font-mono text-[10.5px] text-faint truncate">
-                  {{ p.orgDesc }}
-                </p>
-                <p v-if="p.summary" class="m-0 font-sans text-[13px] text-dim leading-relaxed line-clamp-2">
-                  {{ p.summary }}
-                </p>
-                <div v-if="p.chips && p.chips.length" class="mt-auto pt-2.5 flex flex-wrap gap-1.5">
-                  <span
-                    v-for="chip in p.chips"
-                    :key="chip"
-                    class="px-2 py-0.5 rounded-md bg-paper/75 border border-rule font-mono text-[10px] text-dim group-hover:border-rule-strong transition-colors"
-                  >
+
+                <!-- Columna Derecha: Stack Vertical Alineado a la Derecha (Cero Pill Borders, Estilo Daniele Buser) -->
+                <ul v-if="p.chips && p.chips.length" class="flex flex-col items-end text-right list-none m-0 p-0 shrink-0 font-mono text-[10px] leading-[1.45] uppercase tracking-[0.06em] opacity-70">
+                  <li v-for="chip in p.chips.slice(0, 4)" :key="chip">
                     {{ chip }}
-                  </span>
-                </div>
+                  </li>
+                </ul>
               </div>
             </NuxtLink>
-          </UiHoloCard>
+          </article>
+        </div>
+
+        <!-- Modo 2: Índice Tabular Awwwards con Ventana Flotante por Resorte (Dennis Snellenberg) -->
+        <div v-else class="w-full">
+          <UiCursorWorkList :items="cursorWorkProjects" />
         </div>
       </section>
 
-      <!-- 2.3 ARSENAL TECNOLÓGICO -->
-      <section aria-label="Arsenal Tecnológico" class="surface-10k rounded-2xl px-5 py-4 flex flex-wrap items-center justify-between gap-3">
-        <div class="flex items-center gap-2.5">
-          <span class="font-mono text-[11px] font-semibold text-sig">02</span>
-          <span class="font-mono text-[11.5px] uppercase tracking-wider text-dim font-medium">{{ tr.home.stackTag }}</span>
-        </div>
-        <div class="flex flex-wrap items-center gap-1.5">
-          <NuxtLink
-            v-for="st in bentoStackList"
-            :key="st"
-            to="/stack"
-            class="px-2.5 py-1 rounded-md bg-paper/75 border border-rule hover:border-sig/60 text-dim hover:text-ink font-mono text-[10.5px] no-underline hover:-translate-y-0.5 active:scale-[0.98] transition-all duration-150"
-          >
-            {{ st }}
+      <!-- 2.3 CAPACIDADES & ARQUITECTURA DE SISTEMAS (Basement Studio 3-Column Swiss Hairline Matrix) -->
+      <section aria-label="Capacidades de ingeniería" class="flex flex-col gap-5 pt-4">
+        <div class="flex flex-wrap items-end justify-between gap-3 border-b border-rule pb-3">
+          <div class="flex flex-col gap-1">
+            <span class="font-mono text-[10.5px] text-dim uppercase tracking-[0.14em]">
+              02 / {{ isEs ? 'CAPACIDADES & ESPECIALIDADES TÉCNICAS' : 'ENGINEERING CAPABILITIES & SPECIALTIES' }}
+            </span>
+            <h2 class="m-0 font-sans text-[clamp(22px,3vw,34px)] font-semibold tracking-[-0.03em] text-ink leading-tight">
+              {{ isEs ? 'Arquitectura de extremo a extremo' : 'End-to-end product architecture' }}
+            </h2>
+          </div>
+          <NuxtLink to="/stack" class="font-mono text-[11.5px] text-dim hover:text-ink no-underline transition-colors">
+            {{ isEs ? 'Inspeccionar stack completo (22) →' : 'Inspect full stack (22) →' }}
           </NuxtLink>
         </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 border-b border-rule divide-y md:divide-y-0 md:divide-x divide-rule">
+          <!-- Columna 01: Frontend & Creative Engineering -->
+          <div class="py-5 md:pr-6 flex flex-col justify-between gap-4">
+            <div class="flex flex-col gap-2">
+              <div class="flex items-center justify-between font-mono text-[11px] text-dim">
+                <span>01 / FRONTEND &amp; CREATIVE</span>
+                <span class="text-ink font-semibold">99+ LH</span>
+              </div>
+              <h3 class="m-0 font-sans text-[19px] font-semibold tracking-[-0.025em] text-ink">
+                {{ specialties.frontend.title }}
+              </h3>
+              <p class="m-0 font-sans text-[13.5px] text-dim leading-relaxed">
+                {{ specialties.frontend.tagline }}
+              </p>
+            </div>
+            <div class="flex flex-wrap gap-x-3 gap-y-1 pt-3 border-t border-rule/60 font-mono text-[10.5px] text-dim uppercase">
+              <NuxtLink v-for="t in specialties.frontend.techs" :key="t.slug" :to="'/stack/' + t.slug" class="hover:text-sig no-underline transition-colors">
+                {{ t.name }}
+              </NuxtLink>
+            </div>
+          </div>
+
+          <!-- Columna 02: Data Architecture & Typed APIs -->
+          <div class="py-5 md:px-6 flex flex-col justify-between gap-4">
+            <div class="flex flex-col gap-2">
+              <div class="flex items-center justify-between font-mono text-[11px] text-dim">
+                <span>02 / RELATIONAL &amp; APIS</span>
+                <span class="text-ink font-semibold">PG-17 ACID</span>
+              </div>
+              <h3 class="m-0 font-sans text-[19px] font-semibold tracking-[-0.025em] text-ink">
+                {{ specialties.architecture.title }}
+              </h3>
+              <p class="m-0 font-sans text-[13.5px] text-dim leading-relaxed">
+                {{ specialties.architecture.tagline }}
+              </p>
+            </div>
+            <div class="flex flex-wrap gap-x-3 gap-y-1 pt-3 border-t border-rule/60 font-mono text-[10.5px] text-dim uppercase">
+              <NuxtLink v-for="t in specialties.architecture.techs" :key="t.slug" :to="'/stack/' + t.slug" class="hover:text-sig no-underline transition-colors">
+                {{ t.name }}
+              </NuxtLink>
+            </div>
+          </div>
+
+          <!-- Columna 03: Autonomous Systems & AI Agents -->
+          <div class="py-5 md:pl-6 flex flex-col justify-between gap-4">
+            <div class="flex flex-col gap-2">
+              <div class="flex items-center justify-between font-mono text-[11px] text-dim">
+                <span>03 / APPLIED AI &amp; AGENTS</span>
+                <span class="text-ink font-semibold">PGVECTOR</span>
+              </div>
+              <h3 class="m-0 font-sans text-[19px] font-semibold tracking-[-0.025em] text-ink">
+                {{ specialties.ai.title }}
+              </h3>
+              <p class="m-0 font-sans text-[13.5px] text-dim leading-relaxed">
+                {{ specialties.ai.tagline }}
+              </p>
+            </div>
+            <div class="flex flex-wrap gap-x-3 gap-y-1 pt-3 border-t border-rule/60 font-mono text-[10.5px] text-dim uppercase">
+              <NuxtLink v-for="t in specialties.ai.techs" :key="t.slug" :to="'/stack/' + t.slug" class="hover:text-sig no-underline transition-colors">
+                {{ t.name }}
+              </NuxtLink>
+            </div>
+          </div>
+        </div>
       </section>
 
-      <!-- 2.35 LIBRERÍA DE COMPONENTES PROPIA // SONZOGNI × BENCHO UI v2.0 -->
-      <UiBenchShowcase />
-
-      <!-- 2.4 PIE DE PÁGINA MINIMALISTA ESPECULAR -->
-      <footer class="surface-10k rounded-xl p-5 sm:p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6" aria-label="Contacto directo">
-        <div>
-          <h2 class="m-0 font-sans text-[16px] sm:text-[18px] font-semibold tracking-[-0.02em] text-ink">
-            {{ tr.home.footerTitle }}
+      <!-- 2.4 PIE DE PÁGINA MONUMENTAL AWWWARDS (Daniele Buser "Say Hello." Asymmetrical Lockup 1:1) -->
+      <footer class="pt-14 sm:pt-20 pb-12 border-t border-rule flex flex-col gap-14 sm:gap-20" aria-label="Contacto directo">
+        <!-- Fila Superior: Titular Monumental Hablemos. -->
+        <div class="flex flex-col gap-2">
+          <span class="font-mono text-[10.5px] text-dim uppercase tracking-[0.14em]">
+            03 / {{ isEs ? 'CONTACTO DIRECTO & DISPONIBILIDAD 2026' : 'DIRECT CONTACT & AVAILABILITY 2026' }}
+          </span>
+          <h2 class="m-0 font-sans text-[clamp(56px,9.2vw,128px)] font-semibold tracking-[-0.045em] text-ink leading-[0.88] select-none">
+            {{ isEs ? 'Hablemos' : 'Say Hello' }}<span class="inline-block w-3 h-3 sm:w-4 sm:h-4 bg-sig ml-1.5 align-baseline" aria-hidden="true" />
           </h2>
-          <p class="m-0 mt-1 font-sans text-[13px] text-dim">
-            {{ tr.home.footerSub }}
-          </p>
         </div>
 
-        <div class="flex flex-wrap items-center gap-2.5">
-          <UiCopyPill
-            text="mateogabus@gmail.com"
-            label="mateogabus@gmail.com"
-            :copied-label="isEs ? 'Copiado' : 'Copied'"
-          />
-          <a
-            href="https://github.com/MateoGs013"
-            target="_blank"
-            rel="noopener noreferrer"
-            class="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg bg-surface hover:bg-hover border border-rule hover:border-rule-strong text-dim hover:text-ink font-mono text-[11.5px] no-underline transition-all"
-          >
-            <AppIcon name="code" :size="12" />
-            <span>GitHub ↗</span>
-          </a>
-          <a
-            href="https://www.linkedin.com/in/mateo-sonzogni"
-            target="_blank"
-            rel="noopener noreferrer"
-            class="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg bg-surface hover:bg-hover border border-rule hover:border-rule-strong text-dim hover:text-ink font-mono text-[11.5px] no-underline transition-all"
-          >
-            <AppIcon name="briefcase" :size="12" />
-            <span>LinkedIn ↗</span>
-          </a>
+        <!-- Fila Inferior Asimétrica: Invitación Editorial a la Izquierda + Email & Enlaces a la Derecha -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-end pt-6 border-t border-rule/60">
+          <div class="lg:col-span-6 flex flex-col gap-2">
+            <p class="m-0 font-sans text-[15px] sm:text-[16.5px] text-dim leading-[1.55] max-w-[46ch]">
+              <template v-if="isEs">
+                Si tenés un proyecto en mente, buscás sumar ingeniería de producto a tu equipo o querés conversar sobre arquitectura de software, escribime directamente.
+              </template>
+              <template v-else>
+                If you have a project in mind, are looking to add product engineering to your team, or simply want to connect, feel free to reach out directly.
+              </template>
+            </p>
+          </div>
+
+          <div class="lg:col-span-6 flex flex-col lg:items-end gap-3">
+            <a
+              href="mailto:mateogabus@gmail.com"
+              class="font-sans text-[clamp(22px,3vw,36px)] font-medium tracking-[-0.03em] text-ink hover:text-sig no-underline transition-colors leading-tight break-all"
+            >
+              mateogabus@gmail.com
+            </a>
+            <div class="flex flex-wrap items-center gap-3 font-sans text-[13px] text-dim">
+              <UiCopyPill
+                text="mateogabus@gmail.com"
+                :label="isEs ? 'Copiar correo' : 'Copy email'"
+                :copied-label="isEs ? 'Copiado' : 'Copied'"
+              />
+              <a
+                href="https://www.linkedin.com/in/mateo-sonzogni"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="text-dim hover:text-ink no-underline transition-colors"
+              >
+                LinkedIn
+              </a>
+              <span class="text-rule-strong">|</span>
+              <a
+                href="https://github.com/MateoGs013"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="text-dim hover:text-ink no-underline transition-colors"
+              >
+                GitHub
+              </a>
+              <span class="text-rule-strong">|</span>
+              <NuxtLink
+                to="/about"
+                class="text-dim hover:text-ink no-underline transition-colors"
+              >
+                {{ isEs ? 'CV Harvard ATS' : 'Harvard ATS Resume' }}
+              </NuxtLink>
+            </div>
+          </div>
         </div>
       </footer>
     </div>
@@ -1205,31 +1066,34 @@ function openExternal(url?: string | null) {
         </div>
       </ExplorerHeader>
 
-      <!-- Barra de Filtros Rápidos de Proyectos (Minimalista) -->
-      <div v-if="folder.head === 'projects'" class="flex items-center justify-between gap-3 p-2 px-3 my-4 rounded-xl bg-surface/60 border border-rule flex-wrap w-full min-w-0">
-        <div class="flex items-center gap-1.5 flex-wrap">
+      <!-- Barra de Filtros de Proyectos con Superíndices Tabulares (Awwwards Index Filters) -->
+      <div v-if="folder.head === 'projects'" class="flex items-center justify-between gap-3 py-3 my-3 border-b border-rule flex-wrap w-full min-w-0">
+        <div class="flex items-center gap-2 flex-wrap">
           <NuxtLink
             :to="routeFor(['projects'])"
-            class="font-mono text-[11px] px-2.5 py-1 rounded-md transition-all duration-150 no-underline shrink-0"
-            :class="!hasStatusFilter ? 'bg-ink text-paper font-medium shadow-xs' : 'text-dim hover:text-ink hover:bg-hover/60'"
+            class="font-sans text-[12px] px-3 py-1 rounded-full transition-all duration-150 no-underline shrink-0"
+            :class="!hasStatusFilter ? 'bg-ink text-paper font-semibold shadow-xs' : 'text-dim hover:text-ink bg-surface border border-rule'"
           >
-            {{ tr.collection.filterAll }} ({{ projectCounts.all }})
+            <span>{{ tr.collection.filterAll }}</span>
+            <sup class="font-mono text-[9.5px] opacity-75 ml-0.5">{{ projectCounts.all }}</sup>
           </NuxtLink>
           <NuxtLink
             :to="routeFor(['projects'], { status: 'LIVE' })"
-            class="font-mono text-[11px] px-2.5 py-1 rounded-md transition-all duration-150 no-underline inline-flex items-center gap-1.5 shrink-0"
-            :class="isStatusLive ? 'bg-green/15 text-green border border-green/30 font-medium' : 'text-dim hover:text-ink hover:bg-hover/60'"
+            class="font-sans text-[12px] px-3 py-1 rounded-full transition-all duration-150 no-underline inline-flex items-center gap-1.5 shrink-0"
+            :class="isStatusLive ? 'bg-ink text-paper font-semibold shadow-xs' : 'text-dim hover:text-ink bg-surface border border-rule'"
           >
             <span class="w-1.5 h-1.5 rounded-full bg-green" />
-            <span>{{ tr.collection.filterLive }} ({{ projectCounts.live }})</span>
+            <span>{{ tr.collection.filterLive }}</span>
+            <sup class="font-mono text-[9.5px] opacity-75">{{ projectCounts.live }}</sup>
           </NuxtLink>
           <NuxtLink
             :to="routeFor(['projects'], { status: 'WIP' })"
-            class="font-mono text-[11px] px-2.5 py-1 rounded-md transition-all duration-150 no-underline inline-flex items-center gap-1.5 shrink-0"
-            :class="isStatusWip ? 'bg-amber/15 text-amber border border-amber/30 font-medium' : 'text-dim hover:text-ink hover:bg-hover/60'"
+            class="font-sans text-[12px] px-3 py-1 rounded-full transition-all duration-150 no-underline inline-flex items-center gap-1.5 shrink-0"
+            :class="isStatusWip ? 'bg-ink text-paper font-semibold shadow-xs' : 'text-dim hover:text-ink bg-surface border border-rule'"
           >
             <span class="w-1.5 h-1.5 rounded-full bg-amber" />
-            <span>{{ tr.collection.filterWip }} ({{ projectCounts.wip }})</span>
+            <span>{{ tr.collection.filterWip }}</span>
+            <sup class="font-mono text-[9.5px] opacity-75">{{ projectCounts.wip }}</sup>
           </NuxtLink>
         </div>
         <div class="text-faint font-mono text-[11px] hidden md:block">
@@ -1317,104 +1181,80 @@ function openExternal(url?: string | null) {
       <!-- 2. Vista de Cuadrícula (Especializada por Colección con Revelación Progresiva) -->
       <ol
         v-else-if="viewMode === 'grid'"
-        class="folder-items-grid grid gap-4 sm:gap-5 my-4 w-full list-none p-0 m-0"
+        class="folder-items-grid grid gap-5 sm:gap-6 my-4 w-full list-none p-0 m-0"
         :class="{
-          'grid-cols-1 md:grid-cols-2 xl:grid-cols-3': folder.head === 'projects',
+          'grid-cols-1 md:grid-cols-2': folder.head === 'projects',
           'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4': folder.head === 'stack' || folder.head === 'experience',
           'grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6': folder.head !== 'projects' && folder.head !== 'stack' && folder.head !== 'experience',
         }"
       >
         <li v-for="(it, n) in folder.items" :key="it.key" class="w-full min-w-0">
-          <!-- Tarjeta de Proyecto (Minimalista con Spotlight y Revelación en Hover) -->
-          <UiSpotlightCard
+          <!-- Tarjeta de Proyecto Awwwards (Daniele Buser 2-Column Architectural Frame 1:1) -->
+          <article
             v-if="folder.head === 'projects'"
-            class="h-full rounded-xl border border-rule bg-surface/60 hover:border-rule-strong transition-all duration-200 overflow-hidden"
+            class="buser-project-frame h-full rounded-[2px] p-5 sm:p-7 flex flex-col justify-between gap-6 overflow-hidden"
           >
             <NuxtLink
               :to="it.to"
-              class="project-card group flex flex-col h-full no-underline text-inherit focus:outline-none"
+              class="project-card group flex flex-col h-full justify-between gap-6 no-underline text-inherit focus:outline-none"
               :data-row="it.key"
             >
-              <!-- Contenedor de Portada o Fallback Técnico Limpio -->
-              <div class="relative w-full aspect-[16/10] bg-paper overflow-hidden border-b border-rule flex flex-col justify-between">
-                <img v-if="it.cover" :src="it.cover" :alt="it.label" class="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.03]" loading="lazy">
-                <div v-else class="flex flex-col justify-between p-4 bg-surface-raised/60 relative overflow-hidden h-full w-full">
-                  <div class="flex items-center justify-between font-mono text-[10px] text-faint z-10 pr-20">
-                    <span>spec // {{ it.key }}</span>
+              <!-- Contenedor de Portada 16:10 Puro sin Píldoras Flotantes -->
+              <div class="relative w-full aspect-[16/10] rounded-[2px] bg-black/50 overflow-hidden flex flex-col justify-between">
+                <img v-if="it.cover || knownProjectCovers[it.key]" :src="it.cover || knownProjectCovers[it.key]" :alt="it.label" class="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.02]" loading="lazy">
+                <div v-else class="flex flex-col justify-between p-6 bg-surface-raised/60 relative overflow-hidden h-full w-full">
+                  <div class="flex items-center justify-between font-mono text-[10px] opacity-60 z-10">
+                    <span>{{ pad(n + 1) }}</span>
+                    <span>{{ it.year ?? '2026' }}</span>
                   </div>
-                  <div class="flex flex-col items-center justify-center my-auto py-1 z-10 text-center">
-                    <AppIcon :name="it.key === 'ynara-web' ? 'zap' : 'code'" :size="24" class="text-sig/80 mb-1.5" />
-                    <span class="font-mono text-[11px] font-medium text-ink tracking-wider truncate max-w-full">{{ it.key === 'ynara-web' ? 'WEBGL / SHADERS / GLSL' : 'OBSIDIAN / AI VAULT' }}</span>
-                    <span class="font-mono text-[10px] text-dim mt-0.5 truncate max-w-full">{{ it.key === 'ynara-web' ? '60 FPS · 4 Draw Calls' : '1,420 Notes · 850 Nodes' }}</span>
+                  <div class="flex flex-col items-start justify-end my-auto py-1 z-10">
+                    <span class="font-mono text-[10.5px] text-sig uppercase tracking-widest mb-1">{{ it.key === 'ynara-web' ? 'WEBGL · GLSL SHADERS' : 'AI ARCHITECTURE · OBSIDIAN' }}</span>
+                    <span class="font-sans text-[22px] font-semibold tracking-[-0.03em]">{{ it.label }}</span>
                   </div>
-                  <div class="flex items-center justify-between font-mono text-[9.5px] text-faint pt-1 z-10">
-                    <span>{{ it.key }}.ts</span>
-                    <span>READY</span>
+                  <div class="flex items-center justify-between font-mono text-[9.5px] opacity-50 pt-1 z-10 uppercase">
+                    <span>{{ it.status ?? 'PRODUCTION' }}</span>
+                    <span>CASE STUDY ↗</span>
                   </div>
-                </div>
-
-                <!-- Píldora Flotante de Estado -->
-                <div class="absolute top-2.5 right-2.5 flex items-center gap-1.5 z-20 font-mono text-[10px]">
-                  <span class="px-2 py-0.5 rounded-full backdrop-blur-md bg-black/70 border border-white/10 text-white font-medium inline-flex items-center gap-1.5">
-                    <span class="w-1.5 h-1.5 rounded-full" :class="it.status === 'LIVE' ? 'bg-green' : 'bg-amber'" />
-                    <span>{{ it.status ?? 'LIVE' }} · {{ it.year ?? it.meta }}</span>
-                  </span>
                 </div>
               </div>
 
-              <!-- Cuerpo de la Tarjeta -->
-              <div class="flex flex-col flex-1 p-4 sm:p-5 gap-2 min-w-0">
-                <div class="flex items-center justify-between gap-2 min-w-0">
-                  <h3 class="font-sans text-[16px] font-semibold tracking-[-0.02em] text-ink group-hover:text-sig transition-colors leading-snug truncate m-0">
+              <!-- Cuerpo Arquitectónico del Marco: Título a la Izquierda + Stack Vertical a la Derecha -->
+              <div class="flex items-end justify-between gap-4 pt-1 min-w-0">
+                <div class="flex flex-col gap-1.5 min-w-0 flex-1">
+                  <h3 class="font-sans text-[clamp(20px,2.3vw,28px)] font-semibold tracking-[-0.035em] group-hover:text-sig transition-colors leading-[1.08] m-0">
                     {{ it.label }}
                   </h3>
-                  <span class="font-mono text-[12px] text-dim group-hover:text-sig group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all duration-200 shrink-0" aria-hidden="true">↗</span>
-                </div>
 
-                <p v-if="it.org && it.org.toLowerCase() !== it.label.toLowerCase()" class="font-mono text-[11px] text-faint truncate m-0">
-                  {{ isEs ? (it.org || getProjectLocalization(it.key)?.orgDesc) : (getProjectLocalization(it.key)?.orgDesc || it.org) }}
-                </p>
-
-                <p v-if="it.summary" class="font-sans text-[13px] text-dim leading-relaxed line-clamp-2 m-0 break-words">
-                  {{ isEs ? (it.summary || getProjectLocalization(it.key)?.summary) : (getProjectLocalization(it.key)?.summary || it.summary) }}
-                </p>
-
-                <!-- Footer con Chips y Acciones Rápidas -->
-                <div class="flex items-center justify-between gap-2 pt-3 mt-auto border-t border-rule/70 w-full min-w-0">
-                  <div v-if="it.techs && it.techs.length" class="flex flex-wrap gap-1 min-w-0">
-                    <span v-for="t in it.techs.slice(0, 3)" :key="t.slug" class="px-2 py-0.5 rounded-md bg-paper/70 border border-rule font-mono text-[10px] text-dim">
-                      {{ t.name }}
-                    </span>
-                    <span v-if="it.techs.length > 3" class="px-1.5 py-0.5 rounded-md bg-paper/50 font-mono text-[10px] text-faint">
-                      +{{ it.techs.length - 3 }}
-                    </span>
-                  </div>
-
-                  <div class="flex items-center gap-1.5 shrink-0">
+                  <div v-if="it.url || it.repo" class="flex items-center gap-3 pt-1 font-mono text-[10.5px] opacity-65">
                     <button
                       v-if="it.url"
                       type="button"
-                      class="font-mono text-[10px] px-2 py-0.5 rounded-md border border-rule bg-paper/80 text-dim hover:border-rule-strong hover:text-ink inline-flex items-center gap-1 transition-colors cursor-pointer"
+                      class="bg-transparent border-0 p-0 text-inherit hover:text-sig inline-flex items-center gap-1 transition-colors cursor-pointer"
                       :title="isEs ? 'Visitar sitio en vivo' : 'Visit live site'"
                       @click.stop.prevent="openExternal(it.url)"
                     >
-                      <span>Live</span>
-                      <AppIcon name="external" :size="9" />
+                      <span>Live Site ↗</span>
                     </button>
                     <button
                       v-if="it.repo"
                       type="button"
-                      class="font-mono text-[10px] px-2 py-0.5 rounded-md border border-rule bg-paper/80 text-dim hover:border-rule-strong hover:text-ink inline-flex items-center gap-1 transition-colors cursor-pointer"
+                      class="bg-transparent border-0 p-0 text-inherit hover:text-sig inline-flex items-center gap-1 transition-colors cursor-pointer"
                       :title="isEs ? 'Ver código en GitHub' : 'View source on GitHub'"
                       @click.stop.prevent="openExternal(it.repo)"
                     >
-                      <AppIcon name="code" :size="10" />
+                      <span>GitHub ↗</span>
                     </button>
                   </div>
                 </div>
+
+                <ul v-if="it.techs && it.techs.length" class="flex flex-col items-end text-right list-none m-0 p-0 shrink-0 font-mono text-[10px] leading-[1.45] uppercase tracking-[0.06em] opacity-70">
+                  <li v-for="t in it.techs.slice(0, 4)" :key="t.slug">
+                    {{ t.name }}
+                  </li>
+                </ul>
               </div>
             </NuxtLink>
-          </UiSpotlightCard>
+          </article>
 
           <!-- Tarjeta de Experiencia -->
           <UiSpotlightCard

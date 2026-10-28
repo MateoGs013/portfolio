@@ -157,6 +157,31 @@ function triggerMailto() {
   }
 }
 
+const projectCoverMedia = computed(() => {
+  const m = projectMediaRow.value?.media
+  if (Array.isArray(m) && m.length > 0) {
+    const cover = m.find(item => item.role === 'COVER') || m[0]
+    return cover ?? null
+  }
+  const knownCovers: Record<string, string> = {
+    'la-rucula': '/media/projects/la-rucula.jpg',
+    'argpiscinas': '/media/projects/argpiscinas.jpg',
+    'arg-piscinas': '/media/projects/argpiscinas.jpg',
+    'ynara': '/media/projects/ynara-mtucqc2j.png',
+    'barberpole': '/media/projects/barberpole.png',
+  }
+  const src = knownCovers[projectSlug.value]
+  if (src) {
+    return {
+      id: `${projectSlug.value}-hero`,
+      src,
+      alt: props.detail.name,
+      role: 'COVER',
+    }
+  }
+  return null
+})
+
 // Metadatos y filas computadas para Experiencia
 const expRole = computed(() => {
   if (expLoc.value?.role) return expLoc.value.role
@@ -424,51 +449,114 @@ const jsonContent = computed(() => {
       <CvContainer v-if="isAbout && !showRawFields" :detail="detail" />
 
       <!-- 2. Si es PROYECTO y está en modo Dossier Editorial (por defecto) -->
-      <div v-else-if="isProject && !showRawFields" class="dossier-wrap project-dossier flex flex-col gap-5 sm:gap-6 w-full min-w-0">
-        <!-- Hero Bar del Proyecto (Linear Properties Bar) -->
-        <div class="project-hero-bar w-full p-4 sm:p-5 rounded-xl border border-rule bg-surface/60 flex flex-col md:flex-row md:items-center justify-between gap-3.5">
-          <div class="ph-meta flex flex-wrap items-center gap-1.5 sm:gap-2 text-xs font-mono min-w-0 flex-1">
-            <div class="flex items-center gap-1.5 shrink-0">
-              <span
-                class="ph-status inline-flex items-center gap-1.5 px-2.5 py-1 font-medium rounded-lg text-[11px]"
-                :class="projectStatus === 'LIVE' ? 'text-green border border-green/30 bg-green/10' : 'text-amber border border-amber/30 bg-amber/10'"
-              >
-                <span class="w-1.5 h-1.5 rounded-full" :class="projectStatus === 'LIVE' ? 'bg-green' : 'bg-amber'" />
-                <span>{{ (projectStatus === 'LIVE' ? tr.detail.statusLive : tr.detail.statusWip).replace(/^[●•·\s]+/, '') }}</span>
-              </span>
-              <span v-if="projectYear" class="ph-pill px-2.5 py-1 border border-rule bg-paper/80 text-dim text-[11px] rounded-lg">{{ projectYear }}</span>
+      <div v-else-if="isProject && !showRawFields" class="dossier-wrap project-dossier flex flex-col gap-6 sm:gap-8 w-full min-w-0">
+        <!-- Barra de Créditos Arquitectónica Suiza (Awwwards Case Study 4-Column Credits) -->
+        <div class="project-hero-bar w-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 border-y border-rule divide-y sm:divide-y-0 sm:divide-x divide-rule bg-surface/20">
+          <!-- Columna 1: Estado & Año -->
+          <div class="p-3.5 sm:p-4 flex flex-col justify-between gap-1 min-w-0">
+            <span class="font-mono text-[10px] text-dim uppercase tracking-[0.12em]">01 / {{ isEs ? 'ESTADO & AÑO' : 'STATUS & YEAR' }}</span>
+            <div class="flex items-center gap-2 font-sans text-[14px] font-medium text-ink mt-0.5">
+              <span class="w-2 h-2 rounded-full shrink-0" :class="projectStatus === 'LIVE' ? 'bg-green' : 'bg-amber'" />
+              <span>{{ (projectStatus === 'LIVE' ? tr.detail.statusLive : tr.detail.statusWip).replace(/^[●•·\s]+/, '') }}</span>
+              <span v-if="projectYear" class="text-dim">· {{ projectYear }}</span>
             </div>
-            <span v-if="projectOrg" class="ph-pill org px-2.5 py-1 border border-rule bg-paper/80 text-ink font-medium text-[11px] rounded-lg max-w-full break-words">{{ projectOrg }}</span>
-            <span v-if="projectRole" class="ph-pill role px-2.5 py-1 border border-rule bg-paper/80 text-dim text-[11px] rounded-lg max-w-full break-words">{{ projectRole }}</span>
           </div>
 
-          <div class="ph-actions flex flex-wrap items-center gap-2 sm:gap-2.5 w-full md:w-auto shrink-0">
+          <!-- Columna 2: Cliente & Ubicación -->
+          <div class="p-3.5 sm:p-4 flex flex-col justify-between gap-1 min-w-0">
+            <span class="font-mono text-[10px] text-dim uppercase tracking-[0.12em]">02 / {{ isEs ? 'CLIENTE & UBICACIÓN' : 'CLIENT & LOCATION' }}</span>
+            <span class="font-sans text-[14px] font-medium text-ink truncate mt-0.5">
+              {{ projectOrg || detail.name }}
+            </span>
+          </div>
+
+          <!-- Columna 3: Rol & Dirección -->
+          <div class="p-3.5 sm:p-4 flex flex-col justify-between gap-1 min-w-0">
+            <span class="font-mono text-[10px] text-dim uppercase tracking-[0.12em]">03 / {{ isEs ? 'ROL & RESPONSABILIDAD' : 'ROLE & DIRECTION' }}</span>
+            <span class="font-sans text-[14px] font-medium text-ink truncate mt-0.5">
+              {{ projectRole || (isEs ? 'Ingeniería Full Stack & UI' : 'Full Stack & UI Engineering') }}
+            </span>
+          </div>
+
+          <!-- Columna 4: Acciones Directas -->
+          <div class="p-3.5 sm:p-4 flex items-center justify-start lg:justify-end gap-2 flex-wrap">
             <UiSharePill :title="isEs ? 'Compartir' : 'Share'" compact />
             <a
               v-if="projectUrl"
               :href="projectUrl"
               target="_blank"
               rel="noopener noreferrer"
-              class="ph-btn primary bg-ink text-paper hover:opacity-90 active:scale-[0.98] rounded-md px-3.5 py-2 font-sans text-[12.5px] font-medium no-underline inline-flex items-center justify-center gap-2 transition-all"
+              class="ph-btn primary bg-ink text-paper hover:opacity-90 active:scale-[0.98] rounded-full px-4 py-1.5 font-sans text-[12px] font-semibold no-underline inline-flex items-center justify-center gap-1.5 transition-all"
             >
-              <AppIcon name="external" :size="12" />
               <span>{{ tr.detail.visitOfficial }}</span>
+              <AppIcon name="external" :size="11" />
             </a>
             <a
               v-if="projectRepo"
               :href="projectRepo"
               target="_blank"
               rel="noopener noreferrer"
-              class="ph-btn secondary bg-surface hover:bg-hover text-ink border border-rule hover:border-rule-strong active:scale-[0.98] rounded-md px-3.5 py-2 font-sans text-[12.5px] font-medium no-underline inline-flex items-center justify-center gap-2 transition-all"
+              class="ph-btn secondary bg-surface hover:bg-hover text-ink border border-rule hover:border-rule-strong active:scale-[0.98] rounded-full px-3.5 py-1.5 font-sans text-[12px] font-medium no-underline inline-flex items-center justify-center gap-1.5 transition-all"
             >
-              <AppIcon name="code" :size="12" />
+              <AppIcon name="code" :size="11" />
               <span>{{ tr.detail.sourceCode }}</span>
             </a>
           </div>
         </div>
 
-        <!-- Telemetría & Scorecard de Rendimiento -->
-        <div v-if="projectMetricsRow" class="telemetry-bar p-3.5 sm:p-4 bg-surface/60 border border-rule rounded-xl flex flex-col gap-2.5 w-full min-w-0">
+        <!-- Showcase Visual Hero Awwwards (16:9 Monumental Cover right under Credits) -->
+        <div v-if="projectCoverMedia" class="project-hero-media relative w-full aspect-[16/9] sm:aspect-[21/9] rounded-[2px] overflow-hidden bg-black/60 border border-rule group">
+          <img
+            :src="projectCoverMedia.src"
+            :alt="projectCoverMedia.alt || detail.name"
+            class="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.015]"
+          >
+          <div class="absolute bottom-3 left-3 sm:bottom-4 sm:left-4 flex items-center gap-2 font-mono text-[10.5px]">
+            <span class="px-3 py-1 rounded-full backdrop-blur-md bg-black/80 border border-white/15 text-white inline-flex items-center gap-1.5">
+              <span class="w-1.5 h-1.5 rounded-full" :class="projectStatus === 'LIVE' ? 'bg-green' : 'bg-amber'" />
+              <span>{{ detail.name }} · {{ projectYear || '2026' }} · {{ projectStatus === 'LIVE' ? 'LIVE PRODUCTION' : 'IN DEVELOPMENT' }}</span>
+            </span>
+          </div>
+        </div>
+
+        <!-- Síntesis Ejecutiva Lead (Editorial Text sin cajas oscuras de dashboard) -->
+        <div
+          v-if="projectSummaryRow?.value"
+          class="summary-editorial pt-2 sm:pt-4 max-w-[82ch]"
+        >
+          <span class="font-mono text-[10.5px] uppercase tracking-[0.14em] text-sig block mb-2">
+            01 / {{ tr.detail.executiveOverview }}
+          </span>
+          <p class="m-0 font-sans text-[17px] sm:text-[20px] font-normal text-ink leading-[1.5] tracking-[-0.015em] break-words">
+            {{ projectSummaryRow.value }}
+          </p>
+        </div>
+
+        <!-- Split Editorial: El Encargo (Brief) vs Resultado en Producción (Outcome) -->
+        <div v-if="projectBriefRow?.value || projectOutcomeRow?.value" class="split-editorial grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-10 pt-4 border-t border-rule/70 w-full min-w-0">
+          <!-- Columna Brief -->
+          <div v-if="projectBriefRow?.value" class="flex flex-col gap-2 min-w-0">
+            <span class="font-mono text-[10.5px] uppercase tracking-[0.14em] text-dim">
+              {{ tr.detail.briefSection }}
+            </span>
+            <div class="font-sans text-[14px] sm:text-[15px] text-dim leading-[1.62] whitespace-pre-line break-words">
+              {{ projectBriefRow.value }}
+            </div>
+          </div>
+
+          <!-- Columna Resultado en Producción -->
+          <div v-if="projectOutcomeRow?.value" class="flex flex-col gap-2 min-w-0">
+            <span class="font-mono text-[10.5px] uppercase tracking-[0.14em] text-green">
+              {{ tr.detail.outcomeSection }}
+            </span>
+            <div class="font-sans text-[14px] sm:text-[15px] text-dim leading-[1.62] whitespace-pre-line break-words">
+              {{ projectOutcomeRow.value }}
+            </div>
+          </div>
+        </div>
+
+        <!-- Telemetría & Scorecard de Rendimiento Suiza (Minimalista) -->
+        <div v-if="projectMetricsRow" class="telemetry-bar pt-4 border-t border-rule/70 flex flex-col gap-3 w-full min-w-0">
           <div class="flex items-center justify-between gap-2 border-b border-rule pb-2 w-full min-w-0">
             <div class="flex items-center gap-2 min-w-0">
               <span class="telemetry-dot w-2 h-2 rounded-full bg-green animate-pulse shrink-0" />
@@ -477,51 +565,6 @@ const jsonContent = computed(() => {
             <span class="font-mono text-[10.5px] text-faint hidden sm:inline shrink-0">POSTGRESQL 17 · LATENCIA SUB-100MS</span>
           </div>
           <ExplorerValue :cell="projectMetricsRow" name="metrics" />
-        </div>
-
-        <!-- Síntesis Ejecutiva Lead -->
-        <UiSpotlightCard
-          v-if="projectSummaryRow?.value"
-          class="summary-lead-card rounded-xl border border-rule bg-surface/60 p-4 sm:p-5 w-full min-w-0"
-        >
-          <div class="flex items-center gap-2 mb-2">
-            <span class="w-1.5 h-1.5 rounded-full bg-sig shrink-0" aria-hidden="true" />
-            <span class="font-mono text-[11px] font-medium text-sig uppercase tracking-wider">{{ tr.detail.executiveOverview }}</span>
-          </div>
-          <p class="m-0 font-sans text-[14.5px] sm:text-[15.5px] text-ink leading-relaxed break-words">
-            {{ projectSummaryRow.value }}
-          </p>
-        </UiSpotlightCard>
-
-        <!-- Split Editorial: El Encargo (Brief) vs Resultado en Producción (Outcome) -->
-        <div v-if="projectBriefRow?.value || projectOutcomeRow?.value" class="split-cards grid grid-cols-1 md:grid-cols-2 gap-3.5 sm:gap-4 w-full min-w-0">
-          <!-- Tarjeta Brief -->
-          <UiSpotlightCard
-            v-if="projectBriefRow?.value"
-            class="split-card brief-card rounded-xl border border-rule bg-surface/60 p-4 sm:p-5 flex flex-col gap-2.5 min-w-0"
-          >
-            <div class="sc-header flex items-center gap-2 pb-2 border-b border-rule font-mono text-[11.5px] font-medium text-sig">
-              <span class="w-1.5 h-1.5 rounded-full bg-sig shrink-0" aria-hidden="true" />
-              <span class="truncate">{{ tr.detail.briefSection }}</span>
-            </div>
-            <div class="sc-body font-sans text-[13.5px] sm:text-[14px] text-ink leading-relaxed whitespace-pre-line break-words">
-              {{ projectBriefRow.value }}
-            </div>
-          </UiSpotlightCard>
-
-          <!-- Tarjeta Resultado en Producción -->
-          <UiSpotlightCard
-            v-if="projectOutcomeRow?.value"
-            class="split-card outcome-card rounded-xl border border-rule bg-surface/60 p-4 sm:p-5 flex flex-col gap-2.5 min-w-0"
-          >
-            <div class="sc-header flex items-center gap-2 pb-2 border-b border-rule font-mono text-[11.5px] font-medium text-green">
-              <span class="w-1.5 h-1.5 rounded-full bg-green shrink-0" aria-hidden="true" />
-              <span class="truncate">{{ tr.detail.outcomeSection }}</span>
-            </div>
-            <div class="sc-body font-sans text-[13.5px] sm:text-[14px] text-ink leading-relaxed whitespace-pre-line break-words">
-              {{ projectOutcomeRow.value }}
-            </div>
-          </UiSpotlightCard>
         </div>
 
         <!-- Capturas Técnicas & Galería Multimedia -->

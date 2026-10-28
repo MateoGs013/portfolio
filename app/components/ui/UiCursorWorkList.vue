@@ -28,6 +28,7 @@ defineProps<{
 
 const { isHyperfocus } = useHyperfocus()
 const { playSound } = useBenchoSound()
+const { isEs } = usePortfolioLocale()
 
 const containerRef = ref<HTMLElement | null>(null)
 const activeIdx = ref<number | null>(null)
@@ -108,14 +109,22 @@ onBeforeUnmount(() => {
     @pointermove="onPointerMove"
     @mouseleave="onListLeave"
   >
+    <!-- Encabezado Arquitectónico de 4 Columnas (Dennis Snellenberg Table Index) -->
+    <div class="hidden sm:grid sm:grid-cols-12 gap-4 pb-2.5 px-3 sm:px-4 border-b border-rule font-mono text-[10px] text-dim uppercase tracking-[0.12em]">
+      <span class="col-span-5">{{ isEs ? 'CLIENTE / PROYECTO' : 'CLIENT / PROJECT' }}</span>
+      <span class="col-span-3">{{ isEs ? 'UBICACIÓN & ORG' : 'LOCATION & ORG' }}</span>
+      <span class="col-span-3">{{ isEs ? 'SERVICIOS & STACK' : 'SERVICES & STACK' }}</span>
+      <span class="col-span-1 text-right">{{ isEs ? 'AÑO' : 'YEAR' }}</span>
+    </div>
+
     <!-- Filas Editoriales estilo Awwwards / Dennis Snellenberg -->
-    <div class="divide-y divide-rule border-y border-rule">
+    <div class="divide-y divide-rule border-b border-rule">
       <NuxtLink
         v-for="(item, idx) in items"
         :key="item.slug"
         :to="item.to"
         :data-row="item.slug"
-        class="cwl-row group/row relative flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-6 py-4 sm:py-5 px-3 sm:px-5 no-underline text-inherit transition-all duration-300"
+        class="cwl-row group/row relative grid grid-cols-1 sm:grid-cols-12 sm:items-center gap-2 sm:gap-4 py-4 sm:py-5 px-3 sm:px-4 no-underline text-inherit transition-all duration-300"
         :class="activeIdx !== null && activeIdx !== idx ? 'opacity-40' : 'opacity-100'"
         @mouseenter="e => onRowEnter(idx, e)"
         @focus="activeIdx = idx; lastValidIdx = idx"
@@ -129,48 +138,47 @@ onBeforeUnmount(() => {
           aria-hidden="true"
         />
 
-        <!-- Izquierda: Índice + Título Cinético + Organización -->
-        <div class="flex items-baseline gap-3.5 sm:gap-5 min-w-0 transition-transform duration-300 ease-out group-hover/row:translate-x-2.5">
-          <span class="font-mono text-[11px] sm:text-[12px] text-sig font-semibold tabular-nums shrink-0">
+        <!-- Col 1-5: Índice + Título Monumental -->
+        <div class="sm:col-span-5 flex items-baseline gap-3.5 min-w-0 transition-transform duration-300 ease-out group-hover/row:translate-x-2">
+          <span class="font-mono text-[11px] text-dim tabular-nums shrink-0">
             {{ item.num }}
           </span>
           <div class="min-w-0">
-            <div class="flex items-center gap-2.5 flex-wrap">
-              <h3 class="m-0 font-sans text-[18px] sm:text-[22px] md:text-[25px] font-semibold tracking-[-0.03em] text-ink group-hover/row:text-sig transition-colors duration-200">
+            <div class="flex items-center gap-2 flex-wrap">
+              <h3 class="m-0 font-sans text-[19px] sm:text-[23px] font-semibold tracking-[-0.03em] text-ink group-hover/row:text-sig transition-colors duration-200 truncate">
                 {{ item.title }}
               </h3>
               <span
-                class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full border border-rule bg-paper/70 font-mono text-[9.5px] uppercase"
-                :class="item.status === 'LIVE' ? 'text-green' : 'text-amber'"
-              >
-                <span class="w-1.5 h-1.5 rounded-full" :class="item.status === 'LIVE' ? 'bg-green' : 'bg-amber'" />
-                {{ item.status }}
-              </span>
+                class="w-1.5 h-1.5 rounded-full shrink-0"
+                :class="item.status === 'LIVE' ? 'bg-green' : 'bg-amber'"
+                :title="item.status"
+              />
             </div>
-            <p v-if="item.summary" class="m-0 mt-0.5 font-sans text-[12.5px] sm:text-[13px] text-dim line-clamp-1 max-w-[62ch]">
+            <p v-if="item.summary" class="m-0 mt-0.5 font-sans text-[12.5px] text-dim line-clamp-1 sm:hidden">
               {{ item.summary }}
             </p>
           </div>
         </div>
 
-        <!-- Derecha: Stack Chips + Rol + Año + Flecha Magnética -->
-        <div class="flex items-center justify-between sm:justify-end gap-3 sm:gap-5 shrink-0 transition-transform duration-300 ease-out group-hover/row:-translate-x-1.5">
-          <div v-if="item.chips && item.chips.length" class="hidden xl:flex items-center gap-1.5">
-            <span
-              v-for="chip in item.chips.slice(0, 3)"
-              :key="chip"
-              class="px-2 py-0.5 rounded-md bg-surface border border-rule font-mono text-[10px] text-dim"
-            >
-              {{ chip }}
-            </span>
-          </div>
+        <!-- Col 6-8: Ubicación & Organización -->
+        <div class="sm:col-span-3 hidden sm:flex items-center min-w-0 font-sans text-[13px] text-dim truncate">
+          <span class="truncate">{{ item.orgDesc || item.role }}</span>
+        </div>
 
-          <div class="flex items-center gap-3 font-mono text-[11px] text-dim tabular-nums">
-            <span class="hidden md:inline text-faint max-w-[180px] truncate">{{ item.role }}</span>
-            <span class="text-ink font-medium">{{ item.year }}</span>
-            <span class="w-7 h-7 rounded-full border border-rule bg-surface inline-flex items-center justify-center text-dim group-hover/row:bg-sig group-hover/row:text-on-sig group-hover/row:border-sig group-hover/row:rotate-45 transition-all duration-200">
-              ↗
-            </span>
+        <!-- Col 9-11: Servicios & Stack (Texto limpio sin bordes de píldora) -->
+        <div class="sm:col-span-3 hidden sm:flex items-center min-w-0 font-mono text-[11px] text-dim truncate">
+          <span v-if="item.chips && item.chips.length" class="truncate uppercase tracking-wider">
+            {{ item.chips.slice(0, 3).join(' · ') }}
+          </span>
+          <span v-else class="truncate">{{ item.role }}</span>
+        </div>
+
+        <!-- Col 12: Año + Flecha -->
+        <div class="sm:col-span-1 flex items-center justify-between sm:justify-end gap-2 font-mono text-[12px] text-ink tabular-nums">
+          <span class="sm:hidden text-dim text-[11px] truncate">{{ item.orgDesc || item.role }}</span>
+          <div class="flex items-center gap-2">
+            <span>{{ item.year }}</span>
+            <span class="text-dim group-hover/row:text-sig group-hover/row:translate-x-0.5 group-hover/row:-translate-y-0.5 transition-all duration-200" aria-hidden="true">↗</span>
           </div>
         </div>
       </NuxtLink>

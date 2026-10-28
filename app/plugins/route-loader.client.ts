@@ -7,39 +7,11 @@ declare global {
   }
 }
 
-export default defineNuxtPlugin((nuxtApp) => {
-  const router = useRouter()
+export default defineNuxtPlugin(() => {
   const { startLoading, finishLoading } = useRouteLoader()
 
-  // 1. Estado de arranque inicial en frío / F5 / recarga directa
-  startLoading(router.currentRoute.value.path || '/')
-  nuxtApp.hook('app:mounted', () => {
-    finishLoading()
-  })
-
-  // 2. Navegación reactiva entre rutas del portafolio
-  router.beforeEach((to, from) => {
-    if (to.fullPath !== from.fullPath) {
-      startLoading(to.path)
-    }
-  })
-
-  router.afterEach(() => {
-    finishLoading()
-  })
-
-  router.onError(() => {
-    finishLoading()
-  })
-
-  nuxtApp.hook('page:start', () => {
-    startLoading(router.currentRoute.value.path)
-  })
-
-  nuxtApp.hook('page:finish', () => {
-    finishLoading()
-  })
-
+  // Estándar Awwwards 2026: Cero bloqueo visual (0ms) en carga inicial y navegación entre rutas.
+  // Exponemos la API programática en window.__ROUTE_LOADER__ para telemetría / tests E2E.
   if (typeof window !== 'undefined') {
     window.__ROUTE_LOADER__ = { startLoading, finishLoading }
   }
