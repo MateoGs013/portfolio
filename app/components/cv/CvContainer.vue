@@ -62,6 +62,7 @@ const cvDeliverables = computed<CvDeliverable[]>(() => {
   const pYnara = findDb(['ynara'])
   const pRucula = findDb(['rucula', 'la-rucula'])
   const pArg = findDb(['argpiscinas', 'arg-piscinas', 'arg piscinas'])
+  const pEros = findDb(['eros'])
 
   if (isEs.value) {
     return [
@@ -88,8 +89,8 @@ const cvDeliverables = computed<CvDeliverable[]>(() => {
         location: 'Cádiz, España',
         description: 'Sitio editorial menu-first optimizado para escaneo QR de clientes en mesa con arquitectura de caché offline.',
         bullets: [
-          'Puntuación Lighthouse de 99 en Performance y 100 en SEO y Accesibilidad con bundle de 42 KB.',
-          'Integración con CMS propio y fallback en caché para operación continua ante caídas de red.',
+          'Puntuación Lighthouse de 99 en Performance y 100 en SEO y Accesibilidad con bundle final de 42 KB.',
+          'Integración con CMS propio y fallback en caché offline para operación continua ante caídas de red.',
         ],
         tags: Array.isArray(pRucula?.techs) && pRucula.techs.length ? pRucula.techs.map(t => t.name) : ['Vue 3', 'Vite', 'Tailwind CSS', 'GSAP', 'Lenis'],
       },
@@ -108,6 +109,20 @@ const cvDeliverables = computed<CvDeliverable[]>(() => {
         tags: Array.isArray(pArg?.techs) && pArg.techs.length ? pArg.techs.map(t => t.name) : ['Vue 3', 'Node.js', 'Prisma', 'Tailwind CSS', 'TypeScript'],
       },
       {
+        slug: 'eros',
+        title: pEros?.title || 'Eros Career OS',
+        badge: 'Producción',
+        date: '2026',
+        role: 'Arquitecto de Software & Automatización',
+        location: 'Remoto',
+        description: 'Sistema multiagente autónomo para búsqueda de empleo tech y generación de propuestas.',
+        bullets: [
+          'Sistema multiagente con scoring semántico, análisis de vacantes y orquestación con Google Gemini.',
+          'Servicios backend en FastAPI, SQLite persistente y despacho reactivo con bot de Telegram.',
+        ],
+        tags: ['FastAPI', 'Python', 'SQLite', 'Gemini AI', 'n8n'],
+      },
+      {
         slug: 'freelance',
         title: 'Desarrollo Freelance',
         badge: 'Producción',
@@ -116,7 +131,7 @@ const cvDeliverables = computed<CvDeliverable[]>(() => {
         location: 'Remoto',
         description: 'Desarrollo de software y soluciones web llave en mano para clientes de diversos rubros con arquitectura integral y APIs REST.',
         bullets: [
-          'Desarrollo de punta a punta: arquitectura de sistemas, diseño UI en Figma y despliegue a producción en ~10 proyectos reales.',
+          'Desarrollo integral de punta a punta: arquitectura de sistemas, diseño UI en Figma y despliegue a producción en ~10 proyectos reales.',
           'Diseño y consumo de APIs REST modulares con micro-interacciones, tipado estricto y testing automatizado.',
         ],
         tags: ['TypeScript', 'Vue 3', 'Node.js', 'PostgreSQL', 'Docker'],
@@ -166,6 +181,20 @@ const cvDeliverables = computed<CvDeliverable[]>(() => {
         'Modeled relational schemas and end-to-end type safety using Prisma ORM, Node.js, and TypeScript.',
       ],
       tags: Array.isArray(pArg?.techs) && pArg.techs.length ? pArg.techs.map(t => t.name) : ['Vue 3', 'Node.js', 'Prisma', 'Tailwind CSS', 'TypeScript'],
+    },
+    {
+      slug: 'eros',
+      title: pEros?.title || 'Eros Career OS',
+      badge: 'Production',
+      date: '2026',
+      role: 'Software Architect & Automation',
+      location: 'Remote',
+      description: 'Autonomous multi-agent system for tech job hunting, semantic scoring, and proposal delivery.',
+      bullets: [
+        'Multi-agent pipeline with semantic vacancy matching and LLM orchestration using Google Gemini.',
+        'Backend services with FastAPI, persistent SQLite, and reactive dispatching through Telegram bot.',
+      ],
+      tags: ['FastAPI', 'Python', 'SQLite', 'Gemini AI', 'n8n'],
     },
     {
       slug: 'freelance',

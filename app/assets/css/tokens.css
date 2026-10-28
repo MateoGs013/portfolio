@@ -317,7 +317,7 @@ html[data-hyperfocus="true"] .hb-dot {
 @media print {
   @page {
     size: A4 portrait;
-    margin: 8mm 12mm 8mm 12mm;
+    margin: 10.5mm 12mm 10.5mm 12mm;
   }
 
   /* 1. Configuración del lienzo A4 y fondos contextuales según modo */

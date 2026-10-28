@@ -24,7 +24,11 @@ Toda la aplicación utiliza **Tailwind CSS v4** mediante `@tailwindcss/vite` (`@
   - Colores semánticos: `bg-paper`, `bg-surface`, `bg-surface-raised`, `bg-hover`, `text-ink`, `text-dim`, `text-faint`, `text-sig`, `border-rule`, `border-rule-strong`, `text-green`, `text-amber`.
   - Tipografías técnicas: `font-mono` (Martian Mono), `font-sans` / `font-display` (General Sans), `font-poster` (Bebas Neue).
 - Los componentes priorizan clases utilitarias de Tailwind manteniendo las clases de anclaje semántico (`cabecera`, `sidebar`, `cuerpo-ventana`, `exp`, `hoja`, etc.) para los estilos globales del modo Hiperfoco (`html[data-hyperfocus="true"]`) y las reglas de medios `@media print`.
-- El layout de 1 página A4 de `CvHarvardAts.vue` es estricto e inmutable.
+- El layout de 1 página A4 de `CvHarvardAts.vue` es estricto, inmutable y de **cota dual**:
+  1. **Anti-Overflow:** Bajo ninguna circunstancia generará una 2ª página (`pageCount === 1`, altura `<= 276mm`).
+  2. **Anti-Vacío:** Debe llenar entre el **90% y 95%** de la altura imprimible A4 (`248mm - 265mm`), evitando huecos en blanco desproporcionados al pie.
+  3. **Escala Tipográfica ATS:** Nombre a 19–21pt, títulos de sección a 11–11.5pt, cuerpo y viñetas a 9.2–9.5pt (line-height 1.3–1.35). Jamás reducir a tamaños ilegibles (< 9pt) para forzar encaje; en su lugar, calibrar el número de entregables (4–5 proyectos insignia) y la concisión de sus viñetas de impacto.
+  4. **Puppeteer / Playwright:** Usar siempre `preferCSSPageSize: true` y delegar los márgenes al `@page { margin: 10.5mm 12mm; }` de CSS para prevenir doble marginación.
 
 ## Anatomía y Componentes (`app/components/`)
 

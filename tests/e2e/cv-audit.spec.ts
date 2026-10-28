@@ -4,6 +4,7 @@ import fs from 'node:fs'
 
 test.describe('CV A4 Single Page Verification & PDF Unification', () => {
   test('CV en /about (Español) debe generar exactamente 1 página A4 sin overflow y unificar archivos public/cv', async ({ page }) => {
+    await page.setViewportSize({ width: 794, height: 1123 })
     await page.goto('/', { waitUntil: 'networkidle' })
     await page.evaluate(() => {
       localStorage.setItem('portfolio-locale', 'es')
@@ -22,6 +23,7 @@ test.describe('CV A4 Single Page Verification & PDF Unification', () => {
     const pdfBuffer = await page.pdf({
       format: 'A4',
       printBackground: true,
+      preferCSSPageSize: true,
       margin: { top: '0', bottom: '0', left: '0', right: '0' },
     })
 
@@ -36,8 +38,8 @@ test.describe('CV A4 Single Page Verification & PDF Unification', () => {
     fs.writeFileSync(path.join(outDir, 'test-cv-es.pdf'), pdfBuffer)
 
     await page.screenshot({
-      path: path.join(outDir, 'test-about-print-a4-es.png'),
-      fullPage: true,
+      path: path.join(outDir, 'about-print-a4.png'),
+      fullPage: false,
     })
 
     // Actualizar PDFs estáticos unificados para descarga en Español
@@ -50,6 +52,7 @@ test.describe('CV A4 Single Page Verification & PDF Unification', () => {
   })
 
   test('CV en /about (English) debe generar exactamente 1 página A4 sin overflow y unificar archivos public/cv', async ({ page }) => {
+    await page.setViewportSize({ width: 794, height: 1123 })
     await page.goto('/', { waitUntil: 'networkidle' })
     await page.evaluate(() => {
       localStorage.setItem('portfolio-locale', 'en')
@@ -68,6 +71,7 @@ test.describe('CV A4 Single Page Verification & PDF Unification', () => {
     const pdfBuffer = await page.pdf({
       format: 'A4',
       printBackground: true,
+      preferCSSPageSize: true,
       margin: { top: '0', bottom: '0', left: '0', right: '0' },
     })
 
@@ -83,7 +87,7 @@ test.describe('CV A4 Single Page Verification & PDF Unification', () => {
 
     await page.screenshot({
       path: path.join(outDir, 'test-about-print-a4-en.png'),
-      fullPage: true,
+      fullPage: false,
     })
 
     // Actualizar PDFs estáticos unificados para descarga en Inglés

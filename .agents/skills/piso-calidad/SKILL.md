@@ -82,3 +82,15 @@ Invocar esta skill antes de considerar terminada cualquier vista o componente en
 **Checklist:**
 - [ ] Todo campo nullable tiene fallback visual limpio (ocultar bloque o mostrar `—` estilizado en vista tabla)
 - [ ] Si PostgreSQL no está disponible, el backend sirve `fallbackData.ts` transparente y el header indica el estado sin romper la navegación
+
+---
+
+## 8. Impresión y Exportación A4 de Cota Dual (Harvard ATS)
+
+**Criterio:** La vista `/about` y los componentes de exportación PDF generan exactamente 1 hoja A4 completa, sin hojas fantasma ni áreas vacías inferiores desproporcionadas.
+
+**Checklist:**
+- [ ] En emulación `print`, el contenedor del documento mide entre `248mm` y `268mm` de altura neta (cobertura vertical `>= 90%`).
+- [ ] El buffer PDF generado con `preferCSSPageSize: true` reporta exactamente `1` objeto `/Type /Page` (0 overflow a página 2).
+- [ ] El tamaño de fuente del cuerpo y viñetas se mantiene en `9.2pt - 9.5pt` legible para escaneo ATS.
+- [ ] Los 4 archivos estáticos de descarga en `public/cv/` (`CV-ES-...`, `CV-EN-...`) están sincronizados y validados a 1 página.
