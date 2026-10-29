@@ -17,7 +17,7 @@ export function resolveRouteMetadata(path: string): RouteLoaderMeta {
 
   if (!root) {
     return {
-      title: 'BOOT // SYSTEM ARCHITECTURE',
+      title: 'BOOT · SYSTEM ARCHITECTURE',
       query: 'SELECT * FROM "SystemMeta" · PG-17 CORE',
       target: 'db / root',
       tag: 'SYS_INIT',
@@ -28,14 +28,14 @@ export function resolveRouteMetadata(path: string): RouteLoaderMeta {
     if (sub) {
       const formattedSlug = sub.replace(/-/g, ' ').toUpperCase()
       return {
-        title: `FETCH // DOSSIER: ${formattedSlug}`,
+        title: `FETCH · DOSSIER: ${formattedSlug}`,
         query: `SELECT p.*, t.name FROM "Project" p JOIN "_ProjectTech" ON p.id = t.id WHERE p.slug = '${sub}'`,
         target: `projects/${sub}`,
         tag: 'RELATIONAL',
       }
     }
     return {
-      title: 'INDEX // PRODUCTION APPLICATIONS',
+      title: 'INDEX · PRODUCTION APPLICATIONS',
       query: 'SELECT * FROM "Project" WHERE status = \'LIVE\' ORDER BY year DESC',
       target: '01 · projects',
       tag: 'QUERY',
@@ -45,14 +45,14 @@ export function resolveRouteMetadata(path: string): RouteLoaderMeta {
   if (root === 'experience') {
     if (sub) {
       return {
-        title: `TIMELINE // ROLE: ${sub.toUpperCase()}`,
+        title: `TIMELINE · ROLE: ${sub.toUpperCase()}`,
         query: `SELECT * FROM "Experience" WHERE slug = '${sub}'`,
         target: `experience/${sub}`,
         tag: 'CHRONO',
       }
     }
     return {
-      title: 'TIMELINE // PROFESSIONAL HISTORY',
+      title: 'TIMELINE · PROFESSIONAL HISTORY',
       query: 'SELECT * FROM "Experience" ORDER BY "startDate" DESC · 6 roles',
       target: '02 · experience',
       tag: 'CHRONO',
@@ -62,14 +62,14 @@ export function resolveRouteMetadata(path: string): RouteLoaderMeta {
   if (root === 'stack') {
     if (sub) {
       return {
-        title: `QUERY // TECH: ${sub.toUpperCase()}`,
+        title: `QUERY · TECH: ${sub.toUpperCase()}`,
         query: `SELECT * FROM "Technology" WHERE slug = '${sub}'`,
         target: `stack/${sub}`,
         tag: 'TAXONOMY',
       }
     }
     return {
-      title: 'CATALOG // TECH ARSENAL & RUNTIMES',
+      title: 'CATALOG · TECH ARSENAL & RUNTIMES',
       query: 'SELECT * FROM "Technology" GROUP BY category · 22 packages',
       target: '03 · stack',
       tag: 'TAXONOMY',
@@ -79,14 +79,14 @@ export function resolveRouteMetadata(path: string): RouteLoaderMeta {
   if (root === 'articles') {
     if (sub) {
       return {
-        title: `READ // ARTICLE: ${sub.toUpperCase()}`,
+        title: `READ · ARTICLE: ${sub.toUpperCase()}`,
         query: `SELECT * FROM "Article" WHERE slug = '${sub}'`,
         target: `articles/${sub}`,
         tag: 'MARKDOWN',
       }
     }
     return {
-      title: 'STREAM // ENGINEERING BLOG & DEV.TO',
+      title: 'STREAM · ENGINEERING BLOG & DEV.TO',
       query: 'FETCH dev.to markdown & PostgreSQL Article cache',
       target: '04 · articles',
       tag: 'CACHE',
@@ -95,7 +95,7 @@ export function resolveRouteMetadata(path: string): RouteLoaderMeta {
 
   if (root === 'about') {
     return {
-      title: 'PARSING // CURRICULUM VITAE ATS',
+      title: 'PARSING · CURRICULUM VITAE ATS',
       query: 'RESOLVING HARVARD ATS PROFILE & CORE PRINCIPLES',
       target: '05 · about',
       tag: 'DOSSIER',
@@ -104,7 +104,7 @@ export function resolveRouteMetadata(path: string): RouteLoaderMeta {
 
   if (root === 'contact') {
     return {
-      title: 'HANDSHAKE // CHANNELS & AVAILABILITY',
+      title: 'HANDSHAKE · CHANNELS & AVAILABILITY',
       query: 'POST /api/inbox/handshake · ENCRYPTED RELAY & PGP',
       target: '06 · contact',
       tag: 'SECURITY',
@@ -113,7 +113,7 @@ export function resolveRouteMetadata(path: string): RouteLoaderMeta {
 
   if (root === 'lab') {
     return {
-      title: 'CALIBRATE // BENCHO UI v2.0',
+      title: 'CALIBRATE · BENCHO UI v2.0',
       query: 'INITIALIZING 28 SPRING PHYSICS & WEB AUDIO API',
       target: '07 · lab',
       tag: 'PHYSICS',
@@ -121,7 +121,7 @@ export function resolveRouteMetadata(path: string): RouteLoaderMeta {
   }
 
   return {
-    title: `RESOLVING // ${clean.toUpperCase()}`,
+    title: `RESOLVING · ${clean.toUpperCase()}`,
     query: `SELECT * FROM relational_graph WHERE route = '${clean}'`,
     target: clean,
     tag: 'ROUTING',

@@ -987,7 +987,7 @@ const jsonContent = computed(() => {
         <!-- Barra de Acción Rápida de Contacto -->
         <div v-if="isContact" class="contact-hero-bar w-full p-4 sm:p-5 rounded-xl border border-rule bg-surface/60 flex flex-col md:flex-row md:items-center justify-between gap-3.5">
           <div class="ch-info flex flex-col gap-1 min-w-0 flex-1">
-            <span class="ch-badge text-green font-mono text-xs font-medium">● {{ isEs ? 'DISPONIBLE // CONTRATACIÓN DIRECTA' : 'AVAILABLE // DIRECT HIRE' }}</span>
+            <span class="ch-badge text-green font-mono text-xs font-medium">● {{ isEs ? 'DISPONIBLE · CONTRATACIÓN DIRECTA' : 'AVAILABLE · DIRECT HIRE' }}</span>
             <span class="ch-desc text-dim text-[13px] sm:text-[13.5px] font-sans break-words">{{ isEs ? 'Respondo habitualmente en menos de 24 horas laborables.' : 'I usually respond in less than 24 business hours.' }}</span>
           </div>
           <div class="ch-actions flex flex-wrap items-center gap-2.5 w-full md:w-auto shrink-0">

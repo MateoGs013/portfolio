@@ -520,7 +520,7 @@ function onSlideConfirmed() {
         <div class="flex flex-wrap items-center gap-2">
           <span class="inline-flex items-center gap-1.5 font-mono text-[11px] font-semibold uppercase tracking-wider text-sig">
             <span class="w-2 h-2 rounded-full bg-sig shrink-0" />
-            <span>{{ isEs ? '07 · LABORATORIO DE INTERFACES // SONZOGNI × BENCHO UI v2.0' : '07 · UI INTERACTION LAB // SONZOGNI × BENCHO UI v2.0' }}</span>
+            <span>{{ isEs ? '07 · LABORATORIO DE INTERFACES · SONZOGNI × BENCHO UI v2.0' : '07 · UI INTERACTION LAB · SONZOGNI × BENCHO UI v2.0' }}</span>
           </span>
           <span class="px-2 py-0.5 rounded-full bg-surface-raised border border-rule font-mono text-[10px] text-dim shrink-0">
             {{ catalog.length }} Primitives

@@ -591,7 +591,7 @@ const currentRoot = computed(() => path.value[0] ?? '')
           <div class="zen-topbar w-full flex items-center justify-between">
             <div class="flex items-center gap-2.5 font-mono text-[11.5px]">
               <span class="w-2 h-2 rounded-full bg-sig animate-pulse shrink-0" />
-              <span class="font-semibold text-ink tracking-wider uppercase">MATEO SONZOGNI // {{ isEs ? 'LECTURA ZEN' : 'ZEN READING' }}</span>
+              <span class="font-semibold text-ink tracking-wider uppercase">MATEO SONZOGNI · {{ isEs ? 'LECTURA ZEN' : 'ZEN READING' }}</span>
               <span class="text-dim hidden sm:inline">· {{ folder ? (isEs ? 'DOSSIER EJECUTIVO 2026' : 'EXECUTIVE DOSSIER 2026') : (detail?.name ?? 'DOSSIER') }}</span>
             </div>
             <div class="flex items-center gap-2">

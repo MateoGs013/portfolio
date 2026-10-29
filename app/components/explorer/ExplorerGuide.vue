@@ -17,7 +17,7 @@ const showShortcuts = ref(false)
 
 const steps = computed(() => [
   {
-    tag: isEs.value ? '01 // ARQUITECTURA' : '01 // ARCHITECTURE',
+    tag: isEs.value ? '01 · ARQUITECTURA' : '01 · ARCHITECTURE',
     title: isEs.value ? 'Explorador de Datos Relacional' : 'Relational Data Explorer',
     icon: 'db' as const,
     desc: isEs.value
@@ -26,7 +26,7 @@ const steps = computed(() => [
     badge: 'SYS',
   },
   {
-    tag: isEs.value ? '02 // NAVEGACIÓN' : '02 // NAVIGATION',
+    tag: isEs.value ? '02 · NAVEGACIÓN' : '02 · NAVIGATION',
     title: isEs.value ? 'Control por Teclado y Clics' : 'Keyboard & Click Control',
     icon: 'code' as const,
     desc: isEs.value
@@ -35,7 +35,7 @@ const steps = computed(() => [
     badge: 'KBD',
   },
   {
-    tag: isEs.value ? '03 // PRODUCTIVIDAD' : '03 // PRODUCTIVITY',
+    tag: isEs.value ? '03 · PRODUCTIVIDAD' : '03 · PRODUCTIVITY',
     title: isEs.value ? 'Modo Hiperfoco y CV Harvard' : 'Hyperfocus & Harvard CV',
     icon: 'zap' as const,
     desc: isEs.value

@@ -9,6 +9,8 @@ import UiCopyPill from '~/components/ui/UiCopyPill.vue'
 import UiCursorWorkList, { type CursorWorkItem } from '~/components/ui/UiCursorWorkList.vue'
 import UiSegmentedSwitch from '~/components/ui/UiSegmentedSwitch.vue'
 import UiSpotlightCard from '~/components/ui/UiSpotlightCard.vue'
+import UiTextBlurReveal from '~/components/ui/UiTextBlurReveal.vue'
+import { useBenchoSound } from '~/composables/useBenchoSound'
 import { pad, type Folder } from '~/lib/explorer'
 import type { Project } from '~/lib/api'
 import { routeFor } from '~/lib/path'
@@ -18,6 +20,7 @@ const props = defineProps<{ folder: Folder }>()
 const uid = useId()
 
 const route = useRoute()
+const { playSound } = useBenchoSound()
 const { isEs, tr, getProjectLocalization, getExperienceLocalization } = usePortfolioLocale()
 const { isHyperfocus } = useHyperfocus()
 const viewMode = ref<'grid' | 'table' | 'timeline'>(props.folder.head === 'experience' ? 'timeline' : 'grid')
@@ -160,7 +163,7 @@ const _homeAboutText = computed(() => (isEs.value ? (getHomeField('about_text') 
 const _homeProfileRole = computed(() => (isEs.value ? (getHomeField('profile_role') ?? tr.value.home.profileRole) : tr.value.home.profileRole))
 const homeProfileStatus = computed(() => {
   const raw = isEs.value ? (getHomeField('profile_status') ?? tr.value.home.profileStatus) : tr.value.home.profileStatus
-  return String(raw).replace(/^[●•·\s]+/, '')
+  return String(raw).replace(/^[●•·\s]+/, '').replace(/\s*\/\/\s*/g, ' · ')
 })
 
 // ─── Especialidades Técnicas & Capacidades (Basement 3-Col Matrix) ──────────
@@ -470,7 +473,7 @@ function openExternal(url?: string | null) {
         <div class="flex flex-wrap items-center justify-between gap-2.5 pb-3 border-b border-rule">
           <div class="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-paper/90 border border-rule font-mono text-[11px] text-dim shadow-xs">
             <span class="w-2 h-2 rounded-full bg-green shadow-[0_0_8px_var(--d-green)]" />
-            <span class="text-ink font-semibold">{{ isEs ? 'DISPONIBLE // CONTRATACIÓN DIRECTA 2026' : 'AVAILABLE // DIRECT HIRE 2026' }}</span>
+            <span class="text-ink font-semibold">{{ isEs ? 'DISPONIBLE · CONTRATACIÓN DIRECTA 2026' : 'AVAILABLE · DIRECT HIRE 2026' }}</span>
             <span class="text-faint">·</span>
             <span>Río Negro, AR · UTC-3</span>
           </div>
@@ -762,29 +765,50 @@ function openExternal(url?: string | null) {
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-8 items-end">
           <div class="lg:col-span-9 flex flex-col gap-2">
             <span class="font-mono text-[10.5px] uppercase tracking-[0.14em] text-dim flex items-center gap-2">
-              <span class="w-1.5 h-1.5 rounded-full bg-green shrink-0" />
+              <span class="w-1.5 h-1.5 rounded-full bg-green shrink-0 animate-pulse" />
               <span>{{ isEs ? 'CONSTRUIR CON PROPÓSITO · ' : 'PURPOSEFUL ENGINEERING · ' }}{{ homeProfileStatus }}</span>
             </span>
             <h1
               class="font-sans font-semibold tracking-[-0.044em] text-[clamp(38px,5.8vw,78px)] leading-[0.94] text-ink m-0 select-none"
               data-anchor
             >
-              <template v-if="isEs">
-                Ingeniería creativa &amp;<br>
-                sistemas relacionales<span class="inline-block w-2.5 h-2.5 sm:w-3.5 sm:h-3.5 bg-sig ml-1.5 align-baseline" aria-hidden="true" />
-              </template>
-              <template v-else>
-                Creative engineering &amp;<br>
-                relational systems<span class="inline-block w-2.5 h-2.5 sm:w-3.5 sm:h-3.5 bg-sig ml-1.5 align-baseline" aria-hidden="true" />
-              </template>
+              <span class="block">
+                <UiTextBlurReveal
+                  :text="isEs ? 'Ingeniería creativa &' : 'Creative engineering &'"
+                  split="words"
+                  look="blur"
+                  :stagger-ms="48"
+                  :duration-ms="700"
+                />
+              </span>
+              <span class="inline-flex items-baseline">
+                <UiTextBlurReveal
+                  :text="isEs ? 'sistemas relacionales' : 'relational systems'"
+                  split="words"
+                  look="blur"
+                  :stagger-ms="48"
+                  :duration-ms="700"
+                />
+                <span
+                  class="inline-block w-2.5 h-2.5 sm:w-3.5 sm:h-3.5 bg-sig ml-1.5 align-baseline transition-transform duration-200 hover:scale-125 active:rotate-12 cursor-pointer shadow-xs hover:shadow-sig/30"
+                  aria-hidden="true"
+                  title="Sonzogni Swiss Mark"
+                  @click="playSound('pop')"
+                />
+              </span>
             </h1>
           </div>
 
           <!-- Índice Monumental ’26 (Daniele Buser Signature Mark) -->
           <div class="lg:col-span-3 flex lg:justify-end items-end">
-            <div class="inline-flex items-start leading-none select-none" aria-hidden="true">
-              <span class="w-2.5 sm:w-3.5 h-8 sm:h-11 bg-sig inline-block mr-1.5 mt-1 sm:mt-2 shrink-0" />
-              <span class="font-sans font-semibold tracking-[-0.05em] text-[clamp(48px,6.8vw,92px)] text-ink leading-[0.88]">26</span>
+            <div
+              class="inline-flex items-baseline leading-none select-none group cursor-pointer transition-transform duration-200 hover:scale-105 active:scale-95"
+              aria-hidden="true"
+              title="Edición 2026"
+              @click="playSound('press')"
+            >
+              <span class="w-2 sm:w-3.5 h-6 sm:h-11 bg-sig inline-block mr-1.5 self-end mb-1 sm:mb-2 shrink-0 transition-transform duration-200 group-hover:scale-y-110" />
+              <span class="font-sans font-semibold tracking-[-0.05em] text-[38px] sm:text-[clamp(48px,6.8vw,92px)] text-ink leading-none">26</span>
             </div>
           </div>
         </div>
