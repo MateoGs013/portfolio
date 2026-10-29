@@ -446,7 +446,7 @@ defineProps<{
     page-break-inside: avoid !important;
   }
   .cv-harvard .h-title {
-    font-size: 10.8pt !important;
+    font-size: 11pt !important;
     font-weight: 700 !important;
     text-transform: uppercase !important;
     letter-spacing: 0.05em !important;
@@ -454,7 +454,7 @@ defineProps<{
     padding-bottom: 1.2pt !important;
     margin-top: 4.5pt !important;
     margin-bottom: 2.8pt !important;
-    line-height: 13pt !important;
+    line-height: 13.2pt !important;
   }
   .cv-harvard .h-summary {
     font-size: 9.3pt !important;
@@ -508,8 +508,8 @@ defineProps<{
 
   /* 7. Viñetas */
   .cv-harvard .h-bullets {
-    font-size: 9pt !important;
-    line-height: 12.1pt !important;
+    font-size: 9.2pt !important;
+    line-height: 12.3pt !important;
     margin-top: 0.8pt !important;
     margin-bottom: 0 !important;
     padding-left: 12pt !important;
@@ -517,19 +517,19 @@ defineProps<{
   }
   .cv-harvard .h-bullets li {
     margin-top: 0 !important;
-    margin-bottom: 1.6pt !important;
+    margin-bottom: 1.5pt !important;
     text-align: justify !important;
   }
 
   /* 8. Habilidades Técnicas */
   .cv-harvard .h-skills p {
-    font-size: 8.9pt !important;
-    line-height: 12pt !important;
+    font-size: 9.1pt !important;
+    line-height: 12.1pt !important;
     margin-top: 0 !important;
     margin-bottom: 1.8pt !important;
   }
   .cv-harvard .h-skills strong {
-    font-size: 9.2pt !important;
+    font-size: 9.3pt !important;
     font-weight: 700 !important;
   }
 }

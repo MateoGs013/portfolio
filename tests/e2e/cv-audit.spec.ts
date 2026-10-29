@@ -20,6 +20,10 @@ test.describe('CV A4 Single Page Verification & PDF Unification', () => {
     await page.emulateMedia({ media: 'print' })
     await page.waitForTimeout(200)
 
+    const box = await page.locator('.cv-harvard').boundingBox()
+    const heightMm = box ? (box.height * 25.4 / 96).toFixed(2) : '0'
+    console.log(`[CV ES BOX] w=${box?.width.toFixed(1)}px, h=${box?.height.toFixed(1)}px (${heightMm}mm)`)
+
     const pdfBuffer = await page.pdf({
       format: 'A4',
       printBackground: true,
@@ -67,6 +71,10 @@ test.describe('CV A4 Single Page Verification & PDF Unification', () => {
 
     await page.emulateMedia({ media: 'print' })
     await page.waitForTimeout(200)
+
+    const box = await page.locator('.cv-harvard').boundingBox()
+    const heightMm = box ? (box.height * 25.4 / 96).toFixed(2) : '0'
+    console.log(`[CV ES BOX] w=${box?.width.toFixed(1)}px, h=${box?.height.toFixed(1)}px (${heightMm}mm)`)
 
     const pdfBuffer = await page.pdf({
       format: 'A4',
