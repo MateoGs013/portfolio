@@ -130,8 +130,17 @@ if (import.meta.server && error.value) {
   }
 }
 
-const folder = computed(() => ex.value?.folder ?? null)
-const detail = computed(() => ex.value?.detail ?? null)
+// Retención de datos de vista activa para eliminar el parpadeo negro en navegación (Zero Black Screen)
+const displayEx = ref<Explorer | null>(ex.value ?? null)
+watch(ex, (newVal) => {
+  if (newVal) {
+    displayEx.value = newVal
+  }
+}, { immediate: true })
+
+const activeEx = computed(() => ex.value ?? displayEx.value)
+const folder = computed(() => activeEx.value?.folder ?? null)
+const detail = computed(() => activeEx.value?.detail ?? null)
 const hoja = computed(() => !!detail.value && !folder.value)
 
 const detailSummary = computed(() => {
@@ -263,7 +272,7 @@ const segments = computed(() => [
 
 // Movimiento de panel
 const dir = ref<'' | 'deeper' | 'up' | 'lateral'>('')
-watch(() => ex.value?.level, (now, before) => {
+watch(() => activeEx.value?.level, (now, before) => {
   if (now === undefined || before === undefined) return
   dir.value = now > before ? 'deeper' : now < before ? 'up' : 'lateral'
 })
@@ -272,12 +281,49 @@ const gotoOpen = ref(false)
 const mobileMenuOpen = ref(false)
 const pane = ref<HTMLElement | null>(null)
 
+// Telemetría de Scroll en Tiempo Real & Hitos de Lectura
+const scrollPercent = ref(0)
+const currentSectionLabel = ref(isEs.value ? 'INTRO' : 'INTRO')
+let lastMilestone = ''
+
+function onMainScroll(e: Event) {
+  const el = e.target as HTMLElement
+  if (!el) return
+  const maxScroll = el.scrollHeight - el.clientHeight
+  if (maxScroll <= 0) {
+    scrollPercent.value = 0
+    return
+  }
+  const pct = Math.min(100, Math.max(0, (el.scrollTop / maxScroll) * 100))
+  scrollPercent.value = Math.round(pct * 10) / 10
+
+  let active = isEs.value ? 'INTRO' : 'INTRO'
+  if (pct > 78) {
+    active = isEs.value ? 'CONTACTO' : 'CONTACT'
+  }
+  else if (pct > 52) {
+    active = isEs.value ? 'CAPACIDADES' : 'SPECS'
+  }
+  else if (pct > 22) {
+    active = isEs.value ? 'OBRAS' : 'WORKS'
+  }
+
+  if (active !== lastMilestone && lastMilestone !== '') {
+    playSound('notch')
+  }
+  lastMilestone = active
+  currentSectionLabel.value = active
+}
+
 watch(mobileMenuOpen, (isOpen) => {
   playSound(isOpen ? 'expand' : 'swoop', { gap: 40 })
 })
 
 watch(() => route.fullPath, () => {
   mobileMenuOpen.value = false
+  scrollPercent.value = 0
+  lastMilestone = ''
+  currentSectionLabel.value = isEs.value ? 'INTRO' : 'INTRO'
   if (import.meta.client) {
     const mainEl = document.getElementById('contenido')
     if (mainEl) {
@@ -307,7 +353,7 @@ function go(to: Parameters<typeof navigateTo>[0], from?: string) {
 }
 
 function onKey(e: KeyboardEvent) {
-  if (gotoOpen.value || !ex.value) return
+  if (gotoOpen.value || !activeEx.value) return
   const t = e.target as HTMLElement | null
   if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) return
   if (e.altKey || e.metaKey || e.ctrlKey) {
@@ -361,7 +407,7 @@ function onKey(e: KeyboardEvent) {
       const forward = e.key === 'ArrowDown' || e.key === 'ArrowRight'
       const vertical = e.key === 'ArrowDown' || e.key === 'ArrowUp'
       if (hoja.value) {
-        const vecino = forward ? ex.value.next : ex.value.prev
+        const vecino = forward ? activeEx.value.next : activeEx.value.prev
         if (vecino) { e.preventDefault(); go(vecino.to) }
         return
       }
@@ -393,9 +439,9 @@ function onKey(e: KeyboardEvent) {
       break
 
     case 'Backspace':
-      if (ex.value.up) {
+      if (activeEx.value.up) {
         e.preventDefault()
-        go(ex.value.up, path.value[path.value.length - 1])
+        go(activeEx.value.up, path.value[path.value.length - 1])
       }
       break
 
@@ -421,9 +467,9 @@ function onKey(e: KeyboardEvent) {
         e.preventDefault()
         toggleHyperfocus()
       }
-      else if (ex.value.up) {
+      else if (activeEx.value.up) {
         e.preventDefault()
-        go(ex.value.up, path.value[path.value.length - 1])
+        go(activeEx.value.up, path.value[path.value.length - 1])
       }
       break
   }
@@ -633,9 +679,22 @@ const currentRoot = computed(() => path.value[0] ?? '')
           <!-- Contenido Central Scrollable -->
           <main
             id="contenido"
-            class="exp flex-1 min-w-0 h-full overflow-y-auto focus:outline-none"
+            ref="mainContentRef"
+            class="exp flex-1 min-w-0 h-full overflow-y-auto focus:outline-none relative"
             tabindex="-1"
+            @scroll.passive="onMainScroll"
           >
+            <!-- Línea Láser Cenital de Scroll Progress (Linear 2026 2px Beam) -->
+            <div
+              class="pointer-events-none sticky top-0 left-0 right-0 h-[2px] z-30 overflow-hidden bg-rule/20"
+              aria-hidden="true"
+            >
+              <div
+                class="h-full bg-sig transition-[width] duration-75 ease-out shadow-[0_0_8px_var(--d-sig,#ff3e00)]"
+                :style="{ width: `${scrollPercent}%` }"
+              />
+            </div>
+
             <div v-if="error" class="pane w-full max-w-[1280px] mx-auto">
               <ExplorerDetail
                 :detail="{
@@ -651,11 +710,19 @@ const currentRoot = computed(() => path.value[0] ?? '')
                 }"
               />
             </div>
-            <div v-else-if="ex" ref="pane" :key="route.fullPath" class="pane w-full max-w-[1280px] mx-auto pb-14" :class="dir">
-              <ExplorerLab v-if="currentRoot === 'lab'" />
-              <ExplorerFolder v-else-if="folder" :folder="folder" />
-              <ExplorerDetail v-else-if="detail" :detail="detail" :prev="ex.prev" :next="ex.next" />
-            </div>
+            <Transition v-else name="pane-morph" mode="out-in">
+              <div
+                v-if="activeEx"
+                :key="route.fullPath"
+                ref="pane"
+                class="pane w-full max-w-[1280px] mx-auto pb-14"
+                :class="dir"
+              >
+                <ExplorerLab v-if="currentRoot === 'lab'" />
+                <ExplorerFolder v-else-if="folder" :folder="folder" />
+                <ExplorerDetail v-else-if="detail" :detail="detail" :prev="activeEx.prev" :next="activeEx.next" />
+              </div>
+            </Transition>
           </main>
 
           <!-- Desenfoque Progresivo Fijo en el Borde Inferior (Bencho Optical Lens) -->
@@ -667,11 +734,17 @@ const currentRoot = computed(() => path.value[0] ?? '')
       <footer class="estado flex-none h-7 border-t border-rule bg-paper/85 backdrop-blur-md px-4 sm:px-7 hidden lg:flex items-center justify-between text-[11px] font-mono text-dim select-none z-20">
         <div class="flex items-center gap-3">
           <span class="inline-flex items-center gap-2 text-ink font-medium">
-            <span class="w-1.5 h-1.5 rounded-full bg-green shrink-0" />
+            <span class="w-1.5 h-1.5 rounded-full bg-green shrink-0 animate-pulse" />
             <span>RÍO NEGRO, AR</span>
           </span>
           <span class="text-faint">—</span>
           <span class="tabular-nums text-dim">{{ utcTime || 'UTC-3' }}</span>
+          <span class="text-faint">·</span>
+          <!-- Telemetría Dinámica de Scroll & Hito de Navegación -->
+          <span class="inline-flex items-center gap-1.5 text-sig font-semibold">
+            <span>{{ currentSectionLabel }}</span>
+            <span class="tabular-nums text-dim font-normal">({{ Math.round(scrollPercent) }}%)</span>
+          </span>
         </div>
         <div class="keys flex items-center gap-4 text-[10.5px] text-dim" aria-hidden="true">
           <button
@@ -936,13 +1009,20 @@ kbd {
   }
 }
 .exp:focus { outline: none; }
-.pane { animation: var(--d-dur) var(--d-ease) both; }
-.pane.deeper { animation-name: acercar; }
-.pane.up { animation-name: alejar; }
-.pane.lateral { animation-name: correr; }
-@keyframes acercar { from { transform: translateZ(calc(var(--d-z) * -1)); opacity: 0; } }
-@keyframes alejar { from { transform: translateZ(var(--d-z)); opacity: 0; } }
-@keyframes correr { from { transform: translateX(12px); opacity: 0; } }
+
+/* Transición Cinética entre Secciones (Zero Black Flash) */
+.pane-morph-enter-active,
+.pane-morph-leave-active {
+  transition: opacity 0.22s cubic-bezier(0.16, 1, 0.3, 1), transform 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.pane-morph-enter-from {
+  opacity: 0;
+  transform: translateY(8px) scale(0.995);
+}
+.pane-morph-leave-to {
+  opacity: 0;
+  transform: translateY(-8px) scale(0.995);
+}
 
 /* Barra de estado inferior */
 .estado {

@@ -921,7 +921,8 @@ function openExternal(url?: string | null) {
           <article
             v-for="p in selectedWorkProjects"
             :key="p.slug"
-            class="buser-project-frame group relative rounded-[2px] p-5 sm:p-7 flex flex-col justify-between gap-6 overflow-hidden"
+            class="buser-project-frame group relative rounded-[2px] p-5 sm:p-7 flex flex-col justify-between gap-6 overflow-hidden transition-[box-shadow,border-color] duration-300 hover:shadow-2xl hover:border-rule-strong"
+            @mouseenter="playSound('notch')"
           >
             <UiBorderBeam
               :size="160"
@@ -937,19 +938,30 @@ function openExternal(url?: string | null) {
                 :data-row="p.slug"
                 class="flex flex-col h-full justify-between gap-6 no-underline text-inherit focus:outline-none"
               >
-                <!-- Contenedor Superior: Mockup 16:10 Puro sin Píldoras Flotantes (Daniele Buser 1:1) -->
-                <div class="relative aspect-[16/10] w-full overflow-hidden rounded-[2px] bg-black/50">
+                <!-- Contenedor Superior: Mockup 16:10 Puro con Parallax de Scroll Óptico y Badge Flotante -->
+                <div class="relative aspect-[16/10] w-full overflow-hidden rounded-[2px] bg-black/60 group/mockup">
                   <img
                     v-if="p.cover"
                     :src="p.cover"
                     :alt="p.title"
-                    class="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.02]"
+                    class="w-full h-full object-cover scale-[1.05] transition-transform duration-700 ease-out group-hover:scale-[1.10]"
                     loading="lazy"
                   >
                   <div v-else class="w-full h-full flex flex-col justify-between p-6 bg-surface-raised">
                     <span class="font-mono text-[10px] opacity-60 uppercase">{{ p.year }}</span>
                     <span class="font-sans text-[22px] font-semibold">{{ p.title }}</span>
                   </div>
+
+                  <!-- Badge Flotante Táctil Awwwards ("VER CASO ↗") -->
+                  <div class="absolute bottom-3 right-3 pointer-events-none z-10 transition-all duration-200 opacity-0 translate-y-1.5 group-hover:opacity-100 group-hover:translate-y-0">
+                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-paper/90 backdrop-blur-md border border-rule-strong text-ink font-mono text-[11px] font-semibold shadow-lg">
+                      <span>{{ isEs ? 'VER CASO' : 'VIEW CASE' }}</span>
+                      <span class="text-sig">↗</span>
+                    </span>
+                  </div>
+
+                  <!-- Gradiente Sutil de Profundidad al Hover -->
+                  <div class="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
                 </div>
 
                 <!-- Pie Arquitectónico Puro: Solo Título Grande a la Izquierda + 4 Líneas de Stack Vertical a la Derecha -->
@@ -1000,7 +1012,7 @@ function openExternal(url?: string | null) {
             <div class="flex flex-col gap-2">
               <div class="flex items-center justify-between font-mono text-[11px] text-dim">
                 <span>01 / FRONTEND &amp; CREATIVE</span>
-                <span class="text-ink font-semibold">99+ LH</span>
+                <UiDecryptedText text="99+ LH" class="text-ink font-semibold" />
               </div>
               <h3 class="m-0 font-sans text-[19px] font-semibold tracking-[-0.025em] text-ink">
                 {{ specialties.frontend.title }}
@@ -1021,7 +1033,7 @@ function openExternal(url?: string | null) {
             <div class="flex flex-col gap-2">
               <div class="flex items-center justify-between font-mono text-[11px] text-dim">
                 <span>02 / RELATIONAL &amp; APIS</span>
-                <span class="text-ink font-semibold">PG-17 ACID</span>
+                <UiDecryptedText text="PG-17 ACID" class="text-ink font-semibold" />
               </div>
               <h3 class="m-0 font-sans text-[19px] font-semibold tracking-[-0.025em] text-ink">
                 {{ specialties.architecture.title }}
@@ -1042,7 +1054,7 @@ function openExternal(url?: string | null) {
             <div class="flex flex-col gap-2">
               <div class="flex items-center justify-between font-mono text-[11px] text-dim">
                 <span>03 / APPLIED AI &amp; AGENTS</span>
-                <span class="text-ink font-semibold">PGVECTOR</span>
+                <UiDecryptedText text="PGVECTOR" class="text-ink font-semibold" />
               </div>
               <h3 class="m-0 font-sans text-[19px] font-semibold tracking-[-0.025em] text-ink">
                 {{ specialties.ai.title }}
