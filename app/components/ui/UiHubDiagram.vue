@@ -8,6 +8,7 @@ export interface HubNode {
   label: string
   metric?: string
   icon?: string
+  slug?: string
 }
 
 const props = withDefaults(defineProps<{
@@ -15,6 +16,7 @@ const props = withDefaults(defineProps<{
   nodes?: HubNode[]
   spread?: number
   height?: number
+  activeId?: string | null
 }>(), {
   coreLabel: 'PG-17 Core',
   nodes: () => [
@@ -25,12 +27,14 @@ const props = withDefaults(defineProps<{
     { id: 'eros', label: 'Eros AI', metric: 'Autonomous Agent', icon: 'target' },
     { id: 'playwright', label: 'Playwright', metric: 'Multi-Viewport', icon: 'check' },
   ],
-  spread: 118,
-  height: 240,
+  spread: 120,
+  height: 250,
+  activeId: null,
 })
 
 const emit = defineEmits<{
   select: [node: HubNode]
+  clear: []
 }>()
 
 const { playSound } = useBenchoSound()
@@ -57,14 +61,27 @@ const n = computed(() => Math.max(3, Math.min(8, props.nodes.length)))
 const cx = computed(() => width.value / 2)
 const cy = computed(() => props.height / 2)
 
+const effectiveSpread = computed(() => {
+  if (width.value < 440) {
+    return Math.min(props.spread, Math.max(76, (width.value - 120) / 2))
+  }
+  return props.spread
+})
+
 function nodePos(index: number) {
   const count = n.value
   // Distribución hexagonal simétrica: 2 nodos arriba, 2 en los flancos, 2 abajo
   const a = -Math.PI / 3 + (index / count) * 2 * Math.PI
   return {
-    x: Math.round(Math.cos(a) * (props.spread * 1.08) * 10) / 10,
-    y: Math.round(Math.sin(a) * (props.spread * 0.66) * 10) / 10,
+    x: Math.round(Math.cos(a) * (effectiveSpread.value * 1.08) * 10) / 10,
+    y: Math.round(Math.sin(a) * (effectiveSpread.value * 0.66) * 10) / 10,
   }
+}
+
+function isNodeActive(idx: number) {
+  if (hoveredIdx.value === idx) return true
+  if (props.activeId && props.nodes[idx]?.id === props.activeId) return true
+  return false
 }
 
 function firePacket(nodeIdx: number) {
@@ -108,6 +125,14 @@ function onNodeClick(index: number) {
     firePacket(index)
     emit('select', node)
   }
+}
+
+function onCoreClick() {
+  playSound('chime', { gap: 40 })
+  for (let i = 0; i < n.value; i++) {
+    window.setTimeout(() => firePacket(i), i * 50)
+  }
+  emit('clear')
 }
 
 onMounted(() => {
@@ -159,7 +184,7 @@ onBeforeUnmount(() => {
         :y1="Math.round(cy * 10) / 10"
         :x2="Math.round((cx + nodePos(idx).x) * 10) / 10"
         :y2="Math.round((cy + nodePos(idx).y) * 10) / 10"
-        :data-on="hoveredIdx === idx || undefined"
+        :data-on="isNodeActive(idx) || undefined"
       />
     </svg>
 
@@ -178,10 +203,12 @@ onBeforeUnmount(() => {
     />
 
     <!-- Central Core Hub -->
-    <div
-      class="hub-core"
+    <button
+      type="button"
+      class="hub-core group cursor-pointer border-0 p-0 text-inherit"
       :style="{ left: `${cx}px`, top: `${cy}px` }"
-      aria-hidden="true"
+      aria-label="Núcleo Postgres 17 ACID - Click para ver cluster completo"
+      @click="onCoreClick"
     >
       <transition name="hub-fade" mode="out-in">
         <div
@@ -201,7 +228,7 @@ onBeforeUnmount(() => {
           key="default-core"
           class="hub-icon flex flex-col items-center justify-center px-1"
         >
-          <svg class="text-sig mb-0.5" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <svg class="text-sig mb-0.5 group-hover:scale-110 transition-transform" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <ellipse cx="12" cy="5" rx="9" ry="3" />
             <path d="M3 5V19A9 3 0 0 0 21 19V5" />
             <path d="M3 12A9 3 0 0 0 21 12" />
@@ -211,7 +238,7 @@ onBeforeUnmount(() => {
           </span>
         </div>
       </transition>
-    </div>
+    </button>
 
     <!-- Node Satellite Pills -->
     <button
@@ -219,11 +246,10 @@ onBeforeUnmount(() => {
       :key="node.id"
       type="button"
       class="hub-node"
-      :data-on="hoveredIdx === idx || undefined"
+      :data-on="isNodeActive(idx) || undefined"
       :style="{
         left: `${cx + nodePos(idx).x}px`,
         top: `${cy + nodePos(idx).y}px`,
-        transform: hoveredIdx === idx ? 'translate(-50%, -50%) scale(1.06)' : 'translate(-50%, -50%)',
       }"
       @pointerenter="onNodeHover(idx)"
       @pointerleave="onNodeLeave(idx)"
@@ -231,7 +257,7 @@ onBeforeUnmount(() => {
       @blur="onNodeLeave(idx)"
       @click="onNodeClick(idx)"
     >
-      <span class="hub-bullet" :data-on="hoveredIdx === idx || undefined" aria-hidden="true" />
+      <span class="hub-bullet" :data-on="isNodeActive(idx) || undefined" aria-hidden="true" />
       <span class="hub-label font-mono text-[11px] font-medium tracking-tight">{{ node.label }}</span>
     </button>
   </div>
@@ -274,12 +300,20 @@ onBeforeUnmount(() => {
   border-radius: min(var(--hub-r), 14px);
   background: var(--hub-slab);
   z-index: 3;
-  width: 46px;
-  height: 46px;
-  margin: -23px 0 0 -23px;
+  width: 48px;
+  height: 48px;
+  margin: -24px 0 0 -24px;
   display: flex;
+  align-items: center;
+  justify-content: center;
   position: absolute;
   box-shadow: 0 0 0 1px var(--d-border, rgba(0, 0, 0, 0.08)), 0 4px 12px rgba(0, 0, 0, 0.05);
+  transition: transform 0.22s var(--hub-ease), box-shadow 0.22s ease;
+}
+
+.hub-core:hover {
+  transform: scale(1.06);
+  box-shadow: 0 0 0 1.5px var(--d-sig, #ff3e00), 0 6px 18px rgba(255, 62, 0, 0.16);
 }
 
 .hub-icon {
@@ -345,8 +379,6 @@ onBeforeUnmount(() => {
   display: inline-flex;
   position: absolute;
   transform: translate(-50%, -50%);
-  -webkit-transform: translate(-50%, -50%);
-  translate: -50% -50%;
   box-shadow: 0 0 0 1px var(--d-border, rgba(0, 0, 0, 0.08)), 0 1px 3px rgba(0, 0, 0, 0.04);
 }
 

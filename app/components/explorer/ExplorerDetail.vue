@@ -14,6 +14,8 @@ import UiHubDiagram from '~/components/ui/UiHubDiagram.vue'
 import UiSharePill from '~/components/ui/UiSharePill.vue'
 import UiSlideConfirm from '~/components/ui/UiSlideConfirm.vue'
 import UiSpotlightCard from '~/components/ui/UiSpotlightCard.vue'
+import UiDotGlobe from '~/components/ui/UiDotGlobe.vue'
+import UiThinkingTrace from '~/components/ui/UiThinkingTrace.vue'
 import { pad, safeHref, type Detail, type Vecino, type Project } from '~/lib/explorer'
 import { routeFor } from '~/lib/path'
 
@@ -555,6 +557,32 @@ const jsonContent = computed(() => {
           </div>
         </div>
 
+        <!-- Trazas de Inferencia del Agente Autónomo (Eros AI Engine & pgvector) -->
+        <div v-if="projectSlug === 'ynara' || projectSlug === 'ynara-web' || detail.type.toLowerCase().includes('ai')" class="ai-trace-wrap flex flex-col gap-2 pt-4 border-t border-rule/70 w-full min-w-0">
+          <div class="flex items-center justify-between gap-2 border-b border-rule pb-2">
+            <span class="font-mono text-[11px] font-medium text-sig uppercase tracking-wider flex items-center gap-2">
+              <span class="w-1.5 h-1.5 rounded-full bg-sig animate-ping" aria-hidden="true" />
+              <span>{{ isEs ? 'TRAZA DE INFERENCIA DEL AGENTE (PGVECTOR & ON-PREM)' : 'AGENT INFERENCE TRACE (PGVECTOR & ON-PREM)' }}</span>
+            </span>
+            <span class="font-mono text-[10px] text-faint">EROS CORE · 382 COMMITS</span>
+          </div>
+          <UiThinkingTrace
+            :steps="isEs ? [
+              'Analizando grafo de conocimientos: 382 commits indexados en pgvector.',
+              'Calculando similitud coseno sobre embeddings de arquitectura relacional.',
+              'Resolviendo dependencias cruzadas entre esquemas ACID de PostgreSQL 17.',
+              'Inferencia verificada: síntesis generada sin latencia externa (on-premise).'
+            ] : [
+              'Parsing knowledge graph: 382 commits indexed in pgvector.',
+              'Computing cosine similarity across relational architecture embeddings.',
+              'Resolving cross-dependencies between PostgreSQL 17 ACID schemas.',
+              'Inference verified: synthesized output without external latency (on-premise).'
+            ]"
+            :title-thinking="isEs ? 'Razonando memoria vectorial...' : 'Thinking vector memory...'"
+            :title-done="isEs ? 'Razonamiento completado en' : 'Thought for'"
+          />
+        </div>
+
         <!-- Telemetría & Scorecard de Rendimiento Suiza (Minimalista) -->
         <div v-if="projectMetricsRow" class="telemetry-bar pt-4 border-t border-rule/70 flex flex-col gap-3 w-full min-w-0">
           <div class="flex items-center justify-between gap-2 border-b border-rule pb-2 w-full min-w-0">
@@ -984,11 +1012,15 @@ const jsonContent = computed(() => {
           </div>
         </div>
 
-        <!-- Barra de Acción Rápida de Contacto -->
-        <div v-if="isContact" class="contact-hero-bar w-full p-4 sm:p-5 rounded-xl border border-rule bg-surface/60 flex flex-col md:flex-row md:items-center justify-between gap-3.5">
+        <!-- Barra de Acción Rápida de Contacto con 3D Dot Globe -->
+        <div v-if="isContact" class="contact-hero-bar w-full p-4 sm:p-6 rounded-xl border border-rule bg-surface/60 flex flex-col md:flex-row items-center justify-between gap-6">
+          <div class="flex flex-col items-center justify-center shrink-0">
+            <UiDotGlobe :size="160" class="cursor-grab active:cursor-grabbing" />
+            <span class="font-mono text-[9.5px] text-faint uppercase tracking-wider text-center mt-1">31.73° S · 60.52° W · PARANÁ, AR</span>
+          </div>
           <div class="ch-info flex flex-col gap-1 min-w-0 flex-1">
-            <span class="ch-badge text-green font-mono text-xs font-medium">● {{ isEs ? 'DISPONIBLE · CONTRATACIÓN DIRECTA' : 'AVAILABLE · DIRECT HIRE' }}</span>
-            <span class="ch-desc text-dim text-[13px] sm:text-[13.5px] font-sans break-words">{{ isEs ? 'Respondo habitualmente en menos de 24 horas laborables.' : 'I usually respond in less than 24 business hours.' }}</span>
+            <span class="ch-badge text-green font-mono text-xs font-medium">● {{ isEs ? 'DISPONIBLE · CONTRATACIÓN DIRECTA 2026' : 'AVAILABLE · DIRECT HIRE 2026' }}</span>
+            <span class="ch-desc text-dim text-[13px] sm:text-[13.5px] font-sans break-words">{{ isEs ? 'Ingeniería de software full stack, interfaces fluidas de alto impacto y arquitectura de agentes on-premise. Respondo habitualmente en menos de 24 horas laborables.' : 'Full stack software engineering, high-impact fluid interfaces and on-premise agent architecture. I usually respond in under 24 business hours.' }}</span>
           </div>
           <div class="ch-actions flex flex-wrap items-center gap-2.5 w-full md:w-auto shrink-0">
             <button

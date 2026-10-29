@@ -12,6 +12,10 @@ import UiSpotlightCard from '~/components/ui/UiSpotlightCard.vue'
 import UiTextBlurReveal from '~/components/ui/UiTextBlurReveal.vue'
 import UiClickSpark from '~/components/ui/UiClickSpark.vue'
 import UiRollingCounter from '~/components/ui/UiRollingCounter.vue'
+import UiHubDiagram, { type HubNode } from '~/components/ui/UiHubDiagram.vue'
+import UiDotGlobe from '~/components/ui/UiDotGlobe.vue'
+import UiBorderBeam from '~/components/ui/UiBorderBeam.vue'
+import UiThinkingTrace from '~/components/ui/UiThinkingTrace.vue'
 import { useBenchoSound } from '~/composables/useBenchoSound'
 import { pad, type Folder } from '~/lib/explorer'
 import type { Project } from '~/lib/api'
@@ -61,6 +65,45 @@ watch(isHyperfocus, (val) => {
     viewMode.value = 'grid'
   }
 }, { immediate: true })
+
+// Topología Arquitectónica Relacional para /stack
+const selectedStackNodeId = ref<string | null>(null)
+
+const stackHubNodes = computed<HubNode[]>(() => [
+  { id: 'vue', label: 'Vue 3 / Nuxt 4', metric: '18ms SSR · SFC', icon: 'zap', slug: 'vue' },
+  { id: 'postgresql', label: 'Postgres 17', metric: 'ACID · JSONB', icon: 'db', slug: 'postgresql' },
+  { id: 'prisma', label: 'Prisma 7', metric: 'TypeSafe ORM', icon: 'grid', slug: 'prisma' },
+  { id: 'fastapi', label: 'FastAPI / Python', metric: 'Eros AI · pgvector', icon: 'code', slug: 'fastapi' },
+  { id: 'gsap', label: 'GSAP 3', metric: '120fps Inertia', icon: 'target', slug: 'gsap' },
+  { id: 'tailwind', label: 'Tailwind CSS', metric: 'v4 Utility Engine', icon: 'check', slug: 'tailwind' },
+])
+
+function handleStackHubSelect(node: HubNode) {
+  if (selectedStackNodeId.value === node.id) {
+    selectedStackNodeId.value = null
+  }
+  else {
+    selectedStackNodeId.value = node.id
+  }
+}
+
+function handleStackHubClear() {
+  selectedStackNodeId.value = null
+}
+
+const displayedFolderItems = computed(() => {
+  if (props.folder.head !== 'stack' || !selectedStackNodeId.value) {
+    return props.folder.items
+  }
+  const needle = selectedStackNodeId.value.toLowerCase()
+  return props.folder.items.filter((it) => {
+    const k = (it.key || '').toLowerCase()
+    const l = (it.label || '').toLowerCase()
+    const c = (it.category || '').toLowerCase()
+    const n = (it.note || '').toLowerCase()
+    return k === needle || k.includes(needle) || l.includes(needle) || c.includes(needle) || n.includes(needle)
+  })
+})
 
 const activeStatusFilter = computed(() => {
   const s = route.query.status
@@ -900,8 +943,16 @@ function openExternal(url?: string | null) {
           <article
             v-for="p in selectedWorkProjects"
             :key="p.slug"
-            class="buser-project-frame group rounded-[2px] p-5 sm:p-7 flex flex-col justify-between gap-6"
+            class="buser-project-frame group relative rounded-[2px] p-5 sm:p-7 flex flex-col justify-between gap-6 overflow-hidden"
           >
+            <UiBorderBeam
+              :size="160"
+              :duration="7.5"
+              :border-width="1.5"
+              color-from="#ff3e00"
+              color-to="var(--d-ink, #ffffff)"
+              class="opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
+            />
             <UiClickSpark :spark-count="6" :spark-size="5" :spark-radius="20" class="h-full flex flex-col">
               <NuxtLink
                 :to="p.to"
@@ -1022,6 +1073,23 @@ function openExternal(url?: string | null) {
                 {{ specialties.ai.tagline }}
               </p>
             </div>
+            <!-- Mini Traza de Razonamiento Eros AI -->
+            <div class="pt-1">
+              <UiThinkingTrace
+                :steps="isEs ? [
+                  'pgvector: indexando memoria adaptativa on-premise.',
+                  'Latencia cero: inferencia local sin dependencias externas.',
+                  'Tesis Da Vinci: arquitectura validada en 382 commits.'
+                ] : [
+                  'pgvector: indexing on-premise adaptive memory.',
+                  'Zero latency: local inference without external dependencies.',
+                  'Da Vinci Thesis: architecture validated across 382 commits.'
+                ]"
+                :title-thinking="isEs ? 'Razonando memoria...' : 'Thinking memory...'"
+                :title-done="isEs ? 'Razonado en' : 'Thought for'"
+                :pace="850"
+              />
+            </div>
             <div class="flex flex-wrap gap-x-3 gap-y-1 pt-3 border-t border-rule/60 font-mono text-[10.5px] text-dim uppercase">
               <NuxtLink v-for="t in specialties.ai.techs" :key="t.slug" :to="'/stack/' + t.slug" class="hover:text-sig no-underline transition-colors">
                 {{ t.name }}
@@ -1043,10 +1111,14 @@ function openExternal(url?: string | null) {
           </h2>
         </div>
 
-        <!-- Fila Inferior Asimétrica: Invitación Editorial a la Izquierda + Email & Enlaces a la Derecha -->
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-end pt-6 border-t border-rule/60">
-          <div class="lg:col-span-6 flex flex-col gap-2">
-            <p class="m-0 font-sans text-[15px] sm:text-[16.5px] text-dim leading-[1.55] max-w-[46ch]">
+        <!-- Fila Inferior Asimétrica: Invitación Editorial + 3D Dot Globe + Email & Enlaces -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center pt-6 border-t border-rule/60">
+          <div class="lg:col-span-5 flex flex-col gap-3">
+            <div class="inline-flex items-center gap-2 font-mono text-[10.5px] text-green tracking-wider uppercase">
+              <span class="w-2 h-2 rounded-full bg-green animate-pulse" />
+              <span>{{ isEs ? 'DISPONIBLE PARA NUEVOS PROYECTOS · 2026' : 'AVAILABLE FOR NEW PROJECTS · 2026' }}</span>
+            </div>
+            <p class="m-0 font-sans text-[15px] sm:text-[16.5px] text-dim leading-[1.55] max-w-[44ch]">
               <template v-if="isEs">
                 Si tenés un proyecto en mente, buscás sumar ingeniería de producto a tu equipo o querés conversar sobre arquitectura de software, escribime directamente.
               </template>
@@ -1054,12 +1126,22 @@ function openExternal(url?: string | null) {
                 If you have a project in mind, are looking to add product engineering to your team, or simply want to connect, feel free to reach out directly.
               </template>
             </p>
+            <span class="font-mono text-[10.5px] text-faint">
+              UTC-3 · PARANÁ, AR (ART) · {{ isEs ? 'RESPUESTA HABITUAL &lt; 24H' : 'RESPONSE TIME &lt; 24H' }}
+            </span>
           </div>
 
-          <div class="lg:col-span-6 flex flex-col lg:items-end gap-3">
+          <div class="lg:col-span-3 flex flex-col items-center justify-center py-2 lg:py-0">
+            <UiDotGlobe :size="180" class="cursor-grab active:cursor-grabbing shrink-0" />
+            <span class="font-mono text-[9.5px] text-dim uppercase tracking-wider text-center mt-1">
+              31.73° S · 60.52° W · PARANÁ, AR
+            </span>
+          </div>
+
+          <div class="lg:col-span-4 flex flex-col lg:items-end gap-3">
             <a
               href="mailto:mateogabus@gmail.com"
-              class="font-sans text-[clamp(22px,3vw,36px)] font-medium tracking-[-0.03em] text-ink hover:text-sig no-underline transition-colors leading-tight break-all"
+              class="font-sans text-[clamp(22px,3vw,34px)] font-medium tracking-[-0.03em] text-ink hover:text-sig no-underline transition-colors leading-tight break-all"
             >
               mateogabus@gmail.com
             </a>
@@ -1165,6 +1247,53 @@ function openExternal(url?: string | null) {
         </div>
       </div>
 
+      <!-- Topología de Arquitectura Relacional Viva para /stack -->
+      <div
+        v-if="folder.head === 'stack'"
+        class="stack-architecture-hub my-4 p-4 sm:p-6 rounded-xl border border-rule bg-surface/50 flex flex-col gap-3 relative overflow-hidden"
+      >
+        <div class="flex items-center justify-between gap-3 flex-wrap border-b border-rule/60 pb-3">
+          <div class="flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-sig animate-pulse shrink-0" aria-hidden="true" />
+            <span class="font-mono text-[11px] sm:text-[11.5px] font-medium text-ink uppercase tracking-wider">
+              01 / {{ isEs ? 'ARQUITECTURA RELACIONAL VIVA' : 'LIVING RELATIONAL ARCHITECTURE' }}
+            </span>
+          </div>
+          <div class="flex items-center gap-2.5 font-mono text-[10.5px]">
+            <span class="text-dim hidden sm:inline">POSTGRESQL 17 ACID CORE · 6 SUBSISTEMAS</span>
+            <button
+              v-if="selectedStackNodeId"
+              type="button"
+              class="px-2 py-0.5 rounded border border-sig/40 bg-sig/10 text-sig hover:bg-sig/20 cursor-pointer transition-colors flex items-center gap-1 font-mono text-[10.5px]"
+              @click="handleStackHubClear"
+            >
+              <span>{{ isEs ? 'RESTAURAR VISTA' : 'RESET FILTER' }}</span>
+              <span aria-hidden="true">×</span>
+            </button>
+          </div>
+        </div>
+
+        <UiHubDiagram
+          :core-label="'PG-17 ACID'"
+          :nodes="stackHubNodes"
+          :active-id="selectedStackNodeId"
+          :height="250"
+          :spread="125"
+          @select="handleStackHubSelect"
+          @clear="handleStackHubClear"
+        />
+
+        <div class="flex items-center justify-between gap-2 pt-2 border-t border-rule/50 text-[11px] font-mono text-dim">
+          <span class="flex items-center gap-1.5">
+            <span class="text-sig">●</span>
+            <span>{{ isEs ? 'Click en cualquier nodo para aislar su tecnología o en el núcleo ACID para ver todo' : 'Click any node to isolate tech or core to view all' }}</span>
+          </span>
+          <span v-if="selectedStackNodeId" class="text-sig font-semibold">
+            {{ isEs ? 'FILTRANDO POR:' : 'FILTERED BY:' }} {{ selectedStackNodeId.toUpperCase() }}
+          </span>
+        </div>
+      </div>
+
       <!-- 1. Vista de Cronología Técnica (Timeline) para Experiencia -->
       <div v-if="viewMode === 'timeline' && folder.head === 'experience'" class="experience-timeline relative pl-6 sm:pl-8 my-5 w-full max-w-[920px] min-w-0">
         <!-- Línea Vertical Hairline del Timeline -->
@@ -1254,12 +1383,20 @@ function openExternal(url?: string | null) {
           'grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6': folder.head !== 'projects' && folder.head !== 'stack' && folder.head !== 'experience',
         }"
       >
-        <li v-for="(it, n) in folder.items" :key="it.key" class="w-full min-w-0">
+        <li v-for="(it, n) in displayedFolderItems" :key="it.key" class="w-full min-w-0">
           <!-- Tarjeta de Proyecto Awwwards (Daniele Buser 2-Column Architectural Frame 1:1) -->
           <article
             v-if="folder.head === 'projects'"
-            class="buser-project-frame h-full rounded-[2px] p-5 sm:p-7 flex flex-col justify-between gap-6 overflow-hidden"
+            class="buser-project-frame group relative h-full rounded-[2px] p-5 sm:p-7 flex flex-col justify-between gap-6 overflow-hidden"
           >
+            <UiBorderBeam
+              :size="160"
+              :duration="8"
+              :border-width="1.5"
+              color-from="#ff3e00"
+              color-to="var(--d-ink, #ffffff)"
+              class="opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
+            />
             <NuxtLink
               :to="it.to"
               class="project-card group flex flex-col h-full justify-between gap-6 no-underline text-inherit focus:outline-none"
@@ -1432,7 +1569,7 @@ function openExternal(url?: string | null) {
             </tr>
           </thead>
           <tbody>
-            <tr v-for="(it, n) in folder.items" :key="it.key" class="t-row">
+            <tr v-for="(it, n) in displayedFolderItems" :key="it.key" class="t-row">
               <td class="td-n">{{ pad(n + 1) }}</td>
               <td class="td-name">
                 <NuxtLink :to="it.to" class="t-link" :data-row="it.key">
@@ -1455,7 +1592,17 @@ function openExternal(url?: string | null) {
         </table>
       </div>
 
-      <p v-if="!folder.items.length" class="vacio">{{ isEs ? '00 registros encontrados para este filtro' : '00 records found for this filter' }}</p>
+      <div v-if="!displayedFolderItems.length" class="flex flex-col items-center justify-center py-12 gap-3">
+        <p class="vacio m-0">{{ isEs ? '00 registros encontrados para este filtro' : '00 records found for this filter' }}</p>
+        <button
+          v-if="selectedStackNodeId"
+          type="button"
+          class="font-mono text-xs px-3.5 py-1.5 rounded-full border border-sig bg-sig/10 text-sig hover:bg-sig hover:text-white cursor-pointer transition-colors"
+          @click="handleStackHubClear"
+        >
+          {{ isEs ? 'Restaurar todas las tecnologías' : 'Reset all technologies' }}
+        </button>
+      </div>
     </template>
   </section>
 </template>
