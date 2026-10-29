@@ -1,10 +1,15 @@
 <script setup lang="ts">
+/**
+ * ExplorerLab — Awwwards & Bencho UI Creative Engineering Laboratory
+ * Inspirado en la artesanía táctil de Bencho UI (bencho.dev) y los estándares de Awwwards Site of the Day.
+ * Presenta cada componente como un espécimen interactivo de escala completa con controles en vivo,
+ * telemetría física de resortes (stiffness, damping, mass) y síntesis acústica en Web Audio API.
+ */
 import { ref, computed } from 'vue'
 import { usePortfolioLocale } from '~/composables/usePortfolioLocale'
 import { useHyperfocus } from '~/composables/useHyperfocus'
 import { useBenchoSound } from '~/composables/useBenchoSound'
 import AppIcon from '~/components/ui/AppIcon.vue'
-import UiSpotlightCard from '~/components/ui/UiSpotlightCard.vue'
 import UiBorderBeam from '~/components/ui/UiBorderBeam.vue'
 import UiClickSpark from '~/components/ui/UiClickSpark.vue'
 import UiAudioVisualizer from '~/components/ui/UiAudioVisualizer.vue'
@@ -21,380 +26,38 @@ import UiCopyPill from '~/components/ui/UiCopyPill.vue'
 import UiSweepButton from '~/components/ui/UiSweepButton.vue'
 import UiTelemetryPill from '~/components/ui/UiTelemetryPill.vue'
 import UiDotGlobe from '~/components/ui/UiDotGlobe.vue'
-import UiHubDiagram from '~/components/ui/UiHubDiagram.vue'
 import UiCodeReveal from '~/components/ui/UiCodeReveal.vue'
 import UiHoloCard from '~/components/ui/UiHoloCard.vue'
-import UiBlueprintCard from '~/components/ui/UiBlueprintCard.vue'
 import UiDynamicIsland from '~/components/ui/UiDynamicIsland.vue'
 import UiThinkingTrace from '~/components/ui/UiThinkingTrace.vue'
 import UiTreeView, { type TreeNode } from '~/components/ui/UiTreeView.vue'
-import UiTextBlurReveal from '~/components/ui/UiTextBlurReveal.vue'
-import UiProgressiveBlur from '~/components/ui/UiProgressiveBlur.vue'
-import UiResizablePanels from '~/components/ui/UiResizablePanels.vue'
 import UiCursorWorkList, { type CursorWorkItem } from '~/components/ui/UiCursorWorkList.vue'
 
 const { isEs } = usePortfolioLocale()
 const { isHyperfocus } = useHyperfocus()
 const { soundEnabled, toggleSound, playSound } = useBenchoSound()
 
-// Categorías y filtros
-type Category = 'all' | 'springs' | 'tactile' | 'spatial' | 'surfaces' | 'audio'
-const activeCategory = ref<Category>('all')
+// Categorías de filtro
+type LabCategory = 'all' | 'hero' | 'springs' | 'tactile' | 'spatial' | 'audio'
+const activeCategory = ref<LabCategory>('all')
 const searchQuery = ref('')
 const copiedSnippet = ref<string | null>(null)
 
-const categories = computed(() => {
-  const allCount = catalog.length
-  const springsCount = catalog.filter(c => c.category === 'springs').length
-  const tactileCount = catalog.filter(c => c.category === 'tactile').length
-  const spatialCount = catalog.filter(c => c.category === 'spatial').length
-  const surfacesCount = catalog.filter(c => c.category === 'surfaces').length
-  const audioCount = catalog.filter(c => c.category === 'audio').length
-
-  return [
-    { value: 'all', label: isEs.value ? `Todos (${allCount})` : `All (${allCount})`, count: allCount },
-    { value: 'springs', label: isEs.value ? `Física & Resortes (${springsCount})` : `Springs & Physics (${springsCount})`, count: springsCount },
-    { value: 'tactile', label: isEs.value ? `Controles Táctiles (${tactileCount})` : `Tactile Controls (${tactileCount})`, count: tactileCount },
-    { value: 'spatial', label: isEs.value ? `Spatial 3D & Canvas (${spatialCount})` : `Spatial 3D & Canvas (${spatialCount})`, count: spatialCount },
-    { value: 'surfaces', label: isEs.value ? `Superficies & Lentes (${surfacesCount})` : `Surfaces & Optics (${surfacesCount})`, count: surfacesCount },
-    { value: 'audio', label: isEs.value ? `Audio & Trazas (${audioCount})` : `Audio & Traces (${audioCount})`, count: audioCount },
-  ]
-})
-
-// Componentes catalogados con metadatos
-interface CatalogItem {
-  id: string
-  name: string
-  tag: string
-  category: Category
-  descEs: string
-  descEn: string
-  file: string
-  tags: string[]
-}
-
-const catalog: CatalogItem[] = [
-  // 1. Física & Resortes
-  {
-    id: 'rolling-counter',
-    name: 'UiRollingCounter',
-    tag: 'SPRING ODOMETER · 2ND ORDER',
-    category: 'springs',
-    descEs: 'Contador odómetro numérico con física de resortes, motion blur dinámico y drag vertical interactivo con inercia.',
-    descEn: 'Numeric odometer counter with spring physics, dynamic motion blur, and interactive vertical drag with inertia.',
-    file: 'UiRollingCounter.vue',
-    tags: ['Springs', 'Odometer', 'Motion Blur', 'Audio tock'],
-  },
-  {
-    id: 'wake-slider',
-    name: 'UiWakeSlider',
-    tag: 'KINETIC BAR SLIDER · E-DECAY',
-    category: 'springs',
-    descEs: 'Slider de barras sin thumb táctil donde arrastrar inyecta energía cinética que decae exponencialmente.',
-    descEn: 'Thumbless tactile bar slider where dragging injects kinetic energy decaying exponentially via rAF.',
-    file: 'UiWakeSlider.vue',
-    tags: ['Kinetic', 'Audio notch', 'Springs', 'Energy Decay'],
-  },
-  {
-    id: 'magnetic-dots',
-    name: 'UiMagneticDots',
-    tag: 'VECTOR SPRING FIELD · CANVAS',
-    category: 'springs',
-    descEs: 'Campo de partículas amortiguadas en Canvas que reacciona al puntero con falloff suave y deformación elíptica.',
-    descEn: 'Damped particle field on HTML5 Canvas reacting to pointer with smoothstep falloff and elliptical stretch.',
-    file: 'UiMagneticDots.vue',
-    tags: ['Canvas 2D', 'Vector Field', 'Damped Springs'],
-  },
-  {
-    id: 'folder-preview',
-    name: 'UiFolderPreview',
-    tag: '3D FOLDER SPREAD · FROSTED FLAP',
-    category: 'springs',
-    descEs: 'Carpeta con abanico 3D de tarjetas con origen polar y solapa esmerilada con perspectiva cónica.',
-    descEn: 'Folder with 3D polar fan card spread and frosted flap with conic perspective transform.',
-    file: 'UiFolderPreview.vue',
-    tags: ['3D Fan', 'Backdrop Blur', 'Audio slide/poke'],
-  },
-  {
-    id: 'dock',
-    name: 'UiDock',
-    tag: 'RAISED COSINE MAGNIFICATION',
-    category: 'springs',
-    descEs: 'Dock estilo macOS con curva de magnificación de coseno elevado, tooltip viajero continuo y dot activo.',
-    descEn: 'macOS-inspired dock with raised cosine magnification curve, travelling tooltip pill, and active dot.',
-    file: 'UiDock.vue',
-    tags: ['Cosine Magnification', 'Travelling Tooltip', 'Audio drag'],
-  },
-  {
-    id: 'segmented-switch',
-    name: 'UiSegmentedSwitch',
-    tag: 'SLIDING ACTIVE PILL · SPRING CUBIC',
-    category: 'springs',
-    descEs: 'Control segmentado táctil con fondo activo deslizante que calcula transformaciones matriciales 3D.',
-    descEn: 'Tactile segmented control with sliding active pill calculating 3D translate matrix on click.',
-    file: 'UiSegmentedSwitch.vue',
-    tags: ['Morphing Pill', 'Accessible Tablist', 'Audio notch'],
-  },
-  {
-    id: 'resizable-panels',
-    name: 'UiResizablePanels',
-    tag: 'TACTILE SPLIT · SPRING SNAP',
-    category: 'springs',
-    descEs: 'Divisor de paneles interactivo con resistencia elástica, snap magnético bajo el umbral y control por teclado.',
-    descEn: 'Interactive split pane divider with spring resistance, magnetic snap shut under threshold, and keyboard navigation.',
-    file: 'UiResizablePanels.vue',
-    tags: ['Split Panels', 'Spring Snap', 'Keyboard Accessible'],
-  },
-
-  // 2. Controles Táctiles
-  {
-    id: 'slide-confirm',
-    name: 'UiSlideConfirm',
-    tag: 'SLIDE TO COMMIT · TRAVEL FILL',
-    category: 'tactile',
-    descEs: 'Control de deslizamiento para confirmación que rellena la pista al 85% y emite confirmación con chime armónico.',
-    descEn: 'Slide-to-confirm mechanism filling the track past 85% travel and emitting confirmation with chime tone.',
-    file: 'UiSlideConfirm.vue',
-    tags: ['Slide to Confirm', 'Non-teleporting grab', 'Audio chime'],
-  },
-  {
-    id: 'share-pill',
-    name: 'UiSharePill',
-    tag: 'PARTING AVATARS · MORPHING PILL',
-    category: 'tactile',
-    descEs: 'Píldora colaborativa con avatares que se separan físicamente al pasar el cursor y botón de copiado con check.',
-    descEn: 'Collaborative pill with parting node avatars, travelling tooltip, and checkmark morphing copy button.',
-    file: 'UiSharePill.vue',
-    tags: ['Parting Nodes', 'Checkmark morph', 'Audio pop'],
-  },
-  {
-    id: 'copy-pill',
-    name: 'UiCopyPill',
-    tag: 'STATEFUL HALF-SECOND COPY',
-    category: 'tactile',
-    descEs: 'Botón de copiado con morfismo en 3 fases: reposo, copiado (check animado) y retorno automático.',
-    descEn: 'Stateful copy button morphing smoothly across idle, copied with animated checkmark, and reset.',
-    file: 'UiCopyPill.vue',
-    tags: ['Clipboard API', 'SVG Dashoffset', 'Polite ARIA'],
-  },
-  {
-    id: 'click-spark',
-    name: 'UiClickSpark',
-    tag: 'GEOMETRIC PARTICLE BURST',
-    category: 'tactile',
-    descEs: 'Ráfaga radial de chispas geométricas en Canvas al hacer clic, con pool de partículas y audio procedural pop.',
-    descEn: 'Radial geometric spark burst on HTML5 canvas with particle pool and procedural Web Audio pop.',
-    file: 'UiClickSpark.vue',
-    tags: ['Canvas Particles', 'RequestAnimationFrame', 'Audio pop'],
-  },
-  {
-    id: 'sweep-button',
-    name: 'UiSweepButton',
-    tag: 'SPECULAR RIM SWEEP · ACTIVE SCALE',
-    category: 'tactile',
-    descEs: 'Botón con barrido de luz especular en borde y respuesta táctil en menos de 16 milisegundos.',
-    descEn: 'Button with specular rim sweep animation and tactile response under 16 milliseconds.',
-    file: 'UiSweepButton.vue',
-    tags: ['Specular Sweep', 'Linear 2026', 'Tactile Scale'],
-  },
-  {
-    id: 'telemetry-pill',
-    name: 'UiTelemetryPill',
-    tag: 'MONOSPACE SQL/REST READOUT',
-    category: 'tactile',
-    descEs: 'Píldora de barra de estado con lectura en vivo de telemetría y micro-popover con query PostgreSQL y botón de copia.',
-    descEn: 'Status bar telemetry pill with live query readout and upward popover inspecting raw PostgreSQL query.',
-    file: 'UiTelemetryPill.vue',
-    tags: ['SQL Inspector', 'Pop-over', 'Copy Query'],
-  },
-
-  // 3. Spatial 3D & Canvas
-  {
-    id: 'dot-globe',
-    name: 'UiDotGlobe',
-    tag: '3D DOTTED SPHERE · SLERP ARCS',
-    category: 'spatial',
-    descEs: 'Globo terráqueo tridimensional en Canvas con rotación con inercia y arcos geodésicos proyectados desde Argentina.',
-    descEn: '3D dotted sphere on Canvas with inertia rotation and lifted slerp arcs projected from Patagonia, Argentina.',
-    file: 'UiDotGlobe.vue',
-    tags: ['Canvas 3D', 'Slerp Lifted Arcs', 'Drag Inertia'],
-  },
-  {
-    id: 'hub-diagram',
-    name: 'UiHubDiagram',
-    tag: 'RADIAL PACKET TRANSMISSION',
-    category: 'spatial',
-    descEs: 'Diagrama radial SVG de arquitectura técnica con disparo de paquetes cinéticos en spokes sobre hover.',
-    descEn: 'Radial SVG technical diagram firing kinetic packet streaks across spokes upon hovering node pills.',
-    file: 'UiHubDiagram.vue',
-    tags: ['SVG Geometry', 'Packet Streaks', 'Spoke Highlight'],
-  },
-  {
-    id: 'code-reveal',
-    name: 'UiCodeReveal',
-    tag: 'X-RAY LENS MASK · DUAL LAYER',
-    category: 'spatial',
-    descEs: 'Tarjeta de doble capa con lente de rayos X que revela el código TypeScript/Prisma subyacente bajo el cursor.',
-    descEn: 'Dual-layer card with smooth x-ray circular mask revealing syntax-highlighted code beneath pointer.',
-    file: 'UiCodeReveal.vue',
-    tags: ['CSS Mask Radial', 'Dual Layer', 'Interactive Lens'],
-  },
-  {
-    id: 'holo-card',
-    name: 'UiHoloCard',
-    tag: 'DAMPED 3D TILT · FOIL GLARE',
-    category: 'spatial',
-    descEs: 'Tarjeta con inclinación 3D amortiguada (resorte exponencial), lámina iridiscente y resplandor especular.',
-    descEn: '3D damped spring tilt card with iridiscent holographic rainbow foil and specular cursor glare.',
-    file: 'UiHoloCard.vue',
-    tags: ['Perspective 900px', 'Holographic Foil', 'Specular Rim'],
-  },
-  {
-    id: 'blueprint-card',
-    name: 'UiBlueprintCard',
-    tag: 'ARCHITECTURAL CAD WIREFRAME',
-    category: 'spatial',
-    descEs: 'Contenedor que dibuja retícula de puntos CAD, guías de cota milimétrica y wipe-in antes de fijar el contenido.',
-    descEn: 'CAD architectural container drawing dot grid, guide rulers, and wireframe wipe before card reveal.',
-    file: 'UiBlueprintCard.vue',
-    tags: ['CAD Grid', 'Blueprint Reveal', 'Dimension Guide'],
-  },
-  {
-    id: 'cursor-work-list',
-    name: 'UiCursorWorkList',
-    tag: 'AWWWARDS KINETIC HOVER REEL',
-    category: 'spatial',
-    descEs: 'Lista interactiva de proyectos con carrete vertical de imágenes que sigue al cursor con física de resorte y tilt.',
-    descEn: 'Interactive work list with vertical image reel tracking cursor via damped spring physics and tilt.',
-    file: 'UiCursorWorkList.vue',
-    tags: ['Awwwards', 'Kinetic Reel', 'Spring Follow'],
-  },
-
-  // 4. Superficies & Lentes
-  {
-    id: 'spotlight-card',
-    name: 'UiSpotlightCard',
-    tag: 'CURSOR-TRACKING RADIAL SPOTLIGHT',
-    category: 'surfaces',
-    descEs: 'Contenedor con haz de luz radial sutil que sigue al cursor e ilumina el borde solo en la proximidad.',
-    descEn: 'Container with subtle radial spotlight following cursor and illuminating surface border nearby.',
-    file: 'UiSpotlightCard.vue',
-    tags: ['CSS Variables', 'Radial Gradient', 'Zero Layout Shift'],
-  },
-  {
-    id: 'border-beam',
-    name: 'UiBorderBeam',
-    tag: 'LASER BEAM · CONIC GRADIENT',
-    category: 'surfaces',
-    descEs: 'Haz de luz perimetral tipo láser que viaja por el contorno de la tarjeta mediante conic-gradient y máscara.',
-    descEn: 'Travelling laser perimeter beam circling card contour using conic-gradient, drop shadow, and mask.',
-    file: 'UiBorderBeam.vue',
-    tags: ['Conic Gradient', 'Laser Border', 'Hyperfocus Aware'],
-  },
-  {
-    id: 'dynamic-island',
-    name: 'UiDynamicIsland',
-    tag: 'SPRING DYNAMIC ISLAND · K=380',
-    category: 'surfaces',
-    descEs: 'Píldora flotante cuyo ancho, alto y border-radius se deforman en simultáneo con un resorte de segundo orden.',
-    descEn: 'Floating island whose width, height, and border-radius spring smoothly together on 2nd-order damped physics.',
-    file: 'UiDynamicIsland.vue',
-    tags: ['2nd-order Springs', 'Morphing Island', 'PostgreSQL Readout'],
-  },
-  {
-    id: 'progressive-blur',
-    name: 'UiProgressiveBlur',
-    tag: 'OPTICAL 6-LAYER GRADIENT BLUR',
-    category: 'surfaces',
-    descEs: 'Pila de 6 capas de desenfoque progresivo con máscaras difuminadas que disuelven los bordes de scroll ópticamente.',
-    descEn: '6-layer progressive optical blur stack with feathered mask bands dissolving scroll edges like a camera lens.',
-    file: 'UiProgressiveBlur.vue',
-    tags: ['Camera Lens Blur', 'Feathered Masks', 'Backdrop Filter'],
-  },
-
-  // 5. Audio & Trazas
-  {
-    id: 'audio-visualizer',
-    name: 'UiAudioVisualizer',
-    tag: 'WEB AUDIO API · SOUNDBENCH',
-    category: 'audio',
-    descEs: 'Consola interactiva de síntesis de audio procedural: ecualizador en vivo y pads para disparar las 7 notas.',
-    descEn: 'Interactive procedural audio synthesis console: live equalizer bars and trigger pads for 7 sound notes.',
-    file: 'UiAudioVisualizer.vue',
-    tags: ['Web Audio API', 'Equalizer', 'Procedural Synthesis'],
-  },
-  {
-    id: 'thinking-trace',
-    name: 'UiThinkingTrace',
-    tag: 'AI REASONING TIMELINE · SHINE',
-    category: 'audio',
-    descEs: 'Línea de tiempo de razonamiento estructurado con shimmer animado, pasos progresivos y botón de replay.',
-    descEn: 'Structured AI reasoning timeline with animated gradient shimmer, progressive steps, and replay action.',
-    file: 'UiThinkingTrace.vue',
-    tags: ['Thinking Steps', 'Shimmer Shine', 'Collapsible Drawer'],
-  },
-  {
-    id: 'decrypted-text',
-    name: 'UiDecryptedText',
-    tag: 'CIPHER DECODER · ZERO CLS',
-    category: 'audio',
-    descEs: 'Decodificador de texto monoespaciado en el lugar con glifos aleatorios temporales y cero layout shift.',
-    descEn: 'In-place monospace cipher text decoder with randomized temporary glyphs and zero layout shift.',
-    file: 'UiDecryptedText.vue',
-    tags: ['Cipher Decoder', 'Zero CLS', 'Audio tock'],
-  },
-  {
-    id: 'tree-view',
-    name: 'UiTreeView',
-    tag: 'INTERACTIVE ARCHITECTURE TREE',
-    category: 'audio',
-    descEs: 'Árbol jerárquico interactivo con guías verticales punteadas, animación de expansión y navegación por teclado.',
-    descEn: 'Interactive hierarchical tree with dashed vertical guides, smooth expansion stagger, and keyboard navigation.',
-    file: 'UiTreeView.vue',
-    tags: ['Tree View', 'Dashed Guides', 'Audio press'],
-  },
-  {
-    id: 'text-blur-reveal',
-    name: 'UiTextBlurReveal',
-    tag: 'KINETIC BLUR-TO-FOCUS TYPOGRAPHY',
-    category: 'audio',
-    descEs: 'Revelación tipográfica cinética palabra por palabra con desenfoque óptico escalonado y respeto a reduced-motion.',
-    descEn: 'Kinetic word-by-word typographic reveal with staggered optical blur and reduced-motion safety.',
-    file: 'UiTextBlurReveal.vue',
-    tags: ['Text Blur', 'Staggered Delay', 'Reduced Motion Safe'],
-  },
-]
-
-// Filtrado reactivo por categoría y búsqueda
-const filteredCatalog = computed(() => {
-  return catalog.filter(item => {
-    const matchesCategory = activeCategory.value === 'all' || item.category === activeCategory.value
-    if (!matchesCategory) return false
-
-    if (!searchQuery.value.trim()) return true
-    const q = searchQuery.value.toLowerCase().trim()
-    return (
-      item.name.toLowerCase().includes(q) ||
-      item.tag.toLowerCase().includes(q) ||
-      item.descEs.toLowerCase().includes(q) ||
-      item.descEn.toLowerCase().includes(q) ||
-      item.tags.some(t => t.toLowerCase().includes(q))
-    )
-  })
-})
-
-// Variables interactivas para los playgrounds
-const demoCounter = ref(418)
+// Parámetros de la Hero Sandbox: Dynamic Island Workbench
+const islandMode = ref('status')
+const demoCounter = ref(382)
 const demoWake = ref(68)
-const demoBeamSpeed = ref(8)
-const demoDecryptedReplay = ref(0)
+const demoBeamSpeed = ref(7.5)
 const demoConfirmStatus = ref('')
-const demoDockKey = ref('projects')
-const demoSegment = ref('frontend')
-const demoSegmentOptions = computed(() => [
-  { value: 'frontend', label: 'Frontend' },
-  { value: 'backend', label: 'Backend' },
-  { value: 'ai', label: 'Eros AI' },
+const activeDockKey = ref('projects')
+
+const categories = computed(() => [
+  { value: 'all', label: isEs.value ? 'Todos (28)' : 'All (28)' },
+  { value: 'hero', label: isEs.value ? 'Workbench Destacado' : 'Featured Workbench' },
+  { value: 'springs', label: isEs.value ? 'Física & Resortes (08)' : 'Physics & Springs (08)' },
+  { value: 'spatial', label: isEs.value ? 'Spatial 3D & Óptica (06)' : 'Spatial 3D & Optics (06)' },
+  { value: 'tactile', label: isEs.value ? 'Controles Táctiles (08)' : 'Tactile Controls (08)' },
+  { value: 'audio', label: isEs.value ? 'Audio & Trazas (06)' : 'Audio & Traces (06)' },
 ])
 
 const demoFolderItems = [
@@ -408,45 +71,57 @@ const demoWorkListItems = computed<CursorWorkItem[]>(() => [
     slug: 'la-rucula',
     num: '01',
     title: 'La Rúcula',
-    role: 'Design Eng',
+    role: 'Creative Developer',
     year: '2026',
     status: 'LIVE',
     cover: '/media/projects/la-rucula.png',
     to: '/projects/la-rucula',
-    chips: ['Nuxt 4', 'GSAP'],
+    chips: ['Nuxt 4', 'GSAP', 'Tailwind'],
   },
   {
     slug: 'arg-piscinas',
     num: '02',
     title: 'ARG Piscinas',
-    role: 'Fullstack CMS',
+    role: 'Fullstack Engineer',
     year: '2026',
     status: 'LIVE',
     cover: '/media/projects/arg-piscinas.png',
     to: '/projects/arg-piscinas',
-    chips: ['Express 5', 'PostgreSQL 17'],
+    chips: ['Express 5', 'PostgreSQL 17', 'Prisma'],
+  },
+  {
+    slug: 'ynara-ia',
+    num: '03',
+    title: 'Ynara AI',
+    role: 'Product Architect',
+    year: '2026',
+    status: 'WIP',
+    cover: '/media/projects/la-rucula.png',
+    to: '/projects/ynara',
+    chips: ['Python', 'FastAPI', 'pgvector'],
   },
 ])
 
 const demoThinkingSteps = computed(() => isEs.value ? [
-  'Inicializando osciladores Web Audio API (frecuencia portadora 880 Hz).',
-  'Resolviendo resortes amortiguados de segundo orden en requestAnimationFrame.',
-  'Proyectando arcos geodésicos con interpolación slerp tridimensional.',
-  'Verificando consistencia visual en 4 temas y modo hiperfoco.',
+  'Oscilador Web Audio API inicializado a 880 Hz.',
+  'Resolviendo resortes amortiguados de segundo orden en rAF.',
+  'Proyectando arcos geodésicos con interpolación slerp.',
+  'Verificando iluminación especular y modo Hiperfoco.',
 ] : [
-  'Initializing Web Audio API oscillators (carrier frequency 880 Hz).',
-  'Solving second-order damped springs in requestAnimationFrame.',
-  'Projecting 3D slerp lifted geodesic arcs across coordinates.',
-  'Verifying visual consistency across 4 themes and Zen hyperfocus.',
+  'Web Audio API oscillator initialized at 880 Hz.',
+  'Solving second-order damped springs in rAF.',
+  'Projecting 3D slerp lifted geodesic arcs.',
+  'Verifying top-lit specular lighting and Zen Hyperfocus.',
 ])
 
 const demoTreeRoot: TreeNode = {
   name: 'app/components/ui',
-  meta: '31 primitives',
+  meta: '28 primitives',
   kids: [
     {
       name: 'springs',
       kids: [
+        { name: 'UiDynamicIsland.vue', meta: 'k=380 c=28' },
         { name: 'UiRollingCounter.vue', meta: 'odometer' },
         { name: 'UiWakeSlider.vue', meta: 'kinetic' },
         { name: 'UiMagneticDots.vue', meta: 'canvas' },
@@ -455,16 +130,17 @@ const demoTreeRoot: TreeNode = {
     {
       name: 'spatial-3d',
       kids: [
+        { name: 'UiHoloCard.vue', meta: 'foil 3D' },
         { name: 'UiDotGlobe.vue', meta: '3D slerp' },
-        { name: 'UiHubDiagram.vue', meta: 'packets' },
         { name: 'UiCodeReveal.vue', meta: 'x-ray' },
       ],
     },
     {
-      name: 'surfaces',
+      name: 'tactile',
       kids: [
-        { name: 'UiBorderBeam.vue', meta: 'laser' },
-        { name: 'UiSpotlightCard.vue', meta: 'radial' },
+        { name: 'UiSlideConfirm.vue', meta: 'commit 85%' },
+        { name: 'UiCopyPill.vue', meta: 'check morph' },
+        { name: 'UiSweepButton.vue', meta: 'specular' },
       ],
     },
   ],
@@ -474,7 +150,7 @@ const demoDockItems = [
   { key: 'home', label: 'db / root', icon: 'db' },
   { key: 'projects', label: 'projects (06)', icon: 'folder' },
   { key: 'stack', label: 'stack (22)', icon: 'code' },
-  { key: 'lab', label: 'ui lab (31)', icon: 'cpu' },
+  { key: 'lab', label: 'ui lab (28)', icon: 'cpu' },
 ]
 
 function copyImport(componentName: string) {
@@ -483,7 +159,7 @@ function copyImport(componentName: string) {
     navigator.clipboard.writeText(snippet)
       .then(() => {
         copiedSnippet.value = componentName
-        playSound('pop')
+        playSound('copied')
         setTimeout(() => {
           if (copiedSnippet.value === componentName) {
             copiedSnippet.value = null
@@ -492,11 +168,6 @@ function copyImport(componentName: string) {
       })
       .catch(() => {
         copiedSnippet.value = componentName
-        setTimeout(() => {
-          if (copiedSnippet.value === componentName) {
-            copiedSnippet.value = null
-          }
-        }, 1800)
       })
   }
 }
@@ -511,496 +182,620 @@ function onSlideConfirmed() {
 </script>
 
 <template>
-  <div class="explorer-lab w-full flex flex-col gap-6" role="region" :aria-label="isEs ? 'Laboratorio de Componentes UI' : 'UI Component Laboratory'">
+  <div class="explorer-lab w-full flex flex-col gap-10 sm:gap-14" role="region" :aria-label="isEs ? 'Laboratorio de Componentes UI' : 'UI Component Laboratory'">
     <!-- ═══════════════════════════════════════════════════════════════════════ -->
-    <!-- CABECERA PRINCIPAL: LINEAR 2026 EDITORIAL                             -->
+    <!-- CABECERA MONUMENTAL EDITORIAL: SWISS AWWWARDS 2026                      -->
     <!-- ═══════════════════════════════════════════════════════════════════════ -->
-    <header class="lab-header flex flex-col gap-4 pb-5 border-b border-rule">
-      <div class="flex flex-wrap items-center justify-between gap-3">
-        <div class="flex flex-wrap items-center gap-2">
-          <span class="inline-flex items-center gap-1.5 font-mono text-[11px] font-semibold uppercase tracking-wider text-sig">
-            <span class="w-2 h-2 rounded-full bg-sig shrink-0" />
-            <span>{{ isEs ? '07 · LABORATORIO DE INTERFACES · SONZOGNI × BENCHO UI v2.0' : '07 · UI INTERACTION LAB · SONZOGNI × BENCHO UI v2.0' }}</span>
-          </span>
-          <span class="px-2 py-0.5 rounded-full bg-surface-raised border border-rule font-mono text-[10px] text-dim shrink-0">
-            {{ catalog.length }} Primitives
-          </span>
-          <span v-if="isHyperfocus" class="px-2 py-0.5 rounded-full bg-sig/10 border border-sig text-sig font-mono text-[10px] font-semibold shrink-0">
-            ZEN HYPERFOCUS
-          </span>
+    <header class="flex flex-col gap-6 border-b border-rule pb-8">
+      <!-- Tagline y Controles de Audio Global -->
+      <div class="flex flex-wrap items-center justify-between gap-4">
+        <div class="flex items-center gap-2.5 font-mono text-[11px] uppercase tracking-[0.14em] text-dim">
+          <span class="w-2 h-2 rounded-full bg-sig animate-pulse" />
+          <span>{{ isEs ? '04 / LABORATORIO DE INTERACCIÓN & FÍSICAS' : '04 / INTERACTION LAB & PHYSICS' }}</span>
+          <span class="text-faint">·</span>
+          <UiDecryptedText text="SONZOGNI × BENCHO UI v2.0" class="text-ink font-semibold" />
+          <span v-if="isHyperfocus" class="text-sig ml-2 font-bold">[ZEN HYPERFOCUS]</span>
         </div>
 
-        <div class="flex items-center gap-2">
-          <button
-            type="button"
-            class="inline-flex items-center gap-1.5 px-3 py-1 rounded-md border border-rule bg-surface/80 hover:bg-hover hover:border-rule-strong font-mono text-[11px] text-dim hover:text-ink transition-colors cursor-pointer"
-            :title="isEs ? 'Alternar audio procedimental' : 'Toggle procedural audio'"
-            @click="toggleSound"
-          >
-            <span class="w-1.5 h-1.5 rounded-full" :class="soundEnabled ? 'bg-green' : 'bg-faint'" />
-            <span>{{ soundEnabled ? 'Audio ON' : 'Audio OFF' }}</span>
-          </button>
+        <div class="flex items-center gap-2.5">
+          <UiClickSpark :spark-count="6" :spark-size="5">
+            <button
+              type="button"
+              class="inline-flex items-center gap-2 h-8 px-3.5 rounded-full border border-rule bg-surface/80 hover:bg-hover hover:border-rule-strong font-mono text-[11px] text-dim hover:text-ink transition-all cursor-pointer active:scale-[0.98]"
+              :title="isEs ? 'Alternar síntesis acústica en Web Audio API' : 'Toggle Web Audio API procedural synthesis'"
+              @click="toggleSound(); playSound('notch')"
+            >
+              <span class="w-1.5 h-1.5 rounded-full" :class="soundEnabled ? 'bg-green animate-pulse' : 'bg-faint'" />
+              <span>{{ soundEnabled ? 'Audio ON (Web Audio)' : 'Audio Muted' }}</span>
+            </button>
+          </UiClickSpark>
         </div>
       </div>
 
-      <div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
-        <div class="flex flex-col gap-1.5 max-w-[760px]">
-          <h1 class="font-sans text-[clamp(22px,2.6vw,32px)] font-semibold tracking-[-0.03em] leading-tight text-ink m-0">
-            {{ isEs ? 'Catálogo de Físicas, Óptica & Micro-interacciones' : 'Physics, Optics & Micro-interactions Catalog' }}
+      <!-- Titular Display Monumental Awwwards -->
+      <div class="flex flex-col lg:flex-row lg:items-end justify-between gap-6">
+        <div class="flex flex-col gap-3 max-w-[54ch]">
+          <h1 class="font-sans text-[clamp(32px,5.2vw,68px)] font-semibold tracking-[-0.04em] leading-[0.95] text-ink m-0">
+            {{ isEs ? 'Físicas de resorte, óptica & micro-interacción.' : 'Spring physics, optics & micro-interactions.' }}
           </h1>
-          <p class="font-sans text-[13.5px] leading-relaxed text-dim m-0">
-            {{ isEs
-              ? 'Colección de 31 componentes interactivos de autor inspirados en Bencho UI y Vue Bits. Cada bloque incorpora resortes amortiguados de segundo orden, síntesis acústica en Web Audio API, máscaras de difracción óptica y soporte estricto para modo hiperfoco y accesibilidad.'
-              : 'Collection of 31 author-crafted interactive components inspired by Bencho UI and Vue Bits. Every primitive embeds 2nd-order damped springs, Web Audio API procedural synthesis, optical diffraction masks, and strict compliance with Zen hyperfocus and screen readers.'
-            }}
+          <p class="font-sans text-[clamp(14px,1.2vw,16px)] text-dim leading-[1.55] m-0">
+            <template v-if="isEs">
+              Colección de 28 primitivas interactivas de autor diseñadas bajo el estándar de <strong class="text-ink font-medium">Bencho UI</strong>. Cada componente resuelve resortes amortiguados de segundo orden en tiempo real, síntesis procedural con Web Audio API y materiales ópticos contemporáneos.
+            </template>
+            <template v-else>
+              Collection of 28 author-crafted interactive primitives built to <strong class="text-ink font-medium">Bencho UI</strong> standards. Every component integrates real-time 2nd-order damped spring solvers, Web Audio API synthesis, and contemporary optical materials.
+            </template>
           </p>
         </div>
 
-        <!-- Barra de búsqueda rápida -->
-        <div class="relative w-full md:w-64 shrink-0">
-          <input
-            v-model="searchQuery"
-            type="search"
-            :placeholder="isEs ? 'Buscar componente (ej: spring, audio)...' : 'Search component (e.g. spring, audio)...'"
-            class="lab-search-input w-full h-8.5 pl-8 pr-3 rounded-lg border border-rule bg-surface/60 hover:bg-surface focus:bg-surface focus:border-sig text-ink font-mono text-[11px] outline-none transition-all placeholder:text-faint"
-          >
-          <AppIcon name="search" :size="13" class="absolute left-2.5 top-1/2 -translate-y-1/2 text-dim pointer-events-none" />
+        <!-- Métricas Rápidas de Ingeniería -->
+        <div class="flex flex-col gap-2 font-mono text-[11px] text-dim shrink-0 lg:text-right border-l lg:border-l-0 lg:border-r border-rule pl-4 lg:pl-0 lg:pr-4">
+          <div><strong class="text-ink">28</strong> {{ isEs ? 'PRIMITIVAS DE AUTOR' : 'AUTHOR PRIMITIVES' }}</div>
+          <div><strong class="text-ink">&lt; 16ms</strong> {{ isEs ? 'RESPUESTA FÍSICA' : 'FRAME LATENCY' }}</div>
+          <div><strong class="text-ink">100%</strong> {{ isEs ? 'WEB AUDIO SINTETIZADO' : 'SYNTHESIZED AUDIO' }}</div>
         </div>
       </div>
 
-      <!-- Barra de Filtros por Categoría -->
-      <div class="flex flex-wrap items-center gap-1.5 pt-1 overflow-x-auto no-scrollbar">
-        <button
-          v-for="cat in categories"
-          :key="cat.value"
-          type="button"
-          class="inline-flex items-center gap-1.5 px-3 py-1 rounded-md border font-mono text-[11px] font-medium transition-all cursor-pointer whitespace-nowrap active:scale-[0.98]"
-          :class="activeCategory === cat.value
-            ? 'border-sig bg-sig/10 text-sig font-semibold'
-            : 'border-rule bg-surface/60 text-dim hover:text-ink hover:border-rule-strong hover:bg-hover'"
-          @click="activeCategory = (cat.value as Category); playSound('tock', { gap: 40 })"
-        >
-          <span>{{ cat.label }}</span>
-        </button>
+      <!-- Barra de Filtros Segmentada -->
+      <div class="flex flex-wrap items-center justify-between gap-3 pt-3">
+        <div class="flex flex-wrap items-center gap-1.5">
+          <button
+            v-for="cat in categories"
+            :key="cat.value"
+            type="button"
+            class="inline-flex items-center gap-1.5 h-8 px-3 rounded-full border font-mono text-[11px] transition-all cursor-pointer whitespace-nowrap active:scale-[0.98]"
+            :class="activeCategory === cat.value
+              ? 'border-sig bg-sig/10 text-sig font-semibold shadow-xs'
+              : 'border-rule bg-surface/60 text-dim hover:text-ink hover:border-rule-strong hover:bg-hover'"
+            @click="activeCategory = (cat.value as LabCategory); playSound('tock', { gap: 40 })"
+          >
+            <span>{{ cat.label }}</span>
+          </button>
+        </div>
+
+        <!-- Búsqueda Instantánea -->
+        <div class="relative w-full sm:w-64">
+          <input
+            v-model="searchQuery"
+            type="search"
+            :placeholder="isEs ? 'Filtrar componentes...' : 'Filter primitives...'"
+            class="w-full h-8 pl-8 pr-3 rounded-full border border-rule bg-surface/60 hover:bg-surface focus:bg-surface focus:border-sig text-ink font-mono text-[11px] outline-none transition-all placeholder:text-faint"
+          >
+          <AppIcon name="search" :size="12" class="absolute left-2.5 top-1/2 -translate-y-1/2 text-dim pointer-events-none" />
+        </div>
       </div>
     </header>
 
     <!-- ═══════════════════════════════════════════════════════════════════════ -->
-    <!-- GRILLA PRINCIPAL DE COMPONENTES INTERACTIVOS                          -->
+    <!-- 1. CROWN JEWEL SHOWCASE: BENCHO DYNAMIC ISLAND SIMULATOR                -->
     <!-- ═══════════════════════════════════════════════════════════════════════ -->
-    <div v-if="filteredCatalog.length > 0" class="lab-grid grid grid-cols-1 lg:grid-cols-2 gap-4">
-      <div
-        v-for="item in filteredCatalog"
-        :key="item.id"
-        class="lab-card-wrapper"
-      >
-        <UiSpotlightCard class="surface-10k rounded-xl p-4 sm:p-5 flex flex-col justify-between h-full border border-rule transition-all duration-200 hover:border-rule-strong">
-          <!-- Top Bar de la Tarjeta del Componente -->
-          <div class="flex items-center justify-between gap-2 mb-3 pb-2.5 border-b border-rule/60">
-            <div class="flex items-center gap-2 min-w-0">
-              <span class="w-1.5 h-1.5 rounded-full bg-sig shrink-0" />
-              <h2 class="font-sans text-[15px] font-semibold tracking-tight text-ink m-0 truncate">
-                {{ item.name }}
-              </h2>
-              <span class="font-mono text-[10px] text-faint hidden sm:inline truncate">
-                {{ item.file }}
-              </span>
-            </div>
-
-            <div class="flex items-center gap-1.5 shrink-0">
-              <button
-                type="button"
-                class="copy-import-btn inline-flex items-center gap-1 px-2 py-0.5 rounded border font-mono text-[10px] transition-all cursor-pointer"
-                :class="copiedSnippet === item.name
-                  ? 'border-green bg-green/10 text-green font-semibold'
-                  : 'border-rule bg-paper/60 text-dim hover:text-ink hover:border-rule-strong hover:bg-hover active:scale-[0.97]'"
-                :title="isEs ? 'Copiar importación' : 'Copy import statement'"
-                @click="copyImport(item.name)"
-              >
-                <AppIcon v-if="copiedSnippet === item.name" name="check" :size="10" />
-                <AppIcon v-else name="copy" :size="10" />
-                <span>{{ copiedSnippet === item.name ? (isEs ? 'Copiado' : 'Copied') : 'import' }}</span>
-              </button>
-            </div>
-          </div>
-
-          <!-- Escenario Interactivo Live (Playground) -->
-          <div class="lab-stage flex-1 min-h-[170px] w-full flex items-center justify-center p-3 rounded-lg bg-paper/40 border border-rule/40 overflow-hidden relative">
-            
-            <!-- 1. UiBorderBeam -->
-            <template v-if="item.id === 'border-beam'">
-              <div class="relative w-full max-w-[280px] p-4 rounded-xl border border-rule bg-surface/80 flex flex-col gap-2">
-                <UiBorderBeam :duration="demoBeamSpeed" :border-width="1.8" :size="180" />
-                <div class="flex items-center justify-between">
-                  <span class="font-mono text-[10px] uppercase tracking-wider text-sig">Laser Beam</span>
-                  <span class="font-mono text-[10.5px] text-dim">{{ demoBeamSpeed }}s</span>
-                </div>
-                <span class="font-sans text-[13px] font-semibold text-ink">Conic Traveling Laser</span>
-                <div class="flex items-center gap-2 mt-1">
-                  <button
-                    type="button"
-                    class="px-2 py-0.5 rounded bg-paper border border-rule text-dim hover:text-ink font-mono text-[10px] cursor-pointer"
-                    @click="demoBeamSpeed = demoBeamSpeed === 4 ? 8 : demoBeamSpeed === 8 ? 12 : 4; playSound('notch')"
-                  >
-                    {{ isEs ? 'Velocidad: ' : 'Speed: ' }}{{ demoBeamSpeed }}s
-                  </button>
-                </div>
-              </div>
-            </template>
-
-            <!-- 2. UiClickSpark -->
-            <template v-else-if="item.id === 'click-spark'">
-              <UiClickSpark spark-color="var(--d-sig, #ff3e00)" :spark-count="14" class="w-full h-full flex flex-col items-center justify-center py-4">
-                <button
-                  type="button"
-                  class="px-4 py-2 rounded-lg bg-ink text-paper font-sans text-[12.5px] font-medium shadow-xs hover:opacity-90 active:scale-[0.96] transition-all cursor-pointer inline-flex items-center gap-2"
-                >
-                  <AppIcon name="sparkles" :size="13" />
-                  <span>{{ isEs ? 'Hacer clic para detonar chispas' : 'Click to burst sparks' }}</span>
-                </button>
-                <span class="font-mono text-[10px] text-dim mt-2">
-                  {{ isEs ? 'Partículas geométricas + Web Audio pop' : 'Geometric particles + Web Audio pop' }}
-                </span>
-              </UiClickSpark>
-            </template>
-
-            <!-- 3. UiAudioVisualizer -->
-            <template v-else-if="item.id === 'audio-visualizer'">
-              <div class="w-full max-w-[340px]">
-                <UiAudioVisualizer compact />
-              </div>
-            </template>
-
-            <!-- 4. UiDecryptedText -->
-            <template v-else-if="item.id === 'decrypted-text'">
-              <div :key="demoDecryptedReplay" class="flex flex-col items-center gap-2 text-center py-2">
-                <UiDecryptedText
-                  text="POSTGRESQL 17 · HYPERFOCUS 2026"
-                  class="font-mono text-[15px] sm:text-[17px] font-bold tracking-wider text-ink"
-                  cursor="_"
-                  :speed="45"
-                  hover-replay
-                />
-                <button
-                  type="button"
-                  class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md border border-rule bg-paper text-dim hover:text-ink font-mono text-[10.5px] cursor-pointer active:scale-[0.98]"
-                  @click="demoDecryptedReplay++"
-                >
-                  <AppIcon name="refresh" :size="11" />
-                  <span>{{ isEs ? 'Re-decodificar' : 'Replay cipher' }}</span>
-                </button>
-              </div>
-            </template>
-
-            <!-- 5. UiRollingCounter -->
-            <template v-else-if="item.id === 'rolling-counter'">
-              <div class="flex flex-col items-center gap-2 py-1">
-                <UiRollingCounter v-model="demoCounter" :digits="4" :bounce="45" interactive />
-                <span class="font-mono text-[10.5px] text-dim">
-                  {{ isEs ? 'Arrastrá los números verticalmente para girar' : 'Drag numbers vertically to spin odometer' }}
-                </span>
-              </div>
-            </template>
-
-            <!-- 6. UiWakeSlider -->
-            <template v-else-if="item.id === 'wake-slider'">
-              <div class="w-full max-w-[280px] flex flex-col gap-2 py-1">
-                <UiWakeSlider v-model="demoWake" :bars="28" :label="isEs ? 'Potencia cinética' : 'Kinetic energy'" />
-                <span class="font-mono text-[10px] text-dim text-center">
-                  {{ isEs ? 'Inyecta energía por velocidad con audio notch' : 'Injects velocity energy with notch audio' }}
-                </span>
-              </div>
-            </template>
-
-            <!-- 7. UiMagneticDots -->
-            <template v-else-if="item.id === 'magnetic-dots'">
-              <div class="flex flex-col items-center gap-2 py-1">
-                <UiMagneticDots :width="230" :height="120" initial-shape="Lines" :spacing="14" />
-                <span class="font-mono text-[10px] text-dim">
-                  {{ isEs ? 'Hacé clic sobre el campo para alternar Líneas / Puntos' : 'Click field to toggle Lines / Dots' }}
-                </span>
-              </div>
-            </template>
-
-            <!-- 8. UiFolderPreview -->
-            <template v-else-if="item.id === 'folder-preview'">
-              <UiFolderPreview :items="demoFolderItems" label="production/" count="03" compact />
-            </template>
-
-            <!-- 9. UiDock -->
-            <template v-else-if="item.id === 'dock'">
-              <div class="py-2">
-                <UiDock v-model="demoDockKey" :items="demoDockItems" :magnify="1.3" />
-              </div>
-            </template>
-
-            <!-- 9b. UiSegmentedSwitch -->
-            <template v-else-if="item.id === 'segmented-switch'">
-              <div class="flex flex-col items-center gap-2.5 py-2">
-                <UiSegmentedSwitch
-                  v-model="demoSegment"
-                  :options="demoSegmentOptions"
-                />
-                <span class="font-mono text-[10px] text-dim">
-                  {{ isEs ? 'Píldora activa deslizante con físicas de resorte' : 'Sliding active pill with spring physics' }}
-                </span>
-              </div>
-            </template>
-
-            <!-- 10. UiSlideConfirm -->
-            <template v-else-if="item.id === 'slide-confirm'">
-              <div class="flex flex-col items-center gap-2 py-1">
-                <UiSlideConfirm
-                  :label="isEs ? 'Deslizá para confirmar' : 'Slide to commit'"
-                  :confirmed-label="isEs ? 'Confirmado · 200 OK' : 'Committed · 200 OK'"
-                  @confirm="onSlideConfirmed"
-                />
-                <span v-if="demoConfirmStatus" class="font-mono text-[11px] text-green animate-pulse">
-                  {{ demoConfirmStatus }}
-                </span>
-              </div>
-            </template>
-
-            <!-- 11. UiSharePill -->
-            <template v-else-if="item.id === 'share-pill'">
-              <div class="py-2">
-                <UiSharePill title="Dossier Mateo Sonzogni" />
-              </div>
-            </template>
-
-            <!-- 12. UiCopyPill -->
-            <template v-else-if="item.id === 'copy-pill'">
-              <div class="flex items-center gap-3 py-2">
-                <UiCopyPill text="mateogabus@gmail.com" label="Copiar email" copied-label="Email copiado" />
-                <UiCopyPill text="git clone https://github.com/MateoGs013/portfolio.git" label="Copiar git repo" copied-label="Repo copiado" />
-              </div>
-            </template>
-
-            <!-- 13. UiSweepButton -->
-            <template v-else-if="item.id === 'sweep-button'">
-              <div class="flex items-center gap-2.5 py-2">
-                <UiSweepButton variant="primary">
-                  <span>{{ isEs ? 'Acción Primaria' : 'Primary Action' }}</span>
-                </UiSweepButton>
-                <UiSweepButton variant="secondary">
-                  <span>{{ isEs ? 'Inspeccionar' : 'Inspect' }}</span>
-                </UiSweepButton>
-              </div>
-            </template>
-
-            <!-- 14. UiTelemetryPill -->
-            <template v-else-if="item.id === 'telemetry-pill'">
-              <div class="py-2">
-                <UiTelemetryPill collection="projects" :count="6" :api-healthy="true" />
-              </div>
-            </template>
-
-            <!-- 15. UiDotGlobe -->
-            <template v-else-if="item.id === 'dot-globe'">
-              <div class="py-1">
-                <UiDotGlobe :size="160" home-city="Paraná, AR" />
-              </div>
-            </template>
-
-            <!-- 16. UiHubDiagram -->
-            <template v-else-if="item.id === 'hub-diagram'">
-              <div class="w-full flex items-center justify-center py-1">
-                <UiHubDiagram :spread="85" :height="170" core-label="PG-17" />
-              </div>
-            </template>
-
-            <!-- 17. UiCodeReveal -->
-            <template v-else-if="item.id === 'code-reveal'">
-              <div class="w-full max-w-[280px]">
-                <UiCodeReveal :radius="100" />
-              </div>
-            </template>
-
-            <!-- 18. UiHoloCard -->
-            <template v-else-if="item.id === 'holo-card'">
-              <UiHoloCard :max-tilt="12" class="w-full max-w-[240px] rounded-xl border border-white/15 bg-paper/90 p-3.5 shadow-sm">
-                <div class="flex flex-col gap-1.5">
-                  <div class="flex items-center justify-between">
-                    <span class="font-mono text-[9.5px] uppercase tracking-wider text-sig">Design Engineer</span>
-                    <span class="w-1.5 h-1.5 rounded-full bg-green" />
-                  </div>
-                  <span class="font-sans text-[13.5px] font-semibold text-ink">Tactile Spring Card</span>
-                  <span class="font-mono text-[9.5px] text-dim">Mueve el cursor para inclinar en 3D</span>
-                </div>
-              </UiHoloCard>
-            </template>
-
-            <!-- 19. UiBlueprintCard -->
-            <template v-else-if="item.id === 'blueprint-card'">
-              <UiBlueprintCard class="w-full max-w-[260px] p-3.5 rounded-xl border border-rule bg-paper/90">
-                <div class="flex flex-col gap-1">
-                  <span class="font-mono text-[10px] text-sig">CAD BLUEPRINT</span>
-                  <span class="font-sans text-[13px] font-semibold text-ink">Architectural Trace</span>
-                  <span class="font-mono text-[10px] text-dim">Cotado milimétrico automático</span>
-                </div>
-              </UiBlueprintCard>
-            </template>
-
-            <!-- 20. UiDynamicIsland -->
-            <template v-else-if="item.id === 'dynamic-island'">
-              <div class="py-2">
-                <UiDynamicIsland collection="db" :record-count="31" :latency-ms="14" />
-              </div>
-            </template>
-
-            <!-- 21. UiThinkingTrace -->
-            <template v-else-if="item.id === 'thinking-trace'">
-              <div class="w-full max-w-[320px]">
-                <UiThinkingTrace :steps="demoThinkingSteps" :pace="900" />
-              </div>
-            </template>
-
-            <!-- 22. UiTreeView -->
-            <template v-else-if="item.id === 'tree-view'">
-              <div class="py-1">
-                <UiTreeView :root="demoTreeRoot" :initial-open="['app/components/ui', 'app/components/ui/springs']" />
-              </div>
-            </template>
-
-            <!-- 23. UiTextBlurReveal -->
-            <template v-else-if="item.id === 'text-blur-reveal'">
-              <div class="text-center py-2">
-                <UiTextBlurReveal
-                  text="Interfaces construidas con convicción y criterio de artesanía."
-                  class="font-sans text-[14px] font-medium leading-relaxed text-ink"
-                  split="words"
-                  :stagger-ms="40"
-                  replay-on-click
-                />
-              </div>
-            </template>
-
-            <!-- 24. UiSpotlightCard -->
-            <template v-else-if="item.id === 'spotlight-card'">
-              <div class="w-full flex items-center justify-center py-2">
-                <UiSpotlightCard class="w-full max-w-[280px] p-4 rounded-xl border border-rule bg-surface/80 flex flex-col gap-2">
-                  <div class="flex items-center justify-between">
-                    <span class="font-mono text-[9.5px] uppercase tracking-wider text-sig">Radial Spotlight</span>
-                    <span class="w-1.5 h-1.5 rounded-full bg-sig" />
-                  </div>
-                  <span class="font-sans text-[13.5px] font-semibold text-ink">Cursor Proximity Glow</span>
-                  <span class="font-mono text-[10px] text-dim">Mové el cursor sobre la tarjeta para revelar el haz de luz</span>
-                </UiSpotlightCard>
-              </div>
-            </template>
-
-            <!-- 25. UiProgressiveBlur -->
-            <template v-else-if="item.id === 'progressive-blur'">
-              <div class="relative w-full max-w-[280px] h-36 rounded-xl border border-rule bg-surface/80 overflow-hidden flex flex-col justify-between p-3.5 select-none">
-                <div class="space-y-1 font-mono text-[10px] text-dim">
-                  <div class="text-ink font-semibold">Optical Camera-Depth Vignette</div>
-                  <div>6 capas progresivas con máscaras difuminadas.</div>
-                  <div>Disuelve los bordes del scroll de forma analógica.</div>
-                  <div class="text-sig">100% fijo sobre el borde de salida.</div>
-                </div>
-                <UiProgressiveBlur position="bottom" :height="44" :strength="50" />
-              </div>
-            </template>
-
-            <!-- 26. UiResizablePanels -->
-            <template v-else-if="item.id === 'resizable-panels'">
-              <div class="w-full max-w-[320px] h-36 rounded-xl border border-rule bg-surface/80 overflow-hidden">
-                <UiResizablePanels :initial-width="120" :min-width="90" :max-width="180" :shut-threshold="60">
-                  <template #sidebar>
-                    <div class="h-full p-2.5 font-mono text-[9.5px] text-dim flex flex-col gap-1 border-r border-rule bg-paper/50">
-                      <span class="text-sig font-bold">SIDEBAR</span>
-                      <span>01 · proy</span>
-                      <span>02 · stack</span>
-                      <span>03 · exp</span>
-                    </div>
-                  </template>
-                  <template #default>
-                    <div class="h-full p-2.5 font-mono text-[10px] text-ink flex flex-col justify-between bg-surface/40">
-                      <div>
-                        <div class="font-semibold text-[11px]">Contenido Principal</div>
-                        <div class="text-dim text-[9.5px] mt-1">Arrastrá el divisor para redimensionar o colapsar con resorte.</div>
-                      </div>
-                      <div class="text-faint text-[9px]">Soporta ← / → y Enter</div>
-                    </div>
-                  </template>
-                </UiResizablePanels>
-              </div>
-            </template>
-
-            <!-- 27. UiCursorWorkList -->
-            <template v-else-if="item.id === 'cursor-work-list'">
-              <div class="w-full max-w-[320px] py-1">
-                <UiCursorWorkList :items="demoWorkListItems" />
-              </div>
-            </template>
-
-            <!-- Fallback Genérico para los demás componentes de la librería -->
-            <template v-else>
-              <div class="flex flex-col items-center gap-1.5 text-center py-2">
-                <span class="font-mono text-[11px] font-semibold text-sig">{{ item.tag }}</span>
-                <span class="font-sans text-[13px] text-ink font-medium">{{ item.name }}</span>
-                <span class="font-mono text-[10px] text-dim">{{ item.file }}</span>
-              </div>
-            </template>
-          </div>
-
-          <!-- Pie con Especificaciones y Tags -->
-          <div class="mt-3 pt-2.5 border-t border-rule/60 flex flex-col gap-2">
-            <p class="font-sans text-[12.5px] leading-snug text-dim m-0">
-              {{ isEs ? item.descEs : item.descEn }}
-            </p>
-
-            <div class="flex flex-wrap items-center gap-1">
-              <span
-                v-for="t in item.tags"
-                :key="t"
-                class="px-1.5 py-0.2 rounded bg-paper/60 border border-rule font-mono text-[9px] text-dim"
-              >
-                {{ t }}
-              </span>
-            </div>
-          </div>
-        </UiSpotlightCard>
-      </div>
-    </div>
-
-    <!-- Empty State si no hay resultados en la búsqueda -->
-    <div
-      v-else
-      class="w-full py-16 flex flex-col items-center justify-center text-center gap-2 border border-dashed border-rule rounded-xl bg-paper/40"
+    <section
+      v-if="activeCategory === 'all' || activeCategory === 'hero' || activeCategory === 'springs'"
+      class="flex flex-col gap-4 border border-rule-strong rounded-2xl p-6 sm:p-8 bg-paper/60 backdrop-blur-xl relative overflow-hidden shadow-2xl"
+      aria-label="Simulador de Isla Dinámica Bencho UI"
     >
-      <AppIcon name="search" :size="24" class="text-dim" />
-      <span class="font-sans text-[14px] font-semibold text-ink">
-        {{ isEs ? 'No se encontraron componentes' : 'No components found' }}
-      </span>
-      <p class="font-mono text-[11px] text-dim m-0">
-        {{ isEs ? `Ninguna primitiva coincide con "${searchQuery}".` : `No primitive matches "${searchQuery}".` }}
-      </p>
-      <button
-        type="button"
-        class="mt-2 px-3 py-1 rounded-md border border-rule bg-surface font-mono text-[11px] text-ink hover:bg-hover cursor-pointer"
-        @click="searchQuery = ''; activeCategory = 'all'"
+      <UiBorderBeam
+        :size="260"
+        :duration="demoBeamSpeed"
+        :border-width="1.8"
+        color-from="#ff3e00"
+        color-to="var(--d-ink, #ffffff)"
+        class="pointer-events-none"
+      />
+
+      <!-- Retícula CAD milimétrica cenital -->
+      <div
+        class="absolute inset-0 pointer-events-none opacity-20 bg-[radial-gradient(var(--d-grid-cross,rgba(255,255,255,0.15))_1px,transparent_1px)] [background-size:24px_24px]"
+        aria-hidden="true"
+      />
+
+      <div class="flex flex-wrap items-center justify-between gap-4 z-10 border-b border-rule/70 pb-4">
+        <div class="flex items-center gap-3">
+          <span class="w-2.5 h-2.5 rounded-full bg-sig animate-pulse shadow-[0_0_10px_var(--d-sig,#ff3e00)]" />
+          <div class="flex flex-col">
+            <span class="font-sans text-[16px] sm:text-[18px] font-semibold text-ink tracking-tight">
+              UiDynamicIsland · Specular Spring Simulator
+            </span>
+            <span class="font-mono text-[11px] text-dim">
+              2nd-Order Damped Spring Engine (k = 380 N/m, c = 28 Ns/m, m = 0.9 kg)
+            </span>
+          </div>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-3">
+          <UiSegmentedSwitch
+            v-model="islandMode"
+            :options="[
+              { value: 'status', label: '200 OK' },
+              { value: 'sql', label: 'SQL Telemetry' },
+              { value: 'ats', label: 'ATS Job' }
+            ]"
+          />
+
+          <UiClickSpark :spark-count="7" :spark-size="6">
+            <button
+              type="button"
+              class="inline-flex items-center gap-1.5 h-8 px-3 rounded-md border font-mono text-[10.5px] font-medium transition-all cursor-pointer active:scale-[0.98]"
+              :class="copiedSnippet === 'UiDynamicIsland'
+                ? 'border-green bg-green/10 text-green'
+                : 'border-rule bg-paper/80 text-dim hover:text-ink hover:border-rule-strong'"
+              @click="copyImport('UiDynamicIsland')"
+            >
+              <AppIcon :name="copiedSnippet === 'UiDynamicIsland' ? 'check' : 'copy'" :size="11" />
+              <span>{{ copiedSnippet === 'UiDynamicIsland' ? (isEs ? 'Copiado' : 'Copied') : 'import { UiDynamicIsland }' }}</span>
+            </button>
+          </UiClickSpark>
+        </div>
+      </div>
+
+      <!-- Escenario Central Expansivo de la Isla -->
+      <div class="min-h-[220px] sm:min-h-[260px] w-full flex flex-col items-center justify-center p-6 rounded-xl bg-surface/50 border border-rule/60 relative z-10 shadow-inner">
+        <div class="py-4">
+          <UiDynamicIsland
+            collection="db"
+            :record-count="28"
+            :latency-ms="14"
+          />
+        </div>
+        <span class="font-mono text-[11px] text-dim mt-4 select-none">
+          {{ isEs ? 'Hacé clic sobre la cápsula para desplegar el resorte físico de segundo orden' : 'Click the pill capsule to trigger the 2nd-order physical spring' }}
+        </span>
+      </div>
+
+      <!-- Barra Inferior de Parámetros Físicos en Tiempo Real -->
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 z-10 pt-2 font-mono text-[11px]">
+        <div class="p-2.5 rounded-lg border border-rule bg-surface/40 flex flex-col gap-0.5">
+          <span class="text-faint text-[9.5px]">STIFFNESS (k)</span>
+          <span class="text-ink font-semibold">380 N/m</span>
+        </div>
+        <div class="p-2.5 rounded-lg border border-rule bg-surface/40 flex flex-col gap-0.5">
+          <span class="text-faint text-[9.5px]">DAMPING (c)</span>
+          <span class="text-ink font-semibold">28 Ns/m</span>
+        </div>
+        <div class="p-2.5 rounded-lg border border-rule bg-surface/40 flex flex-col gap-0.5">
+          <span class="text-faint text-[9.5px]">MASS (m)</span>
+          <span class="text-ink font-semibold">0.9 kg</span>
+        </div>
+        <div class="p-2.5 rounded-lg border border-rule bg-surface/40 flex flex-col gap-0.5">
+          <span class="text-faint text-[9.5px]">RESPONSE TIME</span>
+          <span class="text-green font-semibold">&lt; 16ms (60 FPS)</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════════════════ -->
+    <!-- 2. BENTO ARTIFACTS GRID: ARTEFACTOS FÍSICOS & ÓPTICOS EXPANDIDOS        -->
+    <!-- ═══════════════════════════════════════════════════════════════════════ -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8">
+      <!-- ARTEFACTO 1: 3D Holographic Collector Specimen -->
+      <section
+        v-if="activeCategory === 'all' || activeCategory === 'spatial'"
+        class="border border-rule rounded-2xl p-6 sm:p-7 bg-surface/40 backdrop-blur-md flex flex-col justify-between gap-6 transition-all hover:border-rule-strong"
       >
-        {{ isEs ? 'Restablecer filtros' : 'Reset filters' }}
-      </button>
+        <div class="flex items-center justify-between border-b border-rule/60 pb-3">
+          <div class="flex flex-col gap-0.5">
+            <span class="font-mono text-[10px] uppercase tracking-wider text-sig">3D Perspective 900px · Rainbow Foil</span>
+            <h2 class="font-sans text-[17px] font-semibold text-ink m-0">UiHoloCard · Especímen Holográfico</h2>
+          </div>
+          <button
+            type="button"
+            class="h-7 px-2.5 rounded border border-rule font-mono text-[10px] text-dim hover:text-ink cursor-pointer"
+            @click="copyImport('UiHoloCard')"
+          >
+            import
+          </button>
+        </div>
+
+        <!-- Escenario 3D Expansivo de la Tarjeta Holográfica -->
+        <div class="min-h-[280px] flex items-center justify-center p-4">
+          <UiHoloCard :max-tilt="14" class="w-full max-w-[280px] rounded-2xl border border-white/20 bg-paper/95 p-5 shadow-2xl cursor-grab active:cursor-grabbing">
+            <div class="flex flex-col gap-4">
+              <div class="flex items-center justify-between border-b border-rule/60 pb-2.5">
+                <span class="font-mono text-[10px] uppercase tracking-wider text-sig font-bold">EDICIÓN ’26</span>
+                <span class="w-2 h-2 rounded-full bg-green" />
+              </div>
+              <div class="flex flex-col gap-1">
+                <span class="font-sans text-[18px] font-semibold text-ink leading-tight">Creative Engineer Specimen</span>
+                <span class="font-mono text-[11px] text-dim">PostgreSQL 17 · Vue 3 · Nuxt 4</span>
+              </div>
+              <div class="pt-4 border-t border-rule/60 flex items-center justify-between font-mono text-[10px] text-faint">
+                <span>PARANÁ, AR</span>
+                <span class="text-ink font-semibold">0.99 LH / 100</span>
+              </div>
+            </div>
+          </UiHoloCard>
+        </div>
+
+        <p class="font-mono text-[11px] text-dim m-0 text-center">
+          {{ isEs ? 'Mové el cursor sobre la tarjeta para doblar la luz especular y la película arcoíris' : 'Move cursor over the card to bend specular light and rainbow foil reflection' }}
+        </p>
+      </section>
+
+      <!-- ARTEFACTO 2: Kinetic Odometer & Wake Velocity Bar -->
+      <section
+        v-if="activeCategory === 'all' || activeCategory === 'springs'"
+        class="border border-rule rounded-2xl p-6 sm:p-7 bg-surface/40 backdrop-blur-md flex flex-col justify-between gap-6 transition-all hover:border-rule-strong"
+      >
+        <div class="flex items-center justify-between border-b border-rule/60 pb-3">
+          <div class="flex flex-col gap-0.5">
+            <span class="font-mono text-[10px] uppercase tracking-wider text-sig">2nd-Order Momentum · Web Audio Ticks</span>
+            <h2 class="font-sans text-[17px] font-semibold text-ink m-0">UiRollingCounter &amp; UiWakeSlider</h2>
+          </div>
+          <button
+            type="button"
+            class="h-7 px-2.5 rounded border border-rule font-mono text-[10px] text-dim hover:text-ink cursor-pointer"
+            @click="copyImport('UiRollingCounter')"
+          >
+            import
+          </button>
+        </div>
+
+        <!-- Escenario Interactivo Monumental del Odómetro -->
+        <div class="min-h-[280px] flex flex-col items-center justify-center gap-6 p-4">
+          <div class="flex flex-col items-center gap-2">
+            <UiRollingCounter
+              v-model="demoCounter"
+              :digits="3"
+              :bounce="50"
+              :stagger="40"
+              interactive
+            />
+            <span class="font-mono text-[11px] text-dim">
+              {{ isEs ? 'Arrastrá los dígitos verticalmente para girar con inercia y audio tock' : 'Drag digits vertically to spin with momentum and tock audio' }}
+            </span>
+          </div>
+
+          <div class="w-full max-w-[320px] pt-4 border-t border-rule/60 flex flex-col items-center gap-2">
+            <UiWakeSlider
+              v-model="demoWake"
+              :bars="32"
+              unit="ms"
+            />
+            <span class="font-mono text-[10px] text-faint">
+              {{ isEs ? 'Barra cinética con inyección de energía por velocidad' : 'Kinetic bar injecting energy decaying exponentially' }}
+            </span>
+          </div>
+        </div>
+
+        <p class="font-mono text-[11px] text-dim m-0 text-center">
+          {{ isEs ? 'Simulación física de odómetro analógico con motion blur y síntesis armónica' : 'Analog odometer physical simulation with motion blur and harmonic synthesis' }}
+        </p>
+      </section>
+
+      <!-- ARTEFACTO 3: 3D Geodetic Dot Globe & Coordenadas -->
+      <section
+        v-if="activeCategory === 'all' || activeCategory === 'spatial'"
+        class="border border-rule rounded-2xl p-6 sm:p-7 bg-surface/40 backdrop-blur-md flex flex-col justify-between gap-6 transition-all hover:border-rule-strong"
+      >
+        <div class="flex items-center justify-between border-b border-rule/60 pb-3">
+          <div class="flex flex-col gap-0.5">
+            <span class="font-mono text-[10px] uppercase tracking-wider text-sig">Canvas 3D · Geodesic Slerp Lift Arcs</span>
+            <h2 class="font-sans text-[17px] font-semibold text-ink m-0">UiDotGlobe · Globo Geodésico 3D</h2>
+          </div>
+          <button
+            type="button"
+            class="h-7 px-2.5 rounded border border-rule font-mono text-[10px] text-dim hover:text-ink cursor-pointer"
+            @click="copyImport('UiDotGlobe')"
+          >
+            import
+          </button>
+        </div>
+
+        <div class="min-h-[280px] flex items-center justify-center p-4">
+          <UiDotGlobe :size="200" home-city="Paraná, AR" class="cursor-grab active:cursor-grabbing" />
+        </div>
+
+        <div class="flex items-center justify-between font-mono text-[11px] text-dim border-t border-rule/60 pt-3">
+          <span>PARANÁ, ARGENTINA</span>
+          <span>31.73° S · 60.52° W</span>
+          <span class="text-ink font-semibold">UTC-3</span>
+        </div>
+      </section>
+
+      <!-- ARTEFACTO 4: Optical X-Ray Schematics Lens -->
+      <section
+        v-if="activeCategory === 'all' || activeCategory === 'spatial'"
+        class="border border-rule rounded-2xl p-6 sm:p-7 bg-surface/40 backdrop-blur-md flex flex-col justify-between gap-6 transition-all hover:border-rule-strong"
+      >
+        <div class="flex items-center justify-between border-b border-rule/60 pb-3">
+          <div class="flex flex-col gap-0.5">
+            <span class="font-mono text-[10px] uppercase tracking-wider text-sig">Radial Lens Mask · Dual Layer Schematics</span>
+            <h2 class="font-sans text-[17px] font-semibold text-ink m-0">UiCodeReveal · Lente de Rayos X</h2>
+          </div>
+          <button
+            type="button"
+            class="h-7 px-2.5 rounded border border-rule font-mono text-[10px] text-dim hover:text-ink cursor-pointer"
+            @click="copyImport('UiCodeReveal')"
+          >
+            import
+          </button>
+        </div>
+
+        <div class="min-h-[280px] flex items-center justify-center p-4">
+          <UiCodeReveal :radius="110" class="w-full max-w-[340px]" />
+        </div>
+
+        <p class="font-mono text-[11px] text-dim m-0 text-center">
+          {{ isEs ? 'Mové el cursor sobre la tarjeta para revelar el código PostgreSQL/Prisma subyacente' : 'Move cursor across the card to peel open the raw PostgreSQL/Prisma schema' }}
+        </p>
+      </section>
+
+      <!-- ARTEFACTO 5: Slide to Confirm & Stateful Micro-Controls -->
+      <section
+        v-if="activeCategory === 'all' || activeCategory === 'tactile'"
+        class="border border-rule rounded-2xl p-6 sm:p-7 bg-surface/40 backdrop-blur-md flex flex-col justify-between gap-6 transition-all hover:border-rule-strong"
+      >
+        <div class="flex items-center justify-between border-b border-rule/60 pb-3">
+          <div class="flex flex-col gap-0.5">
+            <span class="font-mono text-[10px] uppercase tracking-wider text-sig">Tactile 85% Commit Track · Specular Sweep</span>
+            <h2 class="font-sans text-[17px] font-semibold text-ink m-0">UiSlideConfirm &amp; Tactile Actions</h2>
+          </div>
+          <button
+            type="button"
+            class="h-7 px-2.5 rounded border border-rule font-mono text-[10px] text-dim hover:text-ink cursor-pointer"
+            @click="copyImport('UiSlideConfirm')"
+          >
+            import
+          </button>
+        </div>
+
+        <div class="min-h-[280px] flex flex-col items-center justify-center gap-6 p-4">
+          <!-- Slide Confirm -->
+          <div class="flex flex-col items-center gap-2">
+            <UiSlideConfirm
+              :label="isEs ? 'Deslizá para confirmar commit' : 'Slide to commit transaction'"
+              :confirmed-label="isEs ? 'Confirmado · 200 OK' : 'Committed · 200 OK'"
+              @confirm="onSlideConfirmed"
+            />
+            <span v-if="demoConfirmStatus" class="font-mono text-[11px] text-green font-semibold animate-pulse">
+              {{ demoConfirmStatus }}
+            </span>
+          </div>
+
+          <!-- Micro-actions Cluster -->
+          <div class="w-full pt-4 border-t border-rule/60 flex flex-wrap items-center justify-center gap-3">
+            <UiCopyPill text="mateogabus@gmail.com" label="Copiar correo" copied-label="Correo copiado" />
+            <UiSweepButton variant="primary">
+              <span>{{ isEs ? 'Barrido Especular' : 'Specular Sweep' }}</span>
+            </UiSweepButton>
+            <UiSharePill title="Dossier Mateo Sonzogni" />
+          </div>
+        </div>
+
+        <p class="font-mono text-[11px] text-dim m-0 text-center">
+          {{ isEs ? 'Mecanismo de confirmación irreversible con umbral 85% y acorde chime armónico' : 'Irreversible commit slider with 85% threshold and Web Audio chime chord' }}
+        </p>
+      </section>
+
+      <!-- ARTEFACTO 6: Autonomous AI Reasoning Trace -->
+      <section
+        v-if="activeCategory === 'all' || activeCategory === 'audio'"
+        class="border border-rule rounded-2xl p-6 sm:p-7 bg-surface/40 backdrop-blur-md flex flex-col justify-between gap-6 transition-all hover:border-rule-strong"
+      >
+        <div class="flex items-center justify-between border-b border-rule/60 pb-3">
+          <div class="flex flex-col gap-0.5">
+            <span class="font-mono text-[10px] uppercase tracking-wider text-sig">Real-time Step Trace · Accordion Morph</span>
+            <h2 class="font-sans text-[17px] font-semibold text-ink m-0">UiThinkingTrace · Eros AI Agent</h2>
+          </div>
+          <button
+            type="button"
+            class="h-7 px-2.5 rounded border border-rule font-mono text-[10px] text-dim hover:text-ink cursor-pointer"
+            @click="copyImport('UiThinkingTrace')"
+          >
+            import
+          </button>
+        </div>
+
+        <div class="min-h-[280px] flex items-center justify-center p-4">
+          <div class="w-full max-w-[360px]">
+            <UiThinkingTrace :steps="demoThinkingSteps" :pace="900" />
+          </div>
+        </div>
+
+        <p class="font-mono text-[11px] text-dim m-0 text-center">
+          {{ isEs ? 'Visualizador de pasos de inferencia IA en vivo con telemetría de milisegundos' : 'Live AI reasoning step accordion with millisecond execution telemetry' }}
+        </p>
+      </section>
+
+      <!-- ARTEFACTO 7: Damped Vector Particle Field -->
+      <section
+        v-if="activeCategory === 'all' || activeCategory === 'springs'"
+        class="border border-rule rounded-2xl p-6 sm:p-7 bg-surface/40 backdrop-blur-md flex flex-col justify-between gap-6 transition-all hover:border-rule-strong"
+      >
+        <div class="flex items-center justify-between border-b border-rule/60 pb-3">
+          <div class="flex flex-col gap-0.5">
+            <span class="font-mono text-[10px] uppercase tracking-wider text-sig">Vector Spring Field · Canvas Smoothstep</span>
+            <h2 class="font-sans text-[17px] font-semibold text-ink m-0">UiMagneticDots · Campo Vectorial</h2>
+          </div>
+          <button
+            type="button"
+            class="h-7 px-2.5 rounded border border-rule font-mono text-[10px] text-dim hover:text-ink cursor-pointer"
+            @click="copyImport('UiMagneticDots')"
+          >
+            import
+          </button>
+        </div>
+
+        <div class="min-h-[280px] flex items-center justify-center p-4">
+          <UiMagneticDots
+            :width="300"
+            :height="170"
+            :pull="60"
+            :radius="60"
+            :spring="55"
+            initial-shape="Lines"
+            :spacing="13"
+          />
+        </div>
+
+        <p class="font-mono text-[11px] text-dim m-0 text-center">
+          {{ isEs ? 'Hacé clic sobre el campo para alternar entre Líneas y Puntos' : 'Click the field to toggle between Lines and Dotted particles' }}
+        </p>
+      </section>
+
+      <!-- ARTEFACTO 8: 3D Folder Fan Spread -->
+      <section
+        v-if="activeCategory === 'all' || activeCategory === 'springs'"
+        class="border border-rule rounded-2xl p-6 sm:p-7 bg-surface/40 backdrop-blur-md flex flex-col justify-between gap-6 transition-all hover:border-rule-strong"
+      >
+        <div class="flex items-center justify-between border-b border-rule/60 pb-3">
+          <div class="flex flex-col gap-0.5">
+            <span class="font-mono text-[10px] uppercase tracking-wider text-sig">Conic Polar Fan · Frosted Acrylic Flap</span>
+            <h2 class="font-sans text-[17px] font-semibold text-ink m-0">UiFolderPreview · Abanico 3D</h2>
+          </div>
+          <button
+            type="button"
+            class="h-7 px-2.5 rounded border border-rule font-mono text-[10px] text-dim hover:text-ink cursor-pointer"
+            @click="copyImport('UiFolderPreview')"
+          >
+            import
+          </button>
+        </div>
+
+        <div class="min-h-[280px] flex items-center justify-center p-4">
+          <UiFolderPreview :items="demoFolderItems" label="production/" count="03" compact />
+        </div>
+
+        <p class="font-mono text-[11px] text-dim m-0 text-center">
+          {{ isEs ? 'Pasá el cursor para abrir la solapa y desplegar las tarjetas con origen polar' : 'Hover over the folder to pop the flap and fan out project cards in polar 3D' }}
+        </p>
+      </section>
+
+      <!-- ARTEFACTO 9: macOS Raised Cosine Magnification Dock -->
+      <section
+        v-if="activeCategory === 'all' || activeCategory === 'springs'"
+        class="border border-rule rounded-2xl p-6 sm:p-7 bg-surface/40 backdrop-blur-md flex flex-col justify-between gap-6 transition-all hover:border-rule-strong"
+      >
+        <div class="flex items-center justify-between border-b border-rule/60 pb-3">
+          <div class="flex flex-col gap-0.5">
+            <span class="font-mono text-[10px] uppercase tracking-wider text-sig">Cosine Magnification · Travelling Tooltip</span>
+            <h2 class="font-sans text-[17px] font-semibold text-ink m-0">UiDock · Dock Táctil con Inercia</h2>
+          </div>
+          <button
+            type="button"
+            class="h-7 px-2.5 rounded border border-rule font-mono text-[10px] text-dim hover:text-ink cursor-pointer"
+            @click="copyImport('UiDock')"
+          >
+            import
+          </button>
+        </div>
+
+        <div class="min-h-[220px] flex items-center justify-center p-4">
+          <UiDock v-model="activeDockKey" :items="demoDockItems" :magnify="1.3" />
+        </div>
+
+        <p class="font-mono text-[11px] text-dim m-0 text-center">
+          {{ isEs ? 'Mové el cursor a lo largo del dock para experimentar la curva de magnificación de coseno elevado' : 'Glide cursor across dock to trigger the raised cosine magnification curve' }}
+        </p>
+      </section>
+
+      <!-- ARTEFACTO 10: Real-time Web Audio Synthesizer & SQL Telemetry -->
+      <section
+        v-if="activeCategory === 'all' || activeCategory === 'audio'"
+        class="border border-rule rounded-2xl p-6 sm:p-7 bg-surface/40 backdrop-blur-md flex flex-col justify-between gap-6 transition-all hover:border-rule-strong"
+      >
+        <div class="flex items-center justify-between border-b border-rule/60 pb-3">
+          <div class="flex flex-col gap-0.5">
+            <span class="font-mono text-[10px] uppercase tracking-wider text-sig">Web Audio API · Real-time SQL Readout</span>
+            <h2 class="font-sans text-[17px] font-semibold text-ink m-0">UiAudioVisualizer &amp; UiTelemetryPill</h2>
+          </div>
+          <button
+            type="button"
+            class="h-7 px-2.5 rounded border border-rule font-mono text-[10px] text-dim hover:text-ink cursor-pointer"
+            @click="copyImport('UiAudioVisualizer')"
+          >
+            import
+          </button>
+        </div>
+
+        <div class="min-h-[220px] flex flex-col items-center justify-center gap-5 p-4">
+          <div class="w-full max-w-[320px]">
+            <UiAudioVisualizer compact />
+          </div>
+          <div class="pt-3 border-t border-rule/60 flex items-center justify-center">
+            <UiTelemetryPill collection="projects" :count="28" :api-healthy="true" />
+          </div>
+        </div>
+
+        <p class="font-mono text-[11px] text-dim m-0 text-center">
+          {{ isEs ? 'Espectro de frecuencia armónica en Web Audio API con popover de consulta relacional' : 'Harmonic frequency spectrum on Web Audio API with relational query popover' }}
+        </p>
+      </section>
     </div>
+
+    <!-- ═══════════════════════════════════════════════════════════════════════ -->
+    <!-- 3. AWWWARDS FULL-WIDTH PROJECT INDEX: DENNIS SNELLENBERG FLOATING PREVIEW-->
+    <!-- ═══════════════════════════════════════════════════════════════════════ -->
+    <section
+      v-if="activeCategory === 'all' || activeCategory === 'hero' || activeCategory === 'spatial'"
+      class="border border-rule-strong rounded-2xl p-6 sm:p-8 bg-paper/60 backdrop-blur-xl flex flex-col gap-6 shadow-2xl overflow-hidden"
+      aria-label="Índice de Proyectos con Ventana Flotante por Resorte"
+    >
+      <div class="flex flex-wrap items-center justify-between gap-4 border-b border-rule pb-4">
+        <div class="flex flex-col gap-0.5">
+          <span class="font-mono text-[10.5px] uppercase tracking-wider text-sig font-semibold">
+            Dennis Snellenberg Style · Floating Spring Reel
+          </span>
+          <h2 class="font-sans text-[20px] sm:text-[24px] font-semibold text-ink m-0">
+            UiCursorWorkList · Índice Arquitectónico Awwwards
+          </h2>
+        </div>
+        <button
+          type="button"
+          class="h-7 px-3 rounded-md border border-rule font-mono text-[10.5px] text-dim hover:text-ink cursor-pointer"
+          @click="copyImport('UiCursorWorkList')"
+        >
+          import { UiCursorWorkList }
+        </button>
+      </div>
+
+      <div class="w-full">
+        <UiCursorWorkList :items="demoWorkListItems" />
+      </div>
+
+      <p class="font-mono text-[11px] text-dim m-0 text-center">
+        {{ isEs ? 'Al mover el cursor sobre las filas, la ventana flotante amortiguada con inclinación 3D sigue el puntero' : 'Hover rows to reveal the damped floating spring preview following the pointer with dynamic 3D tilt' }}
+      </p>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════════════════ -->
+    <!-- 4. EXPLORADOR DEL SISTEMA DE ARCHIVOS (ÁRBOL DE COMPONENTES BENCHO)     -->
+    <!-- ═══════════════════════════════════════════════════════════════════════ -->
+    <section class="border border-rule rounded-2xl p-6 sm:p-8 bg-surface/30 flex flex-col gap-5">
+      <div class="flex items-center justify-between border-b border-rule pb-3">
+        <div class="flex flex-col gap-0.5">
+          <span class="font-mono text-[10px] uppercase tracking-wider text-sig">CAD Tree Geometry · Polite Keyboard</span>
+          <h2 class="font-sans text-[18px] font-semibold text-ink m-0">UiTreeView · Arquitectura de Primitivas</h2>
+        </div>
+        <span class="font-mono text-[11px] text-dim">28 Primitives Registered</span>
+      </div>
+
+      <div class="py-2">
+        <UiTreeView :root="demoTreeRoot" :initial-open="['app/components/ui', 'app/components/ui/springs', 'app/components/ui/spatial-3d']" />
+      </div>
+    </section>
   </div>
 </template>
 
 <style scoped>
 .explorer-lab {
-  min-height: 100%;
+  animation: lab-fade-in 0.3s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
-.surface-10k {
-  background-color: var(--d-surface);
+@keyframes lab-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
-.no-scrollbar::-webkit-scrollbar {
-  display: none;
-}
-.no-scrollbar {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
+@media (prefers-reduced-motion: reduce) {
+  .explorer-lab {
+    animation: none !important;
+  }
 }
 </style>
