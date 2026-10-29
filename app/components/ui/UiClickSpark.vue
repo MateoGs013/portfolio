@@ -139,7 +139,7 @@ onBeforeUnmount(() => {
 <template>
   <div
     ref="rootRef"
-    class="relative inline-block"
+    class="relative"
     @click="handleClick"
   >
     <canvas

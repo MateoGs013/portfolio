@@ -10,6 +10,8 @@ import UiCursorWorkList, { type CursorWorkItem } from '~/components/ui/UiCursorW
 import UiSegmentedSwitch from '~/components/ui/UiSegmentedSwitch.vue'
 import UiSpotlightCard from '~/components/ui/UiSpotlightCard.vue'
 import UiTextBlurReveal from '~/components/ui/UiTextBlurReveal.vue'
+import UiClickSpark from '~/components/ui/UiClickSpark.vue'
+import UiRollingCounter from '~/components/ui/UiRollingCounter.vue'
 import { useBenchoSound } from '~/composables/useBenchoSound'
 import { pad, type Folder } from '~/lib/explorer'
 import type { Project } from '~/lib/api'
@@ -533,22 +535,28 @@ function openExternal(url?: string | null) {
 
       <!-- 1.2 Métricas de Rendimiento Clave -->
       <section class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <div class="surface-10k rounded-xl p-3.5 border border-rule flex flex-col">
+        <div class="surface-10k rounded-xl p-3 sm:p-3.5 border border-rule flex flex-col justify-between gap-1">
           <span class="font-mono text-[10px] text-dim uppercase">COMMITS IA</span>
-          <span class="font-sans text-[22px] font-bold text-ink">382</span>
+          <div class="py-0.5">
+            <UiRollingCounter :model-value="382" :digits="3" />
+          </div>
           <span class="font-mono text-[10px] text-faint">Tesis Da Vinci</span>
         </div>
-        <div class="surface-10k rounded-xl p-3.5 border border-rule flex flex-col">
+        <div class="surface-10k rounded-xl p-3 sm:p-3.5 border border-rule flex flex-col justify-between gap-1">
           <span class="font-mono text-[10px] text-dim uppercase">LIGHTHOUSE</span>
-          <span class="font-sans text-[22px] font-bold text-sig">99/100</span>
+          <div class="py-0.5">
+            <UiRollingCounter :model-value="99" :digits="2" suffix="/100" />
+          </div>
           <span class="font-mono text-[10px] text-faint">Producción Real</span>
         </div>
-        <div class="surface-10k rounded-xl p-3.5 border border-rule flex flex-col">
+        <div class="surface-10k rounded-xl p-3 sm:p-3.5 border border-rule flex flex-col justify-between gap-1">
           <span class="font-mono text-[10px] text-dim uppercase">ENTREGABLES</span>
-          <span class="font-sans text-[22px] font-bold text-ink">10+</span>
+          <div class="py-0.5">
+            <UiRollingCounter :model-value="10" :digits="2" suffix="+" />
+          </div>
           <span class="font-mono text-[10px] text-faint">Full-Cycle Shipped</span>
         </div>
-        <div class="surface-10k rounded-xl p-3.5 border border-rule flex flex-col">
+        <div class="surface-10k rounded-xl p-3 sm:p-3.5 border border-rule flex flex-col justify-between gap-1">
           <span class="font-mono text-[10px] text-dim uppercase">BASE DE DATOS</span>
           <span class="font-sans text-[22px] font-bold text-ink">PG-17</span>
           <span class="font-mono text-[10px] text-faint">ACID / pgvector</span>
@@ -781,7 +789,7 @@ function openExternal(url?: string | null) {
                   :duration-ms="700"
                 />
               </span>
-              <span class="inline-flex items-baseline">
+              <span class="inline">
                 <UiTextBlurReveal
                   :text="isEs ? 'sistemas relacionales' : 'relational systems'"
                   split="words"
@@ -826,22 +834,26 @@ function openExternal(url?: string | null) {
 
           <!-- Acciones Táctiles Concisas -->
           <div class="flex flex-wrap items-center gap-2.5 shrink-0">
-            <NuxtLink
-              to="/projects"
-              class="group inline-flex items-center gap-2 h-9 px-4 rounded-full bg-ink text-paper font-sans text-[12.5px] font-semibold tracking-[-0.01em] no-underline hover:opacity-90 active:scale-[0.98] transition-all"
-            >
-              <span>{{ tr.home.btnProjects }}</span>
-              <span class="font-mono text-[10.5px] opacity-70">({{ projectCountBadge }})</span>
-              <AppIcon name="arrow-right" :size="12" class="transition-transform duration-200 group-hover:translate-x-0.5" />
-            </NuxtLink>
+            <UiClickSpark :spark-count="7" :spark-size="6" :spark-radius="22">
+              <NuxtLink
+                to="/projects"
+                class="group inline-flex items-center gap-2 h-9 px-4 rounded-full bg-ink text-paper font-sans text-[12.5px] font-semibold tracking-[-0.01em] no-underline hover:opacity-90 active:scale-[0.98] transition-all"
+              >
+                <span>{{ tr.home.btnProjects }}</span>
+                <span class="font-mono text-[10.5px] opacity-70">({{ projectCountBadge }})</span>
+                <AppIcon name="arrow-right" :size="12" class="transition-transform duration-200 group-hover:translate-x-0.5" />
+              </NuxtLink>
+            </UiClickSpark>
 
-            <NuxtLink
-              to="/about"
-              class="inline-flex items-center justify-center gap-1.5 h-9 px-3.5 rounded-full bg-surface hover:bg-hover border border-rule hover:border-rule-strong text-ink font-sans text-[12.5px] font-medium no-underline active:scale-[0.98] transition-all duration-150"
-              :title="isEs ? 'Abrir currículum completo en formato Harvard ATS o Interactivo' : 'Open complete resume in Harvard ATS or Interactive format'"
-            >
-              <span>{{ isEs ? 'CV Harvard ATS' : 'Harvard ATS CV' }}</span>
-            </NuxtLink>
+            <UiClickSpark :spark-count="7" :spark-size="6" :spark-radius="22">
+              <NuxtLink
+                to="/about"
+                class="inline-flex items-center justify-center gap-1.5 h-9 px-3.5 rounded-full bg-surface hover:bg-hover border border-rule hover:border-rule-strong text-ink font-sans text-[12.5px] font-medium no-underline active:scale-[0.98] transition-all duration-150"
+                :title="isEs ? 'Abrir currículum completo en formato Harvard ATS o Interactivo' : 'Open complete resume in Harvard ATS or Interactive format'"
+              >
+                <span>{{ isEs ? 'CV Harvard ATS' : 'Harvard ATS CV' }}</span>
+              </NuxtLink>
+            </UiClickSpark>
 
             <UiCopyPill
               size="sm"
@@ -890,42 +902,44 @@ function openExternal(url?: string | null) {
             :key="p.slug"
             class="buser-project-frame group rounded-[2px] p-5 sm:p-7 flex flex-col justify-between gap-6"
           >
-            <NuxtLink
-              :to="p.to"
-              :data-row="p.slug"
-              class="flex flex-col h-full justify-between gap-6 no-underline text-inherit focus:outline-none"
-            >
-              <!-- Contenedor Superior: Mockup 16:10 Puro sin Píldoras Flotantes (Daniele Buser 1:1) -->
-              <div class="relative aspect-[16/10] w-full overflow-hidden rounded-[2px] bg-black/50">
-                <img
-                  v-if="p.cover"
-                  :src="p.cover"
-                  :alt="p.title"
-                  class="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.02]"
-                  loading="lazy"
-                >
-                <div v-else class="w-full h-full flex flex-col justify-between p-6 bg-surface-raised">
-                  <span class="font-mono text-[10px] opacity-60 uppercase">{{ p.year }}</span>
-                  <span class="font-sans text-[22px] font-semibold">{{ p.title }}</span>
-                </div>
-              </div>
-
-              <!-- Pie Arquitectónico Puro: Solo Título Grande a la Izquierda + 4 Líneas de Stack Vertical a la Derecha -->
-              <div class="flex items-end justify-between gap-4 pt-1">
-                <div class="flex flex-col gap-1 min-w-0 flex-1">
-                  <h3 class="m-0 font-sans text-[clamp(22px,2.5vw,32px)] font-semibold tracking-[-0.035em] leading-[1.05] group-hover:text-sig transition-colors">
-                    {{ p.title }}
-                  </h3>
+            <UiClickSpark :spark-count="6" :spark-size="5" :spark-radius="20" class="h-full flex flex-col">
+              <NuxtLink
+                :to="p.to"
+                :data-row="p.slug"
+                class="flex flex-col h-full justify-between gap-6 no-underline text-inherit focus:outline-none"
+              >
+                <!-- Contenedor Superior: Mockup 16:10 Puro sin Píldoras Flotantes (Daniele Buser 1:1) -->
+                <div class="relative aspect-[16/10] w-full overflow-hidden rounded-[2px] bg-black/50">
+                  <img
+                    v-if="p.cover"
+                    :src="p.cover"
+                    :alt="p.title"
+                    class="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.02]"
+                    loading="lazy"
+                  >
+                  <div v-else class="w-full h-full flex flex-col justify-between p-6 bg-surface-raised">
+                    <span class="font-mono text-[10px] opacity-60 uppercase">{{ p.year }}</span>
+                    <span class="font-sans text-[22px] font-semibold">{{ p.title }}</span>
+                  </div>
                 </div>
 
-                <!-- Columna Derecha: Stack Vertical Alineado a la Derecha (Cero Pill Borders, Estilo Daniele Buser) -->
-                <ul v-if="p.chips && p.chips.length" class="flex flex-col items-end text-right list-none m-0 p-0 shrink-0 font-mono text-[10px] leading-[1.45] uppercase tracking-[0.06em] opacity-70">
-                  <li v-for="chip in p.chips.slice(0, 4)" :key="chip">
-                    {{ chip }}
-                  </li>
-                </ul>
-              </div>
-            </NuxtLink>
+                <!-- Pie Arquitectónico Puro: Solo Título Grande a la Izquierda + 4 Líneas de Stack Vertical a la Derecha -->
+                <div class="flex items-end justify-between gap-4 pt-1">
+                  <div class="flex flex-col gap-1 min-w-0 flex-1">
+                    <h3 class="m-0 font-sans text-[clamp(22px,2.5vw,32px)] font-semibold tracking-[-0.035em] leading-[1.05] group-hover:text-sig transition-colors">
+                      {{ p.title }}
+                    </h3>
+                  </div>
+
+                  <!-- Columna Derecha: Stack Vertical Alineado a la Derecha (Cero Pill Borders, Estilo Daniele Buser) -->
+                  <ul v-if="p.chips && p.chips.length" class="flex flex-col items-end text-right list-none m-0 p-0 shrink-0 font-mono text-[10px] leading-[1.45] uppercase tracking-[0.06em] opacity-70">
+                    <li v-for="chip in p.chips.slice(0, 4)" :key="chip">
+                      {{ chip }}
+                    </li>
+                  </ul>
+                </div>
+              </NuxtLink>
+            </UiClickSpark>
           </article>
         </div>
 

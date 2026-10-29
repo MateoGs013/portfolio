@@ -582,6 +582,19 @@ const currentRoot = computed(() => path.value[0] ?? '')
                 <AppIcon v-if="theme === 'dark'" name="sun" :size="13" />
                 <AppIcon v-else name="moon" :size="13" />
               </button>
+
+              <!-- Toggle de Sonido Procedural Bencho -->
+              <button
+                type="button"
+                class="tool-btn sound-btn inline-flex items-center justify-center px-1.5 h-5 rounded-full bg-surface border border-rule font-mono text-[9.5px] cursor-pointer transition-colors duration-150 hover:text-ink hover:border-rule-strong active:scale-95"
+                :class="{ 'text-sig !border-sig/40 font-semibold shadow-xs': soundEnabled, 'text-faint': !soundEnabled }"
+                :title="soundEnabled ? (isEs ? 'Desactivar audio táctil Bencho' : 'Mute tactile Bencho audio') : (isEs ? 'Activar audio táctil Bencho' : 'Unmute tactile Bencho audio')"
+                :aria-label="soundEnabled ? 'Mute audio' : 'Unmute audio'"
+                @click="toggleSound"
+              >
+                <span>SFX</span>
+                <span class="ml-1 text-[8.5px] uppercase opacity-75">{{ soundEnabled ? 'ON' : 'OFF' }}</span>
+              </button>
             </div>
           </div>
         </template>

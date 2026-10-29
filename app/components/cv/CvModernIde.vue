@@ -23,7 +23,7 @@ defineProps<{
       <aside class="ide-sidebar w-[260px] max-md:w-full bg-surface border-r max-md:border-r-0 max-md:border-b border-rule-strong flex flex-col shrink-0">
         <div class="ide-window-controls p-3 px-3.5 flex items-center gap-2 border-b border-rule-strong bg-surface-raised">
           <span class="w-1.5 h-1.5 rounded-full bg-sig shrink-0" aria-hidden="true" />
-          <span class="font-mono text-[10px] uppercase tracking-wider text-dim">IDE // DOSSIER</span>
+          <span class="font-mono text-[10px] uppercase tracking-wider text-dim">IDE · DOSSIER</span>
           <span class="ide-file-title ml-auto text-sig text-[11px]">package.json</span>
         </div>
 
