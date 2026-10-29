@@ -135,7 +135,7 @@ const cvDeliverables = computed<CvDeliverable[]>(() => {
         location: 'Remoto',
         description: 'Desarrollo de software y soluciones web llave en mano para clientes de diversos rubros con arquitectura integral y APIs REST.',
         bullets: [
-          'Desarrollo integral y entrega de ~10 soluciones llave en mano: arquitectura técnica, diseño en Figma y puesta en marcha.',
+          'Desarrollo integral y entrega de soluciones web llave en mano: arquitectura técnica, diseño en Figma y puesta en marcha.',
           'Diseño y consumo de APIs REST modulares con micro-interacciones táctiles, tipado estricto y testing automatizado.',
           'Despliegues contenerizados con Docker, integración continua y optimización de rendimiento para diversos rubros.',
         ],
@@ -214,7 +214,7 @@ const cvDeliverables = computed<CvDeliverable[]>(() => {
       location: 'Remote',
       description: 'Full-stack software development and turnkey web solutions for diverse clients with end-to-end architecture and REST APIs.',
       bullets: [
-        'End-to-end delivery of ~10 turnkey web solutions: system architecture, Figma UI design, and custom client delivery.',
+        'End-to-end delivery of custom turnkey web solutions: system architecture, Figma UI design, and client delivery.',
         'Engineered decoupled REST APIs with tactile micro-interactions, strict type-safety, and automated testing.',
         'Containerized multi-environment setups using Docker, CI/CD automated pipelines, and performance tuning.',
       ],

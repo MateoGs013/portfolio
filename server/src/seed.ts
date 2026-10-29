@@ -443,7 +443,7 @@ const aboutFields: DocField[] = [
   { name: 'location', type: 'string', value: 'Río Negro, Patagonia Argentina' },
   { name: 'technical_degree', type: 'string', value: 'Técnico en Programación · CET N.º 30 (2017–2023)' },
   { name: 'higher_education', type: 'string', value: 'Diseño y Desarrollo Web · Escuela Da Vinci (2024–2026) · Tesis Preaprobada' },
-  { name: 'freelance_experience', type: 'string', value: 'Activo desde 2023 · ≈ 10 soluciones web entregadas' },
+  { name: 'freelance_experience', type: 'string', value: 'Activo desde 2023 · Soluciones web y software a medida' },
   { name: 'availability_status', type: 'string', value: 'DISPONIBLE // Búsqueda de equipo o proyectos de alto impacto' },
   { name: 'work_modalities', type: 'string', value: 'Remoto · Híbrido · Presencial' },
   { name: 'timezone', type: 'string', value: 'UTC-3 (Argentina / Compatible con US & EU)' },

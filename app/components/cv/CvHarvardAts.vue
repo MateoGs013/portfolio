@@ -174,8 +174,8 @@ defineProps<{
           <ul class="h-bullets">
             <li v-if="isEs">Desarrollo integral de soluciones de software a medida con APIs REST y arquitecturas modulares.</li>
             <li v-else>End-to-end development of custom software solutions with decoupled REST APIs and scalable architectures.</li>
-            <li v-if="isEs">Entrega exitosa de aproximadamente 10 proyectos web llave en mano combinando diseño en Figma y puesta en marcha.</li>
-            <li v-else>Successful delivery of ~10 turnkey web solutions combining Figma UI design and custom client handover.</li>
+            <li v-if="isEs">Entrega de soluciones web llave en mano combinando diseño en Figma, puesta en marcha y soporte continuo.</li>
+            <li v-else>Delivery of custom turnkey web solutions combining Figma UI design, client handover, and ongoing support.</li>
           </ul>
         </div>
       </template>
