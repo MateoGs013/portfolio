@@ -495,22 +495,22 @@ export function renderCvHtmlHeuristic(job: HunterJob): string {
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>CV · ${cv.candidate.name} · Harvard ATS</title>
   <style>
-    @page { size: A4 portrait; margin: 15mm 18mm; }
+    @page { size: A4 portrait; margin: 9.5mm 12mm; }
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: "Times New Roman", Times, Georgia, serif; font-size: 10.5pt; line-height: 1.35; color: #000; background: #fff; padding: 12mm 15mm; }
-    h1 { text-align: center; font-size: 17pt; font-weight: bold; letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 3pt; }
-    .contact-line { text-align: center; font-size: 9.5pt; margin-bottom: 12pt; border-bottom: 1px solid #000; padding-bottom: 6pt; }
+    body { font-family: "Times New Roman", Times, Georgia, serif; font-size: 10pt; line-height: 1.32; color: #000; background: #fff; padding: 10mm 12mm; }
+    h1 { text-align: center; font-size: 18pt; font-weight: bold; letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 2pt; }
+    .contact-line { text-align: center; font-size: 9pt; margin-bottom: 10pt; border-bottom: 1.2pt solid #000; padding-bottom: 4pt; }
     .contact-line a { color: #000; text-decoration: none; }
-    .section-title { font-size: 11pt; font-weight: bold; text-transform: uppercase; border-bottom: 0.75pt solid #000; margin-top: 10pt; margin-bottom: 4pt; letter-spacing: 0.5px; }
-    .entry { margin-bottom: 6pt; }
-    .entry-header { display: flex; justify-content: space-between; font-weight: bold; font-size: 10pt; }
-    .entry-sub { display: flex; justify-content: space-between; font-style: italic; font-size: 9.5pt; margin-bottom: 2pt; }
-    ul { list-style-type: disc; margin-left: 14pt; margin-top: 2pt; }
-    li { font-size: 9.5pt; margin-bottom: 1.5pt; text-align: justify; }
-    p.summary { font-size: 9.5pt; text-align: justify; margin-bottom: 4pt; }
+    .section-title { font-size: 10.8pt; font-weight: bold; text-transform: uppercase; border-bottom: 0.85pt solid #000; margin-top: 8pt; margin-bottom: 3.5pt; letter-spacing: 0.5px; }
+    .entry { margin-bottom: 5pt; }
+    .entry-header { display: flex; justify-content: space-between; font-weight: bold; font-size: 10pt; line-height: 12.6pt; }
+    .entry-sub { display: flex; justify-content: space-between; font-style: italic; font-size: 9.3pt; margin-bottom: 1.5pt; }
+    ul { list-style-type: disc; margin-left: 12pt; margin-top: 1pt; }
+    li { font-size: 9pt; line-height: 12.1pt; margin-bottom: 1.6pt; text-align: justify; }
+    p.summary { font-size: 9.3pt; line-height: 12.6pt; text-align: justify; margin-bottom: 4pt; }
     @media print {
-      body { padding: 0; }
-      @page { margin: 12mm 15mm; }
+      body { padding: 0; background: #fff !important; color: #000 !important; }
+      @page { size: A4 portrait; margin: 9.5mm 12mm; }
     }
   </style>
 </head>
