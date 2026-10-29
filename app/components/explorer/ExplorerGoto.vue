@@ -84,8 +84,10 @@ onMounted(() => input.value?.focus())
       <label class="grid grid-cols-[auto_1fr_auto] gap-3 items-center px-4 py-3.5 border-b border-rule bg-surface-raised">
         <span class="font-mono text-[12px] text-sig font-bold">{{ isEs ? 'ir a' : 'goto' }}</span>
         <input
+          id="global-goto-input"
           ref="input"
           v-model="q"
+          name="goto-search"
           type="text"
           autocomplete="off"
           spellcheck="false"

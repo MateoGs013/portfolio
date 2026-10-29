@@ -87,6 +87,31 @@ function formatExpPeriod(it: Folder['items'][number]): string {
   return it.meta
 }
 
+function formatItemLabel(it: Folder['items'][number]): string {
+  if (props.folder.head === 'experience') {
+    return isEs.value ? (it.role || it.label) : (getExperienceLocalization(it.key)?.role || it.role || it.label)
+  }
+  return it.label
+}
+
+function formatItemMeta(it: Folder['items'][number]): string {
+  if (props.folder.head === 'experience') {
+    if (!isEs.value) {
+      return (it.meta || '').replace(/act$/i, 'present')
+    }
+  }
+  return it.meta || ''
+}
+
+function formatItemBadge(it: Folder['items'][number]): string {
+  if (props.folder.head === 'experience') {
+    if (!isEs.value && it.badge?.toLowerCase() === 'act') {
+      return 'pres'
+    }
+  }
+  return it.badge || ''
+}
+
 function getExpCategory(key: string): { label: string, color: string } {
   if (key === 'ynara') return { label: isEs.value ? 'TESIS & LIDERAZGO' : 'THESIS & LEAD', color: 'text-sig' }
   if (key === 'la-rucula' || key === 'arg-piscinas') return { label: isEs.value ? 'PRODUCCIÓN CLIENTE' : 'CLIENT PRODUCTION', color: 'text-green' }
@@ -1345,9 +1370,9 @@ function openExternal(url?: string | null) {
           <!-- Baldosa Estándar -->
           <NuxtLink v-else :to="it.to" class="tile rounded-xl" :class="it.kind" :data-row="it.key">
             <span class="n">{{ pad(n + 1) }}</span>
-            <ExplorerBadge :kind="it.kind" :badge="it.badge" class="icono" />
-            <span class="name">{{ it.label }}</span>
-            <span class="meta">{{ it.desc ?? it.meta }}</span>
+            <ExplorerBadge :kind="it.kind" :badge="formatItemBadge(it)" class="icono" />
+            <span class="name">{{ formatItemLabel(it) }}</span>
+            <span class="meta">{{ it.desc ?? formatItemMeta(it) }}</span>
           </NuxtLink>
         </li>
       </ol>
@@ -1371,12 +1396,12 @@ function openExternal(url?: string | null) {
               <td class="td-name">
                 <NuxtLink :to="it.to" class="t-link" :data-row="it.key">
                   <AppIcon :name="it.kind === 'folder' ? 'folder' : 'file'" :size="13" class="t-icon" />
-                  <span class="t-label">{{ it.label }}</span>
-                  <span v-if="it.badge" class="t-badge rounded">{{ it.badge }}</span>
+                  <span class="t-label">{{ formatItemLabel(it) }}</span>
+                  <span v-if="it.badge" class="t-badge rounded">{{ formatItemBadge(it) }}</span>
                 </NuxtLink>
               </td>
               <td class="td-key"><code>{{ it.key }}</code></td>
-              <td class="td-meta">{{ it.meta }}</td>
+              <td class="td-meta">{{ formatItemMeta(it) }}</td>
               <td class="td-kind"><span class="badge-kind rounded">{{ it.kind }}</span></td>
               <td class="td-action">
                 <NuxtLink :to="it.to" class="btn-open rounded-md">

@@ -645,7 +645,7 @@ const currentRoot = computed(() => path.value[0] ?? '')
         <div class="flex items-center gap-3">
           <span class="inline-flex items-center gap-2 text-ink font-medium">
             <span class="w-1.5 h-1.5 rounded-full bg-green shrink-0" />
-            <span>PARANÁ, AR</span>
+            <span>RÍO NEGRO, AR</span>
           </span>
           <span class="text-faint">—</span>
           <span class="tabular-nums text-dim">{{ utcTime || 'UTC-3' }}</span>
