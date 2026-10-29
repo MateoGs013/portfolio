@@ -1127,7 +1127,7 @@ function openExternal(url?: string | null) {
             >
               mateogabus@gmail.com
             </a>
-            <div class="flex flex-wrap items-center lg:justify-end gap-x-3.5 gap-y-2 font-sans text-[clamp(0.75rem,0.85vw,0.875rem)] text-dim">
+            <div class="flex flex-wrap items-center lg:justify-end gap-x-4 gap-y-2 font-sans text-[clamp(0.75rem,0.85vw,0.875rem)] text-dim">
               <UiCopyPill
                 text="mateogabus@gmail.com"
                 :label="isEs ? 'Copiar correo' : 'Copy email'"
@@ -1141,7 +1141,6 @@ function openExternal(url?: string | null) {
               >
                 LinkedIn
               </a>
-              <span class="text-rule-strong" aria-hidden="true">·</span>
               <a
                 href="https://github.com/MateoGs013"
                 target="_blank"
@@ -1150,7 +1149,6 @@ function openExternal(url?: string | null) {
               >
                 GitHub
               </a>
-              <span class="text-rule-strong" aria-hidden="true">·</span>
               <NuxtLink
                 to="/about"
                 class="text-dim hover:text-ink no-underline transition-colors"
