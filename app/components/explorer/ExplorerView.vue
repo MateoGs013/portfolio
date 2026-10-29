@@ -274,6 +274,12 @@ const pane = ref<HTMLElement | null>(null)
 
 watch(() => route.fullPath, () => {
   mobileMenuOpen.value = false
+  if (import.meta.client) {
+    const mainEl = document.getElementById('contenido')
+    if (mainEl) {
+      mainEl.scrollTo({ top: 0, behavior: 'instant' })
+    }
+  }
 })
 
 /** Las filas que el teclado recorre en el panel actual, en orden de lectura. */
@@ -884,10 +890,25 @@ kbd {
   padding: 24px 32px 48px 32px;
   overflow-y: auto;
   overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
   scrollbar-width: thin;
   scrollbar-color: var(--d-rule) transparent;
   perspective: 1200px;
   perspective-origin: 50% 40%;
+}
+.exp::-webkit-scrollbar {
+  width: 5px;
+}
+.exp::-webkit-scrollbar-track {
+  background: transparent;
+}
+.exp::-webkit-scrollbar-thumb {
+  background-color: var(--d-rule);
+  border-radius: 9999px;
+}
+.exp::-webkit-scrollbar-thumb:hover {
+  background-color: var(--d-rule-strong);
 }
 @media screen and (max-width: 1023px) {
   .exp {

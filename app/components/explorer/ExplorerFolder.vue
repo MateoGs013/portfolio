@@ -12,6 +12,7 @@ import UiSpotlightCard from '~/components/ui/UiSpotlightCard.vue'
 import { pad, type Folder } from '~/lib/explorer'
 import type { Project } from '~/lib/api'
 import { routeFor } from '~/lib/path'
+import { fallbackProjects } from '~/lib/fallbackData'
 
 const props = defineProps<{ folder: Folder }>()
 const uid = useId()
@@ -218,10 +219,10 @@ const specialties = computed<Record<SpecialtyKey, SpecialtyPitch>>(() => ({
 }))
 
 const projectCounts = computed(() => {
-  const list = props.folder.projects && props.folder.projects.length ? props.folder.projects : props.folder.items
-  const all = list.length
-  const live = list.filter((p: { status?: string }) => p.status === 'LIVE').length
-  const wip = list.filter((p: { status?: string }) => p.status === 'WIP').length
+  const baseline = fallbackProjects
+  const all = baseline.length
+  const live = baseline.filter(p => p.status === 'LIVE').length
+  const wip = baseline.filter(p => p.status === 'WIP').length
   return {
     all: pad(all),
     live: pad(live),
@@ -1203,10 +1204,12 @@ function openExternal(url?: string | null) {
         </div>
       </div>
 
-      <!-- 2. Vista de Cuadrícula (Especializada por Colección con Revelación Progresiva) -->
-      <ol
+      <!-- 2. Vista de Cuadrícula (Especializada por Colección con Revelación Progresiva & FLIP Animations) -->
+      <TransitionGroup
         v-else-if="viewMode === 'grid'"
-        class="folder-items-grid grid gap-5 sm:gap-6 my-4 w-full list-none p-0 m-0"
+        tag="ol"
+        name="grid-flip"
+        class="folder-items-grid grid gap-5 sm:gap-6 my-4 w-full list-none p-0 m-0 relative"
         :class="{
           'grid-cols-1 md:grid-cols-2': folder.head === 'projects',
           'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4': folder.head === 'stack' || folder.head === 'experience',
@@ -1375,7 +1378,7 @@ function openExternal(url?: string | null) {
             <span class="meta">{{ it.desc ?? formatItemMeta(it) }}</span>
           </NuxtLink>
         </li>
-      </ol>
+      </TransitionGroup>
 
       <!-- Vista de Tabla Técnica Compacta -->
       <div v-else-if="viewMode === 'table'" class="table-container rounded-xl overflow-hidden my-4">
@@ -3675,6 +3678,32 @@ function openExternal(url?: string | null) {
   line-height: 1.5;
   margin: 0;
   text-align: left;
+}
+
+/* Transiciones FLIP para reordenamiento elástico de tarjetas en filtros */
+.grid-flip-move {
+  transition: transform 380ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+.grid-flip-enter-active,
+.grid-flip-leave-active {
+  transition: opacity 280ms cubic-bezier(0.16, 1, 0.3, 1), transform 280ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+.grid-flip-enter-from,
+.grid-flip-leave-to {
+  opacity: 0;
+  transform: scale(0.96) translateY(6px);
+}
+.grid-flip-leave-active {
+  position: absolute;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .grid-flip-move,
+  .grid-flip-enter-active,
+  .grid-flip-leave-active {
+    transition: none !important;
+  }
 }
 
 </style>

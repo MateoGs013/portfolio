@@ -126,7 +126,7 @@ function formatMetricKey(key: string | number): string {
     <div v-for="s in cell.steps" :key="s.order" class="step-card p-3 sm:p-3.5 bg-surface border border-rule border-l-[3px] border-l-sig rounded-[2px]">
       <div class="step-header flex items-center gap-2 mb-1.5">
         <span class="step-pip font-mono text-[11px] font-extrabold text-sig">0{{ s.order }}</span>
-        <span class="step-title font-mono text-[12px] font-bold text-ink uppercase truncate">{{ s.title }}</span>
+        <span class="step-title font-mono text-[12px] font-bold text-ink uppercase truncate">{{ s.title.replace(/^\d+\s*·\s*/, '') }}</span>
       </div>
       <p class="step-body m-0 font-sans text-[13px] sm:text-[13.5px] leading-relaxed text-dim break-words">{{ s.body }}</p>
     </div>
