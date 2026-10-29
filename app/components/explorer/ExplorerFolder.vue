@@ -1110,7 +1110,7 @@ function openExternal(url?: string | null) {
 
             <!-- Lockup Espacial: Mini Globo 3D Relativo + Coordenadas -->
             <div class="flex items-center gap-3.5 pt-1">
-              <UiDotGlobe :size="120" class="w-[clamp(4.5rem,6vw,6rem)] aspect-square cursor-grab active:cursor-grabbing shrink-0" />
+              <UiDotGlobe :size="84" class="shrink-0 cursor-grab active:cursor-grabbing" />
               <div class="flex flex-col gap-0.5 font-mono text-[clamp(0.65rem,0.78vw,0.8rem)] text-dim">
                 <span class="text-ink font-semibold">PARANÁ, ARGENTINA</span>
                 <span>31.73° S · 60.52° W</span>
@@ -1123,11 +1123,11 @@ function openExternal(url?: string | null) {
           <div class="lg:col-span-6 flex flex-col lg:items-end justify-between gap-4 min-w-0">
             <a
               href="mailto:mateogabus@gmail.com"
-              class="font-sans text-[clamp(1.25rem,2.8vw,2.5rem)] font-medium tracking-[-0.03em] text-ink hover:text-sig no-underline transition-colors leading-tight whitespace-nowrap inline-block max-w-full"
+              class="font-sans text-[clamp(1.05rem,2.8vw,2.5rem)] font-medium tracking-[-0.03em] text-ink hover:text-sig no-underline transition-colors leading-tight whitespace-nowrap inline-block max-w-full"
             >
               mateogabus@gmail.com
             </a>
-            <div class="flex flex-wrap items-center lg:justify-end gap-3 font-sans text-[clamp(0.75rem,0.85vw,0.875rem)] text-dim">
+            <div class="flex flex-wrap items-center lg:justify-end gap-x-3.5 gap-y-2 font-sans text-[clamp(0.75rem,0.85vw,0.875rem)] text-dim">
               <UiCopyPill
                 text="mateogabus@gmail.com"
                 :label="isEs ? 'Copiar correo' : 'Copy email'"
@@ -1141,7 +1141,7 @@ function openExternal(url?: string | null) {
               >
                 LinkedIn
               </a>
-              <span class="text-rule-strong" aria-hidden="true">|</span>
+              <span class="text-rule-strong" aria-hidden="true">·</span>
               <a
                 href="https://github.com/MateoGs013"
                 target="_blank"
@@ -1150,7 +1150,7 @@ function openExternal(url?: string | null) {
               >
                 GitHub
               </a>
-              <span class="text-rule-strong" aria-hidden="true">|</span>
+              <span class="text-rule-strong" aria-hidden="true">·</span>
               <NuxtLink
                 to="/about"
                 class="text-dim hover:text-ink no-underline transition-colors"

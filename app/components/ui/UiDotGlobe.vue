@@ -414,11 +414,11 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div class="glb-container inline-flex flex-col items-center justify-center select-none relative max-w-full">
+  <div class="glb-container inline-flex flex-col items-center justify-center select-none relative">
     <canvas
       ref="canvasRef"
-      class="glb block cursor-grab active:cursor-grabbing max-w-full aspect-square"
-      :style="{ width: `${size}px`, height: `${size}px`, maxWidth: '100%' }"
+      class="glb block cursor-grab active:cursor-grabbing shrink-0"
+      :style="{ width: `${size}px`, height: `${size}px` }"
       :data-hover="hoveredCity ? 'true' : undefined"
       :aria-label="`Interactive 3D Dotted Globe with nodes connecting to ${homeCity}`"
       role="img"
