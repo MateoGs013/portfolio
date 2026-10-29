@@ -99,7 +99,7 @@ function getExpHighlights(key: string): string[] {
   if (key === 'la-rucula') return isEs.value ? ['Lighthouse 99', 'En producción en Chiclana', 'Vue 3 + GSAP'] : ['Lighthouse 99', 'Live production in Chiclana', 'Vue 3 + GSAP']
   if (key === 'arg-piscinas') return isEs.value ? ['Lighthouse 98', 'Multi-idioma ES/EN/DE', 'Panel Prisma'] : ['Lighthouse 98', 'Multilingual ES/EN/DE', 'Prisma CMS']
   if (key === 'cet-30') return isEs.value ? ['7 Años de formación', 'Título de Técnico en Programación', 'Bases de bajo nivel'] : ['7-Year technical basis', 'Official programming degree', 'Low-level foundations']
-  if (key === 'freelance') return isEs.value ? ['~10 Entregables llave en mano', 'Stack full-cycle', 'Directo a producción'] : ['~10 Turnkey deliverables', 'Full-cycle stack', 'Direct to production']
+  if (key === 'freelance') return isEs.value ? ['~10 Entregables llave en mano', 'Stack full-cycle', 'Soluciones a medida'] : ['~10 Turnkey deliverables', 'Full-cycle stack', 'Custom client solutions']
   if (key === 'escuela-da-vinci') return isEs.value ? ['Promoción 2026', 'Tesis sobresaliente', 'Dirección visual & frontend'] : ['2026 Class', 'Honors thesis', 'Visual direction & frontend']
   return []
 }
