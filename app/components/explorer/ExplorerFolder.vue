@@ -12,7 +12,6 @@ import UiSpotlightCard from '~/components/ui/UiSpotlightCard.vue'
 import UiTextBlurReveal from '~/components/ui/UiTextBlurReveal.vue'
 import UiClickSpark from '~/components/ui/UiClickSpark.vue'
 import UiRollingCounter from '~/components/ui/UiRollingCounter.vue'
-import UiHubDiagram, { type HubNode } from '~/components/ui/UiHubDiagram.vue'
 import UiDotGlobe from '~/components/ui/UiDotGlobe.vue'
 import UiBorderBeam from '~/components/ui/UiBorderBeam.vue'
 import UiThinkingTrace from '~/components/ui/UiThinkingTrace.vue'
@@ -66,43 +65,22 @@ watch(isHyperfocus, (val) => {
   }
 }, { immediate: true })
 
-// Topología Arquitectónica Relacional para /stack
-const selectedStackNodeId = ref<string | null>(null)
+// Filtros de categoría para /stack
+const activeCategoryFilter = computed(() => {
+  const c = route.query.category
+  return typeof c === 'string' ? c.toUpperCase() : null
+})
 
-const stackHubNodes = computed<HubNode[]>(() => [
-  { id: 'vue', label: 'Vue 3 / Nuxt 4', metric: '18ms SSR · SFC', icon: 'zap', slug: 'vue' },
-  { id: 'postgresql', label: 'Postgres 17', metric: 'ACID · JSONB', icon: 'db', slug: 'postgresql' },
-  { id: 'prisma', label: 'Prisma 7', metric: 'TypeSafe ORM', icon: 'grid', slug: 'prisma' },
-  { id: 'fastapi', label: 'FastAPI / Python', metric: 'Eros AI · pgvector', icon: 'code', slug: 'fastapi' },
-  { id: 'gsap', label: 'GSAP 3', metric: '120fps Inertia', icon: 'target', slug: 'gsap' },
-  { id: 'tailwind', label: 'Tailwind CSS', metric: 'v4 Utility Engine', icon: 'check', slug: 'tailwind' },
-])
-
-function handleStackHubSelect(node: HubNode) {
-  if (selectedStackNodeId.value === node.id) {
-    selectedStackNodeId.value = null
+const stackCategoryCounts = computed(() => {
+  const items = props.folder.items || []
+  return {
+    all: items.length,
+    framework: items.filter(i => i.category?.toUpperCase() === 'FRAMEWORK').length,
+    backend: items.filter(i => i.category?.toUpperCase() === 'BACKEND').length,
+    data: items.filter(i => i.category?.toUpperCase() === 'DATA').length,
+    tooling: items.filter(i => i.category?.toUpperCase() === 'TOOLING').length,
+    motion: items.filter(i => i.category?.toUpperCase() === 'MOTION').length,
   }
-  else {
-    selectedStackNodeId.value = node.id
-  }
-}
-
-function handleStackHubClear() {
-  selectedStackNodeId.value = null
-}
-
-const displayedFolderItems = computed(() => {
-  if (props.folder.head !== 'stack' || !selectedStackNodeId.value) {
-    return props.folder.items
-  }
-  const needle = selectedStackNodeId.value.toLowerCase()
-  return props.folder.items.filter((it) => {
-    const k = (it.key || '').toLowerCase()
-    const l = (it.label || '').toLowerCase()
-    const c = (it.category || '').toLowerCase()
-    const n = (it.note || '').toLowerCase()
-    return k === needle || k.includes(needle) || l.includes(needle) || c.includes(needle) || n.includes(needle)
-  })
 })
 
 const activeStatusFilter = computed(() => {
@@ -1247,50 +1225,60 @@ function openExternal(url?: string | null) {
         </div>
       </div>
 
-      <!-- Topología de Arquitectura Relacional Viva para /stack -->
-      <div
-        v-if="folder.head === 'stack'"
-        class="stack-architecture-hub my-4 p-4 sm:p-6 rounded-xl border border-rule bg-surface/50 flex flex-col gap-3 relative overflow-hidden"
-      >
-        <div class="flex items-center justify-between gap-3 flex-wrap border-b border-rule/60 pb-3">
-          <div class="flex items-center gap-2">
-            <span class="w-2 h-2 rounded-full bg-sig animate-pulse shrink-0" aria-hidden="true" />
-            <span class="font-mono text-[11px] sm:text-[11.5px] font-medium text-ink uppercase tracking-wider">
-              01 / {{ isEs ? 'ARQUITECTURA RELACIONAL VIVA' : 'LIVING RELATIONAL ARCHITECTURE' }}
-            </span>
-          </div>
-          <div class="flex items-center gap-2.5 font-mono text-[10.5px]">
-            <span class="text-dim hidden sm:inline">POSTGRESQL 17 ACID CORE · 6 SUBSISTEMAS</span>
-            <button
-              v-if="selectedStackNodeId"
-              type="button"
-              class="px-2 py-0.5 rounded border border-sig/40 bg-sig/10 text-sig hover:bg-sig/20 cursor-pointer transition-colors flex items-center gap-1 font-mono text-[10.5px]"
-              @click="handleStackHubClear"
-            >
-              <span>{{ isEs ? 'RESTAURAR VISTA' : 'RESET FILTER' }}</span>
-              <span aria-hidden="true">×</span>
-            </button>
-          </div>
+      <!-- Barra de Filtros de Categorías para Stack (Awwwards Index Filters) -->
+      <div v-if="folder.head === 'stack'" class="flex items-center justify-between gap-3 py-3 my-3 border-b border-rule flex-wrap w-full min-w-0">
+        <div class="flex items-center gap-2 flex-wrap">
+          <NuxtLink
+            :to="routeFor(['stack'])"
+            class="font-sans text-[12px] px-3 py-1 rounded-full transition-all duration-150 no-underline shrink-0"
+            :class="!activeCategoryFilter ? 'bg-ink text-paper font-semibold shadow-xs' : 'text-dim hover:text-ink bg-surface border border-rule'"
+          >
+            <span>{{ isEs ? 'TODAS' : 'ALL' }}</span>
+            <sup class="font-mono text-[9.5px] opacity-75 ml-0.5">{{ stackCategoryCounts.all }}</sup>
+          </NuxtLink>
+          <NuxtLink
+            :to="routeFor(['stack'], { category: 'framework' })"
+            class="font-sans text-[12px] px-3 py-1 rounded-full transition-all duration-150 no-underline shrink-0"
+            :class="activeCategoryFilter === 'FRAMEWORK' ? 'bg-ink text-paper font-semibold shadow-xs' : 'text-dim hover:text-ink bg-surface border border-rule'"
+          >
+            <span>FRAMEWORKS</span>
+            <sup class="font-mono text-[9.5px] opacity-75 ml-0.5">{{ stackCategoryCounts.framework }}</sup>
+          </NuxtLink>
+          <NuxtLink
+            :to="routeFor(['stack'], { category: 'backend' })"
+            class="font-sans text-[12px] px-3 py-1 rounded-full transition-all duration-150 no-underline shrink-0"
+            :class="activeCategoryFilter === 'BACKEND' ? 'bg-ink text-paper font-semibold shadow-xs' : 'text-dim hover:text-ink bg-surface border border-rule'"
+          >
+            <span>BACKEND</span>
+            <sup class="font-mono text-[9.5px] opacity-75 ml-0.5">{{ stackCategoryCounts.backend }}</sup>
+          </NuxtLink>
+          <NuxtLink
+            :to="routeFor(['stack'], { category: 'data' })"
+            class="font-sans text-[12px] px-3 py-1 rounded-full transition-all duration-150 no-underline shrink-0"
+            :class="activeCategoryFilter === 'DATA' ? 'bg-ink text-paper font-semibold shadow-xs' : 'text-dim hover:text-ink bg-surface border border-rule'"
+          >
+            <span>DATA</span>
+            <sup class="font-mono text-[9.5px] opacity-75 ml-0.5">{{ stackCategoryCounts.data }}</sup>
+          </NuxtLink>
+          <NuxtLink
+            :to="routeFor(['stack'], { category: 'motion' })"
+            class="font-sans text-[12px] px-3 py-1 rounded-full transition-all duration-150 no-underline shrink-0"
+            :class="activeCategoryFilter === 'MOTION' ? 'bg-ink text-paper font-semibold shadow-xs' : 'text-dim hover:text-ink bg-surface border border-rule'"
+          >
+            <span>MOTION</span>
+            <sup class="font-mono text-[9.5px] opacity-75 ml-0.5">{{ stackCategoryCounts.motion }}</sup>
+          </NuxtLink>
+          <NuxtLink
+            :to="routeFor(['stack'], { category: 'tooling' })"
+            class="font-sans text-[12px] px-3 py-1 rounded-full transition-all duration-150 no-underline shrink-0"
+            :class="activeCategoryFilter === 'TOOLING' ? 'bg-ink text-paper font-semibold shadow-xs' : 'text-dim hover:text-ink bg-surface border border-rule'"
+          >
+            <span>TOOLING</span>
+            <sup class="font-mono text-[9.5px] opacity-75 ml-0.5">{{ stackCategoryCounts.tooling }}</sup>
+          </NuxtLink>
         </div>
-
-        <UiHubDiagram
-          :core-label="'PG-17 ACID'"
-          :nodes="stackHubNodes"
-          :active-id="selectedStackNodeId"
-          :height="250"
-          :spread="125"
-          @select="handleStackHubSelect"
-          @clear="handleStackHubClear"
-        />
-
-        <div class="flex items-center justify-between gap-2 pt-2 border-t border-rule/50 text-[11px] font-mono text-dim">
-          <span class="flex items-center gap-1.5">
-            <span class="text-sig">●</span>
-            <span>{{ isEs ? 'Click en cualquier nodo para aislar su tecnología o en el núcleo ACID para ver todo' : 'Click any node to isolate tech or core to view all' }}</span>
-          </span>
-          <span v-if="selectedStackNodeId" class="text-sig font-semibold">
-            {{ isEs ? 'FILTRANDO POR:' : 'FILTERED BY:' }} {{ selectedStackNodeId.toUpperCase() }}
-          </span>
+        <div class="text-faint font-mono text-[11px] hidden md:block">
+          {{ isEs ? 'PostgreSQL 17 ACID · 22 Tecnologías' : 'PostgreSQL 17 ACID · 22 Technologies' }}
         </div>
       </div>
 
@@ -1383,7 +1371,7 @@ function openExternal(url?: string | null) {
           'grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6': folder.head !== 'projects' && folder.head !== 'stack' && folder.head !== 'experience',
         }"
       >
-        <li v-for="(it, n) in displayedFolderItems" :key="it.key" class="w-full min-w-0">
+        <li v-for="(it, n) in folder.items" :key="it.key" class="w-full min-w-0">
           <!-- Tarjeta de Proyecto Awwwards (Daniele Buser 2-Column Architectural Frame 1:1) -->
           <article
             v-if="folder.head === 'projects'"
@@ -1569,7 +1557,7 @@ function openExternal(url?: string | null) {
             </tr>
           </thead>
           <tbody>
-            <tr v-for="(it, n) in displayedFolderItems" :key="it.key" class="t-row">
+            <tr v-for="(it, n) in folder.items" :key="it.key" class="t-row">
               <td class="td-n">{{ pad(n + 1) }}</td>
               <td class="td-name">
                 <NuxtLink :to="it.to" class="t-link" :data-row="it.key">
@@ -1592,17 +1580,7 @@ function openExternal(url?: string | null) {
         </table>
       </div>
 
-      <div v-if="!displayedFolderItems.length" class="flex flex-col items-center justify-center py-12 gap-3">
-        <p class="vacio m-0">{{ isEs ? '00 registros encontrados para este filtro' : '00 records found for this filter' }}</p>
-        <button
-          v-if="selectedStackNodeId"
-          type="button"
-          class="font-mono text-xs px-3.5 py-1.5 rounded-full border border-sig bg-sig/10 text-sig hover:bg-sig hover:text-white cursor-pointer transition-colors"
-          @click="handleStackHubClear"
-        >
-          {{ isEs ? 'Restaurar todas las tecnologías' : 'Reset all technologies' }}
-        </button>
-      </div>
+      <p v-if="!folder.items.length" class="vacio">{{ isEs ? '00 registros encontrados para este filtro' : '00 records found for this filter' }}</p>
     </template>
   </section>
 </template>
