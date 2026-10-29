@@ -495,7 +495,7 @@ export function renderCvHtmlHeuristic(job: HunterJob): string {
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>CV · ${cv.candidate.name} · Harvard ATS</title>
   <style>
-    @page { size: A4 portrait; margin: 9.5mm 12mm; }
+    @page { size: A4 portrait; margin: 10mm 12mm; }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: "Times New Roman", Times, Georgia, serif; font-size: 10pt; line-height: 1.32; color: #000; background: #fff; padding: 10mm 12mm; }
     h1 { text-align: center; font-size: 18pt; font-weight: bold; letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 2pt; }
@@ -510,7 +510,7 @@ export function renderCvHtmlHeuristic(job: HunterJob): string {
     p.summary { font-size: 9.3pt; line-height: 12.6pt; text-align: justify; margin-bottom: 4pt; }
     @media print {
       body { padding: 0; background: #fff !important; color: #000 !important; }
-      @page { size: A4 portrait; margin: 9.5mm 12mm; }
+      @page { size: A4 portrait; margin: 10mm 12mm; }
     }
   </style>
 </head>

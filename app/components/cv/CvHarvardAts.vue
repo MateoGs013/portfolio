@@ -17,7 +17,7 @@ defineProps<{
 </script>
 
 <template>
-  <article class="cv-harvard">
+  <article class="cv-harvard" :class="{ 'is-es': isEs }">
     <!-- Encabezado Harvard -->
     <header class="h-header">
       <h1 class="h-name">{{ name }}</h1>
@@ -349,10 +349,10 @@ defineProps<{
 }
 
 @media print {
-  /* 1. Declaración estricta de página A4 con márgenes CSS únicos */
+  /* 1. Declaración estricta de página A4 con márgenes CSS únicos y balanceados */
   @page {
     size: A4 portrait;
-    margin: 9.5mm 12mm 9.5mm 12mm;
+    margin: 10mm 12mm 10mm 12mm;
   }
 
   /* 2. Reseteo del canvas del navegador (100% blanco puro anti-márgenes negros) */
@@ -371,12 +371,15 @@ defineProps<{
     print-color-adjust: exact !important;
   }
 
-  /* 3. Contenedor principal sin clipping artificial */
+  /* 3. Contenedor principal sin clipping artificial con compensación vertical simétrica */
   .cv-harvard {
     width: 100% !important;
     max-width: 100% !important;
     margin: 0 !important;
-    padding: 0 !important;
+    padding-top: 3.5mm !important;
+    padding-bottom: 0 !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
     border: none !important;
     box-shadow: none !important;
     background: #ffffff !important;
@@ -395,41 +398,41 @@ defineProps<{
   .cv-harvard .h-header {
     text-align: center !important;
     border-bottom: 1.2pt solid #000000 !important;
-    padding-bottom: 3pt !important;
-    margin-bottom: 5.5pt !important;
+    padding-bottom: 4pt !important;
+    margin-bottom: 7pt !important;
   }
   .cv-harvard .h-name {
     font-size: 19.5pt !important;
     font-weight: 700 !important;
     letter-spacing: 0.03em !important;
     line-height: 22.5pt !important;
-    margin: 0 0 1.5pt !important;
+    margin: 0 0 1.8pt !important;
     text-transform: uppercase !important;
   }
   .cv-harvard .h-role {
     font-size: 10.2pt !important;
     font-style: italic !important;
     line-height: 12.8pt !important;
-    margin: 0 0 1.5pt !important;
+    margin: 0 0 1.8pt !important;
   }
   .cv-harvard .h-contact {
     display: flex !important;
     flex-direction: column !important;
     align-items: center !important;
-    gap: 1.2pt !important;
+    gap: 1.5pt !important;
     font-size: 9pt !important;
-    line-height: 11.8pt !important;
+    line-height: 12pt !important;
   }
   .cv-harvard .h-contact-row {
     display: flex !important;
     flex-wrap: wrap !important;
     justify-content: center !important;
     align-items: center !important;
-    gap: 4.5pt !important;
+    gap: 5pt !important;
   }
   .cv-harvard .h-contact-sub {
     font-size: 8.6pt !important;
-    line-height: 11pt !important;
+    line-height: 11.2pt !important;
     font-style: italic !important;
     color: #222222 !important;
   }
@@ -441,9 +444,12 @@ defineProps<{
   /* 5. Secciones Semánticas */
   .cv-harvard .h-section {
     margin-top: 0 !important;
-    margin-bottom: 5.5pt !important;
+    margin-bottom: 7pt !important;
     break-inside: avoid !important;
     page-break-inside: avoid !important;
+  }
+  .cv-harvard.is-es .h-section {
+    margin-bottom: 7.8pt !important;
   }
   .cv-harvard .h-title {
     font-size: 11pt !important;
@@ -451,9 +457,9 @@ defineProps<{
     text-transform: uppercase !important;
     letter-spacing: 0.05em !important;
     border-bottom: 0.85pt solid #000000 !important;
-    padding-bottom: 1.2pt !important;
-    margin-top: 4.5pt !important;
-    margin-bottom: 2.8pt !important;
+    padding-bottom: 1.5pt !important;
+    margin-top: 5pt !important;
+    margin-bottom: 3.2pt !important;
     line-height: 13.2pt !important;
   }
   .cv-harvard .h-summary {
@@ -466,9 +472,12 @@ defineProps<{
   /* 6. Entradas (Educación y Proyectos) */
   .cv-harvard .h-entry {
     margin-top: 0 !important;
-    margin-bottom: 3.8pt !important;
+    margin-bottom: 4.8pt !important;
     break-inside: avoid !important;
     page-break-inside: avoid !important;
+  }
+  .cv-harvard.is-es .h-entry {
+    margin-bottom: 5.2pt !important;
   }
   .cv-harvard .h-entry-header {
     display: flex !important;
@@ -495,7 +504,7 @@ defineProps<{
     font-style: italic !important;
     line-height: 12pt !important;
     margin-top: 0 !important;
-    margin-bottom: 1.2pt !important;
+    margin-bottom: 1.5pt !important;
   }
   .cv-harvard .h-degree {
     font-weight: 400 !important;
@@ -510,23 +519,26 @@ defineProps<{
   .cv-harvard .h-bullets {
     font-size: 9.2pt !important;
     line-height: 12.3pt !important;
-    margin-top: 0.8pt !important;
+    margin-top: 1pt !important;
     margin-bottom: 0 !important;
     padding-left: 12pt !important;
     list-style-type: disc !important;
   }
   .cv-harvard .h-bullets li {
     margin-top: 0 !important;
-    margin-bottom: 1.5pt !important;
+    margin-bottom: 1.8pt !important;
     text-align: justify !important;
+  }
+  .cv-harvard.is-es .h-bullets li {
+    margin-bottom: 2pt !important;
   }
 
   /* 8. Habilidades Técnicas */
   .cv-harvard .h-skills p {
     font-size: 9.1pt !important;
-    line-height: 12.1pt !important;
+    line-height: 12.3pt !important;
     margin-top: 0 !important;
-    margin-bottom: 1.8pt !important;
+    margin-bottom: 2.4pt !important;
   }
   .cv-harvard .h-skills strong {
     font-size: 9.3pt !important;
