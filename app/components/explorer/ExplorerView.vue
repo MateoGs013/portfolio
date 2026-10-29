@@ -35,7 +35,7 @@ function toggleTheme() {
 // Idioma, Modo Hiperfoco y Sonido Táctil Bencho
 const { toggleLocale, isEs } = usePortfolioLocale()
 const { isHyperfocus, toggleHyperfocus } = useHyperfocus()
-const { soundEnabled, toggleSound } = useBenchoSound()
+const { soundEnabled, toggleSound, playSound } = useBenchoSound()
 
 // Reloj dinámico en tiempo real (UTC-3 Patagonia, Argentina)
 const utcTime = ref('')
@@ -271,6 +271,10 @@ watch(() => ex.value?.level, (now, before) => {
 const gotoOpen = ref(false)
 const mobileMenuOpen = ref(false)
 const pane = ref<HTMLElement | null>(null)
+
+watch(mobileMenuOpen, (isOpen) => {
+  playSound(isOpen ? 'expand' : 'swoop', { gap: 40 })
+})
 
 watch(() => route.fullPath, () => {
   mobileMenuOpen.value = false
@@ -709,6 +713,9 @@ const currentRoot = computed(() => path.value[0] ?? '')
           @click.self="mobileMenuOpen = false"
         >
           <div class="w-full max-w-[420px] mx-auto bg-paper border border-rule-strong rounded-2xl p-4 sm:p-5 shadow-2xl flex flex-col gap-4 max-h-[88vh] overflow-y-auto">
+            <!-- Indicador Táctil de Arrastre (Pill Handle para Móvil) -->
+            <div class="w-10 h-1 rounded-full bg-rule-strong mx-auto -mt-1 sm:hidden opacity-70" aria-hidden="true" />
+
             <!-- Cabecera del Drawer -->
             <div class="flex items-center justify-between pb-3 border-b border-rule">
               <div class="flex items-center gap-2 font-mono text-[11px]">
@@ -948,23 +955,34 @@ kbd {
 /* Transición del Drawer Móvil */
 .m-drawer-enter-active,
 .m-drawer-leave-active {
-  transition: opacity 0.22s cubic-bezier(0.22, 1, 0.36, 1);
+  transition: opacity 0.24s cubic-bezier(0.22, 1, 0.36, 1);
 }
-.m-drawer-enter-active > div,
+.m-drawer-enter-active > div {
+  transition: transform 0.32s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.22s ease;
+}
 .m-drawer-leave-active > div {
-  transition: transform 0.26s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.22s ease;
+  transition: transform 0.22s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.18s ease;
 }
 .m-drawer-enter-from,
 .m-drawer-leave-to {
   opacity: 0;
 }
 .m-drawer-enter-from > div {
-  transform: translateY(16px) scale(0.98);
+  transform: translateY(22px) scale(0.97);
   opacity: 0;
 }
 .m-drawer-leave-to > div {
-  transform: translateY(12px) scale(0.98);
+  transform: translateY(14px) scale(0.98);
   opacity: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .m-drawer-enter-active,
+  .m-drawer-leave-active,
+  .m-drawer-enter-active > div,
+  .m-drawer-leave-active > div {
+    transition: none !important;
+  }
 }
 
 @media screen and (max-width: 900px) {

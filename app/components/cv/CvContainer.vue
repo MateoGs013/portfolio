@@ -7,6 +7,7 @@ import type { Detail } from '~/lib/explorer'
 import type { CvDeliverable } from './types'
 import AppIcon from '~/components/ui/AppIcon.vue'
 import UiSegmentedSwitch from '~/components/ui/UiSegmentedSwitch.vue'
+import { useBenchoSound } from '~/composables/useBenchoSound'
 import CvHarvardAts from './CvHarvardAts.vue'
 import CvModernIde from './CvModernIde.vue'
 
@@ -16,7 +17,14 @@ const props = defineProps<{
 
 const { isEs } = usePortfolioLocale()
 const { isHyperfocus } = useHyperfocus()
+const { playSound } = useBenchoSound()
 const mode = ref<'harvard' | 'modern'>('modern')
+
+watch(mode, (newMode, oldMode) => {
+  if (oldMode && newMode !== oldMode) {
+    playSound('tock', { gap: 40 })
+  }
+})
 
 watch(isHyperfocus, (val) => {
   if (val) {
@@ -310,38 +318,82 @@ function printCV() {
       </div>
     </header>
 
-    <!-- Harvard ATS View (Siempre visible al imprimir para garantizar el Invariante #6 de 1 página A4 ATS) -->
-    <div :class="mode === 'harvard' ? 'block' : 'hidden print:block'">
-      <CvHarvardAts
-        :name="cvName"
-        :role="cvRole"
-        :location="cvLocation"
-        :bio="cvBio"
-        :email="cvEmail"
-        :github="cvGithub"
-        :github-text="cvGithubText"
-        :linkedin="cvLinkedin"
-        :linkedin-text="cvLinkedinText"
-        :deliverables="cvDeliverables"
-        :is-es="isEs"
-      />
-    </div>
+    <!-- Contenedor con Transición Fluida para Pantalla -->
+    <div class="cv-content-transition relative w-full">
+      <Transition name="cv-mode-fade" mode="out-in">
+        <div v-if="mode === 'harvard'" key="harvard-view" class="print:hidden">
+          <CvHarvardAts
+            :name="cvName"
+            :role="cvRole"
+            :location="cvLocation"
+            :bio="cvBio"
+            :email="cvEmail"
+            :github="cvGithub"
+            :github-text="cvGithubText"
+            :linkedin="cvLinkedin"
+            :linkedin-text="cvLinkedinText"
+            :deliverables="cvDeliverables"
+            :is-es="isEs"
+          />
+        </div>
 
-    <!-- Modern IDE / Code Editor View (Vista interactiva en pantalla, oculta en impresión A4) -->
-    <div v-if="mode === 'modern'" class="print:hidden">
-      <CvModernIde
-        :name="cvName"
-        :role="cvRole"
-        :location="cvLocation"
-        :bio="cvBio"
-        :email="cvEmail"
-        :github="cvGithub"
-        :github-text="cvGithubText"
-        :linkedin="cvLinkedin"
-        :timezone="cvTimezone"
-        :deliverables="cvDeliverables"
-        :is-es="isEs"
-      />
+        <div v-else key="modern-view" class="print:hidden">
+          <CvModernIde
+            :name="cvName"
+            :role="cvRole"
+            :location="cvLocation"
+            :bio="cvBio"
+            :email="cvEmail"
+            :github="cvGithub"
+            :github-text="cvGithubText"
+            :linkedin="cvLinkedin"
+            :timezone="cvTimezone"
+            :deliverables="cvDeliverables"
+            :is-es="isEs"
+          />
+        </div>
+      </Transition>
+
+      <!-- Vista Exclusiva de Impresión: Harvard ATS 1 Página A4 Exacta -->
+      <div class="hidden print:block">
+        <CvHarvardAts
+          :name="cvName"
+          :role="cvRole"
+          :location="cvLocation"
+          :bio="cvBio"
+          :email="cvEmail"
+          :github="cvGithub"
+          :github-text="cvGithubText"
+          :linkedin="cvLinkedin"
+          :linkedin-text="cvLinkedinText"
+          :deliverables="cvDeliverables"
+          :is-es="isEs"
+        />
+      </div>
     </div>
   </section>
 </template>
+
+<style scoped>
+.cv-mode-fade-enter-active,
+.cv-mode-fade-leave-active {
+  transition: opacity 0.24s cubic-bezier(0.22, 1, 0.36, 1), transform 0.24s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.cv-mode-fade-enter-from {
+  opacity: 0;
+  transform: translateY(6px);
+}
+
+.cv-mode-fade-leave-to {
+  opacity: 0;
+  transform: translateY(-4px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cv-mode-fade-enter-active,
+  .cv-mode-fade-leave-active {
+    transition: none !important;
+  }
+}
+</style>
