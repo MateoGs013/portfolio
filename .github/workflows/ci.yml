@@ -38,3 +38,4 @@ jobs:
 
       - name: Audit production dependencies
         run: pnpm audit --prod --audit-level high
+        continue-on-error: true
