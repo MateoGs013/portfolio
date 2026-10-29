@@ -28,10 +28,12 @@ const props = withDefaults(defineProps<{
   size?: number
   homeCity?: string
   speed?: number
+  showLegend?: boolean
 }>(), {
   size: 240,
   homeCity: 'Paraná, AR',
   speed: 28,
+  showLegend: false,
 })
 
 const emit = defineEmits<{
@@ -412,16 +414,16 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div class="glb-container inline-flex flex-col items-center justify-center select-none relative">
+  <div class="glb-container inline-flex flex-col items-center justify-center select-none relative max-w-full">
     <canvas
       ref="canvasRef"
-      class="glb block cursor-grab active:cursor-grabbing"
-      :style="{ width: `${size}px`, height: `${size}px` }"
+      class="glb block cursor-grab active:cursor-grabbing max-w-full aspect-square"
+      :style="{ width: `${size}px`, height: `${size}px`, maxWidth: '100%' }"
       :data-hover="hoveredCity ? 'true' : undefined"
       :aria-label="`Interactive 3D Dotted Globe with nodes connecting to ${homeCity}`"
       role="img"
     />
-    <div class="glb-legend mt-2 flex items-center gap-3 font-mono text-[10px] text-faint">
+    <div v-if="showLegend" class="glb-legend mt-2 flex items-center gap-3 font-mono text-[10px] text-faint">
       <span class="inline-flex items-center gap-1.5">
         <span class="w-1.5 h-1.5 rounded-full bg-sig" />
         {{ homeCity }}

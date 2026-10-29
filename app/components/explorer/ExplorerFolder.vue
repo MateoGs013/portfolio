@@ -1089,41 +1089,45 @@ function openExternal(url?: string | null) {
           </h2>
         </div>
 
-        <!-- Fila Inferior Asimétrica: Invitación Editorial + 3D Dot Globe + Email & Enlaces -->
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center pt-6 border-t border-rule/60">
-          <div class="lg:col-span-5 flex flex-col gap-3">
-            <div class="inline-flex items-center gap-2 font-mono text-[10.5px] text-green tracking-wider uppercase">
-              <span class="w-2 h-2 rounded-full bg-green animate-pulse" />
-              <span>{{ isEs ? 'DISPONIBLE PARA NUEVOS PROYECTOS · 2026' : 'AVAILABLE FOR NEW PROJECTS · 2026' }}</span>
+        <!-- Fila Inferior Asimétrica: Invitación Editorial + Email & Enlaces -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-end pt-6 border-t border-rule/60">
+          <!-- Columna 1: Invitación & Ubicación Espacial -->
+          <div class="lg:col-span-6 flex flex-col justify-between gap-5 min-w-0">
+            <div class="flex flex-col gap-2.5">
+              <div class="inline-flex items-center gap-2 font-mono text-[clamp(0.65rem,0.75vw,0.75rem)] text-green tracking-wider uppercase">
+                <span class="w-2 h-2 rounded-full bg-green animate-pulse" />
+                <span>{{ isEs ? 'DISPONIBLE PARA NUEVOS PROYECTOS · 2026' : 'AVAILABLE FOR NEW PROJECTS · 2026' }}</span>
+              </div>
+              <p class="m-0 font-sans text-[clamp(0.9rem,1.1vw,1.05rem)] text-dim leading-[1.55] max-w-[46ch]">
+                <template v-if="isEs">
+                  Si tenés un proyecto en mente, buscás sumar ingeniería de producto a tu equipo o querés conversar sobre arquitectura de software, escribime directamente.
+                </template>
+                <template v-else>
+                  If you have a project in mind, are looking to add product engineering to your team, or simply want to connect, feel free to reach out directly.
+                </template>
+              </p>
             </div>
-            <p class="m-0 font-sans text-[15px] sm:text-[16.5px] text-dim leading-[1.55] max-w-[44ch]">
-              <template v-if="isEs">
-                Si tenés un proyecto en mente, buscás sumar ingeniería de producto a tu equipo o querés conversar sobre arquitectura de software, escribime directamente.
-              </template>
-              <template v-else>
-                If you have a project in mind, are looking to add product engineering to your team, or simply want to connect, feel free to reach out directly.
-              </template>
-            </p>
-            <span class="font-mono text-[10.5px] text-faint">
-              UTC-3 · PARANÁ, AR (ART) · {{ isEs ? 'RESPUESTA HABITUAL &lt; 24H' : 'RESPONSE TIME &lt; 24H' }}
-            </span>
+
+            <!-- Lockup Espacial: Mini Globo 3D Relativo + Coordenadas -->
+            <div class="flex items-center gap-3.5 pt-1">
+              <UiDotGlobe :size="120" class="w-[clamp(4.5rem,6vw,6rem)] aspect-square cursor-grab active:cursor-grabbing shrink-0" />
+              <div class="flex flex-col gap-0.5 font-mono text-[clamp(0.65rem,0.78vw,0.8rem)] text-dim">
+                <span class="text-ink font-semibold">PARANÁ, ARGENTINA</span>
+                <span>31.73° S · 60.52° W</span>
+                <span class="text-faint">UTC-3 · {{ isEs ? 'RESPUESTA HABITUAL &lt; 24H' : 'RESPONSE TIME &lt; 24H' }}</span>
+              </div>
+            </div>
           </div>
 
-          <div class="lg:col-span-3 flex flex-col items-center justify-center py-2 lg:py-0">
-            <UiDotGlobe :size="180" class="cursor-grab active:cursor-grabbing shrink-0" />
-            <span class="font-mono text-[9.5px] text-dim uppercase tracking-wider text-center mt-1">
-              31.73° S · 60.52° W · PARANÁ, AR
-            </span>
-          </div>
-
-          <div class="lg:col-span-4 flex flex-col lg:items-end gap-3">
+          <!-- Columna 2: Email Monumental & Acciones Directas -->
+          <div class="lg:col-span-6 flex flex-col lg:items-end justify-between gap-4 min-w-0">
             <a
               href="mailto:mateogabus@gmail.com"
-              class="font-sans text-[clamp(22px,3vw,34px)] font-medium tracking-[-0.03em] text-ink hover:text-sig no-underline transition-colors leading-tight break-all"
+              class="font-sans text-[clamp(1.25rem,2.8vw,2.5rem)] font-medium tracking-[-0.03em] text-ink hover:text-sig no-underline transition-colors leading-tight whitespace-nowrap inline-block max-w-full"
             >
               mateogabus@gmail.com
             </a>
-            <div class="flex flex-wrap items-center gap-3 font-sans text-[13px] text-dim">
+            <div class="flex flex-wrap items-center lg:justify-end gap-3 font-sans text-[clamp(0.75rem,0.85vw,0.875rem)] text-dim">
               <UiCopyPill
                 text="mateogabus@gmail.com"
                 :label="isEs ? 'Copiar correo' : 'Copy email'"
@@ -1137,7 +1141,7 @@ function openExternal(url?: string | null) {
               >
                 LinkedIn
               </a>
-              <span class="text-rule-strong">|</span>
+              <span class="text-rule-strong" aria-hidden="true">|</span>
               <a
                 href="https://github.com/MateoGs013"
                 target="_blank"
@@ -1146,7 +1150,7 @@ function openExternal(url?: string | null) {
               >
                 GitHub
               </a>
-              <span class="text-rule-strong">|</span>
+              <span class="text-rule-strong" aria-hidden="true">|</span>
               <NuxtLink
                 to="/about"
                 class="text-dim hover:text-ink no-underline transition-colors"
