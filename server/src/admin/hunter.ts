@@ -4,6 +4,7 @@ import { createCvTicket, isAdminAuthorized, validateCvTicket } from './auth.js'
 import { forwardToEros, getParamId, getErosBaseUrl, isCircuitOpen, recordErosFailure } from './proxy.js'
 import {
   fallbackHunterJobs,
+  type HunterJob,
   evaluateJobHeuristic,
   evaluateMultipleJobsHeuristic,
   computeHunterStats,
@@ -417,7 +418,7 @@ hunterRouter.get(['/jobs/:id/apply-preview', '/apply-preview/:id'], async (req: 
     match_score: 90,
     url: 'https://mateogs.tech',
   }
-  const pitch = generatePitchHeuristic(job as any).data
+  const pitch = generatePitchHeuristic(job as unknown as HunterJob).data
   res.setHeader('X-Eros-Source', 'fallback')
   res.json({
     ok: true,

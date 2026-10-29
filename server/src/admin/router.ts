@@ -106,9 +106,9 @@ adminApi.get('/meta', async (_req, res) => {
     }
   }
 
-  let orgs: { id: number, name: string }[] = []
-  let techs: { id: number, name: string }[] = []
-  let projects: { id: number, title: string, slug?: string }[] = []
+  let orgs: { id: number, name: string }[]
+  let techs: { id: number, name: string }[]
+  let projects: { id: number, title: string, slug?: string }[]
 
   try {
     [orgs, techs, projects] = await Promise.all([

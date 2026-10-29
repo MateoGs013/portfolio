@@ -1,4 +1,4 @@
-import { createHash, createHmac, randomBytes, timingSafeEqual } from 'node:crypto'
+import { createHash, createHmac, timingSafeEqual } from 'node:crypto'
 import type { NextFunction, Request, Response } from 'express'
 
 function getAdminTokenConfig(): { token: string; hash: Buffer | null; valid: boolean; reason?: string } {
