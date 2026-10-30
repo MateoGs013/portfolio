@@ -4,6 +4,10 @@ import { generateContentPostHeuristic } from './fallbackContentData.js'
 
 export const radarRouter = Router()
 
+/**
+ * Tendencias de ejemplo de Eros (notas de terceros tal como las detecta el radar) para operar el
+ * admin sin el agente. No describen al candidato ni traen métricas suyas.
+ */
 export const fallbackTrends = [
   {
     id: 'trend_pgvector_hn',
@@ -36,9 +40,9 @@ export const fallbackTrends = [
     title: 'Nuxt 4 Nitro Engine Benchmarks: Sub-100ms Latency on Low-Cost Hardware',
     url: 'https://github.com/nuxt/nuxt/discussions/2026',
     source: 'GITHUB',
-    summary: 'Discusión y benchmarks de rendimiento en renderizado híbrido y bundle footprint mínimo para aplicaciones de ingeniería con Lighthouse 98+.',
+    summary: 'Discusión y benchmarks de rendimiento en renderizado híbrido y bundle footprint mínimo para aplicaciones de ingeniería.',
     relevance_score: 88,
-    engineering_angle: 'Frontend de alta precisión y densidad de datos: optimización de Core Web Vitals (Lighthouse 98+), renderizado híbrido y ergonomía sin bloating ornamental.',
+    engineering_angle: 'Frontend de alta precisión y densidad de datos: cómo medir Core Web Vitals propios, renderizado híbrido y ergonomía sin bloating ornamental.',
     tags: ['nuxt', 'vue', 'performance', 'typescript', 'frontend'],
     detected_at: new Date(Date.now() - 7200000).toISOString(),
     status: 'DISCOVERED',
@@ -134,7 +138,7 @@ radarRouter.post('/trends/:id/generate', async (req: Request, res: Response) => 
     return
   }
   const angle = req.body?.custom_angle || trend.engineering_angle
-  const post = generateContentPostHeuristic({
+  const post = await generateContentPostHeuristic({
     topic: trend.title,
     pillar: req.body?.pillar || 'TECHNICAL_BREAKDOWN',
     project_slug: req.body?.project_slug,
