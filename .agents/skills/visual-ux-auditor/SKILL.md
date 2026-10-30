@@ -1,51 +1,39 @@
 ---
 name: visual-ux-auditor
-description: Flujo de inspección visual, UX/UI y tests E2E automatizados con Playwright. Permite capturar screenshots multi-viewport (Desktop, Tablet, Mobile 320px), multi-tema (Obsidian Dark, Technical Paper, Hyperfocus, Print A4) e inspeccionarlos con view_file para evaluar diseño, micro-interacciones, contraste, overflow y accesibilidad con ojos propios.
+description: Flujo de inspección visual y de UX con Playwright contra el entorno local. Captura el sitio público en varios anchos, en los dos temas, con Hiperfoco, en modo registro y en impresión del CV, y las inspecciona con view_file para evaluar fidelidad al prototipo, contraste, overflow y accesibilidad.
 ---
 
-# Visual & UX/UI Auditor con Playwright ("Ojos del Agente")
+# Auditoría visual con Playwright («ojos del agente»)
 
-Esta skill dota al agente de **visión directa sobre el navegador real** mediante **Playwright (`@playwright/test`)** y la herramienta `view_file` (que soporta lectura nativa de imágenes `.png`). Úsala siempre antes y después de realizar cambios visuales, de layout, de micro-interacciones o en la consola `/admin`.
+Se audita siempre en local, antes de cualquier push: el sitio en `pnpm dev` (:3000) y la API en `pnpm dev:api` (:3001), o los puertos que indique la tarea vía `PLAYWRIGHT_BASE_URL`. Nunca se audita producción en lugar de la revisión local. La referencia de cómo se tiene que ver es `docs/rediseno/movimiento.html` y las reglas, `docs/diseno.md`.
 
----
+## 1. Cómo funciona
 
-## 1. Cómo Funcionan los "Ojos" del Agente
+1. **Captura:** `pnpm test:e2e` o un spec puntual en `tests/e2e/` con Chromium, `deviceScaleFactor: 2`. Las capturas van al directorio de artefactos de la sesión, no al repo (las de referencia versionadas son solo las de `tests/e2e/visual.spec.ts-snapshots/`).
+2. **Inspección:** `view_file` sobre cada `.png`. Se evalúa contra el prototipo: composición, ritmo, jerarquía tipográfica, una sola superficie por pantalla, contraste en los dos temas y ausencia de recortes o solapamientos.
 
-1. **Captura Automatizada con Playwright**:
-   - Ejecuta la suite de Playwright (`pnpm test:e2e` o `pnpm audit:visual`) o un script puntual en `tests/e2e/` que levanta Chromium headless contra el frontend (`http://localhost:3000`) y el backend/admin (`http://localhost:3003`).
-   - Guarda capturas de pantalla de alta resolución (`deviceScaleFactor: 2`) en el directorio de artefactos de la sesión o en `tests/screenshots/`.
-2. **Inspección Visual con `view_file`**:
-   - Invoca `view_file` pasando el `AbsolutePath` del archivo `.png` generado.
-   - Analiza con criterio de diseño 2026: jerarquía tipográfica, alineación de grillas Bento, contraste en ambos temas (`Dark` y `Technical Paper`), estado del modo `Hyperfocus`, ausencia de recortes o solapamientos y fidelidad del CV Harvard ATS en modo impresión (`page.emulateMedia({ media: 'print' })`).
+## 2. Matriz
 
----
+**Anchos:** 1440 × 900, 768 × 1024, 375 × 812 y 320 × 568. En los dos últimos, `scrollWidth <= clientWidth` y áreas táctiles de al menos 44 × 44 px (`boundingBox()`).
 
-## 2. Matriz de Evaluación Visual y UX/UI Obligatoria
+**Páginas:** `/`, `/projects`, `/projects/<una obra>`, `/about`, `/about?cv=ats` y `/articles`.
 
-Cada iteración importante de Frontend o Admin debe evaluarse en estas dimensiones:
+**Estados:**
+- Tema oscuro (por defecto) y claro: cookie `pf-theme`.
+- Hiperfoco: cookie `pf-hyperfocus=true` o `?foco=1`. Navegación intacta, sin ornamentos, imágenes en monocromo.
+- Registro: `?vista=registro`. Campos tipados y `NULL` visibles, también con JS apagado.
+- Reduced motion: `page.emulateMedia({ reducedMotion: 'reduce' })`. Todo quieto y legible.
+- Impresión: `page.emulateMedia({ media: 'print' })` en `/about?cv=ats`. Una sola página A4, sin cromo.
+- Sin JS: `javaScriptEnabled: false`. Contenido completo y navegación por enlaces.
 
-### A. Matriz de Viewports
-- **Desktop Wide (`1440×900`)**: Verificar balance del Bento Grid, sidebar de colecciones, topbar con breadcrumbs y panel de detalle sin espacios muertos.
-- **Tablet (`768×1024`)**: Verificar transición de grillas de 3->2 columnas y legibilidad de tablas.
-- **Mobile Compacto (`375×812` y `320×568`)**:
-  - Verificar que `document.documentElement.scrollWidth <= document.documentElement.clientWidth` (**cero overflow horizontal**).
-  - Verificar que los botones e ítems interactivos tengan caja táctil `>= 44×44px` (`boundingBox()`).
-  - Verificar apertura/cierre del drawer móvil.
+## 3. Consola, red y teclado
 
-### B. Matriz de Temas y Estados
-- **Obsidian Dark (`data-theme="dark"`)**: Superficies `#09090B` / `#121215`, bordes sutiles `rgba(255,255,255,0.07)` y spotlight radial equilibrado.
-- **Technical Paper (`data-theme="light"`)**: Papel cálido `#FAF8F5`, texto tinta `#141413` y contraste editorial limpio sin sombras sucias.
-- **Modo Hyperfocus (`data-hyperfocus="true"`, tecla `H`)**: Verificar que desaparezca el ruido visual y los efectos decorativos instantáneamente.
-- **Modo Print A4 (`emulateMedia({ media: 'print' })` en `/about` y `/admin` Job Hunter)**: Verificar que el CV Harvard ATS entre en 1 página A4 limpia sin elementos de navegación filtrados.
+- **Cero errores:** escuchar `console` y `pageerror`; ni errores de hidratación ni nombres de view transition duplicados.
+- **Sin pedidos duplicados** a la misma colección de la API en una navegación.
+- **Teclado real:** `page.keyboard.press` con las teclas de `docs/diseno.md` §7 y verificar `document.activeElement` después de cada una.
+- **axe** (`@axe-core/playwright`): sin violaciones serias en cada página y estado.
 
-### C. Telemetría de Consola, Red y Teclado
-- **Cero errores en consola**: Escuchar `page.on('console', ...)` y `page.on('pageerror', ...)` — ningún `ReferenceError`, `Hydration node mismatch` ni warning de Vue debe ocurrir.
-- **Cero peticiones duplicadas**: Auditar con `page.on('request', ...)` que `/api/schema` o `/api/projects` no se disparen por duplicado en una misma navegación.
-- **Navegación real por teclado**: Simular `page.keyboard.press('1')`, `ArrowDown`, `Enter`, `Escape`, `/`, `h` y `Control+k` verificando el foco activo (`document.activeElement`).
+## 4. Comandos
 
----
-
-## 3. Comandos Rápidos del Flujo
-
-- `pnpm test:e2e`: Ejecuta toda la suite de validación E2E y UX/UI con Playwright.
-- `pnpm audit:visual`: Ejecuta el generador de capturas multi-viewport y multi-tema para inspección visual inmediata con `view_file`.
+- `pnpm test:e2e`: la suite completa contra el entorno local.
+- `PLAYWRIGHT_BASE_URL=http://localhost:<puerto> pnpm test:e2e <spec>`: un spec contra otros puertos.
