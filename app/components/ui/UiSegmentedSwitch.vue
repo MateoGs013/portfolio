@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, onBeforeUnmount, nextTick } from 'vue'
 import { useHyperfocus } from '~/composables/useHyperfocus'
-import { useBenchoSound } from '~/composables/useBenchoSound'
 
 export interface SegmentedOption {
   value: string
@@ -31,7 +30,6 @@ const emit = defineEmits<{
 }>()
 
 const { isHyperfocus } = useHyperfocus()
-const { playSound } = useBenchoSound()
 
 const tabRefs = ref<(HTMLButtonElement | null)[]>([])
 const tileRef = ref<HTMLSpanElement | null>(null)
@@ -129,9 +127,8 @@ function animateSpring() {
   springState.raf = requestAnimationFrame(step)
 }
 
-function selectOption(value: string, idx: number) {
+function selectOption(value: string) {
   if (value !== props.modelValue) {
-    playSound('tock', { at: props.options.length > 1 ? idx / (props.options.length - 1) : 0.5 })
     emit('update:modelValue', value)
   }
 }
@@ -143,7 +140,7 @@ function onKeyDown(e: KeyboardEvent) {
   const nextIdx = (activeIndex.value + dir + props.options.length) % props.options.length
   const nextOpt = props.options[nextIdx]
   if (nextOpt) {
-    selectOption(nextOpt.value, nextIdx)
+    selectOption(nextOpt.value)
     tabRefs.value[nextIdx]?.focus()
   }
 }
@@ -196,7 +193,7 @@ onBeforeUnmount(() => {
           ? 'text-ink font-semibold'
           : 'text-dim hover:text-ink/80 font-medium',
       ]"
-      @click="selectOption(opt.value, idx)"
+      @click="selectOption(opt.value)"
       @keydown="onKeyDown"
     >
       <span class="w-1 h-1 rounded-full transition-colors duration-150 shrink-0" :class="modelValue === opt.value ? 'bg-sig' : 'bg-transparent'" />

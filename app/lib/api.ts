@@ -1,145 +1,70 @@
 /**
- * Formas que devuelve el API (server/src/routes). Escritas a mano y a
- * propósito: el front no importa nada de Prisma. Si el server cambia una
- * forma, cambia acá en el mismo commit.
+ * Contrato de la API pública (D2). Las formas se infieren en el server (`server/src/content/present.ts`
+ * y `cv.ts`) y acá se reflejan con `import type`: el front nunca diverge del server y no se lleva
+ * código del server al bundle (los imports de tipo se borran al compilar).
  */
-import type { CollectionKey, DocField, DocKey } from './fieldMeta'
+import type {
+  PublicDoc,
+  PublicExperience,
+  PublicProject,
+  PublicProjectSummary,
+  PublicTech,
+} from '../../server/src/content/present'
+import type { DocFieldValue, DocKey } from './fieldMeta'
+import type { Lang } from './dict'
 
+export type { Lang } from './dict'
+export type {
+  CvDocument,
+  CvEducation,
+  CvExperience,
+  CvHeader,
+  CvPeriod,
+  CvSkillGroup,
+} from '../../server/src/content/cv'
+
+/** De dónde salió la respuesta: la base o la copia generada desde ella. */
+export type ContentSource = 'db' | 'snapshot'
+
+/** Envoltura de toda respuesta de la API. `filters` solo trae lo aplicado, en minúscula. */
 export interface Envelope<T> {
   data: T
-  meta: { count: number, filters: Record<string, string> }
+  meta: {
+    count: number
+    filters: Record<string, string>
+    lang?: Lang
+    source?: ContentSource
+  }
 }
 
-export type SchemaEntry =
-  | { key: CollectionKey, label: string, kind: 'collection', count: number }
-  | { key: DocKey, label: string, kind: 'document', count: number }
+/** Fila de `/api/projects`: solo la portada en `media`. */
+export type ProjectSummary = PublicProjectSummary
+/** `/api/projects/:slug`: el caso completo. */
+export type Project = PublicProject
+export type ProjectStatus = Project['status']
+export type Media = Project['media'][number]
+export type MediaKind = Media['kind']
+export type MediaRole = Media['role']
+export type MediaViewport = Media['viewport']
+export type Metric = Project['metrics'][number]
+export type ProcessStep = Project['steps'][number]
+export type ProjectLink = Project['links'][number]
+/** Tecnología dentro de un caso: con nota, desde cuándo y las obras visibles que la usan. */
+export type ProjectTech = Project['techs'][number]
+export type Org = NonNullable<Project['org']>
 
-export interface OrgRef { slug: string, name: string, city?: string | null }
-export interface TechRef { slug: string, name: string }
-export interface LinkRef { label: string, url: string }
+export type Tech = PublicTech
+export type TechCategory = Tech['category']
 
-export type ProjectStatus = 'LIVE' | 'ARCHIVED' | 'WIP'
-export type MediaKind = 'IMAGE' | 'VIDEO'
-export type MediaRole = 'COVER' | 'GALLERY' | 'LAYER'
-export type TechCategory = 'LANGUAGE' | 'FRAMEWORK' | 'MOTION' | 'GRAPHICS' | 'BACKEND' | 'DATA' | 'TOOLING' | 'DESIGN'
+export type Experience = PublicExperience
+export type ExperienceKind = Experience['kind']
 
-export interface Media {
-  id: number
-  kind: MediaKind
-  role: MediaRole
-  src: string
-  alt: string
-  width: number
-  height: number
-  layer: number | null
-  order: number
-  bytes: number | null
+/** Documento con cada `value` ya resuelto en el idioma pedido. */
+export type Doc = PublicDoc
+export type ResolvedDocField = Doc['fields'][number]
+export type { DocFieldValue, DocKey }
+
+/** Todo registro público dice qué campos quedaron en español cuando se pidió inglés. */
+export interface Translatable {
+  untranslated: readonly string[]
 }
-
-export interface ProcessStep {
-  id: number
-  order: number
-  title: string
-  body: string
-  media: Media | null
-}
-
-export interface Project {
-  id: number
-  slug: string
-  title: string
-  year: number
-  role: string
-  status: ProjectStatus
-  featured: boolean
-  summary: string
-  brief: string | null
-  outcome: string | null
-  url: string | null
-  repo: string | null
-  metrics: unknown | null
-  sortOrder: number
-  publishedAt: string | null
-  createdAt: string
-  updatedAt: string
-  org: OrgRef | null
-  techs: TechRef[]
-  links: LinkRef[]
-  /** Solo en la lista. */
-  _count?: { media: number, steps: number }
-  /** En la lista viene solo la portada (`role: COVER`); en el detalle, toda la media. */
-  media?: Media[]
-  steps?: ProcessStep[]
-}
-
-export interface Experience {
-  id: number
-  slug: string
-  role: string
-  startedAt: string
-  endedAt: string | null
-  summary: string
-  story: string | null
-  org: OrgRef | null
-  techs: TechRef[]
-}
-
-export interface Tech {
-  id: number
-  slug: string
-  name: string
-  category: TechCategory
-  since: number
-  note: string | null
-  color: string | null
-  _count: { projects: number, experiences: number }
-}
-
-export interface Org {
-  id: number
-  slug: string
-  name: string
-  url: string | null
-  city: string | null
-  projects: { slug: string, title: string, year: number }[]
-  experiences: { slug: string, role: string, startedAt: string, endedAt: string | null }[]
-}
-
-export interface Doc {
-  key: DocKey
-  title: string
-  fields: DocField[]
-  updatedAt: string
-}
-
-export type ArticleStatus = 'DRAFT' | 'PUBLISHED' | 'ARCHIVED'
-
-export interface Article {
-  id: number
-  slug: string
-  title: string
-  summary: string
-  content: string
-  readingTimeMin: number
-  status: ArticleStatus
-  featured: boolean
-  coverImage: string | null
-  canonicalUrl: string | null
-  sortOrder: number
-  publishedAt: string | null
-  createdAt: string
-  updatedAt: string
-  techs: TechRef[]
-  project: { slug: string, title: string } | null
-}
-
-/** Qué tipo devuelve la lista de cada colección. */
-export interface CollectionRecord {
-  projects: Project
-  experience: Experience
-  stack: Tech
-  articles: Article
-  orgs: Org
-}
-
-export type AnyRecord = Project | Experience | Tech | Org | Article

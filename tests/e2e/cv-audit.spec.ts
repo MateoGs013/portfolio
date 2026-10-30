@@ -1,109 +1,23 @@
-import { test, expect } from '@playwright/test'
-import path from 'node:path'
-import fs from 'node:fs'
+import { expect, test } from '@playwright/test'
 
-test.describe('CV A4 Single Page Verification & PDF Unification', () => {
-  test('CV en /about (Español) debe generar exactamente 1 página A4 sin overflow y unificar archivos public/cv', async ({ page }) => {
-    await page.setViewportSize({ width: 794, height: 1123 })
-    await page.goto('/', { waitUntil: 'networkidle' })
-    await page.evaluate(() => {
-      localStorage.setItem('portfolio-locale', 'es')
-      document.documentElement.setAttribute('lang', 'es')
-    })
+/**
+ * El CV de /about?cv=ats entra en una sola página A4 (cota dual, .claude/rules/explorer.md). Solo lee:
+ * nunca escribe public/cv (los PDF los genera scripts/cv-pdf.mjs, F6). La cota de alto 248–265 mm la
+ * suma Q1 cuando la hoja salga de /api/cv.
+ */
+const A4 = { width: 794, height: 1123 }
 
-    await page.goto('/about', { waitUntil: 'networkidle' })
-    await page.waitForTimeout(400)
-
-    const cvWrapper = page.locator('.cv-wrapper')
-    await expect(cvWrapper).toBeVisible()
+for (const lang of ['es', 'en'] as const) {
+  test(`CV ${lang.toUpperCase()} en /about?cv=ats imprime una sola página A4`, async ({ page }, info) => {
+    await page.setViewportSize(A4)
+    await page.goto(`/about?cv=ats${lang === 'en' ? '&lang=en' : ''}`, { waitUntil: 'networkidle' })
+    await expect(page.locator('html')).toHaveAttribute('lang', lang)
+    await expect(page.locator('.cv-harvard').first()).toBeVisible()
 
     await page.emulateMedia({ media: 'print' })
-    await page.waitForTimeout(200)
-
-    const box = await page.locator('.cv-harvard').boundingBox()
-    const heightMm = box ? (box.height * 25.4 / 96).toFixed(2) : '0'
-    console.log(`[CV ES BOX] w=${box?.width.toFixed(1)}px, h=${box?.height.toFixed(1)}px (${heightMm}mm)`)
-
-    const pdfBuffer = await page.pdf({
-      format: 'A4',
-      printBackground: true,
-      preferCSSPageSize: true,
-      margin: { top: '0', bottom: '0', left: '0', right: '0' },
-    })
-
-    const pdfText = pdfBuffer.toString('binary')
-    const pageMatches = pdfText.match(/\/Type\s*\/Page\b/g)
-    const pageCount = pageMatches ? pageMatches.length : 0
-
-    console.log(`[TEST CV ES] Generado PDF con ${pageCount} página(s). Tamaño buffer: ${pdfBuffer.length} bytes`)
-
-    const outDir = path.resolve(process.cwd(), 'tests/screenshots')
-    if (!fs.existsSync(outDir)) fs.mkdirSync(outDir, { recursive: true })
-    fs.writeFileSync(path.join(outDir, 'test-cv-es.pdf'), pdfBuffer)
-
-    await page.screenshot({
-      path: path.join(outDir, 'about-print-a4.png'),
-      fullPage: false,
-    })
-
-    // Actualizar PDFs estáticos unificados para descarga en Español
-    const cvDir = path.resolve(process.cwd(), 'public/cv')
-    if (!fs.existsSync(cvDir)) fs.mkdirSync(cvDir, { recursive: true })
-    fs.writeFileSync(path.join(cvDir, 'CV-ES-Mateo-Sonzogni-ATS.pdf'), pdfBuffer)
-    fs.writeFileSync(path.join(cvDir, 'CV-ES-Mateo-Sonzogni.pdf'), pdfBuffer)
-
-    expect(pageCount).toBe(1)
+    const pdf = await page.pdf({ printBackground: true, preferCSSPageSize: true, margin: { top: '0', right: '0', bottom: '0', left: '0' } })
+    const pages = pdf.toString('binary').match(/\/Type\s*\/Page\b/g)?.length ?? 0
+    await info.attach(`cv-${lang}.pdf`, { body: pdf, contentType: 'application/pdf' })
+    expect(pages).toBe(1)
   })
-
-  test('CV en /about (English) debe generar exactamente 1 página A4 sin overflow y unificar archivos public/cv', async ({ page }) => {
-    await page.setViewportSize({ width: 794, height: 1123 })
-    await page.goto('/', { waitUntil: 'networkidle' })
-    await page.evaluate(() => {
-      localStorage.setItem('portfolio-locale', 'en')
-      document.documentElement.setAttribute('lang', 'en')
-    })
-
-    await page.goto('/about', { waitUntil: 'networkidle' })
-    await page.waitForTimeout(400)
-
-    const cvWrapper = page.locator('.cv-wrapper')
-    await expect(cvWrapper).toBeVisible()
-
-    await page.emulateMedia({ media: 'print' })
-    await page.waitForTimeout(200)
-
-    const box = await page.locator('.cv-harvard').boundingBox()
-    const heightMm = box ? (box.height * 25.4 / 96).toFixed(2) : '0'
-    console.log(`[CV ES BOX] w=${box?.width.toFixed(1)}px, h=${box?.height.toFixed(1)}px (${heightMm}mm)`)
-
-    const pdfBuffer = await page.pdf({
-      format: 'A4',
-      printBackground: true,
-      preferCSSPageSize: true,
-      margin: { top: '0', bottom: '0', left: '0', right: '0' },
-    })
-
-    const pdfText = pdfBuffer.toString('binary')
-    const pageMatches = pdfText.match(/\/Type\s*\/Page\b/g)
-    const pageCount = pageMatches ? pageMatches.length : 0
-
-    console.log(`[TEST CV EN] Generado PDF con ${pageCount} página(s). Tamaño buffer: ${pdfBuffer.length} bytes`)
-
-    const outDir = path.resolve(process.cwd(), 'tests/screenshots')
-    if (!fs.existsSync(outDir)) fs.mkdirSync(outDir, { recursive: true })
-    fs.writeFileSync(path.join(outDir, 'test-cv-en.pdf'), pdfBuffer)
-
-    await page.screenshot({
-      path: path.join(outDir, 'test-about-print-a4-en.png'),
-      fullPage: false,
-    })
-
-    // Actualizar PDFs estáticos unificados para descarga en Inglés
-    const cvDir = path.resolve(process.cwd(), 'public/cv')
-    if (!fs.existsSync(cvDir)) fs.mkdirSync(cvDir, { recursive: true })
-    fs.writeFileSync(path.join(cvDir, 'CV-EN-Mateo-Sonzogni-ATS.pdf'), pdfBuffer)
-    fs.writeFileSync(path.join(cvDir, 'CV-EN-Mateo-Sonzogni.pdf'), pdfBuffer)
-
-    expect(pageCount).toBe(1)
-  })
-})
+}
