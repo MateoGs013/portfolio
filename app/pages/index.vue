@@ -1,14 +1,14 @@
 <script setup lang="ts">
 // Inicio mínimo (F1): comprueba la cañería con la API. P1 lo reemplaza por el inicio de movimiento.
+// El contacto (#contacto) es el pie del layout (F3).
 const { t, localeRoute, langAttr } = useLocale()
 
-const [about, contact, projects] = await Promise.all([useDoc('about'), useDoc('contact'), useProjects()])
+const [about, projects] = await Promise.all([useDoc('about'), useProjects()])
 failOn(about.error)
 failOn(projects.error)
 await usePageSeo({})
 
 const featured = computed(() => (projects.data.value ?? []).filter(p => p.featured))
-const email = computed(() => docText(contact.data.value, 'email'))
 </script>
 
 <template>
@@ -47,14 +47,5 @@ const email = computed(() => docText(contact.data.value, 'email'))
       </NuxtLink>
     </section>
 
-    <section id="contacto" aria-labelledby="contacto-titulo" class="flex flex-col gap-2">
-      <h2 id="contacto-titulo" class="text-s text-dim">
-        {{ t('nav.contact') }}
-      </h2>
-      <a v-if="email" :href="`mailto:${email}`" class="w-fit text-xl text-ink underline underline-offset-4">{{ email }}</a>
-      <p v-if="docText(contact.data.value, 'availability')" class="text-m text-dim" :lang="langAttr(contact.data.value, 'availability')">
-        {{ docText(contact.data.value, 'availability') }}
-      </p>
-    </section>
   </article>
 </template>

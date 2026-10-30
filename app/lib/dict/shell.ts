@@ -1,4 +1,4 @@
-/** Cabecera, pie, paleta, atajos y página de error. F1 deja lo mínimo; dueño desde la ola 4: F3. */
+/** Cabecera, pie, paleta, atajos y página de error. Dueño: F3. */
 import type { DictEntry } from './index'
 
 export default {
@@ -11,16 +11,50 @@ export default {
   'nav.articles': { es: 'Artículos', en: 'Articles' },
 
   'shell.skip': { es: 'Saltar al contenido', en: 'Skip to content' },
+  'shell.prefs': { es: 'Preferencias', en: 'Preferences' },
   'shell.lang': { es: 'Idioma', en: 'Language' },
-  'shell.theme': { es: 'Tema', en: 'Theme' },
-  'shell.theme.dark': { es: 'Oscuro', en: 'Dark' },
-  'shell.theme.light': { es: 'Claro', en: 'Light' },
+  // Cada idioma se nombra en su propia lengua: así lo reconoce quien no lee el otro.
+  'shell.autonym.es': { es: 'Español', en: 'Español' },
+  'shell.autonym.en': { es: 'English', en: 'English' },
+  'shell.theme.toLight': { es: 'Cambiar a tema claro', en: 'Switch to light theme' },
+  'shell.theme.toDark': { es: 'Cambiar a tema oscuro', en: 'Switch to dark theme' },
+  'shell.theme.nowLight': { es: 'Tema claro', en: 'Light theme' },
+  'shell.theme.nowDark': { es: 'Tema oscuro', en: 'Dark theme' },
+  'shell.focus.enter': { es: 'Entrar al Hiperfoco', en: 'Enter Hyperfocus' },
+  'shell.focus.leave': { es: 'Salir del Hiperfoco', en: 'Leave Hyperfocus' },
   'shell.goto': { es: 'Ir a', en: 'Go to' },
-  'shell.shortcuts': { es: 'Atajos de una tecla', en: 'Single-key shortcuts' },
-  'shell.sound': { es: 'Sonido', en: 'Sound' },
-  'shell.email': { es: 'Email', en: 'Email' },
+
+  'shell.palette.search': { es: 'Buscar página, obra o acción', en: 'Search a page, work or action' },
+  'shell.palette.results': { es: 'Resultados', en: 'Results' },
+  'shell.palette.empty': { es: 'Sin resultados', en: 'No results' },
+  'shell.palette.pages': { es: 'Páginas', en: 'Pages' },
+  'shell.palette.actions': { es: 'Acciones', en: 'Actions' },
+  'shell.palette.count': { es: '{n} obras', en: '{n} works' },
+  'shell.palette.move': { es: 'moverse', en: 'move' },
+  'shell.palette.open': { es: 'abrir', en: 'open' },
+  'shell.palette.close': { es: 'cerrar', en: 'close' },
+
+  'shell.sound.turnOn': { es: 'Activar sonido', en: 'Turn sound on' },
+  'shell.sound.turnOff': { es: 'Apagar sonido', en: 'Turn sound off' },
+  'shell.sound.hint': { es: 'apagado por defecto', en: 'off by default' },
+  'shell.sound.nowOn': { es: 'Sonido activado', en: 'Sound on' },
+  'shell.sound.nowOff': { es: 'Sonido apagado', en: 'Sound off' },
+  'shell.shortcuts': { es: 'Atajos de una tecla: {state}', en: 'Single-key shortcuts: {state}' },
+  'shell.shortcuts.nowOn': { es: 'Atajos de una tecla activados', en: 'Single-key shortcuts on' },
+  'shell.shortcuts.nowOff': { es: 'Atajos de una tecla apagados', en: 'Single-key shortcuts off' },
+  'shell.yes': { es: 'sí', en: 'on' },
+  'shell.no': { es: 'no', en: 'off' },
+
+  'shell.talk': { es: '¿Hablamos?', en: 'Shall we talk?' },
   'shell.copyEmail': { es: 'Copiar email', en: 'Copy email' },
   'shell.copied': { es: 'Copiado', en: 'Copied' },
+  'shell.copyFailed': { es: 'No se pudo copiar el email', en: 'The email could not be copied' },
+  'shell.writeTo': { es: 'Escribir a {email}', en: 'Write to {email}' },
+  'shell.localTime': { es: 'Hora local', en: 'Local time' },
+  'shell.elsewhere': { es: 'En otros sitios', en: 'Elsewhere' },
+  'shell.github': { es: 'GitHub', en: 'GitHub' },
+  'shell.linkedin': { es: 'LinkedIn', en: 'LinkedIn' },
+  'shell.newTab': { es: '(abre en otra pestaña)', en: '(opens in a new tab)' },
 
   'error.404.title': { es: 'Esta página no existe', en: 'This page does not exist' },
   'error.404.body': { es: 'La dirección no lleva a ninguna página publicada.', en: 'The address does not lead to any published page.' },
