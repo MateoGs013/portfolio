@@ -1,13 +1,17 @@
 // Tarjeta de una pieza de media: miniatura o póster, alt y pie editables, rol, pantalla,
 // orden, tinte, dimensiones y peso. Cada cambio se guarda solo (PATCH parcial) al salir del campo.
+// En modo EN, el alt y el pie se editan en inglés (MediaTranslation) con el español de referencia.
 
 import { store } from '../../../store.js'
 import { MEDIA_ROLE_LABELS, MEDIA_VIEWPORT_LABELS, fileName, formatBytes } from '../../../fields.js'
+import { enRow } from '../../../translations.js'
+import { EnField } from '../EnField.js'
 
 const { computed, ref } = window.Vue
 
 export const MediaCard = {
   name: 'AdmMediaCard',
+  components: { EnField },
   props: {
     media: { type: Object, required: true },
     canUp: { type: Boolean, default: false },
@@ -34,6 +38,15 @@ export const MediaCard = {
       emit('patch', { [field]: value || null })
     }
 
+    const en = computed(() => enRow(props.media))
+
+    /** Guarda el inglés solo si cambió; vacío queda en NULL y la galería muestra el español. */
+    function saveEn(field, raw) {
+      const value = raw.trim()
+      if (value === (en.value[field] || '')) return
+      emit('patch', { en: { [field]: value || null } })
+    }
+
     function onPoster(event) {
       const file = event.target.files?.[0]
       if (file) emit('poster', file)
@@ -41,7 +54,7 @@ export const MediaCard = {
     }
 
     return {
-      store, posterInput, isVideo, thumb, name, tintSource, saveText, onPoster,
+      store, posterInput, isVideo, thumb, name, tintSource, saveText, onPoster, en, saveEn,
       roles: computed(() => store.meta.enums.MediaRole || []),
       viewports: computed(() => store.meta.enums.MediaViewport || []),
       roleLabel: r => MEDIA_ROLE_LABELS[r] || r,
@@ -86,11 +99,15 @@ export const MediaCard = {
           </div>
         </div>
 
-        <label class="block">
+        <template v-if="store.editingEn">
+          <EnField :id="'media-alt-en-' + media.id" label="Texto alternativo" :es="media.alt" :model-value="en.alt || ''" @commit="saveEn('alt', $event)" :maxlength="300" dense />
+          <EnField :id="'media-caption-en-' + media.id" label="Pie en la galería" :es="media.caption || ''" :model-value="en.caption || ''" @commit="saveEn('caption', $event)" :maxlength="300" dense />
+        </template>
+        <label v-if="!store.editingEn" class="block">
           <span class="field-label !mb-1">Texto alternativo *</span>
           <input type="text" :value="media.alt" @change="saveText('alt', $event)" class="text-input !h-[28px]" maxlength="300" />
         </label>
-        <label class="block">
+        <label v-if="!store.editingEn" class="block">
           <span class="field-label !mb-1">Pie en la galería</span>
           <input type="text" :value="media.caption || ''" @change="saveText('caption', $event)" class="text-input !h-[28px]" maxlength="300" placeholder="Opcional" />
         </label>

@@ -1,11 +1,14 @@
 // Formulario Especializado: StackForm (AdmStackForm)
-// Editor de tecnologías y herramientas del stack técnico
+// Editor de tecnologías y herramientas del stack técnico. En modo EN se traduce la nota
+// (criterio de elección); nombre, categoría y color son comunes a los dos idiomas.
 
 import { store } from '../../store.js'
 import { slugify } from '../../config.js'
+import { EnField } from './EnField.js'
 
 export const StackForm = {
   name: 'AdmStackForm',
+  components: { EnField },
   setup() {
     function onNameInput() {
       if (store.slugLocked && store.form) {
@@ -101,7 +104,15 @@ export const StackForm = {
         </div>
       </div>
 
-      <div>
+      <EnField
+        v-if="store.editingEn"
+        id="tech-note-en"
+        label="Criterio técnico / criterio de elección"
+        :es="store.form.note"
+        v-model="store.form.en.note"
+        :rows="3"
+      />
+      <div v-else>
         <label class="field-label">Criterio Técnico / Criterio de Elección</label>
         <textarea
           v-model="store.form.note"

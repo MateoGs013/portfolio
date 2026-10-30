@@ -1,9 +1,11 @@
 // Componente Estructural: AdmEditor
-// Lienzo del editor con pestañas lineales, router interno de formularios y barra de acciones anclada
+// Lienzo del editor con pestañas lineales, router interno de formularios y barra de acciones anclada.
+// La cabecera (estado, selector ES|EN, duplicar) vive en AdmEditorHeader.
 
 import { store } from '../store.js'
 import { api } from '../api.js'
 import { MODELS } from '../config.js'
+import { AdmEditorHeader } from './AdmEditorHeader.js'
 
 import { ProjectForm } from './forms/ProjectForm.js'
 import { ExperienceForm } from './forms/ExperienceForm.js'
@@ -17,6 +19,7 @@ const { ref, computed } = window.Vue
 export const AdmEditor = {
   name: 'AdmEditor',
   components: {
+    AdmEditorHeader,
     ProjectForm,
     ExperienceForm,
     StackForm,
@@ -26,41 +29,6 @@ export const AdmEditor = {
   },
   setup() {
     const model = computed(() => MODELS[store.section])
-
-    function setStatus(status) {
-      if (store.form) {
-        store.form.status = status
-        store.checkDirty()
-      }
-    }
-    const setProjectStatus = setStatus
-
-    async function duplicateRecord() {
-      if (!store.form) return
-      const baseTitle = store.form.title || store.form.name || store.form.role || 'Copia'
-      const cloned = JSON.parse(JSON.stringify(store.form))
-      delete cloned.id
-      delete cloned.createdAt
-      delete cloned.updatedAt
-      cloned.slug = `${cloned.slug || 'copia'}-borrador`
-      if (cloned.title) cloned.title = `${cloned.title} (Copia)`
-      if (cloned.name) cloned.name = `${cloned.name} (Copia)`
-      if (cloned.role) cloned.role = `${cloned.role} (Copia)`
-      cloned.status = store.section === 'articles' ? 'DRAFT' : 'WIP'
-      cloned.featured = false
-      // Una copia de obra nace oculta y sin media: «Mostrar en el sitio» se enciende a mano.
-      if (store.section === 'projects') {
-        cloned.publishedAt = ''
-        cloned.media = []
-      }
-
-      store.current = null
-      store.isNew = true
-      store.form = cloned
-      store.slugLocked = false
-      store.isDirty = true
-      store.toast('ok', `Registro duplicado: "${baseTitle}". Revisá los datos y guardá.`)
-    }
 
     const isSaving = ref(false)
 
@@ -165,9 +133,6 @@ export const AdmEditor = {
       store,
       model,
       isSaving,
-      setStatus,
-      setProjectStatus,
-      duplicateRecord,
       save,
       remove,
       cancelEdit,
@@ -177,98 +142,7 @@ export const AdmEditor = {
     <section class="flex-1 flex flex-col h-full overflow-hidden bg-[#08090a]">
       <div v-if="store.form" class="h-full flex flex-col overflow-hidden">
         
-        <!-- CABECERA DEL EDITOR -->
-        <div class="p-3 sm:p-4 px-4 sm:px-6 border-b border-white/10 bg-[#0c0d10] flex items-center justify-between shrink-0 select-none flex-wrap sm:flex-nowrap gap-2">
-          <div class="flex items-center gap-2 sm:gap-3 min-w-0">
-            <button
-              type="button"
-              @click="store.mobileView = 'list'"
-              class="md:hidden flex items-center gap-1 px-2.5 py-1 text-xs font-mono-code text-zinc-300 hover:text-white bg-white/5 hover:bg-white/10 rounded border border-white/10 shrink-0 cursor-pointer"
-              title="Volver a la lista"
-            >
-              <span>←</span>
-              <span>Lista</span>
-            </button>
-            <span class="text-[11px] font-mono-code uppercase text-zinc-500 tracking-wider truncate">
-              {{ store.section }} / {{ store.isNew ? 'nuevo' : (store.form.slug || store.form.key || 'editar') }}
-            </span>
-            <span class="h-3 w-px bg-white/10 hidden sm:inline-block"></span>
-            <div class="hidden sm:flex items-center gap-1.5 shrink-0">
-              <span class="status-dot" :class="store.isDirty ? 'wip' : 'live'"></span>
-              <span class="text-[11px] font-mono-code" :class="store.isDirty ? 'text-amber-400' : 'text-emerald-400'">
-                {{ store.isDirty ? 'Modificado' : 'Sincronizado' }}
-              </span>
-            </div>
-          </div>
-
-          <div class="flex items-center gap-2 sm:gap-2.5 shrink-0">
-            <button
-              type="button"
-              @click="duplicateRecord"
-              class="btn-secondary !h-[28px] !text-[11px] cursor-pointer"
-              title="Duplicar como nuevo borrador (Ctrl+D)"
-            >
-              <span>Duplicar</span>
-              <kbd class="hidden md:inline-block text-[9px] font-mono-code bg-black/40 px-1 rounded border border-white/10 text-zinc-400">Ctrl+D</kbd>
-            </button>
-
-            <!-- Selector de Estado Pill para Proyectos -->
-            <div v-if="store.form.status !== undefined && store.section === 'projects'" class="flex items-center gap-1 bg-[#121318] p-0.5 rounded border border-white/10">
-              <button
-                type="button"
-                @click="setStatus('LIVE')"
-                class="px-2 py-0.5 rounded text-[10px] sm:text-[10.5px] font-mono-code transition-colors flex items-center gap-1 cursor-pointer"
-                :class="store.form.status === 'LIVE' ? 'bg-emerald-500/15 text-emerald-300 font-bold border border-emerald-500/30' : 'text-zinc-500 hover:text-white'"
-              >
-                <span class="status-dot live"></span> LIVE
-              </button>
-              <button
-                type="button"
-                @click="setStatus('WIP')"
-                class="px-2 py-0.5 rounded text-[10px] sm:text-[10.5px] font-mono-code transition-colors flex items-center gap-1 cursor-pointer"
-                :class="store.form.status === 'WIP' ? 'bg-amber-500/15 text-amber-300 font-bold border border-amber-500/30' : 'text-zinc-500 hover:text-white'"
-              >
-                <span class="status-dot wip"></span> WIP
-              </button>
-              <button
-                type="button"
-                @click="setStatus('ARCHIVED')"
-                class="hidden sm:flex px-2 py-0.5 rounded text-[10.5px] font-mono-code transition-colors items-center gap-1 cursor-pointer"
-                :class="store.form.status === 'ARCHIVED' ? 'bg-zinc-500/15 text-zinc-300 font-bold border border-zinc-500/30' : 'text-zinc-500 hover:text-white'"
-              >
-                <span class="status-dot archived"></span> ARCHIVED
-              </button>
-            </div>
-
-            <!-- Selector de Estado Pill para Artículos -->
-            <div v-else-if="store.form.status !== undefined && store.section === 'articles'" class="flex items-center gap-1 bg-[#121318] p-0.5 rounded border border-white/10">
-              <button
-                type="button"
-                @click="setStatus('PUBLISHED')"
-                class="px-2 py-0.5 rounded text-[10px] sm:text-[10.5px] font-mono-code transition-colors flex items-center gap-1 cursor-pointer"
-                :class="store.form.status === 'PUBLISHED' ? 'bg-emerald-500/15 text-emerald-300 font-bold border border-emerald-500/30' : 'text-zinc-500 hover:text-white'"
-              >
-                <span class="status-dot live"></span> PUBLISHED
-              </button>
-              <button
-                type="button"
-                @click="setStatus('DRAFT')"
-                class="px-2 py-0.5 rounded text-[10px] sm:text-[10.5px] font-mono-code transition-colors flex items-center gap-1 cursor-pointer"
-                :class="store.form.status === 'DRAFT' ? 'bg-amber-500/15 text-amber-300 font-bold border border-amber-500/30' : 'text-zinc-500 hover:text-white'"
-              >
-                <span class="status-dot wip"></span> DRAFT
-              </button>
-              <button
-                type="button"
-                @click="setStatus('ARCHIVED')"
-                class="hidden sm:flex px-2 py-0.5 rounded text-[10.5px] font-mono-code transition-colors items-center gap-1 cursor-pointer"
-                :class="store.form.status === 'ARCHIVED' ? 'bg-zinc-500/15 text-zinc-300 font-bold border border-zinc-500/30' : 'text-zinc-500 hover:text-white'"
-              >
-                <span class="status-dot archived"></span> ARCHIVED
-              </button>
-            </div>
-          </div>
-        </div>
+        <AdmEditorHeader />
 
         <!-- Pestañas Lineales (Linear-style tabs) para Proyectos -->
         <div
@@ -300,6 +174,10 @@ export const AdmEditor = {
 
         <!-- CUERPO DEL EDITOR (SCROLL CENTRAL INDEPENDIENTE) -->
         <div class="flex-1 overflow-y-auto p-4 sm:p-6 space-y-5 sm:space-y-6">
+          <p v-if="store.editingEn" class="max-w-2xl flex items-start gap-2 text-[11.5px] leading-relaxed text-zinc-300 border border-[#ff3e00]/25 bg-[#ff3e00]/[0.06] rounded px-3 py-2">
+            <span class="mt-[5px] inline-block w-[7px] h-[7px] rotate-45 border border-[#ff8a5c] shrink-0" aria-hidden="true"></span>
+            <span>Editando el inglés. Los campos con marca <b class="font-mono-code text-[#ff8a5c]">EN</b> guardan la traducción y muestran el español arriba; un campo vacío se publica en español. El resto es común a los dos idiomas.</span>
+          </p>
           <ProjectForm v-if="store.section === 'projects'" />
           <ExperienceForm v-else-if="store.section === 'experience'" />
           <StackForm v-else-if="store.section === 'stack'" />

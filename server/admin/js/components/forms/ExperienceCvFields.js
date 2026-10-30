@@ -1,15 +1,29 @@
 // Campos de la experiencia que usa el CV: tipo de entrada, lugar, posición en el CV,
-// viñetas (hasta 3 de 160 caracteres, la cota de una página A4) y obras ligadas.
+// viñetas (hasta 3 de 160 caracteres, la cota de una página A4) y obras ligadas. En modo EN, el
+// lugar y las viñetas se editan en inglés con la misma cota, cada viñeta junto a su par en español.
 
 import { store } from '../../store.js'
 import { EXPERIENCE_KIND_LABELS, HIGHLIGHTS_MAX, HIGHLIGHT_CHARS } from '../../fields.js'
+import { EnField } from './EnField.js'
 
 const { computed } = window.Vue
 
 export const ExperienceCvFields = {
   name: 'AdmExperienceCvFields',
+  components: { EnField },
   setup() {
     const highlights = computed(() => store.form?.highlights || [])
+    // Una viñeta en inglés por cada una en español (y las de más que hayan quedado, para poder vaciarlas).
+    const enSlots = computed(() => {
+      const en = store.form?.en?.highlights || []
+      return Array.from({ length: Math.min(HIGHLIGHTS_MAX, Math.max(highlights.value.length, en.length)) }, (_, i) => i)
+    })
+
+    function setEnHighlight(idx, value) {
+      const list = store.form.en.highlights
+      while (list.length <= idx) list.push('')
+      list[idx] = value
+    }
     const projects = computed(() => store.meta.options.projects || [])
 
     function addHighlight() {
@@ -40,7 +54,7 @@ export const ExperienceCvFields = {
     }
 
     return {
-      store, highlights, projects, addHighlight, removeHighlight, setHighlight, isLinked, toggleProject,
+      store, highlights, enSlots, setEnHighlight, projects, addHighlight, removeHighlight, setHighlight, isLinked, toggleProject,
       HIGHLIGHTS_MAX, HIGHLIGHT_CHARS,
       kinds: computed(() => store.meta.enums.ExperienceKind || []),
       kindLabel: k => EXPERIENCE_KIND_LABELS[k] || k,
@@ -60,7 +74,7 @@ export const ExperienceCvFields = {
             <option v-for="k in kinds" :key="k" :value="k">{{ kindLabel(k) }}</option>
           </select>
         </label>
-        <label class="block">
+        <label v-if="!store.editingEn" class="block">
           <span class="field-label">Lugar</span>
           <input type="text" v-model="store.form.location" @input="store.checkDirty()" maxlength="120" class="text-input" />
           <span class="field-hint">Vacío: la ciudad de la empresa (sin empresa, remoto).</span>
@@ -71,7 +85,30 @@ export const ExperienceCvFields = {
         </label>
       </div>
 
-      <div class="space-y-2">
+      <div v-if="store.editingEn" class="space-y-3">
+        <EnField
+          id="exp-location-en"
+          label="Lugar"
+          :es="store.form.location"
+          v-model="store.form.en.location"
+          :maxlength="120"
+          hint="Vacío: se usa el lugar en español (o la ciudad de la empresa)."
+        />
+        <p v-if="!enSlots.length" class="text-[11px] text-zinc-400">Esta entrada no tiene viñetas en español.</p>
+        <EnField
+          v-for="idx in enSlots"
+          :key="idx"
+          :id="'exp-highlight-en-' + idx"
+          :label="'Viñeta ' + (idx + 1)"
+          :es="highlights[idx] || ''"
+          :model-value="store.form.en.highlights[idx] || ''"
+          @update:model-value="setEnHighlight(idx, $event)"
+          :rows="2"
+          :maxlength="HIGHLIGHT_CHARS"
+        />
+      </div>
+
+      <div v-else class="space-y-2">
         <div class="flex items-center justify-between">
           <span class="field-label !mb-0">Viñetas del CV ({{ highlights.length }}/{{ HIGHLIGHTS_MAX }})</span>
           <button
