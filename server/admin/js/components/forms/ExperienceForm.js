@@ -3,11 +3,13 @@
 
 import { store } from '../../store.js'
 import { slugify } from '../../config.js'
+import { ExperienceCvFields } from './ExperienceCvFields.js'
 
 const { computed } = window.Vue
 
 export const ExperienceForm = {
   name: 'AdmExperienceForm',
+  components: { ExperienceCvFields },
   setup() {
     const categorizedTechs = computed(() => {
       const q = store.techSearchQuery.trim().toLowerCase()
@@ -199,6 +201,8 @@ export const ExperienceForm = {
         </div>
       </div>
 
+      <ExperienceCvFields />
+
       <!-- Selector de Tecnologías -->
       <div>
         <label class="field-label">Tecnologías Principales Utilizadas ({{ (store.form.techIds || []).length }})</label>
@@ -206,15 +210,15 @@ export const ExperienceForm = {
           <div v-for="cat in categorizedTechs" :key="cat.key" class="space-y-1">
             <div class="text-[10px] font-mono-code uppercase tracking-wider text-zinc-500">{{ cat.label }}</div>
             <div class="flex flex-wrap gap-1.5">
-              <span
+              <button
                 v-for="t in cat.items"
                 :key="t.id"
+                type="button"
                 @click="toggleTech(t.id)"
                 class="tech-chip"
                 :class="{ selected: isTechSelected(t.id) }"
-              >
-                {{ t.name }}
-              </span>
+                :aria-pressed="isTechSelected(t.id)"
+              >{{ t.name }}</button>
             </div>
           </div>
         </div>

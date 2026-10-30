@@ -48,6 +48,11 @@ export const AdmEditor = {
       if (cloned.role) cloned.role = `${cloned.role} (Copia)`
       cloned.status = store.section === 'articles' ? 'DRAFT' : 'WIP'
       cloned.featured = false
+      // Una copia de obra nace oculta y sin media: «Mostrar en el sitio» se enciende a mano.
+      if (store.section === 'projects') {
+        cloned.publishedAt = ''
+        cloned.media = []
+      }
 
       store.current = null
       store.isNew = true

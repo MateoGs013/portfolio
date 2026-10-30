@@ -340,7 +340,8 @@ export const AdmTrendRadar = {
                   rel="noopener noreferrer"
                   class="btn-secondary !h-[30px] !text-xs font-mono-code inline-flex items-center gap-1.5"
                 >
-                  <span>Abrir Fuente Original ↗</span>
+                  <span>Abrir Fuente Original</span>
+                  <svg class="adm-icon sm" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17 17 7"/><polyline points="7 7 17 7 17 17"/></svg>
                 </a>
 
                 <button

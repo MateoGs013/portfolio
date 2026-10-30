@@ -22,9 +22,10 @@ export const HelpModal = {
           <button
             type="button"
             @click="$emit('close')"
+            aria-label="Cerrar la guía"
             class="text-zinc-400 hover:text-white text-xs cursor-pointer px-2 py-1"
           >
-            ✕
+            <span aria-hidden="true">✕</span>
           </button>
         </div>
 
