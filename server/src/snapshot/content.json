@@ -1,0 +1,3204 @@
+{
+  "_generated": "pnpm db:snapshot — no editar",
+  "at": "2026-10-30T18:33:48.662Z",
+  "projects": [
+    {
+      "id": 1,
+      "slug": "la-rucula",
+      "title": "La Rúcula Gastrobar",
+      "year": 2026,
+      "role": "Freelance · diseño y desarrollo",
+      "status": "LIVE",
+      "featured": true,
+      "summary": "Sitio editorial menu-first para un restaurante frente al mar en Chiclana. Cliente real, en producción.",
+      "brief": "La Rúcula necesitaba dejar de ser un PDF escaneado colgado de un QR. El brief real: que la carta se sienta tan cuidada como el plato, y que el dueño pueda editarla sin llamar a nadie.",
+      "outcome": "En producción en laruculagastrobar.es. Modo QR optimizado para llegada directa desde la mesa. Multi-locale con preservación del idioma entre rutas. Review UX y accesibilidad automatizadas antes de cada deploy.",
+      "url": "https://laruculagastrobar.es/",
+      "repo": "https://github.com/MateoGs013/LaRucula",
+      "sortOrder": 0,
+      "publishedAt": "2026-10-05T12:00:00.000Z",
+      "createdAt": "2026-10-30T18:32:38.741Z",
+      "updatedAt": "2026-10-30T18:32:38.741Z",
+      "orgId": 1,
+      "org": {
+        "slug": "la-rucula-gastrobar",
+        "name": "La Rúcula Gastrobar",
+        "city": "Chiclana de la Frontera, ES"
+      },
+      "techs": [
+        {
+          "slug": "gsap",
+          "name": "GSAP",
+          "category": "MOTION",
+          "since": 2026,
+          "note": "Orquestación temporal determinista para interfaces de alta precisión y micro-interacciones espaciales.",
+          "translations": [],
+          "projects": [
+            {
+              "slug": "la-rucula",
+              "title": "La Rúcula Gastrobar",
+              "year": 2026,
+              "publishedAt": "2026-10-05T12:00:00.000Z",
+              "translations": []
+            },
+            {
+              "slug": "argpiscinas",
+              "title": "ARG Piscinas",
+              "year": 2026,
+              "publishedAt": "2026-10-05T12:00:00.000Z",
+              "translations": []
+            },
+            {
+              "slug": "ynara-web",
+              "title": "Ynara Web",
+              "year": 2026,
+              "publishedAt": "2026-10-05T12:00:00.000Z",
+              "translations": []
+            }
+          ]
+        },
+        {
+          "slug": "lenis",
+          "name": "Lenis",
+          "category": "MOTION",
+          "since": 2026,
+          "note": "Scroll inercial normalizado multiplataforma sin romper el comportamiento nativo del navegador.",
+          "translations": [],
+          "projects": [
+            {
+              "slug": "la-rucula",
+              "title": "La Rúcula Gastrobar",
+              "year": 2026,
+              "publishedAt": "2026-10-05T12:00:00.000Z",
+              "translations": []
+            },
+            {
+              "slug": "ynara-web",
+              "title": "Ynara Web",
+              "year": 2026,
+              "publishedAt": "2026-10-05T12:00:00.000Z",
+              "translations": []
+            }
+          ]
+        },
+        {
+          "slug": "tailwind",
+          "name": "Tailwind CSS",
+          "category": "TOOLING",
+          "since": 2026,
+          "note": "Sistema de diseño componible y utilitario con purga agresiva para bundles ultra ligeros.",
+          "translations": [],
+          "projects": [
+            {
+              "slug": "la-rucula",
+              "title": "La Rúcula Gastrobar",
+              "year": 2026,
+              "publishedAt": "2026-10-05T12:00:00.000Z",
+              "translations": []
+            },
+            {
+              "slug": "argpiscinas",
+              "title": "ARG Piscinas",
+              "year": 2026,
+              "publishedAt": "2026-10-05T12:00:00.000Z",
+              "translations": []
+            },
+            {
+              "slug": "ynara-web",
+              "title": "Ynara Web",
+              "year": 2026,
+              "publishedAt": "2026-10-05T12:00:00.000Z",
+              "translations": []
+            }
+          ]
+        },
+        {
+          "slug": "vite",
+          "name": "Vite",
+          "category": "TOOLING",
+          "since": 2025,
+          "note": "Tooling ultra veloz basado en Rollup y esbuild para HMR instantáneo en desarrollo.",
+          "translations": [],
+          "projects": [
+            {
+              "slug": "la-rucula",
+              "title": "La Rúcula Gastrobar",
+              "year": 2026,
+              "publishedAt": "2026-10-05T12:00:00.000Z",
+              "translations": []
+            },
+            {
+              "slug": "argpiscinas",
+              "title": "ARG Piscinas",
+              "year": 2026,
+              "publishedAt": "2026-10-05T12:00:00.000Z",
+              "translations": []
+            }
+          ]
+        },
+        {
+          "slug": "vue",
+          "name": "Vue 3",
+          "category": "FRAMEWORK",
+          "since": 2025,
+          "note": "Elegido por reactividad quirúrgica, Composition API limpia y tipado estricto sin sobrecarga de boilerplate.",
+          "translations": [],
+          "projects": [
+            {
+              "slug": "la-rucula",
+              "title": "La Rúcula Gastrobar",
+              "year": 2026,
+              "publishedAt": "2026-10-05T12:00:00.000Z",
+              "translations": []
+            },
+            {
+              "slug": "argpiscinas",
+              "title": "ARG Piscinas",
+              "year": 2026,
+              "publishedAt": "2026-10-05T12:00:00.000Z",
+              "translations": []
+            }
+          ]
+        }
+      ],
+      "media": [
+        {
+          "id": 1,
+          "kind": "IMAGE",
+          "role": "COVER",
+          "src": "/media/projects/la-rucula.jpg",
+          "srcWebm": null,
+          "poster": null,
+          "alt": "Home de La Rúcula Gastrobar: titular editorial sobre fotografía de la costa",
+          "caption": null,
+          "tint": "#b97e46",
+          "viewport": "DESKTOP",
+          "width": 2880,
+          "height": 1800,
+          "order": 0,
+          "bytes": 218308,
+          "projectId": 1,
+          "translations": []
+        }
+      ],
+      "steps": [
+        {
+          "id": 1,
+          "order": 1,
+          "title": "01 · encargo",
+          "body": "De un encargo de \"página de restaurante\" a una experiencia menu-first pensada para el QR en la mesa. La carta tenía que sentirse tan cuidada como el plato.",
+          "projectId": 1,
+          "mediaId": null,
+          "translations": [],
+          "media": null
+        },
+        {
+          "id": 2,
+          "order": 2,
+          "title": "02 · taller",
+          "body": "Arquitectura menu-first: el sitio se reduce a /, /menu y /menu/:slug. La mayoría del tráfico entra por QR, así que el menú es el producto. El contenido del shell vive en un CMS propio con fallback local: si la API duerme, el sitio no. Antes de cerrar una sección, review visual con Playwright en tres viewports y baseline de accesibilidad con axe.",
+          "projectId": 1,
+          "mediaId": null,
+          "translations": [],
+          "media": null
+        },
+        {
+          "id": 3,
+          "order": 3,
+          "title": "03 · pieza",
+          "body": "Home inmersiva de dirección de arte mediterránea: editorial, calma, lejos del layout genérico de restaurante. Motion con significado: reveals de línea, stagger tipográfico y acentos SVG de trazo manual. La regla del proyecto: cohesión sobre novedad.",
+          "projectId": 1,
+          "mediaId": null,
+          "translations": [],
+          "media": null
+        }
+      ],
+      "links": [
+        {
+          "id": 1,
+          "label": "sitio en vivo",
+          "url": "https://laruculagastrobar.es/",
+          "projectId": 1,
+          "translations": []
+        },
+        {
+          "id": 2,
+          "label": "código fuente",
+          "url": "https://github.com/MateoGs013/LaRucula",
+          "projectId": 1,
+          "translations": []
+        }
+      ],
+      "metrics": [
+        {
+          "id": 1,
+          "key": "performanceScore",
+          "value": "99",
+          "items": [],
+          "unit": null,
+          "label": null,
+          "source": null,
+          "measuredAt": null,
+          "order": 0,
+          "projectId": 1
+        },
+        {
+          "id": 2,
+          "key": "accessibilityScore",
+          "value": "100",
+          "items": [],
+          "unit": null,
+          "label": null,
+          "source": null,
+          "measuredAt": null,
+          "order": 1,
+          "projectId": 1
+        },
+        {
+          "id": 3,
+          "key": "bestPracticesScore",
+          "value": "100",
+          "items": [],
+          "unit": null,
+          "label": null,
+          "source": null,
+          "measuredAt": null,
+          "order": 2,
+          "projectId": 1
+        },
+        {
+          "id": 4,
+          "key": "seoScore",
+          "value": "100",
+          "items": [],
+          "unit": null,
+          "label": null,
+          "source": null,
+          "measuredAt": null,
+          "order": 3,
+          "projectId": 1
+        },
+        {
+          "id": 5,
+          "key": "lcp",
+          "value": "0.8",
+          "items": [],
+          "unit": "s",
+          "label": null,
+          "source": null,
+          "measuredAt": null,
+          "order": 4,
+          "projectId": 1
+        },
+        {
+          "id": 6,
+          "key": "bundleSizeKb",
+          "value": "42",
+          "items": [],
+          "unit": "kb",
+          "label": null,
+          "source": null,
+          "measuredAt": null,
+          "order": 5,
+          "projectId": 1
+        },
+        {
+          "id": 7,
+          "key": "localeCount",
+          "value": "2",
+          "items": [],
+          "unit": null,
+          "label": null,
+          "source": null,
+          "measuredAt": null,
+          "order": 6,
+          "projectId": 1
+        }
+      ],
+      "experiences": [
+        {
+          "slug": "la-rucula",
+          "kind": "CLIENT",
+          "role": "Freelance · diseño y desarrollo",
+          "translations": []
+        }
+      ],
+      "translations": []
+    },
+    {
+      "id": 2,
+      "slug": "argpiscinas",
+      "title": "ARG Piscinas",
+      "year": 2026,
+      "role": "Freelance · front y back a medida",
+      "status": "LIVE",
+      "featured": true,
+      "summary": "Web corporativa multi-idioma (ES/EN/DE) con panel admin y blog para una constructora de piscinas en Andalucía. Cliente real, en producción.",
+      "brief": "ARG venía de mostrar su trabajo por WhatsApp, foto por foto. El brief: un catálogo serio que muestre obra real, presupuesto en línea, y un panel que el propio cliente pueda operar sin depender de nadie.",
+      "outcome": "En producción en argpiscinas.es. Panel autoadministrable: el cliente carga obra sin tocar código. Catálogo tipado de punta a punta con Prisma. Tres idiomas.",
+      "url": "https://www.argpiscinas.es/",
+      "repo": "https://github.com/MateoGs013/argpiscinas",
+      "sortOrder": 1,
+      "publishedAt": "2026-10-05T12:00:00.000Z",
+      "createdAt": "2026-10-30T18:32:38.762Z",
+      "updatedAt": "2026-10-30T18:32:38.762Z",
+      "orgId": 2,
+      "org": {
+        "slug": "arg-piscinas",
+        "name": "ARG Piscinas",
+        "city": "Andalucía, ES"
+      },
+      "techs": [
+        {
+          "slug": "gsap",
+          "name": "GSAP",
+          "category": "MOTION",
+          "since": 2026,
+          "note": "Orquestación temporal determinista para interfaces de alta precisión y micro-interacciones espaciales.",
+          "translations": [],
+          "projects": [
+            {
+              "slug": "la-rucula",
+              "title": "La Rúcula Gastrobar",
+              "year": 2026,
+              "publishedAt": "2026-10-05T12:00:00.000Z",
+              "translations": []
+            },
+            {
+              "slug": "argpiscinas",
+              "title": "ARG Piscinas",
+              "year": 2026,
+              "publishedAt": "2026-10-05T12:00:00.000Z",
+              "translations": []
+            },
+            {
+              "slug": "ynara-web",
+              "title": "Ynara Web",
+              "year": 2026,
+              "publishedAt": "2026-10-05T12:00:00.000Z",
+              "translations": []
+            }
+          ]
+        },
+        {
+          "slug": "node",
+          "name": "Node.js",
+          "category": "BACKEND",
+          "since": 2024,
+          "note": "Runtime de alto rendimiento para APIs REST livianas, pipelines de middleware y servidores de eventos.",
+          "translations": [],
+          "projects": [
+            {
+              "slug": "argpiscinas",
+              "title": "ARG Piscinas",
+              "year": 2026,
+              "publishedAt": "2026-10-05T12:00:00.000Z",
+              "translations": []
+            },
+            {
+              "slug": "barberpole",
+              "title": "Barberpole",
+              "year": 2026,
+              "publishedAt": "2026-10-05T12:00:00.000Z",
+              "translations": []
+            }
+          ]
+        },
+        {
+          "slug": "prisma",
+          "name": "Prisma",
+          "category": "DATA",
+          "since": 2026,
+          "note": "ORM tipado de punta a punta: genera tipos TypeScript exactos directamente desde el esquema SQL.",
+          "translations": [],
+          "projects": [
+            {
+              "slug": "argpiscinas",
+              "title": "ARG Piscinas",
+              "year": 2026,
+              "publishedAt": "2026-10-05T12:00:00.000Z",
+              "translations": []
+            }
+          ]
+        },
+        {
+          "slug": "tailwind",
+          "name": "Tailwind CSS",
+          "category": "TOOLING",
+          "since": 2026,
+          "note": "Sistema de diseño componible y utilitario con purga agresiva para bundles ultra ligeros.",
+          "translations": [],
+          "projects": [
+            {
+              "slug": "la-rucula",
+              "title": "La Rúcula Gastrobar",
+              "year": 2026,
+              "publishedAt": "2026-10-05T12:00:00.000Z",
+              "translations": []
+            },
+            {
+              "slug": "argpiscinas",
+              "title": "ARG Piscinas",
+              "year": 2026,
+              "publishedAt": "2026-10-05T12:00:00.000Z",
+              "translations": []
+            },
+            {
+              "slug": "ynara-web",
+              "title": "Ynara Web",
+              "year": 2026,
+              "publishedAt": "2026-10-05T12:00:00.000Z",
+              "translations": []
+            }
+          ]
+        },
+        {
+          "slug": "vite",
+          "name": "Vite",
+          "category": "TOOLING",
+          "since": 2025,
+          "note": "Tooling ultra veloz basado en Rollup y esbuild para HMR instantáneo en desarrollo.",
+          "translations": [],
+          "projects": [
+            {
+              "slug": "la-rucula",
+              "title": "La Rúcula Gastrobar",
+              "year": 2026,
+              "publishedAt": "2026-10-05T12:00:00.000Z",
+              "translations": []
+            },
+            {
+              "slug": "argpiscinas",
+              "title": "ARG Piscinas",
+              "year": 2026,
+              "publishedAt": "2026-10-05T12:00:00.000Z",
+              "translations": []
+            }
+          ]
+        },
+        {
+          "slug": "vue",
+          "name": "Vue 3",
+          "category": "FRAMEWORK",
+          "since": 2025,
+          "note": "Elegido por reactividad quirúrgica, Composition API limpia y tipado estricto sin sobrecarga de boilerplate.",
+          "translations": [],
+          "projects": [
+            {
+              "slug": "la-rucula",
+              "title": "La Rúcula Gastrobar",
+              "year": 2026,
+              "publishedAt": "2026-10-05T12:00:00.000Z",
+              "translations": []
+            },
+            {
+              "slug": "argpiscinas",
+              "title": "ARG Piscinas",
+              "year": 2026,
+              "publishedAt": "2026-10-05T12:00:00.000Z",
+              "translations": []
+            }
+          ]
+        }
+      ],
+      "media": [
+        {
+          "id": 2,
+          "kind": "IMAGE",
+          "role": "COVER",
+          "src": "/media/projects/argpiscinas.jpg",
+          "srcWebm": null,
+          "poster": null,
+          "alt": "Catálogo de ARG Piscinas con fotografías de obra terminada",
+          "caption": null,
+          "tint": "#508daf",
+          "viewport": "DESKTOP",
+          "width": 2880,
+          "height": 1800,
+          "order": 0,
+          "bytes": 540079,
+          "projectId": 2,
+          "translations": []
+        }
+      ],
+      "steps": [
+        {
+          "id": 4,
+          "order": 1,
+          "title": "01 · encargo",
+          "body": "Una constructora de piscinas que necesitaba mostrar obra terminada y cotizar sin fricción, en tres idiomas.",
+          "projectId": 2,
+          "mediaId": null,
+          "translations": [],
+          "media": null
+        },
+        {
+          "id": 5,
+          "order": 2,
+          "title": "02 · taller",
+          "body": "Dos cuerpos sobre una misma API: catálogo público y panel de gestión. Node y Prisma con datos tipados de punta a punta. La obra que carga el cliente es exactamente la que muestra el sitio, sin intermediarios ni deploys de por medio.",
+          "projectId": 2,
+          "mediaId": null,
+          "translations": [],
+          "media": null
+        },
+        {
+          "id": 6,
+          "order": 3,
+          "title": "03 · pieza",
+          "body": "Front Vue 3 directo y rápido: la obra primero, el argumento después. Catálogo, presupuesto y contacto en el camino más corto posible. El sitio trabaja como la empresa: sin vueltas.",
+          "projectId": 2,
+          "mediaId": null,
+          "translations": [],
+          "media": null
+        }
+      ],
+      "links": [
+        {
+          "id": 3,
+          "label": "sitio en vivo",
+          "url": "https://www.argpiscinas.es/",
+          "projectId": 2,
+          "translations": []
+        },
+        {
+          "id": 4,
+          "label": "código fuente",
+          "url": "https://github.com/MateoGs013/argpiscinas",
+          "projectId": 2,
+          "translations": []
+        }
+      ],
+      "metrics": [
+        {
+          "id": 8,
+          "key": "performanceScore",
+          "value": "98",
+          "items": [],
+          "unit": null,
+          "label": null,
+          "source": null,
+          "measuredAt": null,
+          "order": 0,
+          "projectId": 2
+        },
+        {
+          "id": 9,
+          "key": "accessibilityScore",
+          "value": "98",
+          "items": [],
+          "unit": null,
+          "label": null,
+          "source": null,
+          "measuredAt": null,
+          "order": 1,
+          "projectId": 2
+        },
+        {
+          "id": 10,
+          "key": "bestPracticesScore",
+          "value": "100",
+          "items": [],
+          "unit": null,
+          "label": null,
+          "source": null,
+          "measuredAt": null,
+          "order": 2,
+          "projectId": 2
+        },
+        {
+          "id": 11,
+          "key": "seoScore",
+          "value": "100",
+          "items": [],
+          "unit": null,
+          "label": null,
+          "source": null,
+          "measuredAt": null,
+          "order": 3,
+          "projectId": 2
+        },
+        {
+          "id": 12,
+          "key": "lcp",
+          "value": "0.9",
+          "items": [],
+          "unit": "s",
+          "label": null,
+          "source": null,
+          "measuredAt": null,
+          "order": 4,
+          "projectId": 2
+        },
+        {
+          "id": 13,
+          "key": "bundleSizeKb",
+          "value": "58",
+          "items": [],
+          "unit": "kb",
+          "label": null,
+          "source": null,
+          "measuredAt": null,
+          "order": 5,
+          "projectId": 2
+        },
+        {
+          "id": 14,
+          "key": "languages",
+          "value": null,
+          "items": [
+            "ES",
+            "EN",
+            "DE"
+          ],
+          "unit": null,
+          "label": null,
+          "source": null,
+          "measuredAt": null,
+          "order": 6,
+          "projectId": 2
+        }
+      ],
+      "experiences": [
+        {
+          "slug": "arg-piscinas",
+          "kind": "CLIENT",
+          "role": "Freelance · front y back a medida",
+          "translations": []
+        }
+      ],
+      "translations": []
+    },
+    {
+      "id": 3,
+      "slug": "ynara",
+      "title": "Ynara",
+      "year": 2026,
+      "role": "Tesis Da Vinci 2026 · contribuidor principal, 382 commits",
+      "status": "WIP",
+      "featured": true,
+      "summary": "Tesis en equipo, preaprobada. Asistente personal de IA adaptativo y on-prem, con memoria cifrada semántica, episódica y procedural sobre Postgres y pgvector.",
+      "brief": "Un asistente que corre en tu máquina, habla como vos y se acuerda. Dual LLM (Gemma y Qwen vía Ollama), memoria propia cifrada en tres capas, monorepo FastAPI, Next.js y Expo.",
+      "outcome": "Tesis preaprobada con felicitaciones en Da Vinci. 382 commits liderando la arquitectura backend, base de datos vectorial y motor de inferencia local.",
+      "url": null,
+      "repo": "https://github.com/BriarDevv/Ynara",
+      "sortOrder": 2,
+      "publishedAt": "2026-10-05T12:00:00.000Z",
+      "createdAt": "2026-10-30T18:32:38.776Z",
+      "updatedAt": "2026-10-30T18:32:38.776Z",
+      "orgId": 3,
+      "org": {
+        "slug": "escuela-da-vinci",
+        "name": "Escuela Da Vinci",
+        "city": "Buenos Aires, AR"
+      },
+      "techs": [
+        {
+          "slug": "fastapi",
+          "name": "FastAPI",
+          "category": "BACKEND",
+          "since": 2026,
+          "note": "Core de inferencia y procesamiento de IA/NLP con tipado Pydantic y latencia mínima.",
+          "translations": [],
+          "projects": [
+            {
+              "slug": "ynara",
+              "title": "Ynara",
+              "year": 2026,
+              "publishedAt": "2026-10-05T12:00:00.000Z",
+              "translations": []
+            },
+            {
+              "slug": "eros",
+              "title": "Eros Career OS",
+              "year": 2026,
+              "publishedAt": "2026-10-05T12:00:00.000Z",
+              "translations": []
+            }
+          ]
+        },
+        {
+          "slug": "next",
+          "name": "Next.js",
+          "category": "FRAMEWORK",
+          "since": 2026,
+          "note": "Framework full-stack de React con optimización de assets, routing por sistema de archivos y SSR.",
+          "translations": [],
+          "projects": [
+            {
+              "slug": "ynara",
+              "title": "Ynara",
+              "year": 2026,
+              "publishedAt": "2026-10-05T12:00:00.000Z",
+              "translations": []
+            },
+            {
+              "slug": "ynara-web",
+              "title": "Ynara Web",
+              "year": 2026,
+              "publishedAt": "2026-10-05T12:00:00.000Z",
+              "translations": []
+            }
+          ]
+        },
+        {
+          "slug": "postgresql",
+          "name": "PostgreSQL",
+          "category": "DATA",
+          "since": 2026,
+          "note": "Persistencia relacional ACID, esquemas declarativos e índices vectoriales con pgvector.",
+          "translations": [],
+          "projects": [
+            {
+              "slug": "ynara",
+              "title": "Ynara",
+              "year": 2026,
+              "publishedAt": "2026-10-05T12:00:00.000Z",
+              "translations": []
+            },
+            {
+              "slug": "eros",
+              "title": "Eros Career OS",
+              "year": 2026,
+              "publishedAt": "2026-10-05T12:00:00.000Z",
+              "translations": []
+            }
+          ]
+        },
+        {
+          "slug": "python",
+          "name": "Python",
+          "category": "LANGUAGE",
+          "since": 2026,
+          "note": "Lenguaje predilecto para ingeniería de datos, embeddings vectoriales y orquestación de LLMs.",
+          "translations": [],
+          "projects": [
+            {
+              "slug": "ynara",
+              "title": "Ynara",
+              "year": 2026,
+              "publishedAt": "2026-10-05T12:00:00.000Z",
+              "translations": []
+            },
+            {
+              "slug": "eros",
+              "title": "Eros Career OS",
+              "year": 2026,
+              "publishedAt": "2026-10-05T12:00:00.000Z",
+              "translations": []
+            }
+          ]
+        },
+        {
+          "slug": "react",
+          "name": "React",
+          "category": "FRAMEWORK",
+          "since": 2026,
+          "note": "Ecosistema masivo, React Server Components y rendering híbrido adoptado en la tesis Ynara.",
+          "translations": [],
+          "projects": [
+            {
+              "slug": "ynara",
+              "title": "Ynara",
+              "year": 2026,
+              "publishedAt": "2026-10-05T12:00:00.000Z",
+              "translations": []
+            },
+            {
+              "slug": "barberpole",
+              "title": "Barberpole",
+              "year": 2026,
+              "publishedAt": "2026-10-05T12:00:00.000Z",
+              "translations": []
+            },
+            {
+              "slug": "ynara-web",
+              "title": "Ynara Web",
+              "year": 2026,
+              "publishedAt": "2026-10-05T12:00:00.000Z",
+              "translations": []
+            }
+          ]
+        },
+        {
+          "slug": "typescript",
+          "name": "TypeScript",
+          "category": "LANGUAGE",
+          "since": 2023,
+          "note": "Estándar obligatorio en cliente y servidor: si no está tipado en compilación, no llega a producción.",
+          "translations": [],
+          "projects": [
+            {
+              "slug": "ynara",
+              "title": "Ynara",
+              "year": 2026,
+              "publishedAt": "2026-10-05T12:00:00.000Z",
+              "translations": []
+            },
+            {
+              "slug": "ynara-web",
+              "title": "Ynara Web",
+              "year": 2026,
+              "publishedAt": "2026-10-05T12:00:00.000Z",
+              "translations": []
+            },
+            {
+              "slug": "eros",
+              "title": "Eros Career OS",
+              "year": 2026,
+              "publishedAt": "2026-10-05T12:00:00.000Z",
+              "translations": []
+            }
+          ]
+        }
+      ],
+      "media": [
+        {
+          "id": 3,
+          "kind": "IMAGE",
+          "role": "COVER",
+          "src": "/media/projects/ynara-mtucqc2j.png",
+          "srcWebm": null,
+          "poster": null,
+          "alt": "Ynara asistente de IA adaptativo on-premise",
+          "caption": null,
+          "tint": "#426dbd",
+          "viewport": "DESKTOP",
+          "width": 1531,
+          "height": 602,
+          "order": 0,
+          "bytes": 394847,
+          "projectId": 3,
+          "translations": []
+        }
+      ],
+      "steps": [
+        {
+          "id": 7,
+          "order": 1,
+          "title": "01 · hipótesis",
+          "body": "Los asistentes en la nube sacrifican privacidad y contexto local. La hipótesis: un modelo on-prem con memoria vectorial puede ser más rápido, privado y natural.",
+          "projectId": 3,
+          "mediaId": null,
+          "translations": [],
+          "media": null
+        },
+        {
+          "id": 8,
+          "order": 2,
+          "title": "02 · arquitectura",
+          "body": "Monorepo con FastAPI para orquestación de embeddings y llamadas a Ollama; PostgreSQL 17 con pgvector para búsqueda por similitud coseno; Next.js 14 en frontend web y Expo para móvil.",
+          "projectId": 3,
+          "mediaId": null,
+          "translations": [],
+          "media": null
+        },
+        {
+          "id": 9,
+          "order": 3,
+          "title": "03 · resultado",
+          "body": "Respuestas contextualizadas con menos de 50ms de latencia de consulta interna y almacenamiento local 100% cifrado.",
+          "projectId": 3,
+          "mediaId": null,
+          "translations": [],
+          "media": null
+        }
+      ],
+      "links": [
+        {
+          "id": 5,
+          "label": "repositorio tesis",
+          "url": "https://github.com/BriarDevv/Ynara",
+          "projectId": 3,
+          "translations": []
+        }
+      ],
+      "metrics": [
+        {
+          "id": 15,
+          "key": "commits",
+          "value": "382",
+          "items": [],
+          "unit": null,
+          "label": null,
+          "source": null,
+          "measuredAt": null,
+          "order": 0,
+          "projectId": 3
+        },
+        {
+          "id": 16,
+          "key": "vectorDimensions",
+          "value": "1536",
+          "items": [],
+          "unit": null,
+          "label": null,
+          "source": null,
+          "measuredAt": null,
+          "order": 1,
+          "projectId": 3
+        },
+        {
+          "id": 17,
+          "key": "averageLatencyMs",
+          "value": "48",
+          "items": [],
+          "unit": "ms",
+          "label": null,
+          "source": null,
+          "measuredAt": null,
+          "order": 2,
+          "projectId": 3
+        },
+        {
+          "id": 18,
+          "key": "localModels",
+          "value": null,
+          "items": [
+            "Gemma 2B",
+            "Qwen 2.5"
+          ],
+          "unit": null,
+          "label": null,
+          "source": null,
+          "measuredAt": null,
+          "order": 3,
+          "projectId": 3
+        },
+        {
+          "id": 19,
+          "key": "encryptionLayers",
+          "value": "3",
+          "items": [],
+          "unit": null,
+          "label": null,
+          "source": null,
+          "measuredAt": null,
+          "order": 4,
+          "projectId": 3
+        }
+      ],
+      "experiences": [
+        {
+          "slug": "ynara",
+          "kind": "THESIS",
+          "role": "Tesis en equipo · contribuidor principal",
+          "translations": []
+        }
+      ],
+      "translations": []
+    },
+    {
+      "id": 4,
+      "slug": "barberpole",
+      "title": "Barberpole",
+      "year": 2026,
+      "role": "Producto propio · diseño y desarrollo",
+      "status": "LIVE",
+      "featured": false,
+      "summary": "SaaS de gestión para peluquerías y barberías: turnos, servicios, clientes y caja en un solo lugar.",
+      "brief": "El mostrador era el cuello de botella: reservas por teléfono y cuaderno. El sistema saca los turnos del teléfono y los pone en la agenda, del turno a la caja.",
+      "outcome": "En producción y validado. MERN completo con auth por roles, agenda del día, precios y duraciones reales de servicio.",
+      "url": "https://turnos.mateogs.tech/",
+      "repo": "https://github.com/MateoGs013/barberpole",
+      "sortOrder": 3,
+      "publishedAt": "2026-10-05T12:00:00.000Z",
+      "createdAt": "2026-10-30T18:32:38.787Z",
+      "updatedAt": "2026-10-30T18:32:38.787Z",
+      "orgId": null,
+      "org": null,
+      "techs": [
+        {
+          "slug": "express",
+          "name": "Express",
+          "category": "BACKEND",
+          "since": 2024,
+          "note": "Minimalismo y control total sobre el ciclo de vida HTTP, routing y autenticación.",
+          "translations": [],
+          "projects": [
+            {
+              "slug": "barberpole",
+              "title": "Barberpole",
+              "year": 2026,
+              "publishedAt": "2026-10-05T12:00:00.000Z",
+              "translations": []
+            }
+          ]
+        },
+        {
+          "slug": "mongodb",
+          "name": "MongoDB",
+          "category": "DATA",
+          "since": 2026,
+          "note": "Base NoSQL orientada a documentos para prototipado ágil y esquemas dinámicos en Barberpole.",
+          "translations": [],
+          "projects": [
+            {
+              "slug": "barberpole",
+              "title": "Barberpole",
+              "year": 2026,
+              "publishedAt": "2026-10-05T12:00:00.000Z",
+              "translations": []
+            }
+          ]
+        },
+        {
+          "slug": "node",
+          "name": "Node.js",
+          "category": "BACKEND",
+          "since": 2024,
+          "note": "Runtime de alto rendimiento para APIs REST livianas, pipelines de middleware y servidores de eventos.",
+          "translations": [],
+          "projects": [
+            {
+              "slug": "argpiscinas",
+              "title": "ARG Piscinas",
+              "year": 2026,
+              "publishedAt": "2026-10-05T12:00:00.000Z",
+              "translations": []
+            },
+            {
+              "slug": "barberpole",
+              "title": "Barberpole",
+              "year": 2026,
+              "publishedAt": "2026-10-05T12:00:00.000Z",
+              "translations": []
+            }
+          ]
+        },
+        {
+          "slug": "react",
+          "name": "React",
+          "category": "FRAMEWORK",
+          "since": 2026,
+          "note": "Ecosistema masivo, React Server Components y rendering híbrido adoptado en la tesis Ynara.",
+          "translations": [],
+          "projects": [
+            {
+              "slug": "ynara",
+              "title": "Ynara",
+              "year": 2026,
+              "publishedAt": "2026-10-05T12:00:00.000Z",
+              "translations": []
+            },
+            {
+              "slug": "barberpole",
+              "title": "Barberpole",
+              "year": 2026,
+              "publishedAt": "2026-10-05T12:00:00.000Z",
+              "translations": []
+            },
+            {
+              "slug": "ynara-web",
+              "title": "Ynara Web",
+              "year": 2026,
+              "publishedAt": "2026-10-05T12:00:00.000Z",
+              "translations": []
+            }
+          ]
+        }
+      ],
+      "media": [
+        {
+          "id": 4,
+          "kind": "IMAGE",
+          "role": "COVER",
+          "src": "/media/projects/barberpole.png",
+          "srcWebm": null,
+          "poster": null,
+          "alt": "Agenda del día de barberpole con turnos y servicios",
+          "caption": null,
+          "tint": "#ca354d",
+          "viewport": "DESKTOP",
+          "width": 2880,
+          "height": 1800,
+          "order": 0,
+          "bytes": 144234,
+          "projectId": 4,
+          "translations": []
+        }
+      ],
+      "steps": [
+        {
+          "id": 10,
+          "order": 1,
+          "title": "01 · problema",
+          "body": "El mostrador era el cuello de botella. Reservas por teléfono, cuaderno y memoria.",
+          "projectId": 4,
+          "mediaId": null,
+          "translations": [],
+          "media": null
+        },
+        {
+          "id": 11,
+          "order": 2,
+          "title": "02 · sistema",
+          "body": "MERN completo: turnos, servicios, clientes y caja en un solo lugar. Auth por roles, agenda del día, precios y duraciones reales.",
+          "projectId": 4,
+          "mediaId": null,
+          "translations": [],
+          "media": null
+        },
+        {
+          "id": 12,
+          "order": 3,
+          "title": "03 · identidad",
+          "body": "Identidad de barbería de barrio inspirada en el barber pole: neo-brutalista, directa, sin adornos. El mostrador respira.",
+          "projectId": 4,
+          "mediaId": null,
+          "translations": [],
+          "media": null
+        }
+      ],
+      "links": [
+        {
+          "id": 6,
+          "label": "sitio en vivo",
+          "url": "https://turnos.mateogs.tech/",
+          "projectId": 4,
+          "translations": []
+        },
+        {
+          "id": 7,
+          "label": "código fuente",
+          "url": "https://github.com/MateoGs013/barberpole",
+          "projectId": 4,
+          "translations": []
+        }
+      ],
+      "metrics": [
+        {
+          "id": 20,
+          "key": "performanceScore",
+          "value": "95",
+          "items": [],
+          "unit": null,
+          "label": null,
+          "source": null,
+          "measuredAt": null,
+          "order": 0,
+          "projectId": 4
+        },
+        {
+          "id": 21,
+          "key": "accessibilityScore",
+          "value": "96",
+          "items": [],
+          "unit": null,
+          "label": null,
+          "source": null,
+          "measuredAt": null,
+          "order": 1,
+          "projectId": 4
+        },
+        {
+          "id": 22,
+          "key": "bestPracticesScore",
+          "value": "100",
+          "items": [],
+          "unit": null,
+          "label": null,
+          "source": null,
+          "measuredAt": null,
+          "order": 2,
+          "projectId": 4
+        },
+        {
+          "id": 23,
+          "key": "seoScore",
+          "value": "95",
+          "items": [],
+          "unit": null,
+          "label": null,
+          "source": null,
+          "measuredAt": null,
+          "order": 3,
+          "projectId": 4
+        },
+        {
+          "id": 24,
+          "key": "lcp",
+          "value": "1.1",
+          "items": [],
+          "unit": "s",
+          "label": null,
+          "source": null,
+          "measuredAt": null,
+          "order": 4,
+          "projectId": 4
+        },
+        {
+          "id": 25,
+          "key": "bundleSizeKb",
+          "value": "64",
+          "items": [],
+          "unit": "kb",
+          "label": null,
+          "source": null,
+          "measuredAt": null,
+          "order": 5,
+          "projectId": 4
+        }
+      ],
+      "experiences": [],
+      "translations": []
+    },
+    {
+      "id": 5,
+      "slug": "ynara-web",
+      "title": "Ynara Web",
+      "year": 2026,
+      "role": "Landing inmersiva · diseño y desarrollo",
+      "status": "WIP",
+      "featured": false,
+      "summary": "Landing inmersiva WebGL para Ynara: una forma de luz que muta y reacciona al scroll. Puerta de entrada pública a la tesis.",
+      "brief": "Una experiencia espacial que no se navega: se recorre. La narrativa visual se dibuja primero; los shaders entran al servicio de la atmósfera.",
+      "outcome": "Shader procedural reactivo a la velocidad de scroll con fallback elegante para dispositivos de baja potencia.",
+      "url": null,
+      "repo": "https://github.com/MateoGs013/Ynara-Web",
+      "sortOrder": 4,
+      "publishedAt": "2026-10-05T12:00:00.000Z",
+      "createdAt": "2026-10-30T18:32:38.797Z",
+      "updatedAt": "2026-10-30T18:32:38.797Z",
+      "orgId": null,
+      "org": null,
+      "techs": [
+        {
+          "slug": "gsap",
+          "name": "GSAP",
+          "category": "MOTION",
+          "since": 2026,
+          "note": "Orquestación temporal determinista para interfaces de alta precisión y micro-interacciones espaciales.",
+          "translations": [],
+          "projects": [
+            {
+              "slug": "la-rucula",
+              "title": "La Rúcula Gastrobar",
+              "year": 2026,
+              "publishedAt": "2026-10-05T12:00:00.000Z",
+              "translations": []
+            },
+            {
+              "slug": "argpiscinas",
+              "title": "ARG Piscinas",
+              "year": 2026,
+              "publishedAt": "2026-10-05T12:00:00.000Z",
+              "translations": []
+            },
+            {
+              "slug": "ynara-web",
+              "title": "Ynara Web",
+              "year": 2026,
+              "publishedAt": "2026-10-05T12:00:00.000Z",
+              "translations": []
+            }
+          ]
+        },
+        {
+          "slug": "lenis",
+          "name": "Lenis",
+          "category": "MOTION",
+          "since": 2026,
+          "note": "Scroll inercial normalizado multiplataforma sin romper el comportamiento nativo del navegador.",
+          "translations": [],
+          "projects": [
+            {
+              "slug": "la-rucula",
+              "title": "La Rúcula Gastrobar",
+              "year": 2026,
+              "publishedAt": "2026-10-05T12:00:00.000Z",
+              "translations": []
+            },
+            {
+              "slug": "ynara-web",
+              "title": "Ynara Web",
+              "year": 2026,
+              "publishedAt": "2026-10-05T12:00:00.000Z",
+              "translations": []
+            }
+          ]
+        },
+        {
+          "slug": "next",
+          "name": "Next.js",
+          "category": "FRAMEWORK",
+          "since": 2026,
+          "note": "Framework full-stack de React con optimización de assets, routing por sistema de archivos y SSR.",
+          "translations": [],
+          "projects": [
+            {
+              "slug": "ynara",
+              "title": "Ynara",
+              "year": 2026,
+              "publishedAt": "2026-10-05T12:00:00.000Z",
+              "translations": []
+            },
+            {
+              "slug": "ynara-web",
+              "title": "Ynara Web",
+              "year": 2026,
+              "publishedAt": "2026-10-05T12:00:00.000Z",
+              "translations": []
+            }
+          ]
+        },
+        {
+          "slug": "react",
+          "name": "React",
+          "category": "FRAMEWORK",
+          "since": 2026,
+          "note": "Ecosistema masivo, React Server Components y rendering híbrido adoptado en la tesis Ynara.",
+          "translations": [],
+          "projects": [
+            {
+              "slug": "ynara",
+              "title": "Ynara",
+              "year": 2026,
+              "publishedAt": "2026-10-05T12:00:00.000Z",
+              "translations": []
+            },
+            {
+              "slug": "barberpole",
+              "title": "Barberpole",
+              "year": 2026,
+              "publishedAt": "2026-10-05T12:00:00.000Z",
+              "translations": []
+            },
+            {
+              "slug": "ynara-web",
+              "title": "Ynara Web",
+              "year": 2026,
+              "publishedAt": "2026-10-05T12:00:00.000Z",
+              "translations": []
+            }
+          ]
+        },
+        {
+          "slug": "tailwind",
+          "name": "Tailwind CSS",
+          "category": "TOOLING",
+          "since": 2026,
+          "note": "Sistema de diseño componible y utilitario con purga agresiva para bundles ultra ligeros.",
+          "translations": [],
+          "projects": [
+            {
+              "slug": "la-rucula",
+              "title": "La Rúcula Gastrobar",
+              "year": 2026,
+              "publishedAt": "2026-10-05T12:00:00.000Z",
+              "translations": []
+            },
+            {
+              "slug": "argpiscinas",
+              "title": "ARG Piscinas",
+              "year": 2026,
+              "publishedAt": "2026-10-05T12:00:00.000Z",
+              "translations": []
+            },
+            {
+              "slug": "ynara-web",
+              "title": "Ynara Web",
+              "year": 2026,
+              "publishedAt": "2026-10-05T12:00:00.000Z",
+              "translations": []
+            }
+          ]
+        },
+        {
+          "slug": "three",
+          "name": "Three.js",
+          "category": "GRAPHICS",
+          "since": 2026,
+          "note": "WebGL y shaders GLSL para experiencias inmersivas 3D cuando el DOM no alcanza.",
+          "translations": [],
+          "projects": [
+            {
+              "slug": "ynara-web",
+              "title": "Ynara Web",
+              "year": 2026,
+              "publishedAt": "2026-10-05T12:00:00.000Z",
+              "translations": []
+            }
+          ]
+        },
+        {
+          "slug": "typescript",
+          "name": "TypeScript",
+          "category": "LANGUAGE",
+          "since": 2023,
+          "note": "Estándar obligatorio en cliente y servidor: si no está tipado en compilación, no llega a producción.",
+          "translations": [],
+          "projects": [
+            {
+              "slug": "ynara",
+              "title": "Ynara",
+              "year": 2026,
+              "publishedAt": "2026-10-05T12:00:00.000Z",
+              "translations": []
+            },
+            {
+              "slug": "ynara-web",
+              "title": "Ynara Web",
+              "year": 2026,
+              "publishedAt": "2026-10-05T12:00:00.000Z",
+              "translations": []
+            },
+            {
+              "slug": "eros",
+              "title": "Eros Career OS",
+              "year": 2026,
+              "publishedAt": "2026-10-05T12:00:00.000Z",
+              "translations": []
+            }
+          ]
+        }
+      ],
+      "media": [],
+      "steps": [
+        {
+          "id": 13,
+          "order": 1,
+          "title": "01 · concepto",
+          "body": "Traducir la inteligencia artificial adaptativa a una entidad lumínica tridimensional.",
+          "projectId": 5,
+          "mediaId": null,
+          "translations": [],
+          "media": null
+        },
+        {
+          "id": 14,
+          "order": 2,
+          "title": "02 · shaders",
+          "body": "Vertex y fragment shaders personalizados en GLSL sobre Three.js orquestados con GSAP ScrollTrigger.",
+          "projectId": 5,
+          "mediaId": null,
+          "translations": [],
+          "media": null
+        }
+      ],
+      "links": [
+        {
+          "id": 8,
+          "label": "código fuente",
+          "url": "https://github.com/MateoGs013/Ynara-Web",
+          "projectId": 5,
+          "translations": []
+        }
+      ],
+      "metrics": [
+        {
+          "id": 26,
+          "key": "fpsTarget",
+          "value": "60",
+          "items": [],
+          "unit": "fps",
+          "label": null,
+          "source": null,
+          "measuredAt": null,
+          "order": 0,
+          "projectId": 5
+        },
+        {
+          "id": 27,
+          "key": "drawCalls",
+          "value": "4",
+          "items": [],
+          "unit": null,
+          "label": null,
+          "source": null,
+          "measuredAt": null,
+          "order": 1,
+          "projectId": 5
+        },
+        {
+          "id": 28,
+          "key": "bundleSizeKb",
+          "value": "78",
+          "items": [],
+          "unit": "kb",
+          "label": null,
+          "source": null,
+          "measuredAt": null,
+          "order": 2,
+          "projectId": 5
+        }
+      ],
+      "experiences": [],
+      "translations": []
+    },
+    {
+      "id": 6,
+      "slug": "eros",
+      "title": "Eros Career OS",
+      "year": 2026,
+      "role": "Sistema multiagente · IA & automatización",
+      "status": "LIVE",
+      "featured": true,
+      "summary": "Asistente de carrera autónomo: rastrea vacantes, las evalúa con IA, adapta el CV Harvard ATS a cada una y genera contenido técnico para LinkedIn, X y Dev.to.",
+      "brief": "Automatizar la búsqueda laboral de punta a punta: encontrar vacantes en varios portales, decidir cuáles valen la pena, adaptar el CV a cada una y sostener una presencia técnica en redes sin dedicarle horas todos los días.",
+      "outcome": "En producción en eros.mateogs.tech e integrado a la consola del portafolio como Eros AI Suite: Job Hunter, Contenido omnicanal y TrendRadar. Corre en un VPS propio con FastAPI y SQLite, publica a través de n8n y se supervisa desde un bot privado de Telegram.",
+      "url": "https://eros.mateogs.tech",
+      "repo": "https://github.com/MateoGs013/eros-agent",
+      "sortOrder": 5,
+      "publishedAt": "2026-10-05T12:00:00.000Z",
+      "createdAt": "2026-10-30T18:32:38.807Z",
+      "updatedAt": "2026-10-30T18:32:38.807Z",
+      "orgId": null,
+      "org": null,
+      "techs": [
+        {
+          "slug": "fastapi",
+          "name": "FastAPI",
+          "category": "BACKEND",
+          "since": 2026,
+          "note": "Core de inferencia y procesamiento de IA/NLP con tipado Pydantic y latencia mínima.",
+          "translations": [],
+          "projects": [
+            {
+              "slug": "ynara",
+              "title": "Ynara",
+              "year": 2026,
+              "publishedAt": "2026-10-05T12:00:00.000Z",
+              "translations": []
+            },
+            {
+              "slug": "eros",
+              "title": "Eros Career OS",
+              "year": 2026,
+              "publishedAt": "2026-10-05T12:00:00.000Z",
+              "translations": []
+            }
+          ]
+        },
+        {
+          "slug": "postgresql",
+          "name": "PostgreSQL",
+          "category": "DATA",
+          "since": 2026,
+          "note": "Persistencia relacional ACID, esquemas declarativos e índices vectoriales con pgvector.",
+          "translations": [],
+          "projects": [
+            {
+              "slug": "ynara",
+              "title": "Ynara",
+              "year": 2026,
+              "publishedAt": "2026-10-05T12:00:00.000Z",
+              "translations": []
+            },
+            {
+              "slug": "eros",
+              "title": "Eros Career OS",
+              "year": 2026,
+              "publishedAt": "2026-10-05T12:00:00.000Z",
+              "translations": []
+            }
+          ]
+        },
+        {
+          "slug": "python",
+          "name": "Python",
+          "category": "LANGUAGE",
+          "since": 2026,
+          "note": "Lenguaje predilecto para ingeniería de datos, embeddings vectoriales y orquestación de LLMs.",
+          "translations": [],
+          "projects": [
+            {
+              "slug": "ynara",
+              "title": "Ynara",
+              "year": 2026,
+              "publishedAt": "2026-10-05T12:00:00.000Z",
+              "translations": []
+            },
+            {
+              "slug": "eros",
+              "title": "Eros Career OS",
+              "year": 2026,
+              "publishedAt": "2026-10-05T12:00:00.000Z",
+              "translations": []
+            }
+          ]
+        },
+        {
+          "slug": "typescript",
+          "name": "TypeScript",
+          "category": "LANGUAGE",
+          "since": 2023,
+          "note": "Estándar obligatorio en cliente y servidor: si no está tipado en compilación, no llega a producción.",
+          "translations": [],
+          "projects": [
+            {
+              "slug": "ynara",
+              "title": "Ynara",
+              "year": 2026,
+              "publishedAt": "2026-10-05T12:00:00.000Z",
+              "translations": []
+            },
+            {
+              "slug": "ynara-web",
+              "title": "Ynara Web",
+              "year": 2026,
+              "publishedAt": "2026-10-05T12:00:00.000Z",
+              "translations": []
+            },
+            {
+              "slug": "eros",
+              "title": "Eros Career OS",
+              "year": 2026,
+              "publishedAt": "2026-10-05T12:00:00.000Z",
+              "translations": []
+            }
+          ]
+        }
+      ],
+      "media": [
+        {
+          "id": 5,
+          "kind": "IMAGE",
+          "role": "COVER",
+          "src": "/media/projects/eros.webp",
+          "srcWebm": null,
+          "poster": null,
+          "alt": "Job Hunter de Eros en la consola del portafolio: lista de vacantes con su porcentaje de match y la evaluación de una de ellas",
+          "caption": null,
+          "tint": null,
+          "viewport": "DESKTOP",
+          "width": 2880,
+          "height": 1800,
+          "order": 0,
+          "bytes": 49746,
+          "projectId": 6,
+          "translations": []
+        }
+      ],
+      "steps": [
+        {
+          "id": 15,
+          "order": 1,
+          "title": "01 · fuentes",
+          "body": "Rastreo de vacantes en LinkedIn, Get on Board y RemoteOK, con filtros de stack, modalidad y salario.",
+          "projectId": 6,
+          "mediaId": null,
+          "translations": [],
+          "media": null
+        },
+        {
+          "id": 16,
+          "order": 2,
+          "title": "02 · evaluación",
+          "body": "Cada vacante pasa por Gemini: porcentaje de match, fortalezas, objeciones probables, skills que faltan y qué proyectos del portafolio conviene citar.",
+          "projectId": 6,
+          "mediaId": null,
+          "translations": [],
+          "media": null
+        },
+        {
+          "id": 17,
+          "order": 3,
+          "title": "03 · postulación",
+          "body": "CV Harvard ATS adaptado a la vacante en una página A4, email de postulación y nota de conexión para el hiring lead detectado en LinkedIn.",
+          "projectId": 6,
+          "mediaId": null,
+          "translations": [],
+          "media": null
+        },
+        {
+          "id": 18,
+          "order": 4,
+          "title": "04 · contenido",
+          "body": "TrendRadar detecta temas técnicos afines al stack en Hacker News, Dev.to y GitHub, y el módulo omnicanal los convierte en post de LinkedIn, hilo de X, artículo de Dev.to y carrusel PDF.",
+          "projectId": 6,
+          "mediaId": null,
+          "translations": [],
+          "media": null
+        }
+      ],
+      "links": [
+        {
+          "id": 9,
+          "label": "código fuente",
+          "url": "https://github.com/MateoGs013/eros-agent",
+          "projectId": 6,
+          "translations": []
+        },
+        {
+          "id": 10,
+          "label": "control center",
+          "url": "https://eros.mateogs.tech",
+          "projectId": 6,
+          "translations": []
+        }
+      ],
+      "metrics": [
+        {
+          "id": 29,
+          "key": "freeTierQuota",
+          "value": "1500",
+          "items": [],
+          "unit": "req_day",
+          "label": null,
+          "source": null,
+          "measuredAt": null,
+          "order": 0,
+          "projectId": 6
+        },
+        {
+          "id": 30,
+          "key": "operatingCost",
+          "value": "0",
+          "items": [],
+          "unit": "usd_month",
+          "label": null,
+          "source": null,
+          "measuredAt": null,
+          "order": 1,
+          "projectId": 6
+        },
+        {
+          "id": 31,
+          "key": "platformsCount",
+          "value": "4",
+          "items": [],
+          "unit": null,
+          "label": null,
+          "source": null,
+          "measuredAt": null,
+          "order": 2,
+          "projectId": 6
+        },
+        {
+          "id": 32,
+          "key": "responseLatencyMs",
+          "value": "35",
+          "items": [],
+          "unit": "ms",
+          "label": null,
+          "source": null,
+          "measuredAt": null,
+          "order": 3,
+          "projectId": 6
+        }
+      ],
+      "experiences": [
+        {
+          "slug": "eros",
+          "kind": "PERSONAL",
+          "role": "Proyecto propio · IA y automatización",
+          "translations": []
+        }
+      ],
+      "translations": []
+    }
+  ],
+  "stack": [
+    {
+      "id": 9,
+      "slug": "gsap",
+      "name": "GSAP",
+      "category": "MOTION",
+      "since": 2026,
+      "note": "Orquestación temporal determinista para interfaces de alta precisión y micro-interacciones espaciales.",
+      "color": "#88ce02",
+      "translations": [],
+      "projects": [
+        {
+          "slug": "la-rucula",
+          "title": "La Rúcula Gastrobar",
+          "year": 2026,
+          "publishedAt": "2026-10-05T12:00:00.000Z",
+          "translations": []
+        },
+        {
+          "slug": "argpiscinas",
+          "title": "ARG Piscinas",
+          "year": 2026,
+          "publishedAt": "2026-10-05T12:00:00.000Z",
+          "translations": []
+        },
+        {
+          "slug": "ynara-web",
+          "title": "Ynara Web",
+          "year": 2026,
+          "publishedAt": "2026-10-05T12:00:00.000Z",
+          "translations": []
+        }
+      ],
+      "experiences": [
+        {
+          "slug": "la-rucula",
+          "kind": "CLIENT",
+          "role": "Freelance · diseño y desarrollo",
+          "startedAt": "2026-03-17T00:00:00.000Z",
+          "endedAt": "2026-07-20T00:00:00.000Z",
+          "translations": []
+        },
+        {
+          "slug": "arg-piscinas",
+          "kind": "CLIENT",
+          "role": "Freelance · front y back a medida",
+          "startedAt": "2026-01-28T00:00:00.000Z",
+          "endedAt": "2026-07-20T00:00:00.000Z",
+          "translations": []
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "slug": "react",
+      "name": "React",
+      "category": "FRAMEWORK",
+      "since": 2026,
+      "note": "Ecosistema masivo, React Server Components y rendering híbrido adoptado en la tesis Ynara.",
+      "color": "#61dafb",
+      "translations": [],
+      "projects": [
+        {
+          "slug": "ynara",
+          "title": "Ynara",
+          "year": 2026,
+          "publishedAt": "2026-10-05T12:00:00.000Z",
+          "translations": []
+        },
+        {
+          "slug": "barberpole",
+          "title": "Barberpole",
+          "year": 2026,
+          "publishedAt": "2026-10-05T12:00:00.000Z",
+          "translations": []
+        },
+        {
+          "slug": "ynara-web",
+          "title": "Ynara Web",
+          "year": 2026,
+          "publishedAt": "2026-10-05T12:00:00.000Z",
+          "translations": []
+        }
+      ],
+      "experiences": [
+        {
+          "slug": "escuela-da-vinci",
+          "kind": "EDUCATION",
+          "role": "Estudiante · Diseño y Desarrollo Web",
+          "startedAt": "2024-03-01T00:00:00.000Z",
+          "endedAt": null,
+          "translations": []
+        },
+        {
+          "slug": "freelance",
+          "kind": "FREELANCE",
+          "role": "Freelance · diseño y desarrollo web",
+          "startedAt": "2023-01-01T00:00:00.000Z",
+          "endedAt": null,
+          "translations": []
+        }
+      ]
+    },
+    {
+      "id": 21,
+      "slug": "tailwind",
+      "name": "Tailwind CSS",
+      "category": "TOOLING",
+      "since": 2026,
+      "note": "Sistema de diseño componible y utilitario con purga agresiva para bundles ultra ligeros.",
+      "color": "#06b6d4",
+      "translations": [],
+      "projects": [
+        {
+          "slug": "la-rucula",
+          "title": "La Rúcula Gastrobar",
+          "year": 2026,
+          "publishedAt": "2026-10-05T12:00:00.000Z",
+          "translations": []
+        },
+        {
+          "slug": "argpiscinas",
+          "title": "ARG Piscinas",
+          "year": 2026,
+          "publishedAt": "2026-10-05T12:00:00.000Z",
+          "translations": []
+        },
+        {
+          "slug": "ynara-web",
+          "title": "Ynara Web",
+          "year": 2026,
+          "publishedAt": "2026-10-05T12:00:00.000Z",
+          "translations": []
+        }
+      ],
+      "experiences": [
+        {
+          "slug": "la-rucula",
+          "kind": "CLIENT",
+          "role": "Freelance · diseño y desarrollo",
+          "startedAt": "2026-03-17T00:00:00.000Z",
+          "endedAt": "2026-07-20T00:00:00.000Z",
+          "translations": []
+        },
+        {
+          "slug": "arg-piscinas",
+          "kind": "CLIENT",
+          "role": "Freelance · front y back a medida",
+          "startedAt": "2026-01-28T00:00:00.000Z",
+          "endedAt": "2026-07-20T00:00:00.000Z",
+          "translations": []
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "slug": "typescript",
+      "name": "TypeScript",
+      "category": "LANGUAGE",
+      "since": 2023,
+      "note": "Estándar obligatorio en cliente y servidor: si no está tipado en compilación, no llega a producción.",
+      "color": "#3178c6",
+      "translations": [],
+      "projects": [
+        {
+          "slug": "ynara",
+          "title": "Ynara",
+          "year": 2026,
+          "publishedAt": "2026-10-05T12:00:00.000Z",
+          "translations": []
+        },
+        {
+          "slug": "ynara-web",
+          "title": "Ynara Web",
+          "year": 2026,
+          "publishedAt": "2026-10-05T12:00:00.000Z",
+          "translations": []
+        },
+        {
+          "slug": "eros",
+          "title": "Eros Career OS",
+          "year": 2026,
+          "publishedAt": "2026-10-05T12:00:00.000Z",
+          "translations": []
+        }
+      ],
+      "experiences": [
+        {
+          "slug": "ynara",
+          "kind": "THESIS",
+          "role": "Tesis en equipo · contribuidor principal",
+          "startedAt": "2026-05-18T00:00:00.000Z",
+          "endedAt": "2026-06-28T00:00:00.000Z",
+          "translations": []
+        },
+        {
+          "slug": "freelance",
+          "kind": "FREELANCE",
+          "role": "Freelance · diseño y desarrollo web",
+          "startedAt": "2023-01-01T00:00:00.000Z",
+          "endedAt": null,
+          "translations": []
+        }
+      ]
+    },
+    {
+      "id": 15,
+      "slug": "fastapi",
+      "name": "FastAPI",
+      "category": "BACKEND",
+      "since": 2026,
+      "note": "Core de inferencia y procesamiento de IA/NLP con tipado Pydantic y latencia mínima.",
+      "color": "#009688",
+      "translations": [],
+      "projects": [
+        {
+          "slug": "ynara",
+          "title": "Ynara",
+          "year": 2026,
+          "publishedAt": "2026-10-05T12:00:00.000Z",
+          "translations": []
+        },
+        {
+          "slug": "eros",
+          "title": "Eros Career OS",
+          "year": 2026,
+          "publishedAt": "2026-10-05T12:00:00.000Z",
+          "translations": []
+        }
+      ],
+      "experiences": [
+        {
+          "slug": "ynara",
+          "kind": "THESIS",
+          "role": "Tesis en equipo · contribuidor principal",
+          "startedAt": "2026-05-18T00:00:00.000Z",
+          "endedAt": "2026-06-28T00:00:00.000Z",
+          "translations": []
+        },
+        {
+          "slug": "eros",
+          "kind": "PERSONAL",
+          "role": "Proyecto propio · IA y automatización",
+          "startedAt": "2026-01-01T00:00:00.000Z",
+          "endedAt": null,
+          "translations": []
+        },
+        {
+          "slug": "escuela-da-vinci",
+          "kind": "EDUCATION",
+          "role": "Estudiante · Diseño y Desarrollo Web",
+          "startedAt": "2024-03-01T00:00:00.000Z",
+          "endedAt": null,
+          "translations": []
+        }
+      ]
+    },
+    {
+      "id": 10,
+      "slug": "lenis",
+      "name": "Lenis",
+      "category": "MOTION",
+      "since": 2026,
+      "note": "Scroll inercial normalizado multiplataforma sin romper el comportamiento nativo del navegador.",
+      "color": "#111111",
+      "translations": [],
+      "projects": [
+        {
+          "slug": "la-rucula",
+          "title": "La Rúcula Gastrobar",
+          "year": 2026,
+          "publishedAt": "2026-10-05T12:00:00.000Z",
+          "translations": []
+        },
+        {
+          "slug": "ynara-web",
+          "title": "Ynara Web",
+          "year": 2026,
+          "publishedAt": "2026-10-05T12:00:00.000Z",
+          "translations": []
+        }
+      ],
+      "experiences": [
+        {
+          "slug": "la-rucula",
+          "kind": "CLIENT",
+          "role": "Freelance · diseño y desarrollo",
+          "startedAt": "2026-03-17T00:00:00.000Z",
+          "endedAt": "2026-07-20T00:00:00.000Z",
+          "translations": []
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "slug": "next",
+      "name": "Next.js",
+      "category": "FRAMEWORK",
+      "since": 2026,
+      "note": "Framework full-stack de React con optimización de assets, routing por sistema de archivos y SSR.",
+      "color": "#000000",
+      "translations": [],
+      "projects": [
+        {
+          "slug": "ynara",
+          "title": "Ynara",
+          "year": 2026,
+          "publishedAt": "2026-10-05T12:00:00.000Z",
+          "translations": []
+        },
+        {
+          "slug": "ynara-web",
+          "title": "Ynara Web",
+          "year": 2026,
+          "publishedAt": "2026-10-05T12:00:00.000Z",
+          "translations": []
+        }
+      ],
+      "experiences": [
+        {
+          "slug": "ynara",
+          "kind": "THESIS",
+          "role": "Tesis en equipo · contribuidor principal",
+          "startedAt": "2026-05-18T00:00:00.000Z",
+          "endedAt": "2026-06-28T00:00:00.000Z",
+          "translations": []
+        }
+      ]
+    },
+    {
+      "id": 12,
+      "slug": "node",
+      "name": "Node.js",
+      "category": "BACKEND",
+      "since": 2024,
+      "note": "Runtime de alto rendimiento para APIs REST livianas, pipelines de middleware y servidores de eventos.",
+      "color": "#339933",
+      "translations": [],
+      "projects": [
+        {
+          "slug": "argpiscinas",
+          "title": "ARG Piscinas",
+          "year": 2026,
+          "publishedAt": "2026-10-05T12:00:00.000Z",
+          "translations": []
+        },
+        {
+          "slug": "barberpole",
+          "title": "Barberpole",
+          "year": 2026,
+          "publishedAt": "2026-10-05T12:00:00.000Z",
+          "translations": []
+        }
+      ],
+      "experiences": [
+        {
+          "slug": "arg-piscinas",
+          "kind": "CLIENT",
+          "role": "Freelance · front y back a medida",
+          "startedAt": "2026-01-28T00:00:00.000Z",
+          "endedAt": "2026-07-20T00:00:00.000Z",
+          "translations": []
+        },
+        {
+          "slug": "freelance",
+          "kind": "FREELANCE",
+          "role": "Freelance · diseño y desarrollo web",
+          "startedAt": "2023-01-01T00:00:00.000Z",
+          "endedAt": null,
+          "translations": []
+        }
+      ]
+    },
+    {
+      "id": 17,
+      "slug": "postgresql",
+      "name": "PostgreSQL",
+      "category": "DATA",
+      "since": 2026,
+      "note": "Persistencia relacional ACID, esquemas declarativos e índices vectoriales con pgvector.",
+      "color": "#4169e1",
+      "translations": [],
+      "projects": [
+        {
+          "slug": "ynara",
+          "title": "Ynara",
+          "year": 2026,
+          "publishedAt": "2026-10-05T12:00:00.000Z",
+          "translations": []
+        },
+        {
+          "slug": "eros",
+          "title": "Eros Career OS",
+          "year": 2026,
+          "publishedAt": "2026-10-05T12:00:00.000Z",
+          "translations": []
+        }
+      ],
+      "experiences": [
+        {
+          "slug": "ynara",
+          "kind": "THESIS",
+          "role": "Tesis en equipo · contribuidor principal",
+          "startedAt": "2026-05-18T00:00:00.000Z",
+          "endedAt": "2026-06-28T00:00:00.000Z",
+          "translations": []
+        },
+        {
+          "slug": "escuela-da-vinci",
+          "kind": "EDUCATION",
+          "role": "Estudiante · Diseño y Desarrollo Web",
+          "startedAt": "2024-03-01T00:00:00.000Z",
+          "endedAt": null,
+          "translations": []
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "slug": "python",
+      "name": "Python",
+      "category": "LANGUAGE",
+      "since": 2026,
+      "note": "Lenguaje predilecto para ingeniería de datos, embeddings vectoriales y orquestación de LLMs.",
+      "color": "#3776ab",
+      "translations": [],
+      "projects": [
+        {
+          "slug": "ynara",
+          "title": "Ynara",
+          "year": 2026,
+          "publishedAt": "2026-10-05T12:00:00.000Z",
+          "translations": []
+        },
+        {
+          "slug": "eros",
+          "title": "Eros Career OS",
+          "year": 2026,
+          "publishedAt": "2026-10-05T12:00:00.000Z",
+          "translations": []
+        }
+      ],
+      "experiences": [
+        {
+          "slug": "ynara",
+          "kind": "THESIS",
+          "role": "Tesis en equipo · contribuidor principal",
+          "startedAt": "2026-05-18T00:00:00.000Z",
+          "endedAt": "2026-06-28T00:00:00.000Z",
+          "translations": []
+        },
+        {
+          "slug": "eros",
+          "kind": "PERSONAL",
+          "role": "Proyecto propio · IA y automatización",
+          "startedAt": "2026-01-01T00:00:00.000Z",
+          "endedAt": null,
+          "translations": []
+        }
+      ]
+    },
+    {
+      "id": 22,
+      "slug": "vite",
+      "name": "Vite",
+      "category": "TOOLING",
+      "since": 2025,
+      "note": "Tooling ultra veloz basado en Rollup y esbuild para HMR instantáneo en desarrollo.",
+      "color": "#646cff",
+      "translations": [],
+      "projects": [
+        {
+          "slug": "la-rucula",
+          "title": "La Rúcula Gastrobar",
+          "year": 2026,
+          "publishedAt": "2026-10-05T12:00:00.000Z",
+          "translations": []
+        },
+        {
+          "slug": "argpiscinas",
+          "title": "ARG Piscinas",
+          "year": 2026,
+          "publishedAt": "2026-10-05T12:00:00.000Z",
+          "translations": []
+        }
+      ],
+      "experiences": []
+    },
+    {
+      "id": 6,
+      "slug": "vue",
+      "name": "Vue 3",
+      "category": "FRAMEWORK",
+      "since": 2025,
+      "note": "Elegido por reactividad quirúrgica, Composition API limpia y tipado estricto sin sobrecarga de boilerplate.",
+      "color": "#42b883",
+      "translations": [],
+      "projects": [
+        {
+          "slug": "la-rucula",
+          "title": "La Rúcula Gastrobar",
+          "year": 2026,
+          "publishedAt": "2026-10-05T12:00:00.000Z",
+          "translations": []
+        },
+        {
+          "slug": "argpiscinas",
+          "title": "ARG Piscinas",
+          "year": 2026,
+          "publishedAt": "2026-10-05T12:00:00.000Z",
+          "translations": []
+        }
+      ],
+      "experiences": [
+        {
+          "slug": "la-rucula",
+          "kind": "CLIENT",
+          "role": "Freelance · diseño y desarrollo",
+          "startedAt": "2026-03-17T00:00:00.000Z",
+          "endedAt": "2026-07-20T00:00:00.000Z",
+          "translations": []
+        },
+        {
+          "slug": "arg-piscinas",
+          "kind": "CLIENT",
+          "role": "Freelance · front y back a medida",
+          "startedAt": "2026-01-28T00:00:00.000Z",
+          "endedAt": "2026-07-20T00:00:00.000Z",
+          "translations": []
+        },
+        {
+          "slug": "escuela-da-vinci",
+          "kind": "EDUCATION",
+          "role": "Estudiante · Diseño y Desarrollo Web",
+          "startedAt": "2024-03-01T00:00:00.000Z",
+          "endedAt": null,
+          "translations": []
+        },
+        {
+          "slug": "freelance",
+          "kind": "FREELANCE",
+          "role": "Freelance · diseño y desarrollo web",
+          "startedAt": "2023-01-01T00:00:00.000Z",
+          "endedAt": null,
+          "translations": []
+        }
+      ]
+    },
+    {
+      "id": 13,
+      "slug": "express",
+      "name": "Express",
+      "category": "BACKEND",
+      "since": 2024,
+      "note": "Minimalismo y control total sobre el ciclo de vida HTTP, routing y autenticación.",
+      "color": "#000000",
+      "translations": [],
+      "projects": [
+        {
+          "slug": "barberpole",
+          "title": "Barberpole",
+          "year": 2026,
+          "publishedAt": "2026-10-05T12:00:00.000Z",
+          "translations": []
+        }
+      ],
+      "experiences": []
+    },
+    {
+      "id": 18,
+      "slug": "mongodb",
+      "name": "MongoDB",
+      "category": "DATA",
+      "since": 2026,
+      "note": "Base NoSQL orientada a documentos para prototipado ágil y esquemas dinámicos en Barberpole.",
+      "color": "#47a248",
+      "translations": [],
+      "projects": [
+        {
+          "slug": "barberpole",
+          "title": "Barberpole",
+          "year": 2026,
+          "publishedAt": "2026-10-05T12:00:00.000Z",
+          "translations": []
+        }
+      ],
+      "experiences": [
+        {
+          "slug": "escuela-da-vinci",
+          "kind": "EDUCATION",
+          "role": "Estudiante · Diseño y Desarrollo Web",
+          "startedAt": "2024-03-01T00:00:00.000Z",
+          "endedAt": null,
+          "translations": []
+        }
+      ]
+    },
+    {
+      "id": 16,
+      "slug": "prisma",
+      "name": "Prisma",
+      "category": "DATA",
+      "since": 2026,
+      "note": "ORM tipado de punta a punta: genera tipos TypeScript exactos directamente desde el esquema SQL.",
+      "color": "#2d3748",
+      "translations": [],
+      "projects": [
+        {
+          "slug": "argpiscinas",
+          "title": "ARG Piscinas",
+          "year": 2026,
+          "publishedAt": "2026-10-05T12:00:00.000Z",
+          "translations": []
+        }
+      ],
+      "experiences": [
+        {
+          "slug": "arg-piscinas",
+          "kind": "CLIENT",
+          "role": "Freelance · front y back a medida",
+          "startedAt": "2026-01-28T00:00:00.000Z",
+          "endedAt": "2026-07-20T00:00:00.000Z",
+          "translations": []
+        }
+      ]
+    },
+    {
+      "id": 11,
+      "slug": "three",
+      "name": "Three.js",
+      "category": "GRAPHICS",
+      "since": 2026,
+      "note": "WebGL y shaders GLSL para experiencias inmersivas 3D cuando el DOM no alcanza.",
+      "color": "#000000",
+      "translations": [],
+      "projects": [
+        {
+          "slug": "ynara-web",
+          "title": "Ynara Web",
+          "year": 2026,
+          "publishedAt": "2026-10-05T12:00:00.000Z",
+          "translations": []
+        }
+      ],
+      "experiences": []
+    },
+    {
+      "id": 5,
+      "slug": "angular",
+      "name": "Angular",
+      "category": "FRAMEWORK",
+      "since": 2022,
+      "note": "Arquitectura corporativa basada en RxJS y Dependency Injection.",
+      "color": "#dd0031",
+      "translations": [],
+      "projects": [],
+      "experiences": []
+    },
+    {
+      "id": 20,
+      "slug": "firebase",
+      "name": "Firebase",
+      "category": "DATA",
+      "since": 2024,
+      "note": "Plataforma BaaS para base de datos NoSQL reactiva y autenticación social rápida.",
+      "color": "#ffca28",
+      "translations": [],
+      "projects": [],
+      "experiences": []
+    },
+    {
+      "id": 1,
+      "slug": "javascript",
+      "name": "JavaScript",
+      "category": "LANGUAGE",
+      "since": 2022,
+      "note": "Fundamento del desarrollo web moderno, estándares ECMAScript y manipulación del DOM nativo.",
+      "color": "#f7df1e",
+      "translations": [],
+      "projects": [],
+      "experiences": [
+        {
+          "slug": "freelance",
+          "kind": "FREELANCE",
+          "role": "Freelance · diseño y desarrollo web",
+          "startedAt": "2023-01-01T00:00:00.000Z",
+          "endedAt": null,
+          "translations": []
+        },
+        {
+          "slug": "cet-30",
+          "kind": "EDUCATION",
+          "role": "Técnico en Programación",
+          "startedAt": "2017-03-01T00:00:00.000Z",
+          "endedAt": "2023-12-01T00:00:00.000Z",
+          "translations": []
+        }
+      ]
+    },
+    {
+      "id": 14,
+      "slug": "laravel",
+      "name": "Laravel",
+      "category": "BACKEND",
+      "since": 2026,
+      "note": "Monolito robusto con Eloquent ORM, autenticación por sesión y colas de trabajo para plataformas transaccionales.",
+      "color": "#ff2d20",
+      "translations": [],
+      "projects": [],
+      "experiences": [
+        {
+          "slug": "escuela-da-vinci",
+          "kind": "EDUCATION",
+          "role": "Estudiante · Diseño y Desarrollo Web",
+          "startedAt": "2024-03-01T00:00:00.000Z",
+          "endedAt": null,
+          "translations": []
+        },
+        {
+          "slug": "freelance",
+          "kind": "FREELANCE",
+          "role": "Freelance · diseño y desarrollo web",
+          "startedAt": "2023-01-01T00:00:00.000Z",
+          "endedAt": null,
+          "translations": []
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "slug": "php",
+      "name": "PHP",
+      "category": "LANGUAGE",
+      "since": 2025,
+      "note": "Lenguaje backend tradicional utilizado en integraciones y módulos transaccionales de clientes.",
+      "color": "#777bb4",
+      "translations": [],
+      "projects": [],
+      "experiences": [
+        {
+          "slug": "escuela-da-vinci",
+          "kind": "EDUCATION",
+          "role": "Estudiante · Diseño y Desarrollo Web",
+          "startedAt": "2024-03-01T00:00:00.000Z",
+          "endedAt": null,
+          "translations": []
+        },
+        {
+          "slug": "cet-30",
+          "kind": "EDUCATION",
+          "role": "Técnico en Programación",
+          "startedAt": "2017-03-01T00:00:00.000Z",
+          "endedAt": "2023-12-01T00:00:00.000Z",
+          "translations": []
+        }
+      ]
+    },
+    {
+      "id": 19,
+      "slug": "supabase",
+      "name": "Supabase",
+      "category": "DATA",
+      "since": 2026,
+      "note": "Backend-as-a-Service con Postgres en tiempo real, Row Level Security y storage S3.",
+      "color": "#3ecf8e",
+      "translations": [],
+      "projects": [],
+      "experiences": []
+    }
+  ],
+  "experience": [
+    {
+      "id": 1,
+      "slug": "ynara",
+      "kind": "THESIS",
+      "role": "Tesis en equipo · contribuidor principal",
+      "startedAt": "2026-05-18T00:00:00.000Z",
+      "endedAt": "2026-06-28T00:00:00.000Z",
+      "summary": "382 commits en seis semanas sobre Ynara, la tesis: asistente de IA on-prem con FastAPI, Next.js, Expo y Postgres con pgvector. Preaprobada; falta la defensa.",
+      "story": "Tesis final en Escuela Da Vinci: desarrollo de un asistente de inteligencia artificial on-premise con FastAPI, Next.js, Expo y PostgreSQL con extensión pgvector. 382 commits liderando la arquitectura del backend, pipelines de embeddings vectoriales y la interfaz web.",
+      "highlights": [
+        "Lideré la arquitectura del backend en FastAPI: pipelines de embeddings y llamadas a modelos locales vía Ollama.",
+        "Diseñé la memoria vectorial sobre PostgreSQL con pgvector, con búsqueda por similitud coseno y almacenamiento cifrado.",
+        "Construí la interfaz web con Next.js y TypeScript sobre un motor de inferencia que corre en la máquina del usuario."
+      ],
+      "location": null,
+      "cvOrder": 1,
+      "orgId": 3,
+      "org": {
+        "slug": "escuela-da-vinci",
+        "name": "Escuela Da Vinci",
+        "city": "Buenos Aires, AR"
+      },
+      "techs": [
+        {
+          "slug": "fastapi",
+          "name": "FastAPI",
+          "category": "BACKEND"
+        },
+        {
+          "slug": "next",
+          "name": "Next.js",
+          "category": "FRAMEWORK"
+        },
+        {
+          "slug": "postgresql",
+          "name": "PostgreSQL",
+          "category": "DATA"
+        },
+        {
+          "slug": "python",
+          "name": "Python",
+          "category": "LANGUAGE"
+        },
+        {
+          "slug": "typescript",
+          "name": "TypeScript",
+          "category": "LANGUAGE"
+        }
+      ],
+      "projects": [
+        {
+          "slug": "ynara",
+          "title": "Ynara",
+          "year": 2026,
+          "publishedAt": "2026-10-05T12:00:00.000Z",
+          "translations": []
+        }
+      ],
+      "translations": []
+    },
+    {
+      "id": 2,
+      "slug": "la-rucula",
+      "kind": "CLIENT",
+      "role": "Freelance · diseño y desarrollo",
+      "startedAt": "2026-03-17T00:00:00.000Z",
+      "endedAt": "2026-07-20T00:00:00.000Z",
+      "summary": "Sitio editorial menu-first con panel de gestión propio. En producción.",
+      "story": "De un PDF escaneado a una web menu-first optimizada para comensales en mesa mediante QR. Integración con panel de gestión propio y fallback offline local: si la API externa entra en reposo, el menú sigue disponible sin degradación.",
+      "highlights": [
+        "Diseñé y programé un sitio editorial menu-first, pensado para quien llega desde el QR de la mesa.",
+        "Integré un panel de gestión propio con respaldo local: si la API entra en reposo, la carta sigue disponible.",
+        "Revisión visual con Playwright en tres anchos y auditoría de accesibilidad con axe antes de cada deploy."
+      ],
+      "location": null,
+      "cvOrder": 2,
+      "orgId": 1,
+      "org": {
+        "slug": "la-rucula-gastrobar",
+        "name": "La Rúcula Gastrobar",
+        "city": "Chiclana de la Frontera, ES"
+      },
+      "techs": [
+        {
+          "slug": "gsap",
+          "name": "GSAP",
+          "category": "MOTION"
+        },
+        {
+          "slug": "lenis",
+          "name": "Lenis",
+          "category": "MOTION"
+        },
+        {
+          "slug": "tailwind",
+          "name": "Tailwind CSS",
+          "category": "TOOLING"
+        },
+        {
+          "slug": "vue",
+          "name": "Vue 3",
+          "category": "FRAMEWORK"
+        }
+      ],
+      "projects": [
+        {
+          "slug": "la-rucula",
+          "title": "La Rúcula Gastrobar",
+          "year": 2026,
+          "publishedAt": "2026-10-05T12:00:00.000Z",
+          "translations": []
+        }
+      ],
+      "translations": []
+    },
+    {
+      "id": 3,
+      "slug": "arg-piscinas",
+      "kind": "CLIENT",
+      "role": "Freelance · front y back a medida",
+      "startedAt": "2026-01-28T00:00:00.000Z",
+      "endedAt": "2026-07-20T00:00:00.000Z",
+      "summary": "Web corporativa en tres idiomas con panel de gestión y blog. En producción.",
+      "story": "Construcción integral de catálogo corporativo multi-idioma (ES/EN/DE). Implementación de panel autoadministrable para que el cliente cargue obras sin tocar código, tipado de punta a punta con Prisma y optimización de assets pesados para carga instantánea en conexiones móviles.",
+      "highlights": [
+        "Desarrollé una web corporativa en español, inglés y alemán, con panel de gestión y blog a medida.",
+        "Modelé el catálogo con Node.js y Prisma, con datos tipados de punta a punta entre la API y el front.",
+        "El cliente carga su obra desde el panel sin tocar código ni esperar un deploy."
+      ],
+      "location": null,
+      "cvOrder": 3,
+      "orgId": 2,
+      "org": {
+        "slug": "arg-piscinas",
+        "name": "ARG Piscinas",
+        "city": "Andalucía, ES"
+      },
+      "techs": [
+        {
+          "slug": "gsap",
+          "name": "GSAP",
+          "category": "MOTION"
+        },
+        {
+          "slug": "node",
+          "name": "Node.js",
+          "category": "BACKEND"
+        },
+        {
+          "slug": "prisma",
+          "name": "Prisma",
+          "category": "DATA"
+        },
+        {
+          "slug": "tailwind",
+          "name": "Tailwind CSS",
+          "category": "TOOLING"
+        },
+        {
+          "slug": "vue",
+          "name": "Vue 3",
+          "category": "FRAMEWORK"
+        }
+      ],
+      "projects": [
+        {
+          "slug": "argpiscinas",
+          "title": "ARG Piscinas",
+          "year": 2026,
+          "publishedAt": "2026-10-05T12:00:00.000Z",
+          "translations": []
+        }
+      ],
+      "translations": []
+    },
+    {
+      "id": 4,
+      "slug": "eros",
+      "kind": "PERSONAL",
+      "role": "Proyecto propio · IA y automatización",
+      "startedAt": "2026-01-01T00:00:00.000Z",
+      "endedAt": null,
+      "summary": "Asistente de carrera autónomo: rastrea vacantes, las evalúa con IA y adapta el CV Harvard ATS a cada una. En producción en eros.mateogs.tech.",
+      "story": null,
+      "highlights": [
+        "Sistema multiagente que rastrea vacantes en LinkedIn, Get on Board y RemoteOK y las evalúa con Gemini.",
+        "Adapta el CV Harvard ATS a cada vacante y redacta el email de postulación y la nota para el hiring lead.",
+        "Backend en FastAPI con SQLite en un VPS propio, publicación vía n8n y supervisión desde un bot de Telegram."
+      ],
+      "location": null,
+      "cvOrder": 4,
+      "orgId": null,
+      "org": null,
+      "techs": [
+        {
+          "slug": "fastapi",
+          "name": "FastAPI",
+          "category": "BACKEND"
+        },
+        {
+          "slug": "python",
+          "name": "Python",
+          "category": "LANGUAGE"
+        }
+      ],
+      "projects": [
+        {
+          "slug": "eros",
+          "title": "Eros Career OS",
+          "year": 2026,
+          "publishedAt": "2026-10-05T12:00:00.000Z",
+          "translations": []
+        }
+      ],
+      "translations": []
+    },
+    {
+      "id": 6,
+      "slug": "escuela-da-vinci",
+      "kind": "EDUCATION",
+      "role": "Estudiante · Diseño y Desarrollo Web",
+      "startedAt": "2024-03-01T00:00:00.000Z",
+      "endedAt": null,
+      "summary": "Carrera en curso, promoción 2026. UI/UX, dirección visual, front moderno, back, bases de datos y arquitectura. Tesis preaprobada: Ynara.",
+      "story": "Formación intensiva de 3 años en Diseño y Desarrollo Web: principios de UI/UX, tipografía, dirección visual, arquitecturas de software modernas, patrones de concurrencia y bases de datos relacionales y no-relacionales.",
+      "highlights": [
+        "Tesis de graduación preaprobada: Ynara, asistente de IA on-premise con memoria vectorial.",
+        "Formación en UI/UX, dirección visual, arquitecturas web modernas y bases de datos relacionales y no relacionales."
+      ],
+      "location": null,
+      "cvOrder": null,
+      "orgId": 3,
+      "org": {
+        "slug": "escuela-da-vinci",
+        "name": "Escuela Da Vinci",
+        "city": "Buenos Aires, AR"
+      },
+      "techs": [
+        {
+          "slug": "fastapi",
+          "name": "FastAPI",
+          "category": "BACKEND"
+        },
+        {
+          "slug": "laravel",
+          "name": "Laravel",
+          "category": "BACKEND"
+        },
+        {
+          "slug": "mongodb",
+          "name": "MongoDB",
+          "category": "DATA"
+        },
+        {
+          "slug": "php",
+          "name": "PHP",
+          "category": "LANGUAGE"
+        },
+        {
+          "slug": "postgresql",
+          "name": "PostgreSQL",
+          "category": "DATA"
+        },
+        {
+          "slug": "react",
+          "name": "React",
+          "category": "FRAMEWORK"
+        },
+        {
+          "slug": "vue",
+          "name": "Vue 3",
+          "category": "FRAMEWORK"
+        }
+      ],
+      "projects": [],
+      "translations": []
+    },
+    {
+      "id": 5,
+      "slug": "freelance",
+      "kind": "FREELANCE",
+      "role": "Freelance · diseño y desarrollo web",
+      "startedAt": "2023-01-01T00:00:00.000Z",
+      "endedAt": null,
+      "summary": "Alrededor de diez proyectos reales para clientes desde 2023. El primero: la web de un estudio de arquitectura.",
+      "story": "Del brief al deploy: estructura, contenido y experiencia en Figma; front; back; APIs y bases de datos; responsive y accesibilidad; producción. Trabajo iterativo, con entregables divididos y revisiones progresivas.",
+      "highlights": [
+        "Soluciones web a medida del brief al deploy: estructura y experiencia en Figma, front, back, APIs y bases de datos.",
+        "Responsive y accesibilidad como parte de cada entrega, hasta la puesta en producción.",
+        "Trabajo iterativo, con entregables divididos y revisiones progresivas junto a cada cliente."
+      ],
+      "location": null,
+      "cvOrder": 5,
+      "orgId": null,
+      "org": null,
+      "techs": [
+        {
+          "slug": "javascript",
+          "name": "JavaScript",
+          "category": "LANGUAGE"
+        },
+        {
+          "slug": "laravel",
+          "name": "Laravel",
+          "category": "BACKEND"
+        },
+        {
+          "slug": "node",
+          "name": "Node.js",
+          "category": "BACKEND"
+        },
+        {
+          "slug": "react",
+          "name": "React",
+          "category": "FRAMEWORK"
+        },
+        {
+          "slug": "typescript",
+          "name": "TypeScript",
+          "category": "LANGUAGE"
+        },
+        {
+          "slug": "vue",
+          "name": "Vue 3",
+          "category": "FRAMEWORK"
+        }
+      ],
+      "projects": [],
+      "translations": []
+    },
+    {
+      "id": 7,
+      "slug": "cet-30",
+      "kind": "EDUCATION",
+      "role": "Técnico en Programación",
+      "startedAt": "2017-03-01T00:00:00.000Z",
+      "endedAt": "2023-12-01T00:00:00.000Z",
+      "summary": "Programación en el CET N.º 30, Río Negro. Título de Técnico en Programación en 2023.",
+      "story": "Formación técnica de 7 años en Programación en la Escuela Técnica N.º 30 de Cipolletti, Río Negro. Bases algorítmicas sólidas, estructuras de datos, lógica binaria, redes y metodologías de ingeniería de software.",
+      "highlights": [
+        "Formación técnica de 7 años en lógica algorítmica, estructuras de datos, redes y desarrollo de software."
+      ],
+      "location": null,
+      "cvOrder": null,
+      "orgId": 4,
+      "org": {
+        "slug": "cet-30",
+        "name": "CET N.º 30",
+        "city": "Cipolletti, Río Negro"
+      },
+      "techs": [
+        {
+          "slug": "javascript",
+          "name": "JavaScript",
+          "category": "LANGUAGE"
+        },
+        {
+          "slug": "php",
+          "name": "PHP",
+          "category": "LANGUAGE"
+        }
+      ],
+      "projects": [],
+      "translations": []
+    }
+  ],
+  "orgs": [
+    {
+      "id": 2,
+      "slug": "arg-piscinas",
+      "name": "ARG Piscinas",
+      "url": "https://www.argpiscinas.es/",
+      "city": "Andalucía, ES",
+      "projects": [
+        {
+          "slug": "argpiscinas",
+          "title": "ARG Piscinas",
+          "year": 2026,
+          "publishedAt": "2026-10-05T12:00:00.000Z",
+          "translations": []
+        }
+      ],
+      "experiences": [
+        {
+          "slug": "arg-piscinas",
+          "kind": "CLIENT",
+          "role": "Freelance · front y back a medida",
+          "startedAt": "2026-01-28T00:00:00.000Z",
+          "endedAt": "2026-07-20T00:00:00.000Z",
+          "translations": []
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "slug": "cet-30",
+      "name": "CET N.º 30",
+      "url": null,
+      "city": "Cipolletti, Río Negro",
+      "projects": [],
+      "experiences": [
+        {
+          "slug": "cet-30",
+          "kind": "EDUCATION",
+          "role": "Técnico en Programación",
+          "startedAt": "2017-03-01T00:00:00.000Z",
+          "endedAt": "2023-12-01T00:00:00.000Z",
+          "translations": []
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "slug": "escuela-da-vinci",
+      "name": "Escuela Da Vinci",
+      "url": "https://www.davinci.edu.ar/",
+      "city": "Buenos Aires, AR",
+      "projects": [
+        {
+          "slug": "ynara",
+          "title": "Ynara",
+          "year": 2026,
+          "publishedAt": "2026-10-05T12:00:00.000Z",
+          "translations": []
+        }
+      ],
+      "experiences": [
+        {
+          "slug": "ynara",
+          "kind": "THESIS",
+          "role": "Tesis en equipo · contribuidor principal",
+          "startedAt": "2026-05-18T00:00:00.000Z",
+          "endedAt": "2026-06-28T00:00:00.000Z",
+          "translations": []
+        },
+        {
+          "slug": "escuela-da-vinci",
+          "kind": "EDUCATION",
+          "role": "Estudiante · Diseño y Desarrollo Web",
+          "startedAt": "2024-03-01T00:00:00.000Z",
+          "endedAt": null,
+          "translations": []
+        }
+      ]
+    },
+    {
+      "id": 1,
+      "slug": "la-rucula-gastrobar",
+      "name": "La Rúcula Gastrobar",
+      "url": "https://laruculagastrobar.es/",
+      "city": "Chiclana de la Frontera, ES",
+      "projects": [
+        {
+          "slug": "la-rucula",
+          "title": "La Rúcula Gastrobar",
+          "year": 2026,
+          "publishedAt": "2026-10-05T12:00:00.000Z",
+          "translations": []
+        }
+      ],
+      "experiences": [
+        {
+          "slug": "la-rucula",
+          "kind": "CLIENT",
+          "role": "Freelance · diseño y desarrollo",
+          "startedAt": "2026-03-17T00:00:00.000Z",
+          "endedAt": "2026-07-20T00:00:00.000Z",
+          "translations": []
+        }
+      ]
+    }
+  ],
+  "docs": [
+    {
+      "key": "about",
+      "title": "about",
+      "fields": [
+        {
+          "name": "name",
+          "type": "string",
+          "value": "Mateo Gabriel Sonzogni"
+        },
+        {
+          "name": "display_name",
+          "type": "string",
+          "value": "Mateo Sonzogni"
+        },
+        {
+          "name": "role",
+          "type": "string",
+          "value": "Diseñador & Desarrollador Full Stack · Creative Developer"
+        },
+        {
+          "name": "headline",
+          "type": "string",
+          "value": "Diseño y construyo productos web enteros, de la idea al deploy"
+        },
+        {
+          "name": "portrait",
+          "type": "string",
+          "value": "/media/profile/mateo-front.png"
+        },
+        {
+          "name": "portrait_alt",
+          "type": "string",
+          "value": "Retrato de Mateo Sonzogni"
+        },
+        {
+          "name": "technical_degree",
+          "type": "string",
+          "value": "Técnico en Programación · CET N.º 30 (2017–2023)"
+        },
+        {
+          "name": "higher_education",
+          "type": "string",
+          "value": "Diseño y Desarrollo Web · Escuela Da Vinci (2024–2026) · Tesis Preaprobada"
+        },
+        {
+          "name": "freelance_experience",
+          "type": "string",
+          "value": "Activo desde 2023 · Soluciones web y software a medida"
+        },
+        {
+          "name": "work_modalities",
+          "type": "string",
+          "value": "Remoto · Híbrido · Presencial"
+        },
+        {
+          "name": "languages",
+          "type": "list",
+          "value": [
+            "Español (nativo)",
+            "Inglés (B2, profesional técnico)"
+          ]
+        },
+        {
+          "name": "core_competencies",
+          "type": "string",
+          "value": "Full-Cycle Engineering: Figma UI/UX → Frontend Reactivo → APIs REST/Microservicios → Postgres ACID → Deploy & Monitoreo"
+        },
+        {
+          "name": "engineering_philosophy",
+          "type": "text",
+          "wide": true,
+          "value": "Desarrollo con criterio de diseño y foco en el producto entero: qué problema resuelve, cómo debería verse, cómo debería sentirse, cómo se construye y cómo llega a producción. No me posiciono solo como programador ni solo como diseñador; trabajo la costura donde la arquitectura técnica se encuentra con la experiencia de usuario."
+        },
+        {
+          "name": "professional_goal",
+          "type": "text",
+          "wide": true,
+          "value": "Consolidarme como desarrollador en un equipo con proyectos reales de mayor escala. A mediano plazo, liderazgo técnico: coordinar, organizar, comunicar y conectar perfiles de distintas áreas (diseño, producto, frontend y backend)."
+        }
+      ],
+      "updatedAt": "2026-10-30T18:32:38.886Z"
+    },
+    {
+      "key": "contact",
+      "title": "contact",
+      "fields": [
+        {
+          "name": "email",
+          "type": "email",
+          "value": "mateogabus@gmail.com"
+        },
+        {
+          "name": "github",
+          "type": "url",
+          "value": "https://github.com/MateoGs013"
+        },
+        {
+          "name": "linkedin",
+          "type": "url",
+          "value": "https://www.linkedin.com/in/mateo-sonzogni"
+        },
+        {
+          "name": "website",
+          "type": "url",
+          "value": "https://mateogs.tech"
+        },
+        {
+          "name": "cv",
+          "type": "string",
+          "value": "/cv/CV-ES-Mateo-Sonzogni-ATS.pdf"
+        },
+        {
+          "name": "availability",
+          "type": "string",
+          "value": "Inmediata · Contratación directa, contractor o freelance"
+        },
+        {
+          "name": "location",
+          "type": "string",
+          "value": "Río Negro, Argentina"
+        },
+        {
+          "name": "time_zone",
+          "type": "string",
+          "value": "America/Argentina/Buenos_Aires"
+        },
+        {
+          "name": "preferred_contact",
+          "type": "string",
+          "value": "Email directo, LinkedIn o mensaje vía GitHub"
+        }
+      ],
+      "updatedAt": "2026-10-30T18:32:38.886Z"
+    }
+  ],
+  "articles": [
+    {
+      "id": 1,
+      "slug": "postgresql-17-universal-vector-relational-production",
+      "title": "PostgreSQL 17 como Base Relacional y Vectorial Universal en Producción",
+      "summary": "Análisis de arquitectura y trade-offs: cómo consolidar pgvector y datos relacionales en PostgreSQL 17 reduciendo latencia y complejidad operativa.",
+      "content": "# PostgreSQL 17 como Base Relacional y Vectorial Universal en Producción\n\nLa proliferación de bases de datos especializadas para vectores resolvió necesidades iniciales en la adopción de modelos de lenguaje. Sin embargo, en arquitecturas de ingeniería de producción introduce una sobrecarga crítica: la sincronización bidireccional entre el sistema transaccional de registro y el índice vectorial externo.\n\n## El Problema del Estado Desacoplado\n\nCuando el catálogo de vacantes o publicaciones reside en PostgreSQL y los embeddings se sincronizan de forma asíncrona hacia un cluster vectorial externo:\n1. Las operaciones no son atómicas.\n2. Los filtros estructurados requieren un pipeline de dos fases con serialización intermedia.\n3. Las fallas de red generan estados inconsistentes o huérfanos.\n\n## La Solución: pgvector en PostgreSQL 17\n\nCon las mejoras de indexación HNSW en pgvector y la gestión de memoria en PostgreSQL 17:\n- Las consultas semánticas se ejecutan dentro del mismo planificador de consultas SQL.\n- Los joins entre la tabla vectorial y metadatos relacionales se procesan en memoria compartida sin sobrecarga de red.\n- Las garantías ACID se mantienen en cada inserción y mutación de embeddings.\n\n```sql\nSELECT j.id, j.title, j.company, 1 - (j.embedding <=> $1) AS similarity\nFROM \"Job\" j\nWHERE j.status = 'ACTIVE'\nORDER BY j.embedding <=> $1\nLIMIT 10;\n```\n\n## Conclusión\n\nConsolidar la persistencia relacional y vectorial en un único nodo de PostgreSQL 17 reduce costos operativos a cero sobrecosto, elimina workers de sincronización redundantes y garantiza consistencia transaccional estricta.",
+      "readingTimeMin": 4,
+      "status": "PUBLISHED",
+      "featured": true,
+      "coverImage": null,
+      "canonicalUrl": "https://mateogs.tech/blog/postgresql-17-universal-vector-relational-production",
+      "sortOrder": 0,
+      "publishedAt": "2026-10-12T12:00:00.000Z",
+      "createdAt": "2026-10-30T18:32:38.889Z",
+      "updatedAt": "2026-10-30T18:32:38.889Z",
+      "projectId": null,
+      "techs": [
+        {
+          "slug": "postgresql",
+          "name": "PostgreSQL",
+          "category": "DATA"
+        },
+        {
+          "slug": "prisma",
+          "name": "Prisma",
+          "category": "DATA"
+        }
+      ],
+      "project": null,
+      "translations": []
+    }
+  ]
+}

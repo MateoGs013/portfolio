@@ -446,12 +446,12 @@ En sistemas donde conviven servicios frontend interactivos y microservicios sat�
 
 \`\`\`typescript
 // Manejo resiliente con degradación elegante
-export async function fetchWithFallback<T>(upstreamCall: () => Promise<T>, fallbackData: T): Promise<T> {
+export async function fetchWithFallback<T>(upstreamCall: () => Promise<T>, fallbackValue: T): Promise<T> {
   try {
     return await upstreamCall();
   } catch (err) {
     console.warn('Servicio satélite no disponible, activando fallback heurístico:', err);
-    return fallbackData;
+    return fallbackValue;
   }
 }
 \`\`\`
