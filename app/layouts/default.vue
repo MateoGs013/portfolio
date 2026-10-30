@@ -1,10 +1,27 @@
 <script setup lang="ts">
-// Esqueleto del sitio: salto al contenido y la región principal. F3 suma cabecera, pie y paleta.
+// Marco de todas las páginas: salto al contenido, cabecera, la página, el pie de contacto, la paleta
+// (diferida hasta que se pide) y la única región aria-live, que también anuncia la página nueva al
+// navegar (en lugar de NuxtRouteAnnouncer). Monta los atajos de teclado.
+// La fuente se precarga acá: error.vue también usa este layout.
 const { t } = useLocale()
+const { message, announce } = useAnnounce()
+const { requested } = usePalette()
+
+usePreloadFonts()
+useHotkeys()
+
+const nuxtApp = useNuxtApp()
+/** Al llegar a otra página se anuncia su h1 (o el título, si no tiene): el lector sabe dónde está. */
+const stop = nuxtApp.hook('page:finish', () => {
+  if (nuxtApp.isHydrating) return
+  const heading = document.querySelector('#contenido h1')?.textContent?.trim()
+  announce(heading || document.title)
+})
+onBeforeUnmount(stop)
 </script>
 
 <template>
-  <div class="min-h-dvh">
+  <div class="flex min-h-dvh flex-col">
     <a
       data-chrome
       href="#contenido"
@@ -12,8 +29,14 @@ const { t } = useLocale()
     >
       {{ t('shell.skip') }}
     </a>
-    <main id="contenido" tabindex="-1" class="outline-none">
+    <SiteHeader />
+    <main id="contenido" tabindex="-1" class="flex-1 outline-none">
       <slot />
     </main>
+    <SiteFooter />
+    <LazySitePalette v-if="requested" />
+    <p class="sr-only" role="status" aria-live="polite" aria-atomic="true">
+      {{ message }}
+    </p>
   </div>
 </template>
