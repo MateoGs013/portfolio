@@ -1,12 +1,12 @@
 <script setup lang="ts">
 // Sobre mí mínimo (F1): campos de about y la trayectoria de /api/experience. `?cv=ats` abre el CV.
-// P4 lo reemplaza; F6 conecta el CV a /api/cv.
+// P4 lo reemplaza. El CV (F6) sale de /api/cv: la hoja con ?cv=ats y, sin ella, una copia que solo se imprime.
 import { period } from '~/lib/format'
 
 const route = useRoute()
 const { t, lang, localeRoute, langAttr } = useLocale()
 
-const [about, contact, experience] = await Promise.all([useDoc('about'), useDoc('contact'), useExperience()])
+const [about, experience] = await Promise.all([useDoc('about'), useExperience()])
 failOn(about.error)
 failOn(experience.error)
 await usePageSeo(() => ({ title: t('nav.about'), description: docText(about.data.value, 'engineering_philosophy'), type: 'profile' }))
@@ -23,12 +23,6 @@ const fields = [
   ['work_modalities', 'about.modalities'],
   ['professional_goal', 'about.goal'],
 ] as const
-
-/** Lo que el visor de CV actual lee (F6 lo pasa a /api/cv). */
-const cvSource = computed(() => ({
-  rows: Object.keys(about.data.value?.values ?? {}).map(name => ({ name, value: docText(about.data.value, name) })),
-  contact: Object.fromEntries(['email', 'github', 'linkedin'].map(name => [name, docText(contact.data.value, name) ?? ''])),
-}))
 </script>
 
 <template>
@@ -46,9 +40,7 @@ const cvSource = computed(() => ({
     </NuxtLink>
 
     <!-- En /about?cv=ats la impresión deja solo la hoja (docs/diseno.md §8). -->
-    <div v-if="showCv" data-vt="cv-sheet">
-      <CvContainer :detail="cvSource" />
-    </div>
+    <CvContainer v-if="showCv" />
 
     <template v-else>
       <dl class="flex flex-col gap-6">
@@ -74,6 +66,9 @@ const cvSource = computed(() => ({
           </li>
         </ol>
       </section>
+
+      <!-- Ctrl+P en /about imprime el CV, no la página. -->
+      <CvContainer print-only />
     </template>
   </article>
 </template>

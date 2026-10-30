@@ -1,11 +1,10 @@
-export interface CvDeliverable {
-  slug: string
-  title: string
-  badge?: string
-  date: string
-  role: string
-  location: string
-  description: string
-  bullets: string[]
-  tags: string[]
-}
+/** Tipos del visor de CV: la forma de `/api/cv` (server/src/content/cv.ts) vista desde el front. */
+export type {
+  CvDocument,
+  CvEducation,
+  CvExperience,
+  CvHeader,
+  CvPeriod,
+  CvSkillGroup,
+} from '~/lib/api'
+export type { CvFile, CvFiles } from '~/composables/useCv'
