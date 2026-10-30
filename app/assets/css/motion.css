@@ -25,6 +25,11 @@
   view-transition-name: cv-sheet;
 }
 
+/* «Ver CV» fuera de pantalla no viaja: AboutCvBlock marca la raíz y cambia la página entera. */
+:root[data-vt-off='cv-sheet'] [data-vt='cv-sheet'] {
+  view-transition-name: none;
+}
+
 /* La cabecera queda quieta mientras la página cambia debajo. */
 header[data-chrome] {
   view-transition-name: hud;
@@ -113,5 +118,67 @@ header[data-chrome] {
 @keyframes vt-fade-in {
   from {
     opacity: 0;
+  }
+}
+
+/* Cargador de la primera visita (IntroLoader, docs/diseno.md §6). Antes de JS, el CSS ya hace subir
+   las letras (1 s expo.out, 35 ms por letra) y avanzar contador y barra (1,5 s), así el nombre se ve
+   desde el primer pintado. Al hidratar, JS pone data-run y sigue desde donde va la animación.
+   Seguridad: a los 4 s deja de verse y de tapar, pase lo que pase. */
+@property --intro-n {
+  syntax: '<integer>';
+  inherits: false;
+  initial-value: 0;
+}
+
+[data-intro] [data-intro-loader] {
+  animation: intro-safety 0.4s 4s both;
+}
+
+[data-intro] [data-intro-loader]:not([data-run]) .ch {
+  animation: intro-rise 1s var(--e) calc(var(--i, 0) * 35ms) both;
+}
+
+[data-intro] [data-intro-loader]:not([data-run]) [data-bar] {
+  animation: intro-bar 1.5s cubic-bezier(0.45, 0, 0.55, 1) both;
+}
+
+[data-intro] [data-intro-loader]:not([data-run]) [data-count]::after {
+  content: counter(intro-n);
+  counter-reset: intro-n var(--intro-n);
+  animation: intro-count 1.5s cubic-bezier(0.45, 0, 0.55, 1) both;
+}
+
+@keyframes intro-safety {
+  to {
+    opacity: 0;
+    visibility: hidden;
+  }
+}
+
+@keyframes intro-rise {
+  from {
+    transform: translateY(110%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+@keyframes intro-bar {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+@keyframes intro-count {
+  from {
+    --intro-n: 0;
+  }
+  to {
+    --intro-n: 100;
   }
 }

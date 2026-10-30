@@ -800,6 +800,7 @@
     "app/components/case/CaseGallery.vue",
     "app/components/case/CaseMetrics.vue",
     "app/components/case/CasePeek.vue",
+    "app/components/case/CasePeekTrigger.vue",
     "app/components/case/CaseLinks.vue",
     "app/components/case/CaseNext.vue",
     "app/lib/dict/case.ts"
@@ -877,7 +878,8 @@
     "app/pages/articles/[slug].vue",
     "app/components/articles/",
     "app/components/blog/",
-    "app/lib/dict/articles.ts"
+    "app/lib/dict/articles.ts",
+    "app/lib/markdown.ts"
    ],
    "dependsOn": [
     "F3",

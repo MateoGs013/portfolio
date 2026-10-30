@@ -195,10 +195,19 @@ function onPointerDown(e: PointerEvent) {
   close()
 }
 
+/** Solo un cambio de ancho lo cierra: en el teléfono la barra de direcciones cambia el alto al scrollear. */
+let lastWidth = 0
+function onResize() {
+  if (window.innerWidth === lastWidth) return
+  lastWidth = window.innerWidth
+  closeNow()
+}
+
 const nuxtApp = useNuxtApp()
 onMounted(() => {
+  lastWidth = window.innerWidth
   document.addEventListener('pointerdown', onPointerDown, { passive: true })
-  window.addEventListener('resize', closeNow, { passive: true })
+  window.addEventListener('resize', onResize, { passive: true })
 })
 // El registro cambia el DOM de las anclas: el popover no sobrevive al cambio.
 const unhook = nuxtApp.hook('record:before', closeNow)
@@ -206,7 +215,7 @@ onBeforeUnmount(() => {
   unhook()
   clearTimeout(leaveTimer)
   document.removeEventListener('pointerdown', onPointerDown)
-  window.removeEventListener('resize', closeNow)
+  window.removeEventListener('resize', onResize)
 })
 </script>
 

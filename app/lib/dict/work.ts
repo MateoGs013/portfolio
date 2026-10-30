@@ -5,7 +5,7 @@ export default {
   'work.filters': { es: 'Filtrar la obra', en: 'Filter the work' },
   'work.all': { es: 'Todas', en: 'All' },
   'work.stack': { es: 'Con {name}', en: 'With {name}' },
-  'work.clearStack': { es: 'Quitar el filtro {name}', en: 'Remove the {name} filter' },
+  'work.clearStack': { es: ', quitar el filtro', en: ', remove the filter' },
   'work.gallery': { es: 'Obras', en: 'Works' },
   'work.count.one': { es: '{n} obra', en: '{n} work' },
   'work.count.other': { es: '{n} obras', en: '{n} works' },

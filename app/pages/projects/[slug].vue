@@ -25,7 +25,10 @@ const covers = computed(() => p.value.media.filter(m => m.role === 'COVER'))
 const cover = computed(() => covers.value.find(m => m.kind === 'IMAGE') ?? covers.value[0])
 const coverTint = computed(() => covers.value.find(m => m.tint)?.tint ?? null)
 
-const gallery = computed(() => p.value.media.filter(m => m.role === 'GALLERY'))
+/** Una pieza asignada a un paso se ve en el paso y no se repite en la galería (la API no expone el id:
+ *  la misma fila de Media es el mismo archivo). */
+const inSteps = computed(() => new Set(p.value.steps.flatMap(step => (step.media ? [step.media.src] : []))))
+const gallery = computed(() => p.value.media.filter(m => m.role === 'GALLERY' && !inSteps.value.has(m.src)))
 const phones = computed(() => gallery.value.filter(m => m.viewport === 'MOBILE'))
 
 /** Los bloques con texto, en orden, y las piezas de escritorio que van detrás de cada uno. */

@@ -43,7 +43,7 @@ const securityHeaders = {
  * Primera visita a `/` sin reduced motion ni Hiperfoco: marca `data-intro` para que el cargador corra
  * una vez por sesión (P1 escribe `mov-visited`). Tema e Hiperfoco ya vienen del SSR por cookie.
  */
-const introScript = `(function(){try{var d=document.documentElement;if(location.pathname!=='/'||d.getAttribute('data-hyperfocus')==='true'||/[?&]foco=1(&|$)/.test(location.search)||sessionStorage.getItem('mov-visited')||matchMedia('(prefers-reduced-motion: reduce)').matches)return;d.setAttribute('data-intro','')}catch(e){}})()`
+const introScript = `(function(){try{var d=document.documentElement;if(location.pathname!=='/'||location.hash||d.getAttribute('data-hyperfocus')==='true'||/[?&]foco=1(&|$)/.test(location.search)||sessionStorage.getItem('mov-visited')||matchMedia('(prefers-reduced-motion: reduce)').matches)return;d.setAttribute('data-intro','')}catch(e){}})()`
 
 /** /lab se archiva (docs/archive/lab/): la ruta y sus alias van a la home (Respuestas de Mateo). */
 const labRedirects = ['lab', 'library', 'libreria', 'componentes', 'components', 'showcase']

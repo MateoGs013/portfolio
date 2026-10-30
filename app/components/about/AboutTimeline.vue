@@ -5,6 +5,7 @@
  * como título del caso al tocarlas. En desktop el rótulo queda fijo; en registro (R) es la tabla de
  * Experience. Al llegar por el ancla, la sección recibe el foco sin mover el scroll.
  */
+import gsap from 'gsap'
 import type { Experience } from '~/lib/api'
 import { period } from '~/lib/format'
 
@@ -63,6 +64,25 @@ onMounted(() => {
 })
 
 onBeforeUnmount(() => release?.())
+
+/**
+ * Cada fila sube al entrar (movimiento.html, `.exp li[data-reveal]`: y 40, 1 s `expo.out`, desde el
+ * 92 %). Solo con movimiento ambiental; las que ya están en pantalla (al llegar por el ancla o al
+ * volver) quedan quietas.
+ */
+const list = useTemplateRef<HTMLElement>('list')
+useMotion(list, ({ el, ambient }) => {
+  if (!ambient) return undefined
+  const below = [...el.children].filter(li => li.getBoundingClientRect().top > window.innerHeight * 0.92)
+  below.forEach(li => gsap.from(li, {
+    y: 40,
+    opacity: 0,
+    duration: 1,
+    ease: 'expo.out',
+    scrollTrigger: { trigger: li, start: 'top 92%', once: true },
+  }))
+  return undefined
+})
 </script>
 
 <template>
@@ -79,11 +99,12 @@ onBeforeUnmount(() => release?.())
 
     <RecordTable v-if="isRecord" collection="experience" :rows="entries" :columns="['role', 'kind', 'org', 'startedAt', 'endedAt']" />
 
-    <ol v-else class="border-b border-rule">
+    <ol v-else ref="list" class="@container border-b border-rule">
       <li
         v-for="e in entries"
         :key="e.slug"
-        class="grid gap-x-6 gap-y-1 border-t border-rule py-6 md:grid-cols-[9.5rem_minmax(0,1fr)]"
+        data-motion
+        class="grid gap-x-6 gap-y-1 border-t border-rule py-6 md:grid-cols-[9.5rem_minmax(0,1fr)] @min-[44rem]:grid-cols-[9.5rem_minmax(0,1fr)_minmax(0,1.3fr)] focus-mode:@min-[44rem]:grid-cols-[9.5rem_minmax(0,1fr)]"
       >
         <span class="text-s whitespace-nowrap text-dim tabular-nums">{{ period(e.startedAt, e.endedAt, lang) }}</span>
         <div class="flex flex-col gap-1">
@@ -92,9 +113,6 @@ onBeforeUnmount(() => release?.())
           </h3>
           <p v-if="meta(e)" class="text-s text-dim">
             {{ meta(e) }}
-          </p>
-          <p v-if="e.summary" class="mt-2 max-w-read text-s text-dim" :lang="langAttr(e, 'summary')">
-            {{ e.summary }}
           </p>
           <p v-if="e.projects.length" class="mt-2 flex flex-wrap items-baseline gap-x-4 gap-y-1 text-s">
             <span class="text-faint">{{ t('about.works') }}</span>
@@ -109,6 +127,9 @@ onBeforeUnmount(() => release?.())
             </NuxtLink>
           </p>
         </div>
+        <p v-if="e.summary" class="mt-2 max-w-read text-s text-dim md:col-start-2 @min-[44rem]:col-start-3 @min-[44rem]:row-start-1 @min-[44rem]:mt-0 focus-mode:@min-[44rem]:col-start-2 focus-mode:@min-[44rem]:row-start-auto focus-mode:@min-[44rem]:mt-2" :lang="langAttr(e, 'summary')">
+          {{ e.summary }}
+        </p>
       </li>
     </ol>
   </section>

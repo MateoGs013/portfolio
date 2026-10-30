@@ -60,20 +60,38 @@ async function land(open: boolean) {
 const toggles = (to: RouteLocationNormalized, from: RouteLocationNormalized) =>
   to.path === from.path && isSheet(to) !== isSheet(from)
 
-/** Cierra el update de la view transition en curso cuando la superficie nueva ya está anclada. */
-let landed: (() => void) | null = null
+/** El cierre del update de cada view transition, por navegación: una segunda que llega mientras la
+ *  primera se ancla no le quita el suyo. */
+const landed = new Map<string, () => void>()
 let stops: (() => void)[] = []
 
+/** Un gesto atrás del sistema (iOS, Android) ya anima: no se le encima otra transición. */
+let uaTransition = false
+const onPopState = (e: PopStateEvent) => {
+  uaTransition = !!(e as PopStateEvent & { hasUAVisualTransition?: boolean }).hasUAVisualTransition
+}
+
+/** «Ver CV» o la hoja fuera de pantalla no viajan (docs/diseno.md §4): cambia la página entera. */
+function offScreen() {
+  const r = document.querySelector('[data-vt="cv-sheet"]')?.getBoundingClientRect()
+  return !r || r.bottom <= 0 || r.top >= window.innerHeight
+}
+
 onMounted(() => {
+  window.addEventListener('popstate', onPopState)
   stops = [
     router.beforeResolve((to, from) => {
-      if (!toggles(to, from) || !allowTransitions.value || !document.startViewTransition) return
+      const ua = uaTransition
+      uaTransition = false
+      if (ua || !toggles(to, from) || !allowTransitions.value || !document.startViewTransition) return
+      const html = document.documentElement
+      if (offScreen()) html.dataset.vtOff = 'cv-sheet'
       return new Promise<void>((proceed) => {
         const transition = document.startViewTransition(() => new Promise<void>((done) => {
-          landed = done
+          landed.set(to.fullPath, done)
           proceed()
         }))
-        transition.finished.catch(() => {})
+        transition.finished.catch(() => {}).finally(() => delete html.dataset.vtOff)
         // Lenis se detiene mientras dura y los ScrollTrigger miden de nuevo al terminar (motion.client).
         void nuxtApp.callHook('page:view-transition:start', transition)
       })
@@ -81,16 +99,17 @@ onMounted(() => {
     router.afterEach(async (to, from, failure) => {
       if (!toggles(to, from)) return
       if (!failure) await land(isSheet(to))
-      landed?.()
-      landed = null
+      landed.get(to.fullPath)?.()
+      landed.delete(to.fullPath)
     }),
   ]
 })
 
 onBeforeUnmount(() => {
+  window.removeEventListener('popstate', onPopState)
   stops.forEach(stop => stop())
-  landed?.()
-  landed = null
+  landed.forEach(done => done())
+  landed.clear()
 })
 </script>
 

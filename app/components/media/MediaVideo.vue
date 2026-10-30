@@ -24,7 +24,9 @@ const props = withDefaults(defineProps<{
   vt?: VtName
   /** Dónde se escucha el hover: el contenedor interactivo más cercano. */
   hoverTarget?: string
-}>(), { mode: 'in-view', vt: undefined, hoverTarget: '[data-card], [data-row], [data-view], a' })
+  /** Va sobre una imagen que ya lo describe: el lector no lo anuncia dos veces. */
+  decorative?: boolean
+}>(), { mode: 'in-view', vt: undefined, hoverTarget: '[data-card], [data-row], [data-view], a', decorative: false })
 
 /** Lo visible que tiene que estar para correr. */
 const THRESHOLD = 0.35
@@ -153,8 +155,8 @@ onBeforeUnmount(() => {
       :preload="preload"
       :width="media.width"
       :height="media.height"
-      :aria-label="media.alt || undefined"
-      :aria-hidden="media.alt ? undefined : 'true'"
+      :aria-label="!decorative && media.alt || undefined"
+      :aria-hidden="!decorative && media.alt ? undefined : 'true'"
       :lang="langAttr(media, 'alt')"
       :data-vt="vt"
       @playing="playing = true"

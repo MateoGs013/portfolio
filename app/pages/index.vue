@@ -26,16 +26,6 @@ const content = useTemplateRef<HTMLElement>('content')
       <HomeSelectedWork :projects="projects.data.value ?? []" />
       <HomeStatement :about="aboutDoc" />
     </article>
-    <CursorBubble />
   </div>
 </template>
 
-<style>
-/* Seguridad del cargador (IntroLoader): pase lo que pase, a los 4 s deja de verse y de tapar. */
-@keyframes intro-safety {
-  to {
-    opacity: 0;
-    visibility: hidden;
-  }
-}
-</style>

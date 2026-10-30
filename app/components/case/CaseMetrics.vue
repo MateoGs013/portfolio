@@ -9,7 +9,7 @@ import type { Metric } from '~/lib/api'
 import { metricDescription, metricLabel, metricValue } from '~/lib/format'
 import type { PeekLine } from './CasePeek.vue'
 
-defineProps<{ metrics: Metric[] }>()
+const props = defineProps<{ metrics: Metric[] }>()
 
 const { t, lang } = useLocale()
 
@@ -19,8 +19,9 @@ function day(value: string) {
   return new Intl.DateTimeFormat(dateLocale[lang.value], { dateStyle: 'long', timeZone: 'UTC' }).format(new Date(`${value}T00:00:00Z`))
 }
 
-/** Una cifra corta va en el tamaño de los números (hero); una con unidad larga, un paso abajo, sin cortarse. */
-const size = (m: Metric) => ((metricValue(m, lang.value)?.length ?? 0) > 6 ? 'text-xl' : 'text-hero')
+/** Todas las cifras del bloque en un solo tamaño, como el prototipo: hero si todas son cortas; si
+ *  alguna lleva una unidad larga, todas un paso abajo, así ninguna se corta. Las listas van aparte. */
+const size = computed(() => props.metrics.some(m => m.value !== null && (metricValue(m, lang.value)?.length ?? 0) > 6) ? 'text-xl' : 'text-hero')
 
 function peekLines(m: Metric): PeekLine[] {
   const lines: PeekLine[] = []
@@ -46,7 +47,7 @@ function peekLines(m: Metric): PeekLine[] {
         :lines="peekLines(m)"
         :label="t('case.peek.open', { name: metricLabel(m, lang) })"
       >
-        <span v-if="m.value !== null" :class="[fv, size(m)]" class="block pe-7 font-title whitespace-nowrap tabular-nums">
+        <span v-if="m.value !== null" :class="[fv, size]" class="block pe-7 font-title whitespace-nowrap tabular-nums">
           <RollNumber :value="m.value" :unit="m.unit" />
         </span>
         <span v-else :class="fv" class="block pe-7 text-l font-title">{{ metricValue(m, lang) }}</span>

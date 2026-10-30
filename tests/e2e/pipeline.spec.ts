@@ -19,7 +19,8 @@ test.describe('páginas desde la API', () => {
     const res = await page.goto('/projects/null-net')
     expect(res?.status()).toBe(404)
     await expect(page.locator('meta[name="robots"]')).toHaveAttribute('content', 'noindex')
-    await expect(page.locator('a[href="/"]')).toBeVisible()
+    // La marca de la cabecera también va a /: se busca el enlace de la página de error.
+    await expect(page.locator('section:has(h1) a[href="/"]')).toBeVisible()
   })
 
   test('sin violaciones críticas de accesibilidad en el inicio', async ({ page }) => {
@@ -83,10 +84,11 @@ test.describe('direcciones canónicas', () => {
   }
 })
 
-test('el sitemap lista 9 URL con su alternativa en inglés', async ({ request }) => {
+test('el sitemap lista 11 URL con su alternativa en inglés', async ({ request }) => {
+  // /, /projects, /about, las 6 obras, /articles y el artículo del seed.
   const xml = await (await request.get('/sitemap.xml')).text()
-  expect(xml.match(/<url>/g)).toHaveLength(9)
-  expect(xml.match(/hreflang="en"/g)).toHaveLength(9)
+  expect(xml.match(/<url>/g)).toHaveLength(11)
+  expect(xml.match(/hreflang="en"/g)).toHaveLength(11)
   expect(xml).not.toContain('null-net')
   expect(xml).not.toContain('lampone')
 })

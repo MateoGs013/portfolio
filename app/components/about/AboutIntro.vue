@@ -15,9 +15,6 @@ const { t, langAttr } = useLocale()
 const portrait = computed(() => docText(props.about, 'portrait'))
 const philosophy = computed(() => docText(props.about, 'engineering_philosophy'))
 
-/** El tamaño real del archivo de about.portrait, para reservar su caja: el recorte lo hace el marco. */
-const PORTRAIT_SIDE = 800
-
 const frame = useTemplateRef<HTMLElement>('frame')
 
 useMotion(frame, ({ el, ambient }) => {
@@ -49,9 +46,6 @@ useMotion(frame, ({ el, ambient }) => {
             :src="portrait ?? undefined"
             :alt="docText(about, 'portrait_alt') ?? ''"
             :lang="langAttr(about, 'portrait_alt')"
-            :width="PORTRAIT_SIDE"
-            :height="PORTRAIT_SIDE"
-            fetchpriority="high"
             decoding="async"
             class="absolute -top-[6%] left-0 h-[112%] w-full object-cover"
           >

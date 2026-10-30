@@ -58,6 +58,8 @@ useMotion(root, ({ el, motion, add }) => {
   const setTilt = gsap.quickSetter(el, 'rotation', 'deg')
   let unfollow: (() => void) | null = null
   let shown = -1
+  /** Visible o entrando; falso mientras se apaga (el puntero puede volver antes de que termine). */
+  let visible = false
 
   /** El borde izquierdo de la caja: a la derecha del cursor, sin salirse de la pantalla. */
   const left = (x: number) => Math.min(x + OFFSET, window.innerWidth - el.offsetWidth - EDGE)
@@ -79,6 +81,10 @@ useMotion(root, ({ el, motion, add }) => {
       snap(e)
       place(e.clientX, e.clientY, 0)
       unfollow = follow(f => (motion ? place(f.sx, f.sy, f.vx) : place(f.x, f.y, 0)))
+    }
+    // overwrite mata el apagado en curso (y su onComplete), así la caja vuelve aunque no haya terminado.
+    if (!visible) {
+      visible = true
       add(() => gsap.to(box!, { opacity: 1, scale: 1, duration: motion ? 0.5 : 0, ease: 'expo.out', overwrite: true }))
     }
     if (index !== shown) slide(index, first)
@@ -88,10 +94,12 @@ useMotion(root, ({ el, motion, add }) => {
   function stop() {
     unfollow?.()
     unfollow = null
+    visible = false
   }
 
   function hide() {
-    if (!unfollow) return
+    if (!unfollow || !visible) return
+    visible = false
     shown = -1
     add(() => gsap.to(box!, { opacity: 0, scale: 0.8, duration: motion ? 0.35 : 0, ease: 'power2.out', overwrite: true, onComplete: stop }))
   }

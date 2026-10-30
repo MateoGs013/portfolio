@@ -57,7 +57,6 @@ const link = 'underline decoration-rule decoration-1 underline-offset-4 transiti
 
     <component
       :is="isRecord ? 'div' : 'dl'"
-      :aria-label="isRecord ? undefined : t('case.facts')"
       class="mt-[clamp(1.5rem,4vh,2.5rem)] grid gap-y-1 border-t border-rule pt-5 text-s md:grid-flow-col md:grid-rows-[auto_auto] md:justify-start md:gap-x-[clamp(2rem,5vw,5rem)] md:gap-y-1.5 record:mt-0 record:block record:border-0 record:pt-0 [&_dd]:mb-4 md:[&_dd]:mb-0"
     >
       <RecordField v-slot="{ fv }" collection="projects" k="role" :value="project.role" :record="project">

@@ -1,5 +1,5 @@
 /**
- * Sitemap: las páginas fijas y las obras publicadas (la visibilidad la resuelve la API), cada una con
+ * Sitemap: las páginas fijas, las obras y los artículos publicados (la visibilidad la resuelve la API), cada una con
  * su alternativa en inglés (`?lang=en`) y x-default. `lastmod` sale solo de `updatedAt` de la base.
  * Si la API no responde se devuelve 503 sin caché: nunca un sitemap incompleto.
  */
@@ -38,13 +38,16 @@ export default defineEventHandler(async (event) => {
   const { public: { apiBase, siteUrl } } = useRuntimeConfig(event)
 
   let projects: Dated[]
+  let articles: Dated[]
   let about: Dated
   try {
-    const [list, doc] = await Promise.all([
+    const [list, posts, doc] = await Promise.all([
       $fetch<{ data: Dated[] }>(`${apiBase}/projects`, { timeout: 5000 }),
+      $fetch<{ data: Dated[] }>(`${apiBase}/articles`, { timeout: 5000 }),
       $fetch<{ data: Dated }>(`${apiBase}/docs/about`, { timeout: 5000 }),
     ])
     projects = list.data
+    articles = posts.data
     about = doc.data
   }
   catch {
@@ -60,6 +63,8 @@ export default defineEventHandler(async (event) => {
     { path: '/projects', lastmod: workUpdated },
     { path: '/about', lastmod: about.updatedAt },
     ...projects.map(p => ({ path: `/projects/${p.slug}`, lastmod: p.updatedAt })),
+    { path: '/articles', lastmod: latest(articles.map(a => a.updatedAt)) },
+    ...articles.map(a => ({ path: `/articles/${a.slug}`, lastmod: a.updatedAt })),
   ]
 
   setResponseHeader(event, 'Content-Type', 'application/xml; charset=utf-8')

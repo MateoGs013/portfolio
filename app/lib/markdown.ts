@@ -24,13 +24,16 @@ export type Inline =
   | { type: 'link', href: string, children: Inline[] }
 
 const FENCE = /^(`{3,}|~{3,})\s*([\w+#.-]*)/
-const HEADING = /^(#{1,6})\s+(.+?)\s*#*$/
+/** El cierre opcional de #s necesita un espacio antes: «# C#» conserva su #. */
+const HEADING = /^(#{1,6})\s+(.+?)(?:\s+#+)?\s*$/
 const BULLET = /^[-*+]\s+/
 const ORDERED = /^\d+[.)]\s+/
+/** Una lista numerada empieza en 1: un párrafo que abre con un año («2026. fue…») sigue siendo párrafo. */
+const ORDERED_START = /^1[.)]\s+/
 const RULE = /^(?:-{3,}|\*{3,}|_{3,})$/
 
 /** Una línea que abre otro bloque y corta el párrafo en curso. */
-const opensBlock = (line: string) => line === '' || line.startsWith('>') || [FENCE, HEADING, BULLET, ORDERED, RULE].some(re => re.test(line))
+const opensBlock = (line: string) => line === '' || line.startsWith('>') || [FENCE, HEADING, BULLET, ORDERED_START, RULE].some(re => re.test(line))
 
 export function parseMarkdown(source: string): Block[] {
   const lines = source.replace(/\r\n?/g, '\n').split('\n')
@@ -67,7 +70,7 @@ export function parseMarkdown(source: string): Block[] {
       for (; i < lines.length && at().startsWith('>'); i++) quote.push(at().replace(/^>\s?/, ''))
       blocks.push({ type: 'quote', text: quote.join(' ').trim() })
     }
-    else if (BULLET.test(line) || ORDERED.test(line)) {
+    else if (BULLET.test(line) || ORDERED_START.test(line)) {
       const marker = BULLET.test(line) ? BULLET : ORDERED
       const items: string[] = []
       for (; i < lines.length && marker.test(at()); i++) items.push(at().replace(marker, ''))
@@ -107,9 +110,12 @@ export function plainText(nodes: Inline[]): string {
   return nodes.map(node => ('text' in node ? node.text : plainText(node.children))).join('')
 }
 
-/** Adónde lleva un enlace del cuerpo: una ruta del sitio, una URL segura o nada. */
+/** Adónde lleva un enlace del cuerpo: una ruta del sitio, una URL segura o nada. Una ruta no puede
+ *  empezar con // ni llevar barras invertidas (el navegador lee «/\evil.com» como otro dominio), y
+ *  los #anclas no van: los encabezados no tienen id. */
 export function linkTarget(href: string): { path: string } | { url: string } | null {
   const url = href.trim()
-  if (url.startsWith('/') && !url.startsWith('//')) return { path: url }
-  return /^(?:#|https?:\/\/|mailto:)/i.test(url) ? { url } : null
+  if (url.includes('\\')) return null
+  if (/^\/(?!\/)/.test(url)) return { path: url }
+  return /^(?:https?:\/\/|mailto:)/i.test(url) ? { url } : null
 }

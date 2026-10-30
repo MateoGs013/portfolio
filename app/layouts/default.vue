@@ -14,7 +14,10 @@ const nuxtApp = useNuxtApp()
 /** Al llegar a otra página se anuncia su h1 (o el título, si no tiene): el lector sabe dónde está. */
 const stop = nuxtApp.hook('page:finish', () => {
   if (nuxtApp.isHydrating) return
-  const heading = document.querySelector('#contenido h1')?.textContent?.trim()
+  // El texto accesible del h1: sin lo que está aria-hidden (las letras del nombre del inicio repiten su sr-only).
+  const h1 = document.querySelector('#contenido h1')?.cloneNode(true) as HTMLElement | undefined
+  h1?.querySelectorAll('[aria-hidden="true"]').forEach(node => node.remove())
+  const heading = h1?.textContent?.replace(/\s+/g, ' ').trim()
   announce(heading || document.title)
 })
 onBeforeUnmount(stop)

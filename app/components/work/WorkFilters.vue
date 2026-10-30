@@ -42,8 +42,19 @@ function withQuery(key: 'status' | 'stack', value?: string) {
   return localeRoute({ path: '/projects', query: value ? { ...rest, [key]: value } : rest })
 }
 
+/** Facetas que llegan por enlace (desde el registro) y no tienen control propio: «Todas» las quita. */
+const HIDDEN_FACETS = ['year', 'featured', 'org'] as const
+const hiddenActive = computed(() => HIDDEN_FACETS.some(key => route.query[key] != null))
+
+/** «Todas»: sin estado ni facetas ocultas; conserva idioma, vista y tecnología (que tiene su chip). */
+const allTo = computed(() => {
+  const query = Object.fromEntries(Object.entries(route.query)
+    .filter(([key]) => key !== 'status' && !(HIDDEN_FACETS as readonly string[]).includes(key)))
+  return localeRoute({ path: '/projects', query })
+})
+
 const facets = computed(() => [
-  { id: 'all', label: t('work.all'), to: withQuery('status'), current: active.value === null },
+  { id: 'all', label: t('work.all'), to: allTo.value, current: active.value === null && !hiddenActive.value },
   ...STATUSES.map(s => ({ id: s, label: t(`status.${s}`), to: withQuery('status', s.toLowerCase()), current: active.value === s })),
 ])
 
@@ -84,10 +95,10 @@ watch(active, () => {
       <li v-if="stack && stackName" class="ms-2 border-s border-rule ps-6">
         <NuxtLink
           :to="withQuery('stack')"
-          :aria-label="t('work.clearStack', { name: stackName })"
           class="inline-flex items-center gap-2 text-ink no-underline"
         >
           <RollText :text="t('work.stack', { name: stackName })" />
+          <span class="sr-only">{{ t('work.clearStack') }}</span>
           <AppIcon name="close" :size="12" class="text-dim" />
         </NuxtLink>
       </li>

@@ -3,8 +3,9 @@
  * Lista de obra del inicio (movimiento.html, `.rows`): una fila por obra, sobre líneas de 1 px, con el
  * título monumental y a la derecha rol, cliente, estado y año. Cada fila es el origen de un viaje
  * (`data-travel="row"`): su título se vuelve el título del caso y la imagen abierta de la vista previa,
- * su portada. También es destino de j/k (`data-row`), activa la burbuja (`data-view`) y anticipa la
- * temperatura de la obra (`data-tint`).
+ * su portada. También es destino de j/k (`data-row`) y anticipa la temperatura de la obra
+ * (`data-tint`). Sin `data-view`: como en el prototipo, el único gesto sobre las filas es la vista
+ * previa (una cosa por pantalla); la burbuja «Ver caso» no se le encima.
  *
  * Atenuar (docs/diseno.md §2): con puntero fino, al apuntar una fila sus hermanas bajan a .25 y el
  * título apuntado se corre 1,2 rem; en Hiperfoco no se atenúa. En táctil la fila lleva la miniatura
@@ -48,7 +49,6 @@ const dim = 'fine:not-focus-mode:group-hover/rows:not-hover:opacity-25'
         :to="localeRoute(`/projects/${p.slug}`)"
         data-travel="row"
         data-row
-        data-view
         :data-tint="tintOf(p)"
         :class="[row, dim]"
         @pointerover="onOver(i, $event)"

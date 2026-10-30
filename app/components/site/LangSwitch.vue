@@ -7,9 +7,15 @@ import { withLang } from '~/composables/useLocale'
 const route = useRoute()
 const { t, lang } = useLocale()
 
+// El SSR no conoce el hash: se agrega después de hidratar, así el href coincide al hidratar.
+const hydrated = ref(false)
+onMounted(() => {
+  hydrated.value = true
+})
+
 const options = computed(() => langs.map((l: Lang) => ({
   lang: l,
-  to: { path: route.path, hash: route.hash, query: withLang(route.query, l) },
+  to: { path: route.path, hash: hydrated.value ? route.hash : '', query: withLang(route.query, l) },
   current: l === lang.value,
 })))
 </script>

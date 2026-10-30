@@ -12,9 +12,11 @@
  *   navegar, así la foto de la view transition sale derecha.
  * - Foco con Tab o j/k en una tarjeta fuera de cuadro: el scroll (Lenis si está) la trae a la vista.
  *
- * Las tarjetas miden lo mismo en la grilla y en la pista: la primera fila no salta al hidratar. La
- * pista se fija cuando su centro llega al centro de la pantalla. Al filtrar, las que quedan se acomodan
- * con FLIP (600 ms `expo.out`; 220 ms en Hiperfoco) y las que entran suben 10 px.
+ * Las tarjetas miden lo mismo en la grilla y en la pista (con tope, así en pantallas anchas asoma la
+ * tercera, como en el prototipo): la primera fila no salta al hidratar. La pista se fija cuando su
+ * centro llega al centro de la pantalla, o al cargar si en una pantalla alta ya lo pasó (`clamp`). Al
+ * filtrar, las que quedan se acomodan con FLIP (600 ms `expo.out`; 220 ms en Hiperfoco) y las que entran
+ * suben 10 px. Al imprimir la pista se apaga: Obra se imprime como grilla.
  */
 import gsap from 'gsap'
 import { Flip } from 'gsap/Flip'
@@ -71,7 +73,9 @@ function horizontal(el: HTMLElement, pinned: HTMLElement, list: HTMLElement, add
 
   const st = ScrollTrigger.create({
     trigger: list,
-    start: 'center center',
+    // En una pantalla alta el centro de la pista ya pasó el de la pantalla al cargar: sin clamp el
+    // inicio sería negativo y la página cargaría adentro del pin, con la primera tarjeta recortada.
+    start: 'clamp(center center)',
     end: () => `+=${dist()}`,
     pin: pinned,
     scrub: SCRUB,
@@ -115,9 +119,11 @@ function horizontal(el: HTMLElement, pinned: HTMLElement, list: HTMLElement, add
     if (failure) leaving = false
   })
 
-  /** Una tarjeta enfocada fuera de cuadro: el scroll lleva la pista hasta centrarla. */
+  /** Una tarjeta enfocada con teclado fuera de cuadro: el scroll lleva la pista hasta centrarla. El
+   *  foco del click no mueve nada (la portada se está midiendo para la view transition). */
   function reveal(e: FocusEvent) {
-    const li = e.target instanceof Element ? e.target.closest('li') : null
+    if (!(e.target instanceof Element) || !e.target.matches(':focus-visible')) return
+    const li = e.target.closest('li')
     if (!li || li.parentElement !== list) return
     const r = li.getBoundingClientRect()
     if (r.left >= 0 && r.right <= window.innerWidth && r.top >= 0 && r.bottom <= window.innerHeight) return
@@ -184,7 +190,20 @@ useMotion(root, ({ el, desktop, ambient, transitions, hyperfocus, add }) => {
     }))
   }
 
+  // Impresa, la pista sería dos tarjetas recortadas y un escenario fijo en cada hoja: se vuelve grilla.
+  const offPrint = () => {
+    rail?.destroy()
+    rail = null
+  }
+  const onPrint = () => {
+    if (!rail && wantsRail()) rail = add(() => horizontal(el, pinned, list, add))
+  }
+  window.addEventListener('beforeprint', offPrint)
+  window.addEventListener('afterprint', onPrint)
+
   return () => {
+    window.removeEventListener('beforeprint', offPrint)
+    window.removeEventListener('afterprint', onPrint)
     beforeChange = null
     afterChange = null
     rail?.destroy()
@@ -196,13 +215,13 @@ useMotion(root, ({ el, desktop, ambient, transitions, hyperfocus, add }) => {
   <section
     ref="root"
     :aria-label="t('work.gallery')"
-    class="group/gallery [--card-w:min(calc((100cqw-2*var(--pad)-var(--gal-gap))/2),calc((100svh-13rem)*1.6))] [--gal-gap:clamp(1.5rem,4vw,4rem)]"
+    class="group/gallery [--card-w:min(calc((100cqw-2*var(--pad)-var(--gal-gap))/2),42vw,46rem,calc((100svh-13rem)*1.6))] [--gal-gap:clamp(1.5rem,4vw,4rem)]"
   >
     <div ref="stage" class="@container group-data-[track]/gallery:overflow-clip group-data-[track]/gallery:[overflow-clip-margin:1rem]">
       <ul
         ref="track"
         data-motion="track"
-        class="relative grid gap-x-(--gal-gap) gap-y-[clamp(3rem,9vh,6rem)] px-pad md:grid-cols-2 focus-mode:md:grid-cols-1 group-data-[track]/gallery:flex group-data-[track]/gallery:w-max"
+        class="relative grid gap-x-(--gal-gap) gap-y-[clamp(3rem,9vh,6rem)] px-pad md:grid-cols-[repeat(2,var(--card-w))] focus-mode:md:grid-cols-1 group-data-[track]/gallery:flex group-data-[track]/gallery:w-max"
       >
         <li
           v-for="(p, i) in projects"

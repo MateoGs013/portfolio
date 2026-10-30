@@ -102,7 +102,11 @@ export function useSiteActions() {
   function parentRoute(): RouteLocationRaw | null {
     if (/^\/projects\/[^/]+\/?$/.test(route.path)) return '/projects'
     if (/^\/articles\/[^/]+\/?$/.test(route.path)) return '/articles'
-    if (route.path === '/about' && route.query.cv !== undefined) return '/about'
+    // Como Esc y «Volver»: se cierra la hoja y se conserva el resto de la query (vista, idioma).
+    if (route.path === '/about' && route.query.cv !== undefined) {
+      const { cv: _cv, ...query } = route.query
+      return { path: '/about', query }
+    }
     return null
   }
 

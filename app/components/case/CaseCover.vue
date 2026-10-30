@@ -38,7 +38,9 @@ useMotion(section, ({ el, ambient, desktop, fine }) => {
     scale: 1,
     borderRadius: 0,
     ease: 'none',
-    scrollTrigger: { trigger: el, start: 'top 85%', end: 'top 10%', scrub: true },
+    // clamp: si al cargar el marco ya pasó el 85 %, el crecimiento arranca en el scroll 0 y el .88 del
+    // SSR es exacto (sin salto al hidratar).
+    scrollTrigger: { trigger: el, start: 'clamp(top 85%)', end: 'top 10%', scrub: true },
   })
   if (inner.value) {
     gsap.fromTo(inner.value, { yPercent: 0 }, {
@@ -78,6 +80,7 @@ const growing = 'md:motion-safe:fine:[:root:not([data-hyperfocus=true])_&]:[tran
           v-if="video"
           :media="video"
           mode="autoplay"
+          :decorative="!!image"
           class="absolute! inset-0 [&>video]:object-top [&>video]:opacity-0 [&>video]:transition-opacity [&>video]:duration-600 [&>video]:ease-expo data-playing:[&>video]:opacity-100"
         />
       </div>
