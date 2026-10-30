@@ -1,47 +1,40 @@
 ---
 name: fullstack-schema-sync
-description: Protocolo de sincronización atómica entre Prisma 7 (PostgreSQL), Express 5 API, datos de fallback, tipos del Frontend (Nuxt 4) y el CMS Admin (/admin). Úsalo siempre que modifiques modelos, enums, filtros de búsqueda, colecciones o campos de la base de datos.
+description: Protocolo de sincronización entre Prisma 7 (PostgreSQL), la API de Express 5, el snapshot de respaldo generado, los tipos y el modo registro del frontend (Nuxt 4) y el CMS (/admin). Úsalo siempre que modifiques modelos, enums, filtros, colecciones o campos de la base de datos.
 ---
 
-# Fullstack Schema Sync (Prisma ↔ Express ↔ Nuxt ↔ Admin)
+# Sincronización del esquema (Prisma ↔ Express ↔ Nuxt ↔ Admin)
 
-El portfolio opera bajo el **Invariante #1: Un solo modelo relacional en PostgreSQL 17 (Cero duplicación)**. Sin embargo, un cambio en el esquema o en los filtros de consulta impacta 5 capas distintas. Esta skill garantiza que nunca ocurra deriva de tipos o enums (como desajustes de `TechCategory` o filtros `?org=` rotos).
+Invariante 1: un solo modelo relacional en PostgreSQL 17, sin copias. Un cambio de esquema toca varias capas; esta lista evita que una quede atrás. Las reglas de backend están en `.claude/rules/backend.md` y las del sitio en `docs/diseno.md`.
 
-## Checklist de Sincronización en 5 Capas
+## Capa 1: base de datos (`prisma/`, `server/src/seed*`)
 
-Cada vez que agregues, edites o elimines un modelo, campo, enum o filtro de query, recorre obligatoriamente estas 5 capas en orden:
+- [ ] `prisma/schema.prisma`: modelo, enum o índice.
+- [ ] Migración con `prisma migrate dev`, con la conversión de datos si hace falta. Nunca editar una migración ya aplicada.
+- [ ] `server/src/seed.ts` (y `server/src/seed/en.ts` si el campo se traduce): el seed refleja el cambio.
+- [ ] Si producción necesita el dato, un parche idempotente en `server/src/patches/` con `--dry`. Los parches se corren contra producción solo con el OK de Mateo.
+- [ ] `pnpm prisma generate` y `pnpm typecheck`.
 
-### Capa 1: Base de Datos y Prisma (`prisma/`)
-- [ ] **`prisma/schema.prisma`**: Definir el modelo, enum o índice.
-- [ ] **`prisma/seed.ts`**: Actualizar los datos semilla si el campo es obligatorio o si un enum cambió.
-- [ ] Ejecutar `pnpm db:generate` para regenerar el cliente en `server/generated/prisma` y verificar con `pnpm typecheck`.
+## Capa 2: API (`server/src/`)
 
-### Capa 2: Backend API y Fallback (`server/src/`)
-- [ ] **`server/src/routes/<collection>.ts`**:
-  - Validar siempre los query params entrantes contra los enums de Prisma antes de hacer cast (nunca hacer `as EnumType` directo de `req.query` sin validar contra `Object.values(EnumType)`).
-  - Asegurar que los filtros relacionales (`?tech=`, `?org=`, `?tag=`, `?status=`, `?featured=`) estén soportados tanto en la consulta Prisma como en el bloque de fallback.
-- [ ] **`server/src/data/fallbackData.ts`**:
-  - Mantener la paridad estructural exacta con lo que devuelve Prisma (`include` de relaciones como `technologies`, `organization`, `tags`) para que el modo offline/fallback nunca rompa el SSR.
-- [ ] **`server/src/routes/schema.ts`**:
-  - Si se añade una tabla o relación nueva, exponerla en `/api/schema` para que la vista `/schema` (ERD interactivo) se actualice sola.
+- [ ] Los query params se validan contra los valores del enum antes de usarlos; un valor inválido se ignora, nunca da 500.
+- [ ] La visibilidad (`publishedAt`) y el idioma (`?lang=`) se resuelven en la API, también en relaciones y conteos.
+- [ ] El snapshot de respaldo se regenera desde la base (`pnpm db:snapshot`) y se verifica la paridad (`pnpm db:snapshot:check`). No se escriben datos de respaldo a mano.
+- [ ] `/api/schema` expone la tabla o relación nueva.
 
-### Capa 3: Contratos y Adaptadores Frontend (`app/lib/` & `app/composables/`)
-- [ ] **`app/lib/api.ts`**: Actualizar las interfaces TypeScript (`ApiProject`, `ApiTechnology`, etc.).
-- [ ] **`app/composables/useApi.ts`**: Si se agregó un filtro nuevo en la URL (ej. `?org=`), incluirlo en la firma de parámetros de `useProjects()` u otro composable y en la key reactiva de `useAsyncData`.
-- [ ] **`app/lib/fieldMeta.ts`**: Registrar la metadata de columna (tipo, ancho, icono geométrico, color de badge) para la vista Tabla y el Inspector de `ExplorerDetail.vue`.
-- [ ] **`app/lib/explorer.ts`**:
-  - Verificar que las colecciones estén listadas en el orden canónico y que los enlaces relacionales (`buildRelationUrl`) apunten a query params realmente implementados en el backend.
+## Capa 3: frontend (`app/lib/`, `app/composables/`)
 
-### Capa 4: Explorador Frontend (`app/components/explorer/`)
-- [ ] **`ExplorerView.vue`**: Verificar que la colección aparezca en `navSections` del sidebar y muestre su conteo real.
-- [ ] **`ExplorerGoto.vue` (`⌘K`)**: Asegurar que la colección sea indexada por el buscador global y tenga su atajo numérico o ruta directa.
+- [ ] `app/lib/api.ts`: tipos del contrato de la API.
+- [ ] `app/composables/useApi.ts`: el filtro nuevo entra en los parámetros y en la clave de `useAsyncData`.
+- [ ] `app/lib/fieldMeta.ts`: tipo y rótulo del campo para el modo registro (`.fk` / `.ft`), en el mismo commit que la migración.
+- [ ] `app/lib/dict/`: si el campo tiene rótulo o etiqueta de interfaz (un estado, una métrica), su entrada en ES y EN. El contenido nunca va al diccionario.
 
-### Capa 5: Consola Admin (`server/admin/js/`)
-- [ ] **`server/admin/js/config.js`**:
-  - Sincronizar los valores por defecto (`defaults`) y las opciones de `select` con los enums exactos de `prisma/schema.prisma` (ej. `TechCategory`: `LANGUAGE`, `FRAMEWORK`, `MOTION`, `GRAPHICS`, `BACKEND`, `DATA`, `TOOLING`, `DESIGN`).
-- [ ] **`server/admin/js/components/forms/`**: Verificar que los formularios especializados (`ProjectForm.js`, `ExperienceForm.js`, `ProfileForm.js`) agrupen y validen usando exactamente los mismos enums.
-- [ ] **`server/admin/js/components/CommandPalette.js`**: Incluir la colección en la paleta de comandos del admin.
+## Capa 4: admin (`server/admin/js/`)
 
-## Verificación Post-Cambio
-1. Correr `pnpm typecheck` y `pnpm lint` (deben dar **0 errores**).
-2. Verificar que los endpoints afectados respondan `200 OK` con parámetros válidos e ignoren de forma segura (sin `500 Internal Server Error`) valores de enum inválidos en query params.
+- [ ] `server/admin/js/config.js`: valores por defecto y opciones de `select` iguales a los enums de `prisma/schema.prisma`.
+- [ ] Los formularios de `server/admin/js/components/forms/` editan y validan el campo, con su traducción si la tiene.
+- [ ] Si se agregaron clases de Tailwind, `pnpm build:admin-css`.
+
+## Verificación
+
+`pnpm typecheck` y `pnpm lint` en 0. La base local migrada y sembrada (`pnpm prisma migrate deploy`, `pnpm db:seed`), los endpoints afectados responden 200 con parámetros válidos y no dan 500 con valores inválidos, y el campo se ve en el sitio y en `?vista=registro`.

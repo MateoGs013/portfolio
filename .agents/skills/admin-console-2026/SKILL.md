@@ -16,7 +16,7 @@ Dado que `/admin` no pasa por Vite ni TypeScript en build-time, los errores de i
    - `const { ref, computed, watch, onMounted } = window.Vue;`
    - **Prohibido** invocar `ref()` o `watch()` sin haberlo desestructurado en el módulo actual.
 2. **Estilos con Tailwind CSS v4 CLI**:
-   - Si agregas clases utilitarias nuevas en `server/admin/js/**/*.js` o `server/admin/index.html`, recuerda regenerar el bundle CSS ejecutando `pnpm admin:css` (`@tailwindcss/cli -i ./server/admin/css/input.css -o ./server/admin/css/output.css --minify`).
+   - Si agregas clases utilitarias nuevas en `server/admin/js/**/*.js` o `server/admin/index.html`, recuerda regenerar el bundle CSS ejecutando `pnpm build:admin-css` (`tailwindcss -i server/admin/admin.src.css -o server/admin/admin.css --minify`).
 
 ## 2. Invariante Estético: Cero Emojis & Precisión Linear 2026
 
@@ -40,7 +40,7 @@ En `JobHunterView.js` (y su contraparte pública en `/about`):
 
 ## 5. Arquitectura de Despacho de Postulaciones y CVs (Anti-SMTP VPS)
 
-Está estrictamente prohibido utilizar sockets directos `smtplib` con contraseñas de aplicación de Gmail desde contenedores VPS (Hetzner / Coolify) debido a bloqueos de rDNS IPv6 de Google (`550-5.7.1`), ausencia de sincronización en la carpeta "Enviados" y penalización en filtros ATS corporativos.
+Está estrictamente prohibido utilizar sockets directos `smtplib` con contraseñas de aplicación de Gmail desde contenedores VPS (Hostinger / Coolify) debido a bloqueos de rDNS IPv6 de Google (`550-5.7.1`), ausencia de sincronización en la carpeta "Enviados" y penalización en filtros ATS corporativos.
 
 Todo flujo de despacho de postulaciones debe seguir uno de los dos canales autorizados:
 

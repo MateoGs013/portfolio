@@ -1,96 +1,62 @@
 ---
 name: piso-calidad
-description: Verifica que las vistas y componentes del Explorador Relacional cumplan los 7 requisitos de accesibilidad, SSR, teclado, rendimiento y resiliencia antes de dar por cerrada cualquier tarea visual o de frontend.
+description: Verifica que las páginas y componentes del sitio público cumplan los 8 requisitos de SSR, teclado, lector de pantalla, movimiento e Hiperfoco, estabilidad, responsive, resiliencia e impresión del CV antes de dar por cerrada cualquier tarea visual o de frontend.
 ---
 
-# Piso de Calidad — Los 7 Requisitos No-Negociables
+# Piso de calidad: los 8 requisitos
 
-Invocar esta skill antes de considerar terminada cualquier vista o componente en `app/`. Ningún cambio pasa a producción sin cumplir los 7 puntos.
+Invocar esta skill antes de considerar terminada cualquier página o componente en `app/`. Ningún cambio se publica sin cumplir los 8 puntos. Las reglas de fondo están en `docs/diseno.md` (diseño, anclas, Hiperfoco, movimiento, teclas y rutas) y `.claude/rules/explorer.md` (estructura y cota dual del CV); esta skill es la lista para verificarlas. Se verifica en local, contra los puertos propios, nunca en producción. Versión breve sincronizada en `.claude/skills/piso-calidad/SKILL.md`.
 
----
+## 1. Funciona sin JavaScript (SSR real)
 
-## 1. Funciona sin JavaScript (SSR Real)
+El HTML de la primera respuesta trae el contenido completo y se navega con enlaces reales.
 
-**Criterio:** El HTML que entrega Nuxt 4 en la respuesta inicial contiene el texto completo del perfil, proyectos, experiencias, artículos y stack. Si el usuario desactiva JS, puede leer todo el portfolio y navegar mediante enlaces `<a href="...">` reales.
+- [ ] Los datos vienen de `useAsyncData`, nunca de un `fetch` en `onMounted`.
+- [ ] Ninguna animación deja texto en `opacity: 0` o fuera de su máscara si JS no corre. Lo que ya está en pantalla al cargar no se anima.
+- [ ] Cabecera, obras, facetas (`?status=`, `?stack=`), idioma (`?lang=en`) y registro (`?vista=registro`) son `<NuxtLink>` / `<a href>` reales y el SSR los resuelve.
 
-**Checklist:**
-- [ ] El contenido textual viene de `useAsyncData` en SSR, nunca de `onMounted(() => fetch(...))`
-- [ ] Las animaciones de entrada y micro-interacciones (`SpotlightCard`, `ScrambleText`, `CountUp`) enriquecen el nodo DOM hidratado pero no ocultan el contenido con `opacity: 0` permanente si JS falla
-- [ ] Los enlaces entre colecciones, filtros (`?tech=`, `?org=`, `?tag=`) y registros son `<NuxtLink>` / `<a>` reales con `href` válido
+## 2. Navegable 100 % con teclado
 
----
+- [ ] Todo interactivo es alcanzable con Tab y tiene `:focus-visible` con `--sig-text`.
+- [ ] Las teclas de `docs/diseno.md` §7 funcionan: `1`–`5`, `j`/`k`, `Enter`, `Esc` (capas y después Hiperfoco), `Backspace`, `R`, `H`, `/` y `Ctrl/⌘K`.
+- [ ] Ninguna tecla de una letra se dispara con foco en `input`, `textarea`, `select`, `[role=combobox]` o `[contenteditable]`, ni con un diálogo abierto, ni con los atajos apagados desde la paleta.
+- [ ] La paleta atrapa el foco, se cierra con `Esc` y devuelve el foco al disparador.
 
-## 2. Navegable 100% con Teclado
+## 3. El lector de pantalla entiende la página
 
-**Criterio:** Un usuario sin mouse puede recorrer todo el explorador relacional: cambiar colecciones (`0–5`), moverse entre filas/tarjetas (`↑/↓/←/→`), abrir detalle (`Enter`), volver (`Backspace`/`Escape`), filtrar (`/`), activar Hyperfocus (`H`) y abrir la paleta de comandos (`⌘K` / `Ctrl+K`).
+- [ ] Un solo `<h1>` por página; jerarquía sin saltos.
+- [ ] Las letras partidas para animar llevan `aria-hidden` y el texto completo está en un `.sr` o en el `aria-label` del contenedor.
+- [ ] Botones solo con ícono con `aria-label`; interruptores (Hiperfoco, tema, sonido) con `aria-pressed`.
+- [ ] Cambios de idioma, registro, Hiperfoco y «Copiado» se anuncian por la única región `aria-live`.
+- [ ] Los campos sin traducción llevan `lang="es"` cuando la página está en inglés.
 
-**Checklist:**
-- [ ] Todos los elementos interactivos son alcanzables con `Tab` y tienen `:focus-visible` claro (`2px solid var(--accent-primary)`, `outline-offset: 2px`)
-- [ ] Ningún atajo global de teclado se dispara cuando el foco está dentro de un `<input>`, `<textarea>` o elemento `contenteditable`
-- [ ] Los modales y drawers (`ExplorerGoto.vue`, `ExplorerHelp.vue`) atrapan el foco y se cierran con `Escape` devolviendo el foco al elemento disparador
+## 4. `prefers-reduced-motion` e Hiperfoco
 
----
+- [ ] Toda animación pasa por `useMotion` y respeta `useMotionPrefs` (`allowAmbient`, `allowTransitions`).
+- [ ] Con reduced motion: sin Lenis, sin partir texto, sin autoplay (póster y controles), view transitions y morph instantáneos.
+- [ ] Con Hiperfoco (`html[data-hyperfocus="true"]`): navegación intacta, `[data-hf="hide"]` y `[data-ornament]` ocultos, columna `[data-hf="measure"]`, imágenes en monocromo, temperatura en 0 y movimiento ambiental apagado. Ningún componente se renderiza solo en Hiperfoco.
 
-## 3. Lector de Pantalla Comprende la Jerarquía y los Cambios de Vista
+## 5. Cero layout shift (CLS 0) y sin parpadeo
 
-**Criterio:** VoiceOver / NVDA anuncia correctamente la estructura semántica, la tabla/grid activa y los filtros aplicados.
+- [ ] Tema (`pf-theme`), Hiperfoco (`pf-hyperfocus`), idioma y vista salen del SSR: el primer pintado ya es el correcto.
+- [ ] Números, años y conteos con `font-variant-numeric: tabular-nums`.
+- [ ] Imágenes y videos reservan su relación de aspecto (`width`/`height` desde la Media).
+- [ ] El cargador de la primera visita no corre el contenido: aparece encima y se va.
 
-**Checklist:**
-- [ ] Un solo `<h1>` por vista; jerarquía `<h2>` -> `<h3>` sin saltos
-- [ ] Botones solo-ícono tienen `aria-label` descriptivo
-- [ ] El selector de vista (`Grid` / `Table` / `Timeline`) y el botón de Hyperfocus usan `aria-pressed` o `role="tablist"` / `role="tab"` con `aria-selected`
-- [ ] El efecto `ScrambleText` preserva `aria-label` con el texto final limpio para que el lector de pantalla no lea caracteres aleatorios
+## 6. Responsive de 320 px a 2560 px
 
----
+- [ ] `document.documentElement.scrollWidth <= clientWidth` en 320, 375, 768, 1440 y 2560 px.
+- [ ] Debajo de 768 px: galería en columna, captura estática, caso a una columna, utilidades de la cabecera en un `<details>` que funciona sin JS.
+- [ ] Áreas táctiles de 44 × 44 px como mínimo. El email no se corta (`white-space: nowrap`, nunca `break-all`).
 
-## 4. `prefers-reduced-motion: reduce` y Modo Hyperfocus
+## 7. Degradación elegante (`NULL` o base caída)
 
-**Criterio:** Con movimiento reducido activo en el sistema operativo o con el modo Hyperfocus (`html[data-hyperfocus="true"]`), todas las transiciones espaciales, spotlights y scrambles se desactivan instantáneamente.
+- [ ] Un campo vacío no se ve en diseño y aparece como `NULL` en registro; nunca `undefined`, `null` ni un bloque vacío.
+- [ ] Si PostgreSQL no responde, la API sirve la última respuesta buena o el snapshot generado (`server/src/snapshot/content.json`) y el SSR no se rompe. El front no tiene datos propios.
 
-**Checklist:**
-- [ ] En CSS global y componentes existe el bloque `@media (prefers-reduced-motion: reduce)` que lleva duraciones a `0.01ms`
-- [ ] En JS, los composables de animación (`useScrambleText`, `CountUp`, `SpotlightCard`) verifican `window.matchMedia('(prefers-reduced-motion: reduce)').matches` y el estado de `useHyperfocus()` antes de iniciar loops de `requestAnimationFrame`
+## 8. Impresión del CV en una página A4 (cota dual)
 
----
-
-## 5. Cero Layout Shift (CLS = 0.00) y Anti-FOUC
-
-**Criterio:** Ningún elemento salta ni cambia el tamaño de sus vecinos al hidratarse, cargar fuentes o cambiar números.
-
-**Checklist:**
-- [ ] Tema (`dark`/`light`) e idioma resueltos antes del primer paint sin parpadeo (anti-FOUC)
-- [ ] Contadores numéricos, índices (`01`, `02`), latencias y fechas usan `font-variant-numeric: tabular-nums`
-- [ ] Imágenes y contenedores multimedia declaran `aspect-ratio` o dimensiones explícitas
-
----
-
-## 6. Responsive Impecable desde `320px` hasta `2560px`
-
-**Criterio:** Ningún viewport produce scroll horizontal involuntario y los controles táctiles en móvil tienen área mínima de `44×44px`.
-
-**Checklist:**
-- [ ] En `320px–767px`, el sidebar se transforma en drawer accesible con backdrop y cierre automático al navegar
-- [ ] Las tablas densas usan contenedor con `overflow-x: auto` aislado sin desbordar el `<body>`
-- [ ] Las tarjetas Bento colapsan limpiamente a 1 columna en móvil
-
----
-
-## 7. Degradación Elegante ante Campos `NULL` o API Caída
-
-**Criterio:** Ningún campo opcional vacío (`summary`, `repoUrl`, `deployUrl`, `logoUrl`, `endDate`) ni la caída de PostgreSQL rompe el layout o muestra `undefined` / `null` en pantalla.
-
-**Checklist:**
-- [ ] Todo campo nullable tiene fallback visual limpio (ocultar bloque o mostrar `—` estilizado en vista tabla)
-- [ ] Si PostgreSQL no está disponible, el backend sirve `fallbackData.ts` transparente y el header indica el estado sin romper la navegación
-
----
-
-## 8. Impresión y Exportación A4 de Cota Dual (Harvard ATS)
-
-**Criterio:** La vista `/about` y los componentes de exportación PDF generan exactamente 1 hoja A4 completa, sin hojas fantasma ni áreas vacías inferiores desproporcionadas.
-
-**Checklist:**
-- [ ] En emulación `print`, el contenedor del documento mide entre `248mm` y `268mm` de altura neta (cobertura vertical `>= 90%`).
-- [ ] El buffer PDF generado con `preferCSSPageSize: true` reporta exactamente `1` objeto `/Type /Page` (0 overflow a página 2).
-- [ ] El tamaño de fuente del cuerpo y viñetas se mantiene en `9.2pt - 9.5pt` legible para escaneo ATS.
-- [ ] Los 4 archivos estáticos de descarga en `public/cv/` (`CV-ES-...`, `CV-EN-...`) están sincronizados y validados a 1 página.
+- [ ] `/about?cv=ats` en emulación `print`: la hoja mide entre 248 y 265 mm (90–95 % del alto imprimible) y no hay segunda página.
+- [ ] Un único `@page { size: A4; margin: 10.5mm 12mm }`; se ocultan `[data-chrome]` y `[data-hf]` y se resetea `[data-motion]`.
+- [ ] Cuerpo y viñetas entre 9,2 y 9,5 pt.
+- [ ] Los dos PDF de `public/cv/` (`CV-ES-…-ATS.pdf`, `CV-EN-…-ATS.pdf`) tienen exactamente una página y las URL sin `-ATS` redirigen a ellos.

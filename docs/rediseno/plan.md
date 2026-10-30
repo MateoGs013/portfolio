@@ -6,6 +6,8 @@
 > Cada pantalla tiene dos caras superpuestas al píxel: el **diseño** (oscuro, cinematográfico, portadas a pantalla completa con la temperatura de cada obra) y el **registro** que lo construye (papel técnico, campos tipados, `NULL` a la vista). **El único control es el scroll:** cada escena aparece como diseño; al seguir bajando se fija y una línea la cruza de derecha a izquierda, dejando ver cómo está hecha; después sigue la próxima. Los títulos grandes cruzan la línea, así que la misma palabra se lee en General Sans de un lado y en código del otro. Sin movimiento, las dos caras se muestran una debajo de la otra.
 > Se probaron dos versiones: con el cursor ("la UX es muy compleja") y con el scroll ("me sigue pareciendo complejo e innecesario"). Lección: el visitante no tiene que aprender ni entender un concepto; la estructura es la de siempre y la diferencia está en el oficio del movimiento.
 
+> **Implementación.** Las reglas vigentes del sitio público (vocabulario de movimiento, tokens, tipografía, anclas del DOM, Hiperfoco, política de movimiento, teclas y rutas) viven en [`docs/diseno.md`](../diseno.md), que es la fuente única. Este plan conserva el razonamiento y las referencias; si algo de acá contradice a `docs/diseno.md`, gana `docs/diseno.md`. El plan por olas está en `implementacion.md` y los paquetes en `paquetes.json`.
+
 Demo navegable: `node docs/rediseno/serve.mjs` → http://localhost:4321 (o la configuración `rediseno-demo` de `.claude/launch.json`). Usa el contenido real exportado de la API (`demo-data.js`), así que lo que se ve es lo que hay en Postgres hoy.
 
 ---
@@ -16,7 +18,7 @@ Demo navegable: `node docs/rediseno/serve.mjs` → http://localhost:4321 (o la c
 
 La página tiene poco: tipografía, aire, una línea de 1px y un solo color de acento. Lo memorable no está en la decoración sino en cómo responde todo lo que se toca. Cada respuesta tiene un significado: se mueve lo que cambia y nada más.
 
-El rasgo propio que nadie más tiene es este: **cada página es un registro de la base y se puede dar vuelta.** Con `R` (o el botón de la barra), los mismos nodos del DOM viajan con FLIP desde la composición editorial hasta una tabla de campos tipados (`title string`, `status enum ProjectStatus`, `techs relation → Tech[]`, `NULL` a la vista). No es otra página ni una superposición que tapa el sitio. Es la metamorfosis in situ que se buscó en la Fase 6 de "Dos Mundos", ahora en el lugar correcto: una herramienta, no una tesis aparte.
+El rasgo propio que nadie más tiene es este: **cada página es un registro de la base y se puede dar vuelta.** Con `R` (o el botón «Velo como registro»), los mismos nodos del DOM viajan con FLIP desde la composición editorial hasta una tabla de campos tipados (`title string`, `status enum ProjectStatus`, `techs relation → Tech[]`, `NULL` a la vista). No es otra página ni una superposición que tapa el sitio. Es la metamorfosis in situ que se buscó en la Fase 6 de "Dos Mundos", ahora en el lugar correcto: una herramienta, no una tesis aparte.
 
 Así se resuelve la contradicción que generó la discordia entre archivos:
 
@@ -36,7 +38,7 @@ Revisadas en vivo el 30-oct-2026. Lo marcado *sin verificar* viene de Awwwards y
 |---|---|---|
 | **rauno.me** (Rauno Freiberg) | "Copied" en el mismo lugar del email; un indicador de posición mínimo | Cruces `+`, secuestro del scroll |
 | **emilkowal.ski** | Popovers que entran desde `scale .9–.98`, nunca desde 0; hover solo con `(hover:hover) and (pointer:fine)` | — |
-| **paco.me** (cmdk) | Modo foco: todo se desenfoca 2px y baja a .6 de opacidad menos el párrafo bajo el cursor → la **lectura enfocada** de la demo (tu Hiperfoco, reinterpretado) | El cubo 3D en las letras |
+| **paco.me** (cmdk) | Que un modo de lectura sea un interruptor de una tecla. Se conserva el **Hiperfoco** existente (`H`): monocromo, columna de lectura y movimiento ambiental apagado | Desenfocar y atenuar lo que no está bajo el cursor (se probó en la demo y se descartó); el cubo 3D en las letras |
 | **samuelkraft.com** | Atenuar los hermanos de una lista al apuntar uno | — |
 | **benji.org** | La entrada animada ocurre **solo en la primera visita** (`home-visited`) | — |
 | **brianlovin.com** | `Ctrl+K` "Jump to…" sobre todas las páginas y registros | El volumen de secciones |
@@ -76,7 +78,7 @@ Seis verbos. Todo lo que se mueve en el sitio es uno de estos; si algo no entra 
 | **Rodar** | Métricas · conteos · copiar email | Los números cuentan al entrar en pantalla (1,2 s, una sola vez); el conteo de una colección rueda al filtrar (500 ms); el email se cae letra por letra a "copiado" y vuelve (stagger de 12–25 ms) |
 | **Seguir** | Listas de obra (solo puntero fino) | Vista previa 16:10 que sigue al cursor por la derecha con un lerp de 0,16, gira hasta ±7° según la velocidad y cambia de imagen deslizando una tira vertical (600 ms) |
 | **Asomar** | Tecnologías y métricas de un caso | Un popover que crece desde su ancla (`scale .96→1`, blur de 2 px a 0, 260 ms `expo.out`). Si ya está abierto y pasás a otra ancla, viaja hasta ella y cambia de tamaño en el camino (340 ms), sin cerrarse y volver a abrirse. Se ubica debajo de todo el valor, así no tapa a los vecinos de la lista |
-| **Atenuar** | Hover en listas · lectura enfocada (`F`) | Los hermanos bajan a .3 (400 ms). En la lectura enfocada, los bloques que no están bajo el cursor bajan a .28 con 1,5 px de blur |
+| **Atenuar** | Solo hover en listas | Los hermanos bajan a .25 (500 ms). No se usa para leer: el modo de lectura es el Hiperfoco (`H`) |
 
 ### La transformación diseño ↔ registro, en detalle
 
@@ -109,19 +111,19 @@ Cada uno usa los verbos de arriba y hace visible algo de la base de datos. Todos
 | Detalle | Qué pasa | Por qué |
 |---|---|---|
 | **El título que se abre** | Al hacer click en una fila de obra, su título se transforma en el título del caso (view transition `title`, 720 ms). Si la vista previa estaba abierta, la imagen se transforma en la portada (`cover`) | Abrir un registro se siente como abrirlo, no como cambiar de página |
-| **La faceta que viaja** | En un caso, tocar una tecnología o el estado lleva a la obra filtrada (`/projects?tec=gsap`). La palabra tocada vuela hasta el filtro activo (`facet`). La cabecera del registro dice `where techs ∋ gsap` | "Facetar es tocar un valor", con la relación hecha gesto |
+| **La faceta que viaja** | En un caso, tocar una tecnología o el estado lleva a la obra filtrada (`/projects?stack=gsap`). La palabra tocada vuela hasta el filtro activo (`facet`). La cabecera del registro dice `where techs ∋ gsap` | "Facetar es tocar un valor", con la relación hecha gesto |
 | **Asomar la relación** | Pasar el cursor por una tecnología muestra su categoría, desde cuándo la usás, tu criterio (`note`) y **en qué otras obras está**. En una métrica muestra qué mide | La relación y el significado sin salir de la página |
 | **Índice de campos** | En el caso, un minimapa de rayas a la derecha (≥1180 px), una por campo con contenido. Al apuntarlo aparecen los nombres de campo (`brief`, `steps`, `metrics`), el activo se alarga y toma el acento, y un click desliza hasta ahí | El registro como mapa; el guiño de datos para quien lo busca |
-| **Máquina del tiempo** | En Stack, una barra de años. Al arrastrarla, lo que todavía no usabas se apaga y baja, lo que ya usabas sube a su lugar (FLIP de 700 ms), el conteo rueda y el año cambia rodando. La URL guarda `?hasta=2024`. Con sonido, el tono sube con los años | Cuenta tu crecimiento con los datos de `since`, sin un párrafo |
-| **La ruta que rueda** | Cuando cambia la query (filtro, vista, año), sus caracteres suben en la barra de estado, uno tras otro | La ruta es el estado, y se ve cambiar |
+| **Máquina del tiempo** *(fuera: no hay página Stack)* | En Stack, una barra de años. Al arrastrarla, lo que todavía no usabas se apaga y baja, lo que ya usabas sube a su lugar (FLIP de 700 ms), el conteo rueda y el año cambia rodando. La URL guarda `?hasta=2024`. Con sonido, el tono sube con los años | Cuenta tu crecimiento con los datos de `since`, sin un párrafo |
+| **La ruta que rueda** *(fuera: no hay barra inferior)* | Cuando cambia la query (filtro, vista, año), sus caracteres suben en la barra de estado, uno tras otro | La ruta es el estado, y se ve cambiar |
 | **Resaltado de teclado** | Con `j`/`k` o Tab, una barra se desliza detrás de la fila enfocada. Solo con foco visible (teclado), no con mouse | Quien navega con teclado recibe el mismo cuidado |
 | **Scroll con inercia** | Lenis (`lerp .11`) sobre el ticker de GSAP. Apagado con reduced motion. La paleta lo pausa mientras está abierta | Es la materia de tus referencias (dragonfly, wembi, monolog) |
 
 **Reglas del presupuesto:**
 - Una sola entrada animada, en la home, en la primera visita de la sesión. El texto nunca nace invisible ni borroso: sube desde una máscara, así el LCP se pinta enseguida.
-- Cada verbo tiene equivalente de teclado: `R`, `F`, `Ctrl/⌘ K` o `/`, `j`/`k`, `Esc` y `Backspace` para subir, `Enter`.
+- Cada verbo tiene equivalente de teclado: `R`, `H` (Hiperfoco), `Ctrl/⌘ K` o `/`, `j`/`k`, `Esc` y `Backspace` para subir, `Enter`.
 - Con `prefers-reduced-motion` todo llega a su estado final sin animar, y la vista previa no tiene lerp.
-- En táctil (`hover:none`) no hay vista previa ni lectura enfocada: las filas muestran una miniatura.
+- En táctil (`hover:none`) no hay vista previa: las filas muestran una miniatura.
 - **Sonido:** opcional, apagado por defecto, con un tic de 70 ms. Suena solo en los cinco verbos. Se activa desde la paleta.
 
 **Sale del sitio público** (pasa a `/lab`, se borra si nadie lo usa): `UiClickSpark`, `UiBorderBeam`, `UiDecryptedText`, `UiThinkingTrace`, `UiDotGlobe`, `UiHubDiagram`, `UiHoloCard`, `UiSpotlightCard`, `UiRouteLoader`, `UiProgressiveBlur`, el reloj con segundos, el porcentaje de scroll y los avatares "MS PG AI". Hay 10 componentes `Ui*` que hoy no se usan fuera del lab.
@@ -168,9 +170,9 @@ La superficie sigue siendo sobria. La inmersión sale de la imagen y del color d
 
 ## 5. Páginas
 
-Las rutas reales se mantienen (`/projects`, `/projects/:slug`, `/stack`, `/about`) para no romper links ni SEO. La demo usa rutas con hash en español solo por comodidad.
+Las rutas reales se mantienen (`/projects`, `/projects/:slug`, `/about`) para no romper links ni SEO; `/stack` redirige a `/projects?stack=`. La demo usa rutas con hash en español solo por comodidad. El mapa completo está en `docs/diseno.md` §8.
 
-**Barra inferior (en todas las páginas):** la ruta actual como dirección (`mateogs.tech / projects / la-rucula ?vista=registro`), disponibilidad con hora local al minuto y cuatro acciones: Registro, Lectura enfocada, Ir a y Tema. Es lo que queda del explorador como chrome: la ruta es el estado y se ve.
+**Cabecera (en todas las páginas):** la del prototipo `movimiento.html`: el nombre a la izquierda y Obra, Sobre mí y Contacto a la derecha. Las acciones que esta versión ponía en una barra inferior (idioma, tema, Hiperfoco e «Ir a») van en la cabecera. No hay barra inferior: la ruta sigue siendo el estado sin necesidad de dibujarla, y la disponibilidad con la hora local va en el pie de contacto.
 
 **Home**
 - Nombre y rol chicos. Un titular grande con una afirmación concreta (campo nuevo `about.headline`, ver §6). Disponibilidad y ubicación.
@@ -183,19 +185,16 @@ Las rutas reales se mantienen (`/projects`, `/projects/:slug`, `/stack`, `/about
 - En modo registro, la carpeta se vuelve tabla: `title · slug · status · year`.
 
 **Caso (`/projects/:slug`)**
-- Orden de lectura: título → resumen → rol, año, cliente, estado y stack (cada tecnología enlaza a `/stack?tec=`) → portada → encargo → proceso → resultado → métricas → links.
+- Orden de lectura: título → resumen → rol, año, cliente, estado y stack (cada tecnología enlaza a `/projects?stack=`) → portada → encargo → proceso → resultado → métricas → links.
 - Al final, "Velo como registro" y la **siguiente obra en grande**, con vista previa.
 - Los campos vacíos no se ven en diseño y aparecen como `NULL` en registro.
 
-**Stack**
-- Lista ordenada por cantidad de obras, filtros por categoría y conteo que rueda.
-- Abrir una tecnología despliega su `note` y **en qué obras se usó** (la relación hecha visible).
-- `?tec=gsap` llega directo con esa tecnología abierta.
+**Stack: sin página** (decisión de Mateo, 30-oct-2026, como en el prototipo aprobado). Las tecnologías facetan la obra: cada una enlaza a `/projects?stack=<slug>`, y en el caso su `note`, desde cuándo se usa y **en qué otras obras está** se ven con «Asomar». `/stack` y `/stack/:slug` redirigen con 301.
 
 **Sobre mí**
 - `engineering_philosophy` como texto principal, cuatro datos (formación, estudios, idiomas, modalidad), objetivo y trayectoria (`experience`).
-- Links a los PDF del CV en ES y EN.
-- El visor de CV Harvard ATS sigue existiendo y se abre desde acá. El visor "IDE" es una decisión pendiente (§9).
+- Links a los PDF del CV en ES y EN (uno ATS por idioma).
+- El CV se abre desde acá en `/about?cv=ats`, solo en Harvard ATS. El visor «IDE» y `/lab` se archivan en `docs/archive/lab/`.
 
 ---
 
@@ -229,9 +228,9 @@ Cada fase se cierra con `pnpm typecheck` y `pnpm lint` en cero, revisión local 
 | **R0 · Fuente única** | Nace `docs/diseno.md` con §3 y §4 de este plan. `.claude/rules/explorer.md` se recorta a lo estructural y apunta ahí. `AGENTS.md` (Gemini) apunta al mismo archivo y se borra `.agents/rules/architectural-guardrails.md`. Su "push antes de mirar" se reemplaza por local primero. Entrada en `docs/decisiones.md` con lo descartado | Claude y Gemini leen las mismas reglas y ninguna contradice a otra |
 | **R1 · Datos** | Arreglos de §6.4, migración de `headline` y del origen de `metrics`, home y CV leyendo de la base, fallback generado por script, plan de traducciones | `grep` de nombres de proyectos y ubicaciones en `app/` da cero copias escritas a mano |
 | **R2 · Tokens** | `@theme` de `base.css` con los tokens de §4; reemplazo de valores arbitrarios; contraste AA en los dos temas | No quedan `text-[Npx]` ni colores sueltos en `app/components` (salvo `/lab`) |
-| **R3 · Shell** | Cabecera, barra de ruta, paleta "Ir a" con resaltado que viaja, tema, `experimental.viewTransition` de Nuxt. Salen el route loader, el reloj con segundos, el % de scroll y el SFX encendido | Navegar entre las cinco páginas no muestra pantallas negras ni cargadores, y todo funciona con teclado |
+| **R3 · Shell** | Cabecera con idioma, tema, Hiperfoco e «Ir a» (sin barra inferior), paleta "Ir a" con resaltado que viaja, tema, `experimental.viewTransition` de Nuxt. Salen el route loader, el reloj con segundos, el % de scroll y el SFX encendido | Navegar entre las cinco páginas no muestra pantallas negras ni cargadores, y todo funciona con teclado |
 | **R4 · Modo registro** | Componente `<Field>` (`k`, `type`, valor) y composable `useRecordView`. El estado vive en `?vista=registro` y el SSR lo renderiza directo (invariante 2). FLIP con GSAP Flip, respetando reduced motion | Cada página alterna entre diseño y registro sin saltos, y la URL con `?vista=registro` abre directo en registro y sin JS |
-| **R5 · Páginas** | Home, obra, caso, stack y sobre mí según §5. Se parten `ExplorerView.vue` (1197 líneas) y `ExplorerDetail.vue` (1147) | Cada archivo queda por debajo de 300 líneas y cada página coincide con la demo en 375, 768 y 1440 px |
+| **R5 · Páginas** | Home, obra, caso y sobre mí según §5. Se parten `ExplorerView.vue` (1197 líneas) y `ExplorerDetail.vue` (1147) | Cada archivo queda por debajo de 300 líneas y cada página coincide con la demo en 375, 768 y 1440 px |
 | **R6 · Lab** | Los componentes de §3 que salen se mudan a `/lab` o se borran | Ningún componente del lab se importa desde las páginas públicas |
 | **R7 · Piso de calidad** (la Fase 7 pendiente) | `/piso-calidad`: sin JS, solo teclado, lector de pantalla, reduced motion, CLS 0, 320 px. Capturas de referencia con Playwright de 5 páginas × 3 anchos × 2 temas. Lighthouse en producción, publicado como métrica del propio sitio | Cero bloqueantes; las capturas de referencia quedan versionadas |
 
@@ -245,8 +244,9 @@ El admin (`/admin`) queda fuera de este rediseño: tiene su propio Tailwind y su
 - **View transitions + SSR de Nuxt.** El soporte es experimental. Si falla en algún navegador, se cae a un fundido simple sin romper nada.
 - **Gemini puede volver a escribir reglas propias.** La Fase R0 deja una sola fuente; conviene que cada agente la lea por referencia, no copiada.
 
-## 9. Decisiones pendientes
+## 9. Decisiones
 
-1. El texto del titular (`headline`). La demo propone "Diseño y construyo productos web enteros, de la idea al deploy".
-2. Si el visor de CV "Modern IDE" sigue siendo público o pasa al lab. Recomiendo pasarlo al lab y dejar público el Harvard ATS más los PDF.
-3. El tema por defecto: oscuro, o seguir al sistema operativo. Recomiendo oscuro, recordando la elección de cada visitante.
+1. El texto del titular (`headline`): vive en la base (`about.headline`) y se edita desde el admin.
+2. Visor de CV «Modern IDE»: **resuelto**, se archiva con `/lab` en `docs/archive/lab/`; el CV público es solo Harvard ATS más los PDF.
+3. Tema por defecto: **resuelto**, oscuro, recordando la elección de cada visitante en una cookie.
+4. Modo de lectura: **resuelto**, se conserva el Hiperfoco existente (`H`), revisado; ver `docs/diseno.md` §5.
