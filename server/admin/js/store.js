@@ -3,6 +3,7 @@
 
 import { api } from './api.js'
 import { MODELS } from './config.js'
+import { TRANSLATABLE_SECTIONS, missingEn } from './translations.js'
 
 const { reactive } = window.Vue
 
@@ -31,6 +32,7 @@ export const store = reactive({
   initialSnapshot: null,
   slugLocked: true,
   activeTab: 'general',
+  lang: 'es', // idioma que se edita: 'es' (el registro) | 'en' (sus traducciones, con el español de referencia)
   mobileView: 'list', // 'list' | 'detail' for responsive master-detail
 
   // Metadatos relacionales
@@ -112,6 +114,16 @@ export const store = reactive({
   /** Filas Metric de la obra abierta (viven en form.metrics; la pestaña muestra cuántas hay). */
   get metricsList() {
     return this.section === 'projects' && Array.isArray(this.form?.metrics) ? this.form.metrics : []
+  },
+
+  /** En inglés solo se editan las secciones que tienen traducción. */
+  get editingEn() {
+    return this.lang === 'en' && TRANSLATABLE_SECTIONS.includes(this.section)
+  },
+
+  /** Campos del registro abierto que tienen español y no tienen inglés. */
+  get missingEnList() {
+    return TRANSLATABLE_SECTIONS.includes(this.section) ? missingEn(this.section, this.form) : []
   },
 
   // ─── ACCIONES DE TOAST & MENSAJES ─────────────────────────────────────────

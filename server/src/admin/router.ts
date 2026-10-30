@@ -10,12 +10,13 @@ import { DB_UNAVAILABLE, paramId as id } from './common.js'
 import { docsRouter } from './docs.js'
 import { adminErrors } from './errors.js'
 import { experienceRouter } from './experience.js'
-import { HttpError, bool, enumOf, int, intList, optDate, optInt, optStr, optUrl, slug, str } from './input.js'
+import { HttpError, bool, enumOf, intList, optDate, optInt, optStr, optUrl, slug, str } from './input.js'
 import { hunterRouter } from './hunter.js'
 import { contentRouter } from './content.js'
 import { mediaRouter } from './media.js'
 import { projectsRouter } from './projects.js'
 import { radarRouter } from './radar.js'
+import { techsRouter } from './techs.js'
 
 const require = createRequire(import.meta.url)
 const ADMIN_DIR = path.resolve('server/admin')
@@ -50,17 +51,16 @@ adminApi.use((req, res, next) => {
 adminApi.use('/hunter', hunterRouter)
 adminApi.use('/content', contentRouter)
 adminApi.use('/radar', radarRouter)
-// Obras, media, trayectoria y documentos tienen su propio módulo.
-adminApi.use(projectsRouter, mediaRouter, experienceRouter, docsRouter)
+// Obras, media, trayectoria, stack y documentos tienen su propio módulo (cada uno con su inglés).
+adminApi.use(projectsRouter, mediaRouter, experienceRouter, techsRouter, docsRouter)
 
 const ARTICLE_STATUS = Object.values(ArticleStatus)
-const TECH_CATEGORY = Object.values(TechCategory)
 
 /** Enums que la UI usa en sus selects. */
 const ENUMS = {
   ProjectStatus: Object.values(ProjectStatus),
   ArticleStatus: ARTICLE_STATUS,
-  TechCategory: TECH_CATEGORY,
+  TechCategory: Object.values(TechCategory),
   MediaKind: Object.values(MediaKind),
   MediaRole: Object.values(MediaRole),
   MediaViewport: Object.values(MediaViewport),
@@ -124,37 +124,6 @@ adminApi.get('/meta', async (_req, res) => {
     enums: ENUMS,
     options,
   })
-})
-
-// ─── techs ──────────────────────────────────────────────────────────────────
-
-function techData(b: Record<string, unknown>) {
-  return {
-    slug: slug(b, 'slug'),
-    name: str(b, 'name'),
-    category: enumOf(b, 'category', TECH_CATEGORY),
-    since: int(b, 'since'),
-    note: optStr(b, 'note'),
-    color: optStr(b, 'color'),
-  }
-}
-
-adminApi.get('/techs', async (_req, res) => {
-  try {
-    res.json(await db.tech.findMany({ orderBy: [{ since: 'asc' }, { name: 'asc' }], include: { _count: { select: { projects: true, experiences: true } } } }))
-  } catch {
-    res.status(503).json(DB_UNAVAILABLE)
-  }
-})
-adminApi.post('/techs', async (req, res) => {
-  res.status(201).json(await db.tech.create({ data: techData(req.body) }))
-})
-adminApi.put('/techs/:id', async (req, res) => {
-  res.json(await db.tech.update({ where: { id: id(req) }, data: techData(req.body) }))
-})
-adminApi.delete('/techs/:id', async (req, res) => {
-  await db.tech.delete({ where: { id: id(req) } })
-  res.status(204).end()
 })
 
 // ─── orgs ───────────────────────────────────────────────────────────────────

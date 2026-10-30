@@ -2,6 +2,7 @@
  * Media de las obras: subida de imagen o video (con WebM y póster opcionales), edición parcial y borrado.
  * El tamaño y el formato se leen del archivo (magic bytes), nunca del nombre ni del tipo declarado.
  * Los archivos van a `public/media/projects/<slug>/`, como las capturas versionadas.
+ * El alt y el pie en inglés llegan por PATCH en `en: { alt?, caption? }` (MediaTranslation).
  */
 import { mkdir, unlink, writeFile } from 'node:fs/promises'
 import path from 'node:path'
@@ -12,6 +13,7 @@ import { MediaKind, MediaRole, MediaViewport, type Prisma } from '../../generate
 import { optHex, paramId } from './common.js'
 import { IMAGE_MIME, imageDims } from './image.js'
 import { HttpError, enumOf, int, optInt, optStr, str } from './input.js'
+import { saveMediaEn, withTranslations } from './translations.js'
 import { VIDEO_MIME, videoDims } from './video.js'
 
 const MEDIA_DIR = path.resolve('public/media/projects')
@@ -108,6 +110,14 @@ async function demoteCovers(tx: Tx, projectId: number, kind: MediaKind, keepId?:
   }
 }
 
+/** `en` del PATCH: un objeto con alt y/o caption, o null si no llegó. */
+function enPatch(b: Body): Body | null {
+  const en = b['en']
+  if (en === undefined || en === null) return null
+  if (typeof en !== 'object' || Array.isArray(en)) throw new HttpError(400, 'campo "en": se esperaba { alt?, caption? }')
+  return 'alt' in en || 'caption' in en ? en as Body : null
+}
+
 export const mediaRouter = Router()
 
 mediaRouter.get('/media', async (req, res) => {
@@ -115,6 +125,7 @@ mediaRouter.get('/media', async (req, res) => {
   res.json(await db.media.findMany({
     where: projectId === null ? {} : { projectId },
     orderBy: [{ projectId: 'asc' }, { role: 'asc' }, { order: 'asc' }],
+    include: withTranslations,
   }))
 })
 
@@ -155,6 +166,7 @@ mediaRouter.post('/media', upload.fields([{ name: 'file', maxCount: 1 }, { name:
       if (fields.role === MediaRole.COVER) await demoteCovers(tx, projectId, info.kind)
       return tx.media.create({
         data: { ...fields, kind: info.kind, src, srcWebm, poster: posterSrc, width: info.width, height: info.height, bytes: main.size, projectId },
+        include: withTranslations,
       })
     })
     res.status(201).json(row)
@@ -179,7 +191,7 @@ mediaRouter.post('/media/:id/poster', upload.single('poster'), async (req, res) 
   const slug = media.project.slug
   const poster = await saveFile(slug, `${slug}-${Date.now().toString(36)}-poster.${info.ext}`, req.file.buffer, written)
   const tint = optHex(req.body as Body, 'tint')
-  const row = await db.media.update({ where: { id: mid }, data: { poster, ...(tint ? { tint } : {}) } })
+  const row = await db.media.update({ where: { id: mid }, data: { poster, ...(tint ? { tint } : {}) }, include: withTranslations })
     .catch(async (err: unknown) => {
       await Promise.all(written.map(f => unlink(f).catch(() => undefined)))
       throw err
@@ -188,7 +200,7 @@ mediaRouter.post('/media/:id/poster', upload.single('poster'), async (req, res) 
   res.json(row)
 })
 
-/** Actualiza solo las claves presentes: cambiar el rol no toca el alt ni el orden. */
+/** Actualiza solo las claves presentes: cambiar el rol no toca el alt ni el orden, ni el inglés. */
 mediaRouter.patch('/media/:id', async (req, res) => {
   const mid = paramId(req)
   const b = (req.body ?? {}) as Body
@@ -200,7 +212,8 @@ mediaRouter.patch('/media/:id', async (req, res) => {
   if ('tint' in b) data.tint = optHex(b, 'tint')
   if ('viewport' in b) data.viewport = enumOf(b, 'viewport', MEDIA_VIEWPORT)
   if ('poster' in b) data.poster = optMediaPath(b, 'poster')
-  if (Object.keys(data).length === 0) throw new HttpError(400, 'no llegó ningún campo para actualizar')
+  const en = enPatch(b)
+  if (Object.keys(data).length === 0 && !en) throw new HttpError(400, 'no llegó ningún campo para actualizar')
 
   const row = await db.$transaction(async (tx) => {
     const current = await tx.media.findUnique({ where: { id: mid }, select: { projectId: true, kind: true, project: { select: { slug: true } } } })
@@ -210,7 +223,8 @@ mediaRouter.patch('/media/:id', async (req, res) => {
       throw new HttpError(400, `campo "poster": se esperaba una ruta /media/projects/${current.project.slug}/…`)
     }
     if (data.role === MediaRole.COVER) await demoteCovers(tx, current.projectId, current.kind, mid)
-    return tx.media.update({ where: { id: mid }, data })
+    if (en) await saveMediaEn(tx, mid, en)
+    return tx.media.update({ where: { id: mid }, data, include: withTranslations })
   })
   res.json(row)
 })

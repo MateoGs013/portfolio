@@ -154,7 +154,7 @@ export class ApiClient {
     })
   }
 
-  /** PATCH parcial: el server actualiza solo las claves presentes (alt, caption, role, order, tint, viewport, poster). */
+  /** PATCH parcial: el server actualiza solo las claves presentes (alt, caption, role, order, tint, viewport, poster, en: { alt?, caption? }). */
   async updateMedia(id, fields) {
     return this.fetch(`media/${encodeURIComponent(id)}`, {
       method: 'PATCH',

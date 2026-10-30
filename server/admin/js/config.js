@@ -2,6 +2,7 @@
 // Arquitectura Modular de Administración
 
 import { isPublished, metricToForm, metricToPayload } from './fields.js'
+import { EXPERIENCE_EN, LINK_EN, PROJECT_EN, STEP_EN, TECH_EN, blankEn, enForm, enPayload, enRow } from './translations.js'
 
 export const toLocalDatetime = (iso) => {
   if (!iso) return ''
@@ -86,16 +87,17 @@ export const MODELS = {
       metrics: (r.metrics || []).map(metricToForm),
       orgId: r.orgId ?? null,
       techIds: (r.techs || []).map(t => t.id),
-      links: (r.links || []).map(({ id, label, url }) => ({ id, label, url })),
-      steps: (r.steps || []).map(({ id, title, body, mediaId }) => ({ id, title, body, mediaId: mediaId ?? null })),
+      links: (r.links || []).map(l => ({ id: l.id, label: l.label, url: l.url, en: enForm(l, LINK_EN) })),
+      steps: (r.steps || []).map(s => ({ id: s.id, title: s.title, body: s.body, mediaId: s.mediaId ?? null, en: enForm(s, STEP_EN) })),
       media: r.media || [],
+      en: enForm(r, PROJECT_EN),
     }),
     blank: () => ({
       slug: '', title: '', year: new Date().getFullYear(), role: '', status: 'WIP', featured: false, sortOrder: 0,
       publishedAt: '', summary: '', brief: '', outcome: '', url: '', repo: '', orgId: null, techIds: [], metrics: [],
-      links: [], steps: [], media: [],
+      links: [], steps: [], media: [], en: blankEn(PROJECT_EN),
     }),
-    // Pasos y enlaces viajan con su id (así conservan sus traducciones) y los pasos se numeran 1..n por posición.
+    // Pasos y enlaces viajan con su id y su inglés; los pasos se numeran 1..n por posición.
     toPayload: f => ({
       ...f,
       year: Number(f.year) || new Date().getFullYear(),
@@ -104,9 +106,13 @@ export const MODELS = {
       techIds: (f.techIds || []).map(Number),
       publishedAt: f.publishedAt ? new Date(f.publishedAt).toISOString() : null,
       metrics: (f.metrics || []).filter(m => (m.key || '').trim()).map(metricToPayload),
-      links: (f.links || []).map(({ id, label, url }) => ({ id: id ?? null, label, url })),
-      steps: (f.steps || []).map((s, i) => ({ id: s.id ?? null, order: i + 1, title: s.title, body: s.body, mediaId: s.mediaId ? Number(s.mediaId) : null })),
+      links: (f.links || []).map(l => ({ id: l.id ?? null, label: l.label, url: l.url, translations: enPayload(l.en, LINK_EN) })),
+      steps: (f.steps || []).map((s, i) => ({
+        id: s.id ?? null, order: i + 1, title: s.title, body: s.body, mediaId: s.mediaId ? Number(s.mediaId) : null, translations: enPayload(s.en, STEP_EN),
+      })),
       media: undefined,
+      en: undefined,
+      translations: enPayload(f.en, PROJECT_EN),
     }),
   },
 
@@ -127,10 +133,11 @@ export const MODELS = {
       cvOrder: r.cvOrder ?? '',
       techIds: (r.techs || []).map(t => t.id),
       projectIds: (r.projects || []).map(p => p.id),
+      en: { ...enForm(r, EXPERIENCE_EN), highlights: [...(enRow(r).highlights || [])] },
     }),
     blank: () => ({
       slug: '', kind: 'FREELANCE', role: '', startedAt: '', endedAt: '', orgId: null, techIds: [], projectIds: [],
-      summary: '', story: '', highlights: [], location: '', cvOrder: '',
+      summary: '', story: '', highlights: [], location: '', cvOrder: '', en: { ...blankEn(EXPERIENCE_EN), highlights: [] },
     }),
     toPayload: f => ({
       ...f,
@@ -141,6 +148,8 @@ export const MODELS = {
       highlights: (f.highlights || []).map(x => x.trim()).filter(Boolean),
       location: f.location || null,
       cvOrder: f.cvOrder === '' || f.cvOrder == null ? null : Number(f.cvOrder),
+      en: undefined,
+      translations: enPayload(f.en, EXPERIENCE_EN, { highlights: (f.en?.highlights || []).map(x => x.trim()).filter(Boolean) }),
     }),
   },
 
@@ -151,11 +160,13 @@ export const MODELS = {
     path: 'techs',
     name: r => r.name,
     meta: r => `${r.category} · Desde ${r.since}${r._count ? ` · ${r._count.projects} proyectos` : ''}`,
-    toForm: r => ({ ...r }),
-    blank: () => ({ slug: '', name: '', category: 'FRAMEWORK', since: new Date().getFullYear(), note: '', color: '' }),
+    toForm: r => ({ ...r, en: enForm(r, TECH_EN) }),
+    blank: () => ({ slug: '', name: '', category: 'FRAMEWORK', since: new Date().getFullYear(), note: '', color: '', en: blankEn(TECH_EN) }),
     toPayload: f => ({
       ...f,
       since: Number(f.since) || new Date().getFullYear(),
+      en: undefined,
+      translations: enPayload(f.en, TECH_EN),
     }),
     fields: {
       category: {

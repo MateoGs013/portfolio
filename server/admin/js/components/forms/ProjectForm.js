@@ -1,10 +1,12 @@
 // Formulario Especializado: ProjectForm (AdmProjectForm)
 // Editor progresivo de obras en 6 pestañas (Linear tabs). Datos básicos y textos viven acá;
-// media, métricas, stack y pasos tienen su componente en ./project/.
+// media, métricas, stack y pasos tienen su componente en ./project/. En modo EN, los textos
+// traducibles pasan a su versión en inglés con el español de referencia (EnField).
 
 import { store } from '../../store.js'
 import { slugify, toLocalDatetime } from '../../config.js'
 import { isPublished } from '../../fields.js'
+import { EnField } from './EnField.js'
 import { ProjectMedia } from './project/ProjectMedia.js'
 import { ProjectMetrics } from './project/ProjectMetrics.js'
 import { ProjectStack } from './project/ProjectStack.js'
@@ -14,7 +16,7 @@ const { computed } = window.Vue
 
 export const ProjectForm = {
   name: 'AdmProjectForm',
-  components: { ProjectMedia, ProjectMetrics, ProjectStack, ProjectSteps },
+  components: { EnField, ProjectMedia, ProjectMetrics, ProjectStack, ProjectSteps },
   setup() {
     function onTitleInput() {
       if (store.slugLocked && store.form) {
@@ -71,8 +73,19 @@ export const ProjectForm = {
           />
         </div>
 
+        <div v-if="store.editingEn" class="space-y-4">
+          <EnField
+            id="project-title-en"
+            label="Título"
+            :es="store.form.title"
+            v-model="store.form.en.title"
+            hint="Vacío: se usa el título en español. Un nombre propio no se traduce."
+          />
+          <EnField id="project-role-en" label="Rol desempeñado" :es="store.form.role" v-model="store.form.en.role" />
+        </div>
+
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <label class="block">
+          <label v-if="!store.editingEn" class="block">
             <span class="field-label">Título del proyecto *</span>
             <input type="text" v-model="store.form.title" @input="onTitleInput" placeholder="Nombre del caso de estudio" class="text-input" />
           </label>
@@ -108,7 +121,7 @@ export const ProjectForm = {
             <span class="field-label">Año de realización</span>
             <input type="number" v-model.number="store.form.year" @input="store.checkDirty()" class="text-input font-mono-code" />
           </label>
-          <label class="block">
+          <label v-if="!store.editingEn" class="block">
             <span class="field-label">Rol desempeñado</span>
             <input type="text" v-model="store.form.role" @input="store.checkDirty()" placeholder="Lead Developer & Designer" class="text-input" />
           </label>
@@ -126,7 +139,12 @@ export const ProjectForm = {
       </div>
 
       <!-- PESTAÑA 2: CASO DE ESTUDIO & TEXTOS -->
-      <div v-show="store.activeTab === 'story'" class="space-y-4">
+      <div v-if="store.editingEn" v-show="store.activeTab === 'story'" class="space-y-4">
+        <EnField id="project-summary-en" label="Síntesis ejecutiva (resumen tarjeta)" :es="store.form.summary" v-model="store.form.en.summary" :rows="3" />
+        <EnField id="project-brief-en" label="El reto / desafío (brief técnico)" :es="store.form.brief" v-model="store.form.en.brief" :rows="4" />
+        <EnField id="project-outcome-en" label="El resultado / impacto (outcome)" :es="store.form.outcome" v-model="store.form.en.outcome" :rows="4" />
+      </div>
+      <div v-else v-show="store.activeTab === 'story'" class="space-y-4">
         <div>
           <div class="flex items-center justify-between mb-1">
             <label for="project-summary" class="field-label !mb-0">Síntesis ejecutiva (resumen tarjeta) *</label>
