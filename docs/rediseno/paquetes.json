@@ -1,0 +1,1030 @@
+{
+ "nota": "Paquetes del rediseño: plan del workflow de auditoría + correcciones de la crítica + respuestas de Mateo (ver implementacion.md). notes manda sobre steps.",
+ "packages": [
+  {
+   "id": "D1",
+   "title": "Esquema, migración y seed en español",
+   "goal": "Dejar Postgres con todo lo que pide el rediseño y el seed como fuente única del contenido en español. Solo quedan públicas las 6 obras, y hay un parche idempotente para producción.",
+   "files": [
+    "prisma/schema.prisma",
+    "prisma/migrations/20261101000000_rediseno_movimiento/migration.sql",
+    "server/src/seed.ts",
+    "server/src/seed/en.ts",
+    "server/src/seed/media.ts",
+    "server/src/patches/2026-11-01-rediseno-datos.ts",
+    "app/lib/fieldMeta.ts",
+    "server/src/admin/router.ts",
+    "server/src/routes/projects.ts",
+    "server/src/routes/docs.ts",
+    "server/src/routes/schema.ts",
+    "server/src/fallbackData.ts",
+    "app/lib/explorer.ts",
+    "app/lib/fallbackData.ts",
+    "public/media/projects/eros.webp"
+   ],
+   "dependsOn": [],
+   "wave": 1,
+   "steps": [
+    "Aplicar en prisma/schema.prisma todos los cambios de schemaChanges (Metric, campos de Media, MediaViewport, Experience.kind/highlights/location/cvOrder/projects, tablas *Translation, enum Locale) y sacar layer, LAYER y metrics Json.",
+    "Generar la migración con `prisma migrate dev --create-only` y editar el SQL a mano: primero UPDATE de Media role LAYER a GALLERY, después el cambio de enum. Convertir metrics Json a filas Metric: los valores numéricos con jsonb_each y los de texto conocidos con CASE por clave ('0.8s' → 0.8 s, '1,500 RPD' → 1500 req_day, '$0/mes' → 0 usd_month, languages[] → localeCount = cantidad). Recién después borrar la columna.",
+    "Crear server/src/seed/en.ts y server/src/seed/media.ts como módulos tipados que exportan objetos vacíos (`EN: EnSeed`, `CAPTURES: CaptureSeed[]`) con los tipos que llenan D3 y D4. seed.ts aplica las dos cosas al final: upsert de *Translation y de Media por src.",
+    "seed.ts: publishedAt null para null-net y lampone y fecha para las 6. Tints de portada desde docs/rediseno/demo-data.js (#b97e46, #508daf, #426dbd, #ca354d). Portada de Ynara con 1531x602 (dimensiones reales del PNG). Portada de Eros copiando docs/rediseno/capturas/eros/admin-hunter.webp a public/media/projects/eros.webp, con las dimensiones leídas del archivo con server/src/admin/image.ts. Ynara Web queda sin portada.",
+    "seed.ts: métricas como filas Metric con unit y source/measuredAt en null (no se inventan orígenes).",
+    "seed.ts: Experience con kind (escuela-da-vinci y cet-30 EDUCATION, ynara THESIS, freelance FREELANCE, la-rucula y arg-piscinas CLIENT), cvOrder (ynara 1, la-rucula 2, arg-piscinas 3, eros 4, freelance 5) y projects con el mismo emparejamiento que hoy hace la heurística (mismo org o mismo slug). Nueva Experience 'eros' PERSONAL con las fechas de CvContainer.",
+    "seed.ts: highlights en español de cada entrada del CV y de la formación, pasados desde CvContainer.vue y CvHarvardAts.vue, sin las afirmaciones que la base no respalda: Service Worker, latencia sub-100ms, '1.200 visitas', 'más de 40 proyectos', Lighthouse 99/98+ y '382 commits liderados' como frase suelta; los 382 commits ya están en summary. Máximo 3 viñetas de 160 caracteres por entrada, por la cota A4.",
+    "seed.ts: Org cet-30 con city 'Cipolletti, Río Negro'. Docs about y contact con los campos exactos de schemaChanges: about.role y headline con los valores de producción (demo-data.js), freelance_experience completo, sin '//' ni '●'. Borrar el doc home. contact.email con type 'email'.",
+    "Escribir server/src/patches/2026-11-01-rediseno-datos.ts: idempotente, sin borrar nada editado desde el admin, con flag --dry que imprime el diff. Cubre: kinds, cvOrder, highlights solo si están vacíos, relación Experience↔Project, Experience eros, tints y dimensiones de portada, publishedAt de las 6, docs reformados (renombra o quita las claves listadas y agrega las nuevas solo si faltan) y borrado del doc home.",
+    "app/lib/fieldMeta.ts: projects.metrics como relation[] → Metric, translations, publishedAt con label 'publicado en el sitio'. Entrada media (tint, poster, srcWebm, caption, viewport). experience (kind, highlights, location, cvOrder, projects). DocKey = 'about' | 'contact'. Reemplazar los labels con tono de consola ('arsenal tecnológico', 'telemetría…') por labels llanos.",
+    "Ajustes mínimos de compilación: server/src/admin/router.ts deja de usar layer y metrics Json (la edición de métricas queda desactivada hasta A1) y los GET de colecciones editables responden 503 { error: 'db_unavailable' } en lugar de servir server/src/fallbackData.ts (quitar ese import). Las rutas públicas incluyen metrics como relación. server/src/fallbackData.ts, app/lib/explorer.ts y app/lib/fallbackData.ts solo se tocan lo necesario para que compilen, porque se borran después.",
+    "Sumar ArticleTranslation (articleId+locale, title, excerpt, body) al esquema y a la migración: el blog se conserva.",
+    "Parche de producción: publishedAt = null EXPLÍCITO en null-net y lampone (en producción ya tienen fecha); ciudad de cet-30; Media de portada de Eros; contact.email con type email. Con --dry y con el pg_dump previo documentado. NO correrlo contra producción.",
+    "Métricas en dos pasos: Metric con value Decimal? + items String[] (listas como languages y localModels) + label String? opcional. La columna metrics Json NO se borra en esta migración (se borra en una posterior, cuando el parche verifique la conversión).",
+    "Pares Experience-Project explícitos en el seed (nunca por mismo org: escuela-da-vinci no se liga a Ynara). contact.website para el portafolio, about.languages como lista, about.portrait = /media/profile/mateo-front.png."
+   ],
+   "acceptance": [
+    "`pnpm prisma migrate reset --force` + `pnpm db:seed` terminan sin error sobre la base de Docker.",
+    "La migración también se aplica sobre una base cargada con el seed anterior (checkout del commit previo, seed y migrate deploy), sin perder métricas: la cantidad de filas Metric es igual a la cantidad de claves del Json viejo.",
+    "En la base: 8 proyectos y 6 con publishedAt no nulo (la-rucula, argpiscinas, ynara, barberpole, ynara-web, eros). 0 filas Media con role LAYER. 4 portadas con tint. Doc keys = {about, contact}.",
+    "about.headline existe, ningún valor de Doc contiene '//' ni '●', y contact.email tiene type 'email'.",
+    "Experience: 7 filas, 2 EDUCATION, cvOrder 1..5 sin huecos, cada una con ≤3 highlights de ≤160 caracteres.",
+    "`pnpm tsx server/src/patches/2026-11-01-rediseno-datos.ts --dry`, corrido dos veces sobre una base con el seed anterior y aplicado entre medio, no muestra cambios la segunda vez.",
+    "`pnpm typecheck` y `pnpm lint` en 0."
+   ],
+   "notes": [
+    "La portada de Eros sale de $CAPTURAS_DIR/eros/admin-hunter.webp (ruta absoluta del checkout principal; los worktrees no tienen las capturas)."
+   ]
+  },
+  {
+   "id": "D0",
+   "title": "Fuente única de reglas y documentación del rediseño",
+   "goal": "Que Claude y Gemini lean las mismas reglas: un docs/diseno.md con el vocabulario, el sistema visual, el contrato de anclas y el Hiperfoco vigente, y ninguna regla que contradiga otra.",
+   "files": [
+    "docs/diseno.md",
+    "docs/rediseno/plan.md",
+    "docs/decisiones.md",
+    ".claude/rules/explorer.md",
+    "AGENTS.md",
+    ".agents/rules/architectural-guardrails.md",
+    "CLAUDE.md",
+    ".claude/skills/piso-calidad/",
+    ".agents/skills/"
+   ],
+   "dependsOn": [],
+   "wave": 1,
+   "steps": [
+    "Crear docs/diseno.md con §3 y §4 de plan.md adaptados a movimiento. Los verbos (Transformar, Deslizar, Rodar, Seguir, Asomar y Atenuar solo como hover en listas). Los tokens de color, con --sig del tema claro oscurecido a #c53000 para foco y texto, y #ff3e00 solo decorativo. Los seis tamaños de texto y el presupuesto de movimiento.",
+    "En docs/diseno.md, el contrato de anclas que usan todos los paquetes de frontend: data-chrome (no se imprime), data-hf='hide' y data-hf='measure' (Hiperfoco), data-ornament (decorativo: fantasma en el morph, oculto en Hiperfoco), data-vt='title|cover|page-title|cv-sheet' (nombres estáticos de view transition), data-travel='row|card|next|nav' con data-travel-title y data-travel-cover (origen del viaje), data-motion (reset de impresión), .f/.fk/.ft/.fv con .ed-only/.rec-only (registro) y data-tint.",
+    "En docs/diseno.md, la sección Hiperfoco: estado en cookie con SSR, H como interruptor, Esc que cierra capas y después sale del Hiperfoco, navegación conservada, imágenes en monocromo, temperatura apagada, movimiento ambiental apagado y view transitions de 200–250 ms.",
+    "En docs/diseno.md, la política de movimiento (useMotionPrefs: reduce, fine, hyperfocus, allowAmbient, allowTransitions), las teclas (1 inicio, 2 obra, 3 sobre mí, 4 contacto, 5 CV, j/k, Enter, Esc, Backspace, R, H, / y Ctrl/⌘K, todas apagables desde la paleta) y el mapa de rutas (/, /projects, /projects/:slug, /about, /about?cv=ats, ?lang=en, ?vista=registro, ?status=, ?stack=).",
+    "docs/rediseno/plan.md: reemplazar la 'lectura enfocada (F)' por Hiperfoco (H) en §2, §3 y §5, sacar la barra inferior y mover sus acciones a la cabecera. Dejar Stack sin página (las tecnologías facetan /projects?stack=) mientras no haya otra decisión. Agregar un bloque 'Implementación' que apunte a docs/diseno.md.",
+    ".claude/rules/explorer.md: recortar a lo estructural (DOM accesible, una cosa por pantalla, cota dual del CV con un único @page 10.5mm 12mm), cambiar `paths:` a app/components/**, app/pages/** y app/lib/**, sacar Bebas/font-poster y las anclas del explorador viejo, y apuntar a docs/diseno.md.",
+    "AGENTS.md: apuntar a docs/diseno.md y a las reglas de .claude/rules. Borrar .agents/rules/architectural-guardrails.md. Agregar en docs/decisiones.md una entrada fechada con lo descartado (explorador, dossier, lectura enfocada, sonido en cada click).",
+    "CLAUDE.md: actualizar la estructura del repo (site/, home/, work/, case/, about/, record/, motion/, media/, cv/), las teclas, los PDF (uno ATS por idioma; las URL sin -ATS redirigen) y la descripción del Focus.",
+    "Actualizar la skill piso-calidad (.claude/skills/piso-calidad y .agents/skills/piso-calidad) y las skills de .agents/ que describen el explorador."
+   ],
+   "acceptance": [
+    "grep de 'lectura enfocada', 'tecla F', 'Bebas' y 'font-poster' en docs/diseno.md, .claude/rules y AGENTS.md: 0 resultados.",
+    "AGENTS.md y .claude/rules/explorer.md referencian docs/diseno.md, y .agents/rules/architectural-guardrails.md ya no existe.",
+    "docs/diseno.md define cada ancla del contrato con un ejemplo de uso."
+   ],
+   "notes": []
+  },
+  {
+   "id": "D2",
+   "title": "API pública: visibilidad, ES/EN, CV compuesto y snapshot generado",
+   "goal": "Que cada endpoint sirva solo obras visibles, resuelva el idioma en el server, devuelva meta.filters con lo que de verdad aplicó y, si la base cae, responda lo mismo desde un snapshot generado por script. Se borra el fallback escrito a mano.",
+   "files": [
+    "server/src/content/visibility.ts",
+    "server/src/content/lang.ts",
+    "server/src/content/present.ts",
+    "server/src/content/matches.ts",
+    "server/src/content/cv.ts",
+    "server/src/content/snapshot.ts",
+    "server/src/queries/projects.ts",
+    "server/src/queries/stack.ts",
+    "server/src/queries/experience.ts",
+    "server/src/queries/orgs.ts",
+    "server/src/queries/docs.ts",
+    "server/src/queries/articles.ts",
+    "server/src/queries/schema.ts",
+    "server/src/routes/projects.ts",
+    "server/src/routes/stack.ts",
+    "server/src/routes/experience.ts",
+    "server/src/routes/orgs.ts",
+    "server/src/routes/docs.ts",
+    "server/src/routes/articles.ts",
+    "server/src/routes/schema.ts",
+    "server/src/routes/cv.ts",
+    "server/src/filters.ts",
+    "server/src/envelope.ts",
+    "server/src/app.ts",
+    "server/src/scripts/snapshot.ts",
+    "server/src/scripts/snapshot-check.ts",
+    "server/src/snapshot/content.json",
+    "server/src/fallbackData.ts",
+    "package.json",
+    ".claude/rules/backend.md"
+   ],
+   "dependsOn": [
+    "D1"
+   ],
+   "wave": 2,
+   "steps": [
+    "content/visibility.ts: `visibleProject: Prisma.ProjectWhereInput = { publishedAt: { not: null, lte: new Date() } }`, armado por request (no constante de módulo, para que now() no quede fijo), y `isVisible(p)` en memoria para el snapshot.",
+    "content/lang.ts: parseLang(req) → 'es' | 'en' desde ?lang (cualquier otro valor da 'es'). envelope.ts suma meta.lang.",
+    "content/present.ts: presentProject, presentStep, presentMedia, presentLink, presentExperience, presentTech, presentOrg y presentDoc(record, lang). Con lang 'en' usan el valor EN y caen al ES; devuelven `untranslated: string[]` y nunca exponen el arreglo translations. presentDoc devuelve fields con value ya resuelto.",
+    "queries/*.ts: funciones puras sobre Prisma (listProjects(filters), getProject(slug), listStack, getTech, listExperience, getExperience, listOrgs, getOrg, getDoc(key), listArticles, getArticle, schemaCounts) que traen las translations y aplican visibleProject en la lista, el detalle (404 si no es visible) y en cada relación hacia Project.",
+    "Contrato de la lista de proyectos: orderBy sortOrder; media COVER (IMAGE y VIDEO, con tint, poster, srcWebm, width y height); org { slug, name, city }; techs { slug, name, category }; _count.media. Detalle: GALLERY ordenada por order con caption y viewport, steps con su media, links, metrics ordenadas y techs con { category, since, note, projects: obras visibles {slug,title} } para el popover 'Asomar'.",
+    "Filtros: status se acepta en minúscula (toUpperCase contra el enum), stack, featured, year y org. filters.ts arma meta.filters solo con lo aplicado, normalizado a su forma pública en minúscula; lo inválido se descarta y no se repite. Borrar el alias argpiscinas↔arg-piscinas.",
+    "Stack: _count.projects con where visibleProject, orden por obras visibles desc y después por nombre, y projects {slug,title} incluidos. Orgs y articles: relaciones filtradas por visibilidad. Schema: conteos con visibilidad y docs = about, contact.",
+    "content/cv.ts: composeCv(lang, source) → CvDocument { header {name, role, location, email, github, linkedin, portfolio, modalities, availability}, summary (about.engineering_philosophy), experience[] (Experience con cvOrder, ordenadas: title = org.name o título de la obra ligada, role, period {start, end}, location = experience.location ?? org.city, highlights, techs), education[] (kind EDUCATION: degree = role, org, location, period, highlights), skills (Tech agrupado por category), languages (about.languages) }. routes/cv.ts: GET /api/cv?lang=. CvDocument se exporta como tipo.",
+    "content/snapshot.ts: carga perezosa de server/src/snapshot/content.json. Cada ruta usa la base y, si falla la consulta, el snapshot pasado por el mismo present y matches(record, filters) en memoria. La respuesta lleva meta.source 'db' | 'snapshot'.",
+    "scripts/snapshot.ts: llama a las mismas queries sin filtros y escribe content.json con la cabecera { _generated: 'pnpm db:snapshot — no editar', at }. Registros crudos en español con sus translations y solo obras visibles. scripts/snapshot-check.ts compara, con la base levantada, la respuesta de la base contra la del snapshot en una matriz fija (5 endpoints de lista × filtros status/stack/featured × es/en + detalle de las 6 obras + /api/cv × es/en) y termina con código ≠ 0 si difieren.",
+    "package.json: scripts db:snapshot y db:snapshot:check. Generar content.json desde la base sembrada. Borrar server/src/fallbackData.ts.",
+    "app.ts: registrar routes/cv y agregar mediaSrc ['self', 'blob:'] a la CSP de /admin (para la vista previa de video que agrega A1).",
+    ".claude/rules/backend.md: rutas reales, ?lang global, vista y cv como parámetros de presentación que no se reenvían a la API, visibilidad por publishedAt, meta.filters = lo aplicado, y la nota de que el descriptor del admin vive en server/admin/js/config.js y forms/*.js.",
+    "CSP del admin en server/src/app.ts: sumar media-src blob: para la vista previa de video que agrega A1.",
+    "Artículos: /api/articles y /api/articles/:slug con ?lang= vía ArticleTranslation, solo visibles, y en el snapshot.",
+    "Respaldos generados: el server guarda la última respuesta buena de cada consulta (memoria + disco) y solo si nunca hubo una usa server/src/snapshot/content.json versionado. present() convierte Decimal a número."
+   ],
+   "acceptance": [
+    "GET /api/projects devuelve exactamente las 6 obras en sortOrder, y /api/projects/null-net y /api/projects/lampone dan 404.",
+    "GET /api/projects?status=live devuelve solo las LIVE y meta.filters = { status: 'live' }. ?status=foo no filtra y no aparece en meta.filters.",
+    "GET /api/projects/argpiscinas da 200 y /api/projects/arg-piscinas da 404 (la redirección vive en el front).",
+    "GET /api/projects?lang=en tiene meta.lang 'en' y cada registro trae untranslated (array).",
+    "Los conteos de /api/stack y /api/schema no cuentan null-net ni lampone.",
+    "GET /api/cv?lang=es devuelve 5 entradas de experiencia en orden de cvOrder, 2 de educación y skills agrupadas por categoría, sin ningún literal escrito a mano en cv.ts.",
+    "Con `pnpm db:down` y la API levantada, las mismas URL responden con meta.source 'snapshot', y `pnpm db:snapshot:check` (con la base arriba) termina en 0.",
+    "server/src/fallbackData.ts no existe y grep de 'fallbackData' en server/src da 0.",
+    "`pnpm typecheck` y `pnpm lint` en 0."
+   ],
+   "notes": []
+  },
+  {
+   "id": "D3",
+   "title": "Traducciones al inglés del contenido",
+   "goal": "Que todo el contenido visible tenga inglés en la base, traducido desde el español vigente del seed y no desde i18n.ts, sin afirmaciones nuevas, más un parche que lo cargue en producción sin pisar lo editado.",
+   "files": [
+    "server/src/seed/en.ts",
+    "server/src/patches/2026-11-02-traducciones-en.ts"
+   ],
+   "dependsOn": [
+    "D1"
+   ],
+   "wave": 2,
+   "steps": [
+    "Llenar EN en server/src/seed/en.ts con el tipo EnSeed: proyectos (role, summary, brief y outcome; title solo si cambia), pasos (title y body por order, sin la numeración '01 ·' en el título), links (label), alt de las portadas, experiencias (role, summary, story, highlights y location si existe), note de las techs y el en de cada campo string/text/url de los docs about y contact (contact.cv.en = /cv/CV-EN-Mateo-Sonzogni-ATS.pdf).",
+    "Traducir solo desde el español del seed. Prohibido copiar de app/lib/i18n.ts y prohibido sumar datos que el español no tenga. Las cifras se copian tal cual.",
+    "Escribir el parche de producción: upsert de *Translation y del `en` de los Doc fields solo donde falten; con --force sobrescribe. Mismo flag --dry que D1.",
+    "Traducir también el artículo existente (ArticleTranslation). Viñetas EN con el mismo límite que las ES (3 de 160 caracteres). D3 NO escribe MediaTranslation: es de D4."
+   ],
+   "acceptance": [
+    "Después de `pnpm db:seed`, para las 6 obras, sus pasos y links, las 7 experiencias, las techs con note y los docs about/contact, no queda ningún campo de texto sin EN (lo verifica una consulta que cuenta los null en *Translation).",
+    "grep en server/src/seed/en.ts de '1,200', 'over 40', 'Obsidian', 'Lighthouse 99', 'sub-100' y 'creative director': 0 resultados.",
+    "El parche corrido dos veces en --dry no muestra cambios la segunda vez.",
+    "`pnpm typecheck` en 0."
+   ],
+   "notes": []
+  },
+  {
+   "id": "A1",
+   "title": "Admin: errores que pierden datos y campos del rediseño",
+   "goal": "Que el admin pueda cargar todo lo que el rediseño muestra (visibilidad, tinte, video, póster, pie, viewport, métricas tipadas, experiencia del CV) sin pisar datos.",
+   "files": [
+    "server/src/admin/router.ts",
+    "server/src/admin/image.ts",
+    "server/src/admin/media.ts",
+    "server/admin/js/api.js",
+    "server/admin/js/store.js",
+    "server/admin/js/config.js",
+    "server/admin/js/components/forms/ProjectForm.js",
+    "server/admin/js/components/forms/ExperienceForm.js",
+    "server/admin/js/components/forms/DocsForm.js",
+    "server/admin/js/components/AdmExplorer.js",
+    "server/admin/admin.css"
+   ],
+   "dependsOn": [
+    "D1"
+   ],
+   "wave": 2,
+   "steps": [
+    "PATCH /api/admin/media/:id que actualiza solo las claves presentes (alt, role, order, tint, caption, viewport, poster). updateMediaRole de api.js pasa a usarlo. Al marcar COVER, la portada anterior del mismo kind pasa a GALLERY dentro de una transacción.",
+    "Pasos: config.js toPayload y projectNested renumeran order por índice. Botones subir/bajar con aria-label. P2002 de pasos con un mensaje claro.",
+    "Editor de métricas sobre filas Metric (key con presets que solo cargan la clave, value numérico, unit como select, source, measuredAt). Router: replace de las filas en transacción. Se borran los valores inventados de METRIC_PRESETS.",
+    "Visibilidad: interruptor 'Mostrar en el sitio' en Datos básicos (on = publishedAt now() si estaba null; off = null), meta 'Oculta' en la tarjeta y filtro 'Ocultas' en AdmExplorer. Reordenar obras con subir/bajar vía PATCH sortOrder.",
+    "Media: subida de imagen o video (video/mp4 y video/webm, con magic bytes ftyp y 1A45DFA3) más un póster opcional (files 3: archivo, webm y póster) y fields ~16. server/src/admin/media.ts lee las dimensiones del video (MP4 tkhd, WebM EBML 0xB0/0xBA) sin dependencias, y kind sale del formato detectado.",
+    "Tinte: ProjectForm lo calcula al subir con createImageBitmap y un canvas de 32x20 (cuantizar a 8 colores, elegir el de mejor saturación×peso, normalizar luminosidad, como dice plan §4). En los videos se calcula sobre el póster. Hay un botón 'Recalcular tinte' por tarjeta y una muestra del color.",
+    "Tarjeta de media: miniatura o póster con indicador VIDEO, alt y caption editables, rol, viewport, orden subir/bajar, dimensiones y peso. En los pasos, un selector opcional de mediaId.",
+    "Experiencia: ExperienceForm suma kind, highlights (lista con máximo 3 y contador de 160 caracteres), location, cvOrder y la relación projects.",
+    "Docs: docFields conserva `en` y acepta los tipos 'url' y 'email' (email validado como email). DocsForm suma esos tipos en el select. El input EN de los Doc lo agrega A2.",
+    "aria-label en todos los botones '✕', sin emojis. Recompilar admin.css con `pnpm build:admin-css`."
+   ],
+   "acceptance": [
+    "Cambiar el rol de una imagen no modifica su alt ni su order (verificado en la base).",
+    "Borrar el paso 2 de 4 y agregar uno nuevo guarda sin error, con orders 1..4.",
+    "Editar una métrica numérica guarda un Decimal, no un string.",
+    "Guardar el doc contact con email 'mateogabus@gmail.com' da 200 y conserva el `en` de cada campo.",
+    "Subir un mp4 con póster crea una Media VIDEO con width y height correctos y tint calculado.",
+    "Apagar 'Mostrar en el sitio' en una obra hace que /api/projects deje de listarla.",
+    "tests/e2e/admin-audit.spec.ts sigue pasando y grep de emojis en server/admin/js da 0.",
+    "`pnpm typecheck` y `pnpm lint` en 0."
+   ],
+   "notes": []
+  },
+  {
+   "id": "D4",
+   "title": "Capturas y videos por obra como Media",
+   "goal": "Pasar a filas Media las capturas y videos de docs/rediseno/capturas, con póster, WebM, pie, orden y viewport, en lugar de los mapas escritos a mano en movimiento.html.",
+   "files": [
+    "server/src/seed/media.ts",
+    "server/src/scripts/import-captures.ts",
+    "public/media/projects/la-rucula/",
+    "public/media/projects/argpiscinas/",
+    "public/media/projects/barberpole/",
+    "public/media/projects/eros/",
+    ".gitignore"
+   ],
+   "dependsOn": [
+    "D1"
+   ],
+   "wave": 3,
+   "steps": [
+    "Leer docs/rediseno/capturas/manifest.js y los mapas HERO, MAIN_VIDEO, ORDER, SKIP y CAPTION de docs/rediseno/movimiento.html (líneas ~266-286).",
+    "scripts/import-captures.ts: copiar a public/media/projects/<slug>/ solo los formatos que se sirven (webp de cada captura; mp4, webm y -poster.webp de cada video; nunca los png). Avisar y abortar si un video pasa los 4 MB.",
+    "Escribir CAPTURES en server/src/seed/media.ts: MAIN_VIDEO como role COVER kind VIDEO (src mp4, srcWebm, poster); el resto como GALLERY con order de ORDER; SKIP no se importa; viewport MOBILE para los archivos 'movil-*'; caption ES desde CAPTION y su traducción EN; alt ES/EN descriptivo; width y height leídos del archivo con server/src/admin/image.ts (en los videos, del póster).",
+    "El script acepta --db-only (upsert por src contra DATABASE_URL, sin copiar archivos) para producción, y es idempotente.",
+    ".gitignore: según la decisión sobre media en producción. Por defecto se versionan los archivos copiados y no se toca .gitignore."
+   ],
+   "acceptance": [
+    "Después de `pnpm db:seed`, la-rucula, argpiscinas, barberpole y eros tienen como máximo una COVER IMAGE y una COVER VIDEO, y la COVER VIDEO tiene poster y srcWebm.",
+    "Toda GALLERY tiene caption ES y EN, y los 'movil-*' tienen viewport MOBILE.",
+    "Cada archivo referenciado por Media.src, poster y srcWebm existe en public/media y ningún video pasa los 4 MB.",
+    "Correr el script dos veces no duplica filas."
+   ],
+   "notes": [
+    "Las capturas se leen de $CAPTURAS_DIR (ruta absoluta del checkout principal). Se VERSIONAN en git en public/media/projects/<slug>/ (decisión de Mateo). D4 es dueño de MediaTranslation (pie ES y EN). image.ts ya lo modificó A1: solo importarlo."
+   ]
+  },
+  {
+   "id": "F1",
+   "title": "Desmontaje del explorador y cañería de datos del front",
+   "goal": "Sacar el explorador entero y dejar la base técnica del front: rutas de archivo, idioma en la URL, tipos de la API, composables de datos, diccionario de interfaz, preferencias en cookie, redirecciones 301, sitemap y configuración de Nuxt, con páginas mínimas que ya leen de la API.",
+   "files": [
+    "nuxt.config.ts",
+    "package.json",
+    "pnpm-lock.yaml",
+    "app/app.vue",
+    "app/error.vue",
+    "app/router.options.ts",
+    "app/layouts/default.vue",
+    "app/pages/index.vue",
+    "app/pages/[...path].vue",
+    "app/pages/projects/index.vue",
+    "app/pages/projects/[slug].vue",
+    "app/pages/about.vue",
+    "app/middleware/canonical.global.ts",
+    "app/plugins/route-loader.client.ts",
+    "app/plugins/prefs.ts",
+    "app/nitro/routes/sitemap.xml.ts",
+    "app/composables/useApi.ts",
+    "app/composables/useLocale.ts",
+    "app/composables/usePortfolioLocale.ts",
+    "app/composables/useSiteContent.ts",
+    "app/composables/useTheme.ts",
+    "app/composables/useHyperfocus.ts",
+    "app/composables/useRecordView.ts",
+    "app/composables/usePageSeo.ts",
+    "app/composables/usePreloadFonts.ts",
+    "app/composables/useBenchoSound.ts",
+    "app/composables/useCountUp.ts",
+    "app/composables/useScrambleText.ts",
+    "app/composables/useExplorerRoute.ts",
+    "app/composables/useRouteLoader.ts",
+    "app/lib/api.ts",
+    "app/lib/format.ts",
+    "app/lib/record.ts",
+    "app/lib/explorer.ts",
+    "app/lib/fallbackData.ts",
+    "app/lib/i18n.ts",
+    "app/lib/path.ts",
+    "app/components/explorer/",
+    "app/components/blog/",
+    "app/components/ui/",
+    "app/components/cv/CvContainer.vue",
+    "docs/archive/lab/",
+    "app/lib/dict/index.ts",
+    "playwright.config.ts",
+    "tests/e2e/"
+   ],
+   "dependsOn": [
+    "D2"
+   ],
+   "wave": 3,
+   "steps": [
+    "Borrar app/components/explorer/**, app/components/blog/**, app/pages/[...path].vue, app/plugins/route-loader.client.ts, los composables useBenchoSound, useCountUp, useScrambleText, useExplorerRoute, useRouteLoader y usePortfolioLocale, y app/lib/explorer.ts, fallbackData.ts, i18n.ts y path.ts. Antes de borrar explorer.ts, pasar cellFor, fmt, safeHref y los tipos de celda a app/lib/record.ts.",
+    "Mover ExplorerLab.vue y los Ui* que solo usa el lab a docs/archive/lab/ (fuera del build) hasta la decisión de /lab. Borrar los Ui* sin uso (UiBenchShowcase, UiBlueprintCard, UiLineSidebar, UiResizablePanels, UiSidebarIsland), los que salen del sitio público (UiRouteLoader, UiProgressiveBlur, UiBorderBeam, UiClickSpark, UiDecryptedText, UiThinkingTrace, UiDotGlobe, UiHubDiagram, UiSpotlightCard, UiSharePill, UiSlideConfirm, UiTextBlurReveal, UiCopyPill, UiCursorWorkList, UiRollingCounter) y app/components/ui/index.ts. Quedan AppIcon.vue y UiSegmentedSwitch.vue (sin sonido) hasta F6.",
+    "CvContainer.vue: solo la adaptación mínima para compilar (useLocale en lugar de usePortfolioLocale, sin useBenchoSound). La reescritura es de F6.",
+    "app/lib/api.ts: tipos del contrato de D2 (Project, Media con tint/poster/srcWebm/caption/viewport, Metric, Tech con projects, Experience con kind/highlights/location/cvOrder/projects, DocField con value resuelto, CvDocument, Envelope.meta con lang, source y filters, y untranslated en cada registro). Sin Article ni Org salvo lo que use el CV.",
+    "useApi.ts: get(path, apiParams) siempre con lang. Constantes API_PARAMS por colección y VIEW_PARAMS = ['vista', 'cv'], que nunca se reenvían. Claves de useAsyncData por path y lang, sin la query de vista. useProjects() comparte una sola clave 'projects:{lang}' con getCachedData (payload ?? static) y la usan home, obra, caso y siguiente. useProject(slug), useExperience(), useCv() se deja a F6. Un error de red da createError 502/503.",
+    "useLocale.ts: lang desde route.query.lang ('en' o 'es' por defecto). useHead htmlAttrs.lang. t(key) desde app/lib/dict.ts. localeRoute(to) que conserva ?lang=en. setLang(l) con router.replace. langAttr(record, field) devuelve 'es' si el campo está en untranslated.",
+    "app/lib/dict.ts (ES/EN, ~150 claves solo de interfaz): navegación, estados LIVE/WIP/ARCHIVED, kinds de experiencia, rótulos de sección del caso y de sobre mí, etiquetas y descripción de qué mide cada key de Metric (el METRIC de movimiento.html completo), unidades, aria-labels, skip link, 'Ver caso', 'Copiar email', 'Copiado', Hiperfoco, Registro, tema, atajos y 'Remoto'. Ningún nombre propio, ubicación ni cifra.",
+    "app/lib/format.ts: period(start, end, lang) en MM/AAAA – MM/AAAA | Presente, metric(value, unit, lang) con Intl.NumberFormat según el locale activo, y yearsSince(date).",
+    "useSiteContent.ts: useDoc('about') y useDoc('contact') devuelven un mapa nombre → valor ya resuelto en el idioma.",
+    "Preferencias en cookie con SSR: useTheme (cookie 'pf-theme', oscuro por defecto, data-theme y theme-color desde los tokens) y useHyperfocus (cookie 'pf-hyperfocus', isHyperfocus, setHyperfocus y toggleHyperfocus, sin localStorage ni onMounted por consumidor). app/plugins/prefs.ts los inicializa una sola vez y pone htmlAttrs data-theme y data-hyperfocus. Migración de una sola vez: si localStorage tiene portfolio-hyperfocus o el tema y no hay cookie, se copia (dentro de try/catch).",
+    "useRecordView.ts: isRecord desde ?vista=registro y setRecord(on) con router.replace, que conserva la query y bloquea mientras corre. Llama a los hooks nuxtApp 'record:before' y 'record:after' para que el morph (X2) y useMotion (F4) se enganchen.",
+    "usePageSeo.ts: título, descripción, canonical sin vista ni cv, hreflang recíproco es/en/x-default con ?lang=en, og:* desde COVER o la imagen por defecto y JSON-LD Person desde about y contact. X3 lo completa.",
+    "usePreloadFonts.ts: precargar solo General Sans normal, sin el tipo World.",
+    "app.vue: NuxtRouteAnnouncer + NuxtLayout + NuxtPage. app/error.vue: 404 y 503 con setResponseStatus, noindex y link a inicio con texto del diccionario. layouts/default.vue: skip link y <main id='contenido' tabindex='-1'><slot/></main>, que F3 completa.",
+    "Páginas mínimas: index, projects/index, projects/[slug] y about con useAsyncData y una lista llana de los campos, para comprobar la cañería. F3 y P1–P4 las reemplazan.",
+    "middleware/canonical.global.ts: 301 conservando la query. /experience y /experience/* → /about#trayectoria. /orgs → /projects. /orgs/:slug → /projects?org=:slug. /contact → /#contacto. /stack → /projects. /stack/:slug → /projects?stack=:slug. /articles y /articles/* → / (sujeto a decisión). /lab → / (sujeto a decisión). Los alias de path.ts (proyectos, sobre-mi, cv → /about?cv=ats, etc.), las mayúsculas, /projects/arg-piscinas → /projects/argpiscinas y los /datos, /diseno, /umbral ya existentes.",
+    "app/nitro/routes/sitemap.xml.ts: /, /projects, /about y las 6 obras desde /api/projects, cada una con xhtml:link es/en. lastmod solo desde updatedAt. Si la API falla, 503 sin caché.",
+    "nuxt.config.ts: components con dirs site, home, work, case, about, record, motion, media, cv y ui (pathPrefix false). experimental.viewTransition true. routeRules '/media/**' con proxy a `${apiOrigin}/media/**` y redirect 301 de /cv/CV-ES-Mateo-Sonzogni.pdf y /cv/CV-EN-Mateo-Sonzogni.pdf a sus -ATS. CSP por entorno: localhost y ws solo en dev, sin unsafe-eval en producción, sin dominios de fuentes externas, media-src 'self' + origen de la API + blob:, img-src 'self' data: blob: + origen de la API, upgrade-insecure-requests. Head con valores neutros y sin hreflang estático.",
+    "Script inline del head (con hash en la CSP): solo pone data-intro si el path es '/', no existe sessionStorage 'mov-visited' y no hay reduced motion. El tema y el Hiperfoco salen del SSR por cookie.",
+    "package.json: agregar gsap@^3.15.0 y lenis@^1.3.27 (versiones verificadas en la auditoría) y actualizar pnpm-lock.yaml.",
+    "Diccionario repartido: app/lib/dict/index.ts importa app/lib/dict/{shell,motion,record,cv,home,work,case,about,articles,focus,seo}.ts, que F1 crea con lo mínimo; cada paquete posterior es dueño de su archivo.",
+    "useProjects: la clave de caché incluye los filtros; la siguiente obra sale siempre de la lista completa.",
+    "runtimeConfig.public.siteUrl es la única fuente del origen absoluto: nada de https://mateogs.tech escrito a mano (incluye nuxt.config.ts).",
+    "CSP SIN hash de scripts (un hash anula unsafe-inline y bloquea window.__NUXT__).",
+    "/articles NO se redirige: el blog se conserva (P5 hace las páginas). Lab y CvModernIde van a docs/archive/lab/.",
+    "Pruebas antes: playwright.config.ts corre contra el build con puertos por variable de entorno, instala @axe-core/playwright, borra las specs del explorador (routes-audit y las obsoletas) y deja cv-audit.spec.ts en solo lectura (no escribe public/cv)."
+   ],
+   "acceptance": [
+    "`pnpm typecheck` y `pnpm lint` en 0, sin imports a archivos borrados.",
+    "`pnpm dev` + `pnpm dev:api`: /, /projects, /projects/la-rucula y /about responden 200 con datos de la API. /projects/null-net da 404 con error.vue.",
+    "/projects/la-rucula?lang=en sale del SSR con <html lang='en'> y el resumen en inglés desde la base, sin parpadeo de idioma.",
+    "Con la cookie pf-hyperfocus=true, el HTML del SSR ya trae data-hyperfocus='true'.",
+    "curl -I de /experience, /stack/gsap, /cv, /proyectos y /projects/arg-piscinas devuelve 301 a la ruta canónica.",
+    "/sitemap.xml lista 9 URL con alternativas en.",
+    "grep en app/ (sin app/components/cv/) de 'Paraná', 'Río Negro', 'Cádiz', 'mateogabus', '382', 'Lighthouse', 'PostgreSQL 17', 'null-net', 'lampone', 'github.com/MateoGs013' y 'linkedin.com/in': 0.",
+    "No existen app/lib/i18n.ts, app/lib/fallbackData.ts ni app/lib/explorer.ts."
+   ],
+   "notes": []
+  },
+  {
+   "id": "F2",
+   "title": "Tokens, tipografía y hojas globales",
+   "goal": "Dejar el sistema visual de plan §4 en Tailwind v4 con contraste AA en los dos temas, más las hojas globales de movimiento, impresión e Hiperfoco escritas contra el contrato de anclas.",
+   "files": [
+    "app/assets/css/tokens.css",
+    "app/assets/css/base.css",
+    "app/assets/css/fonts.css",
+    "app/assets/css/motion.css",
+    "app/assets/css/print.css",
+    "app/assets/css/hyperfocus.css",
+    "scripts/check-contrast.mjs"
+   ],
+   "dependsOn": [
+    "D0"
+   ],
+   "wave": 3,
+   "steps": [
+    "tokens.css: --bg, --surface, --ink, --dim, --faint, --rule y --sig de §4 en oscuro (por defecto) y claro, bajo :root[data-theme]. --sig-text #c53000 en claro para foco y texto. @property --tint (<color>) y --tint-amt (<percentage>). Fondo de página con color-mix(in oklab, var(--bg), var(--tint) var(--tint-amt)) y transición de 1,2 s. Nada de --d-*.",
+    "base.css: @import 'tailwindcss' y @theme con esos colores, font-sans (General Sans) y font-mono (Martian Mono), la escala --text-xs/s/m/l/xl/hero de §4, el margen lateral y el ancho máximo. @custom-variant focus-mode y @custom-variant record. @utility roll, ln y chm (máscaras). overflow-x: clip solo en body, sin max-width: 100vw. El guard de reduced motion también cubre ::view-transition-group/old/new. @import de motion.css, print.css y hyperfocus.css. Se mantienen los nombres de archivo que nuxt.config.ts ya lista en `css`.",
+    "fonts.css: borrar el @import de Google Fonts (Bebas y Space Grotesk) y --font-poster. Quedan General Sans local y Martian Mono.",
+    "motion.css: [data-vt=title|cover|page-title|cv-sheet] con su view-transition-name. Grupos title, cover y page-title de 0,95 s con cubic-bezier(.16,1,.3,1). object-fit en cover. :active-view-transition-type(caso) disponible. Header con view-transition-name: hud. Hiperfoco: grupos a 220 ms.",
+    "print.css: un único @page { size: A4; margin: 10.5mm 12mm }. Ocultar [data-chrome], .no-print y [data-hf], resetear transform y opacity de [data-motion] y sus hijos, y dejar visible solo .cv-harvard.",
+    "hyperfocus.css: html[data-hyperfocus='true'] pisa tokens con --faint ≥ 4,5:1 en los dos temas y un --rule-focus visible (ink al 12 %). [data-hf=hide] y [data-ornament] van con display:none y [data-hf=measure] con max-width: 68ch centrado. img y video con grayscale(1) sin contrast, y --tint-amt: 0%. Sin !important salvo en el override de tokens.",
+    "scripts/check-contrast.mjs: lee los tokens de tokens.css y hyperfocus.css y calcula WCAG para cada par texto/fondo usado (ink, dim, faint y sig-text sobre bg y surface en los temas normal e Hiperfoco). Termina ≠ 0 si alguno queda bajo 4,5:1."
+   ],
+   "acceptance": [
+    "`node scripts/check-contrast.mjs` termina en 0 e imprime la tabla de ratios.",
+    "grep en app/assets/css de '--d-', 'fonts.googleapis', 'Bebas' y '!important' (fuera del bloque de tokens del Hiperfoco): 0.",
+    "En toda la carpeta hay un solo @page y su margen es 10.5mm 12mm.",
+    "`pnpm build` compila sin advertencias de utilidades desconocidas en los archivos de CSS."
+   ],
+   "notes": []
+  },
+  {
+   "id": "A2",
+   "title": "Admin: editor de traducciones ES|EN",
+   "goal": "Que Mateo edite y revise el inglés de cada registro desde el admin, viendo el español como referencia, y vea qué falta traducir.",
+   "files": [
+    "server/src/admin/router.ts",
+    "server/admin/js/api.js",
+    "server/admin/js/store.js",
+    "server/admin/js/config.js",
+    "server/admin/js/components/AdmEditor.js",
+    "server/admin/js/components/AdmExplorer.js",
+    "server/admin/js/components/forms/ProjectForm.js",
+    "server/admin/js/components/forms/ExperienceForm.js",
+    "server/admin/js/components/forms/StackForm.js",
+    "server/admin/js/components/forms/DocsForm.js",
+    "server/admin/admin.css"
+   ],
+   "dependsOn": [
+    "A1",
+    "D3"
+   ],
+   "wave": 3,
+   "steps": [
+    "Router: GET de proyecto, experiencia y tech incluye translations. PUT acepta `translations.en` y hace upsert de ProjectTranslation, ProcessStepTranslation (por order), LinkTranslation, MediaTranslation (también por PATCH de media), ExperienceTranslation y TechTranslation. Los campos vacíos se guardan como null.",
+    "AdmEditor: selector ES|EN en la cabecera. En EN, cada campo traducible muestra el valor en español como referencia encima del input.",
+    "DocsForm: input EN por bloque para los tipos string, text y url.",
+    "AdmExplorer: marca geométrica 'sin traducir', sin emojis, en las tarjetas con campos EN faltantes.",
+    "Recompilar admin.css."
+   ],
+   "acceptance": [
+    "Editar el summary EN de una obra desde el admin cambia /api/projects/:slug?lang=en y no toca el español.",
+    "Guardar en ES un registro con traducción conserva sus filas *Translation.",
+    "El indicador 'sin traducir' desaparece cuando se completan los campos.",
+    "admin-audit.spec sigue verde y `pnpm typecheck` en 0."
+   ],
+   "notes": []
+  },
+  {
+   "id": "A3",
+   "title": "Job Hunter: CV de respaldo y contenido de ejemplo desde la base",
+   "goal": "Que el respaldo del generador Harvard ATS use la misma composición del CV que el sitio público y el contrato que lee el admin, sin tocar la ruta principal hacia Eros (invariante 6).",
+   "files": [
+    "server/src/admin/fallbackHunterData.ts",
+    "server/src/admin/fallbackContentData.ts",
+    "server/src/admin/hunter.ts",
+    "server/src/admin/content.ts",
+    "server/admin/js/components/AdmJobHunter.js",
+    "server/src/admin/radar.ts"
+   ],
+   "dependsOn": [
+    "D2"
+   ],
+   "wave": 3,
+   "steps": [
+    "generateCvHeuristic llama a composeCv('es' | lang de la vacante) de server/src/content/cv.ts y lo mapea al contrato que consume AdmJobHunter.js: name, title, location, email, portfolio, github, linkedin, summary, skills {categoría: []}, experience [{ title, role, period, bullets }], education [], languages [] y methodologies. La adaptación a la vacante queda en el orden y el resumen.",
+    "Borrar el candidato escrito a mano: Paraná, el teléfono, UTN y 'Ynara & La Rúcula 2024-2026'. renderCvHtmlHeuristic recibe ese objeto, escapa todo valor interpolado (job.title y company incluidos) y usa la escala ATS y el @page 10.5mm 12mm.",
+    "No cambiar los endpoints /api/admin/hunter/*, el proxy a Eros (hunter.ts:219-304) ni los tickets de CV.",
+    "AdmJobHunter.js: los valores por defecto del candidato (1635-1659, 214-217) pasan a un estado vacío visible y se llenan con la respuesta. Sin clases de Tailwind nuevas.",
+    "fallbackContentData.ts queda como datos de ejemplo de Eros, sin métricas inventadas ('Lighthouse 98+', 'FCP 0.6s', '-28% bundle') y con la firma tomada de los docs about y contact. content.ts: si falla la base o Eros, publish-to-blog, publish y status responden error en lugar de un 201 o un éxito en memoria. canonicalUrl solo si existe la ruta pública del artículo (según la decisión sobre el blog).",
+    "Sumar radar.ts (Lighthouse 98+ y generateContentPostHeuristic), las heurísticas de fallbackHunterData.ts (generatePitchHeuristic, evaluateJobHeuristic) y los literales de hunter.ts (Content-Disposition, url). Los handlers de respaldo de hunter.ts pueden cambiar; el proxy a Eros se comporta igual."
+   ],
+   "acceptance": [
+    "Con Eros apagado, la vista previa del Job Hunter muestra nombre, ubicación 'Río Negro, Argentina', experiencia y skills por categoría, y 'copiar texto plano' produce el CV completo.",
+    "Imprimir desde el admin da una página A4.",
+    "grep en server/src/admin de 'Paraná', '343', 'UTN' y 'Lighthouse 98': 0.",
+    "Con Eros encendido, las respuestas del proxy no cambian.",
+    "`pnpm typecheck` en 0.",
+    "pnpm tsx scripts/test-cv-and-subject.ts y pnpm tsx scripts/test-audit.ts pasan (si necesitan Eros real, se documenta y se prueba el camino de respaldo)"
+   ],
+   "notes": []
+  },
+  {
+   "id": "D5",
+   "title": "Snapshot final con inglés y media",
+   "goal": "Regenerar el snapshot con el seed completo (traducciones y capturas) y verificar la paridad entre la base y el snapshot.",
+   "files": [
+    "server/src/snapshot/content.json"
+   ],
+   "dependsOn": [
+    "D2",
+    "D3",
+    "D4"
+   ],
+   "wave": 4,
+   "steps": [
+    "`pnpm prisma migrate reset --force`, `pnpm db:seed` y `pnpm db:snapshot`.",
+    "`pnpm db:snapshot:check` con la base arriba.",
+    "Revisar en el diff que el JSON solo trae las 6 obras y que trae translations y las Media importadas."
+   ],
+   "acceptance": [
+    "`pnpm db:snapshot:check` termina en 0.",
+    "content.json no contiene 'null-net' ni 'lampone' y sí contiene filas de translations en."
+   ],
+   "notes": []
+  },
+  {
+   "id": "F3",
+   "title": "Shell: layout, cabecera, pie, paleta y atajos",
+   "goal": "El marco de todas las páginas como en el prototipo: cabecera con Obra, Sobre mí y Contacto más las utilidades (idioma, tema, Hiperfoco e Ir a), pie de contacto desde la base, paleta Ctrl+K accesible y atajos centralizados.",
+   "files": [
+    "app/layouts/default.vue",
+    "app/components/site/SiteHeader.vue",
+    "app/components/site/SiteUtilities.vue",
+    "app/components/site/HyperfocusToggle.vue",
+    "app/components/site/ThemeToggle.vue",
+    "app/components/site/LangSwitch.vue",
+    "app/components/site/SiteFooter.vue",
+    "app/components/site/MailCopy.vue",
+    "app/components/site/FooterClock.vue",
+    "app/components/site/RollText.vue",
+    "app/components/site/PageTitle.vue",
+    "app/components/site/SitePalette.vue",
+    "app/components/ui/AppIcon.vue",
+    "app/composables/useHotkeys.ts",
+    "app/composables/useAnnounce.ts",
+    "app/composables/useSound.ts",
+    "app/plugins/magnet.ts",
+    "app/lib/dict/shell.ts"
+   ],
+   "dependsOn": [
+    "F1",
+    "F2"
+   ],
+   "wave": 4,
+   "steps": [
+    "layouts/default.vue: skip link (t('skip')), SiteHeader con data-chrome, main#contenido, SiteFooter id='contacto' con data-chrome, SitePalette y una única región aria-live (useAnnounce). Llama a usePreloadFonts.",
+    "SiteHeader: marca = about.display_name, que enlaza a localeRoute('/'). Nav siempre visible en todos los anchos y renderizada por SSR: Obra → /projects, Sobre mí → /about, Contacto → #contacto, con RollText, data-travel='nav' y aria-current. SiteUtilities: en ≥ 768 px visibles; debajo, dentro de un <details> que funciona sin JS. Contiene LangSwitch (enlaces reales con ?lang), ThemeToggle, HyperfocusToggle (un solo nodo en los dos modos, aria-pressed, aria-keyshortcuts='h' y texto visible 'Hiperfoco') y el botón 'Ir a' (⌘K). mix-blend-mode según el prototipo, verificado en los dos temas.",
+    "SiteFooter: contact.response_time, MailCopy con contact.email (enlace mailto real + botón 'Copiar email' aparte; las letras ruedan al copiar con stagger de 12 ms y se anuncia 'Copiado'), contact.availability, contact.location, FooterClock (hora al minuto en contact.time_zone, solo cliente, '--:--' en el SSR, clearInterval al desmontar) y enlaces a contact.github, contact.linkedin y contact.cv según el idioma. Imanes con v-magnet.",
+    "plugins/magnet.ts: directiva v-magnet universal con getSSRProps vacío y gsap.quickTo. Solo con puntero fino, sin reduced motion y sin Hiperfoco. Limpia los listeners al desmontar.",
+    "PageTitle: título con data-vt='page-title' y conteo en superíndice tabular por prop.",
+    "SitePalette: dialog con aria-modal, combobox + listbox con aria-activedescendant, trampa de foco y foco devuelto al disparador. Resaltado que se desliza 300 ms power3.out. Entradas: las páginas, las 6 obras (de useProjects), Hiperfoco, tema, idioma, sonido y 'Atajos de una tecla: sí/no' (cookie). Al abrir y cerrar emite nuxtApp.callHook('site:overlay', { open }) para que F4 pause Lenis.",
+    "useHotkeys: 1 inicio, 2 obra, 3 sobre mí, 4 contacto, 5 /about?cv=ats, j/k (foco entre [data-row] y [data-card] de la página), Enter, Esc (cierra capas; si no hay ninguna y el Hiperfoco está activo, sale de él), Backspace (caso → obra, cv → about), R (setRecord), H (toggleHyperfocus) y / o Ctrl+K (paleta). Se ignoran con foco en input, textarea, select, [role=combobox] o [contenteditable], con un diálogo abierto o con los atajos apagados.",
+    "useSound: un tic de 70 ms, apagado por defecto (cookie), silencioso con Hiperfoco o reduced motion y solo en los cinco verbos.",
+    "AppIcon.vue: recortado a sol, luna, flecha externa, cerrar, menú y foco."
+   ],
+   "acceptance": [
+    "Con JS apagado y a 320 px se navega a las 4 páginas y al #contacto desde la cabecera.",
+    "Tab recorre cabecera, contenido y pie sin trampas y con foco visible en cada interactivo. La paleta devuelve el foco al cerrarse.",
+    "El botón de Hiperfoco tiene aria-pressed coherente y mantiene el foco al alternar.",
+    "El pie no tiene texto escrito a mano: grep de '@', 'Río Negro' y 'github.com' en app/components/site da 0.",
+    "axe sin violaciones serias en la cabecera y el pie, en los dos temas.",
+    "`pnpm typecheck` y `pnpm lint` en 0."
+   ],
+   "notes": [
+    "AppIcon conserva download y printer (los usa F6). El pie enlaza a /articles (el blog se conserva)."
+   ]
+  },
+  {
+   "id": "F4",
+   "title": "Primitivas de movimiento",
+   "goal": "Llevar el oficio de movimiento del prototipo a piezas Vue que se limpian solas, respetan la política de movimiento y nunca pelean con la hidratación.",
+   "files": [
+    "app/plugins/motion.client.ts",
+    "app/plugins/shared-elements.client.ts",
+    "app/composables/useMotion.ts",
+    "app/composables/useMotionPrefs.ts",
+    "app/composables/useLenis.ts",
+    "app/composables/useCursor.ts",
+    "app/composables/useTint.ts",
+    "app/components/motion/RevealLines.vue",
+    "app/components/motion/ScrubWords.vue",
+    "app/components/motion/CursorBubble.vue",
+    "app/components/media/MediaImage.vue",
+    "app/components/media/MediaVideo.vue",
+    "app/components/ui/RollNumber.vue",
+    "app/lib/dict/motion.ts"
+   ],
+   "dependsOn": [
+    "F1",
+    "F2"
+   ],
+   "wave": 4,
+   "steps": [
+    "useMotionPrefs: reduce, fine ((hover:hover) and (pointer:fine)), hyperfocus (useHyperfocus), allowAmbient = !reduce && !hyperfocus y allowTransitions = !reduce, todos reactivos.",
+    "motion.client.ts: gsap.registerPlugin(ScrollTrigger, SplitText, Flip) y ScrollTrigger.config({ ignoreMobileResize: true }). Lenis (lerp .11, autoRaf false) movido por gsap.ticker solo si allowAmbient, y recreado o destruido cuando cambia. provide $lenis. Hooks: 'page:view-transition:start' para lenis.stop() y, en transition.finished, lenis.start() y ScrollTrigger.refresh(). 'site:overlay' para pausar y reanudar. 'record:before' y 'record:after' para avisar a useMotion. Importa 'lenis/dist/lenis.css'.",
+    "shared-elements.client.ts: listener de click en captura que guarda el enlace [data-travel] tocado. En router.beforeEach pone viewTransitionName 'none' en todo [data-vt] de la página saliente y en lo que está fuera del viewport, y nombra el par tocado (data-travel-title → title, data-travel-cover → cover, nav → page-title, o la imagen de la vista previa abierta → cover). En afterEach limpia los nombres inline. Todo de forma imperativa.",
+    "useMotion(scopeRef, setup): gsap.context + gsap.matchMedia con { motion, fine, desktop }. setup devuelve su limpieza. ctx.revert() en onBeforeUnmount y en 'record:before'; vuelve a armar en 'record:after' y cuando cambia el Hiperfoco.",
+    "useLenis, useCursor (singleton: un pointermove pasivo y lerp .16 en el ticker solo mientras haya suscriptores) y useTint (pone --tint y --tint-amt en documentElement: 8 % oscuro, 5 % claro, 75 % de eso al anticipar; 0 con Hiperfoco).",
+    "RevealLines: SplitText lines con mask, autoSplit y aria auto. En el primer render SSR no anima lo que ya está en el viewport; :key por texto; con reduced motion no parte. ScrubWords: opacidad .16 → 1 con scrub; con reduced motion o Hiperfoco queda en 1.",
+    "CursorBubble: 'Ver caso' (dict) sobre [data-view], con escala vía quickTo y timeout cancelable. Solo si fine y allowAmbient.",
+    "MediaImage: recibe una Media y reserva width y height, alt desde Media.alt (vacío si decorative), loading y fetchpriority por prop, data-vt por prop. MediaVideo: modos hover, in-view (IntersectionObserver .35, disconnect al desmontar) y autoplay. Fuentes webm y mp4 y poster; preload none salvo autoplay. Botón de pausa visible (WCAG 2.2.2). Con reduced motion: póster y controles. En táctil, hover pasa a in-view salvo con saveData.",
+    "RollNumber: el SSR muestra el valor final y rueda 1,2 s una vez al entrar en pantalla (500 ms al cambiar), con Intl del locale activo."
+   ],
+   "acceptance": [
+    "Navegar entre dos páginas de prueba con data-vt y data-travel no tira el error de nombres de view-transition duplicados en la consola.",
+    "Con prefers-reduced-motion: reduce no se crea Lenis, RevealLines no parte el texto y MediaVideo no hace autoplay.",
+    "Desmontar una página con ScrollTrigger y pin no deja pin-spacers huérfanos (document.querySelectorAll('.pin-spacer').length === 0 al volver).",
+    "Ningún componente de motion o media escribe innerHTML.",
+    "`pnpm typecheck` y `pnpm lint` en 0."
+   ],
+   "notes": []
+  },
+  {
+   "id": "F5",
+   "title": "Primitivas del modo registro",
+   "goal": "Que cada página pueda renderizar sus campos en diseño o como registro tipado desde el SSR (?vista=registro), con el marcado estable que después anima el morph.",
+   "files": [
+    "app/components/record/RecordField.vue",
+    "app/components/record/RecordValue.vue",
+    "app/components/record/RecordTable.vue",
+    "app/lib/record.ts",
+    "app/lib/dict/record.ts"
+   ],
+   "dependsOn": [
+    "F1",
+    "F2"
+   ],
+   "wave": 4,
+   "steps": [
+    "RecordField: props collection, k (nombre del campo) y value, más un slot de diseño. Toma el tipo y el label de fieldMeta.ts. En diseño muestra el slot. En registro muestra la fila .f[data-f=k] con .fk (k), .ft (tipo de fieldMeta, por ejemplo 'relation → Tech[]') y .fv (RecordValue). Campo vacío: no se ve en diseño y en registro se ve como NULL. lang='es' si el campo está en untranslated.",
+    "RecordValue: string entre comillas, número, enum, date, relación como enlace (localeRoute) y media como miniatura, reutilizando cellFor y safeHref de app/lib/record.ts.",
+    "RecordTable: tabla accesible (caption, th con scope) para colecciones (title · slug · status · year) con el mismo marcado .f.",
+    "Cada RecordField del SSR ya sale en el estado correcto según useRecordView, sin depender de JS."
+   ],
+   "acceptance": [
+    "Una página de prueba con ?vista=registro y JS apagado muestra la tabla tipada con NULL visibles.",
+    "El marcado de .f, .fk, .ft y .fv coincide con el contrato de docs/diseno.md.",
+    "`pnpm typecheck` y `pnpm lint` en 0."
+   ],
+   "notes": []
+  },
+  {
+   "id": "F6",
+   "title": "Visor de CV desde la base",
+   "goal": "Que el CV Harvard ATS de /about salga entero de /api/cv, imprima una sola página A4 dentro de la cota dual y tenga su script de PDF. Cero literales.",
+   "files": [
+    "app/components/cv/CvContainer.vue",
+    "app/components/cv/CvHarvardAts.vue",
+    "app/components/cv/CvModernIde.vue",
+    "app/components/cv/CvSheet.vue",
+    "app/components/cv/CvDownloads.vue",
+    "app/components/cv/types.ts",
+    "app/components/ui/UiSegmentedSwitch.vue",
+    "app/composables/useCv.ts",
+    "scripts/cv-pdf.mjs",
+    "public/cv/CV-ES-Mateo-Sonzogni.pdf",
+    "public/cv/CV-EN-Mateo-Sonzogni.pdf",
+    "public/cv/CV-ES-Mateo-Sonzogni-ATS.pdf",
+    "public/cv/CV-EN-Mateo-Sonzogni-ATS.pdf",
+    "docs/archive/lab/CvModernIde.vue",
+    "app/lib/dict/cv.ts"
+   ],
+   "dependsOn": [
+    "F1",
+    "F2",
+    "D5"
+   ],
+   "wave": 4,
+   "steps": [
+    "useCv(): useAsyncData('cv:{lang}', GET /api/cv?lang). types.ts reexporta CvDocument de app/lib/api.ts.",
+    "CvHarvardAts: solo props CvDocument. Cabecera: header.name, role, location, email, github, linkedin, modalities y availability. Resumen: summary. Experiencia: cada entrada con title, role, period (format.period), location (o t('remote')), highlights y techs. Formación desde education[]. Habilidades: skills por categoría, con los rótulos de categoría del diccionario. Idiomas: languages. Sin bloque v-else, sin literales y sin @page propio (lo pone print.css). Escala ATS intacta: nombre 19-21 pt, secciones 11-11.5 pt, cuerpo 9.2-9.5 pt.",
+    "CvContainer: barra con Imprimir y Descargar PDF (contact.cv del idioma activo), con .no-print y data-chrome. Sin selector de modo, sin sonido y sin watch de Hiperfoco. CvModernIde.vue se mueve a docs/archive/lab/ y se borra UiSegmentedSwitch.vue (hasta la decisión sobre /lab).",
+    "CvSheet: la hoja a escala (máx. 820 px, papel blanco sobre el tema) con data-vt='cv-sheet', que P4 muestra cuando ?cv=ats. Esc vuelve a /about. CvDownloads: PDF del idioma activo + enlace al otro idioma.",
+    "scripts/cv-pdf.mjs: con Playwright contra el build local, abre /about?cv=ats y /about?cv=ats&lang=en y emula print. Mide la altura de .cv-harvard (248-265 mm) y pageCount === 1, y solo si pasa escribe los dos -ATS.pdf con preferCSSPageSize. Borrar los PDF sin -ATS (F1 ya los redirige)."
+   ],
+   "acceptance": [
+    "grep en app/components/cv de 'Río Negro', 'Buenos Aires', 'Cádiz', 'Escuela', 'CET', '2017', '2026', 'Docker', 'Remoto / Híbrido' y '@gmail': 0.",
+    "`node scripts/cv-pdf.mjs` termina en 0 para ES y EN: 1 página y altura entre 248 y 265 mm.",
+    "Ctrl+P desde /about imprime solo el CV en una página.",
+    "Cambiar una viñeta desde el admin, regenerar y ver el cambio en el visor y en el PDF.",
+    "`pnpm typecheck` y `pnpm lint` en 0."
+   ],
+   "notes": [
+    "El visor Modern IDE se archiva (decisión de Mateo): CV solo Harvard ATS. Las verificaciones sobre /about?cv=ats pasan a P4, que monta la página."
+   ]
+  },
+  {
+   "id": "P1",
+   "title": "Página de inicio",
+   "goal": "La home del prototipo: loader de primera visita, nombre monumental por letras, titular, obra destacada como lista con vista previa que sigue al cursor y frase que se enciende al leerla.",
+   "files": [
+    "app/pages/index.vue",
+    "app/components/home/HomeHero.vue",
+    "app/components/home/HeroName.vue",
+    "app/components/home/HomeSelectedWork.vue",
+    "app/components/home/WorkRows.vue",
+    "app/components/home/WorkPreview.vue",
+    "app/components/home/HomeStatement.vue",
+    "app/components/site/IntroLoader.vue",
+    "app/lib/dict/home.ts"
+   ],
+   "dependsOn": [
+    "F3",
+    "F4",
+    "F5"
+   ],
+   "wave": 5,
+   "steps": [
+    "Datos: useDoc('about'), useDoc('contact') y useProjects(). Ningún literal.",
+    "HeroName: about.display_name partido en letras con v-for en el SSR, aria-hidden en cada letra y el texto completo en .sr. h1 con tabindex -1. Las letras suben (yPercent 110, stagger .025) solo si no hubo loader y allowAmbient. El cuadrado --sig es decorativo.",
+    "HomeHero: about.headline (RevealLines), about.role y contact.availability, cada uno envuelto en RecordField (about.headline, about.role, contact.availability).",
+    "IntroLoader: se monta en la página y solo se ve con html[data-intro]. Las letras de about.display_name suben, contador 0-100 y barra en 1,5 s, y después el nombre viaja con FLIP hasta HeroName. Se omite con click, tecla o wheel (tl.progress(1) de su propia timeline). Pone sessionStorage 'mov-visited'. CSS de seguridad que lo oculta a los 4 s. Con reduced motion no aparece.",
+    "HomeSelectedWork + WorkRows: las obras con featured, en sortOrder. Fila: title (data-travel-title), year, role, org.name y estado (dict). Cada fila tiene data-travel='row', data-row, data-view y data-tint=cover.tint, y enlaza a localeRoute(/projects/slug). En táctil, miniatura de la COVER IMAGE dentro de la fila. Hover: atenuar los hermanos y anticipar la temperatura con useTint.",
+    "WorkPreview: Teleport con la tira de COVER IMAGE de las obras destacadas. Sigue al cursor con useCursor, gira clamp(±7°) según la velocidad y cambia de imagen deslizando la tira (600 ms). Solo con puntero fino y sin Hiperfoco; con reduced motion sigue sin lerp. Al hacer click, la imagen visible lleva el nombre cover. data-hf='hide'.",
+    "HomeStatement: about.engineering_philosophy con ScrubWords, dentro de RecordField.",
+    "Montar CursorBubble. usePageSeo con el título del sitio desde about.display_name y about.role, y la descripción desde about.headline.",
+    "Hiperfoco: WorkPreview, el loader y el cuadrado decorativo llevan data-hf='hide'. El bloque principal lleva data-hf='measure'."
+   ],
+   "acceptance": [
+    "Primera visita sin reduced motion: aparece el loader una vez por sesión y el nombre viaja al hero sin salto. El LCP es el nombre y no espera a JS.",
+    "Click en una fila con la vista previa abierta: el título y la imagen se transforman en el título y la portada del caso (view transition, sin pantalla negra).",
+    "Con JS apagado, la home muestra nombre, titular, la lista de obras con enlaces y la frase completa.",
+    "/?vista=registro muestra los campos tipados.",
+    "grep en app/components/home y app/pages/index.vue de nombres de obras, 'Mateo' y 'Sonzogni': 0.",
+    "Coincide con docs/rediseno/movimiento.html en 375, 768 y 1440 px (capturas lado a lado)."
+   ],
+   "notes": []
+  },
+  {
+   "id": "P2",
+   "title": "Página de obra",
+   "goal": "/projects como galería horizontal movida por el scroll vertical, con inclinación por velocidad y parallax interno, más facetas de estado y tecnología que se reflejan en la URL.",
+   "files": [
+    "app/pages/projects/index.vue",
+    "app/components/work/WorkGallery.vue",
+    "app/components/work/WorkCard.vue",
+    "app/components/work/WorkFilters.vue",
+    "app/lib/dict/work.ts"
+   ],
+   "dependsOn": [
+    "F3",
+    "F4",
+    "F5"
+   ],
+   "wave": 5,
+   "steps": [
+    "Datos: useProjects() más los filtros de la query (?status=, ?stack=) pasados tal cual a la API. Conteo = data.length (RollNumber en el superíndice de PageTitle, con el título t('nav.work')).",
+    "WorkFilters: facetas de estado (LIVE, WIP y ARCHIVED con etiquetas del diccionario) como enlaces reales que cambian la query. Una faceta stack activa muestra su nombre (de techs) con un enlace para quitarla. Resaltado que se desliza.",
+    "WorkGallery: el layout por defecto (SSR, sin JS, reduced motion, Hiperfoco o < 761 px) es una grilla o columna. El modo horizontal lo activa JS dentro de mm.add('(min-width:761px) and (prefers-reduced-motion:no-preference)'): pin, scrub .8, invalidateOnRefresh, barra de progreso, parallax interno con containerAnimation y skewX por velocidad con quickTo (clamp ±6). El pin no se aplica a la raíz del componente. focusin en una tarjeta desplaza Lenis hasta ella. Antes de navegar, skewX vuelve a 0.",
+    "WorkCard: COVER IMAGE (MediaImage con data-travel-cover) o COVER VIDEO en modo hover, title (data-travel-title), year, role y status. data-travel='card', data-card, data-view y data-tint. Sin portada: placa --surface con el tint si existe.",
+    "En registro: RecordTable con title · slug · status · year.",
+    "Montar CursorBubble y usePageSeo."
+   ],
+   "acceptance": [
+    "/projects?status=live&lang=en filtra en el SSR y la API recibe exactamente status=live&lang=en.",
+    "Con reduced motion o JS apagado, las 6 tarjetas son alcanzables y ninguna queda recortada.",
+    "Con Tab, cada tarjeta enfocada queda a la vista en el modo horizontal.",
+    "Click en una tarjeta: su portada y su título se transforman en los del caso.",
+    "Al salir de /projects no quedan .pin-spacer.",
+    "grep de slugs de obras en app/components/work: 0."
+   ],
+   "notes": []
+  },
+  {
+   "id": "P3",
+   "title": "Página de caso",
+   "goal": "/projects/:slug según el prototipo: título que llega viajando, captura enmarcada que crece, rótulos fijos, pasos, piezas de galería y teléfonos, métricas que ruedan con 'Asomar', enlaces y la siguiente obra como escena.",
+   "files": [
+    "app/pages/projects/[slug].vue",
+    "app/components/case/CaseHeader.vue",
+    "app/components/case/CaseCover.vue",
+    "app/components/case/CaseSection.vue",
+    "app/components/case/CaseSteps.vue",
+    "app/components/case/CaseGallery.vue",
+    "app/components/case/CaseMetrics.vue",
+    "app/components/case/CasePeek.vue",
+    "app/components/case/CaseLinks.vue",
+    "app/components/case/CaseNext.vue",
+    "app/lib/dict/case.ts"
+   ],
+   "dependsOn": [
+    "F3",
+    "F4",
+    "F5"
+   ],
+   "wave": 5,
+   "steps": [
+    "Datos: useProject(slug) y useProjects() (para la siguiente obra en sortOrder, de forma circular). Si es 404, error.vue. useTint(cover.tint). definePageMeta({ viewTransition: { toTypes: ['caso'] } }).",
+    "CaseHeader: title (h1 > span con data-vt='title'), summary (RevealLines), role, year, org.name + org.city (sin año de respaldo: si falta, no se muestra), status (dict) y techs como enlaces a localeRoute('/projects?stack=slug') con CasePeek. Cada valor va dentro de un RecordField (projects.title, summary, role, year, org, status, techs).",
+    "CaseCover: COVER VIDEO en autoplay (MediaVideo) o COVER IMAGE (MediaImage eager con fetchpriority high), con data-vt='cover' y el mismo src que la tarjeta. Crecimiento de .88 a 1 y radio de 6 a 0 con scrub, más yPercent interno. Solo con la condición desktop + motion; en táctil, por debajo de 768 px o en Hiperfoco queda estática.",
+    "CaseSection: rótulo fijo (sticky a 5 rem, solo en desktop) con texto del diccionario (Encargo, Proceso, Resultado, Métricas, Enlaces) y cuerpo con RevealLines. brief y outcome dentro de RecordField.",
+    "CaseSteps: steps (title, body y su media si la tiene). CaseGallery: GALLERY por order con caption como figcaption. Las de viewport MOBILE van en el bloque 'En el teléfono' con parallax por paridad desde un prop index.",
+    "CaseMetrics: Metric en order, con etiqueta t('metric.'+key), valor format.metric(value, unit) en RollNumber y CasePeek con t('metricDesc.'+key), más source y measuredAt si existen. Sin línea de telemetría fija.",
+    "CasePeek: popover (verbo Asomar, scale .96 → 1, blur 2 → 0, 260 ms) que viaja entre anclas sin cerrarse. Para una tech muestra category (dict), since (yearsSince), note y las otras obras visibles (tech.projects). Accesible con teclado (botón con aria-expanded y Esc).",
+    "CaseLinks: links (label y url) con flecha externa. Botón 'Velo como registro' que llama a setRecord(true).",
+    "CaseNext: la siguiente obra en escena a pantalla completa, con su COVER IMAGE en profundidad (−10 % a 6 %), el título con data-travel-title, data-travel='next' y la temperatura que pasa de una obra a la otra mientras entra. Sombra para leer sobre portadas claras.",
+    "usePageSeo con title, summary, la COVER como og:image (con width, height y alt) y JSON-LD CreativeWork con autor desde about. Hiperfoco: CaseNext en escena, CasePeek animado y el parallax llevan data-hf='hide' o se desactivan; el cuerpo lleva data-hf='measure'."
+   ],
+   "acceptance": [
+    "Las 6 obras renderizan sin errores y sin texto escrito a mano: grep en app/components/case de 'PostgreSQL', 'Lighthouse', 'EROS CORE', '382' y 'PARANÁ' da 0.",
+    "Siguiente → el caso siguiente se transforma (título y portada) sin nombres duplicados de view transition.",
+    "El caso más largo (Ynara) sostiene 60 fps en el crecimiento de la portada en desktop (Performance de Chrome, sin long tasks de más de 50 ms en el scrub).",
+    "Con JS apagado, el contenido completo está en el HTML y con ?vista=registro llega el registro.",
+    "CLS = 0 en la carga del caso (la portada reserva su relación de aspecto).",
+    "Las métricas muestran la etiqueta del diccionario y el valor con su unidad en ES y EN."
+   ],
+   "notes": []
+  },
+  {
+   "id": "P4",
+   "title": "Página sobre mí y acceso al CV",
+   "goal": "/about con filosofía, cuatro datos, objetivo y trayectoria desde la base, más el CV Harvard ATS que se abre transformando su enlace en la hoja (/about?cv=ats).",
+   "files": [
+    "app/pages/about.vue",
+    "app/components/about/AboutIntro.vue",
+    "app/components/about/AboutFacts.vue",
+    "app/components/about/AboutTimeline.vue",
+    "app/components/about/AboutCvBlock.vue",
+    "app/lib/dict/about.ts"
+   ],
+   "dependsOn": [
+    "F3",
+    "F4",
+    "F5",
+    "F6"
+   ],
+   "wave": 5,
+   "steps": [
+    "Datos: useDoc('about'), useDoc('contact'), useExperience() y useCv() solo cuando ?cv=ats.",
+    "PageTitle t('nav.about'). AboutIntro: about.engineering_philosophy (RevealLines). Retrato desde about.portrait y portrait_alt si existen.",
+    "AboutFacts: about.technical_degree, higher_education, languages y work_modalities en RecordField. Después about.professional_goal.",
+    "AboutTimeline (id='trayectoria'): experience ordenada por startedAt desc, con kind (dict), role, org.name, period (format.period), summary y las obras ligadas (projects) como enlaces. Rótulos fijos en desktop.",
+    "AboutCvBlock: CvDownloads más el enlace 'Ver CV' a localeRoute('/about?cv=ats') con data-vt='cv-sheet'. Con ?cv=ats se muestra CvSheet en lugar del cuerpo (una sola superficie por pantalla) y Esc o Backspace vuelven a /about. El bloque de impresión oculto queda montado, así Ctrl+P en /about imprime el CV.",
+    "usePageSeo (title, description desde about.professional_goal, JSON-LD Person)."
+   ],
+   "acceptance": [
+    "/about y /about?cv=ats&lang=en se renderizan en el SSR sin literales: grep en app/components/about de 'Da Vinci', 'CET', 'Río Negro', 'Español' y 'B2': 0.",
+    "'Ver CV' se transforma en la hoja sin telón, y con reduced motion es un corte directo.",
+    "/experience redirige 301 a /about#trayectoria y el foco o el scroll quedan en la trayectoria.",
+    "node scripts/cv-pdf.mjs sigue en verde.",
+    "scripts/cv-pdf.mjs sobre /about?cv=ats produce PDFs de una página A4 en ES y EN (cota dual)"
+   ],
+   "notes": []
+  },
+  {
+   "id": "P5",
+   "title": "Artículos (blog) con el estilo nuevo",
+   "goal": "Mateo decidió conservar el blog. /articles (lista) y /articles/:slug (artículo) con el lenguaje de movimiento del sitio nuevo, ES/EN desde la base, enlazados desde el pie.",
+   "files": [
+    "app/pages/articles/index.vue",
+    "app/pages/articles/[slug].vue",
+    "app/components/articles/",
+    "app/components/blog/",
+    "app/lib/dict/articles.ts"
+   ],
+   "dependsOn": [
+    "F3",
+    "F4",
+    "F5",
+    "D2"
+   ],
+   "wave": 5,
+   "steps": [
+    "Leer desde /api/articles y /api/articles/:slug con ?lang= (D2 lo resuelve con ArticleTranslation).",
+    "Lista: filas tipográficas como las de la home, con fecha y resumen; título compartido (view transition name único) hacia el artículo.",
+    "Artículo: título que viaja, cuerpo markdown sanitizado con medida de lectura cómoda, RevealLines en encabezados, anterior/siguiente. Reusar o rehacer ArticleMarkdown.vue.",
+    "SEO con usePageSeo (título, descripción, og, hreflang, JSON-LD BlogPosting desde la base).",
+    "Hiperfoco y reduced motion respetados con las anclas de docs/diseno.md."
+   ],
+   "acceptance": [
+    "/articles y /articles/:slug renderizan por SSR desde la API en ES y con ?lang=en, sin texto escrito a mano fuera de app/lib/dict/articles.ts",
+    "Navegable por teclado, contraste AA, sin animación con prefers-reduced-motion",
+    "pnpm typecheck y pnpm lint en 0"
+   ],
+   "notes": []
+  },
+  {
+   "id": "X1",
+   "title": "Hiperfoco: revisión, UX y cierre",
+   "goal": "Cerrar el Modo Focus existente sobre el sitio nuevo: el SSR correcto, la navegación conservada, el contraste AA, la entrada y salida con transformación, Esc y H coherentes y sin componentes propios.",
+   "files": [
+    "app/composables/useHyperfocus.ts",
+    "app/components/site/HyperfocusToggle.vue",
+    "app/assets/css/hyperfocus.css",
+    "app/composables/useHotkeys.ts",
+    "app/components/home/",
+    "app/components/work/",
+    "app/components/case/",
+    "app/components/about/",
+    "tests/e2e/hyperfocus.spec.ts",
+    "app/lib/dict/focus.ts",
+    "docs/diseno.md"
+   ],
+   "dependsOn": [
+    "P1",
+    "P2",
+    "P3",
+    "P4"
+   ],
+   "wave": 6,
+   "steps": [
+    "Antes de tocar nada: inventario escrito (en docs/diseno.md, sección Hiperfoco) de lo que hacía el Hiperfoco en main (git show main:<archivo>): colecciones como tabla, CV en Harvard, dossier en la home, orden de Esc, atajo H, persistencia. Cada comportamiento se conserva, se mejora o se descarta con motivo. El contenido del dossier sale de la base. ?foco=1 funciona como entrada compartible.",
+    "setHyperfocus envuelve el cambio en document.startViewTransition cuando allowTransitions es true (220 ms): la palabra 'Hiperfoco' del botón conserva su view-transition-name y la columna de lectura se angosta. Con reduced motion el cambio es instantáneo. Anuncia 'Hiperfoco activado' o 'desactivado' por useAnnounce.",
+    "Recorrer las 4 páginas y completar las marcas data-hf y data-ornament que falten: queda una columna de lectura sin vista previa, sin escena siguiente, sin parallax ni imanes, con la navegación intacta y las imágenes en monocromo.",
+    "Revisar useHotkeys: H no cambia el modo detrás de un diálogo, Esc cierra capas antes de salir del Hiperfoco y Backspace sube de nivel.",
+    "Verificar el contraste de hyperfocus.css con check-contrast y axe en los dos temas.",
+    "tests/e2e/hyperfocus.spec.ts: cookie → SSR con data-hyperfocus sin cambio de layout (CLS 0 con PerformanceObserver), navegación posible con el modo activo, toggle con aria-pressed y foco conservado, Esc/H, Lenis apagado (window.__lenis ausente o detenido) y el CV impreso en una página con el modo activo."
+   ],
+   "acceptance": [
+    "hyperfocus.spec pasa en 375 y 1440 px, en oscuro y claro.",
+    "axe con Hiperfoco activo: 0 violaciones serias en las 4 páginas.",
+    "No existe ningún componente que se renderice solo en Hiperfoco: grep de 'v-if=\\\"isHyperfocus' en app/components da 0."
+   ],
+   "notes": []
+  },
+  {
+   "id": "X3",
+   "title": "SEO, CSP y rendimiento + retiro de /lab",
+   "goal": "Dejar indexables ES y EN con hreflang recíproco, JSON-LD desde la base, imágenes OG correctas, la CSP ajustada y fuentes e imágenes sin costo de más.",
+   "files": [
+    "app/composables/usePageSeo.ts",
+    "app/nitro/routes/sitemap.xml.ts",
+    "nuxt.config.ts",
+    "app/middleware/canonical.global.ts",
+    "scripts/og-default.mjs",
+    "public/og/default.png",
+    "public/robots.txt",
+    "tests/e2e/seo.spec.ts",
+    "app/pages/lab.vue",
+    "app/components/lab/",
+    "app/lib/dict/seo.ts"
+   ],
+   "dependsOn": [
+    "P1",
+    "P2",
+    "P3",
+    "P4"
+   ],
+   "wave": 6,
+   "steps": [
+    "usePageSeo: JSON-LD Person (name, jobTitle = about.role, sameAs = contact.github y contact.linkedin, image = about.portrait), WebSite, BreadcrumbList por ruta y CreativeWork por obra. og:locale según el idioma. Canonical sin vista ni cv. og:image con width, height y alt.",
+    "scripts/og-default.mjs: genera public/og/default.png de 1200x630 con Playwright, a partir de about.display_name y about.headline de la API.",
+    "nuxt.config: revisar la CSP final contra los orígenes reales (media de la API, el hash del script inline) y que no queden fonts.googleapis ni fontshare. robots.txt con la URL del sitemap.",
+    "Revisar el sitemap (alternativas en) y las 301 del middleware con los casos borde (barra final, mayúsculas, query conservada).",
+    "tests/e2e/seo.spec.ts: title, description, canonical, hreflang recíproco, og:image de 1200x630 o COVER con dimensiones, JSON-LD que se parsea, html lang según ?lang y las 301.",
+    "(ex X4) /lab y el visor Modern IDE se archivan (decisión de Mateo): /lab redirige con 301 a la home desde canonical.global.ts; nada de lab queda en app/ ni en nuxt.config. F1 y F6 ya mueven los archivos a docs/archive/lab/: verificar que no quede nada."
+   ],
+   "acceptance": [
+    "seo.spec pasa contra `pnpm build && pnpm start`.",
+    "La consola no muestra violaciones de CSP en las 4 páginas ni al reproducir un video.",
+    "La red de la home no hace pedidos a terceros."
+   ],
+   "notes": []
+  },
+  {
+   "id": "X2",
+   "title": "Ver como registro (tecla R): el morph",
+   "goal": "Portar morph() de demo.html: los mismos nodos viajan entre la composición editorial y el registro tipado con FLIP, fantasmas y trazado de líneas, mientras la URL cambia al instante.",
+   "files": [
+    "app/lib/morph/flip.ts",
+    "app/lib/morph/timeline.ts",
+    "app/plugins/record-morph.client.ts",
+    "app/components/record/RecordField.vue",
+    "tests/e2e/record.spec.ts"
+   ],
+   "dependsOn": [
+    "P1",
+    "P2",
+    "P3",
+    "P4"
+   ],
+   "wave": 7,
+   "steps": [
+    "flip.ts: captureBefore(root) mide los valores .fv, ornamentos e imágenes. play(root, before, on) aplica viaje (traslación + escala por razón de font-size), fantasma (clon que se apaga del 12 % al 46 %, el nodo real aparece desde el 50 %) e imágenes (escala X/Y). Los clones llevan view-transition-name 'none'.",
+    "timeline.ts: acompañamiento de plan §3 (ornamentos 0–0,3 s; valores con 14 ms de stagger y tope de 220 ms, 0,95 s expo.inOut; líneas --rs desde 0,18 s con 22 ms por fila; rótulos con máscara a mitad del viaje del valor; comillas a 0,75 s) y su inverso.",
+    "record-morph.client.ts: se engancha a 'record:before' (captura y revert de escenas vía useMotion) y 'record:after' (nextTick y play). Ancla el scroll con lenis.scrollTo(y, { immediate: true, force: true }) y bloquea el alto del documento. Ignora una segunda R mientras corre, cuando hay una view transition activa o durante la intro. Si se desmonta a mitad: progress(1) y remove de la capa. __morph solo en dev.",
+    "RecordField: ajustar lo que haga falta para que el diseño y el registro compartan el nodo .fv que viaja.",
+    "tests/e2e/record.spec.ts: R alterna ?vista=registro al instante, la segunda R durante la animación se ignora, reduced motion da un cambio instantáneo, con JS apagado ?vista=registro llega renderizado y no quedan nodos de la capa del morph después de 2 s."
+   ],
+   "acceptance": [
+    "En el caso de Ynara, R y R de nuevo no cambian la posición de lectura (el primer valor visible queda a ±8 px).",
+    "Ningún texto cambia de ancho mientras viaja (verificado congelando __morph.pause().progress(.4)).",
+    "record.spec pasa y `pnpm typecheck` en 0."
+   ],
+   "notes": [
+    "Corre solo en su ola: puede tocar app/components/** y useHotkeys.ts si el morph lo necesita."
+   ]
+  },
+  {
+   "id": "Q1",
+   "title": "Suite e2e del sitio nuevo",
+   "goal": "Reemplazar las specs del explorador por pruebas de lo que el rediseño promete y de lo que se conserva, contra el build de producción.",
+   "files": [
+    "playwright.config.ts",
+    "package.json",
+    "pnpm-lock.yaml",
+    "tests/e2e/"
+   ],
+   "dependsOn": [
+    "X1",
+    "X2",
+    "X3",
+    "X4"
+   ],
+   "wave": 8,
+   "steps": [
+    "playwright.config.ts: webServer con `pnpm build && node .output/server/index.mjs` más la API. Proyectos 375, 768 y 1440 × oscuro y claro, uno con reducedMotion 'reduce' y uno con javaScriptEnabled false. Agregar @axe-core/playwright como devDependency.",
+    "Borrar awwwards-deep-audit, awwwards-verification, blur-audit, route-loader, deep-visual-audit, ux-audit, arch-verification y library-audit (salvo que /lab siga), junto con sus capturas obsoletas de tests/e2e/screenshots. Conservar admin-audit.",
+    "cv-audit.spec de solo lectura: idioma por ?lang, pageCount === 1 y altura de .cv-harvard entre 248 y 265 mm en ES y EN, sin escribir en public/cv.",
+    "Specs nuevas: routes (200 en canónicas y en las 6 obras, 404 en null-net y lampone, 301 en alias), a11y (axe en 4 páginas + /about?cv=ats × 2 temas × Hiperfoco), keyboard (Tab, skip link, paleta, 1-5, j/k, Enter, Esc, Backspace, R y H), nojs, motion (reduced: sin loader, sin Lenis y sin autoplay), i18n (?lang=en con contenido EN desde la base y untranslated vacío), cls (CLS 0 en la home y el caso), media (/media/** responde desde :3000 y el video reproduce) y data (grep de la lista de literales prohibidos en app/)."
+   ],
+   "acceptance": [
+    "`pnpm test:e2e` en verde en todos los proyectos.",
+    "Ninguna spec depende de clases del explorador viejo (.ventana, .hd-*, #route-loader).",
+    "Correr la suite no modifica ningún archivo versionado (git status limpio después)."
+   ],
+   "notes": []
+  },
+  {
+   "id": "Q2",
+   "title": "Piso de calidad, capturas de referencia y cierre de documentación",
+   "goal": "Cerrar la fase R7: auditoría con piso-calidad, capturas de referencia versionadas, Lighthouse local y documentación al día.",
+   "files": [
+    "tests/e2e/visual.spec.ts",
+    "tests/e2e/visual.spec.ts-snapshots/",
+    "docs/fases.md",
+    "CLAUDE.md",
+    "README.md",
+    "server/admin/admin.css"
+   ],
+   "dependsOn": [
+    "Q1"
+   ],
+   "wave": 9,
+   "steps": [
+    "Correr la skill piso-calidad sobre las 4 páginas y /about?cv=ats y corregir los bloqueantes. Cada corrección se anota en el commit con el archivo tocado.",
+    "visual.spec.ts con toHaveScreenshot: 5 vistas × 3 anchos × 2 temas, con animaciones desactivadas.",
+    "Lighthouse local sobre el build (home y caso de La Rúcula): anotar Performance, Accesibilidad, Buenas prácticas y SEO en docs/fases.md.",
+    "Recompilar admin.css (pnpm build:admin-css) por si A3 o A2 dejaron clases sin compilar.",
+    "Actualizar docs/fases.md (R0–R7 hechas), CLAUDE.md (estructura final, comandos db:snapshot, db:snapshot:check y cv:pdf) y README.md.",
+    "Grep final de control: ningún literal de contenido en app/ (lista de Q1/data) y ningún TODO, test.skip ni .only en archivos cambiados."
+   ],
+   "acceptance": [
+    "piso-calidad sin bloqueantes.",
+    "Las capturas de referencia quedan versionadas y visual.spec pasa dos veces seguidas.",
+    "Lighthouse local de Accesibilidad = 100 y CLS = 0 en la home y el caso.",
+    "`pnpm typecheck`, `pnpm lint` y `pnpm test:e2e` en 0."
+   ],
+   "notes": [
+    "Actualizar también la skill piso-calidad si D0 no lo hizo."
+   ]
+  }
+ ]
+}
