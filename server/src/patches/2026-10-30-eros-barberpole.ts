@@ -8,10 +8,11 @@
  *
  * Uso: pnpm tsx server/src/patches/2026-10-30-eros-barberpole.ts   (con DATABASE_URL apuntando a la base)
  * Idempotente: correrlo dos veces deja lo mismo. Si cambia el seed, este archivo no se actualiza: es un registro.
+ * Desde la migración 20261101 las métricas son filas Metric: el parche las reemplaza con las mismas reglas.
  */
 import { db } from '../db.js'
 import { ProjectStatus } from '../../generated/prisma/client.js'
-import type { Prisma } from '../../generated/prisma/client.js'
+import { metricRows } from '../seed/metrics.js'
 
 const BARBERPOLE_URL = 'https://turnos.mateogs.tech/'
 
@@ -25,8 +26,8 @@ const EROS = {
   outcome: 'En producción en eros.mateogs.tech e integrado a la consola del portafolio como Eros AI Suite: Job Hunter, Contenido omnicanal y TrendRadar. Corre en un VPS propio con FastAPI y SQLite, publica a través de n8n y se supervisa desde un bot privado de Telegram.',
   url: 'https://eros.mateogs.tech',
   repo: 'https://github.com/MateoGs013/eros-agent',
-  metrics: { freeTierQuota: '1,500 RPD', operatingCost: '$0/mes', platformsCount: 4, responseLatencyMs: 35 } as Prisma.InputJsonValue,
 }
+const EROS_METRICS = metricRows({ freeTierQuota: '1,500 RPD', operatingCost: '$0/mes', platformsCount: 4, responseLatencyMs: 35 })
 const EROS_TECHS = ['fastapi', 'python', 'typescript', 'postgresql']
 const EROS_LINKS = [
   { label: 'código fuente', url: 'https://github.com/MateoGs013/eros-agent' },
@@ -50,6 +51,7 @@ async function main() {
           techs: { set: EROS_TECHS.map(slug => ({ slug })) },
           links: { deleteMany: {}, create: EROS_LINKS },
           steps: { deleteMany: {}, create: EROS_STEPS.map((s, i) => ({ ...s, order: i + 1 })) },
+          metrics: { deleteMany: {}, create: EROS_METRICS },
         },
       })
       console.log('eros: actualizado')

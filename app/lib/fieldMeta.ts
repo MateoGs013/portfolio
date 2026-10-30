@@ -1,18 +1,18 @@
 /**
- * Metadatos de campos del esquema técnico.
+ * Metadatos de campos del esquema (prisma/schema.prisma).
  *
  * Cada campo declara su tipo visible en pantalla (`type`), si requiere ancho completo
- * de lectura (`wide`) y si admite valores nulos (`nullable`).
+ * de lectura (`wide`) y si admite valores nulos (`nullable`). La vista registro y el admin
+ * los muestran tal cual, así que los rótulos son llanos.
  *
- * El orden de los campos es el orden de lectura de la hoja técnica:
- * primero la identidad y síntesis, luego enlaces y métricas, y finalmente
- * el dossier profundo (brief, outcome, steps, media).
+ * El orden de los campos es el orden de lectura: identidad y síntesis, enlaces y métricas,
+ * y al final el relato (brief, outcome, steps, media).
  */
 
 export type World = 'datos'
 
 export type FieldType =
-  | 'string' | 'text' | 'int' | 'bool' | 'date' | 'datetime' | 'url' | 'json'
+  | 'string' | 'text' | 'int' | 'decimal' | 'bool' | 'date' | 'datetime' | 'url' | 'email' | 'list' | 'json'
   | `enum ${string}`
   | `relation → ${string}`
   | `relation[] → ${string}`
@@ -25,7 +25,7 @@ export interface FieldMeta {
 }
 
 export type CollectionKey = 'projects' | 'experience' | 'stack' | 'articles' | 'orgs'
-export type DocKey = 'about' | 'contact' | 'home' | 'lab'
+export type DocKey = 'about' | 'contact'
 
 export interface CollectionMeta {
   label: string
@@ -40,22 +40,24 @@ export const fieldMeta: Record<CollectionKey, CollectionMeta> = {
     kind: 'collection',
     nameField: 'title',
     fields: {
-      summary: { type: 'string', label: 'síntesis ejecutiva', wide: true },
-      media: { type: 'relation[] → Media', label: 'capturas & piezas multimedia', wide: true },
-      brief: { type: 'text', label: 'encargo / brief', wide: true, nullable: true },
-      outcome: { type: 'text', label: 'resultado en producción', wide: true, nullable: true },
-      steps: { type: 'relation[] → ProcessStep', label: 'proceso de ingeniería (taller)', wide: true },
-      metrics: { type: 'json', label: 'telemetría & métricas lighthouse', wide: true, nullable: true },
-      techs: { type: 'relation[] → Tech', label: 'arsenal tecnológico' },
-      links: { type: 'relation[] → Link', label: 'enlaces directos' },
+      summary: { type: 'string', label: 'resumen', wide: true },
+      media: { type: 'relation[] → Media', label: 'imágenes y videos', wide: true },
+      brief: { type: 'text', label: 'encargo', wide: true, nullable: true },
+      outcome: { type: 'text', label: 'resultado', wide: true, nullable: true },
+      steps: { type: 'relation[] → ProcessStep', label: 'proceso', wide: true },
+      metrics: { type: 'relation[] → Metric', label: 'métricas', wide: true },
+      techs: { type: 'relation[] → Tech', label: 'tecnologías' },
+      links: { type: 'relation[] → Link', label: 'enlaces' },
       url: { type: 'url', label: 'sitio en vivo', nullable: true },
-      repo: { type: 'url', label: 'código en github', nullable: true },
-      year: { type: 'int', label: 'año de entrega' },
-      role: { type: 'string', label: 'rol desempeñado' },
-      status: { type: 'enum ProjectStatus', label: 'estado de producción' },
-      org: { type: 'relation → Org', label: 'cliente / organización', nullable: true },
-      featured: { type: 'bool', label: 'proyecto destacado' },
-      publishedAt: { type: 'datetime', label: 'publicado en', nullable: true },
+      repo: { type: 'url', label: 'repositorio', nullable: true },
+      year: { type: 'int', label: 'año' },
+      role: { type: 'string', label: 'rol' },
+      status: { type: 'enum ProjectStatus', label: 'estado' },
+      org: { type: 'relation → Org', label: 'cliente u organización', nullable: true },
+      experiences: { type: 'relation[] → Experience', label: 'experiencia ligada' },
+      featured: { type: 'bool', label: 'destacada' },
+      publishedAt: { type: 'datetime', label: 'publicado en el sitio', nullable: true },
+      translations: { type: 'relation[] → ProjectTranslation', label: 'traducciones' },
       updatedAt: { type: 'datetime', label: 'última actualización' },
       slug: { type: 'string', label: 'identificador' },
     },
@@ -66,13 +68,19 @@ export const fieldMeta: Record<CollectionKey, CollectionMeta> = {
     kind: 'collection',
     nameField: 'role',
     fields: {
-      role: { type: 'string', label: 'rol / cargo' },
-      org: { type: 'relation → Org', label: 'institución / empresa', nullable: true },
-      startedAt: { type: 'date', label: 'fecha de inicio' },
-      endedAt: { type: 'date', label: 'fecha de culminación', nullable: true },
-      summary: { type: 'string', label: 'síntesis de desempeño', wide: true },
-      story: { type: 'text', label: 'relato de aprendizajes e impacto', wide: true, nullable: true },
-      techs: { type: 'relation[] → Tech', label: 'tecnologías aplicadas' },
+      role: { type: 'string', label: 'rol' },
+      kind: { type: 'enum ExperienceKind', label: 'tipo' },
+      org: { type: 'relation → Org', label: 'institución o empresa', nullable: true },
+      startedAt: { type: 'date', label: 'inicio' },
+      endedAt: { type: 'date', label: 'fin', nullable: true },
+      location: { type: 'string', label: 'ubicación', nullable: true },
+      summary: { type: 'string', label: 'resumen', wide: true },
+      story: { type: 'text', label: 'relato', wide: true, nullable: true },
+      highlights: { type: 'list', label: 'viñetas del CV', wide: true },
+      cvOrder: { type: 'int', label: 'orden en el CV', nullable: true },
+      projects: { type: 'relation[] → Project', label: 'obras' },
+      techs: { type: 'relation[] → Tech', label: 'tecnologías' },
+      translations: { type: 'relation[] → ExperienceTranslation', label: 'traducciones' },
       slug: { type: 'string', label: 'identificador' },
     },
   },
@@ -84,11 +92,12 @@ export const fieldMeta: Record<CollectionKey, CollectionMeta> = {
     fields: {
       name: { type: 'string', label: 'tecnología' },
       category: { type: 'enum TechCategory', label: 'categoría' },
-      since: { type: 'int', label: 'año de adopción' },
-      note: { type: 'string', label: 'criterio técnico de uso', wide: true, nullable: true },
-      projects: { type: 'relation[] → Project', label: 'proyectos en que se usó' },
-      experiences: { type: 'relation[] → Experience', label: 'etapas en que se usó' },
-      color: { type: 'string', label: 'color distintivo', nullable: true },
+      since: { type: 'int', label: 'la usa desde' },
+      note: { type: 'string', label: 'cuándo la elige', wide: true, nullable: true },
+      projects: { type: 'relation[] → Project', label: 'obras' },
+      experiences: { type: 'relation[] → Experience', label: 'experiencia' },
+      color: { type: 'string', label: 'color', nullable: true },
+      translations: { type: 'relation[] → TechTranslation', label: 'traducciones' },
       slug: { type: 'string', label: 'identificador' },
     },
   },
@@ -99,10 +108,10 @@ export const fieldMeta: Record<CollectionKey, CollectionMeta> = {
     nameField: 'name',
     fields: {
       name: { type: 'string', label: 'nombre' },
-      city: { type: 'string', label: 'ubicación / sede', nullable: true },
-      url: { type: 'url', label: 'sitio oficial', nullable: true },
-      projects: { type: 'relation[] → Project', label: 'proyectos asociados' },
-      experiences: { type: 'relation[] → Experience', label: 'experiencias asociadas' },
+      city: { type: 'string', label: 'ciudad', nullable: true },
+      url: { type: 'url', label: 'sitio', nullable: true },
+      projects: { type: 'relation[] → Project', label: 'obras' },
+      experiences: { type: 'relation[] → Experience', label: 'experiencia' },
       slug: { type: 'string', label: 'identificador' },
     },
   },
@@ -112,32 +121,80 @@ export const fieldMeta: Record<CollectionKey, CollectionMeta> = {
     kind: 'collection',
     nameField: 'title',
     fields: {
-      summary: { type: 'string', label: 'síntesis ejecutiva', wide: true },
-      content: { type: 'text', label: 'desarrollo técnico (markdown)', wide: true },
-      readingTimeMin: { type: 'int', label: 'tiempo de lectura (min)' },
-      techs: { type: 'relation[] → Tech', label: 'tecnologías aplicadas' },
-      project: { type: 'relation → Project', label: 'proyecto de referencia', nullable: true },
-      status: { type: 'enum ArticleStatus', label: 'estado de publicación' },
-      featured: { type: 'bool', label: 'artículo destacado' },
+      summary: { type: 'string', label: 'resumen', wide: true },
+      content: { type: 'text', label: 'contenido (markdown)', wide: true },
+      readingTimeMin: { type: 'int', label: 'minutos de lectura' },
+      techs: { type: 'relation[] → Tech', label: 'tecnologías' },
+      project: { type: 'relation → Project', label: 'obra relacionada', nullable: true },
+      status: { type: 'enum ArticleStatus', label: 'estado' },
+      featured: { type: 'bool', label: 'destacado' },
       publishedAt: { type: 'datetime', label: 'publicado en', nullable: true },
       canonicalUrl: { type: 'url', label: 'enlace canónico', nullable: true },
+      translations: { type: 'relation[] → ArticleTranslation', label: 'traducciones' },
       slug: { type: 'string', label: 'identificador' },
     },
   },
 }
 
-/** Forma de cada item de `Doc.fields`. */
+/** Registros que solo se ven dentro de una obra (no son colecciones navegables). */
+export const relationMeta: Record<'media' | 'metrics', { label: string, fields: Record<string, FieldMeta> }> = {
+  media: {
+    label: 'Media',
+    fields: {
+      kind: { type: 'enum MediaKind', label: 'tipo' },
+      role: { type: 'enum MediaRole', label: 'rol' },
+      src: { type: 'string', label: 'archivo' },
+      srcWebm: { type: 'string', label: 'archivo webm', nullable: true },
+      poster: { type: 'string', label: 'póster', nullable: true },
+      alt: { type: 'string', label: 'texto alternativo' },
+      caption: { type: 'string', label: 'pie', nullable: true },
+      tint: { type: 'string', label: 'tinte', nullable: true },
+      viewport: { type: 'enum MediaViewport', label: 'pantalla' },
+      width: { type: 'int', label: 'ancho' },
+      height: { type: 'int', label: 'alto' },
+      order: { type: 'int', label: 'orden' },
+      bytes: { type: 'int', label: 'peso en bytes', nullable: true },
+      translations: { type: 'relation[] → MediaTranslation', label: 'traducciones' },
+    },
+  },
+  metrics: {
+    label: 'Metric',
+    fields: {
+      key: { type: 'string', label: 'clave' },
+      value: { type: 'decimal', label: 'valor', nullable: true },
+      items: { type: 'list', label: 'lista' },
+      unit: { type: 'string', label: 'unidad', nullable: true },
+      label: { type: 'string', label: 'rótulo propio', nullable: true },
+      source: { type: 'string', label: 'origen', nullable: true },
+      measuredAt: { type: 'date', label: 'medido el', nullable: true },
+      order: { type: 'int', label: 'orden' },
+    },
+  },
+}
+
+/**
+ * Unidades de Metric.unit. NULL es un conteo o un puntaje. El rótulo de cada una va en el
+ * diccionario de interfaz; el valor se formatea con Intl según el idioma.
+ */
+export const metricUnits = ['s', 'ms', 'kb', 'fps', 'h', 'req_day', 'usd_month'] as const
+export type MetricUnit = typeof metricUnits[number]
+
+/** Un valor de documento: texto o lista (about.languages). */
+export type DocFieldValue = string | string[]
+
+/** Forma de cada item de `Doc.fields`. `en` es el valor en inglés; sin él, se sirve el español. */
 export type DocField = {
   name: string
   type: FieldType
-  value: string
+  value: DocFieldValue
+  en?: DocFieldValue
   wide?: boolean
   worlds?: string[]
 }
 
-/** Orden de navegación en el explorador. */
+/** Orden de lectura. */
 export const collectionOrder: CollectionKey[] = ['projects', 'experience', 'stack', 'articles', 'orgs']
-export const docOrder: DocKey[] = ['about', 'contact', 'home', 'lab']
+export const docOrder: DocKey[] = ['about', 'contact']
 
 export function fieldsFor(collection: CollectionKey, _world?: string): string[] {
   return Object.keys(fieldMeta[collection].fields)

@@ -330,9 +330,10 @@ export function safeHref(url?: string | null): string | undefined {
 
 /** Un campo de documento como fila: las urls y los mails se vuelven links seguros. */
 function docRow(f: DocField): Row {
-  const row: Row = { name: f.name, type: f.type, value: f.value, wide: f.wide }
-  if (/^[^\s@]+@[^\s@]+$/.test(f.value)) row.href = safeHref(`mailto:${f.value}`)
-  else if (f.type === 'url') row.href = safeHref(f.value)
+  const value = Array.isArray(f.value) ? f.value.join(' · ') : f.value
+  const row: Row = { name: f.name, type: f.type, value, wide: f.wide }
+  if (f.type === 'email' || /^[^\s@]+@[^\s@]+$/.test(value)) row.href = safeHref(`mailto:${value}`)
+  else if (f.type === 'url') row.href = safeHref(value)
   return row
 }
 
@@ -379,32 +380,6 @@ const fallbackDocData: Record<DocKey, Doc> = {
       { name: 'preferred_contact', type: 'string', value: 'Email directo, LinkedIn o mensaje vía GitHub' },
     ],
   },
-  home: {
-    key: 'home',
-    title: 'home',
-    updatedAt: new Date().toISOString(),
-    fields: [
-      { name: 'headline', type: 'string', value: 'CONSTRUIR CON PROPÓSITO' },
-      { name: 'about_tag', type: 'string', value: 'SOBRE MÍ —' },
-      { name: 'about_text', type: 'text', wide: true, value: 'Construyo productos digitales y arquitecturas de software que unen precisión relacional en PostgreSQL 17, APIs tipadas (TypeScript / Python) e interfaces reactivas contemporáneas con micro-interacciones espaciales. Mínimo ruido. Máximo impacto.' },
-      { name: 'globe_pill', type: 'string', value: 'DISPONIBLE GLOBALMENTE · COLABORACIONES REMOTAS Y FREELANCE' },
-      { name: 'profile_role', type: 'string', value: 'DESARROLLADOR FULL STACK Y CREATIVO' },
-      { name: 'profile_status', type: 'string', value: '● DISPONIBLE · 2026' },
-      { name: 'manifesto_quote', type: 'text', wide: true, value: 'EL BUEN CÓDIGO NO ES SOLO CÓMO SE VE.<br>ES CÓMO CORRE, A QUIÉN SIRVE Y QUÉ REPRESENTA.' },
-      { name: 'manifesto_lead', type: 'text', wide: true, value: 'DISEÑO CON PROPÓSITO.<br>CONSTRUYO CON PRECISIÓN.<br>ENTREGO CON ORGULLO.' },
-    ],
-  },
-  lab: {
-    key: 'lab',
-    title: 'lab ui',
-    updatedAt: new Date().toISOString(),
-    fields: [
-      { name: 'catalog', type: 'string', value: 'Sonzogni × Bencho UI / Vue Bits v2.0' },
-      { name: 'components_count', type: 'string', value: '31' },
-      { name: 'architecture', type: 'string', value: 'Vue 3 · Nuxt 4 · Tailwind CSS v4 · Web Audio API · 2nd-order Springs' },
-      { name: 'philosophy', type: 'text', wide: true, value: 'Laboratorio de micro-interacciones de alta fidelidad: resortes amortiguados de segundo orden, deformaciones cinéticas, x-ray canvas, audio sintético procedimental y respeto estricto a accesibilidad y modo hiperfoco.' },
-    ],
-  },
 }
 
 export async function resolveExplorer(api: Api, path: Path, query: LocationQuery, preloadedSchema?: Answer<SchemaEntry[]> | null): Promise<Explorer> {
@@ -419,11 +394,10 @@ export async function resolveExplorer(api: Api, path: Path, query: LocationQuery
 
   if (!root) {
     // La raíz es la base de datos completa: sus colecciones y documentos
-    const [schema, projectsRes, expRes, homeRes] = await Promise.all([
+    const [schema, projectsRes, expRes] = await Promise.all([
       (preloadedSchema ? Promise.resolve(preloadedSchema) : api.schema()).catch(() => fallbackSchemaData),
       api.list('projects').catch(() => ({ data: fallbackProjects, meta: { count: fallbackProjects.length, filters: {} }, request: 'GET /api/projects [fallback]', status: 200, ms: 0 })),
       api.list('experience').catch(() => ({ data: fallbackExperience, meta: { count: fallbackExperience.length, filters: {} }, request: 'GET /api/experience [fallback]', status: 200, ms: 0 })),
-      api.doc('home').catch(() => null),
     ])
     last = schema
     const schemaMap: Record<string, number> = {}
@@ -446,7 +420,7 @@ export async function resolveExplorer(api: Api, path: Path, query: LocationQuery
       line: ['database', `${pad(schema.meta.count)} tables`, 'PostgreSQL 17'],
       count: schema.meta.count,
       facets: [],
-      items: schema.data.filter(e => e.key !== 'home').map(e => {
+      items: schema.data.map(e => {
         const info = rootInfo[e.key]
         return {
           key: e.key,
@@ -460,7 +434,7 @@ export async function resolveExplorer(api: Api, path: Path, query: LocationQuery
       }),
       projects: projectsRes?.data ?? [],
       experience: expRes?.data ?? [],
-      homeDoc: homeRes?.data ?? null,
+      homeDoc: null,
       schemaCounts: schemaMap,
     }
     return done()
@@ -472,25 +446,6 @@ export async function resolveExplorer(api: Api, path: Path, query: LocationQuery
   // Documento: es una hoja directa
   if (isDoc(root)) {
     if (slug) throw notFound()
-    if (root === 'lab') {
-      const fallbackLab = fallbackDocData.lab
-      last = {
-        data: fallbackLab,
-        meta: { count: fallbackLab.fields.length, filters: {} },
-        request: 'GET /api/docs/lab',
-        status: 200,
-        ms: 0,
-      }
-      detail = {
-        kind: 'document',
-        name: '07 · lab ui · componentes',
-        type: 'laboratory · UI Primitives & Springs',
-        updated: new Date().toISOString().slice(0, 10),
-        rawRecord: fallbackLab,
-        rows: fallbackLab.fields.map((f: DocField) => docRow(f)),
-      }
-      return done()
-    }
     if (root === 'about') {
       const [answerRes, expRes, projRes, contactRes] = await Promise.all([
         api.doc(root).catch(() => null),
