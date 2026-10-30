@@ -441,20 +441,44 @@ adminApi.delete('/experience/:id', async (req, res) => {
 
 // ─── docs ───────────────────────────────────────────────────────────────────
 
+const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+
+/**
+ * Valor de un campo de Doc según su tipo (DocFieldValue en app/lib/fieldMeta.ts).
+ * - list: array de textos; si llega un texto (el textarea del admin), se parte por renglón.
+ * - url / email: se validan; vacío queda vacío.
+ * Devuelve undefined cuando no vino nada (sirve para `en`, que es opcional).
+ */
+function docValue(raw: unknown, type: string, where: string): string | string[] | undefined {
+  if (raw === undefined || raw === null) return undefined
+  if (type === 'list') {
+    const items = Array.isArray(raw)
+      ? raw.filter((x): x is string => typeof x === 'string')
+      : typeof raw === 'string' ? raw.split(/\r?\n/) : []
+    return items.map(x => x.trim()).filter(Boolean)
+  }
+  if (typeof raw !== 'string') throw new HttpError(400, `${where}: se esperaba texto`)
+  const val = raw.trim()
+  if (val === '') return ''
+  if (type === 'url') return optUrl({ val }, 'val') ?? ''
+  if (type === 'email' && !EMAIL.test(val)) throw new HttpError(400, `${where}: email inválido`)
+  return type === 'email' ? val : raw
+}
+
 function docFields(b: Record<string, unknown>): Prisma.InputJsonValue {
   return list(b, 'fields').map(f => {
+    const name = str(f, 'name')
     const type = str(f, 'type')
-    let val = typeof f['value'] === 'string' ? f['value'] : ''
-    if (type === 'url' && val.trim() !== '') {
-      val = optUrl({ val }, 'val') ?? ''
-    }
+    const value = docValue(f['value'], type, name) ?? (type === 'list' ? [] : '')
+    const en = docValue(f['en'], type, `${name} (en)`)
     const worlds = Array.isArray(f['worlds'])
       ? f['worlds'].filter((w): w is string => typeof w === 'string')
       : []
     return {
-      name: str(f, 'name'),
+      name,
       type,
-      value: val,
+      value,
+      ...(en !== undefined && en !== '' && !(Array.isArray(en) && !en.length) ? { en } : {}),
       ...(bool(f, 'wide') ? { wide: true } : {}),
       ...(worlds.length ? { worlds } : {}),
     }

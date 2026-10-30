@@ -13,9 +13,13 @@
  *
  * Uso, siempre en este orden y nunca sin el respaldo:
  *   1. pg_dump --format=custom --file=antes-rediseno.dump "$DATABASE_URL"
- *   2. pnpm tsx server/src/patches/2026-11-01-rediseno-datos.ts --dry   (imprime el diff, no escribe)
- *   3. pnpm tsx server/src/patches/2026-11-01-rediseno-datos.ts         (aplica todo en una transacción)
- *   4. Repetir el paso 2: tiene que decir "sin cambios".
+ *   2. pnpm prisma migrate deploy
+ *   3. pnpm tsx server/src/patches/2026-10-30-eros-barberpole.ts        (Eros: métricas nuevas y Json viejo alineados)
+ *   4. pnpm tsx server/src/patches/2026-11-01-rediseno-datos.ts --dry   (imprime el diff, no escribe)
+ *   5. pnpm tsx server/src/patches/2026-11-01-rediseno-datos.ts         (aplica todo en una transacción)
+ *   6. Repetir el paso 4: tiene que decir "sin cambios".
+ * El paso 3 va antes porque este parche completa Metric desde el Json viejo: sin él, las métricas viejas
+ * de Eros (si producción las tiene) volverían como filas.
  * Para volver atrás: pg_restore --clean --if-exists --dbname="$DATABASE_URL" antes-rediseno.dump
  */
 import { db } from '../db.js'

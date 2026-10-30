@@ -20,7 +20,18 @@
     "server/src/fallbackData.ts",
     "app/lib/explorer.ts",
     "app/lib/fallbackData.ts",
-    "public/media/projects/eros.webp"
+    "public/media/projects/eros.webp",
+    "server/src/seed/types.ts",
+    "server/src/seed/stack.ts",
+    "server/src/seed/projects.ts",
+    "server/src/seed/projects-hidden.ts",
+    "server/src/seed/experience.ts",
+    "server/src/seed/docs.ts",
+    "server/src/seed/articles.ts",
+    "server/src/seed/metrics.ts",
+    "server/src/seed/files.ts",
+    "server/src/seed/apply.ts",
+    "server/src/patches/rediseno/"
    ],
    "dependsOn": [],
    "wave": 1,
@@ -36,7 +47,7 @@
     "Escribir server/src/patches/2026-11-01-rediseno-datos.ts: idempotente, sin borrar nada editado desde el admin, con flag --dry que imprime el diff. Cubre: kinds, cvOrder, highlights solo si están vacíos, relación Experience↔Project, Experience eros, tints y dimensiones de portada, publishedAt de las 6, docs reformados (renombra o quita las claves listadas y agrega las nuevas solo si faltan) y borrado del doc home.",
     "app/lib/fieldMeta.ts: projects.metrics como relation[] → Metric, translations, publishedAt con label 'publicado en el sitio'. Entrada media (tint, poster, srcWebm, caption, viewport). experience (kind, highlights, location, cvOrder, projects). DocKey = 'about' | 'contact'. Reemplazar los labels con tono de consola ('arsenal tecnológico', 'telemetría…') por labels llanos.",
     "Ajustes mínimos de compilación: server/src/admin/router.ts deja de usar layer y metrics Json (la edición de métricas queda desactivada hasta A1) y los GET de colecciones editables responden 503 { error: 'db_unavailable' } en lugar de servir server/src/fallbackData.ts (quitar ese import). Las rutas públicas incluyen metrics como relación. server/src/fallbackData.ts, app/lib/explorer.ts y app/lib/fallbackData.ts solo se tocan lo necesario para que compilen, porque se borran después.",
-    "Sumar ArticleTranslation (articleId+locale, title, excerpt, body) al esquema y a la migración: el blog se conserva.",
+    "Sumar ArticleTranslation (articleId+locale, title, summary, content) al esquema y a la migración: el blog se conserva.",
     "Parche de producción: publishedAt = null EXPLÍCITO en null-net y lampone (en producción ya tienen fecha); ciudad de cet-30; Media de portada de Eros; contact.email con type email. Con --dry y con el pg_dump previo documentado. NO correrlo contra producción.",
     "Métricas en dos pasos: Metric con value Decimal? + items String[] (listas como languages y localModels) + label String? opcional. La columna metrics Json NO se borra en esta migración (se borra en una posterior, cuando el parche verifique la conversión).",
     "Pares Experience-Project explícitos en el seed (nunca por mismo org: escuela-da-vinci no se liga a Ynara). contact.website para el portafolio, about.languages como lista, about.portrait = /media/profile/mateo-front.png."
@@ -158,7 +169,9 @@
     "server/src/fallbackData.ts no existe y grep de 'fallbackData' en server/src da 0.",
     "`pnpm typecheck` y `pnpm lint` en 0."
    ],
-   "notes": []
+   "notes": [
+    "Integración ola 1: el respaldo de /api/docs/:key sale de server/src/seed/docs.ts (de D1) hasta que el snapshot lo reemplace. Metric.value llega de Prisma como string (Decimal): present() lo pasa a número. Las rutas públicas todavía listan las 8 obras y usan server/src/fallbackData.ts con la forma vieja (layer, metrics Json): visibilidad y borrado de ese archivo son de D2. ArticleTranslation usa title, summary y content (los nombres de Article), no excerpt/body."
+   ]
   },
   {
    "id": "D3",
@@ -184,7 +197,9 @@
     "El parche corrido dos veces en --dry no muestra cambios la segunda vez.",
     "`pnpm typecheck` en 0."
    ],
-   "notes": []
+   "notes": [
+    "Integración ola 1: ArticleTranslation tiene title, summary y content (no excerpt/body). El tipo EnSeed está en server/src/seed/en.ts y seed.ts lo aplica con applyEnglish (server/src/seed/apply.ts)."
+   ]
   },
   {
    "id": "A1",
@@ -229,7 +244,9 @@
     "tests/e2e/admin-audit.spec.ts sigue pasando y grep de emojis en server/admin/js da 0.",
     "`pnpm typecheck` y `pnpm lint` en 0."
    ],
-   "notes": []
+   "notes": [
+    "Integración ola 1: docFields del router ya acepta value y en como string o string[] (type list; un texto se parte por renglón), valida url y email y conserva en. DocsForm muestra list uno por renglón y ofrece url, email y list. config.js muestra las filas Metric como clave → valor solo para leer: la API ignora metrics hasta que A1 rehaga el editor sobre filas Metric (value llega como string Decimal). ProjectForm todavía ofrece LAYER, que la API rechaza con 400."
+   ]
   },
   {
    "id": "D4",
@@ -358,7 +375,9 @@
     "grep en app/ (sin app/components/cv/) de 'Paraná', 'Río Negro', 'Cádiz', 'mateogabus', '382', 'Lighthouse', 'PostgreSQL 17', 'null-net', 'lampone', 'github.com/MateoGs013' y 'linkedin.com/in': 0.",
     "No existen app/lib/i18n.ts, app/lib/fallbackData.ts ni app/lib/explorer.ts."
    ],
-   "notes": []
+   "notes": [
+    "Integración ola 1: nuxt.config.ts ya tiene routeRules de Nuxt (no de Nitro) que redirigen /lab y sus alias (library, libreria, componentes, components, showcase) a / con 301; F1 los conserva al sumar el resto de las redirecciones."
+   ]
   },
   {
    "id": "F2",
@@ -392,7 +411,9 @@
     "En toda la carpeta hay un solo @page y su margen es 10.5mm 12mm.",
     "`pnpm build` compila sin advertencias de utilidades desconocidas en los archivos de CSS."
    ],
-   "notes": []
+   "notes": [
+    "Integración ola 1: docs/diseno.md fija --sig-text claro en #b82d00 (no #c53000), --ok/--wip solo para el punto de estado, y print oculta [data-chrome], [data-hf=\"hide\"] y [data-ornament] (nunca [data-hf=\"measure\"])."
+   ]
   },
   {
    "id": "A2",
@@ -463,7 +484,9 @@
     "`pnpm typecheck` en 0.",
     "pnpm tsx scripts/test-cv-and-subject.ts y pnpm tsx scripts/test-audit.ts pasan (si necesitan Eros real, se documenta y se prueba el camino de respaldo)"
    ],
-   "notes": []
+   "notes": [
+    "Integración ola 1: la regla del @page único es solo para el CSS de app/. El @page del generador del Job Hunter (fallbackHunterData.ts) es de A3 y no cambia sin una decisión explícita."
+   ]
   },
   {
    "id": "D5",
@@ -584,7 +607,9 @@
     "Ningún componente de motion o media escribe innerHTML.",
     "`pnpm typecheck` y `pnpm lint` en 0."
    ],
-   "notes": []
+   "notes": [
+    "Integración ola 1: docs/diseno.md sigue al prototipo: Lenis lerp .1 con lagSmoothing(0), vista previa lerp .14 y ±8°, números 1,6 s. El conteo al entrar en pantalla es ambiental (allowAmbient); el rodar al filtrar es una transición (allowTransitions). El plugin de elementos compartidos pone view-transition-name: none en todo [data-vt] saliente antes de nombrar el par (docs/diseno.md §4, «Nombres únicos»)."
+   ]
   },
   {
    "id": "F5",
@@ -848,7 +873,9 @@
     "Navegable por teclado, contraste AA, sin animación con prefers-reduced-motion",
     "pnpm typecheck y pnpm lint en 0"
    ],
-   "notes": []
+   "notes": [
+    "Integración ola 1: ArticleTranslation tiene title, summary y content (no excerpt/body)."
+   ]
   },
   {
    "id": "X1",
@@ -887,7 +914,9 @@
     "axe con Hiperfoco activo: 0 violaciones serias en las 4 páginas.",
     "No existe ningún componente que se renderice solo en Hiperfoco: grep de 'v-if=\\\"isHyperfocus' en app/components da 0."
    ],
-   "notes": []
+   "notes": [
+    "Integración ola 1: ?foco=1 lo renderiza el SSR en Hiperfoco y escribe la cookie; el cliente lo saca de la URL con replaceState. Salir borra la cookie. data-intro no se pone con Hiperfoco."
+   ]
   },
   {
    "id": "X3",

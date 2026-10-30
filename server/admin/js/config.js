@@ -90,7 +90,10 @@ export const MODELS = {
     toForm: r => ({
       ...r,
       publishedAt: toLocalDatetime(r.publishedAt),
-      metrics: r.metrics == null ? '' : (typeof r.metrics === 'string' ? r.metrics : JSON.stringify(r.metrics, null, 2)),
+      // Desde D1 llegan filas Metric; hasta que A1 rehaga el editor se muestran como clave → valor (solo lectura: la API ignora 'metrics').
+      metrics: r.metrics == null ? '' : (typeof r.metrics === 'string' ? r.metrics : JSON.stringify(
+        Array.isArray(r.metrics) ? Object.fromEntries(r.metrics.map(m => [m.key, m.value ?? (m.items || []).join(', ')])) : r.metrics,
+        null, 2)),
       orgId: r.orgId ?? null,
       techIds: (r.techs || []).map(t => t.id),
       links: (r.links || []).map(({ label, url }) => ({ label, url })),

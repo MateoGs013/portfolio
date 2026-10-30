@@ -56,7 +56,7 @@ El HTML de la primera respuesta trae el contenido completo y se navega con enlac
 
 ## 8. Impresión del CV en una página A4 (cota dual)
 
-- [ ] `/about?cv=ats` en emulación `print`: la hoja mide entre 248 y 265 mm (90–95 % del alto imprimible) y no hay segunda página.
-- [ ] Un único `@page { size: A4; margin: 10.5mm 12mm }`; se ocultan `[data-chrome]` y `[data-hf]` y se resetea `[data-motion]`.
+- [ ] `/about?cv=ats` en emulación `print`: la hoja mide entre 248 y 265 mm (90–96 % de los 276 mm imprimibles) y no hay segunda página.
+- [ ] Un único `@page { size: A4; margin: 10.5mm 12mm }` en el CSS de `app/`; se ocultan `[data-chrome]`, `[data-hf="hide"]` y `[data-ornament]`, se resetea `[data-motion]` y `[data-hf="measure"]` se imprime (sin el límite de 68ch).
 - [ ] Cuerpo y viñetas entre 9,2 y 9,5 pt.
 - [ ] Los dos PDF de `public/cv/` (`CV-ES-…-ATS.pdf`, `CV-EN-…-ATS.pdf`) tienen exactamente una página y las URL sin `-ATS` redirigen a ellos.

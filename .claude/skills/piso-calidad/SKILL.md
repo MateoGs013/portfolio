@@ -14,4 +14,4 @@ Invocar esta skill antes de considerar terminada cualquier página o componente 
 5. **CLS 0 y sin parpadeo:** tema, Hiperfoco, idioma y vista desde el SSR (cookies `pf-theme` y `pf-hyperfocus`), `tabular-nums` en números, medios con relación de aspecto reservada.
 6. **Responsive de 320 a 2560 px:** sin scroll horizontal, corte único en 768 px, áreas táctiles de 44 × 44 px, el email sin cortes.
 7. **Degradación elegante:** campos vacíos ocultos en diseño y `NULL` en registro; con la base caída, la API sirve la última respuesta buena o el snapshot generado, y el SSR no se rompe.
-8. **CV en una página A4 (cota dual):** `/about?cv=ats` impreso entre 248 y 265 mm sin segunda página, un único `@page { size: A4; margin: 10.5mm 12mm }`, cuerpo de 9,2 a 9,5 pt y los dos PDF ATS de una página.
+8. **CV en una página A4 (cota dual):** `/about?cv=ats` impreso entre 248 y 265 mm sin segunda página, un único `@page { size: A4; margin: 10.5mm 12mm }` en el CSS de `app/` (se ocultan `[data-chrome]`, `[data-hf="hide"]` y `[data-ornament]`; `[data-hf="measure"]` se imprime), cuerpo de 9,2 a 9,5 pt y los dos PDF ATS de una página.

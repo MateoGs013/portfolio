@@ -18,6 +18,14 @@ export default defineNuxtConfig({
     { path: '~/components/explorer', pathPrefix: false },
   ],
 
+  // /lab se archiva (docs/archive/lab/): la ruta y sus alias redirigen a la home (Respuestas de Mateo).
+  // En `routeRules` de Nuxt (no de Nitro) para que también aplique en la navegación del cliente.
+  routeRules: Object.fromEntries(
+    ['lab', 'library', 'libreria', 'componentes', 'components', 'showcase']
+      .flatMap(seg => [`/${seg}`, `/${seg}/**`])
+      .map(path => [path, { redirect: { to: '/', statusCode: 301 } }]),
+  ),
+
   // El API es un proceso aparte (Express, `pnpm dev:api`). Nitro no sirve rutas propias.
   // `server/` es de Express; se lo saca del alcance de Nitro para que no lo escanee ni tipee.
   serverDir: 'app/nitro',

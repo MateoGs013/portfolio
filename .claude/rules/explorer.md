@@ -38,6 +38,6 @@ Cada página muestra una superficie a la vez y tiene un solo gesto de imagen (la
 La hoja del CV (`/about?cv=ats`, los PDF de `public/cv/` y el generador del Job Hunter) entra en **una sola página A4**:
 
 1. **Sin desborde:** nunca una segunda página (`pageCount === 1`).
-2. **Sin vacío:** llena entre el 90 % y el 95 % del alto imprimible (248–265 mm).
+2. **Sin vacío:** la hoja mide entre 248 y 265 mm (del 90 % al 96 % de los 276 mm imprimibles).
 3. **Escala ATS:** nombre de 19 a 21 pt, títulos de sección de 11 a 11,5 pt, cuerpo y viñetas de 9,2 a 9,5 pt con interlineado de 1,3 a 1,35. Nunca bajar de 9 pt para que entre: se ajusta la cantidad y la concisión de las viñetas.
-4. **Un único `@page { size: A4; margin: 10.5mm 12mm }`** en todo el CSS. Puppeteer y Playwright imprimen con `preferCSSPageSize: true` y sin márgenes propios.
+4. **Un único `@page { size: A4; margin: 10.5mm 12mm }`** en el CSS de `app/`. Puppeteer y Playwright imprimen con `preferCSSPageSize: true` y sin márgenes propios. El generador del Job Hunter (`server/src/admin/`) conserva su propio `@page` y sus márgenes: los decide A3 de forma explícita, esta regla no lo obliga a cambiar (invariante 6).

@@ -176,6 +176,29 @@ export interface Explorer {
 
 export const pad = (n: number) => String(n).padStart(2, '0')
 
+/**
+ * Métricas como mapa clave → valor para las vistas actuales. Desde D1 la API las manda como filas
+ * Metric ({ key, value, items, unit }); el respaldo viejo todavía usa el objeto Json. Acepta los dos.
+ */
+export function metricMap(raw: unknown): Record<string, unknown> | null {
+  if (Array.isArray(raw)) {
+    const out: Record<string, unknown> = {}
+    for (const m of raw) {
+      if (!m || typeof m !== 'object' || typeof (m as { key?: unknown }).key !== 'string') continue
+      const { key, value, items, unit } = m as { key: string, value?: unknown, items?: unknown, unit?: unknown }
+      const list = Array.isArray(items) ? items.filter(x => typeof x === 'string') : []
+      if (value !== null && value !== undefined && value !== '') {
+        const n = Number(value)
+        out[key] = Number.isFinite(n) ? n : value
+        if (typeof unit === 'string' && ['s', 'ms', 'kb', 'fps', 'h'].includes(unit)) out[key] = `${out[key]}${unit}`
+      }
+      else out[key] = list.length ? list : null
+    }
+    return Object.keys(out).length ? out : null
+  }
+  return raw && typeof raw === 'object' ? (raw as Record<string, unknown>) : null
+}
+
 const notFound = (message = 'no encontrado') => createError({ statusCode: 404, statusMessage: message })
 
 const modelName: Record<CollectionKey, string> = {
@@ -266,7 +289,7 @@ function cellFor(collection: CollectionKey, record: AnyRecord, name: string, ext
     cell.steps = stepList
   }
   else if (name === 'metrics') {
-    const m = field(record, 'metrics') as Record<string, unknown> | null
+    const m = metricMap(field(record, 'metrics'))
     cell.metrics = m
     cell.value = m ? JSON.stringify(m) : null
   }
@@ -557,7 +580,7 @@ export async function resolveExplorer(api: Api, path: Path, query: LocationQuery
             item.techs = Array.isArray(p.techs) ? (p.techs as TechRef[]).map(t => ({ name: t.name, slug: t.slug })) : []
             item.url = typeof p.url === 'string' ? p.url : null
             item.repo = typeof p.repo === 'string' ? p.repo : null
-            item.metrics = typeof p.metrics === 'object' && p.metrics ? (p.metrics as Record<string, unknown>) : null
+            item.metrics = metricMap(p.metrics)
           }
           else if (collection === 'stack') {
             const s = r as unknown as Record<string, unknown>

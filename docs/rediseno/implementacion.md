@@ -182,8 +182,19 @@ Un crítico adversarial revisó el plan contra el código y encontró problemas 
 
 ### Respuestas de Mateo (30-oct-2026)
 - **/lab y visor «Modern IDE»:** se archivan los dos en `docs/archive/lab/`. `/lab` redirige a la home y el CV de `/about` queda solo en Harvard ATS.
-- **Blog:** se conserva. Paquete nuevo **P5 · Artículos** (ola 5): `/articles` y `/articles/:slug` con el estilo nuevo, enlazados desde el pie (F3 deja el enlace). D1 suma `ArticleTranslation` (title, excerpt, body) y D3 traduce el artículo existente. Los artículos entran en el sitemap, el hreflang y el snapshot.
+- **Blog:** se conserva. Paquete nuevo **P5 · Artículos** (ola 5): `/articles` y `/articles/:slug` con el estilo nuevo, enlazados desde el pie (F3 deja el enlace). D1 suma `ArticleTranslation` (title, summary, content) y D3 traduce el artículo existente. Los artículos entran en el sitemap, el hreflang y el snapshot.
 - **Media:** las capturas y videos se versionan en git, en `public/media/projects/<slug>/`. Lo que se suba después por el admin necesita un volumen de Coolify en `/app/public/media`.
 - **Contenido:** valores por defecto. Ubicación Río Negro, Argentina, y sin teléfono en el CV. Ynara y Eros quedan como dice la base. El CV muestra solo las tecnologías cargadas como Tech.
 - **Página Stack:** no hay, como en el prototipo aprobado. Las tecnologías del caso filtran `/projects?stack=`.
 - **Viñetas del CV e inglés:** quedan en la base sin las afirmaciones que no tienen respaldo. Mateo las revisa en el admin antes de llevarlas a producción.
+
+### Integración de la ola 1 (30-oct-2026)
+Lo que quedó fijado al mergear D0 y D1 en `rediseno/movimiento`. Manda sobre lo anterior.
+
+- **ArticleTranslation** usa `title`, `summary` y `content`, los nombres de `Article` (no `excerpt`/`body`), así `present()` resuelve por el mismo nombre.
+- **Archivos nuevos de D1:** el seed está partido en `server/src/seed/` (`types`, `stack`, `projects`, `projects-hidden`, `experience`, `docs`, `articles`, `metrics`, `files`, `apply`, `en`, `media`) y el parche en `server/src/patches/rediseno/`. Dueños: D3 escribe `seed/en.ts`, D4 `seed/media.ts`; D2 usa `seed/docs.ts` como respaldo de `/api/docs/:key` hasta el snapshot. El resto es de D1 (registrado en `paquetes.json`).
+- **Migración 20261101:** la conversión Json → `Metric` no aborta: un texto conocido (`lcp`, `freeTierQuota`, `operatingCost`, `ephemeralTTL`) que no queda como número limpio va a `items` tal cual. Una coma decimal (`0,8s`) se leería como 8: producción no tiene ninguna, verificarlo en el `--dry`.
+- **Orden en producción** (solo con el OK de Mateo): `pg_dump` → `prisma migrate deploy` → `2026-10-30-eros-barberpole.ts` → `2026-11-01-rediseno-datos.ts --dry` → aplicar → `--dry` otra vez. El parche 10-30 ahora también alinea `legacyMetrics` de Eros, así el 11-01 no revive métricas viejas desde el Json.
+- **Admin:** `docFields` acepta `value` y `en` como texto o lista (type `list`), valida `url` y `email` y conserva `en`. Las filas `Metric` se muestran como clave → valor solo para leer hasta A1.
+- **Sitio actual:** `metricMap()` (`app/lib/explorer.ts`) lee las métricas como filas `Metric` o como el Json viejo, así el explorador y el dossier no muestran basura hasta que F1/X1 los reemplacen. `/lab` y sus alias redirigen a `/` con 301 desde `routeRules` de Nuxt.
+- **`docs/diseno.md`:** impresión sin ocultar `[data-hf="measure"]`; nombres únicos de view transition (todo `[data-vt]` saliente a `none` antes de nombrar el par); `--sig-text` claro `#b82d00`; `--ok`/`--wip` solo como punto; Lenis `lerp .1`; contador y barra del cargador; conteo al entrar en pantalla es ambiental; `?foco=1` se saca de la URL al hidratar; `data-intro` no se pone con Hiperfoco.

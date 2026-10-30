@@ -198,6 +198,8 @@ ALTER TABLE "_ExperienceToProject" ADD CONSTRAINT "_ExperienceToProject_B_fkey" 
 --   texto conocido         → value + unit ('0.8s' → 0.8 s, '1,500 RPD' → 1500 req_day, '$0/mes' → 0 usd_month, '24h' → 24 h)
 --   lista                  → items (languages, localModels)
 --   otro texto o booleano  → items con un solo elemento
+-- Un texto conocido que no queda como un número limpio ('0.8s/1.1s', '1.2.3') no se convierte:
+-- va a items tal cual, así la migración nunca aborta a mitad de camino por un cast.
 -- La unidad sale de la clave con las mismas reglas que server/src/seed/metrics.ts.
 INSERT INTO "Metric" ("projectId", "key", "value", "items", "unit", "order")
 SELECT
@@ -205,15 +207,13 @@ SELECT
   m."key",
   CASE
     WHEN jsonb_typeof(m."value") = 'number' THEN (m."value" #>> '{}')::numeric
-    WHEN jsonb_typeof(m."value") = 'string' AND m."key" IN ('lcp', 'freeTierQuota', 'operatingCost', 'ephemeralTTL')
-      THEN NULLIF(regexp_replace(m."value" #>> '{}', '[^0-9.]', '', 'g'), '')::numeric
+    WHEN c."known" AND c."clean" ~ '^[0-9]+(\.[0-9]+)?$' THEN c."clean"::numeric
     ELSE NULL
   END,
   CASE
     WHEN jsonb_typeof(m."value") = 'array' THEN ARRAY(SELECT jsonb_array_elements_text(m."value"))
     WHEN jsonb_typeof(m."value") IN ('number', 'null') THEN ARRAY[]::TEXT[]
-    WHEN jsonb_typeof(m."value") = 'string' AND m."key" IN ('lcp', 'freeTierQuota', 'operatingCost', 'ephemeralTTL')
-      THEN ARRAY[]::TEXT[]
+    WHEN c."known" AND c."clean" ~ '^[0-9]+(\.[0-9]+)?$' THEN ARRAY[]::TEXT[]
     ELSE ARRAY[m."value" #>> '{}']
   END,
   CASE
@@ -229,4 +229,9 @@ SELECT
   (m."ord" - 1)::INTEGER
 FROM "Project" p
 CROSS JOIN LATERAL jsonb_each(p."metrics") WITH ORDINALITY AS m("key", "value", "ord")
+CROSS JOIN LATERAL (
+  SELECT
+    jsonb_typeof(m."value") = 'string' AND m."key" IN ('lcp', 'freeTierQuota', 'operatingCost', 'ephemeralTTL') AS "known",
+    regexp_replace(m."value" #>> '{}', '[^0-9.]', '', 'g') AS "clean"
+) c
 WHERE jsonb_typeof(p."metrics") = 'object';

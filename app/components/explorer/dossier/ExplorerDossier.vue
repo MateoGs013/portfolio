@@ -2,7 +2,7 @@
 import AppIcon from '~/components/ui/AppIcon.vue'
 import UiCopyPill from '~/components/ui/UiCopyPill.vue'
 import UiRollingCounter from '~/components/ui/UiRollingCounter.vue'
-import { pad, type Folder } from '~/lib/explorer'
+import { metricMap, pad, type Folder } from '~/lib/explorer'
 import type { Project } from '~/lib/api'
 
 const props = defineProps<{
@@ -23,8 +23,8 @@ const masterProjects = computed(() => {
         role: isEs.value ? p.role : (p.role.includes('diseño y desarrollo') ? 'Freelance · Design & Engineering' : p.role),
         summary: isEs.value ? (p.summary || loc?.summary || '') : (loc?.summary || p.summary || ''),
         stack: p.techs ? p.techs.map((t: { name: string }) => t.name) : [],
-        metrics: typeof p.metrics === 'object' && p.metrics
-          ? Object.entries(p.metrics).map(([k, v]) => `${k} ${v}`).join(' · ')
+        metrics: metricMap(p.metrics)
+          ? Object.entries(metricMap(p.metrics) ?? {}).map(([k, v]) => `${k} ${Array.isArray(v) ? v.join('/') : v}`).join(' · ')
           : (typeof p.metrics === 'string' ? p.metrics : (isEs.value ? 'Lighthouse 98+' : 'Lighthouse 98+')),
         url: p.url,
         repo: p.repo,

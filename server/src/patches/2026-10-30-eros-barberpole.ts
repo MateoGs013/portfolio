@@ -8,10 +8,14 @@
  *
  * Uso: pnpm tsx server/src/patches/2026-10-30-eros-barberpole.ts   (con DATABASE_URL apuntando a la base)
  * Idempotente: correrlo dos veces deja lo mismo. Si cambia el seed, este archivo no se actualiza: es un registro.
- * Desde la migración 20261101 las métricas son filas Metric: el parche las reemplaza con las mismas reglas.
+ * Desde la migración 20261101 las métricas son filas Metric: el parche las reemplaza con las mismas reglas
+ * y deja el Json viejo (legacyMetrics) con las mismas claves, así el parche 2026-11-01-rediseno-datos no
+ * vuelve a crear métricas viejas de Eros desde ese Json. Orden en producción (ver el encabezado de ese parche):
+ * pg_dump → prisma migrate deploy → este parche → 2026-11-01 --dry → 2026-11-01 → 2026-11-01 --dry.
  */
 import { db } from '../db.js'
 import { ProjectStatus } from '../../generated/prisma/client.js'
+import type { Prisma } from '../../generated/prisma/client.js'
 import { metricRows } from '../seed/metrics.js'
 
 const BARBERPOLE_URL = 'https://turnos.mateogs.tech/'
@@ -27,7 +31,8 @@ const EROS = {
   url: 'https://eros.mateogs.tech',
   repo: 'https://github.com/MateoGs013/eros-agent',
 }
-const EROS_METRICS = metricRows({ freeTierQuota: '1,500 RPD', operatingCost: '$0/mes', platformsCount: 4, responseLatencyMs: 35 })
+const EROS_METRICS_JSON = { freeTierQuota: '1,500 RPD', operatingCost: '$0/mes', platformsCount: 4, responseLatencyMs: 35 }
+const EROS_METRICS = metricRows(EROS_METRICS_JSON)
 const EROS_TECHS = ['fastapi', 'python', 'typescript', 'postgresql']
 const EROS_LINKS = [
   { label: 'código fuente', url: 'https://github.com/MateoGs013/eros-agent' },
@@ -52,6 +57,7 @@ async function main() {
           links: { deleteMany: {}, create: EROS_LINKS },
           steps: { deleteMany: {}, create: EROS_STEPS.map((s, i) => ({ ...s, order: i + 1 })) },
           metrics: { deleteMany: {}, create: EROS_METRICS },
+          legacyMetrics: EROS_METRICS_JSON as Prisma.InputJsonValue,
         },
       })
       console.log('eros: actualizado')

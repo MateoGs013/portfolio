@@ -95,6 +95,9 @@ export const DocsForm = {
               <option value="text">text</option>
               <option value="string">string</option>
               <option value="markdown">markdown</option>
+              <option value="url">url</option>
+              <option value="email">email</option>
+              <option value="list">list (uno por renglón)</option>
             </select>
             <label class="text-[11px] text-zinc-400 flex items-center gap-1.5 ml-auto cursor-pointer select-none">
               <input
@@ -114,8 +117,8 @@ export const DocsForm = {
             </button>
           </div>
           <textarea
-            v-model="b.value"
-            @input="store.checkDirty()"
+            :value="Array.isArray(b.value) ? b.value.join('\\n') : b.value"
+            @input="b.value = b.type === 'list' ? $event.target.value.split('\\n') : $event.target.value; store.checkDirty()"
             rows="4"
             placeholder="Contenido textual del bloque..."
             class="textarea-input"

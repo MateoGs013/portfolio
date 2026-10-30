@@ -25,7 +25,7 @@ Así se resuelve la contradicción que generó la discordia entre archivos:
 | Lo que pedía explorer.md | Lo que pedía AGENTS.md | Cómo lo resuelve el rediseño |
 |---|---|---|
 | Tinta sobre papel, la estructura del dato es la decoración | Micro-interacciones Bencho, efecto Awwwards | Superficie sobria y un **vocabulario** chico de micro-interacciones con oficio |
-| Explorador: ruta = estado, teclado, facetas | Landing con hero, obras, contacto | La landing es la *lectura editorial*; el explorador es la *forma de navegar* y el modo registro |
+| Explorador: ruta = estado, teclado, facetas | Landing con hero, obras, contacto | La landing es la *lectura editorial*; del explorador quedan la ruta como estado, el teclado, las facetas por query y el modo registro (`R`). *Ya no hay explorador como forma de navegar: ver `docs/diseno.md`* |
 | Cero ornamento | Sonido, física, sparks, globo | Sonido opcional y apagado; física solo donde algo se mueve de verdad; sparks y globo al `/lab` |
 
 ---
@@ -73,10 +73,10 @@ Seis verbos. Todo lo que se mueve en el sitio es uno de estos; si algo no entra 
 
 | Verbo | Dónde | Especificación |
 |---|---|---|
-| **Transformar** (FLIP) | Modo registro · filtros de colección · portada compartida al abrir un caso | Registro: ver la especificación de abajo. Filtros: 600 ms `expo.out`, con los que entran subiendo 10 px. Portada: view transition de 750 ms desde la vista previa hasta la imagen del caso |
+| **Transformar** (FLIP) | Modo registro · filtros de colección · portada compartida al abrir un caso | Registro: ver la especificación de abajo. Filtros: 600 ms `expo.out`, con los que entran subiendo 10 px. Portada: view transition con grupos de 0,95 s desde la fila o la tarjeta hasta la imagen del caso |
 | **Deslizar** | Navegación · filtros · paleta | Un solo rectángulo de resaltado que viaja entre opciones (300 ms `power3.out`); aparece sin viajar la primera vez |
-| **Rodar** | Métricas · conteos · copiar email | Los números cuentan al entrar en pantalla (1,2 s, una sola vez); el conteo de una colección rueda al filtrar (500 ms); el email se cae letra por letra a "copiado" y vuelve (stagger de 12–25 ms) |
-| **Seguir** | Listas de obra (solo puntero fino) | Vista previa 16:10 que sigue al cursor por la derecha con un lerp de 0,16, gira hasta ±7° según la velocidad y cambia de imagen deslizando una tira vertical (600 ms) |
+| **Rodar** | Métricas · conteos · copiar email | Los números cuentan al entrar en pantalla (1,6 s `power3.out`, una sola vez); el conteo de una colección rueda al filtrar (500 ms); el email se cae letra por letra a "copiado" y vuelve (stagger de 12–25 ms) |
+| **Seguir** | Listas de obra (solo puntero fino) | Vista previa 16:10 que sigue al cursor por la derecha con un lerp de 0,14, gira hasta ±8° según la velocidad y cambia de imagen deslizando una tira vertical (0,7 s), como en el prototipo |
 | **Asomar** | Tecnologías y métricas de un caso | Un popover que crece desde su ancla (`scale .96→1`, blur de 2 px a 0, 260 ms `expo.out`). Si ya está abierto y pasás a otra ancla, viaja hasta ella y cambia de tamaño en el camino (340 ms), sin cerrarse y volver a abrirse. Se ubica debajo de todo el valor, así no tapa a los vecinos de la lista |
 | **Atenuar** | Solo hover en listas | Los hermanos bajan a .25 (500 ms). No se usa para leer: el modo de lectura es el Hiperfoco (`H`) |
 
@@ -117,7 +117,7 @@ Cada uno usa los verbos de arriba y hace visible algo de la base de datos. Todos
 | **Máquina del tiempo** *(fuera: no hay página Stack)* | En Stack, una barra de años. Al arrastrarla, lo que todavía no usabas se apaga y baja, lo que ya usabas sube a su lugar (FLIP de 700 ms), el conteo rueda y el año cambia rodando. La URL guarda `?hasta=2024`. Con sonido, el tono sube con los años | Cuenta tu crecimiento con los datos de `since`, sin un párrafo |
 | **La ruta que rueda** *(fuera: no hay barra inferior)* | Cuando cambia la query (filtro, vista, año), sus caracteres suben en la barra de estado, uno tras otro | La ruta es el estado, y se ve cambiar |
 | **Resaltado de teclado** | Con `j`/`k` o Tab, una barra se desliza detrás de la fila enfocada. Solo con foco visible (teclado), no con mouse | Quien navega con teclado recibe el mismo cuidado |
-| **Scroll con inercia** | Lenis (`lerp .11`) sobre el ticker de GSAP. Apagado con reduced motion. La paleta lo pausa mientras está abierta | Es la materia de tus referencias (dragonfly, wembi, monolog) |
+| **Scroll con inercia** | Lenis (`lerp .1`, el del prototipo) sobre el ticker de GSAP. Apagado con reduced motion. La paleta lo pausa mientras está abierta | Es la materia de tus referencias (dragonfly, wembi, monolog) |
 
 **Reglas del presupuesto:**
 - Una sola entrada animada, en la home, en la primera visita de la sesión. El texto nunca nace invisible ni borroso: sube desde una máscara, así el LCP se pinta enseguida.
@@ -141,7 +141,7 @@ Cada uno usa los verbos de arriba y hace visible algo de la base de datos. Todos
 | `--dim` | `#a1a1a9` | `#55565d` | texto secundario |
 | `--faint` | `#83838c` (≈5:1) | `#66676e` (≈5:1) | tipos, metadatos. **Hoy `#71717a` da 4,1:1 y no pasa AA** |
 | `--rule` | `rgba(255,255,255,.085)` | `rgba(0,0,0,.1)` | líneas de 1px |
-| `--sig` | `#ff3e00` | `#ff3e00` | **solo** el cuadrado del nombre, el estado activo (subrayado de 1px), el foco y la query en la ruta |
+| `--sig` | `#ff3e00` | `#ff3e00` | **solo decorativo:** el cuadrado del nombre y la barra del cargador. El foco y el estado activo usan `--sig-text` (ver `docs/diseno.md` §3); no hay barra con la query |
 
 ### Tipografía
 - **General Sans** para todo lo que se lee. **Martian Mono** solo para lo que de verdad es un identificador: nombres y tipos de campo, la ruta, slugs, `kbd`. Bebas sale del sistema.
@@ -151,7 +151,7 @@ Cada uno usa los verbos de arriba y hace visible algo de la base de datos. Todos
 
 ### Espacio y forma
 - Un margen lateral `clamp(1rem, 4vw, 3rem)`, un ancho máximo de 80 rem y secciones separadas por `clamp(5rem, 15vh, 9rem)`.
-- Sin tarjetas ni cajas dentro de cajas: listas sobre líneas de 1px. Radio de 4–6 px solo en imágenes, botones de la barra y paleta.
+- Sin tarjetas ni cajas dentro de cajas: listas sobre líneas de 1px. Radio de 3 px en imágenes (6 px al inicio de la captura que crece); no hay barra inferior: sus acciones viven en la cabecera.
 
 ### Inmersión visual
 
@@ -162,7 +162,7 @@ La superficie sigue siendo sobria. La inmersión sale de la imagen y del color d
 - **La portada que se abre.** En el caso, cuando la portada llega arriba, la escena se fija durante un 85 % de pantalla de scroll. En ese tramo la imagen pasa del ancho de la columna, con radio de 4 px, a cubrir toda la pantalla, mientras se aleja de 1,14× a 1×. Al final aparece su texto alternativo como pie de foto. Técnica: ScrollTrigger con `pin` y `scrub` sincronizado con Lenis, `clip-path: inset()` calculado en las coordenadas de la imagen escalada para que lo visible abra parejo y `power2.inOut` sobre el progreso.
   - *Cuándo no:* sin movimiento, con puntero táctil o por debajo de 768 px la portada queda estática en la columna.
   - *Con el modo registro:* la escena se desarma antes de transformar (sin mover lo que estás mirando) y se rearma al volver.
-- **La lista como selector de escena (Obra).** En la colección, apuntar una obra (con mouse o con foco de teclado) llena el fondo con su portada: desenfocada 5 px, al 42 % y entrando desde 1,12× en 1,2 s. Un degradado desde el color de la página deja la lista siempre legible del lado izquierdo, y la temperatura acompaña. Al hacer click, ese fondo se transforma en la portada del caso. En la home se mantiene la vista previa chica que sigue al cursor: cada página tiene un solo gesto de imagen.
+- **La lista como selector de escena (Obra).** *Superado: Obra es la galería horizontal con `pin` del prototipo aprobado (`docs/diseno.md` §2, Deslizar); lo que sigue queda como registro de la idea.* En la colección, apuntar una obra (con mouse o con foco de teclado) llena el fondo con su portada: desenfocada 5 px, al 42 % y entrando desde 1,12× en 1,2 s. Un degradado desde el color de la página deja la lista siempre legible del lado izquierdo, y la temperatura acompaña. Al hacer click, ese fondo se transforma en la portada del caso. En la home se mantiene la vista previa chica que sigue al cursor: cada página tiene un solo gesto de imagen.
 - **Rótulos fijos.** En el caso y en Sobre mí, el rótulo de cada bloque ("Proceso", "Resultado") queda fijo a 5 rem del borde mientras su texto avanza. En mobile vuelve a ser estático.
 - **La siguiente obra como escena.** El cierre del caso es una escena a pantalla completa con la portada de la próxima obra en profundidad: la imagen se mueve más lento que su marco, de −10 % a 6 %. Mientras entra, la temperatura de la página pasa de una obra a la otra (por ejemplo, de ARG Piscinas a Ynara), así que el cambio de obra empieza antes del click. El título y la portada viajan al caso siguiente con view transitions. Una sombra fuerte abajo garantiza que el texto se lea sobre portadas claras.
 

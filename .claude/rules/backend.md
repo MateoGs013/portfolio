@@ -43,13 +43,13 @@ Envoltura: `{ data, meta: { count, filters } }`
 
 Toda la información vive en PostgreSQL 17 gobernada por Prisma. Cada registro contiene tanto metadatos técnicos estructurados (`summary`, `year`, `metrics`, `techs`) como narrativa y proceso en profundidad (`brief`, `outcome`, `steps`, `media`).
 
-`app/lib/fieldMeta.ts` declara la tipificación y presentación de los campos para la hoja técnica del explorador:
+`app/lib/fieldMeta.ts` declara la tipificación y presentación de los campos para el modo registro (`R`, `?vista=registro`) y el admin:
 
 ```ts
 { campo: { type, label, wide, nullable } }
 ```
 
-Nombrar una columna o propiedad es una decisión visible en la hoja técnica del portafolio. Cero duplicación de datos.
+Nombrar una columna o propiedad es una decisión visible en el modo registro del portafolio. Cero duplicación de datos.
 
 ## Documentos
 
