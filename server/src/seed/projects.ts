@@ -28,7 +28,7 @@ export const publicProjects: SeedProject[] = [
       { title: '02 · taller', body: 'Arquitectura menu-first: el sitio se reduce a /, /menu y /menu/:slug. La mayoría del tráfico entra por QR, así que el menú es el producto. El contenido del shell vive en un CMS propio con fallback local: si la API duerme, el sitio no. Antes de cerrar una sección, review visual con Playwright en tres viewports y baseline de accesibilidad con axe.' },
       { title: '03 · pieza', body: 'Home inmersiva de dirección de arte mediterránea: editorial, calma, lejos del layout genérico de restaurante. Motion con significado: reveals de línea, stagger tipográfico y acentos SVG de trazo manual. La regla del proyecto: cohesión sobre novedad.' },
     ],
-    cover: { src: '/media/projects/la-rucula.jpg', alt: 'Home de La Rúcula Gastrobar: titular editorial sobre fotografía de la costa', tint: '#b97e46' },
+    cover: { src: '/media/projects/la-rucula/hero.webp', alt: 'Home de La Rúcula Gastrobar: titular editorial sobre un atardecer en la costa', tint: '#b97e46' },
   },
   {
     slug: 'argpiscinas',
@@ -55,7 +55,7 @@ export const publicProjects: SeedProject[] = [
       { title: '02 · taller', body: 'Dos cuerpos sobre una misma API: catálogo público y panel de gestión. Node y Prisma con datos tipados de punta a punta. La obra que carga el cliente es exactamente la que muestra el sitio, sin intermediarios ni deploys de por medio.' },
       { title: '03 · pieza', body: 'Front Vue 3 directo y rápido: la obra primero, el argumento después. Catálogo, presupuesto y contacto en el camino más corto posible. El sitio trabaja como la empresa: sin vueltas.' },
     ],
-    cover: { src: '/media/projects/argpiscinas.jpg', alt: 'Catálogo de ARG Piscinas con fotografías de obra terminada', tint: '#508daf' },
+    cover: { src: '/media/projects/argpiscinas/hero.webp', alt: 'Inicio de ARG Piscinas: «Tranquilidad y confort para su piscina» sobre la fotografía de una piscina terminada', tint: '#508daf' },
   },
   {
     slug: 'ynara',
@@ -106,7 +106,7 @@ export const publicProjects: SeedProject[] = [
       { title: '02 · sistema', body: 'MERN completo: turnos, servicios, clientes y caja en un solo lugar. Auth por roles, agenda del día, precios y duraciones reales.' },
       { title: '03 · identidad', body: 'Identidad de barbería de barrio inspirada en el barber pole: neo-brutalista, directa, sin adornos. El mostrador respira.' },
     ],
-    cover: { src: '/media/projects/barberpole.png', alt: 'Agenda del día de barberpole con turnos y servicios', tint: '#ca354d' },
+    cover: { src: '/media/projects/barberpole/hero.webp', alt: 'Inicio de barberpole: «Reserva directa.» en tipografía monoespaciada sobre fondo oscuro', tint: '#ca354d' },
   },
   {
     slug: 'ynara-web',
