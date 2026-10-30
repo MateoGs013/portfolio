@@ -100,7 +100,7 @@ export const AdmHeader = {
         >
           <span class="hidden sm:inline">Ver Portafolio</span>
           <span class="sm:hidden">Web</span>
-          <span class="text-zinc-500 font-bold">↗</span>
+          <span class="text-zinc-500"><svg class="adm-icon sm" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17 17 7"/><polyline points="7 7 17 7 17 17"/></svg></span>
         </a>
 
         <!-- Guía Operativa -->

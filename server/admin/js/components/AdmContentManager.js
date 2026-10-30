@@ -638,7 +638,8 @@ export const AdmContentManager = {
                     @click="openCarouselWindow(store.content.selected.id)"
                     class="btn-primary !h-[32px] !text-xs inline-flex items-center gap-1.5 font-mono-code cursor-pointer"
                   >
-                    <span>Abrir Visor Web ↗</span>
+                    <span>Abrir Visor Web</span>
+                    <svg class="adm-icon sm" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17 17 7"/><polyline points="7 7 17 7 17 17"/></svg>
                   </button>
                 </div>
 

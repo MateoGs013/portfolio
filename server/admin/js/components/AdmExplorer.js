@@ -3,6 +3,7 @@
 
 import { store } from '../store.js'
 import { MODELS } from '../config.js'
+import { isPublished } from '../fields.js'
 
 const { computed } = window.Vue
 
@@ -22,6 +23,8 @@ export const AdmExplorer = {
         list = list.filter(r => r.status === 'WIP' || r.status === 'DRAFT')
       } else if (store.filter === 'featured') {
         list = list.filter(r => !!r.featured)
+      } else if (store.filter === 'hidden') {
+        list = list.filter(r => !isPublished(r))
       }
 
       if (!q) return list
@@ -32,6 +35,9 @@ export const AdmExplorer = {
         return title.includes(q) || slug.includes(q) || meta.includes(q)
       })
     })
+
+    // El orden de las obras se toca solo con la lista completa a la vista (sin filtro ni búsqueda).
+    const canReorder = computed(() => store.section === 'projects' && store.filter === 'all' && !store.searchQuery.trim())
 
     function isSelected(r) {
       if (store.isNew || !store.current) return false
@@ -65,6 +71,8 @@ export const AdmExplorer = {
       store,
       model,
       filteredRows,
+      canReorder,
+      isPublished,
       isSelected,
       onSelect,
       onCreate,
@@ -107,7 +115,7 @@ export const AdmExplorer = {
         </div>
 
         <!-- Filtros Rápidos en Píldoras Sobrias (Para proyectos y artículos) -->
-        <div v-if="store.section === 'projects' || store.section === 'articles'" class="flex items-center gap-1 text-[10.5px] font-mono-code">
+        <div v-if="store.section === 'projects' || store.section === 'articles'" class="flex flex-wrap items-center gap-1 text-[10.5px] font-mono-code">
           <button
             type="button"
             @click="store.filter = 'all'"
@@ -140,13 +148,22 @@ export const AdmExplorer = {
           >
             Destacados
           </button>
+          <button
+            v-if="store.section === 'projects'"
+            type="button"
+            @click="store.filter = 'hidden'"
+            class="px-2 py-0.5 rounded transition-colors cursor-pointer flex items-center gap-1"
+            :class="store.filter === 'hidden' ? 'bg-white/15 text-white font-semibold' : 'text-zinc-500 hover:text-white'"
+          >
+            <span class="status-dot archived"></span> Ocultas
+          </button>
         </div>
       </div>
 
       <!-- Lista Scrolleable de Registros -->
       <div class="flex-1 overflow-y-auto divide-y divide-white/5">
         <div
-          v-for="r in filteredRows"
+          v-for="(r, idx) in filteredRows"
           :key="r.id || r.key"
           @click="onSelect(r)"
           class="p-3 cursor-pointer transition-colors relative"
@@ -160,8 +177,26 @@ export const AdmExplorer = {
             </div>
           </div>
 
-          <div class="text-[11px] text-zinc-400 mt-0.5 truncate font-mono-code">
-            {{ model?.meta ? model.meta(r) : (r.slug || '') }}
+          <div class="flex items-center justify-between gap-2 mt-0.5">
+            <div class="text-[11px] text-zinc-400 truncate font-mono-code">
+              {{ model?.meta ? model.meta(r) : (r.slug || '') }}
+            </div>
+            <div v-if="canReorder" class="flex items-center gap-0.5 shrink-0">
+              <button
+                type="button"
+                @click.stop="store.moveProject(r, -1)"
+                :disabled="idx === 0"
+                :aria-label="'Subir ' + r.title + ' en el orden del sitio'"
+                class="icon-btn"
+              ><svg class="adm-icon sm" viewBox="0 0 24 24" aria-hidden="true"><polyline points="18 15 12 9 6 15"/></svg></button>
+              <button
+                type="button"
+                @click.stop="store.moveProject(r, 1)"
+                :disabled="idx === filteredRows.length - 1"
+                :aria-label="'Bajar ' + r.title + ' en el orden del sitio'"
+                class="icon-btn"
+              ><svg class="adm-icon sm" viewBox="0 0 24 24" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg></button>
+            </div>
           </div>
         </div>
 
