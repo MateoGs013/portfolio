@@ -1,6 +1,9 @@
+<script setup lang="ts">
+usePreloadFonts()
+</script>
+
 <template>
   <NuxtRouteAnnouncer />
-  <UiRouteLoader />
   <NuxtLayout>
     <NuxtPage />
   </NuxtLayout>

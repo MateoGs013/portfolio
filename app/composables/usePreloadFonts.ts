@@ -1,21 +1,11 @@
 /**
- * Preload de las fuentes del Portafolio Técnico Mateo Sonzogni (Mundo DATOS).
- * Martian Mono Variable (Mono) + General Sans Variable (Sans).
+ * Precarga de la única fuente que se lee en la primera pantalla: General Sans variable, normal.
+ * Martian Mono (identificadores del registro) y la itálica se cargan cuando se usan.
  */
-import martianUrl from '@fontsource-variable/martian-mono/files/martian-mono-latin-wght-normal.woff2?url'
 import generalSansUrl from '~/assets/fonts/GeneralSans-Variable.woff2?url'
-import type { World } from '~/lib/path'
 
-const fonts = [martianUrl, generalSansUrl]
-
-export function usePreloadFonts(_surface?: World | 'umbral') {
+export function usePreloadFonts() {
   useHead({
-    link: fonts.map(href => ({
-      rel: 'preload',
-      as: 'font',
-      type: 'font/woff2',
-      crossorigin: '',
-      href,
-    })),
+    link: [{ rel: 'preload', as: 'font', type: 'font/woff2', crossorigin: '', href: generalSansUrl }],
   })
 }

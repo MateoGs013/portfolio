@@ -1,36 +1,25 @@
 <script setup lang="ts">
-// Componente de Currículum Vitae Dual — Mateo Gabriel Sonzogni
-// Orquestador de modos: Harvard ATS (académico / corporate) vs Modern IDE (terminal / code editor)
-// Consumo dinámico de datos, conmutación reactiva, Hyperfocus binding y exportación print/PDF A4.
+// Visor del CV Harvard ATS con descarga e impresión A4. Adaptación mínima de F1 para compilar sin el
+// explorador; F6 lo reescribe sobre /api/cv (CvDocument) y le saca el contenido escrito a mano.
+// El visor Modern IDE se archivó en docs/archive/lab/ (el CV de /about es solo Harvard ATS).
 
-import type { Detail } from '~/lib/explorer'
 import type { CvDeliverable } from './types'
 import AppIcon from '~/components/ui/AppIcon.vue'
-import UiSegmentedSwitch from '~/components/ui/UiSegmentedSwitch.vue'
-import { useBenchoSound } from '~/composables/useBenchoSound'
 import CvHarvardAts from './CvHarvardAts.vue'
-import CvModernIde from './CvModernIde.vue'
+
+/** Lo que el visor lee de la página: los campos de about y los contactos. */
+interface CvSource {
+  rows?: { name: string, value: string | null }[]
+  contact?: Record<string, string>
+  projects?: { slug?: string, title?: string, techs?: { name: string }[] }[]
+}
 
 const props = defineProps<{
-  detail?: Detail
+  detail?: CvSource
 }>()
 
-const { isEs } = usePortfolioLocale()
-const { isHyperfocus } = useHyperfocus()
-const { playSound } = useBenchoSound()
-const mode = ref<'harvard' | 'modern'>('modern')
-
-watch(mode, (newMode, oldMode) => {
-  if (oldMode && newMode !== oldMode) {
-    playSound('tock', { gap: 40 })
-  }
-})
-
-watch(isHyperfocus, (val) => {
-  if (val) {
-    mode.value = 'harvard'
-  }
-}, { immediate: true })
+const { lang } = useLocale()
+const isEs = computed(() => lang.value === 'es')
 
 function getDocField(name: string): string | null {
   const row = props.detail?.rows?.find(r => r.name === name)
@@ -60,7 +49,6 @@ const cvGithub = computed(() => props.detail?.contact?.github || 'https://github
 const cvGithubText = computed(() => cvGithub.value.replace(/^https?:\/\/(www\.)?/, ''))
 const cvLinkedin = computed(() => props.detail?.contact?.linkedin || 'https://www.linkedin.com/in/mateo-sonzogni')
 const cvLinkedinText = computed(() => cvLinkedin.value.replace(/^https?:\/\/(www\.)?/, ''))
-const cvTimezone = computed(() => props.detail?.contact?.timezone || 'UTC-3')
 
 const cvDeliverables = computed<CvDeliverable[]>(() => {
   const dbProjects = props.detail?.projects || []
@@ -231,10 +219,7 @@ const cvDeliverables = computed<CvDeliverable[]>(() => {
   ]
 })
 
-const cvDownloadBaseName = computed(() => {
-  const lang = isEs.value ? 'ES' : 'EN'
-  return `CV-${lang}-Mateo-Sonzogni-ATS`
-})
+const cvDownloadBaseName = computed(() => `CV-${isEs.value ? 'ES' : 'EN'}-Mateo-Sonzogni-ATS`)
 
 const cvDownloadFileName = computed(() => `${cvDownloadBaseName.value}.pdf`)
 const cvPdfUrl = computed(() => `/cv/${cvDownloadFileName.value}`)
@@ -273,28 +258,10 @@ function printCV() {
 </script>
 
 <template>
-  <section class="cv-wrapper w-full" :class="`mode-${mode}`">
-    <!-- Barra de Herramientas del CV (Segmented Switch + Export Actions) -->
+  <section class="cv-wrapper w-full">
+    <!-- Barra del CV: descarga e impresión -->
     <header class="cv-toolbar flex flex-wrap items-center justify-between gap-3 px-3.5 py-2.5 mb-5 bg-surface/70 border border-rule rounded-xl no-print">
-      <div class="flex items-center gap-2.5">
-        <span class="font-mono text-[10.5px] text-dim uppercase tracking-wider hidden sm:inline">{{ isEs ? 'Formato:' : 'Format:' }}</span>
-        <UiSegmentedSwitch
-          v-model="mode"
-          :options="[
-            { value: 'modern', label: isEs ? 'Moderno + Foto' : 'Modern + Photo', shortLabel: isEs ? 'Moderno' : 'Modern' },
-            { value: 'harvard', label: 'Harvard ATS (A4)', shortLabel: 'ATS (A4)' },
-          ]"
-          :aria-label="isEs ? 'Formato de CV' : 'CV format'"
-          size="sm"
-        />
-        <span class="hidden sm:inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-mono font-medium bg-sig/10 text-sig border border-sig/20">
-          <span class="w-1.5 h-1.5 rounded-full bg-sig" />
-          {{ isEs ? '1 PÁGINA A4' : '1 PAGE A4' }}
-        </span>
-      </div>
-
       <div class="cv-actions flex items-center gap-2 max-sm:w-full">
-        <!-- Botón de Descarga Directa PDF -->
         <a
           :href="cvPdfUrl"
           :download="cvDownloadFileName"
@@ -304,8 +271,6 @@ function printCV() {
           <AppIcon name="download" :size="12" class="text-sig" />
           <span>{{ isEs ? 'Descargar PDF' : 'Download PDF' }}</span>
         </a>
-
-        <!-- Botón de Impresión Navegador -->
         <button
           type="button"
           class="cv-action-btn group inline-flex items-center justify-center gap-1.5 h-8 px-3 bg-paper/80 hover:bg-hover border border-rule hover:border-rule-strong text-ink font-mono text-[11px] font-semibold no-underline cursor-pointer transition-all active:scale-[0.98] rounded-lg max-sm:flex-1"
@@ -317,83 +282,18 @@ function printCV() {
         </button>
       </div>
     </header>
-
-    <!-- Contenedor con Transición Fluida para Pantalla -->
-    <div class="cv-content-transition relative w-full">
-      <Transition name="cv-mode-fade" mode="out-in">
-        <div v-if="mode === 'harvard'" key="harvard-view" class="print:hidden">
-          <CvHarvardAts
-            :name="cvName"
-            :role="cvRole"
-            :location="cvLocation"
-            :bio="cvBio"
-            :email="cvEmail"
-            :github="cvGithub"
-            :github-text="cvGithubText"
-            :linkedin="cvLinkedin"
-            :linkedin-text="cvLinkedinText"
-            :deliverables="cvDeliverables"
-            :is-es="isEs"
-          />
-        </div>
-
-        <div v-else key="modern-view" class="print:hidden">
-          <CvModernIde
-            :name="cvName"
-            :role="cvRole"
-            :location="cvLocation"
-            :bio="cvBio"
-            :email="cvEmail"
-            :github="cvGithub"
-            :github-text="cvGithubText"
-            :linkedin="cvLinkedin"
-            :timezone="cvTimezone"
-            :deliverables="cvDeliverables"
-            :is-es="isEs"
-          />
-        </div>
-      </Transition>
-
-      <!-- Vista Exclusiva de Impresión: Harvard ATS 1 Página A4 Exacta -->
-      <div class="hidden print:block">
-        <CvHarvardAts
-          :name="cvName"
-          :role="cvRole"
-          :location="cvLocation"
-          :bio="cvBio"
-          :email="cvEmail"
-          :github="cvGithub"
-          :github-text="cvGithubText"
-          :linkedin="cvLinkedin"
-          :linkedin-text="cvLinkedinText"
-          :deliverables="cvDeliverables"
-          :is-es="isEs"
-        />
-      </div>
-    </div>
+    <CvHarvardAts
+      :name="cvName"
+      :role="cvRole"
+      :location="cvLocation"
+      :bio="cvBio"
+      :email="cvEmail"
+      :github="cvGithub"
+      :github-text="cvGithubText"
+      :linkedin="cvLinkedin"
+      :linkedin-text="cvLinkedinText"
+      :deliverables="cvDeliverables"
+      :is-es="isEs"
+    />
   </section>
 </template>
-
-<style scoped>
-.cv-mode-fade-enter-active,
-.cv-mode-fade-leave-active {
-  transition: opacity 0.24s cubic-bezier(0.22, 1, 0.36, 1), transform 0.24s cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-.cv-mode-fade-enter-from {
-  opacity: 0;
-  transform: translateY(6px);
-}
-
-.cv-mode-fade-leave-to {
-  opacity: 0;
-  transform: translateY(-4px);
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .cv-mode-fade-enter-active,
-  .cv-mode-fade-leave-active {
-    transition: none !important;
-  }
-}
-</style>
