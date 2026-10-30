@@ -1,0 +1,110 @@
+/* Transformar: view transitions con elementos compartidos (docs/diseno.md §2 y §4).
+   Los nombres son estáticos en la página de destino; el plugin de elementos compartidos
+   los apaga en línea (view-transition-name: none) en la página saliente antes de nombrar el par. */
+
+[data-vt='title'] {
+  view-transition-name: title;
+}
+
+[data-vt='cover'] {
+  view-transition-name: cover;
+}
+
+[data-vt='page-title'] {
+  view-transition-name: page-title;
+}
+
+[data-vt='cv-sheet'] {
+  view-transition-name: cv-sheet;
+}
+
+/* La cabecera queda quieta mientras la página cambia debajo. */
+header[data-chrome] {
+  view-transition-name: hud;
+}
+
+/* La página sale hacia arriba y se apaga; la nueva entra desde abajo, un poco después. */
+::view-transition-old(root) {
+  animation: 0.45s cubic-bezier(0.7, 0, 0.84, 0) both vt-out;
+}
+
+::view-transition-new(root) {
+  animation: 0.9s var(--e) 0.08s both vt-in;
+}
+
+::view-transition-group(title),
+::view-transition-group(cover),
+::view-transition-group(page-title),
+::view-transition-group(cv-sheet) {
+  animation-duration: 0.95s;
+  animation-timing-function: var(--e);
+}
+
+/* Un título que cambia de tamaño escala desde su esquina, sin deformarse. */
+::view-transition-old(title),
+::view-transition-new(title),
+::view-transition-old(page-title),
+::view-transition-new(page-title) {
+  object-fit: contain;
+  object-position: 0 0;
+}
+
+::view-transition-old(cover),
+::view-transition-new(cover) {
+  object-fit: cover;
+}
+
+/* «Ver CV» crece hasta la hoja desde su borde superior. */
+::view-transition-old(cv-sheet),
+::view-transition-new(cv-sheet) {
+  object-fit: cover;
+  object-position: 50% 0;
+}
+
+/* Hacia un caso (tipo «caso»): el título viaja por encima de la portada que crece. */
+:root:active-view-transition-type(caso)::view-transition-group(title) {
+  z-index: 1;
+}
+
+/* El cambio de modo (tipo «hiperfoco») es un fundido corto, sin desplazar la página. */
+:root:active-view-transition-type(hiperfoco)::view-transition-old(root) {
+  animation: 220ms ease both vt-fade-out;
+}
+
+:root:active-view-transition-type(hiperfoco)::view-transition-new(root) {
+  animation: 220ms ease both vt-fade-in;
+}
+
+/* Hiperfoco: todo viaje dura 220 ms y nada espera. */
+:root[data-hyperfocus='true']::view-transition-group(*),
+:root[data-hyperfocus='true']::view-transition-old(*),
+:root[data-hyperfocus='true']::view-transition-new(*) {
+  animation-duration: 220ms;
+  animation-delay: 0s;
+}
+
+@keyframes vt-out {
+  to {
+    opacity: 0;
+    transform: translateY(-4vh);
+  }
+}
+
+@keyframes vt-in {
+  from {
+    opacity: 0;
+    transform: translateY(6vh);
+  }
+}
+
+@keyframes vt-fade-out {
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes vt-fade-in {
+  from {
+    opacity: 0;
+  }
+}

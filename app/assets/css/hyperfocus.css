@@ -1,0 +1,37 @@
+/* Hiperfoco (docs/diseno.md §5): una capa de presentación para leer sin ruido.
+   El SSR pone data-hyperfocus='true' en <html> desde la cookie pf-hyperfocus.
+   Solo en pantalla: la impresión es la misma con o sin Hiperfoco. */
+@media screen {
+  /* Override de tokens: el único lugar que fuerza con important, porque useTint escribe
+     --tint y --tint-amt en línea sobre <html> y acá tienen que perder. */
+  :root[data-hyperfocus='true'] {
+    --sig: var(--ink) !important;
+    --sig-text: var(--ink) !important;
+    --ok: var(--ink) !important;
+    --wip: var(--dim) !important;
+    --faint: #9b9ba3 !important;
+    --rule-focus: color-mix(in oklab, var(--ink) 12%, transparent) !important;
+    --rule: var(--rule-focus) !important;
+    --tint-amt: 0% !important;
+  }
+
+  :root[data-theme='light'][data-hyperfocus='true'] {
+    --faint: #5a5b61 !important;
+  }
+
+  /* Vista previa, burbuja, cargador, cuadrado del nombre, escena de la siguiente obra. */
+  :root[data-hyperfocus='true'] :is([data-hf='hide'], [data-ornament]) {
+    display: none;
+  }
+
+  /* El contenido se lee en una sola columna centrada. */
+  :root[data-hyperfocus='true'] [data-hf='measure'] {
+    max-width: 68ch;
+    margin-inline: auto;
+  }
+
+  /* Monocromo sin tocar el contraste: la captura se sigue leyendo. */
+  :root[data-hyperfocus='true'] :is(img, video) {
+    filter: grayscale(1);
+  }
+}
