@@ -4,11 +4,10 @@ import path from 'node:path'
 import express, { Router, type NextFunction, type Request, type Response } from 'express'
 import multer from 'multer'
 import { db } from '../db.js'
-import { ArticleStatus, MediaKind, MediaRole, Prisma, ProjectStatus, TechCategory } from '../../generated/prisma/client.js'
+import { ArticleStatus, MediaKind, MediaRole, ProjectStatus, TechCategory, type Prisma } from '../../generated/prisma/client.js'
 import { requireAdmin } from './auth.js'
-import { fallbackArticles, fallbackExperience, fallbackOrgs, fallbackProjects, fallbackStack } from '../fallbackData.js'
 import { IMAGE_MIME, imageDims } from './image.js'
-import { HttpError, bool, date, enumOf, int, intList, json, list, optDate, optInt, optStr, optUrl, slug, str, url } from './input.js'
+import { HttpError, bool, date, enumOf, int, intList, list, optDate, optInt, optStr, optUrl, slug, str, url } from './input.js'
 import { hunterRouter } from './hunter.js'
 import { contentRouter } from './content.js'
 import { radarRouter } from './radar.js'
@@ -45,6 +44,12 @@ const TECH_CATEGORY = Object.values(TechCategory)
 const MEDIA_KIND = Object.values(MediaKind)
 const MEDIA_ROLE = Object.values(MediaRole)
 
+/**
+ * Sin base no hay edición: las colecciones responden 503 en vez de servir datos de respaldo
+ * con ids inventados (guardar sobre ellos fallaría o pisaría otro registro).
+ */
+const DB_UNAVAILABLE = { error: 'db_unavailable' } as const
+
 function id(req: Request): number {
   const n = Number(req.params['id'])
   if (!Number.isInteger(n)) throw new HttpError(400, 'id inválido')
@@ -68,6 +73,7 @@ adminApi.get('/meta', async (_req, res) => {
   }
 
   let counts: AdminCounts
+  let options: { orgs: { id: number, name: string }[], techs: { id: number, name: string }[], projects: { id: number, title: string, slug: string }[] }
   try {
     const [projectCount, experienceCount, techCount, orgCount, articleCount, docCount] = await prisma.$transaction([
       prisma.project.count(),
@@ -90,43 +96,21 @@ adminApi.get('/meta', async (_req, res) => {
       docs: docCount,
       inbox: 0,
     }
-  } catch {
-    counts = {
-      projects: fallbackProjects.length,
-      experiences: fallbackExperience.length,
-      experience: fallbackExperience.length,
-      stack: fallbackStack.length,
-      orgs: Object.keys(fallbackOrgs).length,
-      education: 0,
-      certs: 0,
-      labs: 0,
-      articles: fallbackArticles.length,
-      docs: 2,
-      inbox: 0,
-    }
-  }
-
-  let orgs: { id: number, name: string }[]
-  let techs: { id: number, name: string }[]
-  let projects: { id: number, title: string, slug?: string }[]
-
-  try {
-    [orgs, techs, projects] = await Promise.all([
+    const [orgs, techs, projects] = await Promise.all([
       prisma.org.findMany({ select: { id: true, name: true }, orderBy: { name: 'asc' } }),
       prisma.tech.findMany({ select: { id: true, name: true }, orderBy: { name: 'asc' } }),
       prisma.project.findMany({ select: { id: true, title: true, slug: true }, orderBy: { title: 'asc' } }),
     ])
+    options = { orgs, techs, projects }
   } catch {
-    // Si la DB falla, se devuelven opciones derivadas de los datos de fallback
-    orgs = Object.values(fallbackOrgs).map((o, i) => ({ id: i + 1, name: o.name }))
-    techs = fallbackStack.map(s => ({ id: s.id, name: s.name }))
-    projects = fallbackProjects.map(p => ({ id: p.id, title: p.title, slug: p.slug }))
+    res.status(503).json(DB_UNAVAILABLE)
+    return
   }
 
   res.json({
     counts,
     enums: { ProjectStatus: PROJECT_STATUS, ArticleStatus: ARTICLE_STATUS, TechCategory: TECH_CATEGORY, MediaKind: MEDIA_KIND, MediaRole: MEDIA_ROLE },
-    options: { orgs, techs, projects },
+    options,
   })
 })
 
@@ -138,7 +122,11 @@ const projectInclude = {
   links: { orderBy: { id: 'asc' } },
   steps: { orderBy: { order: 'asc' } },
   media: { orderBy: [{ role: 'asc' }, { order: 'asc' }] },
+  metrics: { orderBy: { order: 'asc' } },
 } satisfies Prisma.ProjectInclude
+
+/** La columna vieja de métricas no sale del server: se borra en una migración posterior. */
+const projectOmit = { legacyMetrics: true } satisfies Prisma.ProjectOmit
 
 function projectData(b: Record<string, unknown>) {
   return {
@@ -153,7 +141,6 @@ function projectData(b: Record<string, unknown>) {
     outcome: optStr(b, 'outcome'),
     url: optUrl(b, 'url'),
     repo: optUrl(b, 'repo'),
-    metrics: json(b, 'metrics') as Prisma.InputJsonValue | null,
     sortOrder: optInt(b, 'sortOrder') ?? 0,
     publishedAt: optDate(b, 'publishedAt'),
     orgId: optInt(b, 'orgId'),
@@ -173,28 +160,23 @@ function projectNested(b: Record<string, unknown>) {
 
 adminApi.get('/projects', async (_req, res) => {
   try {
-    res.json(await db.project.findMany({ include: projectInclude, orderBy: [{ sortOrder: 'asc' }, { year: 'desc' }] }))
+    res.json(await db.project.findMany({ include: projectInclude, omit: projectOmit, orderBy: [{ sortOrder: 'asc' }, { year: 'desc' }] }))
   } catch {
-    res.json(fallbackProjects)
+    res.status(503).json(DB_UNAVAILABLE)
   }
 })
 
 adminApi.get('/projects/:id', async (req, res) => {
   const pid = id(req)
+  let row
   try {
-    const row = await db.project.findUnique({ where: { id: pid }, include: projectInclude })
-    if (!row) {
-      const fb = fallbackProjects.find(p => p.id === pid)
-      if (fb) return res.json(fb)
-      throw new HttpError(404, 'not found')
-    }
-    res.json(row)
-  } catch (err) {
-    if (err instanceof HttpError) throw err
-    const fb = fallbackProjects.find(p => p.id === pid)
-    if (fb) return res.json(fb)
-    throw new HttpError(404, 'not found')
+    row = await db.project.findUnique({ where: { id: pid }, include: projectInclude, omit: projectOmit })
+  } catch {
+    res.status(503).json(DB_UNAVAILABLE)
+    return
   }
+  if (!row) throw new HttpError(404, 'not found')
+  res.json(row)
 })
 
 adminApi.post('/projects', async (req, res) => {
@@ -203,12 +185,12 @@ adminApi.post('/projects', async (req, res) => {
   const row = await db.project.create({
     data: {
       ...data,
-      metrics: data.metrics ?? undefined,
       techs: { connect: techIds.map(id => ({ id })) },
       links: { create: links },
       steps: { create: steps },
     },
     include: projectInclude,
+    omit: projectOmit,
   })
   res.status(201).json(row)
 })
@@ -224,12 +206,12 @@ adminApi.put('/projects/:id', async (req, res) => {
       where: { id: pid },
       data: {
         ...data,
-        metrics: data.metrics === null ? Prisma.DbNull : data.metrics,
         techs: { set: techIds.map(id => ({ id })) },
         links: { create: links },
         steps: { create: steps },
       },
       include: projectInclude,
+      omit: projectOmit,
     })
   })
   res.json(row)
@@ -254,6 +236,7 @@ adminApi.patch('/projects/:id', async (req, res) => {
     where: { id: pid },
     data: patchData,
     include: projectInclude,
+    omit: projectOmit,
   })
   res.json(row)
 })
@@ -287,7 +270,6 @@ function mediaData(b: Record<string, unknown>) {
   return {
     alt: str(b, 'alt'),
     role: enumOf(b, 'role', MEDIA_ROLE),
-    layer: optInt(b, 'layer'),
     order: optInt(b, 'order') ?? 0,
   }
 }
@@ -300,7 +282,7 @@ adminApi.get('/media', async (req, res) => {
   }))
 })
 
-/** multipart: file + projectId + alt + role + layer? + order? */
+/** multipart: file + projectId + alt + role + order? */
 adminApi.post('/media', upload.single('file'), async (req, res) => {
   const file = req.file
   if (!file) throw new HttpError(400, 'falta el archivo (campo "file")')
@@ -373,7 +355,7 @@ adminApi.get('/techs', async (_req, res) => {
   try {
     res.json(await db.tech.findMany({ orderBy: [{ since: 'asc' }, { name: 'asc' }], include: { _count: { select: { projects: true, experiences: true } } } }))
   } catch {
-    res.json(fallbackStack)
+    res.status(503).json(DB_UNAVAILABLE)
   }
 })
 adminApi.post('/techs', async (req, res) => {
@@ -397,15 +379,7 @@ adminApi.get('/orgs', async (_req, res) => {
   try {
     res.json(await db.org.findMany({ orderBy: { name: 'asc' }, include: { _count: { select: { projects: true, experiences: true } } } }))
   } catch {
-    const list = Object.values(fallbackOrgs).map((o, i) => ({
-      id: i + 1,
-      slug: o.slug,
-      name: o.name,
-      url: o.url,
-      city: o.city,
-      _count: { projects: o.projects.length, experiences: o.experiences.length },
-    }))
-    res.json(list)
+    res.status(503).json(DB_UNAVAILABLE)
   }
 })
 adminApi.post('/orgs', async (req, res) => {
@@ -442,7 +416,7 @@ adminApi.get('/experience', async (_req, res) => {
   try {
     res.json(await db.experience.findMany({ orderBy: { startedAt: 'desc' }, include: experienceInclude }))
   } catch {
-    res.json(fallbackExperience)
+    res.status(503).json(DB_UNAVAILABLE)
   }
 })
 adminApi.post('/experience', async (req, res) => {
@@ -491,10 +465,7 @@ adminApi.get('/docs', async (_req, res) => {
   try {
     res.json(await db.doc.findMany({ orderBy: { key: 'asc' } }))
   } catch {
-    res.json([
-      { key: 'about', title: 'Sobre Mí (About)', fields: [] },
-      { key: 'contact', title: 'Contacto (Contact)', fields: [] },
-    ])
+    res.status(503).json(DB_UNAVAILABLE)
   }
 })
 adminApi.put('/docs/:key', async (req, res) => {
@@ -537,32 +508,27 @@ adminApi.get('/articles', async (_req, res) => {
       },
     }))
   } catch {
-    res.json(fallbackArticles)
+    res.status(503).json(DB_UNAVAILABLE)
   }
 })
 
 adminApi.get('/articles/:id', async (req, res) => {
   const aid = id(req)
+  let row
   try {
-    const row = await db.article.findUnique({
+    row = await db.article.findUnique({
       where: { id: aid },
       include: {
         techs: { select: { id: true, name: true, slug: true } },
         project: { select: { id: true, title: true, slug: true } },
       },
     })
-    if (!row) {
-      const fb = fallbackArticles.find(a => a.id === aid)
-      if (fb) return res.json(fb)
-      throw new HttpError(404, 'artículo inexistente')
-    }
-    res.json(row)
-  } catch (err) {
-    if (err instanceof HttpError) throw err
-    const fb = fallbackArticles.find(a => a.id === aid)
-    if (fb) return res.json(fb)
-    throw new HttpError(404, 'artículo inexistente')
+  } catch {
+    res.status(503).json(DB_UNAVAILABLE)
+    return
   }
+  if (!row) throw new HttpError(404, 'artículo inexistente')
+  res.json(row)
 })
 
 adminApi.post('/articles', async (req, res) => {

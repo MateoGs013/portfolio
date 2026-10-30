@@ -1,0 +1,86 @@
+/** Stack y organizaciones del seed (español). */
+import { TechCategory } from '../../generated/prisma/client.js'
+
+export const techs = [
+  { slug: 'javascript', name: 'JavaScript', category: TechCategory.LANGUAGE, since: 2022 },
+  { slug: 'typescript', name: 'TypeScript', category: TechCategory.LANGUAGE, since: 2023 },
+  { slug: 'php', name: 'PHP', category: TechCategory.LANGUAGE, since: 2025 },
+  { slug: 'python', name: 'Python', category: TechCategory.LANGUAGE, since: 2026 },
+  { slug: 'angular', name: 'Angular', category: TechCategory.FRAMEWORK, since: 2022 },
+  { slug: 'vue', name: 'Vue 3', category: TechCategory.FRAMEWORK, since: 2025 },
+  { slug: 'react', name: 'React', category: TechCategory.FRAMEWORK, since: 2026 },
+  { slug: 'next', name: 'Next.js', category: TechCategory.FRAMEWORK, since: 2026 },
+  { slug: 'gsap', name: 'GSAP', category: TechCategory.MOTION, since: 2026 },
+  { slug: 'lenis', name: 'Lenis', category: TechCategory.MOTION, since: 2026 },
+  { slug: 'three', name: 'Three.js', category: TechCategory.GRAPHICS, since: 2026 },
+  { slug: 'node', name: 'Node.js', category: TechCategory.BACKEND, since: 2024 },
+  { slug: 'express', name: 'Express', category: TechCategory.BACKEND, since: 2024 },
+  { slug: 'laravel', name: 'Laravel', category: TechCategory.BACKEND, since: 2026 },
+  { slug: 'fastapi', name: 'FastAPI', category: TechCategory.BACKEND, since: 2026 },
+  { slug: 'prisma', name: 'Prisma', category: TechCategory.DATA, since: 2026 },
+  { slug: 'postgresql', name: 'PostgreSQL', category: TechCategory.DATA, since: 2026 },
+  { slug: 'mongodb', name: 'MongoDB', category: TechCategory.DATA, since: 2026 },
+  { slug: 'supabase', name: 'Supabase', category: TechCategory.DATA, since: 2026 },
+  { slug: 'firebase', name: 'Firebase', category: TechCategory.DATA, since: 2024 },
+  { slug: 'tailwind', name: 'Tailwind CSS', category: TechCategory.TOOLING, since: 2026 },
+  { slug: 'vite', name: 'Vite', category: TechCategory.TOOLING, since: 2025 },
+] as const
+
+export type TechSlug = typeof techs[number]['slug']
+
+export const techNotes: Record<TechSlug, string> = {
+  vue: 'Elegido por reactividad quirúrgica, Composition API limpia y tipado estricto sin sobrecarga de boilerplate.',
+  typescript: 'Estándar obligatorio en cliente y servidor: si no está tipado en compilación, no llega a producción.',
+  gsap: 'Orquestación temporal determinista para interfaces de alta precisión y micro-interacciones espaciales.',
+  lenis: 'Scroll inercial normalizado multiplataforma sin romper el comportamiento nativo del navegador.',
+  three: 'WebGL y shaders GLSL para experiencias inmersivas 3D cuando el DOM no alcanza.',
+  node: 'Runtime de alto rendimiento para APIs REST livianas, pipelines de middleware y servidores de eventos.',
+  express: 'Minimalismo y control total sobre el ciclo de vida HTTP, routing y autenticación.',
+  fastapi: 'Core de inferencia y procesamiento de IA/NLP con tipado Pydantic y latencia mínima.',
+  python: 'Lenguaje predilecto para ingeniería de datos, embeddings vectoriales y orquestación de LLMs.',
+  postgresql: 'Persistencia relacional ACID, esquemas declarativos e índices vectoriales con pgvector.',
+  prisma: 'ORM tipado de punta a punta: genera tipos TypeScript exactos directamente desde el esquema SQL.',
+  tailwind: 'Sistema de diseño componible y utilitario con purga agresiva para bundles ultra ligeros.',
+  vite: 'Tooling ultra veloz basado en Rollup y esbuild para HMR instantáneo en desarrollo.',
+  angular: 'Arquitectura corporativa basada en RxJS y Dependency Injection.',
+  react: 'Ecosistema masivo, React Server Components y rendering híbrido adoptado en la tesis Ynara.',
+  next: 'Framework full-stack de React con optimización de assets, routing por sistema de archivos y SSR.',
+  mongodb: 'Base NoSQL orientada a documentos para prototipado ágil y esquemas dinámicos en Barberpole.',
+  supabase: 'Backend-as-a-Service con Postgres en tiempo real, Row Level Security y storage S3.',
+  firebase: 'Plataforma BaaS para base de datos NoSQL reactiva y autenticación social rápida.',
+  laravel: 'Monolito robusto con Eloquent ORM, autenticación por sesión y colas de trabajo para plataformas transaccionales.',
+  php: 'Lenguaje backend tradicional utilizado en integraciones y módulos transaccionales de clientes.',
+  javascript: 'Fundamento del desarrollo web moderno, estándares ECMAScript y manipulación del DOM nativo.',
+}
+
+export const techColors: Record<TechSlug, string> = {
+  vue: '#42b883',
+  typescript: '#3178c6',
+  javascript: '#f7df1e',
+  python: '#3776ab',
+  php: '#777bb4',
+  angular: '#dd0031',
+  react: '#61dafb',
+  next: '#000000',
+  gsap: '#88ce02',
+  lenis: '#111111',
+  three: '#000000',
+  node: '#339933',
+  express: '#000000',
+  fastapi: '#009688',
+  laravel: '#ff2d20',
+  prisma: '#2d3748',
+  postgresql: '#4169e1',
+  mongodb: '#47a248',
+  supabase: '#3ecf8e',
+  firebase: '#ffca28',
+  tailwind: '#06b6d4',
+  vite: '#646cff',
+}
+
+export const orgs = [
+  { slug: 'la-rucula-gastrobar', name: 'La Rúcula Gastrobar', url: 'https://laruculagastrobar.es/', city: 'Chiclana de la Frontera, ES' },
+  { slug: 'arg-piscinas', name: 'ARG Piscinas', url: 'https://www.argpiscinas.es/', city: 'Andalucía, ES' },
+  { slug: 'escuela-da-vinci', name: 'Escuela Da Vinci', url: 'https://www.davinci.edu.ar/', city: 'Buenos Aires, AR' },
+  { slug: 'cet-30', name: 'CET N.º 30', url: null, city: 'Cipolletti, Río Negro' },
+]

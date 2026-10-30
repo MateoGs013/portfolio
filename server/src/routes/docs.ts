@@ -1,79 +1,23 @@
 import { Router } from 'express'
 import { db } from '../db.js'
 import { envelope } from '../envelope.js'
+import { docs as seedDocs } from '../seed/docs.js'
 
 export const docs = Router()
 
-interface FallbackField {
-  name: string
-  type: string
-  value: string
-  wide?: boolean
-}
+/**
+ * Respaldo si la base no responde: los mismos documentos del seed, sin una copia escrita a mano.
+ * D2 lo reemplaza por el snapshot generado desde la base.
+ */
+const fallbackDocs = new Map(seedDocs.map(d => [d.key as string, { ...d, updatedAt: null }]))
 
-const fallbackDocs: Record<string, { key: string, title: string, updatedAt: string, fields: FallbackField[] }> = {
-  about: {
-    key: 'about',
-    title: 'about',
-    updatedAt: new Date().toISOString(),
-    fields: [
-      { name: 'name', type: 'string', value: 'Mateo Gabriel Sonzogni' },
-      { name: 'role', type: 'string', value: 'Desarrollador Frontend & Full Stack · Creative Developer' },
-      { name: 'location', type: 'string', value: 'Río Negro, Patagonia Argentina' },
-      { name: 'technical_degree', type: 'string', value: 'Técnico en Programación · CET N.º 30 (2017–2023)' },
-      { name: 'higher_education', type: 'string', value: 'Diseño y Desarrollo Web · Escuela Da Vinci (2024–2026) · Tesis Preaprobada' },
-      { name: 'freelance_experience', type: 'string', value: 'Activo desde 2023 · Soluciones web y software a medida' },
-      { name: 'availability_status', type: 'string', value: 'DISPONIBLE // Búsqueda de equipo o proyectos de alto impacto' },
-      { name: 'work_modalities', type: 'string', value: 'Remoto · Híbrido · Presencial' },
-      { name: 'timezone', type: 'string', value: 'UTC-3 (Argentina / Compatible con US & EU)' },
-      { name: 'languages', type: 'string', value: 'Español (Nativo) · Inglés (B2 Profesional Técnico)' },
-      { name: 'core_competencies', type: 'string', value: 'Full-Cycle Engineering: Figma UI/UX → Frontend Reactivo → APIs REST/Microservicios → Postgres ACID → Deploy & Monitoreo' },
-      { name: 'engineering_philosophy', type: 'text', wide: true, value: 'Desarrollo con criterio de diseño y foco en el producto entero: qué problema resuelve, cómo debería verse, cómo debería sentirse, cómo se construye y cómo llega a producción. No me posiciono solo como programador ni solo como diseñador; trabajo la costura donde la arquitectura técnica se encuentra con la experiencia de usuario.' },
-      { name: 'professional_goal', type: 'text', wide: true, value: 'Consolidarme como desarrollador en un equipo con proyectos reales de mayor escala. A mediano plazo, liderazgo técnico: coordinar, organizar, comunicar y conectar perfiles de distintas áreas (diseño, producto, frontend y backend).' },
-    ],
-  },
-  contact: {
-    key: 'contact',
-    title: 'contact',
-    updatedAt: new Date().toISOString(),
-    fields: [
-      { name: 'email', type: 'url', value: 'mateogabus@gmail.com' },
-      { name: 'github', type: 'url', value: 'https://github.com/MateoGs013' },
-      { name: 'linkedin', type: 'url', value: 'https://www.linkedin.com/in/mateo-sonzogni' },
-      { name: 'availability', type: 'string', value: 'Inmediata · Contratación directa, contractor o freelance' },
-      { name: 'location', type: 'string', value: 'Río Negro, AR (Disponible para relocalización o remoto)' },
-      { name: 'timezone', type: 'string', value: 'UTC-3' },
-      { name: 'preferred_contact', type: 'string', value: 'Email directo, LinkedIn o mensaje vía GitHub' },
-    ],
-  },
-  home: {
-    key: 'home',
-    title: 'home',
-    updatedAt: new Date().toISOString(),
-    fields: [
-      { name: 'headline', type: 'string', value: 'CONSTRUIR CON PROPÓSITO' },
-      { name: 'about_tag', type: 'string', value: 'SOBRE MÍ —' },
-      { name: 'about_text', type: 'text', wide: true, value: 'Construyo productos digitales y arquitecturas de software que unen precisión relacional en PostgreSQL 17, APIs tipadas (TypeScript / Python) e interfaces reactivas contemporáneas con micro-interacciones espaciales. Mínimo ruido. Máximo impacto.' },
-      { name: 'globe_pill', type: 'string', value: 'DISPONIBLE GLOBALMENTE · COLABORACIONES REMOTAS Y FREELANCE' },
-      { name: 'profile_role', type: 'string', value: 'DESARROLLADOR FULL STACK Y CREATIVO' },
-      { name: 'profile_status', type: 'string', value: '● DISPONIBLE // 2026' },
-      { name: 'manifesto_quote', type: 'text', wide: true, value: 'EL BUEN CÓDIGO NO ES SOLO CÓMO SE VE.<br>ES CÓMO CORRE, A QUIÉN SIRVE Y QUÉ REPRESENTA.' },
-      { name: 'manifesto_lead', type: 'text', wide: true, value: 'DISEÑO CON PROPÓSITO.<br>CONSTRUYO CON PRECISIÓN.<br>ENTREGO CON ORGULLO.' },
-    ],
-  },
-}
-
-/** GET /api/docs/:key → { key, title, fields: [{ name, type, value, wide?, worlds? }] } */
+/** GET /api/docs/:key → { key, title, fields: [{ name, type, value, en?, wide?, worlds? }] } */
 docs.get('/docs/:key', async (req, res) => {
   const key = req.params.key
+  const fallback = fallbackDocs.get(key)
   try {
     const data = await db.doc.findUnique({ where: { key } })
     if (!data) {
-      if (key && Object.hasOwn(fallbackDocs, key)) {
-        const fb = fallbackDocs[key]!
-        res.json(envelope(fb, { count: fb.fields.length }))
-        return
-      }
       res.status(404).json({ error: 'not found' })
       return
     }
@@ -81,9 +25,8 @@ docs.get('/docs/:key', async (req, res) => {
     res.json(envelope(data, { count }))
   }
   catch {
-    if (key && Object.hasOwn(fallbackDocs, key)) {
-      const fb = fallbackDocs[key]!
-      res.json(envelope(fb, { count: fb.fields.length }))
+    if (fallback) {
+      res.json(envelope(fallback, { count: fallback.fields.length }))
       return
     }
     res.status(500).json({ error: 'internal error' })

@@ -598,7 +598,6 @@ export const fallbackSchemaEntries: SchemaEntry[] = [
   { key: 'articles', label: 'artículos & blog', count: fallbackArticles.length, kind: 'collection' },
   { key: 'about', label: 'sobre mí', count: 13, kind: 'document' },
   { key: 'contact', label: 'contacto', count: 7, kind: 'document' },
-  { key: 'lab', label: 'lab ui', count: 31, kind: 'document' },
   { key: 'orgs', label: 'organizaciones', count: Object.keys(fallbackOrgsData).length, kind: 'collection' },
 ]
 

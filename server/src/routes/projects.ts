@@ -11,6 +11,12 @@ const FILTERS = ['stack', 'year', 'role', 'featured', 'status', 'org'] as const
 
 const orgSelect = { select: { slug: true, name: true } } satisfies Prisma.Project$orgArgs
 const techSelect = { select: { slug: true, name: true }, orderBy: { name: 'asc' } } satisfies Prisma.Project$techsArgs
+const metricSelect = {
+  select: { key: true, value: true, items: true, unit: true, label: true, source: true, measuredAt: true },
+  orderBy: { order: 'asc' },
+} satisfies Prisma.Project$metricsArgs
+/** La columna vieja de métricas (Json) no se publica: se borra en una migración posterior. */
+const projectOmit = { legacyMetrics: true } satisfies Prisma.ProjectOmit
 
 /** GET /api/projects?stack=&year=&role=&featured=&status=&org= */
 projects.get(['/projects', '/project'], async (req, res) => {
@@ -42,9 +48,11 @@ projects.get(['/projects', '/project'], async (req, res) => {
     const data = await db.project.findMany({
       where,
       orderBy: [{ sortOrder: 'asc' }, { year: 'desc' }, { title: 'asc' }],
+      omit: projectOmit,
       include: {
         org: orgSelect,
         techs: techSelect,
+        metrics: metricSelect,
         links: { select: { label: true, url: true } },
         // La portada viaja en la lista: DISEÑO arma su tira de fotogramas con ella.
         media: { where: { role: 'COVER' }, orderBy: { order: 'asc' }, take: 1 },
@@ -73,9 +81,11 @@ projects.get(['/projects/:slug', '/project/:slug'], async (req, res) => {
           { slug: altSlug },
         ],
       },
+      omit: projectOmit,
       include: {
         org: orgSelect,
         techs: techSelect,
+        metrics: metricSelect,
         links: { select: { label: true, url: true } },
         media: { orderBy: [{ role: 'asc' }, { order: 'asc' }] },
         steps: {
