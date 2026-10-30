@@ -1,84 +1,39 @@
 import { Router } from 'express'
-import { db } from '../db.js'
-import { envelope } from '../envelope.js'
-import { readFilters } from '../filters.js'
-import { fallbackStack } from '../fallbackData.js'
-import { TechCategory, type Prisma } from '../../generated/prisma/client.js'
+import { parseLang } from '../content/lang.js'
+import { matchesTech, sortByUsage } from '../content/matches.js'
+import { presentTech } from '../content/present.js'
+import { resolve, type Resource, type Wire } from '../content/snapshot.js'
+import { sendResolved } from '../envelope.js'
+import { publicFilters, readFilters, stackFilters, type StackFilters } from '../filters.js'
+import { getTech, listStack, type TechRecord } from '../queries/stack.js'
+
+type Tech = Wire<TechRecord>
+
+export const stackList: Resource<StackFilters, Tech[], ReturnType<typeof presentTech>[]> = {
+  name: 'stack',
+  db: listStack,
+  snapshot: (snap, filters) => sortByUsage(snap.stack.filter(t => matchesTech(t, filters))),
+  present: (records, lang) => records.map(t => presentTech(t, lang)),
+}
+
+export const techDetail: Resource<string, Tech, ReturnType<typeof presentTech>> = {
+  name: 'tech',
+  db: getTech,
+  snapshot: (snap, slug) => snap.stack.find(t => t.slug === slug) ?? null,
+  present: presentTech,
+}
 
 export const stack = Router()
 
-const FILTERS = ['category'] as const
-
-function isCategory(value: string): value is TechCategory {
-  return (Object.values(TechCategory) as string[]).includes(value)
-}
-
-/** GET /api/stack?category= (alias /api/techs) — cada tech con cuántos proyectos y experiencias la usan. */
-stack.get(['/stack', '/techs'], async (req, res) => {
-  const filters = readFilters(req, FILTERS)
-
-  try {
-    const where: Prisma.TechWhereInput = {}
-    const category = filters.category?.toUpperCase()
-    if (category && isCategory(category)) where.category = category
-
-    const data = await db.tech.findMany({
-      where,
-      orderBy: [{ since: 'asc' }, { name: 'asc' }],
-      include: {
-        _count: { select: { projects: true, experiences: true } },
-      },
-    })
-
-    res.json(envelope(data, { filters }))
-  } catch {
-    // Fallback resiliente en memoria
-    let data = [...fallbackStack]
-    const category = filters.category?.toUpperCase()
-    if (category && isCategory(category)) {
-      data = data.filter(t => t.category === category)
-    }
-
-    res.json(envelope(data, { filters }))
-  }
+/** GET /api/stack?category=&lang= — cada tecnología con sus obras visibles; más usadas primero. */
+stack.get('/stack', async (req, res) => {
+  const filters = readFilters(req.query, stackFilters)
+  const lang = parseLang(req)
+  sendResolved(res, await resolve(stackList, filters, lang), { lang, filters: publicFilters(filters) })
 })
 
-/** GET /api/stack/:slug (alias /api/techs/:slug) — detalle de una tecnología por slug. */
-stack.get(['/stack/:slug', '/techs/:slug'], async (req, res) => {
-  const slug = String(Array.isArray(req.params.slug) ? req.params.slug[0] : req.params.slug)
-  try {
-    const data = await db.tech.findUnique({
-      where: { slug },
-      include: {
-        projects: {
-          select: { slug: true, title: true, year: true },
-          orderBy: [{ sortOrder: 'asc' }, { year: 'desc' }],
-        },
-        experiences: {
-          select: { slug: true, role: true, startedAt: true, endedAt: true },
-          orderBy: { startedAt: 'desc' },
-        },
-        _count: { select: { projects: true, experiences: true } },
-      },
-    })
-
-    if (!data) {
-      const fb = fallbackStack.find(t => t.slug === slug)
-      if (fb) {
-        res.json(envelope(fb))
-        return
-      }
-      res.status(404).json({ error: 'not found' })
-      return
-    }
-
-    res.json(envelope(data))
-  } catch {
-    const fb = fallbackStack.find(t => t.slug === slug)
-    if (fb) {
-      res.json(envelope(fb))
-      return
-    }
-    res.status(500).json({ error: 'internal error' })
-  }
+/** GET /api/stack/:slug?lang= */
+stack.get('/stack/:slug', async (req, res) => {
+  const lang = parseLang(req)
+  sendResolved(res, await resolve(techDetail, req.params.slug, lang), { lang })
 })

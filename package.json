@@ -21,6 +21,8 @@
     "db:up": "docker compose up -d",
     "db:down": "docker compose down",
     "db:seed": "tsx server/src/seed.ts",
+    "db:snapshot": "tsx server/src/scripts/snapshot.ts",
+    "db:snapshot:check": "tsx server/src/scripts/snapshot-check.ts",
     "test:e2e": "playwright test",
     "postinstall": "prisma generate && nuxt prepare"
   },
