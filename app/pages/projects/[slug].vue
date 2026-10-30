@@ -1,17 +1,44 @@
 <script setup lang="ts">
-// Caso mínimo (F1): los campos de /api/projects/:slug en una lista llana. P3 lo reemplaza por el caso.
-import { metricLabel, metricValue } from '~/lib/format'
-import { safeHref } from '~/lib/record'
+/**
+ * El caso (/projects/:slug): el título y la portada llegan viajando, la captura crece, cada bloque
+ * tiene su rótulo fijo, las tecnologías y las métricas se asoman y la siguiente obra cierra como
+ * escena. Todo sale de /api/projects/:slug; la siguiente obra, de /api/projects completa (sortOrder,
+ * circular). Las piezas de escritorio se reparten entre los bloques como en el prototipo: una tras el
+ * encargo, otra tras el proceso y el resto tras el resultado. Las de teléfono van juntas.
+ */
+import type { Media } from '~/lib/api'
+import { docText } from '~/composables/useSiteContent'
+
+definePageMeta({ viewTransition: { toTypes: ['caso'] } })
 
 const route = useRoute()
-const { t, lang, localeRoute, langAttr } = useLocale()
+const { t, lang } = useLocale()
+const { isRecord } = useRecordView()
+const { public: { siteUrl } } = useRuntimeConfig()
 const slug = computed(() => String(route.params.slug))
 
 const [project, all] = await Promise.all([useProject(slug), useProjects()])
 failOn(project.error)
 const p = computed(() => project.data.value!)
-const cover = computed(() => p.value.media.find(m => m.role === 'COVER'))
-await usePageSeo(() => ({ title: p.value.title, description: p.value.summary, image: cover.value }))
+
+const covers = computed(() => p.value.media.filter(m => m.role === 'COVER'))
+const cover = computed(() => covers.value.find(m => m.kind === 'IMAGE') ?? covers.value[0])
+const coverTint = computed(() => covers.value.find(m => m.tint)?.tint ?? null)
+
+const gallery = computed(() => p.value.media.filter(m => m.role === 'GALLERY'))
+const phones = computed(() => gallery.value.filter(m => m.viewport === 'MOBILE'))
+
+/** Los bloques con texto, en orden, y las piezas de escritorio que van detrás de cada uno. */
+const pieces = computed(() => {
+  const desktop = gallery.value.filter(m => m.viewport === 'DESKTOP')
+  const blocks = (['brief', 'steps', 'outcome'] as const).filter(k => (k === 'steps' ? p.value.steps.length : p.value[k]))
+  const out: Record<'brief' | 'steps' | 'outcome' | 'rest', Media[]> = { brief: [], steps: [], outcome: [], rest: [] }
+  blocks.forEach((k, i) => {
+    out[k] = i === blocks.length - 1 ? desktop.slice(i) : desktop.slice(i, i + 1)
+  })
+  if (!blocks.length) out.rest = desktop
+  return out
+})
 
 /** La siguiente obra en sortOrder, circular, siempre desde la lista completa. */
 const next = computed(() => {
@@ -19,89 +46,97 @@ const next = computed(() => {
   const i = list.findIndex(item => item.slug === p.value.slug)
   return list.length > 1 && i >= 0 ? list[(i + 1) % list.length] : undefined
 })
+
+/** Mientras entra la escena de la siguiente obra, la página ya toma su temperatura. */
+const nextEntering = ref(false)
+const nextTint = computed(() => next.value?.media.find(m => m.role === 'COVER' && m.tint)?.tint ?? null)
+useTint(() => (nextEntering.value && nextTint.value ? nextTint.value : coverTint.value))
+
+await usePageSeo(() => ({ title: p.value.title, description: p.value.summary, image: cover.value }))
+
+const about = useDoc('about')
+const absolute = (path: string) => new URL(path, siteUrl).toString()
+const ogImage = computed(() => cover.value && (cover.value.kind === 'IMAGE' || cover.value.poster) ? cover.value : null)
+
+useSeoMeta({
+  ogImageWidth: () => ogImage.value?.width,
+  ogImageHeight: () => ogImage.value?.height,
+})
+
+/** La obra como CreativeWork, con su autor desde about. */
+const creativeWork = computed(() => {
+  const image = ogImage.value
+  const src = image?.kind === 'VIDEO' ? image.poster : image?.src
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'CreativeWork',
+    'name': p.value.title,
+    'description': p.value.summary,
+    'url': absolute(`/projects/${p.value.slug}${lang.value === 'en' ? '?lang=en' : ''}`),
+    'inLanguage': lang.value,
+    'dateCreated': String(p.value.year),
+    'datePublished': p.value.publishedAt ?? undefined,
+    'dateModified': p.value.updatedAt,
+    'image': src ? { '@type': 'ImageObject', 'url': absolute(src), 'width': image?.width, 'height': image?.height, 'caption': image?.alt } : undefined,
+    'keywords': p.value.techs.map(tech => tech.name).join(', ') || undefined,
+    'sameAs': p.value.url ?? undefined,
+    'author': { '@type': 'Person', 'name': docText(about.data.value, 'name') ?? undefined, 'url': absolute('/') },
+  }
+})
+
+useHead({
+  script: [{ key: 'ld-case', type: 'application/ld+json', innerHTML: computed(() => JSON.stringify(creativeWork.value).replace(/</g, '\\u003c')) }],
+})
 </script>
 
 <template>
-  <article data-hf="measure" class="flex flex-col gap-12 px-(--pad) py-24">
-    <header class="flex flex-col gap-4">
-      <h1 class="text-display-case font-medium tracking-tight text-ink">
-        <span data-vt="title">{{ p.title }}</span>
-      </h1>
-      <p class="max-w-[58ch] text-l text-dim" :lang="langAttr(p, 'summary')">
-        {{ p.summary }}
-      </p>
-    </header>
+  <div>
+    <article data-hf="measure" class="pb-section record:pb-0">
+      <CasePeek>
+        <CaseHeader :project="p" />
+        <CaseCover :project="p" />
 
-    <figure v-if="cover && cover.kind === 'IMAGE'" data-vt="cover" class="m-0">
-      <img :src="cover.src" :alt="cover.alt" :width="cover.width" :height="cover.height" class="h-auto w-full rounded-[3px]" :lang="langAttr(cover, 'alt')">
-    </figure>
+        <div class="px-pad py-section record:py-0">
+          <RecordField v-slot="{ fv }" collection="projects" k="summary" :value="p.summary" :record="p">
+            <RevealLines :text="p.summary" :class="fv" class="max-w-[24ch] text-hero text-ink" />
+          </RecordField>
+        </div>
 
-    <dl class="grid grid-cols-[max-content_1fr] gap-x-8 gap-y-3 text-m">
-      <dt class="text-xs text-dim">{{ t('case.role') }}</dt>
-      <dd :lang="langAttr(p, 'role')">{{ p.role }}</dd>
-      <dt class="text-xs text-dim">{{ t('case.year') }}</dt>
-      <dd>{{ p.year }}</dd>
-      <dt class="text-xs text-dim">{{ t('case.status') }}</dt>
-      <dd>{{ t(`status.${p.status}`) }}</dd>
-      <template v-if="p.org">
-        <dt class="text-xs text-dim">{{ t('case.client') }}</dt>
-        <dd>{{ p.org.name }}</dd>
-      </template>
-    </dl>
+        <div class="flex flex-col gap-[clamp(3rem,10vh,6rem)] record:gap-0">
+          <CaseSection v-if="isRecord || p.brief" :label="t('case.brief')">
+            <RecordField v-slot="{ fv }" collection="projects" k="brief" :value="p.brief" :record="p">
+              <RevealLines :text="p.brief ?? ''" :class="fv" class="max-w-read text-l" />
+            </RecordField>
+            <CaseGallery :items="pieces.brief" />
+          </CaseSection>
 
-    <section v-if="p.brief" class="flex flex-col gap-2">
-      <h2 class="text-s text-dim">{{ t('case.brief') }}</h2>
-      <p class="max-w-[58ch] text-l" :lang="langAttr(p, 'brief')">{{ p.brief }}</p>
-    </section>
+          <CaseSection v-if="isRecord || p.steps.length" :label="t('case.process')">
+            <CaseSteps :steps="p.steps" />
+            <CaseGallery :items="pieces.steps" />
+          </CaseSection>
 
-    <section v-if="p.steps.length" class="flex flex-col gap-4">
-      <h2 class="text-s text-dim">{{ t('case.process') }}</h2>
-      <ol class="flex flex-col gap-4">
-        <li v-for="step in p.steps" :key="step.order" class="flex flex-col gap-1">
-          <h3 class="text-l text-ink" :lang="langAttr(step, 'title')">{{ step.title }}</h3>
-          <p class="max-w-[58ch] text-m text-dim" :lang="langAttr(step, 'body')">{{ step.body }}</p>
-        </li>
-      </ol>
-    </section>
+          <CaseSection v-if="isRecord || p.outcome" :label="t('case.outcome')">
+            <RecordField v-slot="{ fv }" collection="projects" k="outcome" :value="p.outcome" :record="p">
+              <RevealLines :text="p.outcome ?? ''" :class="fv" class="max-w-read text-l" />
+            </RecordField>
+            <CaseGallery :items="pieces.outcome" />
+          </CaseSection>
 
-    <section v-if="p.outcome" class="flex flex-col gap-2">
-      <h2 class="text-s text-dim">{{ t('case.outcome') }}</h2>
-      <p class="max-w-[58ch] text-l" :lang="langAttr(p, 'outcome')">{{ p.outcome }}</p>
-    </section>
+          <CaseGallery v-if="pieces.rest.length" :items="pieces.rest" class="px-pad" />
 
-    <section v-if="p.metrics.length" class="flex flex-col gap-2">
-      <h2 class="text-s text-dim">{{ t('case.metrics') }}</h2>
-      <dl class="grid grid-cols-[max-content_1fr] gap-x-8 gap-y-2 text-m">
-        <template v-for="m in p.metrics" :key="m.key">
-          <dt class="text-xs text-dim">{{ metricLabel(m, lang) }}</dt>
-          <dd class="tabular-nums">{{ metricValue(m, lang) }}</dd>
-        </template>
-      </dl>
-    </section>
+          <CaseSection v-if="isRecord || p.metrics.length" :label="t('case.metrics')">
+            <CaseMetrics :metrics="p.metrics" />
+          </CaseSection>
 
-    <section v-if="p.techs.length" class="flex flex-col gap-2">
-      <h2 class="text-s text-dim">{{ t('case.stack') }}</h2>
-      <ul class="flex flex-wrap gap-x-5 gap-y-1 text-m">
-        <li v-for="tech in p.techs" :key="tech.slug">
-          <NuxtLink :to="localeRoute({ path: '/projects', query: { stack: tech.slug } })" class="text-ink underline underline-offset-4">{{ tech.name }}</NuxtLink>
-        </li>
-      </ul>
-    </section>
+          <CaseSection v-if="phones.length" :label="t('case.phone')" class="ed-only">
+            <CaseGallery :items="phones" phones />
+          </CaseSection>
 
-    <section v-if="p.links.length" class="flex flex-col gap-2">
-      <h2 class="text-s text-dim">{{ t('case.links') }}</h2>
-      <ul class="flex flex-col gap-1 text-m">
-        <li v-for="link in p.links" :key="link.url">
-          <a :href="safeHref(link.url)" rel="noopener" class="text-ink underline underline-offset-4" :lang="langAttr(link, 'label')">{{ link.label }}</a>
-        </li>
-      </ul>
-    </section>
+          <CaseLinks :project="p" />
+        </div>
+      </CasePeek>
+    </article>
 
-    <nav v-if="next" :aria-label="t('case.next')" class="border-t border-rule pt-6">
-      <NuxtLink :to="localeRoute(`/projects/${next.slug}`)" data-travel="next" class="flex flex-col gap-1 text-ink no-underline">
-        <span class="text-s text-dim">{{ t('case.next') }}</span>
-        <span data-travel-title class="text-xl font-medium">{{ next.title }}</span>
-      </NuxtLink>
-    </nav>
-  </article>
+    <CaseNext v-if="next" :next="next" @tint="nextEntering = $event" />
+  </div>
 </template>
