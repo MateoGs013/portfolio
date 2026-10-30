@@ -38,7 +38,10 @@ export function useCvFiles() {
   const { get } = useApi()
   return useAsyncData('cv:files', async () => {
     const docs = await Promise.all(langs.map(l => get<Doc>('/docs/contact', {}, l).then(r => [l, cvFileOf(r.data)] as const)))
-    return Object.fromEntries(docs.filter(([, file]) => file)) as CvFiles
+    const files = Object.fromEntries(docs.filter(([, file]) => file)) as CvFiles
+    // Sin PDF propio en inglés, la API repite el de ES: no se ofrece como «el otro idioma».
+    if (files.es && files.en?.href === files.es.href) delete files.en
+    return files
   }, { getCachedData: cachedApiData })
 }
 

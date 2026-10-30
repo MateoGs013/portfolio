@@ -94,6 +94,11 @@ async function render(browser, lang) {
 
 async function main() {
   const targets = Object.fromEntries(await Promise.all(langs.map(async lang => [lang, await pdfPath(lang)])))
+  // Sin contact.cv traducido, la API devuelve el de ES también en EN: el render EN pisaría el PDF ES.
+  if (targets.es.file === targets.en.file) {
+    console.error(`cv-pdf: contact.cv apunta al mismo archivo en es y en (${targets.es.href}); no se escribió ningún PDF.`)
+    process.exit(1)
+  }
   const browser = await chromium.launch()
   let results
   try {

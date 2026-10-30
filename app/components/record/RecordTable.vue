@@ -31,10 +31,11 @@ const caption = computed(() => {
 })
 
 const head = computed(() => names.value.map(name => ({ name, type: typeLabel(metaFor(props.collection, name)) })))
-const body = computed(() => props.rows.map((row) => {
+const body = computed(() => props.rows.map((row, i) => {
   const record = row as Record<string, unknown> & Item
   return {
-    key: String(record.slug ?? ''),
+    // Sin slug, el índice: key y data-f nunca se repiten (el morph empareja por data-f).
+    key: typeof record.slug === 'string' && record.slug ? record.slug : `row-${i}`,
     to: recordRoute(props.collection, record),
     record: 'untranslated' in record ? record as Translatable : null,
     cells: names.value.map(name => ({ name, cell: cellFor(record, name, metaFor(props.collection, name, record[name]), props.collection) })),
@@ -51,7 +52,7 @@ const numeric = (name: string) => ['int', 'decimal'].includes(metaFor(props.coll
       {{ caption }}
     </caption>
     <thead>
-      <tr>
+      <tr :class="recordLine">
         <th
           v-for="col in head"
           :key="col.name"

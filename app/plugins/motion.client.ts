@@ -16,7 +16,7 @@ import { SplitText } from 'gsap/SplitText'
 import Lenis from 'lenis'
 import 'lenis/dist/lenis.css'
 import type { ShallowRef } from 'vue'
-import { armScenes, revertScenes } from '~/composables/useMotion'
+import { armScenes, beginNavigation, endNavigation, revertScenes } from '~/composables/useMotion'
 import { installTintAnchors } from '~/composables/useTint'
 
 /** El valor del prototipo (docs/diseno.md §2: Lenis lerp .1 con lagSmoothing(0)). */
@@ -84,7 +84,21 @@ export default defineNuxtPlugin({
       })
     })
 
-    nuxtApp.hook('page:finish', refresh)
+    // La ventana en la que lo que se monta es una página que entra (useMotion → `entering`): abre en el
+    // guard del router, que corre antes del setup de la página nueva (los hooks de Nuxt corren en una
+    // microtarea, tarde para eso), y cierra en page:finish, cuando la página ya se montó. Un cambio de
+    // query en la misma página no remonta nada: cierra en el próximo tick.
+    const router = useRouter()
+    router.beforeEach(() => {
+      if (!nuxtApp.isHydrating) beginNavigation()
+    })
+    router.afterEach((to, from, failure) => {
+      if (failure || to.path === from.path) void nextTick(endNavigation)
+    })
+    nuxtApp.hook('page:finish', () => {
+      endNavigation()
+      refresh()
+    })
 
     nuxtApp.hook('site:overlay', ({ open }) => (open ? hold('overlay') : release('overlay')))
 

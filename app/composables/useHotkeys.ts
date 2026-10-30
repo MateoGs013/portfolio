@@ -6,16 +6,7 @@
 import type { RouteLocationRaw } from 'vue-router'
 import { prefersReducedMotion } from './useSound'
 
-/** La paleta avisa que tapa la página: F4 pausa Lenis mientras está abierta. */
-export interface SiteOverlay {
-  open: boolean
-}
-
-declare module '#app' {
-  interface RuntimeNuxtHooks {
-    'site:overlay': (overlay: SiteOverlay) => void | Promise<void>
-  }
-}
+// El hook 'site:overlay' y su tipo SiteOverlay viven en useLenis.ts (una sola declaración).
 
 export const KEYS_COOKIE = 'pf-keys'
 export const CONTACT_ID = 'contacto'
@@ -198,8 +189,9 @@ export function useHotkeys() {
     }
     if (dialogOpen()) return
     if (key === 'Escape') {
+      // Cerrar una capa abierta anda en cualquier contexto; salir del Hiperfoco no, con foco en un campo.
       if (closeTopLayer()) e.preventDefault()
-      else if (keys.shortcutsOn.value && focus.isHyperfocus.value) actions.toggleHyperfocus()
+      else if (keys.shortcutsOn.value && focus.isHyperfocus.value && !isEditable(e.target)) actions.toggleHyperfocus()
       return
     }
     if (e.ctrlKey || e.metaKey || e.altKey || e.repeat || !keys.shortcutsOn.value || isEditable(e.target)) return

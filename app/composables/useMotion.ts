@@ -57,6 +57,21 @@ interface Scene {
 /** Escenas montadas; motion.client.ts las revierte y las vuelve a armar en bloque. */
 const scenes = new Set<Scene>()
 
+/**
+ * Hay una navegación del cliente en curso (del guard del router a `page:finish`, que avisa
+ * motion.client.ts). Solo lo que se monta en esa ventana es una página que entra: un componente que
+ * aparece después (v-if, ClientOnly, un fetch diferido) se comporta como al hidratar.
+ */
+let navigating = false
+
+export function beginNavigation() {
+  navigating = true
+}
+
+export function endNavigation() {
+  navigating = false
+}
+
 export function revertScenes() {
   scenes.forEach(scene => scene.revert())
 }
@@ -72,7 +87,7 @@ export function useMotion(scope: MaybeRefOrGetter<HTMLElement | null | undefined
 
   const nuxtApp = useNuxtApp()
   const { isHyperfocus } = useHyperfocus()
-  let entering = !nuxtApp.isHydrating
+  let entering = navigating && !nuxtApp.isHydrating
   let mm: gsap.MatchMedia | null = null
   let mounted = false
 

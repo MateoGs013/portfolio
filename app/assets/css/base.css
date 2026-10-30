@@ -159,7 +159,11 @@
 }
 
 @layer base {
+  /* El canal de la barra queda reservado: cuando Lenis se detiene (view transition, paleta) pone
+     overflow: clip en <html> y, sin esto, la página se ensancharía y volvería a angostarse con cada
+     navegación en Windows con barras clásicas. */
   html {
+    scrollbar-gutter: stable;
     -webkit-text-size-adjust: 100%;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;

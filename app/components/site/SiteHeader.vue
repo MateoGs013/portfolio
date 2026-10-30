@@ -1,9 +1,11 @@
 <script setup lang="ts">
 // Cabecera del prototipo: el nombre a la izquierda; Obra, Sobre mí y Contacto, siempre visibles y
-// renderizados por el SSR; y las utilidades. En oscuro se mezcla por diferencia como el prototipo (blanco
-// sobre el fondo se lee como --ink y sobre una captura se invierte). En claro va en --ink sin mezcla: sobre
-// el fondo se ve igual, y así el contraste que mide axe es el real (axe no aplica la mezcla al texto).
-// Con el menú angosto abierto vuelve a la mezcla normal para que el panel se lea. Contacto es el pie.
+// renderizados por el SSR; y las utilidades. En los dos temas se mezcla por diferencia como el prototipo:
+// blanco sobre el fondo se lee como --ink y sobre una captura oscura se invierte, así la cabecera fija se lee
+// encima de portadas y galerías. axe no aplica la mezcla al texto: su regla color-contrast se excluye para
+// header[data-chrome] y el contraste se mide con scripts/check-contrast.mjs. Con el menú angosto abierto
+// vuelve a la mezcla normal para que el panel se lea. Contacto es el pie. El DOM sigue el orden visual
+// (nombre, navegación, utilidades) para que Tab recorra lo que se ve; en angosto la grilla los acomoda.
 import { CONTACT_ID } from '~/composables/useHotkeys'
 
 const route = useRoute()
@@ -37,7 +39,7 @@ function onContact(e: MouseEvent) {
 <template>
   <header
     data-chrome
-    class="fixed inset-x-0 top-0 z-40 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-6 gap-y-1 px-pad py-[calc(var(--pad)*0.6)] text-s text-white mix-blend-difference light:text-ink light:mix-blend-normal has-[details[open]]:text-ink has-[details[open]]:mix-blend-normal md:flex md:justify-between"
+    class="fixed inset-x-0 top-0 z-40 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-6 gap-y-1 px-pad py-[calc(var(--pad)*0.6)] text-s text-white mix-blend-difference has-[details[open]]:text-ink has-[details[open]]:mix-blend-normal md:flex md:justify-between"
   >
     <NuxtLink
       :to="home"
@@ -48,9 +50,7 @@ function onContact(e: MouseEvent) {
       {{ brand ?? t('nav.home') }}
     </NuxtLink>
 
-    <SiteUtilities class="col-start-2 row-start-1 md:order-last" />
-
-    <nav :aria-label="t('nav.label')" class="col-span-2 md:ms-auto">
+    <nav :aria-label="t('nav.label')" class="col-span-2 row-start-2 md:ms-auto">
       <ul class="flex gap-[clamp(1rem,2.4vw,2rem)]">
         <li v-for="link in links" :key="link.path">
           <NuxtLink
@@ -73,5 +73,7 @@ function onContact(e: MouseEvent) {
         </li>
       </ul>
     </nav>
+
+    <SiteUtilities class="col-start-2 row-start-1" />
   </header>
 </template>

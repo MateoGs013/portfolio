@@ -49,7 +49,6 @@ export default {
   'shell.copyEmail': { es: 'Copiar email', en: 'Copy email' },
   'shell.copied': { es: 'Copiado', en: 'Copied' },
   'shell.copyFailed': { es: 'No se pudo copiar el email', en: 'The email could not be copied' },
-  'shell.writeTo': { es: 'Escribir a {email}', en: 'Write to {email}' },
   'shell.localTime': { es: 'Hora local', en: 'Local time' },
   'shell.elsewhere': { es: 'En otros sitios', en: 'Elsewhere' },
   'shell.github': { es: 'GitHub', en: 'GitHub' },

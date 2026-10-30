@@ -60,6 +60,7 @@ Tema oscuro por defecto, recordado en la cookie `pf-theme`. Los tokens viven en 
 ### Tipografía
 
 - **General Sans** (variable, 200–700, local) para todo lo que se lee. **Martian Mono** solo para identificadores: nombres y tipos de campo del registro, slugs, `kbd`. No hay otras familias ni fuentes remotas.
+- **Excepción: la hoja del CV.** `CvHarvardAts` es un documento impreso, no una pantalla del sitio: usa la serif de sistema del estándar Harvard (`'Times New Roman', Times, 'Liberation Serif', Georgia, serif`), la misma que el generador de Job Hunter del admin (`server/src/admin/hunterCvHtml.ts`), con su escala en pt. Los PDF se generan con `scripts/cv-pdf.mjs` contra el build local, que verifica una página y 248–265 mm.
 - Cuerpo en 420; titulares en 540–560 con tracking de −0,03 a −0,058 em e interlineado de .82 a .95; la frase grande en 500.
 - **Sin etiquetas en mayúsculas espaciadas** y sin numeración «01 /». Los rótulos de sección van en sans, en minúscula de oración y en `--dim`.
 
@@ -106,6 +107,7 @@ Los paquetes de frontend se coordinan por estos atributos y clases, no por nombr
 | `data-travel-title` | Dentro del origen, lo que viaja como `title` | `<span data-travel-title>{{ p.title }}</span>` |
 | `data-travel-cover` | Dentro del origen, lo que viaja como `cover` | `<MediaImage data-travel-cover :media="p.cover" />` |
 | `data-motion` | Lo que GSAP transforma. La impresión resetea `transform` y `opacity` en él y sus hijos | `<figure data-motion class="grow">` |
+| `[data-preview]` · `data-preview-cover="/projects/<slug>"` | La caja visible de la vista previa de la home y cada imagen de su tira (solo el pathname, sin query). Si la fila tocada no tiene `data-travel-cover`, el plugin nombra `cover` a la pieza de esa ruta, solo si la caja se ve y más de la mitad de la pieza está adentro. La página no nombra nada por su cuenta | `<div data-preview data-hf="hide" aria-hidden="true"><img data-preview-cover="/projects/la-rucula"></div>` |
 | `data-tint="#rrggbb"` | Temperatura que anticipa al apuntar o enfocar | `<a data-travel="row" :data-tint="p.cover?.tint">` |
 | `.f[data-f]` | Fila de un campo del registro | `<div class="f" data-f="status">` |
 | `.fk` · `.ft` · `.fv` | Nombre, tipo y valor del campo. `.fk` y `.ft` solo existen en registro; `.fv` es el nodo que viaja | `<span class="fk">status</span><span class="ft">enum ProjectStatus</span><span class="fv">LIVE</span>` |
@@ -114,11 +116,11 @@ Los paquetes de frontend se coordinan por estos atributos y clases, no por nombr
 | `data-row` · `data-card` | Destinos de `j`/`k` en listas y galerías | `<a data-row data-travel="row">` |
 | `data-view` | Activa la burbuja «Ver caso» | `<a data-card data-view data-travel="card">` |
 
-**Nombres únicos de view transition.** Si dos elementos tienen el mismo `view-transition-name` en un mismo estado, el navegador saltea la transición. El plugin de elementos compartidos lo evita como `prepareTravel()` y `render()` del prototipo: al tocar un origen (`click` en fase de captura, antes de navegar) pone `view-transition-name: none` en todo `[data-vt]` de la página saliente y recién después nombra el par `data-travel-title` / `data-travel-cover` del origen (`title` y `cover`, o `page-title` si es `nav`). En la página nueva, cuando termina la transición, limpia los nombres que puso fuera de la raíz de la página. Ejemplos: en un caso, el `h1` con `title` se apaga antes de que «Siguiente» tome `title`; en `/projects`, el `h1` con `page-title` se apaga antes de que «Sobre mí» del menú tome `page-title`.
+**Nombres únicos de view transition.** Si dos elementos tienen el mismo `view-transition-name` en un mismo estado, el navegador saltea la transición. El plugin de elementos compartidos (`app/plugins/shared-elements.client.ts`) lo evita como `prepareTravel()` y `render()` del prototipo: el `click` solo recuerda qué origen se tocó; en `router.beforeEach` (antes de que el navegador capture el estado viejo, y también para teclado, paleta y Atrás) pone `view-transition-name: none` en todo `[data-vt]` de la página saliente y recién después nombra el par del origen tocado si está en pantalla: `data-travel-title` / `data-travel-cover` (`title` y `cover`), la `.roll` que envuelve `data-travel-title` si es `nav` (`page-title`), o la pieza abierta de la vista previa (`cover`). Un enlace con hash (`#contacto`) no nombra nada. En `router.afterEach`, ya capturado el estado viejo, limpia todos los nombres en línea. Ejemplos: en un caso, el `h1` con `title` se apaga antes de que «Siguiente» tome `title`; en `/projects`, el `h1` con `page-title` se apaga antes de que «Sobre mí» del menú tome `page-title`.
 
 **Estado en `<html>`** (lo pone el SSR, sin parpadeo): `data-theme="dark|light"` (cookie `pf-theme`), `data-hyperfocus="true"` (cookie `pf-hyperfocus`), `data-vista="registro"` (de `?vista=registro`) y `data-intro` (solo lo pone el script del head en `/`, primera visita de la sesión, sin reduced motion y sin Hiperfoco: ni cookie `pf-hyperfocus` ni `?foco=1`). Tailwind expone `focus-mode:` y `record:` como variantes de los dos primeros estados de lectura. Mientras corre el morph, `data-morphing` en `<html>` y `.quotes-off` en la raíz de la página.
 
-**Hooks de Nuxt:** `record:before` y `record:after` (los emite `useRecordView`; los escuchan el morph y `useMotion`), `site:overlay` (`{ open }`, la paleta pausa Lenis) y `page:view-transition:start` (Lenis se detiene hasta que termina).
+**Hooks de Nuxt:** `record:before` y `record:after` (los emite `useRecordView`; los escuchan el morph y `useMotion`), `site:overlay` (`(overlay: SiteOverlay) => void`, con `SiteOverlay = { open: boolean }`, declarado una sola vez en `app/composables/useLenis.ts`; la paleta lo emite al abrir y en el evento `close` del diálogo, y Lenis se pausa mientras está abierta) y `page:view-transition:start` (Lenis se detiene hasta que termina).
 
 ## 5. Hiperfoco
 
@@ -194,3 +196,9 @@ La ruta es el estado: todo se resuelve con rutas limpias y query parameters inde
 - Rótulos en mayúsculas espaciadas o numerados. Emojis en cualquier parte del sitio o del admin.
 - Texto de contenido escrito en un componente, ubicaciones o cifras fuera de la base, datos de respaldo mantenidos a mano.
 - Atenuar fuera del hover en listas. Animaciones que no sean uno de los seis verbos.
+
+## 10. Convenciones de código
+
+- **`app/components/site/` escribe los eventos en forma larga** (`v-on:click`, regla `vue/v-on-style: longform` acotada a esa carpeta en `eslint.config.mjs`) y usa variantes de Tailwind en vez de `@media` / `@supports`. Motivo: el criterio «el pie no tiene texto escrito a mano» se verifica con `grep -rln "@\|Río Negro\|github.com" app/components/site`, que debe dar 0. Quien toque esa carpeta (X1, X2) respeta las dos cosas.
+- **Cabecera y axe.** La cabecera fija usa `mix-blend-mode: difference` en los dos temas (se lee sobre portadas y galerías oscuras). axe no aplica la mezcla al texto y reporta un falso 1,1:1: las specs excluyen la regla `color-contrast` para `header[data-chrome]` y su contraste se mide con `scripts/check-contrast.mjs`.
+

@@ -1,8 +1,8 @@
 <script setup lang="ts">
 /**
  * Burbuja «Ver caso» (Seguir, docs/diseno.md §2): un círculo de 5,5 rem que acompaña al cursor sobre
- * todo `[data-view]` (tarjetas y filas). Crece y se encoge con `quickTo` en la escala; al salir se
- * esconde con un timeout corto que se cancela si el puntero entra en otro `[data-view]`, así pasar de
+ * todo `[data-view]` (tarjetas y filas). Crece en 0,5 s `expo.out` y se encoge en 0,3 s `power2.in`,
+ * como el prototipo; al salir se esconde con un timeout corto que se cancela si el puntero entra en otro `[data-view]`, así pasar de
  * una tarjeta a la vecina no parpadea. Solo existe con puntero fino y movimiento ambiental: en táctil,
  * con reduced motion o en Hiperfoco no se monta. Es decorativa: el enlace ya dice adónde va.
  */
@@ -11,7 +11,7 @@ import gsap from 'gsap'
 /** Cuánto espera antes de esconderse al salir de un `[data-view]`. */
 const HIDE_DELAY_MS = 80
 /** Cuánto tarda en encogerse antes de dejar de seguir al cursor. */
-const SHRINK_MS = 500
+const SHRINK_MS = 300
 
 const { t } = useLocale()
 const prefs = useMotionPrefs()
@@ -21,17 +21,14 @@ const router = useRouter()
 const active = computed(() => prefs.ready.value && prefs.fine.value && prefs.allowAmbient.value)
 const bubble = useTemplateRef<HTMLElement>('bubble')
 
-useMotion(bubble, ({ el, fine, ambient }) => {
+useMotion(bubble, ({ el, fine, ambient, add }) => {
   if (!fine || !ambient) return
 
   gsap.set(el, { scale: 0 })
-  // quickTo no admite el atajo `scale`: se mueven los dos ejes juntos.
-  const scaleX = gsap.quickTo(el, 'scaleX', { duration: 0.5, ease: 'expo.out' })
-  const scaleY = gsap.quickTo(el, 'scaleY', { duration: 0.5, ease: 'expo.out' })
-  const scale = (to: number) => {
-    scaleX(to)
-    scaleY(to)
-  }
+  // Crecer y encogerse tienen su propia curva: cada uno pisa al anterior desde la escala actual.
+  const scale = (to: number) => add(() => gsap.to(el, to
+    ? { scale: 1, duration: 0.5, ease: 'expo.out', overwrite: true }
+    : { scale: 0, duration: SHRINK_MS / 1000, ease: 'power2.in', overwrite: true }))
   const setX = gsap.quickSetter(el, 'x', 'px')
   const setY = gsap.quickSetter(el, 'y', 'px')
   let unfollow: (() => void) | null = null
@@ -80,6 +77,7 @@ useMotion(bubble, ({ el, fine, ambient }) => {
   // Al navegar se va enseguida: la foto de salida de la view transition no la lleva.
   const offRoute = router.beforeEach(() => {
     clearTimeout(hideTimer)
+    gsap.killTweensOf(el)
     gsap.set(el, { scale: 0 })
     stopFollowing()
   })

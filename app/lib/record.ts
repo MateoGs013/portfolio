@@ -73,6 +73,8 @@ export function safeHref(url?: string | null): string | undefined {
 /** Un valor escalar según el tipo declarado en fieldMeta. */
 export function fmt(type: FieldType, value: unknown): string | null {
   if (value === null || value === undefined) return null
+  // Un string vacío (o solo espacios) es un campo sin valor: NULL en registro, nada en diseño.
+  if (typeof value === 'string' && !value.trim()) return null
   if (Array.isArray(value)) return value.length ? value.map(String).join(' · ') : null
   switch (type) {
     case 'bool':

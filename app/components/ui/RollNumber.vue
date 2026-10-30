@@ -51,11 +51,13 @@ function finish() {
   animating.value = false
 }
 
+// La limpieza se devuelve siempre: si la escena se revierte a mitad de un rodar (registro, Hiperfoco,
+// cruzar 768 px), el número queda en el valor final y no congelado en uno intermedio.
 const { add } = useMotion(root, ({ el, ambient, entering }) => {
-  if (!ambient || counted) return
+  if (!ambient || counted) return finish
   if (!entering && el.getBoundingClientRect().top < window.innerHeight * START) {
     counted = true
-    return
+    return finish
   }
   const counter = { v: 0 }
   const tween = counting = gsap.to(counter, {

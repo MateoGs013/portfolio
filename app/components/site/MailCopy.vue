@@ -11,6 +11,7 @@ const props = defineProps<{ email: string }>()
 const { t } = useLocale()
 const { announce } = useAnnounce()
 const { tick } = useSound()
+const { isHyperfocus } = useHyperfocus()
 
 const mail = ref<HTMLAnchorElement>()
 const copied = ref(false)
@@ -25,10 +26,13 @@ function rollLetters() {
   const chars = mail.value?.querySelectorAll('[data-ch]')
   if (!chars?.length || prefersReducedMotion()) return
   roll?.progress(1).kill()
+  // En Hiperfoco las transiciones se acortan (docs/diseno.md §6): unos 220 ms en total y sin escalonado.
+  const quick = isHyperfocus.value
+  const stagger = quick ? 0 : 0.012
   roll = gsap.timeline()
-    .to(chars, { yPercent: -110, duration: 0.45, ease: 'expo.in', stagger: 0.012 })
+    .to(chars, { yPercent: -110, duration: quick ? 0.1 : 0.45, ease: 'expo.in', stagger })
     .set(chars, { yPercent: 110 })
-    .to(chars, { yPercent: 0, duration: 0.7, ease: 'expo.out', stagger: 0.012 })
+    .to(chars, { yPercent: 0, duration: quick ? 0.12 : 0.7, ease: 'expo.out', stagger })
 }
 
 async function copy() {

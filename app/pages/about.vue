@@ -11,6 +11,7 @@ failOn(about.error)
 failOn(experience.error)
 await usePageSeo(() => ({ title: t('nav.about'), description: docText(about.data.value, 'engineering_philosophy'), type: 'profile' }))
 
+// Con la hoja abierta no hay columna de Hiperfoco: la hoja del CV mide 210 mm, a escala de lo que se imprime.
 const showCv = computed(() => route.query.cv === 'ats')
 
 /** Campos de about que se leen en la página, con su rótulo de interfaz. */
@@ -26,7 +27,7 @@ const fields = [
 </script>
 
 <template>
-  <article data-hf="measure" class="flex flex-col gap-12 px-(--pad) py-24" :class="{ 'print:p-0': showCv }">
+  <article :data-hf="showCv ? undefined : 'measure'" class="flex flex-col gap-12 px-(--pad) py-24" :class="{ 'print:p-0': showCv }">
     <h1 data-vt="page-title" class="text-display-page font-medium tracking-tight text-ink" :class="{ 'print:hidden': showCv }">
       {{ t('nav.about') }}
     </h1>

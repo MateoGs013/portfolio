@@ -57,7 +57,7 @@ const entries = computed<Entry[]>(() => {
     { id: 'cv', group: 'pages', label: t('nav.cv'), to: { path: '/about', query: { cv: 'ats' } } },
     { id: 'articles', group: 'pages', label: t('nav.articles'), to: '/articles' },
     ...works.map((p): Entry => ({ id: `work-${p.slug}`, group: 'works', label: p.title, hint: String(p.year), to: `/projects/${p.slug}` })),
-    { id: 'focus', group: 'actions', label: t(isHyperfocus.value ? 'shell.focus.leave' : 'shell.focus.enter'), kbd: 'H', run: actions.toggleHyperfocus },
+    { id: 'focus', group: 'actions', label: t(isHyperfocus.value ? 'shell.focus.leave' : 'shell.focus.enter'), kbd: shortcutsOn.value ? 'H' : undefined, run: actions.toggleHyperfocus },
     { id: 'theme', group: 'actions', label: t(theme.value === 'dark' ? 'shell.theme.toLight' : 'shell.theme.toDark'), run: actions.toggleTheme },
     { id: 'lang', group: 'actions', label: t(`shell.autonym.${other.value}`), lang: other.value, hint: t('shell.lang'), run: actions.toggleLang },
     { id: 'sound', group: 'actions', label: t(soundOn.value ? 'shell.sound.turnOff' : 'shell.sound.turnOn'), hint: soundOn.value ? undefined : t('shell.sound.hint'), run: actions.toggleSound },
@@ -112,9 +112,21 @@ watch([active, results], () => {
   instantNext = false
 }, { flush: 'post' })
 
+let closing = false
+
 async function show() {
   const box = dialog.value
-  if (!box || box.open) return
+  if (!box) return
+  // Ctrl+K durante la animación de cierre: se corta y la caja vuelve sin cerrarse.
+  if (box.open && closing) {
+    closing = false
+    pending = null
+    gsap.killTweensOf(box)
+    gsap.set(box, { clearProps: 'opacity,transform' })
+    input.value?.focus()
+    return
+  }
+  if (box.open) return
   returnTo = document.activeElement instanceof HTMLElement ? document.activeElement : null
   query.value = ''
   active.value = 0
@@ -124,26 +136,34 @@ async function show() {
   input.value?.focus()
   await nextTick()
   placeHighlight(true)
-  if (!prefersReducedMotion()) gsap.fromTo(box, { opacity: 0, y: -10, scale: 0.975 }, { opacity: 1, y: 0, scale: 1, duration: 0.32, ease: 'expo.out' })
+  if (!prefersReducedMotion()) gsap.fromTo(box, { opacity: 0, y: -10, scale: 0.975 }, { opacity: 1, y: 0, scale: 1, duration: isHyperfocus.value ? 0.2 : 0.32, ease: 'expo.out' })
 }
 
+/** Solo anima y cierra: la limpieza vive en el evento close, que también cubre los cierres nativos. */
 function hide() {
   const box = dialog.value
-  if (!box?.open) return
-  const done = () => {
+  if (!box?.open || closing) return
+  if (prefersReducedMotion()) return box.close()
+  closing = true
+  gsap.to(box, { opacity: 0, y: -6, scale: 0.985, duration: isHyperfocus.value ? 0.12 : 0.16, ease: 'power2.in', overwrite: true, onComplete: () => box.close() })
+}
+
+function onClose() {
+  const box = dialog.value
+  closing = false
+  if (box) {
+    gsap.killTweensOf(box)
     gsap.set(box, { clearProps: 'opacity,transform' })
-    box.close()
-    void nuxtApp.callHook('site:overlay', { open: false })
-    const entry = pending
-    pending = null
-    // Una acción devuelve el foco al disparador; una navegación lo deja a la página nueva.
-    if (!entry?.to && entry?.id !== 'contact') returnTo?.focus()
-    returnTo = null
-    if (entry?.to) void actions.go(entry.to)
-    else void entry?.run?.()
   }
-  if (prefersReducedMotion()) return done()
-  gsap.to(box, { opacity: 0, y: -6, scale: 0.985, duration: 0.16, ease: 'power2.in', overwrite: true, onComplete: done })
+  if (palette.open.value) palette.closePalette()
+  void nuxtApp.callHook('site:overlay', { open: false })
+  const entry = pending
+  pending = null
+  // Una acción devuelve el foco al disparador; una navegación lo deja a la página nueva.
+  if (!entry?.to && entry?.id !== 'contact') returnTo?.focus()
+  returnTo = null
+  if (entry?.to) void actions.go(entry.to)
+  else void entry?.run?.()
 }
 
 watch(palette.open, isOpen => (isOpen ? show() : hide()))
@@ -190,6 +210,7 @@ function onDialogClick(e: MouseEvent) {
     class="inset-x-0 mx-auto mt-[13vh] mb-auto w-[min(36rem,calc(100vw-2rem))] max-w-none overflow-hidden rounded-[10px] border border-rule bg-surface p-0 text-ink shadow-[0_30px_90px_rgb(0_0_0/0.45)] backdrop:bg-bg/55 backdrop:backdrop-blur-[5px]"
     v-on:cancel.prevent="palette.closePalette()"
     v-on:click="onDialogClick"
+    v-on:close="onClose"
   >
     <div class="flex flex-col">
       <input
@@ -197,7 +218,7 @@ function onDialogClick(e: MouseEvent) {
         v-model="query"
         type="text"
         role="combobox"
-        aria-expanded="true"
+        :aria-expanded="results.length > 0 ? 'true' : 'false'"
         aria-controls="site-palette-list"
         aria-autocomplete="list"
         :aria-activedescendant="activeId"
@@ -218,7 +239,7 @@ function onDialogClick(e: MouseEvent) {
         class="relative max-h-[min(23rem,52vh)] overflow-auto overscroll-contain p-[0.35rem]"
         :class="{ hidden: !results.length }"
       >
-        <span ref="highlight" aria-hidden="true" class="pointer-events-none absolute top-0 left-0 size-0 rounded-md bg-ink/[0.035] opacity-0" />
+        <span ref="highlight" aria-hidden="true" class="pointer-events-none absolute top-0 left-0 size-0 rounded-md bg-ink/[0.035] opacity-0 ring-1 ring-rule ring-inset" />
         <div v-for="g in groups" :key="g.group" role="group" :aria-labelledby="`site-palette-g-${g.group}`">
           <div :id="`site-palette-g-${g.group}`" class="px-[0.7rem] pt-[0.65rem] pb-[0.3rem] text-xs text-faint">
             {{ g.label }}

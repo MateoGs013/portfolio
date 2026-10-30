@@ -34,7 +34,8 @@ watch(open, (isOpen) => {
   if (isOpen) document.addEventListener('pointerdown', onPointerDown)
   else document.removeEventListener('pointerdown', onPointerDown)
 })
-watch(() => route.fullPath, () => close(false))
+// Cambiar de idioma desde el menú cierra el panel: si el foco estaba adentro, vuelve al resumen.
+watch(() => route.fullPath, () => close(true))
 
 onMounted(() => {
   if (/Mac|iPhone|iPad/.test(navigator.platform)) shortcut.value = '⌘K'

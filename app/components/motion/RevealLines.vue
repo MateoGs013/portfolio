@@ -7,7 +7,9 @@
  *   anima (tampoco al volver a armar por registro o Hiperfoco).
  * - Con reduced motion o Hiperfoco no se parte nunca.
  * - `autoSplit` vuelve a partir si cambia el ancho o cargan las fuentes; al terminar, el texto vuelve
- *   a ser un solo nodo (sin máscaras ni `aria-label` de por medio).
+ *   a ser un solo nodo (sin máscaras de por medio).
+ * - `aria: 'none'`: las líneas conservan su texto real (con sus espacios), así el lector de pantalla lee
+ *   el párrafo aunque nunca llegue a revelarse; un `aria-label` en un <p> no se anuncia en modo lectura.
  * - `:key` por texto: si cambia (otro idioma), Vue reemplaza el elemento en vez de parchar el DOM que
  *   SplitText reescribió, y la escena se arma sobre el nuevo.
  */
@@ -35,7 +37,7 @@ useMotion(root, ({ el, ambient, entering }) => {
     mask: 'lines',
     linesClass: 'rl',
     tag: 'span',
-    aria: 'auto',
+    aria: 'none',
     autoSplit: true,
     // Devolver el tween deja que SplitText lo rehaga con el mismo avance si vuelve a partir.
     onSplit: self => gsap.from(self.lines, {

@@ -86,7 +86,7 @@ const sectionTitle = 'mb-[3.2pt] border-b-[0.85pt] border-black pb-[1.5pt] text-
       </p>
       <ul :aria-label="t('cv.contact')" class="flex flex-wrap justify-center">
         <li v-for="item in contact" :key="item.text" class="whitespace-nowrap not-last:after:px-[4pt] not-last:after:content-['·']">
-          <a v-if="item.href" :href="item.href" class="text-black no-underline hover:underline">{{ item.text }}</a>
+          <a v-if="item.href" :href="item.href" class="text-black underline decoration-black/35 underline-offset-2 hover:decoration-black print:no-underline">{{ item.text }}</a>
           <span v-else>{{ item.text }}</span>
         </li>
       </ul>
