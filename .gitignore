@@ -16,3 +16,6 @@ tests/screenshots/
 data/
 *.db
 
+
+# Capturas generadas por docs/rediseno/capturar.mjs (pesadas; se suben al sitio por el admin)
+docs/rediseno/capturas/
