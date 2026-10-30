@@ -5,7 +5,7 @@
  * la columna vieja `Project.metrics`, así el seed, el parche y la migración producen lo mismo.
  * La etiqueta y la descripción de cada clave viven en el diccionario de interfaz, no acá.
  */
-import type { MetricUnit } from '../../../app/lib/fieldMeta.js'
+import type { MetricUnit } from '../shared/metricUnits.js'
 
 /** Valor de una métrica tal como se escribe en el seed (o como estaba en el Json viejo). */
 export type MetricInput = number | string | boolean | null | string[]

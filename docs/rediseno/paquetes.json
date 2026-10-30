@@ -216,7 +216,22 @@
     "server/admin/js/components/forms/ExperienceForm.js",
     "server/admin/js/components/forms/DocsForm.js",
     "server/admin/js/components/AdmExplorer.js",
-    "server/admin/admin.css"
+    "server/admin/admin.css",
+    "server/src/admin/projects.ts",
+    "server/src/admin/video.ts",
+    "server/src/admin/metrics.ts",
+    "server/src/admin/experience.ts",
+    "server/src/admin/docs.ts",
+    "server/src/admin/errors.ts",
+    "server/src/admin/common.ts",
+    "server/admin/js/fields.js",
+    "server/admin/js/tint.js",
+    "server/admin/js/components/forms/ExperienceCvFields.js",
+    "server/admin/js/components/forms/project/MediaCard.js",
+    "server/admin/js/components/forms/project/ProjectMedia.js",
+    "server/admin/js/components/forms/project/ProjectMetrics.js",
+    "server/admin/js/components/forms/project/ProjectStack.js",
+    "server/admin/js/components/forms/project/ProjectSteps.js"
    ],
    "dependsOn": [
     "D1"
@@ -430,7 +445,15 @@
     "server/admin/js/components/forms/ExperienceForm.js",
     "server/admin/js/components/forms/StackForm.js",
     "server/admin/js/components/forms/DocsForm.js",
-    "server/admin/admin.css"
+    "server/admin/admin.css",
+    "server/src/admin/projects.ts",
+    "server/src/admin/media.ts",
+    "server/src/admin/experience.ts",
+    "server/src/admin/docs.ts",
+    "server/admin/js/components/forms/ExperienceCvFields.js",
+    "server/admin/js/components/forms/project/MediaCard.js",
+    "server/admin/js/components/forms/project/ProjectMedia.js",
+    "server/admin/js/components/forms/project/ProjectSteps.js"
    ],
    "dependsOn": [
     "A1",
@@ -450,7 +473,9 @@
     "El indicador 'sin traducir' desaparece cuando se completan los campos.",
     "admin-audit.spec sigue verde y `pnpm typecheck` en 0."
    ],
-   "notes": []
+   "notes": [
+    "Integración ola 2: A1 partió router.ts y ProjectForm.js. Los upserts de traducciones van en server/src/admin/{projects,media,experience,docs}.ts y los inputs EN en forms/project/*.js y ExperienceCvFields.js. Pasos y enlaces se actualizan por id (no por order), así ProcessStepTranslation y LinkTranslation se upsertean por stepId/linkId. El PUT de docs ya conserva `en` si no llega; `en: ''` lo borra."
+   ]
   },
   {
    "id": "A3",

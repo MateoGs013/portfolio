@@ -397,6 +397,10 @@ export const store = reactive({
       this.toast('ok', `«${row.title}» quedó en el puesto ${to + 1}`)
     } catch (err) {
       this.toast('err', `No se pudo reordenar: ${err.message}`)
+      // Algunos PATCH pudieron entrar: la lista vuelve a leerse para mostrar el orden real.
+      try {
+        this.rows = (await api.getCollection('projects')) || []
+      } catch { /* la lista queda como estaba */ }
     }
   },
 

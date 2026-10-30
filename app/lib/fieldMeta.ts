@@ -172,12 +172,8 @@ export const relationMeta: Record<'media' | 'metrics', { label: string, fields: 
   },
 }
 
-/**
- * Unidades de Metric.unit. NULL es un conteo o un puntaje. El rótulo de cada una va en el
- * diccionario de interfaz; el valor se formatea con Intl según el idioma.
- */
-export const metricUnits = ['s', 'ms', 'kb', 'fps', 'h', 'req_day', 'usd_month'] as const
-export type MetricUnit = typeof metricUnits[number]
+/** Unidades de Metric.unit: viven en server/src/shared porque el API las usa en ejecución. */
+export { metricUnits, type MetricUnit } from '../../server/src/shared/metricUnits.js'
 
 /** Un valor de documento: texto o lista (about.languages). */
 export type DocFieldValue = string | string[]

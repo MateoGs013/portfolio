@@ -4,7 +4,7 @@ import { matchesTech, sortByUsage } from '../content/matches.js'
 import { presentTech } from '../content/present.js'
 import { resolve, type Resource, type Wire } from '../content/snapshot.js'
 import { sendResolved } from '../envelope.js'
-import { publicFilters, readFilters, stackFilters, type StackFilters } from '../filters.js'
+import { publicFilters, readFilters, stackFilters, detailSlug, type StackFilters } from '../filters.js'
 import { getTech, listStack, type TechRecord } from '../queries/stack.js'
 
 type Tech = Wire<TechRecord>
@@ -35,5 +35,5 @@ stack.get('/stack', async (req, res) => {
 /** GET /api/stack/:slug?lang= */
 stack.get('/stack/:slug', async (req, res) => {
   const lang = parseLang(req)
-  sendResolved(res, await resolve(techDetail, req.params.slug, lang), { lang })
+  sendResolved(res, await resolve(techDetail, detailSlug(req.params.slug), lang), { lang })
 })

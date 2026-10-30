@@ -149,7 +149,7 @@ Un crítico adversarial revisó el plan contra el código y encontró problemas 
 ### Orden y dueños de archivos
 - **Capturas:** los paquetes leen las capturas desde la ruta absoluta del checkout principal (`CAPTURAS_DIR`), porque los worktrees no las tienen.
 - **D4 pasa a la ola 3** (después de que A1 cambie `image.ts`), y D5 pasa a la ola 4. D4 es dueño de las filas `MediaTranslation` (pie ES y EN). D3 no toca media.
-- **CSP del admin (`media-src blob:`):** es de A1. D2 no toca `server/src/app.ts`.
+- **CSP del admin (`media-src blob:`):** es de A1. D2 no toca `server/src/app.ts`. *Integración ola 2:* D2 la agregó en `app.ts` (paquetes.json le asignaba ese archivo) y A1 no la tocó; queda `media-src 'self' blob:` en el admin.
 - **A3** suma `radar.ts`, las heurísticas de `fallbackHunterData.ts` y los literales de `hunter.ts`. Puede cambiar los handlers de respaldo de `hunter.ts`, pero el proxy a Eros se comporta igual. Su aceptación incluye `scripts/test-cv-and-subject.ts` y `scripts/test-audit.ts`.
 - **Pruebas antes:** F1 (ola 3) cambia `playwright.config.ts` para que corra contra el build, instala `@axe-core/playwright`, borra las specs del explorador (`routes-audit` y las demás) y deja `cv-audit` en solo lectura. Así las olas 4 a 6 pueden verificar. La aceptación de F6 sobre `/about?cv=ats` pasa a P4.
 - **Diccionario repartido:** `app/lib/dict/` tiene un archivo por área (`cv.ts`, `case.ts`, `shell.ts`…), cada uno con su dueño. F1 arma el índice.

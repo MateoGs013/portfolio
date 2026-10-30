@@ -72,8 +72,9 @@ type ProjectStub = {
 /** Obra ligada desde otra colección: solo si es visible, con su título en `lang`. */
 export function presentProjectStubs(stubs: readonly ProjectStub[], lang: Lang) {
   return stubs.filter(isVisible).map((p) => {
-    const { values, untranslated } = translate(p, p.translations, ['title'], lang)
-    return { slug: p.slug, title: values.title, year: p.year, untranslated }
+    // El título de una obra es un nombre propio: nunca queda pendiente de traducción.
+    const { values } = translate(p, p.translations, ['title'], lang)
+    return { slug: p.slug, title: values.title, year: p.year, untranslated: [] as 'title'[] }
   })
 }
 

@@ -17,6 +17,11 @@ const slug: Parser<string> = (raw) => {
   return slugPattern.test(value) ? value : undefined
 }
 
+/** Slug de una ruta de detalle (/projects/:slug…): en minúsculas; uno inválido no encuentra nada (404). */
+export function detailSlug(raw: string): string {
+  return slug(raw) ?? ''
+}
+
 const int: Parser<number> = (raw) => {
   const n = Number(raw)
   return raw.trim() !== '' && Number.isInteger(n) ? n : undefined

@@ -23,7 +23,7 @@ Si se violan, la herramienta pierde su propósito.
    - Modo Dashboard: `grid-template-columns: 240px 1fr;` con contenedor centralizado y fluido.
    - Modo Colecciones: `grid-template-columns: 240px minmax(300px, 340px) 1fr;` donde el editor es una columna flex autónoma (`display: flex; flex-direction: column; height: 100%;`) con cabecera fija, scroll central y barra de acciones anclada al pie del contenedor.
 7. **Coherencia con el explorador y modo Focus.** Un registro alimenta tanto la vista detallada de datos técnicos como el modo Focus (lectura limpia sin distracciones) y la ficha de perfil/CV. El editor debe explicar al operador el propósito de cada campo (`summary` sintetiza la tarjeta y vista rápida; `brief`, `outcome` y `steps` articulan el relato técnico y casos de estudio; `metrics` sustentan el impacto medible).
-8. **Métricas sin fricción de código.** Las métricas técnicas de un proyecto (`metrics`) no pueden requerir que un asistente escriba JSON a mano. Se provee un editor visual clave-valor ("Métrica" / "Valor"), manteniendo un selector discreto a JSON plano solo para desarrolladores.
+8. **Métricas tipadas, sin JSON a mano.** Cada métrica es una fila `Metric`: clave, valor numérico (Decimal) con unidad (`server/src/shared/metricUnits.ts`) o lista de items, fuente, fecha de medición y rótulo propio opcional. Las claves sugeridas salen de las otras obras de la base, nunca de presets inventados. La vista "Ver JSON" es solo lectura del payload tipado.
 9. **Lenguaje claro y tranquilizador.** Los modales de confirmación y mensajes de error deben redactarse en español claro y empático. Prohibidos los tecnicismos intimidantes como *"mutación DELETE ACID irreversible"*.
 
 ---
@@ -61,8 +61,10 @@ Todo el panel vive en `server/admin/` (UI en Vue 3 global servida por Express) y
 - **Pestañas lineales (Linear-style tabs):** Agrupación por momento de trabajo:
   - `Datos Básicos`: título con generador de slug, estado, rol, fechas, empresa y selector visual de tecnologías.
   - `Caso de Estudio & Textos`: resumen, reto y resultado con textos de ayuda editorial.
-  - `Multimedia & Portada`: zona de carga (dropzone) con especificaciones de imagen, y cuadrícula de tarjetas con miniatura, texto Alt, selector de rol (`COVER`, `GALLERY`, `LAYER`) y lightbox.
-  - `Métricas de Impacto`: editor visual clave-valor con sincronización automática a JSON.
+  - `Multimedia & Portada`: carga de imagen o video (MP4/WebM con variante WebM y póster opcionales; el formato se lee de los magic bytes), tarjetas con miniatura o póster, marca VIDEO, alt y caption editables, rol (`COVER`, `GALLERY`), viewport, orden, peso y tinte con "Recalcular tinte". Los cambios van por `PATCH /api/admin/media/:id` y solo tocan las claves enviadas; marcar una portada pasa la anterior del mismo tipo al final de la galería.
+  - `Métricas de Impacto`: filas `Metric` tipadas (ver regla 8).
+  - `Mostrar en el sitio`: switch (role=switch) que pone `publishedAt` en ahora o en NULL. Una obra oculta sale de la API pública, las relaciones y los conteos.
+  - Pasos y enlaces se actualizan por id (conservan sus traducciones); el servidor renumera los pasos 1..n.
   - `Tecnologías & Enlaces`: selector de chips de stack y URLs públicas/repo.
   - `Enlaces & Pasos`: lista de enlaces directos y pasos secuenciales del proceso.
 - **Barra de Acciones Inferior:**
@@ -83,3 +85,7 @@ Todo el panel vive en `server/admin/` (UI en Vue 3 global servida por Express) y
 - **Emojis decorativos:** Cohetes, maletines, estrellas, herramientas. El estándar 2026 es tipográfico y sobrio.
 - **Hojas de estilo monolíticas gigantescas:** Escribir CSS manual sin Tailwind genera duplicación y deuda técnica.
 - **Formularios monolíticos sin pestañas:** Forzar al usuario a scrollear 20 campos técnicos continuos agota la atención.
+
+## Módulos del API del admin
+
+`server/src/admin/router.ts` monta los módulos: `projects.ts`, `media.ts` (con `video.ts` para leer MP4 y WebM), `metrics.ts`, `experience.ts`, `docs.ts`, `errors.ts` y `common.ts`. Cada escritura que sale bien invalida las últimas respuestas buenas de la API pública (`forgetLastGood` en `server/src/content/snapshot.ts`). El servidor nunca importa valores de `app/` (Dockerfile.api no lo copia): solo `import type`.

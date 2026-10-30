@@ -4,7 +4,7 @@ import { matchesExperience } from '../content/matches.js'
 import { presentExperience } from '../content/present.js'
 import { resolve, type Resource, type Wire } from '../content/snapshot.js'
 import { sendResolved } from '../envelope.js'
-import { experienceFilters, publicFilters, readFilters, type ExperienceFilters } from '../filters.js'
+import { experienceFilters, publicFilters, readFilters, detailSlug, type ExperienceFilters } from '../filters.js'
 import { getExperience, listExperience, type ExperienceRecord } from '../queries/experience.js'
 
 type Experience = Wire<ExperienceRecord>
@@ -35,5 +35,5 @@ experience.get('/experience', async (req, res) => {
 /** GET /api/experience/:slug?lang= */
 experience.get('/experience/:slug', async (req, res) => {
   const lang = parseLang(req)
-  sendResolved(res, await resolve(experienceDetail, req.params.slug, lang), { lang })
+  sendResolved(res, await resolve(experienceDetail, detailSlug(req.params.slug), lang), { lang })
 })

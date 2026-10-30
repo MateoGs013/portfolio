@@ -3,6 +3,7 @@ import { parseLang } from '../content/lang.js'
 import { presentOrg } from '../content/present.js'
 import { resolve, type Resource, type Wire } from '../content/snapshot.js'
 import { sendResolved } from '../envelope.js'
+import { detailSlug } from '../filters.js'
 import { getOrg, listOrgs, type OrgRecord } from '../queries/orgs.js'
 
 type Org = Wire<OrgRecord>
@@ -32,5 +33,5 @@ orgs.get('/orgs', async (req, res) => {
 /** GET /api/orgs/:slug?lang= */
 orgs.get('/orgs/:slug', async (req, res) => {
   const lang = parseLang(req)
-  sendResolved(res, await resolve(orgDetail, req.params.slug, lang), { lang })
+  sendResolved(res, await resolve(orgDetail, detailSlug(req.params.slug), lang), { lang })
 })

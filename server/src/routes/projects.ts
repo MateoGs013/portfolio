@@ -5,7 +5,7 @@ import { presentProject, presentProjectSummary } from '../content/present.js'
 import { resolve, type Resource, type Wire } from '../content/snapshot.js'
 import { isVisible } from '../content/visibility.js'
 import { sendResolved } from '../envelope.js'
-import { projectFilters, publicFilters, readFilters, type ProjectFilters } from '../filters.js'
+import { projectFilters, publicFilters, readFilters, detailSlug, type ProjectFilters } from '../filters.js'
 import { getProject, listProjects, type ProjectRecord } from '../queries/projects.js'
 
 type Project = Wire<ProjectRecord>
@@ -36,5 +36,5 @@ projects.get('/projects', async (req, res) => {
 /** GET /api/projects/:slug?lang= — el caso completo; 404 si no existe o no se publica. */
 projects.get('/projects/:slug', async (req, res) => {
   const lang = parseLang(req)
-  sendResolved(res, await resolve(projectDetail, req.params.slug, lang), { lang })
+  sendResolved(res, await resolve(projectDetail, detailSlug(req.params.slug), lang), { lang })
 })

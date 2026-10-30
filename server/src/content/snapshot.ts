@@ -55,8 +55,10 @@ const LAST_GOOD_FILE = path.resolve(process.env['CONTENT_LAST_GOOD_FILE'] ?? 'da
 const LAST_GOOD_MAX = 256
 
 let snapshot: ContentSnapshot | undefined
-const lastGood = new Map<string, unknown>()
+/** Última respuesta buena por clave, serializada: comparar el texto evita escribir lo que no cambió. */
+const lastGood = new Map<string, string>()
 let lastGoodLoaded = false
+let lastGoodDirty = false
 let writeTimer: NodeJS.Timeout | undefined
 let warnedAt = 0
 
@@ -66,13 +68,33 @@ export function readSnapshot(): ContentSnapshot {
   return snapshot
 }
 
+/**
+ * Formato del archivo de últimas respuestas buenas: la fecha del content.json versionado. Cambiar
+ * una consulta (queries/*) obliga a regenerar el snapshot (`pnpm db:snapshot:check` falla si no),
+ * así que un archivo guardado con otra forma de registros se descarta en lugar de romper `present`.
+ */
+function lastGoodFormat(): string {
+  try {
+    return readSnapshot().at
+  }
+  catch {
+    return 'sin-snapshot'
+  }
+}
+
+interface LastGoodFile {
+  format: string
+  entries: Record<string, string>
+}
+
 function loadLastGood() {
   if (lastGoodLoaded) return
   lastGoodLoaded = true
   try {
-    const stored = JSON.parse(fs.readFileSync(LAST_GOOD_FILE, 'utf8')) as Record<string, unknown>
-    for (const [key, raw] of Object.entries(stored)) {
-      if (!lastGood.has(key)) lastGood.set(key, raw)
+    const stored = JSON.parse(fs.readFileSync(LAST_GOOD_FILE, 'utf8')) as Partial<LastGoodFile>
+    if (stored.format !== lastGoodFormat() || !stored.entries) return
+    for (const [key, json] of Object.entries(stored.entries)) {
+      if (!lastGood.has(key) && typeof json === 'string') lastGood.set(key, json)
     }
   }
   catch {
@@ -80,37 +102,56 @@ function loadLastGood() {
   }
 }
 
+/** A lo sumo una escritura cada 5 s, y solo si algo cambió: el tráfico constante no la posterga. */
 function persistLastGood() {
-  clearTimeout(writeTimer)
+  lastGoodDirty = true
+  if (writeTimer) return
   writeTimer = setTimeout(() => {
-    try {
-      fs.mkdirSync(path.dirname(LAST_GOOD_FILE), { recursive: true })
-      const tmp = `${LAST_GOOD_FILE}.tmp`
-      fs.writeFileSync(tmp, JSON.stringify(Object.fromEntries(lastGood)))
-      fs.renameSync(tmp, LAST_GOOD_FILE)
-    }
-    catch (err) {
-      console.warn('[content] no se pudo guardar la última respuesta buena:', (err as Error).message)
-    }
-  }, 2000)
+    writeTimer = undefined
+    if (!lastGoodDirty) return
+    lastGoodDirty = false
+    const file: LastGoodFile = { format: lastGoodFormat(), entries: Object.fromEntries(lastGood) }
+    const tmp = `${LAST_GOOD_FILE}.tmp`
+    fs.promises.mkdir(path.dirname(LAST_GOOD_FILE), { recursive: true })
+      .then(() => fs.promises.writeFile(tmp, JSON.stringify(file)))
+      .then(() => fs.promises.rename(tmp, LAST_GOOD_FILE))
+      .catch((err: Error) => console.warn('[content] no se pudo guardar la última respuesta buena:', err.message))
+  }, 5000)
   writeTimer.unref()
 }
 
 function remember(key: string, raw: unknown) {
+  // Una lista vacía no se recuerda: así una URL inventada (?stack=a1, ?stack=a2…) no desplaza
+  // a las consultas reales del tope. Si la base cae, esa lista sale del snapshot.
+  if (Array.isArray(raw) && raw.length === 0) return
   loadLastGood()
+  const json = JSON.stringify(raw)
+  const previous = lastGood.get(key)
   lastGood.delete(key)
-  lastGood.set(key, raw)
+  lastGood.set(key, json)
   while (lastGood.size > LAST_GOOD_MAX) {
     const oldest = lastGood.keys().next().value
     if (oldest === undefined) break
     lastGood.delete(oldest)
   }
-  persistLastGood()
+  if (previous !== json) persistLastGood()
 }
 
 function recall(key: string): unknown {
   loadLastGood()
-  return lastGood.get(key)
+  const json = lastGood.get(key)
+  return json === undefined ? undefined : JSON.parse(json) as unknown
+}
+
+/**
+ * Olvida todas las últimas respuestas buenas. Lo llama el admin después de cada escritura: si la
+ * base cae justo después de ocultar una obra, la copia vieja no puede volver a mostrarla.
+ */
+export function forgetLastGood() {
+  loadLastGood()
+  if (lastGood.size === 0) return
+  lastGood.clear()
+  persistLastGood()
 }
 
 function warnDbDown(name: string, err: unknown) {
@@ -150,6 +191,14 @@ export async function resolve<A, W, O>(
   }
 
   const recalled = force ? undefined : recall(key)
-  if (recalled !== undefined) return publish(recalled as W, 'snapshot')
+  if (recalled !== undefined) {
+    try {
+      return publish(recalled as W, 'snapshot')
+    }
+    catch (err) {
+      // Una copia que ya no encaja con `present` no tumba la respuesta: se cae al snapshot.
+      console.warn(`[content] última respuesta buena inválida (${key}):`, (err as Error).message)
+    }
+  }
   return publish(resource.snapshot(readSnapshot(), args), 'snapshot')
 }

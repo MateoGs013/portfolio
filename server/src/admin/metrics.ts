@@ -3,7 +3,7 @@
  * Una métrica es un número (`value`, Decimal 14,4, con `unit` opcional) o una lista (`items`), nunca las dos.
  */
 import { Prisma } from '../../generated/prisma/client.js'
-import { metricUnits, type MetricUnit } from '../../../app/lib/fieldMeta.js'
+import { metricUnits, type MetricUnit } from '../shared/metricUnits.js'
 import { HttpError, enumOf, list, optDate, optStr } from './input.js'
 
 type Body = Record<string, unknown>

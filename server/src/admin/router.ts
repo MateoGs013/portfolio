@@ -1,9 +1,10 @@
 import { createRequire } from 'node:module'
 import path from 'node:path'
 import express, { Router } from 'express'
+import { forgetLastGood } from '../content/snapshot.js'
 import { db } from '../db.js'
 import { ArticleStatus, ExperienceKind, MediaKind, MediaRole, MediaViewport, ProjectStatus, TechCategory } from '../../generated/prisma/client.js'
-import { metricUnits } from '../../../app/lib/fieldMeta.js'
+import { metricUnits } from '../shared/metricUnits.js'
 import { requireAdmin } from './auth.js'
 import { DB_UNAVAILABLE, paramId as id } from './common.js'
 import { docsRouter } from './docs.js'
@@ -37,6 +38,15 @@ adminApi.use((req, _res, next) => {
   next()
 })
 adminApi.use(requireAuth)
+// Cada escritura que sale bien invalida las últimas respuestas buenas de la API pública.
+adminApi.use((req, res, next) => {
+  if (req.method !== 'GET' && req.method !== 'HEAD') {
+    res.on('finish', () => {
+      if (res.statusCode < 400) forgetLastGood()
+    })
+  }
+  next()
+})
 adminApi.use('/hunter', hunterRouter)
 adminApi.use('/content', contentRouter)
 adminApi.use('/radar', radarRouter)

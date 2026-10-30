@@ -157,7 +157,7 @@ projectsRouter.put('/projects/:id', async (req, res) => {
 /** Cambios rápidos desde la lista: estado, destacado y orden (subir/bajar). */
 projectsRouter.patch('/projects/:id', async (req, res) => {
   const pid = paramId(req)
-  const b = req.body as Body
+  const b = (req.body ?? {}) as Body
   const patchData: Prisma.ProjectUpdateInput = {}
   if ('status' in b) patchData.status = enumOf(b, 'status', PROJECT_STATUS)
   if ('featured' in b) patchData.featured = bool(b, 'featured')

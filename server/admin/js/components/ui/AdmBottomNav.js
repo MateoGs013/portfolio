@@ -73,7 +73,7 @@ export const AdmBottomNav = {
               @click="$emit('close')"
               class="text-zinc-400 hover:text-white text-[11px] font-mono-code px-2 py-0.5 rounded bg-white/5 border border-white/10 active:scale-[0.96] transition-all cursor-pointer"
             >
-              ✕ Cerrar
+              <span aria-hidden="true">✕</span> Cerrar
             </button>
           </div>
 

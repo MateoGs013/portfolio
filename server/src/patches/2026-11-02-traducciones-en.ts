@@ -98,7 +98,10 @@ async function projectsPlan(plan: Plan): Promise<EnSeed['projects']> {
     for (const [order, step] of Object.entries(steps)) {
       const current = row.steps.find(s => s.order === Number(order))
       const seedStep = seed.steps[Number(order) - 1]
-      if (!current || !seedStep) continue
+      if (!current || !seedStep) {
+        plan.warnings.push(`${label} paso ${order}: no está en la base o en el seed, se saltea`)
+        continue
+      }
       const out = fill(`${label} paso ${order}`, step, current.translations[0] ?? {}, current, seedStep, plan)
       if (nonEmpty(out)) pickedSteps[Number(order)] = out
     }
@@ -108,7 +111,10 @@ async function projectsPlan(plan: Plan): Promise<EnSeed['projects']> {
     for (const [url, label_] of Object.entries(links)) {
       const current = row.links.find(l => l.url === url)
       const seedLink = seed.links.find(l => l.url === url)
-      if (!current || !seedLink) continue
+      if (!current || !seedLink) {
+        plan.warnings.push(`${label} enlace ${url}: no está en la base o en el seed, se saltea`)
+        continue
+      }
       const out = fill(`${label} enlace ${url}`, { label: label_ }, current.translations[0] ?? {}, current, seedLink, plan)
       if (out.label) pickedLinks[url] = out.label
     }
@@ -177,7 +183,10 @@ async function docsPlan(plan: Plan): Promise<{ key: string, fields: DocField[] }
     for (const [name, value] of Object.entries(EN.docs[d.key])) {
       const current = fields.find(f => f.name === name)
       const seed = d.fields.find(f => f.name === name)
-      if (!current || !seed) continue
+      if (!current || !seed) {
+        plan.warnings.push(`doc ${d.key}.${name}: no está en la base o en el seed, se saltea`)
+        continue
+      }
       const out = fill(`doc ${d.key}`, { [name]: value }, { [name]: current.en }, { [name]: current.value }, { [name]: seed.value }, plan)
       if (out[name] !== undefined) picked[name] = out[name]
     }
@@ -201,7 +210,9 @@ async function main() {
   for (const warning of plan.warnings) console.warn(`aviso: ${warning}`)
 
   if (!plan.what.length) {
-    console.log('sin cambios: el inglés de la base ya está al día con el seed')
+    console.log(plan.warnings.length
+      ? `sin cambios aplicables; ${plan.warnings.length} avisos quedan para resolver en el admin`
+      : 'sin cambios: el inglés de la base ya está al día con el seed')
     return
   }
 

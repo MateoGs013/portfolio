@@ -62,7 +62,10 @@ export function presentMetric(m: Project['metrics'][number]) {
 
 /** Lo que comparten la lista y el detalle de una obra. */
 function projectBase(p: Project, lang: Lang, fields: readonly ('title' | 'role' | 'summary' | 'brief' | 'outcome')[]) {
-  const { values, untranslated } = translate(p, p.translations, fields, lang)
+  const translated = translate(p, p.translations, fields, lang)
+  const { values } = translated
+  // El título es un nombre propio: sin traducción se usa igual y no cuenta como pendiente (D3).
+  const untranslated = translated.untranslated.filter(f => f !== 'title')
   return {
     slug: p.slug,
     ...values,

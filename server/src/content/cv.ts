@@ -95,6 +95,12 @@ const headerFrom: Record<keyof CvHeader, Origin> = {
   availability: ['contact', 'availability'],
 }
 
+/** Campos de la cabecera que son prosa; el resto (nombre, lugar, contactos) se lee igual en ES y EN. */
+const headerProse: readonly (keyof CvHeader)[] = ['role', 'modalities', 'availability']
+
+/** Lo que el CV muestra de cada experiencia: solo estos campos pueden quedar en español. */
+const cvExperienceFields = new Set<string>(['role', 'highlights', 'location'])
+
 const proseFrom: Record<'summary' | 'methodologies' | 'languages', Origin> = {
   summary: ['about', 'engineering_philosophy'],
   methodologies: ['about', 'core_competencies'],
@@ -119,14 +125,14 @@ export function composeCv(lang: Lang, source: CvSource): CvDocument {
   ) as unknown as CvHeader
 
   const untranslated = [
-    ...Object.entries(headerFrom).flatMap(([key, origin]) => pending(`header.${key}`, origin)),
+    ...headerProse.flatMap(key => pending(`header.${key}`, headerFrom[key])),
     ...Object.entries(proseFrom).flatMap(([key, origin]) => pending(key, origin)),
   ]
 
   const entries = source.experience.map(e => presentExperience(e, lang))
 
   const experience = entries
-    .filter((e): e is typeof e & { cvOrder: number } => e.cvOrder !== null)
+    .filter((e): e is typeof e & { cvOrder: number } => e.cvOrder !== null && e.kind !== 'EDUCATION')
     .sort((a, b) => a.cvOrder - b.cvOrder)
     .map(e => ({
       slug: e.slug,
@@ -136,7 +142,7 @@ export function composeCv(lang: Lang, source: CvSource): CvDocument {
       location: e.location ?? e.org?.city ?? null,
       highlights: e.highlights,
       techs: e.techs.map(t => t.name),
-      untranslated: e.untranslated,
+      untranslated: e.untranslated.filter(f => cvExperienceFields.has(f)),
     }))
 
   const education = entries
@@ -148,7 +154,7 @@ export function composeCv(lang: Lang, source: CvSource): CvDocument {
       location: e.location ?? e.org?.city ?? null,
       period: period(e.startedAt, e.endedAt),
       highlights: e.highlights,
-      untranslated: e.untranslated,
+      untranslated: e.untranslated.filter(f => cvExperienceFields.has(f)),
     }))
 
   const skills = Object.values(TechCategory)

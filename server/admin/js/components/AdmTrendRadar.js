@@ -190,9 +190,10 @@ export const AdmTrendRadar = {
                 v-if="store.searchQuery"
                 type="button"
                 @click="store.searchQuery = ''"
+                aria-label="Limpiar búsqueda"
                 class="absolute right-2.5 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-white text-xs"
               >
-                ×
+                <span aria-hidden="true">×</span>
               </button>
             </div>
 

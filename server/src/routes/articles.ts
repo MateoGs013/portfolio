@@ -5,7 +5,7 @@ import { presentArticle, presentArticleSummary } from '../content/present.js'
 import { resolve, type Resource, type Wire } from '../content/snapshot.js'
 import { isVisibleArticle } from '../content/visibility.js'
 import { sendResolved } from '../envelope.js'
-import { articleFilters, publicFilters, readFilters, type ArticleFilters } from '../filters.js'
+import { articleFilters, publicFilters, readFilters, detailSlug, type ArticleFilters } from '../filters.js'
 import { getArticle, listArticles, type ArticleRecord } from '../queries/articles.js'
 
 type Article = Wire<ArticleRecord>
@@ -36,5 +36,5 @@ articles.get('/articles', async (req, res) => {
 /** GET /api/articles/:slug?lang= — el artículo con su markdown. */
 articles.get('/articles/:slug', async (req, res) => {
   const lang = parseLang(req)
-  sendResolved(res, await resolve(articleDetail, req.params.slug, lang), { lang })
+  sendResolved(res, await resolve(articleDetail, detailSlug(req.params.slug), lang), { lang })
 })

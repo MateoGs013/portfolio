@@ -13,7 +13,7 @@ El modo registro (`R`, `?vista=registro`) **muestra en pantalla los nombres de c
 
 Criterio para agregar una colección: **cada una debería ser la respuesta a una pregunta concreta que trae quien entra.**
 
-El schema está migrado. Todo cambio pasa por `prisma migrate dev` con nombre descriptivo y se refleja en `app/lib/fieldMeta.ts` en el mismo commit. El server importa de `app/lib/` **solo tipos**: la imagen del API (`Dockerfile.api`) no copia `app/`.
+El schema está migrado. Todo cambio pasa por `prisma migrate dev` con nombre descriptivo y se refleja en `app/lib/fieldMeta.ts` en el mismo commit. El server importa de `app/lib/` **solo tipos**: la imagen del API (`Dockerfile.api`) no copia `app/`. Un valor que usan los dos lados vive en `server/src/shared/` y `app/lib` lo reexporta (por ejemplo `metricUnits`).
 
 ## Contrato de URL
 
@@ -45,7 +45,7 @@ GET /api/articles/:slug
 GET /api/cv                    → CvDocument (content/cv.ts): el CV Harvard ATS compuesto desde la base
 ```
 
-No hay alias (`/api/project`, `/api/techs`…) ni alias de slug: `arg-piscinas` da 404 y la redirección vive en el front.
+No hay alias (`/api/project`, `/api/techs`…) ni alias de slug: `arg-piscinas` da 404 y la redirección vive en el front. El slug de las rutas de detalle se pasa a minúscula (`detailSlug` en `filters.ts`): `/api/projects/La-Rucula` responde igual que `la-rucula`.
 
 Envoltura: `{ data, meta: { count, filters, lang, source } }`.
 
@@ -66,7 +66,7 @@ server/src/routes/    cada endpoint como Resource { db, snapshot, present } + su
 
 ## Respaldos
 
-Generados, nunca escritos a mano. Si la consulta a la base falla, la ruta responde con la última respuesta buena de esa misma consulta (memoria y `data/content-last-good.json`) y, si nunca hubo una, con `server/src/snapshot/content.json`. Las dos copias pasan por el mismo `present` y los mismos `matches`, así que la forma es idéntica.
+Generados, nunca escritos a mano. Si la consulta a la base falla, la ruta responde con la última respuesta buena de esa misma consulta (memoria y `data/content-last-good.json`) y, si nunca hubo una, con `server/src/snapshot/content.json`. Las dos copias pasan por el mismo `present` y los mismos `matches`, así que la forma es idéntica. La última respuesta buena guarda el `at` del content.json como formato (un archivo de otra versión se descarta), no recuerda listas vacías, se escribe a lo sumo cada 5 s y se olvida entera después de cada escritura del admin (`forgetLastGood`). Si una copia recordada no pasa por `present`, se cae a content.json.
 
 ```bash
 pnpm db:snapshot          # regenera content.json desde la base (sin filtros, solo lo visible)

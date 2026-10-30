@@ -31,10 +31,12 @@ export const ProjectMedia = {
     }
 
     /** Después de marcar una portada, la anterior del mismo tipo pasa a la galería (como en el server). */
+    /** Igual que el servidor: la portada anterior del mismo tipo pasa al final de la galería. */
     function withRow(row) {
-      return media.value
-        .filter(m => m.id !== row.id)
-        .map(m => (row.role === 'COVER' && m.role === 'COVER' && m.kind === row.kind ? { ...m, role: 'GALLERY' } : m))
+      const rest = media.value.filter(m => m.id !== row.id)
+      let next = Math.max(-1, ...rest.filter(m => m.role === 'GALLERY').map(m => m.order)) + 1
+      return rest
+        .map(m => (row.role === 'COVER' && m.role === 'COVER' && m.kind === row.kind ? { ...m, role: 'GALLERY', order: next++ } : m))
         .concat(row)
     }
 

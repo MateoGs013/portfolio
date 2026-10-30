@@ -70,17 +70,42 @@ async function removeFile(src: string | null): Promise<void> {
   await unlink(abs).catch(() => undefined)
 }
 
-/** Borra del disco el archivo, su WebM y su póster. */
-export async function removeMediaFiles(rows: { src: string, srcWebm: string | null, poster: string | null }[]): Promise<void> {
-  await Promise.all(rows.flatMap(m => [removeFile(m.src), removeFile(m.srcWebm), removeFile(m.poster)]))
+/** Rutas que alguna fila de Media todavía usa como src, WebM o póster. */
+async function pathsInUse(paths: string[]): Promise<Set<string>> {
+  if (paths.length === 0) return new Set()
+  const rows = await db.media.findMany({
+    where: { OR: [{ src: { in: paths } }, { srcWebm: { in: paths } }, { poster: { in: paths } }] },
+    select: { src: true, srcWebm: true, poster: true },
+  })
+  return new Set(rows.flatMap(r => [r.src, r.srcWebm, r.poster]).filter((p): p is string => p !== null))
 }
 
-/** Una sola portada por tipo: la anterior del mismo kind pasa a la galería. */
+/**
+ * Borra del disco el archivo, su WebM y su póster de filas ya borradas o reemplazadas. Una ruta
+ * que otra fila sigue usando (por ejemplo, un póster que apunta a la imagen de otra pieza) se deja.
+ */
+export async function removeMediaFiles(rows: { src: string | null, srcWebm: string | null, poster: string | null }[]): Promise<void> {
+  const paths = [...new Set(rows.flatMap(m => [m.src, m.srcWebm, m.poster]).filter((p): p is string => !!p))]
+  const used = await pathsInUse(paths)
+  await Promise.all(paths.filter(p => !used.has(p)).map(removeFile))
+}
+
+/**
+ * Una sola portada por tipo: la anterior del mismo kind pasa a la galería, al final de la cola
+ * (con su orden de portada empataría con la primera de la galería).
+ */
 async function demoteCovers(tx: Tx, projectId: number, kind: MediaKind, keepId?: number): Promise<void> {
-  await tx.media.updateMany({
+  const covers = await tx.media.findMany({
     where: { projectId, kind, role: MediaRole.COVER, ...(keepId === undefined ? {} : { id: { not: keepId } }) },
-    data: { role: MediaRole.GALLERY },
+    select: { id: true },
+    orderBy: [{ order: 'asc' }, { id: 'asc' }],
   })
+  if (covers.length === 0) return
+  const last = await tx.media.aggregate({ where: { projectId, role: MediaRole.GALLERY }, _max: { order: true } })
+  const next = (last._max.order ?? -1) + 1
+  for (const [i, cover] of covers.entries()) {
+    await tx.media.update({ where: { id: cover.id }, data: { role: MediaRole.GALLERY, order: next + i } })
+  }
 }
 
 export const mediaRouter = Router()
@@ -103,6 +128,7 @@ mediaRouter.post('/media', upload.fields([{ name: 'file', maxCount: 1 }, { name:
   const poster = files['poster']?.[0]
   if ((webm || poster) && info.kind !== MediaKind.VIDEO) throw new HttpError(400, 'la variante WebM y el póster solo acompañan a un video')
   if (webm && sniff(webm, 'webm').ext !== 'webm') throw new HttpError(400, 'webm: se esperaba un archivo WebM')
+  if (webm && info.ext === 'webm') throw new HttpError(400, 'el archivo ya es WebM: la variante WebM acompaña a un MP4')
   const posterInfo = poster ? sniff(poster, 'póster') : null
   if (posterInfo && posterInfo.kind !== MediaKind.IMAGE) throw new HttpError(400, 'póster: se esperaba una imagen')
 
@@ -158,14 +184,14 @@ mediaRouter.post('/media/:id/poster', upload.single('poster'), async (req, res) 
       await Promise.all(written.map(f => unlink(f).catch(() => undefined)))
       throw err
     })
-  await removeFile(media.poster)
+  await removeMediaFiles([{ src: null, srcWebm: null, poster: media.poster }])
   res.json(row)
 })
 
 /** Actualiza solo las claves presentes: cambiar el rol no toca el alt ni el orden. */
 mediaRouter.patch('/media/:id', async (req, res) => {
   const mid = paramId(req)
-  const b = req.body as Body
+  const b = (req.body ?? {}) as Body
   const data: Prisma.MediaUpdateInput = {}
   if ('alt' in b) data.alt = str(b, 'alt', 300)
   if ('caption' in b) data.caption = optStr(b, 'caption', 300)
@@ -177,8 +203,12 @@ mediaRouter.patch('/media/:id', async (req, res) => {
   if (Object.keys(data).length === 0) throw new HttpError(400, 'no llegó ningún campo para actualizar')
 
   const row = await db.$transaction(async (tx) => {
-    const current = await tx.media.findUnique({ where: { id: mid }, select: { projectId: true, kind: true } })
+    const current = await tx.media.findUnique({ where: { id: mid }, select: { projectId: true, kind: true, project: { select: { slug: true } } } })
     if (!current) throw new HttpError(404, 'not found')
+    // El póster es un archivo de la misma obra: así borrar otra pieza nunca deja a esta sin él.
+    if (typeof data.poster === 'string' && !data.poster.startsWith(`/media/projects/${current.project.slug}/`)) {
+      throw new HttpError(400, `campo "poster": se esperaba una ruta /media/projects/${current.project.slug}/…`)
+    }
     if (data.role === MediaRole.COVER) await demoteCovers(tx, current.projectId, current.kind, mid)
     return tx.media.update({ where: { id: mid }, data })
   })
