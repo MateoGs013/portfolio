@@ -1,4 +1,4 @@
-/** Primitivas de movimiento y media. F1 deja lo mínimo; dueño desde la ola 4: F4. */
+/** Primitivas de movimiento y media (F4): la burbuja «Ver caso» y el botón de pausa de los videos. */
 import type { DictEntry } from './index'
 
 export default {
