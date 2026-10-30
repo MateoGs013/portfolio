@@ -17,8 +17,8 @@ const showCv = computed(() => route.query.cv === 'ats')
 const fields = [
   ['engineering_philosophy', 'about.philosophy'],
   ['core_competencies', 'about.competencies'],
-  ['technical_degree', 'about.education'],
-  ['higher_education', 'about.education'],
+  ['technical_degree', 'about.degree'],
+  ['higher_education', 'about.higherEducation'],
   ['languages', 'about.languages'],
   ['work_modalities', 'about.modalities'],
   ['professional_goal', 'about.goal'],

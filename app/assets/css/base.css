@@ -143,6 +143,7 @@
   }
 
   & > span::after {
+    content: attr(data-t);
     content: attr(data-t) / '';
   }
 
@@ -178,7 +179,7 @@
   }
 
   /* main y los destinos de salto reciben foco por programa: sin anillo. */
-  [tabindex='-1']:focus {
+  [tabindex='-1']:focus:not(:focus-visible) {
     outline: none;
   }
 
@@ -211,9 +212,10 @@
     scroll-behavior: auto;
   }
 
-  :root::view-transition-group(*),
-  :root::view-transition-old(*),
-  :root::view-transition-new(*) {
+  /* :not(#_) sube la especificidad sobre los tipos de motion.css (hiperfoco, caso) sin !important. */
+  :root:not(#_)::view-transition-group(*),
+  :root:not(#_)::view-transition-old(*),
+  :root:not(#_)::view-transition-new(*) {
     animation: none;
   }
 }

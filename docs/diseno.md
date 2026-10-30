@@ -47,7 +47,7 @@ Tema oscuro por defecto, recordado en la cookie `pf-theme`. Los tokens viven en 
 | `--surface` | `#141416` | `#e6e7e8` | paleta, placas sin portada |
 | `--ink` | `#ededee` | `#121315` | texto principal |
 | `--dim` | `#a1a1a9` | `#55565d` | texto secundario, rótulos de sección |
-| `--faint` | `#83838c` (≈5,2:1) | `#66676e` (≈5:1) | metadatos, tipos de campo |
+| `--faint` | `#83838c` (≈5,2:1) | `#616268` (≈5,4:1; 4,7:1 sobre el fondo con tinte oscuro al 5 %, que es el peor caso que mide `scripts/check-contrast.mjs`) | metadatos, tipos de campo |
 | `--rule` | `rgba(255,255,255,.1)` | `rgba(0,0,0,.1)` | líneas de 1 px |
 | `--sig` | `#ff3e00` | `#ff3e00` | **solo decorativo:** el cuadrado del nombre y la barra del cargador |
 | `--sig-text` | `#ff3e00` (≈5,6:1) | `#b82d00` (≈5,5:1 sobre `--bg`, ≈5:1 sobre `--surface`) | foco visible y el único texto en acento (estado activo, también el ítem activo de la paleta sobre `--surface`) |

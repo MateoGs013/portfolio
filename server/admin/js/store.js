@@ -815,7 +815,7 @@ export const store = reactive({
     const s = this || store
     try {
       const res = await api.publishPostToBlog(id)
-      s.toast('ok', `Artículo publicado exitosamente en el Blog: /blog/${res?.article?.slug || ''}`)
+      s.toast('ok', `Artículo publicado en /articles/${res?.article?.slug || ''}`)
       await s.loadContentPosts()
       await s.refreshCounts()
       return res

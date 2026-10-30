@@ -124,7 +124,9 @@ export function tailorCv(cv: CvDocument, job: JobText): AdminCv {
     linkedin: cv.header.linkedin,
     summary,
     skills: Object.fromEntries(skills.map(([label, items]) => [label, items])),
-    experience: byAffinity(cv.experience, e => overlap(e.techs, matched)).map(e => ({
+    // Las entradas quedan en el orden curado (cvOrder, cronología inversa): un CV ATS con la cronología
+    // rota se lee como error. La adaptación toca habilidades y resumen, no el orden de la trayectoria.
+    experience: cv.experience.map(e => ({
       title: e.title,
       role: e.role,
       period: formatPeriod(e.period, lang),

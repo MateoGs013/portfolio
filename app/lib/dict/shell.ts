@@ -26,5 +26,7 @@ export default {
   'error.404.body': { es: 'La dirección no lleva a ninguna página publicada.', en: 'The address does not lead to any published page.' },
   'error.503.title': { es: 'El contenido no está disponible', en: 'The content is not available' },
   'error.503.body': { es: 'No se pudo leer la base en este momento. Probá de nuevo en unos minutos.', en: 'The database could not be read right now. Try again in a few minutes.' },
+  'error.500.title': { es: 'Algo falló al armar esta página', en: 'Something went wrong building this page' },
+  'error.500.body': { es: 'El error quedó registrado. Probá volver al inicio.', en: 'The error was logged. Try going back to home.' },
   'error.home': { es: 'Volver al inicio', en: 'Back to home' },
 } satisfies Record<string, DictEntry>

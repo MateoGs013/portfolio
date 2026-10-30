@@ -35,6 +35,9 @@ export const ExperienceCvFields = {
 
     function removeHighlight(idx) {
       store.form.highlights.splice(idx, 1)
+      // La viñeta en inglés va pareada por posición: se quita la misma para no desalinear el resto.
+      const en = store.form.en?.highlights
+      if (Array.isArray(en) && en.length > idx) en.splice(idx, 1)
       store.checkDirty()
     }
 

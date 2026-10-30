@@ -261,11 +261,11 @@ function printCV() {
   <section class="cv-wrapper w-full">
     <!-- Barra del CV: descarga e impresión -->
     <header class="cv-toolbar flex flex-wrap items-center justify-between gap-3 px-3.5 py-2.5 mb-5 bg-surface/70 border border-rule rounded-xl no-print">
-      <div class="cv-actions flex items-center gap-2 max-sm:w-full">
+      <div class="cv-actions flex items-center gap-2 max-md:w-full">
         <a
           :href="cvPdfUrl"
           :download="cvDownloadFileName"
-          class="cv-action-btn inline-flex items-center justify-center gap-1.5 h-8 px-3 bg-paper/80 hover:bg-hover border border-rule hover:border-rule-strong text-ink font-mono text-[11px] font-semibold no-underline cursor-pointer transition-all active:scale-[0.98] rounded-lg max-sm:flex-1"
+          class="cv-action-btn inline-flex items-center justify-center gap-1.5 h-8 px-3 bg-surface border border-rule hover:border-ink text-ink font-mono text-[11px] font-semibold no-underline cursor-pointer transition-all active:scale-[0.98] rounded-lg max-md:flex-1"
           :title="isEs ? `Descargar archivo PDF (${cvDownloadFileName})` : `Download PDF file (${cvDownloadFileName})`"
         >
           <AppIcon name="download" :size="12" class="text-sig" />
@@ -273,7 +273,7 @@ function printCV() {
         </a>
         <button
           type="button"
-          class="cv-action-btn group inline-flex items-center justify-center gap-1.5 h-8 px-3 bg-paper/80 hover:bg-hover border border-rule hover:border-rule-strong text-ink font-mono text-[11px] font-semibold no-underline cursor-pointer transition-all active:scale-[0.98] rounded-lg max-sm:flex-1"
+          class="cv-action-btn group inline-flex items-center justify-center gap-1.5 h-8 px-3 bg-surface border border-rule hover:border-ink text-ink font-mono text-[11px] font-semibold no-underline cursor-pointer transition-all active:scale-[0.98] rounded-lg max-md:flex-1"
           :title="isEs ? 'Imprimir en papel o guardar como PDF (Ctrl+P)' : 'Print or save as PDF (Ctrl+P)'"
           @click="printCV"
         >

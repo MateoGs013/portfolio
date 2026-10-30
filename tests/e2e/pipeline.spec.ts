@@ -70,6 +70,8 @@ test.describe('direcciones canónicas', () => {
     ['/orgs/la-rucula', '/projects?org=la-rucula'],
     ['/Projects/La-Rucula?lang=en', '/projects/la-rucula?lang=en'],
     ['/lab', '/'],
+    ['/datos', '/'],
+    ['/datos/projects', '/projects'],
     ['/cv/CV-ES-Mateo-Sonzogni.pdf', '/cv/CV-ES-Mateo-Sonzogni-ATS.pdf'],
   ]
   for (const [from, to] of redirects) {

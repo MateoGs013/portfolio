@@ -224,7 +224,7 @@ export const AdmJobHunter = {
     // Nombre de archivo desde el nombre que trae el CV: «Ana Pérez» → CV_Ana_Perez_<sufijo>.
     function cvFileName(suffix) {
       const stem = String(cvData.value?.name || '')
-        .normalize('NFD').replace(/[̀-ͯ]/g, '')
+        .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
         .replace(/[^A-Za-z0-9]+/g, '_').replace(/^_+|_+$/g, '')
       return ['CV', stem, suffix].filter(Boolean).join('_')
     }
@@ -1702,7 +1702,7 @@ export const AdmJobHunter = {
                       <div v-for="(exp, expIdx) in cvData.experience" :key="expIdx" class="mb-2.5 last:mb-0">
                         <div class="flex justify-between items-baseline font-sans text-[10.5px] font-bold text-black">
                           <span>{{ (exp.title || exp.company || '').toUpperCase() }}<span v-if="exp.role && exp.role !== (exp.title || exp.company)" class="font-semibold text-zinc-800"> — {{ exp.role }}</span></span>
-                          <span class="text-[9.5px] font-normal font-sans text-zinc-600">{{ exp.period }}</span>
+                          <span class="text-[9.5px] font-normal font-sans text-zinc-600">{{ [exp.period, exp.location].filter(Boolean).join(' · ') }}</span>
                         </div>
                         <ul class="list-disc pl-4 mt-0.5 space-y-0.5 text-[9.5px] leading-relaxed text-zinc-800 font-serif">
                           <li v-for="(b, bIdx) in (exp.bullets || [])" :key="bIdx">{{ b }}</li>
@@ -1721,7 +1721,7 @@ export const AdmJobHunter = {
                       <div v-for="(edu, eduIdx) in cvData.education" :key="eduIdx" class="mb-1 last:mb-0">
                         <div class="flex justify-between items-baseline font-sans text-[10px]">
                           <span class="font-bold text-black">{{ edu.degree || edu.title }}<span v-if="edu.institution" class="font-normal text-zinc-800"> — {{ edu.institution }}</span></span>
-                          <span class="text-[9.5px] text-zinc-600">{{ edu.period || '' }}</span>
+                          <span class="text-[9.5px] text-zinc-600">{{ [edu.period, edu.location].filter(Boolean).join(' · ') }}</span>
                         </div>
                         <p v-if="edu.details" class="text-[9px] text-zinc-600 font-serif leading-snug mt-0.5">{{ edu.details }}</p>
                       </div>

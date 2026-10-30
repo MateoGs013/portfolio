@@ -14,6 +14,12 @@
  *
  * Uso local:  CAPTURAS_DIR=<checkout>/docs/rediseno/capturas pnpm tsx server/src/scripts/import-captures.ts
  * Producción (los archivos llegan versionados con la imagen; solo la base), después de un pg_dump:
+ *   ANTES: el volumen persistente de Coolify montado en /app/public/media/projects (o /app/public/media)
+ *   tapa lo que la imagen copia en esa ruta. Hay que copiar public/media/projects/{la-rucula,argpiscinas,
+ *   barberpole,eros}/ al volumen (docker cp desde el checkout, o una copia única de la imagen al volumen) o
+ *   confirmar que el volumen no cubre esas carpetas. Sin eso, /media/projects/<slug>/*.webp da 404 y este
+ *   script falla al cargar seed/media.ts. Lo mismo vale para el parche 11-01: desde D4 pide que exista
+ *   public/media/projects/<slug>/hero.webp en el servidor.
  *   pnpm tsx server/src/scripts/import-captures.ts --db-only --dry     (imprime el diff, no escribe)
  *   pnpm tsx server/src/scripts/import-captures.ts --db-only           (aplica todo en una transacción)
  *   pnpm tsx server/src/scripts/import-captures.ts --db-only --dry     (tiene que decir "sin cambios")
@@ -132,6 +138,15 @@ async function planCaptures(captures: readonly CaptureSeed[]): Promise<Plan> {
         plan.what.push(`${label}: reemplaza a ${previous} (misma fila, id ${row.id})`)
       }
     }
+    if (!row && c.role === 'COVER') {
+      // Igual que el parche 11-01: una portada del mismo tipo ya cargada (por ejemplo, subida desde el admin)
+      // se respeta. Crear otra rompería "a lo sumo una portada de imagen y una de video por obra".
+      const cover = await db.media.findFirst({ where: { projectId: project.id, role: 'COVER', kind: c.kind }, select: { id: true, src: true } })
+      if (cover) {
+        console.warn(`aviso: ${c.project} ya tiene portada ${c.kind} (${cover.src}, id ${cover.id}); se respeta y se saltea ${c.src}`)
+        continue
+      }
+    }
     if (!row) {
       plan.what.push(`${label}: nueva ${c.kind} ${c.role} ${c.viewport} ${c.width}x${c.height}`)
       plan.captures.push(c)
@@ -177,6 +192,9 @@ async function main() {
   await db.$transaction(async (tx) => {
     for (const r of plan.renames) await tx.media.update({ where: { id: r.id }, data: { src: r.src } })
     await applyCaptures(tx, plan.captures)
+    const covers = await tx.media.groupBy({ by: ['projectId', 'kind'], where: { role: 'COVER' }, _count: { _all: true } })
+    const doubled = covers.filter(g => g._count._all > 1)
+    if (doubled.length) throw new Error(`más de una portada por tipo en ${doubled.map(g => `obra ${g.projectId} ${g.kind}`).join(', ')}: se deshace todo`)
   }, { timeout: 60000 })
   console.log('listo')
 }

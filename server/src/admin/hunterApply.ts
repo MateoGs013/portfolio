@@ -47,17 +47,15 @@ hunterApplyRouter.post(['/jobs/:id/find-email', '/find-email/:id'], async (req: 
     res.status(result.status).json(result.data)
     return
   }
-  const job = findJob(id)
-  const companyClean = (job?.company || 'company').toLowerCase().replace(/[^a-z0-9]/g, '')
-  const guessedDomain = `${companyClean || 'empresa'}.com`
-  const guessedEmail = job?.contact_email || `talent@${guessedDomain}`
+  // Sin Eros no se adivina una dirección: solo el contacto que la vacante ya trae, o null.
+  const email = findJob(id)?.contact_email || null
   res.setHeader('X-Eros-Source', 'fallback')
   res.json({
     ok: true,
-    email: guessedEmail,
-    domain: guessedDomain,
-    confidence: job?.contact_email ? 90 : 65,
-    sources: ['heuristic_domain_fallback'],
+    email,
+    domain: email ? email.split('@')[1] ?? null : null,
+    confidence: email ? 90 : 0,
+    sources: email ? ['job_contact'] : [],
     _source: 'fallback',
   })
 })
@@ -77,17 +75,10 @@ hunterApplyRouter.post(['/jobs/:id/apply-email', '/apply-email/:id'], async (req
     res.status(result.status).json(result.data)
     return
   }
-  // Contingencia cuando Eros Agent o SMTP no están configurados en entorno local
-  const job = findJob(id)
-  const recipient = req.body?.to_email || job?.contact_email || null
-  res.setHeader('X-Eros-Source', 'fallback')
-  res.json({
-    ok: true,
-    provider: 'local_registered',
-    dispatched_to: recipient,
-    applied_at: new Date().toISOString(),
-    _source: 'fallback',
-  })
+  // Sin Eros no hay envío: se responde el error para que el admin no marque la vacante como postulada.
+  const data = result.data as { error?: unknown } | null
+  const error = typeof data?.error === 'string' && data.error ? data.error : 'Eros no está disponible: la postulación no se envió'
+  res.status(result.status >= 400 ? result.status : 502).json({ error })
 })
 
 /** PATCH /api/admin/hunter/jobs/:id/contact-email - Actualizar correo de contacto de vacante */

@@ -4,7 +4,8 @@
  * así la API pública cae al español y lo lista en `untranslated`.
  *
  * Forma del body: `translations: { en: { campo: texto | null } }` en el registro y en cada paso
- * o enlace. Sin la clave `translations` (o sin `en`) no se toca nada. Un inglés todo vacío no crea
+ * o enlace. Sin la clave `translations` (o sin `en`) no se toca nada, y dentro de `en` solo cambian las
+ * claves que llegan. Un inglés todo vacío no crea
  * una fila nueva: solo vacía la que ya existía.
  */
 import { Locale, type Prisma } from '../../generated/prisma/client.js'
@@ -32,10 +33,14 @@ export function enBody(b: Body): Body | null {
   return en as Body
 }
 
-/** Textos en inglés con el mismo tope que su par en español; vacío → null. */
-export function enTexts<K extends string>(en: Body, limits: Record<K, number>): Record<K, string | null> {
-  const out = {} as Record<K, string | null>
+/**
+ * Textos en inglés con el mismo tope que su par en español; vacío → null. Solo las claves que llegan:
+ * una clave ausente conserva lo guardado (un `translations.en` parcial no borra el resto).
+ */
+export function enTexts<K extends string>(en: Body, limits: Record<K, number>): Partial<Record<K, string | null>> {
+  const out: Partial<Record<K, string | null>> = {}
   for (const [k, max] of Object.entries(limits) as [K, number][]) {
+    if (!(k in en)) continue
     try {
       out[k] = optStr(en, k, max)
     }
@@ -48,7 +53,7 @@ export function enTexts<K extends string>(en: Body, limits: Record<K, number>): 
 }
 
 /** Sin ningún texto ni viñeta: no vale la pena crear una fila para eso. */
-export function isBlank(data: Record<string, string | string[] | null>): boolean {
+export function isBlank(data: Record<string, string | string[] | null | undefined>): boolean {
   return Object.values(data).every(v => v === null || (Array.isArray(v) && v.length === 0))
 }
 
@@ -102,7 +107,7 @@ export async function saveMediaEn(tx: Tx, mediaId: number, en: Body): Promise<vo
   const keys = (Object.keys(MEDIA_LIMITS) as (keyof typeof MEDIA_LIMITS)[]).filter(k => k in en)
   if (keys.length === 0) return
   const all = enTexts(en, MEDIA_LIMITS)
-  const data = Object.fromEntries(keys.map(k => [k, all[k]]))
+  const data = Object.fromEntries(keys.map(k => [k, all[k] ?? null]))
   if (isBlank(data)) {
     await tx.mediaTranslation.updateMany({ where: { mediaId, locale: EN }, data })
     return

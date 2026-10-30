@@ -1,13 +1,13 @@
 /**
- * Metadatos de cada página desde la base: título, descripción, canonical (sin `vista`, `cv` ni
- * `foco`), hreflang recíproco es/en/x-default, Open Graph y JSON-LD Person (about + contact). El
+ * Metadatos de cada página desde la base: título, descripción, canonical (lista blanca: `lang` y
+ * las facetas de /projects y /articles), hreflang recíproco es/en/x-default, Open Graph y JSON-LD Person (about + contact). El
  * origen absoluto sale solo de `runtimeConfig.public.siteUrl`. X3 lo completa (imagen OG por defecto).
  */
 import type { MaybeRefOrGetter } from 'vue'
 import type { LocationQuery } from 'vue-router'
 import type { Media } from '~/lib/api'
-import { VIEW_PARAMS } from './useApi'
-import { withLang } from './useLocale'
+import { apiParams, type ApiCollection } from './useApi'
+import { langFrom, withLang } from './useLocale'
 import { docList, docText, useDoc } from './useSiteContent'
 
 export interface PageSeo {
@@ -21,15 +21,18 @@ export interface PageSeo {
 
 const ogLocale = { es: 'es_AR', en: 'en_US' } as const
 
-/** La query pública de la página: sin parámetros de vista y en orden estable. */
-function publicQuery(query: LocationQuery): Record<string, string> {
-  const out: Record<string, string> = {}
-  for (const key of Object.keys(query).sort()) {
-    const raw = query[key]
-    const value = Array.isArray(raw) ? raw[0] : raw
-    if (typeof value === 'string' && !(VIEW_PARAMS as readonly string[]).includes(key)) out[key] = value
-  }
-  return out
+/** Colecciones cuyas facetas forman parte de la dirección canónica de su página. */
+const FACETED: Record<string, ApiCollection> = { '/projects': 'projects', '/articles': 'articles' }
+
+/**
+ * La query pública de la página, por lista blanca: `lang=en` y, en una página con facetas, sus filtros
+ * normalizados (apiParams). Todo lo demás (vista, cv, foco, utm_*, fbclid, basura) queda afuera.
+ */
+function publicQuery(path: string, query: LocationQuery): Record<string, string> {
+  const collection = FACETED[path]
+  const out: Record<string, string> = collection ? { ...apiParams(collection, query) } as Record<string, string> : {}
+  if (langFrom(query) === 'en') out.lang = 'en'
+  return Object.fromEntries(Object.keys(out).sort().map(k => [k, out[k]!]))
 }
 
 /** Escapa `<` para que el JSON no pueda cerrar el `<script>` que lo contiene. */
@@ -47,7 +50,7 @@ export async function usePageSeo(input: MaybeRefOrGetter<PageSeo>) {
 
   const absolute = (path: string) => new URL(path, siteUrl).toString()
   const urlFor = (query: LocationQuery) => {
-    const search = new URLSearchParams(publicQuery(query)).toString()
+    const search = new URLSearchParams(publicQuery(route.path, query)).toString()
     return absolute(`${route.path}${search ? `?${search}` : ''}`)
   }
 

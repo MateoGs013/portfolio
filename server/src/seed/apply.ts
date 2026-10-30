@@ -108,7 +108,10 @@ export async function applyCaptures(tx: Tx, captures: readonly CaptureSeed[]): P
       : await tx.media.create({ data: { ...data, src: c.src, projectId: project.id } })
 
     const en = { alt: c.alt.en, caption: c.caption?.en ?? null }
-    if (!en.alt && !en.caption) continue
+    if (!en.alt && !en.caption) {
+      await tx.mediaTranslation.deleteMany({ where: { mediaId: media.id, locale: Locale.en } })
+      continue
+    }
     await tx.mediaTranslation.upsert({
       where: { mediaId_locale: { mediaId: media.id, locale: Locale.en } },
       create: { mediaId: media.id, locale: Locale.en, ...en },

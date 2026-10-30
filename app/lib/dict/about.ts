@@ -5,6 +5,8 @@ export default {
   'about.philosophy': { es: 'Cómo trabajo', en: 'How I work' },
   'about.competencies': { es: 'Competencias', en: 'Competencies' },
   'about.education': { es: 'Formación', en: 'Education' },
+  'about.degree': { es: 'Título técnico', en: 'Technical degree' },
+  'about.higherEducation': { es: 'Formación superior', en: 'Higher education' },
   'about.languages': { es: 'Idiomas', en: 'Languages' },
   'about.modalities': { es: 'Modalidades', en: 'Work arrangements' },
   'about.goal': { es: 'Objetivo', en: 'Goal' },

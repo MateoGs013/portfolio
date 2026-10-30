@@ -2,6 +2,13 @@
    Los nombres son estáticos en la página de destino; el plugin de elementos compartidos
    los apaga en línea (view-transition-name: none) en la página saliente antes de nombrar el par. */
 
+/* Un span nombrado que se parte en dos líneas hace que Chromium saltee toda la transición. */
+[data-vt='title'],
+[data-vt='page-title'],
+[data-travel-title] {
+  display: inline-block;
+}
+
 [data-vt='title'] {
   view-transition-name: title;
 }

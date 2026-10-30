@@ -228,7 +228,7 @@ contentRouter.post('/posts/:id/publish-to-blog', async (req: Request, res: Respo
   const content = String(post['devto_markdown'] || post['body'] || post['linkedin_text'] || '').trim()
   const summary = String(post['hook'] || title).slice(0, 200).trim()
   const baseSlug = title.toLowerCase()
-    .normalize('NFD').replace(/[̀-ͯ]/g, '')
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
     .replace(/[^\w\s-]/g, '').trim().replace(/\s+/g, '-').slice(0, 60)
   const slug = `${baseSlug || 'articulo'}-${Date.now().toString(36).slice(-4)}`
 

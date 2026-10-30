@@ -96,7 +96,7 @@ export const ArticleForm = {
             class="text-input font-mono-code"
             :class="(store.slugLocked && store.isNew) && '!bg-[#0c0d11] !text-zinc-400 !cursor-not-allowed'"
           />
-          <span class="field-hint">Ruta canónica: mateogs.tech/blog/{{ store.form.slug || 'slug' }}</span>
+          <span class="field-hint">Ruta en el sitio: /articles/{{ store.form.slug || 'slug' }}</span>
         </div>
       </div>
 
@@ -262,7 +262,7 @@ export const ArticleForm = {
           class="textarea-input font-mono-code text-xs leading-relaxed"
         ></textarea>
         <span class="field-hint">
-          El artículo se renderiza dinámicamente con resaltado de sintaxis Shiki y KaTeX en /blog/{{ store.form.slug || 'articulo' }}.
+          El artículo se renderiza dinámicamente con resaltado de sintaxis Shiki y KaTeX en /articles/{{ store.form.slug || 'articulo' }}.
         </span>
       </div>
     </div>

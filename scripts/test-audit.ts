@@ -104,11 +104,16 @@ async function run() {
     })
     if (res.status !== 200) throw new Error(`Status ${res.status}`)
     const data = await res.json()
-    if (!data.email) throw new Error('No email found')
+    // Sin Eros no se adivina una dirección: el contacto de la vacante o null.
+    if (res.headers.get('x-eros-source') === 'fallback') {
+      if (data.email !== null && typeof data.email !== 'string') throw new Error('email de respaldo inválido')
+      if (typeof data.email === 'string' && /^talent@/.test(data.email)) throw new Error('email adivinado')
+    }
+    else if (!data.email) throw new Error('No email found')
     console.log('   resolved email:', data.email)
   })
 
-  await test('POST /api/admin/hunter/jobs/0cf33b331de5caf9/apply-email -> 200', async () => {
+  await test('POST /api/admin/hunter/jobs/0cf33b331de5caf9/apply-email -> 200 con Eros, error sin Eros', async () => {
     const res = await fetch(`${base}/api/admin/hunter/jobs/0cf33b331de5caf9/apply-email`, {
       method: 'POST',
       headers: {
@@ -117,8 +122,14 @@ async function run() {
       },
       body: JSON.stringify({ to_email: 'test@epam.com', subject: 'Application', body: 'Hello' }),
     })
-    if (res.status !== 200) throw new Error(`Status ${res.status}`)
     const data = await res.json()
+    if (res.status >= 400) {
+      // Sin Eros no hay envío y no se finge uno: tiene que venir el error.
+      if (!data.error) throw new Error(`Status ${res.status} sin error`)
+      console.log('   sin Eros:', res.status, data.error)
+      return
+    }
+    if (res.status !== 200) throw new Error(`Status ${res.status}`)
     if (!data.ok) throw new Error('Apply not ok')
   })
 

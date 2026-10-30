@@ -36,7 +36,8 @@ function highlights(b: Body, lang = ''): string[] {
 
 /** Fila ExperienceTranslation: vacío → null y viñetas con el mismo tope que en español. */
 function englishData(en: Body) {
-  return { ...enTexts(en, { role: 4000, summary: 4000, story: 4000, location: 120 }), highlights: highlights(en, ' (inglés)') }
+  const texts = enTexts(en, { role: 4000, summary: 4000, story: 4000, location: 120 })
+  return 'highlights' in en ? { ...texts, highlights: highlights(en, ' (inglés)') } : texts
 }
 
 /** Inglés anidado (create al crear, upsert al editar), o nada si el body no trae `translations.en`. */

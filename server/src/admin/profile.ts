@@ -87,7 +87,7 @@ export async function loadSignature(): Promise<Signature> {
 /** Nombre de archivo del CV: («Ana Pérez», 'Harvard_ATS') → «CV_Ana_Perez_Harvard_ATS». */
 export function cvFileName(name: string | null, ...suffix: string[]): string {
   const stem = (name ?? '')
-    .normalize('NFD').replace(/[̀-ͯ]/g, '')
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
     .replace(/[^A-Za-z0-9]+/g, '_').replace(/^_+|_+$/g, '')
   return ['CV', stem, ...suffix].filter(Boolean).join('_')
 }

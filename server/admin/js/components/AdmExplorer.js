@@ -138,6 +138,7 @@ export const AdmExplorer = {
           <button
             type="button"
             @click="store.filter = 'all'"
+            :aria-pressed="store.filter === 'all' ? 'true' : 'false'"
             class="px-2 py-0.5 rounded transition-colors cursor-pointer"
             :class="store.filter === 'all' ? 'bg-white/15 text-white font-semibold' : 'text-zinc-500 hover:text-white'"
           >
@@ -147,6 +148,7 @@ export const AdmExplorer = {
             <button
               type="button"
               @click="store.filter = 'live'"
+              :aria-pressed="store.filter === 'live' ? 'true' : 'false'"
               class="px-2 py-0.5 rounded transition-colors cursor-pointer flex items-center gap-1"
               :class="store.filter === 'live' ? 'bg-emerald-500/15 text-emerald-300 font-semibold' : 'text-zinc-500 hover:text-white'"
             >
@@ -155,6 +157,7 @@ export const AdmExplorer = {
             <button
               type="button"
               @click="store.filter = 'wip'"
+              :aria-pressed="store.filter === 'wip' ? 'true' : 'false'"
               class="px-2 py-0.5 rounded transition-colors cursor-pointer flex items-center gap-1"
               :class="store.filter === 'wip' ? 'bg-amber-500/15 text-amber-300 font-semibold' : 'text-zinc-500 hover:text-white'"
             >
@@ -163,6 +166,7 @@ export const AdmExplorer = {
             <button
               type="button"
               @click="store.filter = 'featured'"
+              :aria-pressed="store.filter === 'featured' ? 'true' : 'false'"
               class="px-2 py-0.5 rounded transition-colors cursor-pointer"
               :class="store.filter === 'featured' ? 'bg-[#ff3e00]/20 text-[#ff3e00] font-semibold' : 'text-zinc-500 hover:text-white'"
             >
@@ -172,6 +176,7 @@ export const AdmExplorer = {
               v-if="store.section === 'projects'"
               type="button"
               @click="store.filter = 'hidden'"
+              :aria-pressed="store.filter === 'hidden' ? 'true' : 'false'"
               class="px-2 py-0.5 rounded transition-colors cursor-pointer flex items-center gap-1"
               :class="store.filter === 'hidden' ? 'bg-white/15 text-white font-semibold' : 'text-zinc-500 hover:text-white'"
             >

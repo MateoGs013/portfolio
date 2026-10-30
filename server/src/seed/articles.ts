@@ -40,7 +40,8 @@ Consolidar la persistencia relacional y vectorial en un único nodo de PostgreSQ
     status: ArticleStatus.PUBLISHED,
     featured: true,
     publishedAt: new Date('2026-10-12T12:00:00.000Z'),
-    canonicalUrl: 'https://mateogs.tech/blog/postgresql-17-universal-vector-relational-production',
+    // Original de este sitio: sin URL canónica externa (el campo es para lo publicado antes en otro lado).
+    canonicalUrl: null,
     techs: ['postgresql', 'prisma'] satisfies TechSlug[],
   },
 ]

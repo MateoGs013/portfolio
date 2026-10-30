@@ -34,14 +34,16 @@ const lower = (seg: string) => (seg.includes('%') ? seg : seg.toLowerCase())
 /** A dónde va un path que no es canónico, o null si ya lo es. */
 export function canonicalTarget(path: string, query: LocationQuery): Target | null {
   let segs = path.split('/').filter(Boolean).map(lower)
-  if (segs[0] && WORLD_PREFIXES.has(segs[0])) segs = segs.slice(1)
+  const world = Boolean(segs[0] && WORLD_PREFIXES.has(segs[0]))
+  if (world) segs = segs.slice(1)
   const [rawRoot, ...rest] = segs
   const root = rawRoot ? (ALIASES[rawRoot] ?? rawRoot) : undefined
   const slug = rest[0]
 
   switch (root) {
     case undefined:
-      return null
+      // '/' ya es canónico; '/datos', '/diseno', '/umbral' (y sus variantes) van al inicio.
+      return world ? { path: '/', query } : null
     case 'experience':
       return { path: '/about', hash: '#trayectoria', query }
     case 'cv':

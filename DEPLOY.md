@@ -90,7 +90,7 @@ El repositorio cuenta con Dockerfiles optimizados para producción:
 4. En **"Ports Exposes"**, indicá `3001`.
 5. En **"Domains"**, podés dejarlo sin dominio público (si Nuxt actuará como proxy inverso completo) o asignarle un subdominio como `https://api.mateogs.tech`.
 6. En la pestaña **"Persistent Storage" / "Storages"**:
-   - Montar volumen persistente: destino `/app/public/media/projects` (o `/app/public/media`). Esto garantiza que las imágenes subidas desde el CMS no se eliminen al redeployar.
+   - Montar volumen persistente: destino `/app/public/media/projects` (o `/app/public/media`). Esto garantiza que las imágenes subidas desde el CMS no se eliminen al redeployar. **Ojo:** el volumen tapa lo que la imagen trae en esa ruta (las capturas versionadas en `public/media/projects/<slug>/`). Antes del parche 11-01 y de `import-captures.ts --db-only`, copiar `public/media/projects/{la-rucula,argpiscinas,barberpole,eros}/` al volumen (`docker cp`) o montar el volumen en una ruta que no cubra esas carpetas; ver la cabecera de `server/src/scripts/import-captures.ts`.
 7. En la pestaña **"Environment Variables"**, definí:
    ```env
    NODE_ENV=production

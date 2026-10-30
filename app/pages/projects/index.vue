@@ -57,7 +57,10 @@ function withStatus(status?: ProjectStatus) {
         </NuxtLink>
       </li>
     </ul>
-    <p v-else class="text-m text-dim">
+    <p v-else-if="projects.error.value" role="alert" class="text-m text-dim">
+      {{ t('error.503.body') }}
+    </p>
+    <p v-else-if="projects.status.value === 'success'" class="text-m text-dim">
       {{ t('work.empty') }}
     </p>
   </article>
