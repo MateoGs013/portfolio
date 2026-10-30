@@ -1,67 +1,52 @@
 <script setup lang="ts">
-// Obra mínima (F1): la lista de /api/projects con las facetas de la URL. P2 la reemplaza por la galería.
-import type { ProjectStatus } from '~/lib/api'
+// Obra: el título con el conteo que rueda, las facetas de la URL y la galería horizontal. Los filtros
+// de la query (?status=, ?stack=…) llegan tal cual a la API; en registro, la colección como tabla.
+import type { ProjectSummary } from '~/lib/api'
 
 const route = useRoute()
-const { t, localeRoute, langAttr } = useLocale()
+const { t, localeRoute } = useLocale()
+const { isRecord } = useRecordView()
 
 const filters = computed(() => apiParams('projects', route.query))
 const projects = await useProjects(filters)
 failOn(projects.error)
 await usePageSeo(() => ({ title: t('nav.work') }))
 
-const statuses: ProjectStatus[] = ['LIVE', 'WIP', 'ARCHIVED']
+/** Lo último que llegó: mientras se trae otro filtro, la galería no se vacía. */
+const list = shallowRef<readonly ProjectSummary[]>(projects.data.value ?? [])
+watch(projects.data, (data) => {
+  if (data) list.value = data
+})
 
-/** La query actual con otro estado (o sin estado): facetar es cambiar la URL. */
-function withStatus(status?: ProjectStatus) {
-  const { status: _drop, ...rest } = route.query
-  return localeRoute({ path: '/projects', query: status ? { ...rest, status: status.toLowerCase() } : rest })
-}
+const count = computed(() => list.value.length)
+const countLabel = computed(() => t(count.value === 1 ? 'work.count.one' : 'work.count.other', { n: count.value }))
 </script>
 
 <template>
-  <article data-hf="measure" class="flex flex-col gap-10 px-(--pad) py-24">
-    <h1 data-vt="page-title" class="text-display-page font-medium tracking-tight text-ink">
-      {{ t('nav.work') }}
-    </h1>
+  <article data-hf="measure">
+    <header class="px-pad pt-[clamp(7rem,22vh,12rem)] pb-[clamp(2rem,6vh,4rem)]">
+      <h1 tabindex="-1" class="-ms-[0.045em] text-display-page text-ink">
+        <span data-vt="page-title">{{ t('nav.work') }}</span>
+        <sup aria-hidden="true" class="ms-[0.2em] align-super text-[0.2em] font-[450] tracking-normal text-dim"><RollNumber :value="count" /></sup>
+        <span class="sr-only">, {{ countLabel }}</span>
+      </h1>
+      <WorkFilters :status="filters.status" :stack="filters.stack" :projects="list" class="mt-[clamp(1.5rem,4vh,2.5rem)]" />
+    </header>
 
-    <nav :aria-label="t('work.filters')">
-      <ul class="flex flex-wrap gap-x-6 gap-y-2 text-s">
-        <li>
-          <NuxtLink :to="withStatus()" :aria-current="filters.status ? undefined : 'page'" class="text-dim aria-[current=page]:text-ink">
-            {{ t('work.all') }}
-          </NuxtLink>
-        </li>
-        <li v-for="s in statuses" :key="s">
-          <NuxtLink :to="withStatus(s)" :aria-current="filters.status === s.toLowerCase() ? 'page' : undefined" class="text-dim aria-[current=page]:text-ink">
-            {{ t(`status.${s}`) }}
-          </NuxtLink>
-        </li>
-      </ul>
-    </nav>
-
-    <ul v-if="projects.data.value?.length" class="flex flex-col border-t border-rule">
-      <li v-for="p in projects.data.value" :key="p.slug" class="border-b border-rule">
-        <NuxtLink
-          :to="localeRoute(`/projects/${p.slug}`)"
-          data-card
-          data-travel="card"
-          :data-tint="p.media[0]?.tint ?? undefined"
-          class="flex flex-col gap-1 py-5 text-ink no-underline focus-visible:outline-2 focus-visible:outline-sig-text"
-        >
-          <span data-travel-title class="text-xl font-medium">{{ p.title }}</span>
-          <span class="text-s text-dim">
-            {{ p.year }} · {{ t(`status.${p.status}`) }}<template v-if="p.org"> · {{ p.org.name }}</template>
-          </span>
-          <span class="max-w-[58ch] text-m text-dim" :lang="langAttr(p, 'summary')">{{ p.summary }}</span>
-        </NuxtLink>
-      </li>
-    </ul>
-    <p v-else-if="projects.error.value" role="alert" class="text-m text-dim">
+    <p v-if="projects.error.value" role="alert" class="px-pad text-m text-dim">
       {{ t('error.503.body') }}
     </p>
-    <p v-else-if="projects.status.value === 'success'" class="text-m text-dim">
+    <div v-else-if="isRecord" class="px-pad">
+      <RecordTable collection="projects" :rows="list" />
+    </div>
+    <WorkGallery v-else-if="list.length" :projects="list" />
+    <p v-else class="flex flex-wrap gap-x-4 gap-y-2 px-pad text-m text-dim">
       {{ t('work.empty') }}
+      <NuxtLink :to="localeRoute('/projects')" class="text-ink underline underline-offset-4">
+        {{ t('work.clear') }}
+      </NuxtLink>
     </p>
+
+    <CursorBubble />
   </article>
 </template>
