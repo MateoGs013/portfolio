@@ -44,6 +44,10 @@ test.describe('literales prohibidos', () => {
     expect(offenders(under('app/components/cv'), literals)).toEqual([])
   })
 
+  test('ningún componente solo para el Hiperfoco (X1): es el modo Focus existente, no uno paralelo', () => {
+    expect(offenders(under('app/components'), ['v-if="isHyperfocus'])).toEqual([])
+  })
+
   test('en el cromo del sitio (F3): ningún email, ubicación ni perfil escritos a mano', () => {
     expect(offenders(under('app/components/site'), ['@', 'Río Negro', 'github.com'])).toEqual([])
   })

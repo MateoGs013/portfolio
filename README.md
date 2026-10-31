@@ -78,8 +78,9 @@ La aplicación quedará disponible en `http://localhost:3000`.
 # Ejecutar verificación de tipos
 npm run typecheck
 
-# Ejecutar tests end-to-end con Playwright
-npx playwright test
+# Ejecutar tests end-to-end con Playwright (compila una vez y corre cada spec de cada proyecto
+# —1440/768/375 en dark y light, reduced-motion y no-js— con una API nueva; ver tests/e2e/run.mjs)
+pnpm test:e2e
 ```
 
 ### Métricas de Rendimiento (Lighthouse)

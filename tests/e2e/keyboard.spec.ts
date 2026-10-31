@@ -106,6 +106,22 @@ test('la paleta: / abre, filtra, Enter navega y Ctrl+K y Esc cierran devolviendo
   await expect(page.locator('a[href="#contenido"]')).toBeFocused()
 })
 
+test('las teclas andan durante la salida de la paleta, sin esperar a que termine', async ({ page }) => {
+  await open(page, '/about')
+  const dialog = page.locator('dialog[open]')
+  await press(page, '/')
+  await expect(dialog).toBeVisible()
+  // Ctrl+K cierra y '/' llega en plena animación de salida: la paleta vuelve, no se pierde la tecla.
+  await page.keyboard.press('Control+k')
+  await page.keyboard.press('/')
+  await expect(dialog).toBeVisible()
+  await expect(dialog.locator('input[role="combobox"]')).toBeFocused()
+  // Esc cierra y '2' llega durante la salida: navega a Obra.
+  await page.keyboard.press('Escape')
+  await page.keyboard.press('2')
+  await expect(page).toHaveURL(/\/projects$/)
+})
+
 test('1–5 llevan a inicio, obra, sobre mí, contacto y CV', async ({ page }) => {
   await open(page, '/articles')
   await press(page, '1')

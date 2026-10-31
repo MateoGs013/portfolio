@@ -54,10 +54,8 @@ for (const width of WIDTHS) {
         test(`${path}: SSR en Hiperfoco, sin cambio de layout, sin Lenis y sin violaciones serias`, async ({ page, context, baseURL }) => {
           await prefs(context, baseURL, theme, true)
           await page.addInitScript(observeShifts)
-          // Primera carga para la caché: el cambio de fuente de la primera visita (Martian Mono en el
-          // atajo de la cabecera) no es del modo. Se mide la segunda, la del SSR con la cookie.
-          await page.goto(path, { waitUntil: 'networkidle' })
-          const res = await page.reload({ waitUntil: 'networkidle' })
+          // Se mide la primera visita, la del SSR con la cookie: las fuentes se precargan (usePreloadFonts).
+          const res = await page.goto(path, { waitUntil: 'networkidle' })
           expect(await res?.text()).toMatch(/<html[^>]*\bdata-hyperfocus="true"/)
           await expect(page.locator('html')).toHaveAttribute('data-theme', theme)
           await page.waitForTimeout(800)

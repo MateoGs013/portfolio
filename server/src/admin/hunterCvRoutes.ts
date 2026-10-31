@@ -10,7 +10,7 @@ import { forwardToEros, getErosBaseUrl, getParamId, isCircuitOpen, recordErosFai
 /** CV Harvard ATS adaptado: tickets, datos, hoja HTML y PDF (Eros primero, respaldo desde la base). */
 export const hunterCvRouter = Router()
 
-/** POST /api/admin/hunter/cv/:id/ticket - Ticket de un solo uso para abrir CV HTML */
+/** POST /api/admin/hunter/cv/:id/ticket - Ticket firmado para abrir la hoja HTML del CV: vale 1 hora y solo para esa vacante (no es de un solo uso: la hoja se puede recargar) */
 hunterCvRouter.post(['/cv/:id/ticket', '/jobs/:id/cv/ticket'], (req: Request, res: Response) => {
   const id = getParamId(req)
   if (!id) {

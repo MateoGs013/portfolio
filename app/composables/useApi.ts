@@ -54,16 +54,31 @@ function statusOf(err: unknown): number | undefined {
   return e.response?.status ?? e.statusCode ?? e.status
 }
 
+/**
+ * En el SSR la API ve como cliente al proceso de Nuxt, no a quien pidió la página: sin esto, todo el
+ * tráfico renderizado cae en un solo balde del rate limit público (300 cada 15 min) y, pasado ese
+ * número, el sitio entero responde 503. Se reenvía el X-Forwarded-For que llegó (lo pone Traefik) o,
+ * sin proxy delante, la dirección del socket; es lo mismo que hace el proxy de Nitro con `/api/**`.
+ */
+function forwardedFor(): Record<string, string> {
+  const req = useRequestEvent()?.node.req
+  if (!req) return {}
+  const header = req.headers['x-forwarded-for']
+  const value = (Array.isArray(header) ? header.join(', ') : header) || req.socket.remoteAddress
+  return value ? { 'x-forwarded-for': value } : {}
+}
+
 export function useApi() {
   const config = useRuntimeConfig()
   const { lang } = useLocale()
   const base = import.meta.server ? config.public.apiBase : '/api'
+  const headers = import.meta.server ? forwardedFor() : {}
 
   /** GET a la API con `lang`. 404 se propaga; sin respuesta es 503 y un 5xx es 502. */
   async function get<T>(path: string, params: Record<string, string | undefined> = {}, as: Lang = lang.value): Promise<Envelope<T>> {
     const query = { ...params, lang: as }
     try {
-      return await $fetch<Envelope<T>>(`${base}${path}`, { query, timeout: 8000 })
+      return await $fetch<Envelope<T>>(`${base}${path}`, { query, headers, timeout: 8000 })
     }
     catch (err) {
       const status = statusOf(err)

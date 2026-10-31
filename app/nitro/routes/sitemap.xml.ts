@@ -40,15 +40,19 @@ function urlXml(siteUrl: string, entry: Entry): string {
 
 export default defineEventHandler(async (event) => {
   const { public: { apiBase, siteUrl } } = useRuntimeConfig(event)
+  // El cliente real para el rate limit de la API, igual que en useApi (forwardedFor).
+  const xff = event.node.req.headers['x-forwarded-for']
+  const client = (Array.isArray(xff) ? xff.join(', ') : xff) || event.node.req.socket.remoteAddress
+  const opts = { timeout: 5000, headers: client ? { 'x-forwarded-for': client } : undefined }
 
   let projects: Dated[]
   let articles: Dated[]
   let about: Dated
   try {
     const [list, posts, doc] = await Promise.all([
-      $fetch<{ data: Dated[] }>(`${apiBase}/projects`, { timeout: 5000 }),
-      $fetch<{ data: Dated[] }>(`${apiBase}/articles`, { timeout: 5000 }),
-      $fetch<{ data: Dated }>(`${apiBase}/docs/about`, { timeout: 5000 }),
+      $fetch<{ data: Dated[] }>(`${apiBase}/projects`, opts),
+      $fetch<{ data: Dated[] }>(`${apiBase}/articles`, opts),
+      $fetch<{ data: Dated }>(`${apiBase}/docs/about`, opts),
     ])
     projects = list.data
     articles = posts.data

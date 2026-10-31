@@ -152,7 +152,8 @@ function isEditable(target: EventTarget | null): boolean {
   return target instanceof Element && (target.closest(EDITABLE) !== null || (target as HTMLElement).isContentEditable)
 }
 
-const dialogOpen = () => document.querySelector('dialog[open], [role="dialog"][aria-modal="true"]:not(dialog)') !== null
+/** Un diálogo que ya se está cerrando (`data-closing`, la paleta en su animación de salida) no cuenta. */
+const dialogOpen = () => document.querySelector('dialog[open]:not([data-closing]), [role="dialog"][aria-modal="true"]:not(dialog)') !== null
 
 /** j/k: foco a la siguiente o anterior fila o tarjeta visible de la página. Mover el foco no navega. */
 function moveFocus(step: 1 | -1) {

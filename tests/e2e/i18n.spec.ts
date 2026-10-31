@@ -99,13 +99,13 @@ test.describe('en el navegador', () => {
 
   test('el selector de idioma conserva la ruta y los enlaces siguen en inglés', async ({ page }) => {
     await page.goto('/projects/ynara', { waitUntil: 'networkidle' })
-    await page.locator('header[data-chrome] a[hreflang="en"]').first().evaluate((a: HTMLAnchorElement) => a.click())
+    await page.locator('header[data-chrome] a[hreflang="en"]').filter({ visible: true }).first().click()
     await expect(page).toHaveURL(/\/projects\/ynara\?lang=en$/)
     await expect(page.locator('html')).toHaveAttribute('lang', 'en')
     for (const href of await page.locator('header[data-chrome] nav a').evaluateAll(as => as.map(a => a.getAttribute('href')!))) {
       if (!href.startsWith('#')) expect(href).toContain('lang=en')
     }
-    await page.locator('header[data-chrome] a[hreflang="es"]').first().evaluate((a: HTMLAnchorElement) => a.click())
+    await page.locator('header[data-chrome] a[hreflang="es"]').filter({ visible: true }).first().click()
     await expect(page).toHaveURL(/\/projects\/ynara$/)
     await expect(page.locator('html')).toHaveAttribute('lang', 'es')
   })

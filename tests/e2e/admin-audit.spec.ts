@@ -10,7 +10,9 @@ import { api } from './support'
 const token = process.env.PW_ADMIN_TOKEN!
 const auth = { Authorization: `Bearer ${token}` }
 
-interface Job { id: string, title: string, company: string }
+interface Job { id: string, title: string, company: string, match_score: number | null }
+interface Evaluation { ok: boolean, job: Job, match: { score: number, verdict: string } }
+const VERDICTS = ['EXCELENTE_MATCH', 'BUEN_MATCH', 'REGULAR', 'DESCARTAR']
 
 async function firstJob(request: APIRequestContext) {
   const res = await request.get('/api/admin/hunter/jobs', { headers: auth })
@@ -41,6 +43,17 @@ test.describe('Job Hunter', () => {
 
   test('analiza, adapta, previsualiza, imprime en A4 y copia el CV en texto plano', async ({ page, context, request }) => {
     const job = await firstJob(request)
+
+    // Analizar: la evaluación de la vacante (respaldo heurístico contra la base, sin Eros).
+    const evaluated = await request.post(`/api/admin/hunter/jobs/${job.id}/evaluate`, { headers: auth })
+    expect(evaluated.status()).toBe(200)
+    const { match } = await evaluated.json() as Evaluation
+    expect(match.score).toBeGreaterThanOrEqual(0)
+    expect(match.score).toBeLessThanOrEqual(100)
+    expect(VERDICTS).toContain(match.verdict)
+    const listed = (await (await request.get('/api/admin/hunter/jobs', { headers: auth })).json() as Job[]).find(j => j.id === job.id)
+    expect(listed?.match_score).toBe(match.score)
+
     const cv = await api<{ header: { name: string }, experience: { title: string }[] }>(request, '/cv')
     await context.grantPermissions(['clipboard-read', 'clipboard-write'])
     await login(page)
@@ -48,12 +61,9 @@ test.describe('Job Hunter', () => {
     await page.locator('aside button', { hasText: 'Job Hunter' }).click()
     await page.getByText(job.title, { exact: true }).first().click()
 
-    // Analizar: la evaluación de la vacante con el respaldo heurístico.
-    const evaluate = page.getByRole('button', { name: /Evaluar esta vacante/ })
-    if (await evaluate.isVisible()) {
-      await evaluate.click()
-      await expect(evaluate).toBeEnabled({ timeout: 15000 })
-    }
+    // La consola muestra el análisis: puntaje y veredicto de la vacante.
+    await expect(page.getByText(`${match.score}% Match IA`)).toBeVisible()
+    await expect(page.getByText(match.verdict, { exact: true }).first()).toBeVisible()
 
     // Adaptar y previsualizar.
     await page.getByRole('button', { name: 'Generar CV Harvard ATS' }).first().click()

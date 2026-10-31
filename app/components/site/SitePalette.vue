@@ -120,6 +120,7 @@ async function show() {
   // Ctrl+K durante la animación de cierre: se corta y la caja vuelve sin cerrarse.
   if (box.open && closing) {
     closing = false
+    delete box.dataset.closing
     pending = null
     gsap.killTweensOf(box)
     gsap.set(box, { clearProps: 'opacity,transform' })
@@ -143,8 +144,13 @@ async function show() {
 function hide() {
   const box = dialog.value
   if (!box?.open || closing) return
+  // El campo suelta el foco ya: si no, un dialog cerrado lo conserva (sin disparador al que volver) y
+  // se traga las teclas de la página. El foco vuelve al disparador en onClose.
+  input.value?.blur()
   if (prefersReducedMotion()) return box.close()
   closing = true
+  // Para useHotkeys la paleta ya está cerrada: las teclas de la página vuelven a andar durante la salida.
+  box.dataset.closing = ''
   gsap.to(box, { opacity: 0, y: -6, scale: 0.985, duration: isHyperfocus.value ? 0.12 : 0.16, ease: 'power2.in', overwrite: true, onComplete: () => box.close() })
 }
 
@@ -152,6 +158,7 @@ function onClose() {
   const box = dialog.value
   closing = false
   if (box) {
+    delete box.dataset.closing
     gsap.killTweensOf(box)
     gsap.set(box, { clearProps: 'opacity,transform' })
   }
@@ -159,8 +166,11 @@ function onClose() {
   void nuxtApp.callHook('site:overlay', { open: false })
   const entry = pending
   pending = null
-  // Una acción devuelve el foco al disparador; una navegación lo deja a la página nueva.
-  if (!entry?.to && entry?.id !== 'contact') returnTo?.focus()
+  // Una acción devuelve el foco al disparador; una navegación lo deja a la página nueva. Si durante la
+  // salida otra tecla ya movió el foco (una navegación), no se lo saca.
+  const current = document.activeElement
+  const lost = !current || current === document.body || (box?.contains(current) ?? false)
+  if (lost && !entry?.to && entry?.id !== 'contact') returnTo?.focus()
   returnTo = null
   if (entry?.to) void actions.go(entry.to)
   else void entry?.run?.()

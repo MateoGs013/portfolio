@@ -7,9 +7,13 @@
  * proyecto en su propia invocación de Playwright, que levanta una API nueva (con el contador en cero)
  * y la apaga al terminar.
  *
- * Uso: `pnpm test:e2e [filtros de archivo] [--opción=valor]`. Los filtros y las opciones (--grep=…,
- * --project=…) se pasan a Playwright. Con PLAYWRIGHT_BASE_URL no se levanta nada: corre una sola vez
- * contra ese sitio, y reiniciar su API entre specs largas queda a cargo de quien lo levantó.
+ * Uso: `pnpm test:e2e [filtros de archivo] [opciones]`. Los filtros y las opciones (`--grep …`,
+ * `-g …`, `--project=…`) se pasan a Playwright; si no queda ningún test, sale con error. Con
+ * PLAYWRIGHT_BASE_URL no se levanta nada: corre una sola vez contra ese sitio, y reiniciar su API
+ * entre specs largas queda a cargo de quien lo levantó.
+ *
+ * El SSR reenvía el X-Forwarded-For del visitante (useApi): en producción cada visitante tiene su
+ * balde. Acá todo sale de 127.0.0.1, así que la suite sigue necesitando una API nueva por corrida.
  */
 import { spawnSync } from 'node:child_process'
 import { createConnection } from 'node:net'
@@ -65,9 +69,32 @@ function listRuns() {
   return [...runs.values()]
 }
 
+/** Opciones de Playwright que llevan su valor en el argumento siguiente (`--grep foo`, `-g foo`). */
+const WITH_VALUE = new Set(['-g', '--grep', '--grep-invert', '-j', '--workers', '-p', '--project', '--repeat-each', '--retries', '--timeout', '--global-timeout', '--reporter', '--output', '-c', '--config', '--shard', '--trace', '--max-failures', '--test-list'])
+
+/**
+ * Las opciones van a cada corrida tal cual (con su valor, pegado o en el argumento siguiente); los
+ * filtros de archivo y el proyecto solo eligen los pares, que cada corrida fija por su cuenta.
+ */
+function perRunOptions() {
+  const out = []
+  for (let i = 0; i < args.length; i++) {
+    const arg = args[i]
+    if (!arg.startsWith('-')) continue
+    const name = arg.split('=')[0]
+    const value = !arg.includes('=') && WITH_VALUE.has(name) && i + 1 < args.length ? args[++i] : undefined
+    if (name === '--project' || name === '-p') continue
+    out.push(arg, ...(value === undefined ? [] : [value]))
+  }
+  return out
+}
+
 const runs = listRuns()
-// Las opciones van a cada corrida; los filtros de archivo y el proyecto los fija cada par.
-const options = args.filter(arg => arg.startsWith('--') && !arg.startsWith('--project'))
+const options = perRunOptions()
+if (!runs.length) {
+  console.error('Ningún test coincide con esos filtros.')
+  process.exit(1)
+}
 
 if (!process.env.PW_SKIP_BUILD) {
   // El proxy de /api, /media y /admin queda fijo en el build: se compila con el puerto de la prueba.
