@@ -9,7 +9,7 @@ const { toggleHyperfocus } = useSiteActions()
 <template>
   <button
     type="button"
-    class="group inline-flex min-h-6 cursor-pointer items-center gap-2 opacity-72 transition-opacity duration-300 hover:opacity-100 aria-pressed:opacity-100"
+    class="group hit inline-flex min-h-6 cursor-pointer items-center gap-2 opacity-72 transition-opacity duration-300 hover:opacity-100 aria-pressed:opacity-100"
     :aria-pressed="isHyperfocus ? 'true' : 'false'"
     aria-keyshortcuts="h"
     v-on:click="toggleHyperfocus"

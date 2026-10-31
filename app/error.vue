@@ -39,7 +39,7 @@ function goHome() {
       <p class="max-w-[58ch] text-m text-dim">
         {{ t(`${key}.body`) }}
       </p>
-      <a :href="home" class="w-fit text-m text-ink underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-sig-text" @click.prevent="goHome">
+      <a :href="home" class="hit w-fit text-m text-ink underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-sig-text" @click.prevent="goHome">
         {{ t('error.home') }}
       </a>
     </section>

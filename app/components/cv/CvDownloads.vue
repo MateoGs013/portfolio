@@ -15,13 +15,13 @@ const other = computed(() => {
 </script>
 
 <template>
-  <ul v-if="active || other" data-chrome class="no-print flex flex-wrap items-center gap-x-6 gap-y-2 text-s">
+  <ul v-if="active || other" data-chrome class="no-print flex flex-wrap items-center gap-x-6 gap-y-2 text-s coarse:gap-y-6">
     <li v-if="active">
       <a
         :href="active.href"
         :download="active.name"
         :title="t('cv.downloadHint', { file: active.name })"
-        class="inline-flex items-center gap-2 text-ink"
+        class="hit inline-flex items-center gap-2 text-ink"
       >
         <AppIcon name="download" :size="15" class="text-dim" />
         <span class="roll"><span :data-t="t('cv.download')">{{ t('cv.download') }}</span></span>
@@ -33,7 +33,7 @@ const other = computed(() => {
         :download="other.file.name"
         :hreflang="other.lang"
         :lang="other.lang"
-        class="inline-flex text-dim transition-colors duration-300 hover:text-ink focus-visible:text-ink"
+        class="hit inline-flex text-dim transition-colors duration-300 hover:text-ink focus-visible:text-ink"
       >
         <span class="roll"><span :data-t="other.label">{{ other.label }}</span></span>
       </a>

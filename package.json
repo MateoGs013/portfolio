@@ -23,6 +23,7 @@
     "db:seed": "tsx server/src/seed.ts",
     "db:snapshot": "tsx server/src/scripts/snapshot.ts",
     "db:snapshot:check": "tsx server/src/scripts/snapshot-check.ts",
+    "cv:pdf": "node scripts/cv-pdf.mjs",
     "test:e2e": "node tests/e2e/run.mjs",
     "postinstall": "prisma generate && nuxt prepare"
   },

@@ -25,7 +25,7 @@ const preview = useTemplateRef<{ show: (index: number, e: PointerEvent) => void,
       <h2 id="obra-seleccionada">
         {{ t('home.featured') }}
       </h2>
-      <NuxtLink :to="localeRoute('/projects')" class="text-ink">
+      <NuxtLink :to="localeRoute('/projects')" class="hit text-ink">
         <RollText :text="t('home.allWork', { n: projects.length })" />
       </NuxtLink>
     </div>

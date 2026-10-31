@@ -47,7 +47,7 @@ El HTML de la primera respuesta trae el contenido completo y se navega con enlac
 
 - [ ] `document.documentElement.scrollWidth <= clientWidth` en 320, 375, 768, 1440 y 2560 px.
 - [ ] Debajo de 768 px: galería en columna, captura estática, caso a una columna, utilidades de la cabecera en un `<details>` que funciona sin JS.
-- [ ] Áreas táctiles de 44 × 44 px como mínimo. El email no se corta (`white-space: nowrap`, nunca `break-all`).
+- [ ] Áreas táctiles de 44 × 44 px como mínimo con puntero grueso: los controles chicos llevan la utilidad `hit` (una capa transparente centrada, sin mover el layout) o `size-11` con margen negativo si ya son `absolute`, y la variante `coarse:` separa los que se pisarían. Solo quedan fuera los enlaces en línea dentro de un texto (la hoja del CV, un párrafo de artículo). El email no se corta (`white-space: nowrap`, nunca `break-all`).
 
 ## 7. Degradación elegante (`NULL` o base caída)
 
@@ -59,4 +59,10 @@ El HTML de la primera respuesta trae el contenido completo y se navega con enlac
 - [ ] `/about?cv=ats` en emulación `print`: la hoja mide entre 248 y 265 mm (90–96 % de los 276 mm imprimibles) y no hay segunda página.
 - [ ] Un único `@page { size: A4; margin: 10.5mm 12mm }` en el CSS de `app/`; se ocultan `[data-chrome]`, `[data-hf="hide"]` y `[data-ornament]`, se resetea `[data-motion]` y `[data-hf="measure"]` se imprime (sin el límite de 68ch).
 - [ ] Cuerpo y viñetas entre 9,2 y 9,5 pt.
-- [ ] Los dos PDF de `public/cv/` (`CV-ES-…-ATS.pdf`, `CV-EN-…-ATS.pdf`) tienen exactamente una página y las URL sin `-ATS` redirigen a ellos.
+- [ ] Los dos PDF de `public/cv/` (`CV-ES-…-ATS.pdf`, `CV-EN-…-ATS.pdf`) tienen exactamente una página y las URL sin `-ATS` redirigen a ellos (`pnpm cv:pdf` los regenera con la misma cota).
+
+## Cómo se verifica
+
+- `pnpm typecheck`, `pnpm lint` y `pnpm test:e2e` (con `PW_WEB_PORT`/`PW_API_PORT` propios en un worktree): a11y, teclado, sin JS, movimiento, CLS, Hiperfoco, registro, i18n, SEO, rutas, media y literales prohibidos.
+- Capturas de referencia: `tests/e2e/visual.spec.ts` compara las cinco vistas en 375, 768 y 1440 px y en los dos temas. Si el cambio de diseño es buscado, se regeneran con `pnpm test:e2e visual --update-snapshots`, se miran una por una y se commitean.
+- Lighthouse local sobre el build (`pnpm dlx lighthouse` contra `pnpm start`), home y caso de La Rúcula: Accesibilidad 100 y CLS 0 en móvil y escritorio. Las cifras quedan en `docs/fases.md`.

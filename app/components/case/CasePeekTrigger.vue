@@ -56,7 +56,7 @@ function onClick() {
       :aria-expanded="open"
       :aria-describedby="descId"
       :class="buttonClass"
-      class="inline-grid size-6 shrink-0 cursor-pointer place-items-center rounded-full text-faint transition-[color,rotate] duration-300 ease-expo hover:text-ink aria-expanded:rotate-45 aria-expanded:text-ink fine:not-focus-visible:sr-only"
+      class="inline-grid size-6 shrink-0 cursor-pointer coarse:-my-2.5 coarse:-me-2.5 coarse:size-11 place-items-center rounded-full text-faint transition-[color,rotate] duration-300 ease-expo hover:text-ink aria-expanded:rotate-45 aria-expanded:text-ink fine:not-focus-visible:sr-only"
       @click="onClick"
     >
       <svg aria-hidden="true" viewBox="0 0 12 12" class="size-2.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">

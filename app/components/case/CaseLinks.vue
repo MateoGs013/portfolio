@@ -54,7 +54,7 @@ const sentence = (label: string) => label.charAt(0).toLocaleUpperCase(lang.value
       <button
         type="button"
         aria-keyshortcuts="r"
-        class="inline-flex min-h-6 cursor-pointer items-center text-s text-dim transition-colors duration-300 hover:text-ink"
+        class="hit inline-flex min-h-6 cursor-pointer items-center text-s text-dim transition-colors duration-300 hover:text-ink"
         @click="toggleRecord"
       >
         <RollText :text="t(isRecord ? 'record.toDesign' : 'case.asRecord')" />

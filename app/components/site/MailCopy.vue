@@ -63,7 +63,7 @@ onBeforeUnmount(() => {
       <slot />
       <button
         type="button"
-        class="inline-flex min-h-6 cursor-pointer items-center text-s text-dim transition-[color] duration-300 hover:text-ink"
+        class="hit inline-flex min-h-6 cursor-pointer items-center text-s text-dim transition-[color] duration-300 hover:text-ink"
         v-on:click="copy"
       >
         <RollText :text="copied ? t('shell.copied') : t('shell.copyEmail')" />
@@ -73,7 +73,7 @@ onBeforeUnmount(() => {
       ref="mail"
       v-magnet="0.12"
       :href="`mailto:${email}`"
-      class="mt-4 inline-block max-w-full whitespace-nowrap text-display-mail text-ink"
+      class="hit mt-4 inline-block max-w-full coarse:mt-6 whitespace-nowrap text-display-mail text-ink"
       :style="fit"
     >
       <span class="sr-only">{{ email }}</span>

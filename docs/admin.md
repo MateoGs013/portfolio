@@ -6,7 +6,7 @@ Este documento establece la visión técnica, el diseño de interacción (UX/UI)
 
 ## 1. La Tesis del Admin
 
-El portafolio se fundamenta en un modelo de contenido único y relacional: **un solo modelo relacional servido sobre PostgreSQL 17 que alimenta el explorador interactivo, el modo Focus/Hiperfoco y las representaciones de perfil profesional**. Cero duplicación.
+El portafolio se fundamenta en un modelo de contenido único y relacional: **un solo modelo relacional servido sobre PostgreSQL 17 que alimenta el sitio público (inicio, obra, caso, sobre mí y artículos, cada uno con su vista de registro), el modo Focus/Hiperfoco y las representaciones de perfil profesional**. Cero duplicación.
 
 El panel de administración es el **taller de trastienda** donde ese modelo se gestiona y enriquece:
 1. **Fuente de verdad unificada:** Cada proyecto, experiencia laboral, tecnología o documento se redacta una sola vez. No existen silos fragmentados.

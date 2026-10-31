@@ -52,7 +52,7 @@ onBeforeUnmount(() => document.removeEventListener('pointerdown', onPointerDown)
     <summary
       ref="summary"
       :aria-label="t('shell.prefs')"
-      class="inline-flex size-8 cursor-pointer list-none items-center justify-center rounded-sm [&::-webkit-details-marker]:hidden supports-[selector(::details-content)]:md:hidden"
+      class="-m-1.5 inline-flex size-11 cursor-pointer list-none items-center justify-center rounded-sm [&::-webkit-details-marker]:hidden supports-[selector(::details-content)]:md:hidden"
     >
       <AppIcon :name="open ? 'close' : 'menu'" :size="18" />
     </summary>
@@ -66,7 +66,7 @@ onBeforeUnmount(() => document.removeEventListener('pointerdown', onPointerDown)
         type="button"
         aria-haspopup="dialog"
         aria-keyshortcuts="Control+K Meta+K /"
-        class="inline-flex min-h-6 cursor-pointer items-center gap-2 opacity-72 transition-opacity duration-300 hover:opacity-100"
+        class="hit inline-flex min-h-6 cursor-pointer items-center gap-2 opacity-72 transition-opacity duration-300 hover:opacity-100"
         v-on:click="goto"
       >
         <RollText :text="t('shell.goto')" />

@@ -39,13 +39,13 @@ function onContact(e: MouseEvent) {
 <template>
   <header
     data-chrome
-    class="fixed inset-x-0 top-0 z-40 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-6 gap-y-1 px-pad py-[calc(var(--pad)*0.6)] text-s text-white mix-blend-difference has-[details[open]]:text-ink has-[details[open]]:mix-blend-normal md:flex md:justify-between"
+    class="fixed inset-x-0 top-0 z-40 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-6 gap-y-1 px-pad coarse:gap-y-6 py-[calc(var(--pad)*0.6)] text-s text-white mix-blend-difference has-[details[open]]:text-ink has-[details[open]]:mix-blend-normal md:flex md:justify-between"
   >
     <NuxtLink
       :to="home"
       :aria-current="route.path === '/' ? 'page' : undefined"
       :lang="langAttr(about.data.value, 'display_name')"
-      class="w-fit font-display"
+      class="hit w-fit font-display"
     >
       {{ brand ?? t('nav.home') }}
     </NuxtLink>
@@ -57,7 +57,7 @@ function onContact(e: MouseEvent) {
             :to="link.to"
             data-travel="nav"
             :aria-current="link.current"
-            class="inline-flex min-h-6 items-center opacity-72 transition-opacity duration-300 hover:opacity-100 aria-[current]:opacity-100"
+            class="hit inline-flex min-h-6 items-center opacity-72 transition-opacity duration-300 hover:opacity-100 aria-[current]:opacity-100"
           >
             <RollText :text="link.label" travel />
           </NuxtLink>
@@ -65,7 +65,7 @@ function onContact(e: MouseEvent) {
         <li>
           <a
             :href="contactHref"
-            class="inline-flex min-h-6 items-center opacity-72 transition-opacity duration-300 hover:opacity-100"
+            class="hit inline-flex min-h-6 items-center opacity-72 transition-opacity duration-300 hover:opacity-100"
             v-on:click="onContact"
           >
             <RollText :text="t('nav.contact')" />

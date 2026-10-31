@@ -110,18 +110,17 @@ Lo que dejó para la Fase 3: DATOS ya resuelve todos los niveles en una sola col
 
 ---
 
-## Fase 7 — Piso de calidad
+## Fase 7 — Piso de calidad ✅ reemplazada por R7 (31-oct-2026)
 
-Correr `/piso-calidad`. No cerrar con bloqueantes abiertos.
+La fase quedó pendiente con el explorador y se cerró como **R7** del rediseño «movimiento» (abajo), sobre el sitio nuevo. DATOS ya no existe: las cifras de Lighthouse quedan anotadas en R7 y publicarlas como métrica del sitio necesita una medición en producción, que solo corre Mateo.
 
-- [ ] Sin JS
-- [ ] Solo teclado
-- [ ] Lector de pantalla
-- [ ] Reduced motion
-- [ ] CLS en cero
-- [ ] Responsive hasta 320px
-- [ ] Degradación de contenido
-- [ ] Métricas propias expuestas como contenido en DATOS
+- [x] Sin JS
+- [x] Solo teclado
+- [x] Lector de pantalla
+- [x] Reduced motion
+- [x] CLS en cero
+- [x] Responsive hasta 320px
+- [x] Degradación de contenido
 
 ---
 
@@ -134,3 +133,43 @@ Correr `/piso-calidad`. No cerrar con bloqueantes abiertos.
 - [x] Rediseño de la consola de administración (`/admin`) a estándares 2026 (sin emojis, layout desktop elástico, editor visual de métricas).
 - [x] Job Hunter AI con evaluación de vacantes (Gemini), redacción de pitch y generador de CV Harvard ATS adaptado.
 - [x] Infraestructura en producción consolidada en **Hostinger VPS mediante Coolify** (PostgreSQL 17, Dockerfiles multi-stage y Traefik SSL).
+
+---
+
+## Rediseño «movimiento» (R0–R7) ✅ cerrado el 31-oct-2026
+
+Plan en `docs/rediseno/plan.md` y `docs/rediseno/implementacion.md`, paquetes en `docs/rediseno/paquetes.json`, nueve olas integradas en la rama `rediseno/movimiento`. Todo se verificó en local; producción espera el OK de Mateo y el orden de parches de `implementacion.md`.
+
+- [x] **R0 · Fuente única** — `docs/diseno.md` (D0): reglas, tokens, anclas del DOM, Hiperfoco, política de movimiento, teclas y rutas. `AGENTS.md` y las skills apuntan ahí.
+- [x] **R1 · Datos** — D1 a D5: `Metric` tipada, tablas `*Translation` (ES y EN desde la base), visibilidad por `publishedAt` (seis obras), capturas y videos versionados, API pública con envoltura `{ data, meta }`, `/api/cv` y respaldos generados (`pnpm db:snapshot`, `db:snapshot:check`). Cero contenido escrito a mano en `app/` (`tests/e2e/data.spec.ts`).
+- [x] **R2 · Tokens** — F2: `@theme` con los tokens de `diseno.md`, un corte de 768 px, contraste AA en los dos temas y en Hiperfoco (`scripts/check-contrast.mjs`).
+- [x] **R3 · Shell** — F3 y F4: cabecera, pie, paleta «Ir a», teclas, sonido apagado por defecto, Lenis, GSAP y view transitions con elementos compartidos.
+- [x] **R4 · Modo registro** — F5 y X2: `RecordField`/`RecordValue`/`RecordTable`, `?vista=registro` desde el SSR y el morph de `R`.
+- [x] **R5 · Páginas** — P1 a P5: inicio con cargador y vista previa, obra con galería horizontal, caso con captura que crece y Asomar, sobre mí con trayectoria y CV Harvard ATS, artículos. X1 (Hiperfoco) y X3 (SEO, CSP, OG).
+- [x] **R6 · Lab** — `/lab` y el visor IDE archivados en `docs/archive/lab/`; sus rutas redirigen con 301.
+- [x] **R7 · Piso de calidad** — Q1 (suite e2e por ancho, tema, reduced motion y sin JS) y Q2 (abajo).
+
+### R7 · Auditoría del 31-oct-2026
+
+`/piso-calidad` sobre `/`, `/projects`, `/projects/la-rucula`, `/about`, `/about?cv=ats` y los artículos, en 320, 375, 768, 1440 y 2560 px, en los dos temas, contra el build local:
+
+- Sin scroll horizontal, un solo `h1`, una sola región `aria-live`, el email en una línea y sin errores de consola en ninguna combinación.
+- Con la base caída (API apuntando a una base que no existe), la API responde desde el snapshot (`meta.source: 'snapshot'`) y las seis páginas salen 200 desde el SSR.
+- **Bloqueantes corregidos:**
+  - Áreas táctiles: los controles medían 18–24 px de alto en táctil. La utilidad `hit` y la variante `coarse:` (`app/assets/css/base.css`) los llevan a 44 × 44 px sin mover el layout de escritorio (cabecera, utilidades, idioma, tema, Hiperfoco, pie, facetas, caso, Asomar, trayectoria, CV, artículos, error).
+  - Contraste de las palabras que se encienden: nacían en opacidad .16 (1,5:1). El piso pasa a .5 (`ScrubWords.vue`): 4,7:1 en oscuro y 3,4:1 en claro, sobre el 3:1 del texto grande.
+  - Paleta con reduced motion: el cierre es inmediato y su evento `close` llegaba después de que `/` la volviera a abrir, y la cerraba (la suite lo marcó en `keyboard.spec.ts`). Un `close` viejo con el diálogo ya abierto se ignora (`SitePalette.vue`).
+  - CLS de la primera visita: el contador del cargador, alineado a la derecha en una caja de `3ch`, se corría al llegar General Sans (0,000007). Ahora es una caja fija de 2 em con el número desde su borde izquierdo (`IntroLoader.vue`).
+- Capturas de referencia versionadas: `tests/e2e/visual.spec.ts`, 5 vistas × 3 anchos × 2 temas (30 capturas en `tests/e2e/visual.spec.ts-snapshots/`), quietas (reduced motion, animaciones CSS apagadas, reloj de la página fijo). Pasan dos veces seguidas.
+- `server/admin/admin.css` recompilado con `source(none)`: el Tailwind del admin ya no lee `app/` ni otras copias del repo.
+
+**Lighthouse 13.6 local** (build de producción con `pnpm start`, Chrome 156, sin datos de campo):
+
+| Página | Perfil | Performance | Accesibilidad | Buenas prácticas | SEO | CLS | LCP |
+|---|---|---|---|---|---|---|---|
+| `/` | móvil (por defecto) | 97 | 100 | 100 | 100 | 0 | 1,4 s |
+| `/` | escritorio | 100 | 100 | 100 | 100 | 0 | 0,3 s |
+| `/projects/la-rucula` | móvil (por defecto) | 55 | 100 | 100 | 100 | 0 | 6,4 s |
+| `/projects/la-rucula` | escritorio | 95 | 100 | 100 | 100 | 0 | 1,3 s |
+
+El caso en móvil simulado (CPU ×4) es lo único flojo: 3,9 s de estilo y layout en el hilo principal durante la hidratación (escenas de GSAP, SplitText y ScrollTrigger) retrasan el pintado de la portada. Queda como trabajo siguiente; no afecta CLS ni accesibilidad.

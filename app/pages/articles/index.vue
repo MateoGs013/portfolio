@@ -56,7 +56,7 @@ useHead({
       />
       <p v-if="filtered" class="flex flex-wrap gap-x-6 gap-y-1 text-s text-dim">
         <span v-if="stackName">{{ t('articles.filtered', { name: stackName }) }}</span>
-        <NuxtLink :to="localeRoute('/articles')" class="text-ink">
+        <NuxtLink :to="localeRoute('/articles')" class="hit text-ink">
           <RollText :text="t('articles.clear')" />
         </NuxtLink>
       </p>

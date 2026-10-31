@@ -76,12 +76,12 @@ watch(active, () => {
 
 <template>
   <nav ref="root" :aria-label="t('work.filters')">
-    <ul class="flex flex-wrap items-baseline gap-x-6 gap-y-3 text-s">
+    <ul class="flex flex-wrap items-baseline gap-x-6 gap-y-3 text-s coarse:gap-y-6">
       <li v-for="f in facets" :key="f.id">
         <NuxtLink
           :to="f.to"
           :aria-current="f.current ? 'page' : undefined"
-          class="relative inline-block text-dim no-underline transition-colors duration-300 ease-expo hover:text-ink aria-[current=page]:text-ink"
+          class="hit inline-block text-dim no-underline transition-colors duration-300 ease-expo hover:text-ink aria-[current=page]:text-ink"
         >
           <RollText :text="f.label" />
           <span
@@ -95,7 +95,7 @@ watch(active, () => {
       <li v-if="stack && stackName" class="ms-2 border-s border-rule ps-6">
         <NuxtLink
           :to="withQuery('stack')"
-          class="inline-flex items-center gap-2 text-ink no-underline"
+          class="hit inline-flex items-center gap-2 text-ink no-underline"
         >
           <RollText :text="t('work.stack', { name: stackName })" />
           <span class="sr-only">{{ t('work.clearStack') }}</span>

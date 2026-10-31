@@ -105,6 +105,23 @@
 @custom-variant dark (&:where(:root:not([data-theme='light']), :root:not([data-theme='light']) *));
 /* Atenuar, vista previa, burbuja e imanes: solo con puntero fino. */
 @custom-variant fine (@media (hover: hover) and (pointer: fine));
+/* Táctil: áreas de 44 px y aire entre controles que, si no, se pisarían. */
+@custom-variant coarse (@media (pointer: coarse));
+
+/* Área táctil de 44 × 44 px (piso de calidad §6) sin mover el layout: con puntero grueso, una capa
+   transparente centrada en el control crece hasta 44 px en el eje que le falte. El control es su
+   propio contenedor de posición: no va en uno absolute (ahí, size-11 con margen negativo). */
+@utility hit {
+  position: relative;
+
+  @media (pointer: coarse) {
+    &::after {
+      content: '';
+      position: absolute;
+      inset: min(0px, calc(50% - 22px));
+    }
+  }
+}
 
 /* Máscara de una línea que se revela: deja lugar a los descendentes. */
 @utility ln {
