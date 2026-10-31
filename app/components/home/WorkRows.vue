@@ -44,7 +44,7 @@ const dim = 'fine:not-focus-mode:group-hover/rows:not-hover:opacity-25'
 
 <template>
   <ul class="group/rows border-b border-rule" @pointerleave="emit('leave')">
-    <li v-for="(p, i) in projects" :key="p.slug">
+    <li v-for="(p, i) in projects" :key="p.slug" :data-f="p.slug">
       <NuxtLink
         :to="localeRoute(`/projects/${p.slug}`)"
         data-travel="row"
@@ -56,7 +56,8 @@ const dim = 'fine:not-focus-mode:group-hover/rows:not-hover:opacity-25'
         <span class="min-w-0 text-display-row focus-mode:text-xl">
           <span
             data-travel-title
-            class="transition-transform duration-700 ease-expo fine:not-focus-mode:group-hover/row:translate-x-[1.2rem]"
+            data-f="title"
+            class="fv transition-transform duration-700 ease-expo fine:not-focus-mode:group-hover/row:translate-x-[1.2rem]"
           >{{ p.title }}</span>
         </span>
         <span class="col-start-1 mt-2 text-s text-dim md:col-start-2 md:row-start-1 md:mt-0 md:pl-8 md:text-right">

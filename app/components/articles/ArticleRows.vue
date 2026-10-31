@@ -17,7 +17,7 @@ const { t, localeRoute, langAttr } = useLocale()
 
 <template>
   <ul class="group/rows flex flex-col border-b border-rule">
-    <li v-for="a in articles" :key="a.slug">
+    <li v-for="a in articles" :key="a.slug" :data-f="a.slug">
       <NuxtLink
         :to="localeRoute(`/articles/${a.slug}`)"
         data-row
@@ -28,7 +28,8 @@ const { t, localeRoute, langAttr } = useLocale()
           <span class="max-w-[24ch] text-display-row text-balance focus-mode:max-w-none focus-mode:text-xl">
             <span
               data-travel-title
-              class="transition-transform duration-700 ease-expo fine:group-hover/row:translate-x-[1.2rem]"
+              data-f="title"
+              class="fv transition-transform duration-700 ease-expo fine:group-hover/row:translate-x-[1.2rem]"
               :lang="langAttr(a, 'title')"
             >{{ a.title }}</span>
           </span>

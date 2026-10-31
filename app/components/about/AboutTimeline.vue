@@ -103,12 +103,13 @@ useMotion(list, ({ el, ambient }) => {
       <li
         v-for="e in entries"
         :key="e.slug"
+        :data-f="e.slug"
         data-motion
         class="grid gap-x-6 gap-y-1 border-t border-rule py-6 md:grid-cols-[9.5rem_minmax(0,1fr)] @min-[44rem]:grid-cols-[9.5rem_minmax(0,1fr)_minmax(0,1.3fr)] focus-mode:@min-[44rem]:grid-cols-[9.5rem_minmax(0,1fr)]"
       >
         <span class="text-s whitespace-nowrap text-dim tabular-nums">{{ period(e.startedAt, e.endedAt, lang) }}</span>
         <div class="flex flex-col gap-1">
-          <h3 class="text-l font-title text-ink" :lang="langAttr(e, 'role')">
+          <h3 data-f="role" class="fv text-l font-title text-ink" :lang="langAttr(e, 'role')">
             {{ e.role }}
           </h3>
           <p v-if="meta(e)" class="text-s text-dim">

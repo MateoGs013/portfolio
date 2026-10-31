@@ -35,6 +35,7 @@ const DOT: Record<ProjectStatus, string> = { LIVE: 'bg-ok', WIP: 'bg-wip', ARCHI
     data-card
     data-view
     data-travel="card"
+    :data-f="project.slug"
     :data-tint="tint"
     class="block text-ink no-underline"
   >
@@ -67,11 +68,11 @@ const DOT: Record<ProjectStatus, string> = { LIVE: 'bg-ok', WIP: 'bg-wip', ARCHI
         </div>
       </div>
       <div class="mt-4 flex items-baseline justify-between gap-4">
-        <span data-travel-title class="text-xl">{{ project.title }}</span>
-        <span class="text-s whitespace-nowrap text-dim tabular-nums">{{ project.year }}</span>
+        <span data-travel-title data-f="title" class="fv text-xl">{{ project.title }}</span>
+        <span data-f="year" class="fv text-s whitespace-nowrap text-dim tabular-nums">{{ project.year }}</span>
       </div>
       <p class="mt-1.5 text-s text-dim">
-        <span data-ornament aria-hidden="true" class="me-2 inline-block size-1.75 rounded-full align-[0.08em]" :class="DOT[project.status]" />{{ t(`status.${project.status}`) }} · <span :lang="langAttr(project, 'role')">{{ project.role }}</span>
+        <span data-ornament aria-hidden="true" class="me-2 inline-block size-1.75 rounded-full align-[0.08em]" :class="DOT[project.status]" /><span data-f="status" class="fv">{{ t(`status.${project.status}`) }}</span> · <span :lang="langAttr(project, 'role')">{{ project.role }}</span>
       </p>
     </div>
   </NuxtLink>
