@@ -1,0 +1,828 @@
+{
+ "nota": "Paquetes del rediseño del admin: plan final del workflow de auditoría (crítica aplicada).",
+ "packages": [
+  {
+   "id": "A0",
+   "title": "Sistema base: Vite, tokens, fuentes, componentes y guardarraíles",
+   "goal": "Levantar el admin nuevo en /admin-next sobre Vite + SFC + TypeScript + Tailwind v4 con base absoluta, tokens del sitio, fuentes locales, componentes base accesibles, cliente de API y los chequeos que impiden volver a los tics. Bloqueado hasta que Mateo responda la pregunta 1 (si responde 'sin build', se aplica el plan B de la sección 4).",
+   "files": [
+    "package.json",
+    "pnpm-lock.yaml",
+    ".gitignore",
+    "eslint.config.mjs",
+    "Dockerfile.api",
+    "nuxt.config.ts",
+    "server/src/app.ts",
+    "server/src/admin/uiNext.ts",
+    "server/admin/vite.config.ts",
+    "server/admin/tsconfig.json",
+    "server/admin/src/index.html",
+    "server/admin/src/main.ts",
+    "server/admin/src/App.vue",
+    "server/admin/src/env.d.ts",
+    "server/admin/src/styles/tokens.css",
+    "server/admin/src/styles/fonts.css",
+    "server/admin/src/styles/admin.css",
+    "server/admin/src/assets/fonts/",
+    "server/admin/src/ui/",
+    "server/admin/src/api/client.ts",
+    "server/admin/src/api/errors.ts",
+    "server/admin/src/stores/toasts.ts",
+    "server/admin/src/stores/dialogs.ts",
+    "server/admin/src/composables/useAsyncAction.ts",
+    "server/admin/src/composables/useClipboard.ts",
+    "server/admin/src/composables/usePlatform.ts",
+    "server/admin/src/composables/useId.ts",
+    "scripts/admin-checks.mjs",
+    "scripts/check-admin-style.mjs",
+    "scripts/check-admin-contrast.mjs",
+    "docs/decisiones.md"
+   ],
+   "dependsOn": [],
+   "wave": 1,
+   "steps": [
+    "Devdeps vite y @vitejs/plugin-vue (versiones del lockfile). Scripts: build:admin (vite build -c server/admin/vite.config.ts), dev:admin (vite en :3002 con proxy de /api a :3001); typecheck suma vue-tsc -p server/admin/tsconfig.json --noEmit; lint pasa a `eslint . && node scripts/admin-checks.mjs` (admin-checks corre cada scripts/check-admin-*.mjs que exista, así D1 suma el suyo sin tocar package.json). build:api corre build:admin-css y build:admin mientras conviva el legado.",
+    "vite.config.ts: root server/admin/src, outDir server/admin/dist (en .gitignore), base = process.env.ADMIN_BASE ?? '/admin-next/' (absoluta, nunca './'), plugins vue() y tailwindcss(). tsconfig strict con paths a ../../src/shared para import type.",
+    "Dockerfile.api: `RUN pnpm build:admin-css && pnpm build:admin && pnpm prisma generate` (la etapa deps ya instala devDeps).",
+    "styles/tokens.css con los tokens de la sección 2 en :root[data-theme=dark] más --e, mapeados en @theme (--color-*, --text-meta/label/body/row/title/figure con line-height, --radius-control 6px, --radius-dialog 10px, --radius-media 3px); valores claros del sitio declarados en :root[data-theme=light] sin activar.",
+    "fonts.css: @font-face local de General Sans Variable (copiada de app/assets/fonts con licencia) y Martian Mono desde @fontsource-variable/martian-mono, font-display swap; precarga en index.html (<html lang=\"es\" data-theme=\"dark\">).",
+    "admin.css: `@import 'tailwindcss' source(none); @source './**/*.{vue,ts,html}';`, body en --bg/--ink 14/1.45 peso 420, :focus-visible global (2px --sig-text, offset 2px), bloque prefers-reduced-motion que anula transiciones y animaciones, sin user-select global.",
+    "ui/ (cada archivo 300 líneas o menos): Button (primary, secondary, ghost, danger; 32/36 px; loading con ancho fijo y aria-busy), IconButton (aria-label obligatorio), Field (ids, label for, hint --faint, error --danger, contador, obligatorio, aria-describedby/aria-invalid), TextInput, TextArea (prosa 15/1.6, 68ch, autosize), Select, Switch role=switch, RadioGroup, Tabs WAI-ARIA con activación manual y marcas, Listbox (roving tabindex, flechas, Inicio/Fin, tecleo, Enter), Dialog sobre <dialog> showModal (foco inicial configurable y devuelto, Esc, fondo inert), ConfirmDialog (Cancelar primero si es destructivo, lista de impacto), Menu ARIA, Announcer (polite y assertive montadas desde el arranque; errores no se cierran solos), EmptyState, ErrorState con Reintentar, Skeleton, StatusDot (punto + palabra), Kbd (⌘ o Ctrl), Mono, Icon con set cerrado (buscar, cerrar, más, basura, externo, flechas, check, arrastrar, ojo, ojo tachado, subir, copiar), Spinner que bajo reduced motion pasa a texto.",
+    "ui/Muestrario.vue solo con import.meta.env.DEV en #/muestrario: cada componente en reposo, hover, foco, disabled, cargando, error y vacío.",
+    "api/client.ts: fetch con Bearer (sessionStorage), timeout 15 s (60 s en rutas de Eros), AbortController por vista, un reintento en GET, errores clasificados en api/errors.ts (SessionError 401, ServiceError 503 db_unavailable u offline, NetworkError, FieldErrors 400 con errors[{path,message}]), evento 'write' tras cada escritura que sale bien, _source desde X-Eros-Source, diccionario de códigos a español.",
+    "stores/toasts.ts y dialogs.ts (requestConfirm con promesa); composables useAsyncAction, useClipboard (try/catch, respaldo textarea+execCommand, devuelve ok o error), usePlatform y useId.",
+    "server/src/admin/uiNext.ts: GET exacto /admin-next → 301 a /admin-next/; sirve server/admin/dist con caché larga en /assets y no-store en index.html. app.ts lo monta en /admin-next con CSP propia: default/script/style/font 'self', img 'self' data: blob:, connect 'self' https://api.github.com, frame 'self', media 'self' blob:. nuxt.config.ts: '/admin-next' → redirect 301 a '/admin-next/', '/admin-next/**' → proxy a la API; si la prueba de humo muestra dos CSP, override de headers para '/admin-next/**' que deja solo la del admin.",
+    "scripts/check-admin-style.mjs: falla en server/admin/src con [#hex], text-[N, paletas de Tailwind (zinc, emerald, amber, cyan, purple, blue, rose, indigo, sky, violet, red, green, slate, gray, neutral seguidas de -N), ' // ' en <template>, uppercase y tracking-wide*, font-mono fuera de ui/Mono.vue y ui/Kbd.vue, transition-all, atributos style=\"…\" estáticos en plantillas, emojis (\\p{Extended_Pictographic}) y archivos de más de 300 líneas. eslint: max-lines 300 y no-restricted-globals confirm/alert/prompt en server/admin/src.",
+    "scripts/check-admin-contrast.mjs: 4,5:1 para ink, dim, faint, danger y sig-text sobre bg, panel, surface y surface-2; 3:1 para ok y wip; 4,5:1 para #0b0b0c sobre sig; compara bg, ink, dim, faint, sig, ok y wip con app/assets/css/tokens.css y el hash de la fuente copiada con el original.",
+    "docs/decisiones.md: entrada «Rediseño del admin (nov-2026)» con la dirección, los valores de la sección 2, la respuesta a la pregunta 1 y lo descartado."
+   ],
+   "acceptance": [
+    "`pnpm build:admin` genera server/admin/dist con assets referenciados como /admin-next/assets/…; `pnpm lint` y `pnpm typecheck` pasan.",
+    "`node scripts/check-admin-style.mjs` da 0 hallazgos; un .vue de prueba con `class=\"bg-[#121318] uppercase\"` y `style=\"color:red\"` falla con los tres motivos.",
+    "`node scripts/check-admin-contrast.mjs` imprime cada par con su ratio y sale con 0.",
+    "#/muestrario con `pnpm dev:admin`: capturas a 1440 y 390 px; axe (Playwright, script de scratchpad) 0 violaciones serias o críticas; Tabs con flechas, Listbox con ↑↓/Inicio/Fin/Enter, Dialog atrapa y devuelve el foco y cierra con Esc, ConfirmDialog destructivo abre en Cancelar.",
+    "Prueba de humo por el proxy (script de scratchpad): API en un puerto libre 3940–3990 con ADMIN_TOKEN aleatorio, HUNTER_API_URL=http://127.0.0.1:9 y EROS_API_KEY=offline; `NUXT_PUBLIC_API_BASE=http://localhost:<puerto>/api pnpm build` y node .output en otro puerto libre; /admin-next responde 301 a /admin-next/, /admin-next/ carga sin 404 de assets, la respuesta trae una sola cabecera Content-Security-Policy sin unsafe-eval ni unsafe-inline y la consola no registra violaciones; document.fonts muestra General Sans y Martian Mono y no hay pedidos a fontshare ni googleapis. Todo se apaga al terminar.",
+    "Con prefers-reduced-motion emulado, transition-duration de Button y de un aviso ≤ 0,01 ms.",
+    "/admin legado sin cambios: `pnpm test:e2e admin-audit` verde."
+   ]
+  },
+  {
+   "id": "D1",
+   "title": "API del admin: contrato, errores en español, meta real, slugs fijos y arnés de pruebas",
+   "goal": "Contrato de datos único: descriptores de campo, rótulos desde shared, errores por campo en español, /meta con conteos reales, inglés de artículos, slugs que solo cambian con una acción explícita (experiencias y artículos incluidos), catálogos con impacto, y el arnés que separa las pruebas del admin de las del sitio.",
+   "files": [
+    "server/src/admin/router.ts",
+    "server/src/admin/meta.ts",
+    "server/src/admin/status.ts",
+    "server/src/admin/orgs.ts",
+    "server/src/admin/articles.ts",
+    "server/src/admin/techs.ts",
+    "server/src/admin/experience.ts",
+    "server/src/admin/input.ts",
+    "server/src/admin/errors.ts",
+    "server/src/admin/common.ts",
+    "server/src/shared/adminSchema.ts",
+    "server/src/shared/adminContracts.ts",
+    "server/src/shared/labels.ts",
+    "server/src/shared/slug.ts",
+    "server/src/content/present.ts",
+    "server/src/content/translate.ts",
+    "app/lib/dict/common.ts",
+    "scripts/check-admin-schema.mjs",
+    "scripts/admin-db.mjs",
+    "scripts/admin-run.mjs",
+    "playwright.config.ts",
+    "playwright.admin.config.ts",
+    "tests/e2e/run.mjs",
+    "tests/admin/api-contrato.test.ts"
+   ],
+   "dependsOn": [],
+   "wave": 1,
+   "steps": [
+    "Extraer de router.ts meta.ts, orgs.ts, articles.ts y status.ts; router.ts queda con requireAdmin, montaje y forgetLastGood solo en los routers que escriben en Prisma. El static del legado pasa a lista blanca (index.html, admin.css, js/**, vendor/**); cualquier otro archivo de server/admin responde 404.",
+    "shared/labels.ts: rótulos ES de ProjectStatus, ArticleStatus, TechCategory, MediaKind, MediaRole, MediaViewport, ExperienceKind y MetricUnit; lo que ya esté en app/lib/dict se muda acá y el diccionario lo reexporta.",
+    "shared/adminSchema.ts: por modelo y campo {label, help, required, max, kind, translatable, surfaces, editable}, con la ayuda de dónde aparece. scripts/check-admin-schema.mjs parsea prisma/schema.prisma y falla si un campo no tiene entrada.",
+    "input.ts: validación que junta todos los fallos → 400 {error, errors:[{path,message}]} con paths anidados y mensajes desde adminSchema; URL sin protocolo completan https://; firmas de str/slug/optUrl intactas. Helper guardSlugChange(actual, entrante): un PUT con otro slug → 400 «La dirección se cambia con Cambiar dirección».",
+    "errors.ts: P2002, P2003, P2025 y db_unavailable en español.",
+    "meta.ts: GET /meta con enums [{value,label}] (se conservan las claves viejas hasta S1), schema, summary con las reglas de visibility.ts (projects {visible, hidden, scheduled}, articles {published, draft}, experience {total, cv}, stack, orgs) y options (orgs, techs, projects, experiences, articles con id, título, slug y estado).",
+    "status.ts: GET /status {db:{ok, checkedAt}, eros:{state, retryInSec}} con el tipo de los cuatro estados (ok, cooldown, down, unconfigured) en adminContracts; D1 implementa ok/cooldown/down con getCircuitBreakerStatus y H0 completa unconfigured.",
+    "orgs.ts y techs.ts: GET /:id/impact y DELETE ?reassignTo= en transacción; techs con color optHex y since 1990..año actual; guardSlugChange y PATCH /:id/slug.",
+    "articles.ts: withTranslations y saveArticleEn (title, summary, content); nace DRAFT sin publishedAt; slug con shared/slug.ts (ñ→n, acentos→ascii); guardSlugChange y PATCH /articles/:id/slug.",
+    "experience.ts: guardSlugChange y PATCH /experience/:id/slug; viñetas EN del mismo largo que las ES; PATCH /experience/order {ids} escribe cvOrder 1..n y NULL al resto; present.ts y translate.ts sirven el inglés viñeta por viñeta con respaldo y listan 'highlights[i]' en untranslated.",
+    "shared/adminContracts.ts con los tipos de meta, status, colecciones, impact y errores.",
+    "scripts/admin-db.mjs (create|drop: pg_dump | psql desde portfolio a portfolio_admin_<x>, nunca escribe en portfolio) y scripts/admin-run.mjs: crea la base, busca un puerto libre 3940–3990, levanta la API (DATABASE_URL, ADMIN_TOKEN aleatorio no impreso, HUNTER_API_URL=http://127.0.0.1:9, EROS_API_KEY=offline; con --eros-mock arranca tests/admin/eros-mock.ts en otro puerto libre y apunta HUNTER_API_URL ahí; con --demo suma EROS_DEMO=1; con --web compila Nuxt con NUXT_PUBLIC_API_BASE a esa API y lo sirve en otro puerto, exportando ADMIN_WEB_URL), exporta ADMIN_API_URL y PW_ADMIN_TOKEN al hijo y al terminar apaga todo y borra la base aunque falle.",
+    "playwright.config.ts: testIgnore '**/admin-*.spec.ts' (salvo admin-audit.spec.ts) en todos los proyectos del sitio; la API de su webServer suma EROS_DEMO: '1'. playwright.admin.config.ts: sin webServer, testMatch admin-*.spec.ts salvo admin-audit, proyecto 'admin' Desktop Chrome 1440×900, baseURL desde ADMIN_API_URL. tests/e2e/run.mjs: las specs admin-* (salvo admin-audit) se corren una por una con `node scripts/admin-run.mjs -- pnpm exec playwright test -c playwright.admin.config.ts <spec>` y los tests/admin/*.test.ts con node --test dentro de admin-run.",
+    "tests/admin/api-contrato.test.ts (node:test con tsx)."
+   ],
+   "acceptance": [
+    "`node scripts/admin-run.mjs -- pnpm tsx --test tests/admin/api-contrato.test.ts` pasa y `docker exec portfolio-db psql -U portfolio -lqt` no lista bases portfolio_admin_*.",
+    "POST /api/admin/projects con solo título y slug → 400 con errors que incluye role y summary, en español y sin 'string', 'ISO' ni 'campo \"'.",
+    "summary.projects.visible de /meta es igual a meta.count de GET /api/projects (6 en la base local).",
+    "PUT /articles/:id con translations.en.title cambia GET /api/articles/:slug?lang=en; PATCH /articles/:id/slug cambia la dirección y un PUT con otro slug da 400.",
+    "PUT /experience/:id con otro slug → 400; PATCH /experience/:id/slug lo cambia; highlights EN ['', 'only second'] se guardan así y untranslated lista 'highlights[0]'.",
+    "GET /orgs/:id/impact de arg-piscinas lista obras y experiencias; DELETE con reassignTo las mueve.",
+    "Color 'no-es-un-color' o since=1800 → 400 en español.",
+    "`node scripts/check-admin-schema.mjs` sale con 0 y falla nombrando un campo de prueba sin entrada.",
+    "GET /admin/vite.config.ts y /admin/tsconfig.json → 404; /admin/js/app.js → 200.",
+    "`pnpm exec playwright test --list` (config del sitio) no lista ningún admin-*.spec.ts salvo admin-audit; `pnpm test:e2e admin-audit i18n data record` verde; `pnpm lint` y `pnpm typecheck` pasan."
+   ]
+  },
+  {
+   "id": "L0",
+   "title": "Arreglos urgentes y preparación del admin actual",
+   "goal": "Cerrar en el admin en producción los fallos que rompen datos o pierden trabajo y prepararlo para los cambios de API de H0 (409 del CV, vacante en el cuerpo, dev-token), porque sigue en uso hasta S1.",
+   "files": [
+    "server/admin/js/store.js",
+    "server/admin/js/app.js",
+    "server/admin/js/api.js",
+    "server/admin/js/components/AdmEditor.js",
+    "server/admin/js/components/AdmExplorer.js",
+    "server/admin/js/components/AdmLogin.js",
+    "server/admin/js/components/AdmJobHunter.js",
+    "server/admin/js/components/forms/ProjectForm.js",
+    "server/admin/js/components/forms/ExperienceForm.js",
+    "server/admin/js/components/forms/ArticleForm.js"
+   ],
+   "dependsOn": [],
+   "wave": 1,
+   "steps": [
+    "store.loadSection guarda formSection con el form; ante un GET fallido vacía rows, current y form y muestra el error; AdmEditor.save se niega si formSection no coincide con section.",
+    "checkDirtyDiscard devuelve un booleano y loadSection hace return si no se confirma (sin doble carga).",
+    "Ctrl+N pasa por checkDirtyDiscard y llama a la acción del store; en el Panel Principal no hace nada.",
+    "selectRecord deja slugLocked=false en obras, experiencias y artículos existentes: el slug ya no sigue al título ni al cargo.",
+    "AdmEditor.save aplica la respuesta guardada (isNew=false) y refresca la lista aparte («Se guardó; no pudimos actualizar la lista»); no reselecciona si el usuario abrió otro registro.",
+    "AdmJobHunter: copias al portapapeles con try/catch y aviso; el toast de escaneo lee scanned_count además de scanned; POST /cv, /pitch y /evaluate mandan la vacante completa en el cuerpo; imprimir, vista previa y copiar ante un 409 vuelven a hacer POST /cv con la vacante y reintentan una vez.",
+    "store: nunca persistir en localStorage filas _source 'fallback' o 'demo'; logout y 401 borran eros_hunter_jobs.",
+    "api.js: un solo mensaje ante un 401. AdmLogin.js: se quita el botón «dev-token rápido».",
+    "Docs: se ocultan Eliminar, Duplicar y + Nuevo en Páginas y Textos."
+   ],
+   "acceptance": [
+    "Recorrido Playwright (script de scratchpad con `node scripts/admin-run.mjs` en una copia; si D1 aún no está integrado, el mismo procedimiento manual de copia y puerto 3940–3990): con 503 interceptado en GET /api/admin/projects, entrar a Obras desde Experiencia y Ctrl+S → ningún PUT (page.on('request')).",
+    "Agregar ' Bar' al título de La Rúcula y guardar → el slug sigue siendo 'la-rucula'; cambiar el cargo de una experiencia → su slug no cambia.",
+    "Con cambios, Ctrl+N abre el diálogo de descartar y Esc conserva la edición.",
+    "Con navigator.clipboard.writeText rechazado, Copiar ATS muestra un aviso de error visible.",
+    "Interceptar la primera GET /cv/:id/html con 409 → el cliente hace un POST /cv con la vacante en el cuerpo y la hoja abre.",
+    "localStorage sembrado con una vacante real, Job Hunter sin Eros → la vacante sigue; después de Salir eros_hunter_jobs no existe. El login no muestra dev-token.",
+    "`pnpm test:e2e admin-audit` verde; `pnpm lint` pasa."
+   ]
+  },
+  {
+   "id": "A1",
+   "title": "Shell: navegación, rutas, sesión, estado real, paleta y atajos",
+   "goal": "La estructura del admin nuevo: rutas por hash con guarda de cambios, navegación única, ingreso y reautenticación sin perder trabajo, estado real de base y Eros, paleta Ctrl/⌘K que encuentra registros y atajos coherentes con el sitio.",
+   "files": [
+    "server/admin/src/main.ts",
+    "server/admin/src/App.vue",
+    "server/admin/src/router.ts",
+    "server/admin/src/shell/",
+    "server/admin/src/stores/session.ts",
+    "server/admin/src/stores/meta.ts",
+    "server/admin/src/stores/status.ts",
+    "server/admin/src/composables/useShortcuts.ts",
+    "server/admin/src/composables/usePalette.ts",
+    "server/admin/src/composables/useLeaveGuards.ts",
+    "server/admin/src/features/home/Index.vue",
+    "server/admin/src/features/projects/Index.vue",
+    "server/admin/src/features/experience/Index.vue",
+    "server/admin/src/features/articles/Index.vue",
+    "server/admin/src/features/profile/Index.vue",
+    "server/admin/src/features/stack/Index.vue",
+    "server/admin/src/features/orgs/Index.vue",
+    "server/admin/src/features/hunter/Index.vue",
+    "server/admin/src/features/content/Index.vue",
+    "server/admin/src/features/radar/Index.vue",
+    "tests/e2e/admin-shell.spec.ts"
+   ],
+   "dependsOn": [
+    "A0",
+    "D1"
+   ],
+   "wave": 2,
+   "steps": [
+    "router.ts (hash): #/inicio, #/obras[/:id[/:seccion]], #/obras/nueva, #/trayectoria[/:id], #/trayectoria/cv, #/articulos[/:id], #/perfil/sobre-mi, #/perfil/contacto, #/tecnologias[/:id], #/empresas[/:id], #/busqueda/vacantes[/:id[/:etapa]], #/busqueda/publicaciones[/:id], #/busqueda/tendencias[/:id], #/ingresar; carga diferida; beforeEach consulta useLeaveGuards; foco al h1 y document.title «La Rúcula · Obras · Admin».",
+    "features/<área>/Index.vue provisorios (EmptyState con enlace al /admin actual) que reemplaza el dueño de cada carpeta; S1 verifica que no quede ninguno.",
+    "shell/nav.ts: arreglo NAV único (Inicio, Obras, Trayectoria, Artículos, Perfil; Catálogos plegado con Tecnologías y Empresas; Búsqueda laboral) del que salen Nav.vue, el menú móvil y la paleta; sin iconos ni numeración, contador solo con pendientes, aria-current, indicador que viaja 300 ms.",
+    "shell/AppShell.vue con las rejillas de la sección 2, colapso a dos columnas (768–1023) y maestro-detalle (<768), enlace «Saltar al editor»; shell/SearchLayout.vue con pestañas Vacantes, Publicaciones y Tendencias.",
+    "shell/Header.vue (52 px): «Mateo Sonzogni», disparador de la paleta con Kbd, «Ver sitio», «Salir»; el estado aparece solo si algo anda mal, en una línea --dim con punto --wip y una frase con Reintentar.",
+    "stores/session.ts, shell/LoginView.vue («Clave de acceso», Mostrar clave con aria-pressed, error en el lugar) y shell/ReauthDialog.vue: un 401 a mitad del trabajo abre la reautenticación sin desmontar y reintenta la petición; un 503 al entrar no borra el token.",
+    "stores/status.ts sondea /status cada 30 s y al volver el foco; stores/meta.ts expone label(enum, valor), opciones, esquema y resumen, invalidado con el evento 'write' (debounce 300 ms).",
+    "shell/CommandPalette.vue: combobox ARIA (role=combobox, aria-controls, aria-activedescendant), búsqueda sin acentos, grupos (Ir a, Acciones, Obras, Trayectoria, Artículos, Tecnologías, Empresas, Vacantes), resaltado que viaja; fuentes registrables con usePalette; acciones Nueva obra, Nueva experiencia, Nuevo artículo, Pegar una vacante, Ver en el sitio y Atajos de una tecla (localStorage con try/catch).",
+    "useShortcuts.ts: Ctrl/⌘K, Ctrl/⌘S (emite save, también desde un campo), Esc, '/', N, j/k; las teclas de un carácter no actúan en campos ni con un diálogo abierto; aria-keyshortcuts.",
+    "tests/e2e/admin-shell.spec.ts."
+   ],
+   "acceptance": [
+    "`node scripts/admin-run.mjs -- pnpm exec playwright test -c playwright.admin.config.ts tests/e2e/admin-shell.spec.ts` verde.",
+    "En #/obras recargar conserva la URL; Atrás vuelve a #/inicio.",
+    "Paleta: 'rucula' muestra «La Rúcula Gastrobar» en Obras y Enter navega a #/obras/<id>; ↑↓ cambia aria-activedescendant.",
+    "Un 401 interceptado tras el ingreso abre ReauthDialog; con la clave correcta la petición se reintenta y la vista sigue montada.",
+    "/status con db.ok=false → aviso en la cabecera en menos de 31 s, sin borrar la sesión.",
+    "Primer Tab: «Saltar al editor»; axe 0 serias o críticas a 1440, 1024, 768 y 390 px; sin scroll horizontal en 390, 768, 1024, 1280, 1440 y 1920.",
+    "`pnpm lint` y `pnpm typecheck` pasan; capturas a 1440 y 390 px del shell y de la paleta abierta."
+   ]
+  },
+  {
+   "id": "D2",
+   "title": "Datos: documentos con esquema, retrato en el volumen, métricas por id, media completa",
+   "goal": "Cerrar los huecos de datos: inglés de los Doc solo donde se traduce (portrait sin en, cv por idioma), esquema fijo de about y contact que tolera bloques faltantes, retrato subido dentro del volumen persistente, métricas por id con catálogo y rótulo EN, reemplazo de media y dirección fija de la obra, con su parche y su snapshot.",
+   "files": [
+    "prisma/schema.prisma",
+    "prisma/migrations/20261105000000_metric_translation/migration.sql",
+    "app/lib/fieldMeta.ts",
+    "app/lib/dict/common.ts",
+    "server/src/shared/docSchema.ts",
+    "server/src/shared/metricKeys.ts",
+    "server/src/content/docFields.ts",
+    "server/src/content/present.ts",
+    "server/src/queries/",
+    "server/src/admin/docs.ts",
+    "server/src/admin/metrics.ts",
+    "server/src/admin/projects.ts",
+    "server/src/admin/media.ts",
+    "server/src/admin/image.ts",
+    "server/src/admin/meta.ts",
+    "server/src/admin/translations.ts",
+    "server/src/patches/2026-11-05-admin-datos.ts",
+    "server/src/snapshot/content.json",
+    "tests/admin/api-datos.test.ts"
+   ],
+   "dependsOn": [
+    "D1"
+   ],
+   "wave": 2,
+   "steps": [
+    "shared/docSchema.ts: bloques requeridos de about (name, display_name, role, headline, portrait, portrait_alt, technical_degree, higher_education, freelance_experience, work_modalities, languages, core_competencies, engineering_philosophy, professional_goal) y contact (email, github, linkedin, website, cv, availability, response_time, location, time_zone, preferred_contact) con tipo, rótulo, ayuda y ancho. Tipos: portrait = 'image' (sin en), email/url sin en, cv = 'localizedPath' (valor ES y valor EN propios, los dos obligatorios, validados como /cv/<archivo>.pdf). Se verifica con grep de docText/docValue/docList en app/ y server/src que estén todos los consumidos.",
+    "docs.ts: PUT valida contra el esquema; un requerido no se renombra, no cambia de tipo ni se quita; si falta en la base, el PUT lo acepta con el nombre y tipo del esquema (lo crea); bloques libres solo string, text o list; descarta en de email, url y portrait; conserva el en de cv. Doc.title deja de pedirse en el formulario y el servidor conserva el guardado (sin migración). Sin DELETE ni POST de documentos. GET /docs/:key → {key, fields, schema, missing}. POST /docs/about/portrait sube (multer, magic bytes de media.ts) a public/media/projects/_perfil/ (dentro del volumen de DEPLOY.md) y actualiza portrait; la limpieza de carpetas vacías de obras ignora las carpetas que empiezan con '_'.",
+    "Parche 2026-11-05-admin-datos.ts con --dry: borra en de email, url y portrait de about y contact, no toca cv, lista los requeridos faltantes (sin crearlos: se crean al guardar desde Perfil), llama a dropLastGoodFile, idempotente («sin cambios»).",
+    "Migración MetricTranslation (metricId, locale, label?) @@id([metricId, locale]) onDelete Cascade; reflejo en fieldMeta.ts en el mismo commit; present.ts sirve el label EN con respaldo y lo lista en untranslated.",
+    "shared/metricKeys.ts: catálogo de claves (label y desc ES/EN) mudado desde app/lib/dict/common.ts, que lo reexporta; meta.ts suma metricKeys y las claves usadas fuera del catálogo.",
+    "metrics.ts y projects.ts: métricas por id (crear, actualizar, borrar las que faltan, renumerar) conservando MetricTranslation; projects con guardSlugChange y PATCH /projects/:id/slug; sortOrder max+1 al crear; al borrar, carpeta de la obra eliminada si quedó vacía.",
+    "media.ts: POST /media/:id/file reemplaza el archivo conservando id, traducciones y pasos (recalcula ancho, alto, bytes; borra el anterior); POST /media/:id/webm; PATCH acepta tint (optHex).",
+    "translations.ts: regla de 'sin traducir' viñeta por viñeta, Metric.label y artículos, usada por /meta y por pending (U5).",
+    "`pnpm db:snapshot` y commit de server/src/snapshot/content.json; recién después `pnpm db:snapshot:check`.",
+    "tests/admin/api-datos.test.ts."
+   ],
+   "acceptance": [
+    "`node scripts/admin-run.mjs -- pnpm tsx --test tests/admin/api-datos.test.ts` verde.",
+    "En una copia: PUT /docs/contact con email nuevo@ejemplo.com → /api/docs/contact?lang=en, /api/cv?lang=en y POST /api/admin/hunter/cv con vacante en inglés devuelven nuevo@ejemplo.com; GET /api/docs/contact?lang=en sigue devolviendo cv=/cv/CV-EN-Mateo-Sonzogni-ATS.pdf.",
+    "Subir un retrato → /api/docs/about?lang=en devuelve el nuevo portrait; renombrar display_name → 400; un PUT sobre una copia sin el bloque time_zone, con time_zone enviado, lo crea.",
+    "Volumen: `docker build -f Dockerfile.api -t portfolio-api-check .`, contenedor con volumen nombrado en /app/public/media/projects, subir un retrato, recrear el contenedor desde la imagen → GET /media/projects/_perfil/<archivo> sigue respondiendo 200. Contenedor y volumen borrados al terminar.",
+    "Parche en una copia: --dry lista los bloques; aplicado; el --dry siguiente dice «sin cambios»; contact.cv EN intacto.",
+    "PUT de la-rucula sin cambios: ids de Metric iguales; POST /media/:id/file conserva id, alt EN y paso ligado.",
+    "`pnpm prisma migrate dev` en una copia; `pnpm db:snapshot:check` sin diferencias salvo fechas; `pnpm test:e2e i18n record data` verde."
+   ]
+  },
+  {
+   "id": "H0",
+   "title": "Eros en el servidor: contrato, extracción de pistas, política sin Eros y una sola fuente del CV",
+   "goal": "Que el Job Hunter cumpla el invariante 6 con Eros o sin él: contrato tipado, CV siempre compuesto desde la base con pistas extraídas campo por campo, caché por vacante con hoja y texto del mismo AdminCv, vacantes manual-* que nunca van a Eros, escrituras honestas sin Eros, breaker que no castiga 404 y un Eros simulado para probar el camino en línea.",
+   "files": [
+    "server/src/admin/erosContract.ts",
+    "server/src/admin/erosHints.ts",
+    "server/src/admin/hunter.ts",
+    "server/src/admin/hunterCv.ts",
+    "server/src/admin/hunterCvHtml.ts",
+    "server/src/admin/hunterCvText.ts",
+    "server/src/admin/hunterCvRoutes.ts",
+    "server/src/admin/hunterCvBase.ts",
+    "server/src/admin/hunterCvCache.ts",
+    "server/src/admin/hunterApply.ts",
+    "server/src/admin/hunterMatch.ts",
+    "server/src/admin/hunterHeuristics.ts",
+    "server/src/admin/proxy.ts",
+    "server/src/admin/status.ts",
+    "server/src/admin/fallbackHunterData.ts",
+    "server/src/admin/profile.ts",
+    "server/src/admin/auth.ts",
+    "server/src/env.ts",
+    ".env.example",
+    "scripts/test-cv-and-subject.ts",
+    "scripts/test-audit.ts",
+    "tests/e2e/admin-audit.spec.ts",
+    "tests/admin/eros-mock.ts",
+    "tests/admin/fixtures/eros/",
+    "tests/admin/api-hunter.test.ts"
+   ],
+   "dependsOn": [
+    "D1"
+   ],
+   "wave": 2,
+   "steps": [
+    "erosContract.ts: tipos y normalizadores de cada respuesta de Eros usada (stats, jobs, scan, evaluate, pitch, status, apply-preview, find-email, apply-email, contact-email, cv, semantic-search, vectorize, purge); nombres unificados; hunter.ts responde siempre esa forma.",
+    "Política sin Eros: GET /jobs y /stats → 503 {offline:true, error:'Eros no responde. Reintento en N s.'} salvo EROS_DEMO=1 (muestra con _source 'demo' y demo:true); escrituras sin Eros → 503 con mensaje claro; se borran las mutaciones en memoria y el semantic_score fijo; PATCH status valida contra el enum.",
+    "fallbackHunterData.ts (solo con EROS_DEMO): empresas y dominios ficticios (example.com), sin salarios ni puntajes inventados.",
+    "POST /cv/:id, /jobs/:id/pitch y /jobs/:id/evaluate aceptan job en el cuerpo {title, company, description, tags, url, contact_email}. Ids que empiezan con 'manual-' nunca se reenvían a Eros: van directo al respaldo local. Un 404 de Eros con job en el cuerpo cae al respaldo con _source 'fallback'. Sin cuerpo ni muestra → 400 «Falta la descripción de la vacante».",
+    "erosHints.ts: extracción de pistas desde el AdminCv de Eros, campo por campo: claves de skills → TechCategory con cvLabels.categories invertido (ES y EN), orden conservado; nombres dentro de cada categoría → Tech.name normalizado (minúsculas, sin acentos ni puntuación), desconocidos descartados; experience[].title/role → entradas visibles del CV base por título normalizado o slug, solo orden; bullets → índice en highlights por texto exacto normalizado, las inexistentes descartadas; summary → summaryProposal. El AdminCv final = tailorCv(await loadCv(lang), hints); nombre, contacto, educación, idiomas y metodología siempre de la base. Respuesta con _adaptation {categories, entries, bullets, discarded}. useSummaryProposal:true usa la propuesta (pregunta 4).",
+    "hunterCvCache.ts: último AdminCv por vacante en memoria, TTL 1 h; /cv/:id/html y el nuevo /cv/:id/txt leen de ahí; si no hay → 409 {code:'cv_expired', error:'Generá el CV de nuevo'}. Se retira GET /cv/:id/pdf (el PDF de Eros era otra fuente) y jobFromQuery. hunterCvText.ts arma el texto plano con cvLabels.",
+    "hunterCvBase.ts: POST /cv-base/ticket y GET /cv-base/html?lang=es|en&ticket= (prefijo propio, montado antes que /cv/:id) con composeCv sin adaptar; ?measure=1 hace postMessage({heightMm, pages}) al padre (sandbox con allow-scripts, sin allow-same-origin).",
+    "El idioma lo decide hunterMatch.ts y viaja en cv.lang y pitch.lang.",
+    "proxy.ts: el breaker cuenta solo red, timeouts y 5xx; mensajes en español sin 'Circuit Breaker' ni 'cooldown'; sin HUNTER_API_URL → 'unconfigured' (sin valor por defecto público); reintento a 127.0.0.1:8000 solo con HUNTER_LOCAL_FALLBACK=1. status.ts completa eros.state con 'unconfigured'. env.ts y .env.example documentan HUNTER_API_URL, EROS_DEMO y HUNTER_LOCAL_FALLBACK.",
+    "auth.ts: dev-token solo si ADMIN_TOKEN no está definido y NODE_ENV no es production.",
+    "tests/admin/eros-mock.ts: servidor HTTP mínimo con respuestas escritas a mano según erosContract (tests/admin/fixtures/eros/*.json), que incluye un CV con textos inventados ('3 años de experiencia', 'Portafolio Dos Mundos', una viñeta que no existe, una tecnología que no está en la base) y responde 404 a ids desconocidos. Nunca contacta al Eros real.",
+    "admin-audit.spec.ts (sigue en la config del sitio, con EROS_DEMO): invariante 6 con la muestra demo, 409 sin CV generado y recuperación automática, 401 con el ticket de otra vacante, y el caso «API reiniciada entre generar e imprimir» (se borra la caché vía reinicio de la API de la spec o interceptando el primer GET con 409).",
+    "scripts/test-cv-and-subject.ts y test-audit.ts leen ADMIN_TOKEN del entorno, comparan contra /api/cv y no usan ids fijos.",
+    "tests/admin/api-hunter.test.ts."
+   ],
+   "acceptance": [
+    "`node scripts/admin-run.mjs -- pnpm tsx --test tests/admin/api-hunter.test.ts` y `node scripts/admin-run.mjs --eros-mock -- pnpm tsx --test tests/admin/api-hunter.test.ts` verdes.",
+    "Sin Eros ni EROS_DEMO: GET /hunter/jobs → 503 {offline:true}; PATCH /jobs/x/status y POST /hunter/scan → 503 en español.",
+    "Con el Eros simulado: POST /hunter/cv/<id del mock> → el CV no contiene 'Dos Mundos' ni '3 años', cada viñeta existe en highlights de /api/cv, ninguna tecnología fuera de /api/stack y _adaptation.discarded ≥ 3.",
+    "Con el Eros simulado arriba: POST /hunter/cv/manual-abc123 con job en el cuerpo → 200 con _source 'fallback' y el simulado no registra ningún pedido a manual-abc123; un id desconocido con cuerpo (404 del simulado) → 200 fallback.",
+    "Sin Eros: POST /cv/eros_real_123 con job (title 'Desarrollador Frontend', 'Vue 3 y Nuxt') → 200 lang 'es'; /cv/eros_real_123/txt con ticket → texto sin marcado con el nombre de /api/cv; /html mide 1 página y 248–265 mm en ES y EN (Playwright, 7 vacantes: 3 ES, 3 EN, 1 pegada).",
+    "GET /cv/otra/html sin CV → 409 cv_expired; con ticket de otra vacante → 401; GET /cv/x/pdf → 404.",
+    "GET /cv-base/html?lang=en con ticket responde la hoja base y no la de una vacante con id 'base'.",
+    "Bearer dev-token con ADMIN_TOKEN definido → 401. Tres 404 del simulado no abren el breaker.",
+    "`pnpm test:e2e admin-audit` verde; `ADMIN_TOKEN=<aleatorio> pnpm tsx scripts/test-cv-and-subject.ts` y test-audit.ts pasan; grep de jobFromQuery y de 'Circuit Breaker|cooldown' en mensajes al cliente: 0; `pnpm lint` y `pnpm typecheck` pasan."
+   ]
+  },
+  {
+   "id": "C0",
+   "title": "Marco de colecciones y componentes compartidos de edición",
+   "goal": "Una sola implementación de explorador + editor para todas las colecciones, más los componentes que comparten varias áreas: estado de publicación con checklist, creación en línea de empresa o tecnología y campo de dirección con su diálogo de cambio.",
+   "files": [
+    "server/admin/src/features/collections/",
+    "server/admin/src/composables/useCollection.ts",
+    "server/admin/src/composables/useEditor.ts",
+    "server/admin/src/composables/useDirtyGuard.ts",
+    "server/admin/src/composables/useDraft.ts",
+    "server/admin/src/composables/useServerErrors.ts",
+    "server/admin/src/models/types.ts",
+    "server/admin/src/models/validate.ts",
+    "server/admin/src/models/slug.ts",
+    "server/admin/src/models/labels.ts",
+    "tests/e2e/admin-colecciones.spec.ts"
+   ],
+   "dependsOn": [
+    "A1"
+   ],
+   "wave": 3,
+   "steps": [
+    "models/types.ts: Model<TRecord, TForm> {key, path, singular con género, blank, toForm, toPayload, validate, title, metaLine, status → {tone,label}, publicUrl, sections, filters, slugEndpoint?}. validate.ts aplica el adminSchema con el formato {path,message} del servidor; slug.ts reexporta shared/slug.ts; labels.ts usa meta.label.",
+    "collections/Explorer.vue: búsqueda ('/'), filtros como pestañas de texto con conteo, Listbox de filas (título 15/520, meta --faint, StatusDot con palabra), Skeleton, EmptyState con «Nueva …», ErrorState con Reintentar.",
+    "collections/EditorFrame.vue: encabezado con el título humano (View Transition de 250 ms desde la fila), slot de publicación, «Ver en el sitio», Menu Más acciones; cuerpo con scroll propio y máximo 760 px; pie con SaveState («Sin cambios», «Cambios sin guardar», «Guardando…», «Guardado hace 3 s», «No se pudo guardar»), Descartar y Guardar (36 px, aria-keyshortcuts). En móvil, «← Lista».",
+    "collections/SectionTabs.vue atada a :seccion, con marcas de error y cambios; Select en móvil.",
+    "collections/BilingualField.vue: ES y EN lado a lado desde 1280 px, apilado debajo; «Copiar del español»; «Falta el inglés» solo con español escrito.",
+    "collections/PublishState.vue + Checklist.vue (genéricos, los usan obras y artículos): punto y palabra, switch «Mostrar en el sitio» con fecha opcional, «Faltan N» que abre un popover; el modelo aporta los ítems y cada uno navega con ?campo=. Publicar con faltantes pide confirmación.",
+    "collections/InlineCreate.vue: «+ Crear Acme» para empresa o tecnología (POST /orgs o /techs) dentro de un Select con búsqueda, que selecciona lo creado y dispara 'write'.",
+    "collections/SlugField.vue y SlugDialog.vue: dirección automática solo mientras el registro es nuevo, en Mono con «así se ve en la URL: /projects/la-rucula»; existente fija con «Cambiar dirección», que explica que los enlaces compartidos dejan de andar y llama a model.slugEndpoint (PATCH /:col/:id/slug).",
+    "useEditor.ts: form, snapshot, dirty, applySaved; guardado con clave colección+id que rechaza un payload de otro modelo; form readonly con aria-busy durante el PUT; la respuesta es la verdad; no devuelve al usuario a un registro que dejó; hook onAfterSave.",
+    "useDirtyGuard.ts (useLeaveGuards y beforeunload), useDraft.ts (sessionStorage por ruta, debounce 500 ms, «Recuperar cambios del 05/11 14:02»), useServerErrors.ts (path → campo y sección, aria-invalid, foco al primero, salto de pestaña, resumen assertive) y ?campo=<path> que enfoca el campo y abre su pestaña.",
+    "collections/DeleteDialog.vue: pide /impact, lista lo afectado, ofrece reasignar con Select; foco en Cancelar.",
+    "useCollection.ts: lista con caché invalidada por 'write'. Modelo de prueba solo DEV en #/muestrario/coleccion sobre /orgs (con SlugField, InlineCreate de tecnología y un PublishState simulado)."
+   ],
+   "acceptance": [
+    "`node scripts/admin-run.mjs -- pnpm exec playwright test -c playwright.admin.config.ts tests/e2e/admin-colecciones.spec.ts` verde.",
+    "Teclado: Tab a la lista, ↓↓ Enter abre el tercer registro; flechas cambian de pestaña; Ctrl+S guarda desde un campo.",
+    "503 en el GET de la lista → ErrorState y ningún PUT posible.",
+    "PUT demorado 5 s: form readonly con aria-busy; navegar a otro registro no pide descartar y al terminar el editor sigue en el nuevo.",
+    "400 con dos paths: ambos con aria-invalid, foco en el primero, marca en la pestaña; #/muestrario/coleccion/<id>?campo=city enfoca ese campo.",
+    "401 a mitad de la edición y reingreso → «Recuperar cambios» devuelve lo escrito; recargar con cambios ofrece el borrador.",
+    "SlugField: en un registro existente cambiar el nombre no cambia la dirección; Cambiar dirección hace PATCH y actualiza la URL del editor.",
+    "InlineCreate crea una tecnología y queda seleccionada; DeleteDialog de una empresa con obras muestra el impacto y reasigna.",
+    "axe 0 serias o críticas; `pnpm lint` y `pnpm typecheck` pasan."
+   ]
+  },
+  {
+   "id": "H1",
+   "title": "Búsqueda laboral: vacantes por etapas con paridad completa",
+   "goal": "Rehacer el Job Hunter como flujo por etapas con la hoja del CV real, texto plano desde el servidor, recuperación automática del 409, «Pegar una vacante» con Eros arriba o caído, y todas las funciones del Job Hunter actual asignadas a un lugar (salvo lo que Mateo retire en la pregunta 3).",
+   "files": [
+    "server/admin/src/features/hunter/",
+    "tests/e2e/admin-vacantes.spec.ts"
+   ],
+   "dependsOn": [
+    "A1",
+    "H0"
+   ],
+   "wave": 3,
+   "steps": [
+    "store.ts y adapter.ts: cola desde GET /hunter/jobs; offline (503) muestra la última lista de la sesión (sessionStorage) como solo lectura con «Última sincronización 16:42»; nunca guarda filas demo; la selección sigue al filtro. Todas las llamadas que necesitan la vacante mandan el objeto completo en el cuerpo.",
+    "cvClient.ts: generar, ticket, html y txt; ante 409 cv_expired vuelve a hacer POST /cv con la vacante y repite una vez, sin pedir nada al operador.",
+    "Queue.vue (Listbox con j/k): título, empresa, porcentaje con StatusDot y palabra; un solo estado visible (Nueva, Evaluada, Guardada, Postulada, Descartada). QueueFilters.vue con pestañas de texto. QueueActions.vue: «Buscar vacantes nuevas» (POST /scan; al terminar, POST /vectorize si la búsqueda por afinidad sigue en la pregunta 3), Más acciones con «Evaluar las pendientes» (POST /evaluate) y «Limpiar la cola» (POST /purge, ConfirmDialog con lo que hace). Resumen desde GET /stats. Búsqueda de la cola con el interruptor «Buscar por afinidad» (POST /search/semantic; afinidad como dato aparte), sujeto a la pregunta 3. «Borrar todas» solo si la pregunta 3 lo conserva.",
+    "ManualJob.vue («Pegar una vacante»): título, empresa, descripción, correo opcional; crea una vacante local manual-<hash> en sessionStorage que pasa por las mismas etapas.",
+    "JobDetail.vue con etapas en la ruta (analisis|mensaje|cv|postular) y un solo primario por etapa; Más acciones de la vacante con Eliminar (DELETE /jobs/:id, confirmación) y estado (PATCH status).",
+    "stages/Analysis.vue: veredicto en palabras, a favor y en contra, obras para citar con enlace al caso. stages/Message.vue: asunto, pitch, carta y nota con Copiar y confirmación en el mismo botón.",
+    "stages/Cv.vue y CvFrame.vue: «Adaptar CV» → POST /cv/:id con la vacante, abre la etapa con el foco puesto, iframe de /cv/:id/html escalado; «Imprimir o guardar como PDF» (ventana abierta en el gesto y URL asignada después; si window.open da null, enlace «Abrir para imprimir»), «Copiar texto plano» (GET /cv/:id/txt; si el portapapeles falla, TextArea readonly seleccionado), «Ampliar» (Dialog). summaryProposal como propuesta con «Usar este resumen» (pregunta 4).",
+    "stages/Apply.vue: destinatario editable (PATCH contact-email), «Buscar correo» (POST find-email), vista previa del correo (GET apply-preview), «Abrir en Gmail», «Enviar desde Eros» (POST apply-email, ConfirmDialog con destinatario y asunto; sin Eros, deshabilitado con la razón) y «Ya la envié» (PATCH status applied). Nada se marca postulado al abrir Gmail.",
+    "OriginNote.vue («Generado por Eros» o «Armado desde la base, sin Eros») y cargas honestas; sin AdmAiTrace.",
+    "Registrar en usePalette las vacantes, «Generar CV para esta vacante» y «Pegar una vacante».",
+    "tests/e2e/admin-vacantes.spec.ts."
+   ],
+   "acceptance": [
+    "`node scripts/admin-run.mjs --demo -- pnpm exec playwright test -c playwright.admin.config.ts tests/e2e/admin-vacantes.spec.ts`, sin --demo y con --eros-mock: los tres verdes; sin Eros ni demo la vacante pegada cubre el invariante 6 completo (analizar, adaptar, ver la hoja, imprimir 1 página A4 248–265 mm, copiar texto plano igual al /txt sin marcado).",
+    "Con --eros-mock: una vacante pegada adapta su CV sin que el simulado reciba pedidos a su id.",
+    "Interceptar el primer GET /cv/:id/html con 409 → la hoja aparece sin intervención y hubo un segundo POST /cv.",
+    "Al adaptar, el foco queda en el encabezado de la etapa CV y la hoja contiene el nombre de /api/cv; el PDF impreso tiene exactamente una /Type /Page.",
+    "Con el filtro Compatibles la vacante del detalle está en la lista visible; portapapeles denegado muestra el aviso y el texto seleccionado.",
+    "Cada endpoint de la tabla de la sección 6 asignado a H1 tiene un control alcanzable por teclado (lista en el spec).",
+    "axe en la cola y en cada etapa: 0 serias o críticas; grep de 'EXCELENTE_MATCH|Match IA|EROS //|\\[Lead\\]' en server/admin/src: 0; capturas a 1440 y 390 px de las cuatro etapas y una secuencia."
+   ]
+  },
+  {
+   "id": "R0",
+   "title": "Eros en el servidor: publicaciones y tendencias sin datos inventados",
+   "goal": "Que Publicaciones y Tendencias digan la verdad: contrato normalizado, «Publicar en el blog» que crea un borrador, estados honestos sin Eros.",
+   "files": [
+    "server/src/admin/erosContentContract.ts",
+    "server/src/admin/content.ts",
+    "server/src/admin/contentCarousel.ts",
+    "server/src/admin/fallbackContentData.ts",
+    "server/src/admin/radar.ts",
+    "tests/admin/fixtures/eros-content/",
+    "tests/admin/api-eros-contenido.test.ts"
+   ],
+   "dependsOn": [
+    "H0",
+    "D1"
+   ],
+   "wave": 3,
+   "steps": [
+    "erosContentContract.ts: posts (linkedin_text, twitter_thread, devto_markdown, carousel_slides, status, pillar) y tendencias (id, título, fuente, url, detectada en, estado); content.ts y radar.ts responden esa forma.",
+    "Sin Eros: GET /content/posts y /radar/trends → 503 {offline:true} salvo EROS_DEMO=1 (posts derivados de artículos publicados y tendencias demo, sin relevancias ni URL fabricadas); escrituras sin Eros → 503 sin cambiar estado en memoria.",
+    "publish-to-blog: Article DRAFT sin publishedAt, slug de shared/slug.ts con unicidad verificada (sin sufijo aleatorio), responde {article:{id, slug}}; no llama a forgetLastGood.",
+    "POST /posts/:id/publish (n8n) valida el canal y responde en español; sin Eros, 503.",
+    "Fixtures de contenido para tests/admin/eros-mock.ts (posts y tendencias según el contrato) y mensajes en español sin jerga."
+   ],
+   "acceptance": [
+    "`node scripts/admin-run.mjs -- pnpm tsx --test tests/admin/api-eros-contenido.test.ts` y con --eros-mock: verdes.",
+    "Sin Eros ni demo: posts y trends → 503 {offline:true}; con EROS_DEMO cada post trae linkedin_text no vacío y demo:true.",
+    "Con --eros-mock: publish-to-blog crea un artículo DRAFT que GET /api/articles no lista.",
+    "`ADMIN_TOKEN=<aleatorio> pnpm tsx scripts/test-audit.ts` pasa; `pnpm lint` y `pnpm typecheck` pasan."
+   ]
+  },
+  {
+   "id": "U1",
+   "title": "Obras: lista, lo esencial, relato y publicación",
+   "goal": "El editor de obra: lista ordenable, Lo esencial con dirección fija, Relato con pasos e inglés por campo, y publicación con checklist, usando los componentes compartidos de C0.",
+   "files": [
+    "server/admin/src/features/projects/Index.vue",
+    "server/admin/src/features/projects/model.ts",
+    "server/admin/src/features/projects/checklist.ts",
+    "server/admin/src/features/projects/ProjectEditor.vue",
+    "server/admin/src/features/projects/ProjectOrder.vue",
+    "server/admin/src/features/projects/sections/Essentials.vue",
+    "server/admin/src/features/projects/sections/Story.vue",
+    "server/admin/src/features/projects/sections/Steps.vue",
+    "server/admin/src/features/projects/sections/Images.vue",
+    "server/admin/src/features/projects/sections/Data.vue",
+    "tests/e2e/admin-obras.spec.ts"
+   ],
+   "dependsOn": [
+    "C0",
+    "D2"
+   ],
+   "wave": 4,
+   "steps": [
+    "model.ts: Model de Project (toForm/toPayload con translations.en, pasos por id, filtros Publicadas, Ocultas, Programadas, Destacadas, Falta inglés), status desde publishedAt, publicUrl /projects/:slug, slugEndpoint PATCH /projects/:id/slug.",
+    "Essentials.vue: título, SlugField, rol obligatorio, año, empresa con InlineCreate, situación con una línea de explicación, destacada.",
+    "Story.vue: síntesis (contador, «aparece en la tarjeta y en la vista rápida»), reto y resultado en prosa con BilingualField. Steps.vue: pasos ordenables (arrastre y Subir/Bajar), título y texto bilingües, imagen ligada opcional.",
+    "checklist.ts: ítems de la obra para PublishState (portada, síntesis, relato, alt de cada imagen, inglés por campo, rol), cada uno con su ?campo=.",
+    "ProjectOrder.vue: orden del sitio con arrastre y Subir/Bajar; PATCH solo de las filas que cambiaron.",
+    "Obra nueva: N o paleta → Lo esencial con foco en el título; después de crearla, la siguiente sección incompleta.",
+    "sections/Images.vue y Data.vue como EmptyState provisorio que reemplaza U7; relaciones experiences y articles en solo lectura con enlace.",
+    "tests/e2e/admin-obras.spec.ts."
+   ],
+   "acceptance": [
+    "`node scripts/admin-run.mjs -- pnpm exec playwright test -c playwright.admin.config.ts tests/e2e/admin-obras.spec.ts` verde.",
+    "Editar el título de La Rúcula y guardar: GET /api/projects/la-rucula sigue respondiendo 200.",
+    "Crear sin rol muestra «Falta el rol que tuviste en la obra» junto al campo con aria-invalid antes de mandar nada.",
+    "Las cuatro pestañas entran a 1366 px; en 390 px la sección es un Select.",
+    "La obra nueva publicada aparece última en /api/projects; el checklist navega al campo faltante.",
+    "axe 0 serias o críticas en lista y editor; capturas a 1440 y 390 px."
+   ]
+  },
+  {
+   "id": "U2",
+   "title": "Trayectoria y vista CV",
+   "goal": "Editar experiencia y formación con dirección fija, inglés por campo y una vista CV para ordenar lo que entra y ver la hoja A4 real en vivo con aviso de página.",
+   "files": [
+    "server/admin/src/features/experience/",
+    "tests/e2e/admin-trayectoria.spec.ts"
+   ],
+   "dependsOn": [
+    "C0",
+    "D1",
+    "H0"
+   ],
+   "wave": 4,
+   "steps": [
+    "model.ts: Model de Experience (filtros Formación, Trabajo, En el CV, Falta inglés; período «2024 – actual»; slugEndpoint PATCH /experience/:id/slug).",
+    "Lo esencial: tipo, cargo, «Dirección» con SlugField (automática solo si es nueva), empresa o institución con InlineCreate, inicio y fin con «Actual», ubicación («vacía = la ciudad de la empresa; sin empresa, remoto»). Relato: síntesis y relato con BilingualField. CV: hasta 3 viñetas de 160 caracteres con contador y su par EN en la misma posición, obras y tecnologías ligadas.",
+    "«Entra al CV en el puesto N · Ver CV» o «No entra al CV · Sumar».",
+    "CvView.vue en #/trayectoria/cv: entradas ordenables (PATCH /experience/order), «Sumar al CV», iframe de /cv-base/html?lang=es|en&measure=1 escalado con selector ES/EN; si postMessage informa más de 1 página o más de 265 mm, aviso «El CV pasa de una página: acortá una viñeta o sacá una entrada». Debajo, una línea: «El PDF descargable del sitio se regenera con pnpm cv:pdf» (y el estado del sello si U5 ya lo expone).",
+    "tests/e2e/admin-trayectoria.spec.ts."
+   ],
+   "acceptance": [
+    "`node scripts/admin-run.mjs -- pnpm exec playwright test -c playwright.admin.config.ts tests/e2e/admin-trayectoria.spec.ts` verde.",
+    "Cambiar el cargo de una experiencia existente no cambia su slug (GET /api/experience/<slug> sigue 200); Cambiar dirección sí.",
+    "Editar la viñeta 2 en inglés no corre las demás; reordenar con teclado → GET /api/cv en ese orden y cvOrder 1..n.",
+    "El aviso aparece con viñetas largas (>265 mm) en una copia y desaparece al volver.",
+    "«Experiencia guardada» tras guardar; axe 0 serias o críticas; capturas a 1440 y 390 px."
+   ]
+  },
+  {
+   "id": "U3",
+   "title": "Catálogos: tecnologías y empresas",
+   "goal": "Tecnologías y Empresas como catálogos claros y seguros: rótulos del servidor, validación, color solo para el registro y borrado con impacto y reasignación.",
+   "files": [
+    "server/admin/src/features/stack/",
+    "server/admin/src/features/orgs/",
+    "tests/e2e/admin-catalogos.spec.ts"
+   ],
+   "dependsOn": [
+    "C0",
+    "D1"
+   ],
+   "wave": 4,
+   "steps": [
+    "features/stack: Model de Tech; nombre, SlugField, categoría con meta.label, «Desde» (1990 al actual), nota bilingüe («una línea de criterio: cuándo la elegís»), color con <input type=color> más hex en Mono y «solo se ve en el registro R»; lista agrupada por categoría con cantidad de obras.",
+    "features/orgs: Model de Org; nombre, SlugField, sitio web (https:// completado), ciudad («el CV la usa como lugar de la experiencia»); lista con obras y experiencias.",
+    "Borrado con DeleteDialog e impacto/reasignación.",
+    "tests/e2e/admin-catalogos.spec.ts."
+   ],
+   "acceptance": [
+    "`node scripts/admin-run.mjs -- pnpm exec playwright test -c playwright.admin.config.ts tests/e2e/admin-catalogos.spec.ts` verde.",
+    "Borrar ARG Piscinas en una copia: el diálogo nombra sus obras y su experiencia; con reasignación quedan con la otra empresa.",
+    "Ningún select muestra un valor crudo (LANGUAGE, FRAMEWORK…); axe 0 serias o críticas; capturas a 1440 px."
+   ]
+  },
+  {
+   "id": "U4",
+   "title": "Perfil: sobre mí y contacto",
+   "goal": "Editar el perfil como un formulario con rótulos humanos: bloques fijos, retrato con subida y alt, CV por idioma con dos campos, inglés solo donde se traduce y bloques requeridos faltantes que se completan al guardar.",
+   "files": [
+    "server/admin/src/features/profile/",
+    "tests/e2e/admin-perfil.spec.ts"
+   ],
+   "dependsOn": [
+    "C0",
+    "D2"
+   ],
+   "wave": 4,
+   "steps": [
+    "Index.vue con pestañas Sobre mí y Contacto, sin Nuevo, Duplicar ni Eliminar.",
+    "AboutForm.vue y ContactForm.vue desde el schema de GET /docs: rótulo, ayuda, tipo, ancho; requeridos sin nombre técnico ni tipo y sin control para quitarlos; los que vienen en missing aparecen vacíos con «Falta completar» y se crean al guardar. string, text y list con BilingualField; email y URL con «igual en los dos idiomas».",
+    "CvPathField.vue para contact.cv: dos campos, «PDF en español» y «PDF en inglés», validados como /cv/<archivo>.pdf, con la ayuda «el PDF se regenera con pnpm cv:pdf».",
+    "PortraitField.vue: vista previa, «Cambiar retrato» (POST /docs/about/portrait) y alt bilingüe en portrait_alt; sin campo de inglés para la imagen.",
+    "FreeBlocks.vue: bloques opcionales (texto corto, texto largo, lista) con nombre editable y quitar.",
+    "tests/e2e/admin-perfil.spec.ts."
+   ],
+   "acceptance": [
+    "`node scripts/admin-run.mjs -- pnpm exec playwright test -c playwright.admin.config.ts tests/e2e/admin-perfil.spec.ts` verde.",
+    "Cambiar el email → /api/docs/contact?lang=en devuelve el nuevo; contact.cv en EN sigue siendo /cv/CV-EN-…; cambiar el PDF en inglés solo cambia ?lang=en.",
+    "Subir un retrato → /api/docs/about?lang=en devuelve el nuevo y, con `node scripts/admin-run.mjs --web`, /about?lang=en en el sitio muestra la imagen nueva con su alt EN.",
+    "En la UI no aparecen display_name, engineering_philosophy ni los tipos string, text o markdown; axe 0 serias o críticas; capturas a 1440 y 390 px."
+   ]
+  },
+  {
+   "id": "U6",
+   "title": "Artículos: texto, vista previa, inglés y dirección",
+   "goal": "Editar artículos con el mismo cuidado que las obras: nacen como borrador, se publican con PublishState, tienen vista previa con el render del sitio, inglés editable y cambio de dirección explícito.",
+   "files": [
+    "server/admin/src/features/articles/",
+    "server/src/shared/markdown.ts",
+    "app/lib/markdown.ts",
+    "tests/e2e/admin-articulos.spec.ts"
+   ],
+   "dependsOn": [
+    "C0",
+    "D1"
+   ],
+   "wave": 4,
+   "steps": [
+    "Mudar el renderer de app/lib/markdown.ts a server/src/shared/markdown.ts; app/lib/markdown.ts lo reexporta.",
+    "model.ts: Model de Article; nace Borrador sin fecha; status Borrador, Programado, Publicado; filtros Publicados, Borradores, Falta inglés; slugEndpoint PATCH /articles/:id/slug; checklist (resumen, contenido, inglés de título/resumen/contenido, tecnologías).",
+    "Lo esencial: título, SlugField, resumen, obra ligada, tecnologías (InlineCreate), lectura en minutos con «Calcular» (palabras/200), URL canónica; sin portada.",
+    "Texto: TextArea de prosa con pestaña Vista previa (renderer compartido y estilos de lectura); inglés con BilingualField y su vista previa.",
+    "PublishState de C0 («Mostrar en el sitio» → PUBLISHED + publishedAt); Archivar en Más acciones; aviso de revisión al llegar desde «Publicar en el blog».",
+    "tests/e2e/admin-articulos.spec.ts."
+   ],
+   "acceptance": [
+    "`node scripts/admin-run.mjs -- pnpm exec playwright test -c playwright.admin.config.ts tests/e2e/admin-articulos.spec.ts` verde.",
+    "«Arquitectura rápida en ñandú» propone arquitectura-rapida-en-nandu; en uno publicado el título no cambia la dirección y Cambiar dirección sí.",
+    "Un borrador no aparece en /api/articles; el inglés editado aparece en ?lang=en tras publicar.",
+    "La vista previa de un bloque de código y una tabla coincide con el HTML de /articles/:slug.",
+    "`pnpm test:e2e routes data` verde; axe 0 serias o críticas; capturas a 1440 px."
+   ]
+  },
+  {
+   "id": "H2",
+   "title": "Publicaciones y tendencias",
+   "goal": "Portar Publicaciones y Tendencias como pestañas de Búsqueda laboral con paridad (generar, estado, eliminar, carrusel, publicar por n8n, publicar en el blog, buscar tendencias) y estados honestos sin Eros. Si Mateo retira alguna en la pregunta 2, el paquete quita sus rutas, módulos y endpoints.",
+   "files": [
+    "server/admin/src/features/content/",
+    "server/admin/src/features/radar/",
+    "tests/e2e/admin-publicaciones.spec.ts"
+   ],
+   "dependsOn": [
+    "A1",
+    "R0"
+   ],
+   "wave": 4,
+   "steps": [
+    "features/content: lista (Listbox) con estado en palabras; detalle con pestañas por formato (LinkedIn, Hilo, Dev.to, Carrusel) con Copiar; carrusel en iframe con ticket; Generar (tema, pilar, obra de la base, puntos clave, ángulo) solo con Eros; estado (PATCH) y Eliminar (DELETE, confirmación) en Más acciones; «Publicar por n8n» con ConfirmDialog que nombra el canal; «Publicar en el blog» crea el borrador y navega a #/articulos/:id con «Revisá tecnologías, obra e inglés antes de publicarlo».",
+    "features/radar: lista con fuente, fecha real y enlace externo; detalle; «Buscar tendencias» (POST /scan), estado (PATCH) y «Crear publicación desde esta tendencia» solo con Eros; sin Eros, EmptyState sin datos inventados.",
+    "Contadores cargados al arrancar si Eros responde; sin ceros a la izquierda.",
+    "tests/e2e/admin-publicaciones.spec.ts."
+   ],
+   "acceptance": [
+    "`node scripts/admin-run.mjs --demo -- pnpm exec playwright test -c playwright.admin.config.ts tests/e2e/admin-publicaciones.spec.ts`, sin --demo y con --eros-mock: verdes.",
+    "El cuerpo LinkedIn del primer post se ve y se copia; con --eros-mock, «Publicar en el blog» abre el editor de un artículo en Borrador.",
+    "Cada endpoint de content y radar de la sección 6 tiene un control alcanzable (lista en el spec) o figura como retirado.",
+    "axe 0 serias o críticas; `pnpm lint` pasa; capturas a 1440 px con datos y vacías."
+   ]
+  },
+  {
+   "id": "U7",
+   "title": "Obras: imágenes y datos, y sesión cronometrada",
+   "goal": "Completar el editor de obra: subida múltiple desde antes de crear la obra, portada, alt, tinte y reemplazo, y Datos con tecnologías, enlaces, métricas con rótulos humanos e importación del repositorio, todo con un solo Guardar; cerrar la ola con la sesión de 5 minutos con una persona real.",
+   "files": [
+    "server/admin/src/features/projects/sections/Images.vue",
+    "server/admin/src/features/projects/sections/Data.vue",
+    "server/admin/src/features/projects/media/",
+    "server/admin/src/features/projects/data/",
+    "tests/e2e/admin-obras-imagenes.spec.ts",
+    "docs/rediseno/admin-sesion-5-minutos.md"
+   ],
+   "dependsOn": [
+    "U1"
+   ],
+   "wave": 5,
+   "steps": [
+    "media/MediaDrop.vue: arrastre y «Elegir archivos» (varios, imagen o MP4/WebM); tarjetas pendientes con vista previa (blob), alt obligatorio y rol.",
+    "media/mediaQueue.ts: cola de altas, reemplazos y metadatos registrada en onAfterSave: una obra nueva sube sus imágenes en el mismo Guardar; progreso por tarjeta y «3 imágenes por subir» en SaveState.",
+    "media/MediaCard.vue: miniatura o póster, alt y pie bilingües, Portada o Galería (una portada por tipo), Escritorio o Celular, orden con arrastre y Subir/Bajar, tinte como muestra con edición y «Recalcular», Reemplazar archivo, Agregar o cambiar WebM, póster, Eliminar con confirmación.",
+    "data/Techs.vue con InlineCreate; data/Links.vue con rótulo bilingüe y https:// completado; data/Repo.vue «Importar desde el repositorio» (api.github.com; sin imágenes externas, si se agregaran se suma el host a img-src).",
+    "data/Metrics.vue: Select de clave con el catálogo de /meta («Peso del JavaScript inicial · kB (bundleSizeKb)»), Número con unidad o Lista, fuente, fecha; «Rótulo propio» con su par EN solo fuera del catálogo; «Ver JSON» de solo lectura.",
+    "Images.vue y Data.vue reemplazan los provisorios de U1.",
+    "Al cierre de la ola, Mateo coordina una sesión con una persona que no programa (o la observa él): cargar una obra con lo esencial, relato (síntesis, reto, resultado y un paso), 3 tecnologías y 3 imágenes con alt, en español, con el contenido listo para pegar. Se registra tiempo, errores y tropiezos en docs/rediseno/admin-sesion-5-minutos.md."
+   ],
+   "acceptance": [
+    "`node scripts/admin-run.mjs -- pnpm exec playwright test -c playwright.admin.config.ts tests/e2e/admin-obras-imagenes.spec.ts` verde.",
+    "Obra nueva: 3 imágenes arrastradas antes del primer guardado, alt completo, Guardar → la obra existe con 3 imágenes y una portada en un solo guardado.",
+    "Reemplazar la portada de La Rúcula en una copia: mismo id de Media, alt EN y paso ligado intactos.",
+    "El selector de métricas no muestra claves camelCase sin rótulo; una clave nueva pide rótulo ES y EN y el sitio en ?lang=en muestra el inglés.",
+    "Ningún aviso tapa la barra de acciones; axe 0 serias o críticas; capturas a 1440 y 390 px.",
+    "Gate de la ola (humano): docs/rediseno/admin-sesion-5-minutos.md registra una carga completa en menos de 5 minutos sin errores de formato; si no, la ola no cierra y se corrige antes de E1."
+   ]
+  },
+  {
+   "id": "U5",
+   "title": "Inicio: bandeja de pendientes reales",
+   "goal": "Reemplazar la telemetría por una bandeja de trabajo calculada desde la base con las reglas de la API pública, donde cada fila lleva al campo exacto, incluido el aviso de que el PDF del CV quedó desactualizado.",
+   "files": [
+    "server/src/admin/pending.ts",
+    "server/src/admin/router.ts",
+    "server/src/shared/adminContracts.ts",
+    "scripts/cv-pdf.mjs",
+    "server/src/snapshot/cv-stamp.json",
+    "server/admin/src/features/home/",
+    "tests/e2e/admin-inicio.spec.ts"
+   ],
+   "dependsOn": [
+    "C0",
+    "U1",
+    "D2"
+   ],
+   "wave": 5,
+   "steps": [
+    "scripts/cv-pdf.mjs: al escribir los dos PDF, guarda en server/src/snapshot/cv-stamp.json el hash (sha256 de JSON estable) de GET /api/cv?lang=es y ?lang=en y la fecha.",
+    "server/src/admin/pending.ts: GET /pending → [{kind, record:{collection,id,title}, field?, message, route}] con obras ocultas o programadas, visibles sin portada, imágenes sin alt EN, campos sin inglés (translations.ts, viñeta por viñeta), métricas sin fuente o fecha, experiencias del CV sin viñetas o con EN incompleto, artículos en borrador, bloques requeridos de about o contact vacíos o faltantes, y «El PDF del CV no coincide con la base» cuando el hash de composeCv(es|en) difiere del sello (mensaje: «Regenerá los PDF con pnpm cv:pdf y commitealos»). router.ts lo monta; el tipo en adminContracts.ts.",
+    "features/home/Index.vue: resumen con cifras reales a 28/500 tabular-nums; PendingList.vue agrupada por tipo en filas-enlace (#/obras/12/relato?campo=translations.en.outcome); EmptyState «Nada pendiente»; bloque de vacantes nuevas compatibles desde GET /hunter/stats si Eros responde; estado de Eros solo si falla; accesos Nueva obra y Pegar una vacante.",
+    "Sin bento, sin infraestructura y sin ceros a la izquierda."
+   ],
+   "acceptance": [
+    "`node scripts/admin-run.mjs -- pnpm exec playwright test -c playwright.admin.config.ts tests/e2e/admin-inicio.spec.ts` verde.",
+    "En una copia, translations.en.outcome de una obra visible en NULL → aparece la fila; Enter navega a la obra, sección Relato, con el foco en el campo inglés del resultado.",
+    "Cambiar una viñeta en una copia → aparece «El PDF del CV no coincide con la base»; con el sello recalculado contra esa copia, desaparece.",
+    "Las cifras coinciden con meta.count de /api/projects y /api/articles.",
+    "Todas las filas son <a> alcanzables con Tab; axe 0 serias o críticas; capturas a 1440 y 390 px."
+   ]
+  },
+  {
+   "id": "E1",
+   "title": "Pruebas e2e del admin, proxy y medición de los 5 minutos",
+   "goal": "Consolidar la red de seguridad del admin nuevo en pnpm test:e2e: accesibilidad, teclado, robustez, invariante 6, ida y vuelta, proxy de Nuxt, anchos, movimiento reducido y la carga de una obra medida con las constantes de la auditoría.",
+   "files": [
+    "tests/e2e/run.mjs",
+    "playwright.config.ts",
+    "playwright.admin.config.ts",
+    "scripts/admin-run.mjs",
+    "tests/e2e/admin-audit.spec.ts",
+    "tests/e2e/admin-a11y.spec.ts",
+    "tests/e2e/admin-teclado.spec.ts",
+    "tests/e2e/admin-robustez.spec.ts",
+    "tests/e2e/admin-idayvuelta.spec.ts",
+    "tests/e2e/admin-flujo-obra.spec.ts",
+    "tests/e2e/admin-proxy.spec.ts",
+    "tests/e2e/admin-support.ts",
+    "tests/admin/",
+    "docs/rediseno/capturar-admin.mjs",
+    "docs/rediseno/capturas/admin-nuevo/"
+   ],
+   "dependsOn": [
+    "U1",
+    "U2",
+    "U3",
+    "U4",
+    "U5",
+    "U6",
+    "U7",
+    "H1",
+    "H2"
+   ],
+   "wave": 6,
+   "steps": [
+    "admin-audit.spec.ts se reescribe sobre la UI nueva y pasa a playwright.admin.config.ts (playwright.config.ts ignora todos los admin-*): analizar, adaptar, previsualizar, imprimir 1 página A4 248–265 mm ES y EN, copiar texto plano igual al /txt, 401 con otro ticket, 409 con recuperación, portapapeles denegado, vacante pegada sin Eros ni demo y vacante pegada con --eros-mock. run.mjs corre cada spec admin con los flags que declara en su cabecera (--demo, --eros-mock, --web).",
+    "admin-a11y.spec.ts: axe en cada vista y editor (0 serias o críticas); sin scroll horizontal en 390, 768, 1024, 1280, 1440 y 1920; reduced motion sin transiciones; fuente computada ≥ 12 px; ningún uppercase fuera de la hoja del CV; consola sin violaciones de CSP en ninguna vista.",
+    "admin-teclado.spec.ts: explorador, pestañas, Ctrl/⌘S, borrado con foco en Cancelar, Esc por capa, paleta con registros y vacantes, j/k en la cola, teclas de un carácter apagadas.",
+    "admin-robustez.spec.ts: 503 al cargar sin guardado cruzado; 401 con borrador y reautenticación; guardado lento; recargar con cambios; Atrás con cambios; base caída al entrar.",
+    "admin-idayvuelta.spec.ts: por colección y los dos documentos, guardar sin cambios y comparar el GET del admin antes y después (ids de métricas incluidos).",
+    "admin-proxy.spec.ts (con --web): /admin-next y /admin-next/ cargan por Nuxt, sin 404 de assets, una sola CSP, recargar #/obras/<id>/imagenes conserva la vista.",
+    "admin-flujo-obra.spec.ts con el alcance literal del invariante (lo esencial, síntesis, reto, resultado, 1 paso, 3 tecnologías, 3 imágenes con alt, en español, publicada): cuenta clics, campos y guardados; estimación = clics × 2 s + campos × 12 s; exige ≤ 16 clics, ≤ 15 campos, ≤ 2 guardados y ≤ 300 s y lo imprime. Un segundo test mide la obra bilingüe completa (inglés de título, rol, síntesis, reto, resultado, paso y alt) e imprime su estimación sin umbral, para informar.",
+    "docs/rediseno/capturar-admin.mjs: capturas de cada vista a 1440 y 390 px y video del recorrido (obra completa y CV de una vacante pegada), anonimizado, en docs/rediseno/capturas/admin-nuevo/."
+   ],
+   "acceptance": [
+    "`pnpm test:e2e admin` verde de punta a punta; al terminar ninguna base portfolio_admin_* y ningún proceso escuchando entre 3940 y 3990.",
+    "admin-flujo-obra imprime clics ≤ 16, campos ≤ 15, guardados ≤ 2 y estimación ≤ 300 s, más la estimación bilingüe.",
+    "admin-idayvuelta sin diferencias en las 5 colecciones y los 2 documentos; admin-proxy verde.",
+    "Capturas y recorrido en docs/rediseno/capturas/admin-nuevo/; `pnpm lint` y `pnpm typecheck` pasan."
+   ]
+  },
+  {
+   "id": "S1",
+   "title": "Cambio de /admin y retiro del legado",
+   "goal": "Poner el admin nuevo en /admin con base absoluta, borrar el legado, cerrar la CSP, limpiar las claves viejas de la API y dejar el build de producción verificado por el proxy.",
+   "files": [
+    "server/admin/js/",
+    "server/admin/vendor/",
+    "server/admin/index.html",
+    "server/admin/admin.src.css",
+    "server/admin/admin.css",
+    "server/admin/vite.config.ts",
+    "server/src/admin/router.ts",
+    "server/src/admin/uiNext.ts",
+    "server/src/admin/meta.ts",
+    "server/src/app.ts",
+    "nuxt.config.ts",
+    "package.json",
+    "pnpm-lock.yaml",
+    "Dockerfile.api",
+    "playwright.admin.config.ts",
+    "scripts/test-cv-and-subject.ts",
+    "scripts/test-audit.ts",
+    "tests/e2e/admin-support.ts",
+    "tests/e2e/admin-proxy.spec.ts"
+   ],
+   "dependsOn": [
+    "E1"
+   ],
+   "wave": 7,
+   "steps": [
+    "vite.config.ts: base por defecto '/admin/'. router.ts: adminUi sirve server/admin/dist (GET exacto /admin → 301 a /admin/, index.html para cualquier otra ruta no-asset); se borran /vendor/vue.js, la lista blanca del legado y uiNext.ts con su montaje y proxy (app.ts, nuxt.config.ts: '/admin' → redirect 301 a '/admin/', '/admin/**' → proxy, override de headers si E1 lo necesitó); specs a /admin.",
+    "app.ts: CSP de /admin y /api/admin igual a la de /admin-next (script/style 'self', sin scriptSrcAttr unsafe-inline ni CDN de fuentes; connect con api.github.com).",
+    "Borrar server/admin/js/**, vendor/**, index.html legado, admin.src.css y admin.css. package.json: fuera build:admin-css y la devDep @tailwindcss/cli; build:api corre build:admin. Dockerfile.api: `RUN pnpm build:admin && pnpm prisma generate`.",
+    "meta.ts: fuera las claves viejas (counts duplicados, enums planos).",
+    "Borrar scripts/test-cv-and-subject.ts y test-audit.ts (los cubre E1).",
+    "Grep final en server/admin/src de los provisorios («en el próximo paso», «se está rehaciendo») y de TODO, test.skip y .only en lo cambiado: 0."
+   ],
+   "acceptance": [
+    "`docker build -f Dockerfile.api -t portfolio-api-check .` termina bien; el contenedor sirve /admin/ con una CSP sin unsafe-eval (curl -I) y /admin responde 301 a /admin/.",
+    "`pnpm test:e2e` completo verde (sitio y admin), incluido admin-proxy contra /admin y /admin/.",
+    "`pnpm lint`, `pnpm typecheck` y `pnpm build` pasan; GET /admin/js/app.js → 404; `pnpm why @tailwindcss/cli` sin resultados."
+   ]
+  },
+  {
+   "id": "DOC",
+   "title": "Documentación del admin nuevo",
+   "goal": "Que reglas y documentos digan exactamente lo que quedó después de S1, con un chequeo que mantenga sincronizados los endpoints documentados, montados y usados.",
+   "files": [
+    "docs/admin.md",
+    ".claude/rules/admin.md",
+    ".claude/rules/backend.md",
+    "docs/decisiones.md",
+    "CLAUDE.md",
+    "AGENTS.md",
+    "DEPLOY.md",
+    "docs/fases.md",
+    "scripts/check-admin-endpoints.mjs"
+   ],
+   "dependsOn": [
+    "S1"
+   ],
+   "wave": 8,
+   "steps": [
+    "docs/admin.md: tesis, perfiles, arquitectura de información y rutas, dirección visual con valores, componentes base, teclado, matriz de datos, contrato con Eros (endpoints, extracción de pistas, política sin Eros, ids manual-*, caché y 409, EROS_DEMO solo para pruebas), inventario de endpoints → UI con los retirados, flujo del PDF del CV (pnpm cv:pdf, sello y commit), guardarraíles y checklist de aceptación.",
+    ".claude/rules/admin.md: invariantes actualizados (Vite + SFC + TS con @tailwindcss/vite, base absoluta, tokens, sin colores por módulo, rejillas, paleta con registros, un solo modelo de guardado, sin valores de enum visibles, sin style estático), anatomía nueva, defaults a evitar con los tics concretos borrados y módulos del API.",
+    ".claude/rules/backend.md: Admin en server/admin/src, adminSchema como contrato, formato de errores, guardSlugChange, checklist para sumar un campo (schema → migración → fieldMeta → adminSchema → model.ts → check-admin-schema) y pruebas con admin-run.",
+    "docs/decisiones.md: completa «Rediseño del admin (nov-2026)» con las respuestas a las preguntas, lo retirado y por qué (PDF de Eros, Guía de Asistencia, AdmAiTrace).",
+    "CLAUDE.md y AGENTS.md: stack del admin, comandos (build:admin, dev:admin, admin-run con --demo, --eros-mock y --web), estructura. DEPLOY.md: build del admin en la imagen, HUNTER_API_URL obligatoria, volumen que incluye _perfil, parche 2026-11-05. docs/fases.md: estado.",
+    "scripts/check-admin-endpoints.mjs: compara las rutas montadas en server/src/admin con la tabla de docs/admin.md y con los usos en server/admin/src; falla si una ruta no está documentada, si una documentada no existe o si una montada no tiene uso en la UI ni figura como retirada. Entra en pnpm lint vía admin-checks."
+   ],
+   "acceptance": [
+    "grep de 'Plus Jakarta|JetBrains Mono|@tailwindcss/cli|Vue global sin build|PG-17 ACID' en CLAUDE.md, AGENTS.md, docs/admin.md y .claude/rules → 0 (salvo la lista de lo descartado en decisiones.md).",
+    "`node scripts/check-admin-endpoints.mjs` sale con 0 y falla si se monta una ruta de prueba sin documentar.",
+    "`pnpm lint` pasa."
+   ]
+  }
+ ]
+}
