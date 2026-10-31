@@ -1,22 +1,30 @@
 /* Hiperfoco (docs/diseno.md §5): una capa de presentación para leer sin ruido.
    El SSR pone data-hyperfocus='true' en <html> desde la cookie pf-hyperfocus.
-   Solo en pantalla: la impresión es la misma con o sin Hiperfoco. */
+   Solo en pantalla: la impresión es la misma con o sin Hiperfoco.
+   Sin important: esta hoja entra antes que tokens.css (base.css la importa), así que cada token que el
+   tema claro redefine vuelve a declararse en la regla clara, que pesa más. scripts/check-contrast.mjs
+   lee estas dos reglas tal como están escritas. */
 @media screen {
-  /* Override de tokens: el único lugar que fuerza con important, porque useTint escribe
-     --tint y --tint-amt en línea sobre <html> y acá tienen que perder. */
   :root[data-hyperfocus='true'] {
-    --sig: var(--ink) !important;
-    --sig-text: var(--ink) !important;
-    --ok: var(--ink) !important;
-    --wip: var(--dim) !important;
-    --faint: #9b9ba3 !important;
-    --rule-focus: color-mix(in oklab, var(--ink) 12%, transparent) !important;
-    --rule: var(--rule-focus) !important;
-    --tint-amt: 0% !important;
+    --sig: var(--ink);
+    --sig-text: var(--ink);
+    --ok: var(--ink);
+    --wip: var(--dim);
+    --faint: #9b9ba3;
+    --rule-focus: color-mix(in oklab, var(--ink) 12%, transparent);
+    --rule: var(--rule-focus);
+
+    /* Sin temperatura. useTint escribe --tint-amt en línea sobre <html> (y ya lo deja en 0 sin
+       movimiento ambiental); acá se pinta el fondo llano para que ni el primer cuadro la muestre. */
+    background-color: var(--bg);
   }
 
   :root[data-theme='light'][data-hyperfocus='true'] {
-    --faint: #5a5b61 !important;
+    --sig-text: var(--ink);
+    --ok: var(--ink);
+    --wip: var(--dim);
+    --faint: #5a5b61;
+    --rule: var(--rule-focus);
   }
 
   /* Vista previa, burbuja, cargador, cuadrado del nombre, escena de la siguiente obra. */
@@ -34,4 +42,38 @@
   :root[data-hyperfocus='true'] :is(img, video) {
     filter: grayscale(1);
   }
+}
+
+/* El cambio de modo (view transition de tipo «hiperfoco», 220 ms): la cabecera, con la palabra del
+   botón, conserva su nombre (hud, motion.css) y queda quieta; la columna de lectura se angosta (o se
+   abre) desde el centro, recortada y sin escalar el texto. La palabra no lleva un nombre propio: fuera
+   del grupo de la cabecera perdería la mezcla por diferencia y en claro se vería blanca sobre blanco.
+   Hay un solo article[data-hf='measure'] por página (el enlace llano de CaseNext es un div), así el
+   nombre es único. */
+
+:root:active-view-transition-type(hiperfoco) #contenido article[data-hf='measure'] {
+  view-transition-name: hf-column;
+}
+
+:root:active-view-transition-type(hiperfoco)::view-transition-group(hf-column) {
+  overflow: clip;
+  animation-duration: 220ms;
+  animation-timing-function: var(--e);
+}
+
+:root:active-view-transition-type(hiperfoco)::view-transition-old(hf-column),
+:root:active-view-transition-type(hiperfoco)::view-transition-new(hf-column) {
+  block-size: 100%;
+  object-fit: none;
+  object-position: 50% 0;
+  animation-duration: 220ms;
+}
+
+/* Al entrar o al salir todo el cambio dura lo mismo: el título y la portada del caso, que tienen su
+   nombre fijo (data-vt), no se van a los 0,95 s de un viaje mientras el resto termina a los 220 ms. */
+:root:active-view-transition-type(hiperfoco)::view-transition-group(*),
+:root:active-view-transition-type(hiperfoco)::view-transition-old(*),
+:root:active-view-transition-type(hiperfoco)::view-transition-new(*) {
+  animation-duration: 220ms;
+  animation-delay: 0s;
 }

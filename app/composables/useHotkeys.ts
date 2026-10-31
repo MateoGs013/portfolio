@@ -63,20 +63,6 @@ export function usePalette() {
   return { open: readonly(open), requested: readonly(requested), openPalette, closePalette, togglePalette }
 }
 
-/** Corre `update` dentro de una view transition del tipo dado, o directo si no hay o con reduced motion. */
-function withViewTransition(type: string, update: () => void) {
-  if (!import.meta.client || prefersReducedMotion() || !document.startViewTransition) return update()
-  let transition: ViewTransition
-  try {
-    transition = document.startViewTransition({ update, types: [type] })
-  }
-  catch {
-    // Navegadores con view transitions pero sin tipos: solo aceptan la función.
-    transition = document.startViewTransition(update)
-  }
-  transition.finished.catch(() => {})
-}
-
 /** Los verbos del sitio: los usan las teclas, la cabecera y la paleta, con su anuncio y su sonido. */
 export function useSiteActions() {
   const router = useRouter()
@@ -110,16 +96,11 @@ export function useSiteActions() {
     return null
   }
 
+  /** El cambio en sí (view transition, cookie, lectura en su lugar) es de useHyperfocus. */
   function toggleHyperfocus() {
     const next = !focus.isHyperfocus.value
     sound.tick(1400)
-    withViewTransition('hiperfoco', () => {
-      focus.setHyperfocus(next)
-      // El atributo se escribe ya, no en el próximo parche de useHead: la transición captura este estado.
-      const root = document.documentElement
-      if (next) root.dataset.hyperfocus = 'true'
-      else delete root.dataset.hyperfocus
-    })
+    void focus.setHyperfocus(next)
     announce(t(next ? 'focus.on' : 'focus.off'))
   }
 
