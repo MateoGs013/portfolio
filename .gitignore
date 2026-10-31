@@ -16,3 +16,7 @@ tests/screenshots/
 data/
 *.db
 
+
+# Fuente cruda de docs/rediseno/capturar.mjs (pesada, png incluidos). Lo que se sirve se versiona en
+# public/media/projects/<slug>/ y se copia con server/src/scripts/import-captures.ts
+docs/rediseno/capturas/

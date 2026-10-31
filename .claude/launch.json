@@ -1,0 +1,23 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "rediseno-demo",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["docs/rediseno/serve.mjs"],
+      "port": 4321
+    },
+    {
+      "name": "api",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["dev:api"],
+      "port": 3001
+    },
+    {
+      "name": "sitio",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["dev"],
+      "port": 3000
+    }
+  ]
+}

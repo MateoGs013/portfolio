@@ -15,6 +15,7 @@ import { projects } from './routes/projects.js'
 import { schema } from './routes/schema.js'
 import { stack } from './routes/stack.js'
 import { articles } from './routes/articles.js'
+import { cv } from './routes/cv.js'
 
 export const app: Express = express()
 
@@ -39,6 +40,8 @@ app.use(['/admin', '/api/admin'], helmet.contentSecurityPolicy({
     fontSrc: ["'self'", 'https://fonts.gstatic.com', 'https://cdn.fontshare.com', 'data:'],
     imgSrc: ["'self'", 'data:', 'https:', 'blob:'],
     connectSrc: ["'self'", 'blob:', 'https://api.github.com'],
+    // Vista previa de un video antes de subirlo (URL.createObjectURL).
+    mediaSrc: ["'self'", 'blob:'],
     frameAncestors: ["'none'"],
     baseUri: ["'self'"],
     formAction: ["'self'"],
@@ -153,7 +156,7 @@ app.use('/api/admin', express.json({ limit: '2mb' }), adminAuthFailuresLimiter, 
 app.use('/admin', adminUi)
 
 // Rutas de API pública: parser de 100kb y publicApiLimiter desacoplado del admin
-app.use('/api', express.json({ limit: '100kb' }), publicApiLimiter, schema, projects, experience, stack, orgs, docs, articles)
+app.use('/api', express.json({ limit: '100kb' }), publicApiLimiter, schema, projects, experience, stack, orgs, docs, articles, cv)
 
 app.use((_req, res) => {
   res.status(404).json({ error: 'not found' })

@@ -1,106 +1,40 @@
 import { Router } from 'express'
-import { db } from '../db.js'
-import { envelope } from '../envelope.js'
-import { asBool, asInt, readFilters } from '../filters.js'
-import { fallbackProjects, getFallbackProjects } from '../fallbackData.js'
-import { ProjectStatus, type Prisma } from '../../generated/prisma/client.js'
+import { parseLang } from '../content/lang.js'
+import { matchesProject } from '../content/matches.js'
+import { presentProject, presentProjectSummary } from '../content/present.js'
+import { resolve, type Resource, type Wire } from '../content/snapshot.js'
+import { isVisible } from '../content/visibility.js'
+import { sendResolved } from '../envelope.js'
+import { projectFilters, publicFilters, readFilters, detailSlug, type ProjectFilters } from '../filters.js'
+import { getProject, listProjects, type ProjectRecord } from '../queries/projects.js'
+
+type Project = Wire<ProjectRecord>
+
+export const projectList: Resource<ProjectFilters, Project[], ReturnType<typeof presentProjectSummary>[]> = {
+  name: 'projects',
+  db: listProjects,
+  snapshot: (snap, filters) => snap.projects.filter(p => matchesProject(p, filters)),
+  present: (records, lang) => records.map(p => presentProjectSummary(p, lang)),
+}
+
+export const projectDetail: Resource<string, Project, ReturnType<typeof presentProject>> = {
+  name: 'project',
+  db: getProject,
+  snapshot: (snap, slug) => snap.projects.find(p => p.slug === slug && isVisible(p)) ?? null,
+  present: presentProject,
+}
 
 export const projects = Router()
 
-const FILTERS = ['stack', 'year', 'role', 'featured', 'status', 'org'] as const
-
-const orgSelect = { select: { slug: true, name: true } } satisfies Prisma.Project$orgArgs
-const techSelect = { select: { slug: true, name: true }, orderBy: { name: 'asc' } } satisfies Prisma.Project$techsArgs
-
-/** GET /api/projects?stack=&year=&role=&featured=&status=&org= */
-projects.get(['/projects', '/project'], async (req, res) => {
-  const filters = readFilters(req, FILTERS)
-  const org = typeof req.query.org === 'string' ? req.query.org : undefined
-  if (org) {
-    filters.org = org
-  }
-
-  try {
-    const where: Prisma.ProjectWhereInput = {}
-    if (filters.stack) where.techs = { some: { slug: filters.stack } }
-    const year = asInt(filters.year)
-    if (year !== undefined) where.year = year
-    if (filters.role) where.role = { contains: filters.role, mode: 'insensitive' }
-    const featured = asBool(filters.featured)
-    if (featured !== undefined) where.featured = featured
-
-    // Validar status de forma segura contra ProjectStatus para evitar 500 en Prisma
-    const validStatuses = Object.values(ProjectStatus)
-    if (filters.status && validStatuses.includes(filters.status as ProjectStatus)) {
-      where.status = filters.status as ProjectStatus
-    }
-
-    if (filters.org) {
-      where.org = { slug: filters.org }
-    }
-
-    const data = await db.project.findMany({
-      where,
-      orderBy: [{ sortOrder: 'asc' }, { year: 'desc' }, { title: 'asc' }],
-      include: {
-        org: orgSelect,
-        techs: techSelect,
-        links: { select: { label: true, url: true } },
-        // La portada viaja en la lista: DISEÑO arma su tira de fotogramas con ella.
-        media: { where: { role: 'COVER' }, orderBy: { order: 'asc' }, take: 1 },
-        _count: { select: { media: true, steps: true } },
-      },
-    })
-
-    res.json(envelope(data, { filters }))
-  } catch {
-    // Fallback resiliente en memoria
-    const data = getFallbackProjects(filters)
-    res.json(envelope(data, { filters }))
-  }
+/** GET /api/projects?status=&stack=&featured=&year=&org=&lang= — solo obras visibles, en sortOrder. */
+projects.get('/projects', async (req, res) => {
+  const filters = readFilters(req.query, projectFilters)
+  const lang = parseLang(req)
+  sendResolved(res, await resolve(projectList, filters, lang), { lang, filters: publicFilters(filters) })
 })
 
-/** GET /api/projects/:slug → record + subvistas (steps) + media + links */
-projects.get(['/projects/:slug', '/project/:slug'], async (req, res) => {
-  const reqSlug = Array.isArray(req.params.slug) ? req.params.slug[0] ?? '' : String(req.params.slug ?? '')
-  const altSlug = reqSlug === 'arg-piscinas' ? 'argpiscinas' : reqSlug === 'argpiscinas' ? 'arg-piscinas' : reqSlug
-
-  try {
-    const data = await db.project.findFirst({
-      where: {
-        OR: [
-          { slug: reqSlug },
-          { slug: altSlug },
-        ],
-      },
-      include: {
-        org: orgSelect,
-        techs: techSelect,
-        links: { select: { label: true, url: true } },
-        media: { orderBy: [{ role: 'asc' }, { order: 'asc' }] },
-        steps: {
-          orderBy: { order: 'asc' },
-          include: { media: true },
-        },
-      },
-    })
-
-    if (!data) {
-      const fb = fallbackProjects.find(p => p.slug === reqSlug || p.slug === altSlug)
-      if (fb) {
-        res.json(envelope(fb))
-        return
-      }
-      res.status(404).json({ error: 'not found' })
-      return
-    }
-    res.json(envelope(data))
-  } catch {
-    const fb = fallbackProjects.find(p => p.slug === reqSlug || p.slug === altSlug)
-    if (fb) {
-      res.json(envelope(fb))
-      return
-    }
-    res.status(500).json({ error: 'internal error' })
-  }
+/** GET /api/projects/:slug?lang= — el caso completo; 404 si no existe o no se publica. */
+projects.get('/projects/:slug', async (req, res) => {
+  const lang = parseLang(req)
+  sendResolved(res, await resolve(projectDetail, detailSlug(req.params.slug), lang), { lang })
 })

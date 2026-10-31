@@ -1,497 +1,91 @@
-/* Mundo DATOS — Portafolio Técnico Mateo Sonzogni
-   Paleta de alta precisión técnica: Obsidian Dark (por defecto) y Technical Paper (modo claro).
-   Tokens unificados con prefijo --d-. */
+/* Tokens de color del sitio público (docs/diseno.md §3).
+   Oscuro por defecto; el SSR pone data-theme desde la cookie pf-theme.
+   Los valores de texto están verificados por scripts/check-contrast.mjs (AA, 4,5:1). */
 
-:root {
-  /* Tipografías del Sistema DATOS */
-  --font-mono: 'Martian Mono Variable', ui-monospace, monospace;
-  --font-text: 'General Sans Variable', system-ui, -apple-system, sans-serif;
-  --font-display: 'General Sans Variable', system-ui, -apple-system, sans-serif;
-  --font-poster: 'Bebas Neue', Impact, 'General Sans Variable', sans-serif;
-
-  /* Acento Constructivista Internacional */
-  --d-orange: #ff3e00;
-  --d-orange-deep: #e03600;
-  --d-orange-glow: rgba(255, 62, 0, 0.28);
-  --d-orange-bg: rgba(255, 62, 0, 0.09);
-
-  /* Obsidian Dark (Tema Nocturno Monocromático de Alta Precisión y Calma Visual) */
-  --d-paper: #0a0a0c;
-  --d-bg: #0a0a0c;
-  --d-surface: #111114;
-  --d-surface-raised: #17171c;
-  --d-card: #17171c;
-  --d-ink: #f4f4f5;
-  --d-rule: rgba(255, 255, 255, 0.065);
-  --d-rule-strong: rgba(255, 255, 255, 0.13);
-  --d-dim: #9898a0;
-  --d-mute: #9898a0;
-  --d-faint: #71717a;
-  --d-hover: #19191f;
-  --d-sig: #ff3e00;
-  --d-sig-hover: #ff551c;
-  --d-sig-glow: rgba(255, 62, 0, 0.22);
-  --d-accent: #ff3e00;
-  --d-amber: #e5a00d;
-  --d-green: #22c55e;
-  --d-inv-dim: #9898a0;
-  --d-on-sig: #09090b;
-
-  --d-grid-cross: rgba(255, 255, 255, 0.014);
-
-  /* Densidad y marco de ventana (Full-bleed sin márgenes muertos) */
-  --d-frame: 0px;
-  --d-inset: clamp(16px, 2vw, 28px);
-  --d-row: 44px;
-  --d-tile: 184px;
-  --d-tile-sm: 128px;
-  --d-z: 40px;
-  --d-fs-mono: 12px;
-  --d-fs-ui: 13px;
-  --d-fs-name: 15px;
-  --d-fs-value: 15px;
-  --d-fs-read: 17px;
-  --d-fs-title: 24px;
-  --d-lh: 1.5;
-
-  /* Ritmo y transiciones */
-  --d-dur: 160ms;
-  --d-ease: cubic-bezier(0.22, 1, 0.36, 1);
+/* Temperatura por obra: useTint escribe --tint y --tint-amt en <html>.
+   Registradas para que el navegador las interpole y el fondo cambie de a poco. */
+@property --tint {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: #0b0b0c;
 }
 
-html[data-theme="light"] {
-  /* Technical Poster Paper (Inspirado en papel cálido de imprenta suizo) */
-  --d-orange: #c53000;
-  --d-orange-deep: #a82900;
-  --d-orange-glow: rgba(197, 48, 0, 0.18);
-  --d-orange-bg: rgba(197, 48, 0, 0.06);
+@property --tint-amt {
+  syntax: '<percentage>';
+  inherits: true;
+  initial-value: 0%;
+}
 
-  --d-paper: #faf9f6;
-  --d-bg: #faf9f6;
-  --d-surface: #f2f1ed;
-  --d-surface-raised: #e8e6e0;
-  --d-card: #ffffff;
-  --d-ink: #111113;
-  --d-rule: rgba(0, 0, 0, 0.065);
-  --d-rule-strong: rgba(0, 0, 0, 0.13);
-  --d-dim: #52525b;
-  --d-mute: #52525b;
-  --d-faint: #71717a;
-  --d-hover: #eae8e1;
-  --d-sig: #c53000;
-  --d-sig-hover: #a82900;
-  --d-sig-glow: rgba(197, 48, 0, 0.18);
-  --d-accent: #c53000;
-  --d-amber: #b45309;
-  --d-green: #047857;
-  --d-inv-dim: #71717a;
-  --d-on-sig: #ffffff;
-  --d-grid-cross: rgba(0, 0, 0, 0.018);
+:root {
+  color-scheme: dark;
+
+  --bg: #0b0b0c;
+  --surface: #141416;
+  --ink: #ededee;
+  --dim: #a1a1a9;
+  --faint: #83838c;
+  --rule: rgb(255 255 255 / 0.1);
+
+  /* --sig es solo decorativo (cuadrado del nombre, barra del cargador).
+     --sig-text es el foco visible y el único texto en acento. */
+  --sig: #ff3e00;
+  --sig-text: #ff3e00;
+
+  /* Solo para el punto de estado: nunca color de texto ni única señal. */
+  --ok: #3ecf6e;
+  --wip: #e5a00d;
+
+  /* Sin obra apuntada, la temperatura es el propio fondo: mezclar da --bg. */
+  --tint: var(--bg);
+  --tint-amt: 0%;
+
+  --pad: clamp(1rem, 3.2vw, 3rem);
+  --e: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+:root[data-theme='light'] {
   color-scheme: light;
+
+  --bg: #f1f2f2;
+  --surface: #e6e7e8;
+  --ink: #121315;
+  --dim: #55565d;
+  /* Un punto más oscuro que el #66676e de diseno.md: con la temperatura al 5 %
+     de un tinte oscuro el fondo baja y #66676e queda en 4,3:1. */
+  --faint: #616268;
+  --rule: rgb(0 0 0 / 0.1);
+
+  --sig-text: #b82d00;
+
+  --ok: #1f8a4c;
+  --wip: #a86a00;
 }
 
 html {
-  color-scheme: dark;
-  background-color: var(--d-paper);
-  color: var(--d-ink);
-  transition: background-color 0.2s ease, color 0.2s ease;
+  background-color: var(--bg);
+  background-color: color-mix(in oklab, var(--bg), var(--tint) var(--tint-amt));
+  color: var(--ink);
+  transition:
+    --tint 1.2s var(--e),
+    --tint-amt 1.2s var(--e);
 }
 
-:focus-visible {
-  outline: 2px solid var(--d-sig);
-  outline-offset: -2px;
-}
-
-/* Animaciones globales del sistema DATOS */
-@keyframes copy-pulse {
-  0% { box-shadow: 0 0 0 0 var(--d-sig-glow); }
-  70% { box-shadow: 0 0 0 7px rgba(255, 62, 0, 0); }
-  100% { box-shadow: 0 0 0 0 rgba(255, 62, 0, 0); }
-}
-
-@keyframes ticker-slide {
-  0% { transform: translate3d(0, 0, 0); }
-  100% { transform: translate3d(-50%, 0, 0); }
-}
-
-/* ─── Modo Hiperfoco Radical (Monocromo Total, Cero Marcos, Centrado) ─────── */
-html[data-hyperfocus="true"] {
-  /* Cero Colores — Monocromatismo Absoluto */
-  --d-orange: var(--d-ink) !important;
-  --d-orange-deep: var(--d-ink) !important;
-  --d-orange-glow: transparent !important;
-  --d-orange-bg: transparent !important;
-  --d-sig: var(--d-ink) !important;
-  --d-sig-hover: var(--d-dim) !important;
-  --d-sig-glow: transparent !important;
-  --d-accent: var(--d-ink) !important;
-  --d-amber: var(--d-dim) !important;
-  --d-green: var(--d-dim) !important;
-
-  /* Cero Marcos y Líneas */
-  --d-rule: transparent !important;
-  --d-rule-strong: transparent !important;
-  --d-grid-cross: transparent !important;
-
-  /* Fondos Puros */
-  --d-paper: #000000 !important;
-  --d-surface: #000000 !important;
-  --d-surface-raised: #060606 !important;
-  --d-hover: #0d0d0d !important;
-  --d-on-sig: #000000 !important;
-}
-
-html[data-theme="light"][data-hyperfocus="true"] {
-  --d-paper: #ffffff !important;
-  --d-surface: #ffffff !important;
-  --d-surface-raised: #fbfbfb !important;
-  --d-hover: #f3f3f3 !important;
-  --d-ink: #000000 !important;
-  --d-dim: #555555 !important;
-  --d-faint: #777777 !important;
-  --d-on-sig: #ffffff !important;
-}
-
-/* Ocultar Barra Lateral en Hiperfoco (Zen / Reader Mode) */
-html[data-hyperfocus="true"] .sidebar,
-html[data-hyperfocus="true"] .rzp-pane-sidebar,
-html[data-hyperfocus="true"] .rzp-div {
-  display: none !important;
-}
-html[data-hyperfocus="true"] .cuerpo-ventana {
-  grid-template-columns: 1fr !important;
-  display: flex !important;
-  justify-content: center !important;
-}
-html[data-hyperfocus="true"] .exp {
-  max-width: 840px !important;
-  width: 100% !important;
-  margin: 0 auto !important;
-  padding: 24px 16px !important;
-  border: none !important;
-}
-
-/* Supresión de Todos los Marcos, Bordes y Cajas */
-html[data-hyperfocus="true"] .ventana,
-html[data-hyperfocus="true"] .barra,
-html[data-hyperfocus="true"] .estado,
-html[data-hyperfocus="true"] .table-container,
-html[data-hyperfocus="true"] .data-table,
-html[data-hyperfocus="true"] .data-table th,
-html[data-hyperfocus="true"] .data-table td,
-html[data-hyperfocus="true"] .hd-table-wrap,
-html[data-hyperfocus="true"] .hd-table,
-html[data-hyperfocus="true"] .hd-table th,
-html[data-hyperfocus="true"] .hd-table td,
-html[data-hyperfocus="true"] .ventana-archivo-chassis,
-html[data-hyperfocus="true"] .va-titlebar,
-html[data-hyperfocus="true"] .campo,
-html[data-hyperfocus="true"] .project-hero-bar,
-html[data-hyperfocus="true"] .contact-hero-bar,
-html[data-hyperfocus="true"] .ph-btn,
-html[data-hyperfocus="true"] .ch-btn,
-html[data-hyperfocus="true"] .raw-btn,
-html[data-hyperfocus="true"] .vecino,
-html[data-hyperfocus="true"] .btn-open,
-html[data-hyperfocus="true"] .hd-btn-xs,
-html[data-hyperfocus="true"] .hd-header,
-html[data-hyperfocus="true"] .hd-list li,
-html[data-hyperfocus="true"] .hd-nav-card,
-html[data-hyperfocus="true"] .view-toggle,
-html[data-hyperfocus="true"] .v-btn,
-html[data-hyperfocus="true"] .badge-kind,
-html[data-hyperfocus="true"] .t-badge,
-html[data-hyperfocus="true"] .facet,
-html[data-hyperfocus="true"] .cabecera {
-  border: none !important;
-  border-top: none !important;
-  border-bottom: none !important;
-  border-left: none !important;
-  border-right: none !important;
-  box-shadow: none !important;
-  background: transparent !important;
-}
-
-/* Contenedores Centrados con Texto al Margen Izquierdo en Hiperfoco */
-html[data-hyperfocus="true"] .cabecera {
-  text-align: left !important;
-  display: flex !important;
-  flex-direction: column !important;
-  align-items: flex-start !important;
-  gap: 8px !important;
-  max-width: 760px !important;
-  margin: 0 auto !important;
-  width: 100% !important;
-}
-html[data-hyperfocus="true"] .cabecera .icono {
-  display: none !important;
-}
-html[data-hyperfocus="true"] .cabecera .linea,
-html[data-hyperfocus="true"] .cabecera .lado {
-  justify-content: flex-start !important;
-}
-html[data-hyperfocus="true"] .data-table {
-  margin: 0 auto !important;
-  max-width: 800px !important;
-  text-align: left !important;
-}
-html[data-hyperfocus="true"] .hoja {
-  max-width: 760px !important;
-  margin: 0 auto !important;
-  text-align: left !important;
-}
-html[data-hyperfocus="true"] .project-hero-bar,
-html[data-hyperfocus="true"] .contact-hero-bar {
-  justify-content: flex-start !important;
-  text-align: left !important;
-  border: none !important;
-  padding: 12px 0 !important;
-}
-html[data-hyperfocus="true"] .ph-meta,
-html[data-hyperfocus="true"] .ph-actions,
-html[data-hyperfocus="true"] .ch-actions {
-  justify-content: flex-start !important;
-}
-html[data-hyperfocus="true"] .ph-pill,
-html[data-hyperfocus="true"] .ph-btn,
-html[data-hyperfocus="true"] .ch-btn {
-  border: none !important;
-  background: transparent !important;
-  text-decoration: underline !important;
-  color: var(--d-ink) !important;
-}
-html[data-hyperfocus="true"] .campos {
-  border: none !important;
-  max-width: 760px !important;
-  margin: 0 auto !important;
-  text-align: left !important;
-}
-html[data-hyperfocus="true"] .campo {
-  border-bottom: 1px solid rgba(128, 128, 128, 0.12) !important;
-  padding: 12px 0 !important;
-  text-align: left !important;
-}
-
-
-
-/* Ocultar Elementos Decorativos y Ruido Visual */
-html[data-hyperfocus="true"] .ventana {
-  background-image: none !important;
-}
-html[data-hyperfocus="true"] .corner-bracket,
-html[data-hyperfocus="true"] .avatar-crosshair,
-html[data-hyperfocus="true"] .bento-cross,
-html[data-hyperfocus="true"] .pt-grid-coords,
-html[data-hyperfocus="true"] .pt-crosses,
-html[data-hyperfocus="true"] .pf-stamp-zone,
-html[data-hyperfocus="true"] .poster-ticker,
-html[data-hyperfocus="true"] .sw-ribbon,
-html[data-hyperfocus="true"] .pf-ribbon,
-html[data-hyperfocus="true"] .va-controls,
-html[data-hyperfocus="true"] .va-status-tag,
-html[data-hyperfocus="true"] .telemetria-badge,
-html[data-hyperfocus="true"] .clock-badge,
-html[data-hyperfocus="true"] .goto-btn kbd,
-html[data-hyperfocus="true"] .spotlight::after,
-html[data-hyperfocus="true"] .ui-spotlight-overlay {
-  display: none !important;
-}
-
-/* 100% Escala de Grises en Multimedia */
-html[data-hyperfocus="true"] img,
-html[data-hyperfocus="true"] video {
-  filter: grayscale(100%) contrast(1.1) !important;
-}
-
-/* Puntos e Indicadores Monocromáticos */
-html[data-hyperfocus="true"] .tele-dot,
-html[data-hyperfocus="true"] .sf-dot,
-html[data-hyperfocus="true"] .hb-dot {
-  background: var(--d-ink) !important;
-  box-shadow: none !important;
-}
-
-/* ═══════════════════════════════════════════════════════════════════════════ */
-/* REGLAS GLOBALES DE IMPRESIÓN Y EXPORTACIÓN A PDF (A4 ATS & WHITE PAPER)     */
-/* ═══════════════════════════════════════════════════════════════════════════ */
+/* Papel: se imprime siempre en claro, sin temperatura, en cualquier tema.
+   Va al final para ganarle a :root[data-theme='light'] por orden. */
 @media print {
-  @page {
-    size: A4 portrait;
-    margin: 9.5mm 12mm 9.5mm 12mm;
+  :root,
+  :root[data-theme='light'] {
+    color-scheme: light;
+
+    --bg: #ffffff;
+    --surface: #ffffff;
+    --ink: #000000;
+    --dim: #3d3e44;
+    --faint: #55565d;
+    --rule: rgb(0 0 0 / 0.18);
+    --sig-text: #000000;
+    --ok: #1f8a4c;
+    --wip: #a86a00;
+    --tint-amt: 0%;
   }
-
-  /* 1. Configuración del lienzo A4: Fondo 100% blanco puro anti-márgenes negros */
-  html,
-  body {
-    margin: 0 !important;
-    padding: 0 !important;
-    width: 100% !important;
-    height: auto !important;
-    min-height: 0 !important;
-    max-height: none !important;
-    background: #ffffff !important;
-    background-color: #ffffff !important;
-    color: #000000 !important;
-    color-scheme: light !important;
-    -webkit-print-color-adjust: exact !important;
-    print-color-adjust: exact !important;
-  }
-
-  /* 2. Ocultar el 100% de la interfaz de la aplicación, chrome, ventanas y navegación */
-  .no-print,
-  .barra,
-  .sidebar,
-  .estado,
-  .mobile-nav,
-  .datos-guia,
-  .cabecera-documento,
-  .va-titlebar,
-  .va-controls,
-  .va-header,
-  .cabecera,
-  .hoja-acciones,
-  .vecinos,
-  .raw-btn,
-  .raw-json-btn,
-  .raw-json-panel,
-  .btn-toggle-cv,
-  .cv-toolbar,
-  .hiperfoco-banner,
-  .poster-topbar,
-  .corner-bracket,
-  .sw-ribbon,
-  .pf-ribbon,
-  .pf-stamp-zone,
-  .poster-ticker,
-  .contextual-guide-bar,
-  .sw-h-hint,
-  .folder-header-hint,
-  .keys-guide-btn,
-  .saltar,
-  .no-print,
-  #vue-tracer-overlay,
-  nuxt-devtools-inspect-panel,
-  [id^="__nuxt-devtools"] {
-    display: none !important;
-  }
-
-  /* 3. Resetear contenedores intermediarios sin forzar fondos opacos */
-  #__nuxt,
-  .portafolio-layout,
-  .datos,
-  .ventana,
-  .cuerpo-ventana,
-  .exp,
-  .pane,
-  .hoja,
-  .ventana-archivo-chassis,
-  .va-body {
-    background: transparent !important;
-    color: inherit !important;
-    padding: 0 !important;
-    margin: 0 !important;
-    height: auto !important;
-    min-height: 0 !important;
-    max-height: none !important;
-    overflow: visible !important;
-    border: none !important;
-    box-shadow: none !important;
-    width: 100% !important;
-    max-width: 100% !important;
-    animation: none !important;
-  }
-
-  /* 4. Ajustes de renderizado para color y fidelidad en imprenta */
-  * {
-    -webkit-print-color-adjust: exact !important;
-    print-color-adjust: exact !important;
-  }
-
-  /* 5. Contenedor de CV */
-  .cv-wrapper {
-    max-width: 100% !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    background: transparent !important;
-  }
-}
-
-/* ─── $10k Spatial Canvas & Swiss Architectural Grid (Awwwards 2026) ─── */
-:root {
-  --d-specular-top: rgba(255, 255, 255, 0.085);
-  --d-specular-edge: rgba(255, 255, 255, 0.065);
-  --d-ambient-bleed: rgba(255, 62, 0, 0.032);
-  --d-shadow-10k: 0 12px 36px -8px rgba(0, 0, 0, 0.45), inset 0 1px 0 0 var(--d-specular-top);
-  --d-shadow-pill: 0 10px 30px -6px rgba(0, 0, 0, 0.55), inset 0 1px 0 0 rgba(255, 255, 255, 0.11);
-  --d-swiss-line: rgba(255, 255, 255, 0.038);
-  --d-buser-frame: #131316;
-  --d-buser-frame-text: #f4f4f5;
-  --d-buser-frame-dim: #8e8e96;
-}
-
-html[data-theme="light"] {
-  --d-specular-top: rgba(255, 255, 255, 0.85);
-  --d-specular-edge: rgba(0, 0, 0, 0.075);
-  --d-ambient-bleed: rgba(197, 48, 0, 0.025);
-  --d-shadow-10k: 0 8px 24px -6px rgba(0, 0, 0, 0.05), inset 0 1px 0 0 var(--d-specular-top);
-  --d-shadow-pill: 0 8px 26px -6px rgba(0, 0, 0, 0.08), inset 0 1px 0 0 rgba(255, 255, 255, 0.9);
-  --d-swiss-line: rgba(0, 0, 0, 0.045);
-  --d-buser-frame: #141414;
-  --d-buser-frame-text: #f4f4f5;
-  --d-buser-frame-dim: #9898a0;
-}
-
-/* Grilla Suiza de 12 Columnas Expuesta (Daniele Buser / Basement Studio) */
-.swiss-grid-canvas {
-  background-image: linear-gradient(to right, var(--d-swiss-line) 1px, transparent 1px);
-  background-size: calc(100% / 12) 100%;
-}
-
-/* Marco Arquitectónico de Proyecto (Daniele Buser Awwwards SOTD Card) */
-.buser-project-frame {
-  background-color: var(--d-buser-frame);
-  color: var(--d-buser-frame-text);
-  border: 1px solid var(--d-rule);
-  transition: border-color 0.25s var(--d-ease), transform 0.25s var(--d-ease);
-}
-.buser-project-frame:hover {
-  border-color: var(--d-rule-strong);
-}
-
-.surface-10k {
-  background: linear-gradient(
-    180deg,
-    color-mix(in srgb, var(--d-surface-raised) 65%, var(--d-surface)) 0%,
-    var(--d-surface) 100%
-  );
-  border: 1px solid var(--d-specular-edge);
-  box-shadow: var(--d-shadow-10k);
-}
-
-.floating-pill-10k {
-  background: color-mix(in srgb, var(--d-surface) 82%, transparent);
-  backdrop-filter: blur(16px) saturate(140%);
-  -webkit-backdrop-filter: blur(16px) saturate(140%);
-  border: 1px solid var(--d-specular-edge);
-  box-shadow: var(--d-shadow-pill);
-}
-
-.ambient-canvas-10k {
-  background-image:
-    radial-gradient(760px 340px at 32% 0%, var(--d-ambient-bleed), transparent 72%),
-    radial-gradient(var(--d-grid-cross) 1px, transparent 1px);
-  background-size: 100% 100%, 24px 24px;
-}
-
-html[data-hyperfocus="true"] .surface-10k,
-html[data-hyperfocus="true"] .floating-pill-10k,
-html[data-hyperfocus="true"] .ambient-canvas-10k,
-html[data-hyperfocus="true"] .swiss-grid-canvas,
-html[data-hyperfocus="true"] .buser-project-frame {
-  background: transparent !important;
-  background-image: none !important;
-  border: none !important;
-  box-shadow: none !important;
-  backdrop-filter: none !important;
-  color: var(--d-ink) !important;
 }

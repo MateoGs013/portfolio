@@ -1,48 +1,59 @@
 import { Router } from 'express'
-import { db } from '../db.js'
-import { envelope } from '../envelope.js'
+import type { CollectionKey } from '../../../app/lib/fieldMeta.js'
+import { docFieldsOf } from '../content/docFields.js'
+import { parseLang } from '../content/lang.js'
+import { resolve, type Resource, type Wire } from '../content/snapshot.js'
+import { isVisible, isVisibleArticle } from '../content/visibility.js'
+import { sendResolved } from '../envelope.js'
+import { schemaCounts, type SchemaCounts } from '../queries/schema.js'
+
+type Counts = Wire<SchemaCounts>
+
+export interface SchemaEntry {
+  key: string
+  label: string
+  kind: 'collection' | 'document'
+  count: number
+}
+
+function presentSchema(counts: Counts): SchemaEntry[] {
+  // Orden de lectura de collectionOrder (app/lib/fieldMeta.ts); el tipo exige cada colección.
+  const byCollection: Record<CollectionKey, number> = {
+    projects: counts.projects,
+    experience: counts.experience,
+    stack: counts.stack,
+    articles: counts.articles,
+    orgs: counts.orgs,
+  }
+  const collections = Object.entries(byCollection)
+    .map(([key, count]) => ({ key, label: key, kind: 'collection' as const, count }))
+  const documents = counts.docs.map(d => ({
+    key: d.key,
+    label: d.key,
+    kind: 'document' as const,
+    count: docFieldsOf(d.fields).length,
+  }))
+  return [...collections, ...documents]
+}
+
+export const schemaCounter: Resource<null, Counts, SchemaEntry[]> = {
+  name: 'schema',
+  db: () => schemaCounts(),
+  snapshot: snap => ({
+    projects: snap.projects.filter(isVisible).length,
+    experience: snap.experience.length,
+    stack: snap.stack.length,
+    articles: snap.articles.filter(isVisibleArticle).length,
+    orgs: snap.orgs.length,
+    docs: snap.docs,
+  }),
+  present: presentSchema,
+}
 
 export const schema = Router()
 
-/** GET /api/schema → [{ key, label, kind, count }] — la raíz del explorador. */
-schema.get('/schema', async (_req, res) => {
-  try {
-    const [projects, experience, stack, orgs, articles, docs] = await Promise.all([
-      db.project.count(),
-      db.experience.count(),
-      db.tech.count(),
-      db.org.count(),
-      db.article.count(),
-      db.doc.findMany({ select: { key: true, fields: true }, orderBy: { key: 'asc' } }),
-    ])
-
-    const collections = [
-      { key: 'projects', label: 'projects', kind: 'collection', count: projects },
-      { key: 'experience', label: 'experience', kind: 'collection', count: experience },
-      { key: 'stack', label: 'stack', kind: 'collection', count: stack },
-      { key: 'articles', label: 'articles', kind: 'collection', count: articles },
-      { key: 'orgs', label: 'orgs', kind: 'collection', count: orgs },
-    ]
-    const documents = docs.map(d => ({
-      key: d.key,
-      label: d.key,
-      kind: 'document',
-      count: Array.isArray(d.fields) ? d.fields.length : 0,
-    }))
-
-    res.json(envelope([...collections, ...documents]))
-  } catch {
-    // Fallback resiliente si la conexión a base de datos local está en reposo
-    const fallback = [
-      { key: 'projects', label: 'projects', kind: 'collection', count: 6 },
-      { key: 'experience', label: 'experience', kind: 'collection', count: 6 },
-      { key: 'stack', label: 'stack', kind: 'collection', count: 22 },
-      { key: 'articles', label: 'articles', kind: 'collection', count: 1 },
-      { key: 'orgs', label: 'orgs', kind: 'collection', count: 4 },
-      { key: 'about', label: 'about', kind: 'document', count: 13 },
-      { key: 'contact', label: 'contact', kind: 'document', count: 7 },
-      { key: 'home', label: 'home', kind: 'document', count: 8 },
-    ]
-    res.json(envelope(fallback))
-  }
+/** GET /api/schema → [{ key, label, kind, count }] — conteos con visibilidad; documentos about y contact. */
+schema.get('/schema', async (req, res) => {
+  const lang = parseLang(req)
+  sendResolved(res, await resolve(schemaCounter, null, lang), { lang })
 })

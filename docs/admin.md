@@ -6,7 +6,7 @@ Este documento establece la visión técnica, el diseño de interacción (UX/UI)
 
 ## 1. La Tesis del Admin
 
-El portafolio se fundamenta en un modelo de contenido único y relacional: **un solo modelo relacional servido sobre PostgreSQL 17 que alimenta el explorador interactivo, el modo Focus/Hiperfoco y las representaciones de perfil profesional**. Cero duplicación.
+El portafolio se fundamenta en un modelo de contenido único y relacional: **un solo modelo relacional servido sobre PostgreSQL 17 que alimenta el sitio público (inicio, obra, caso, sobre mí y artículos, cada uno con su vista de registro), el modo Focus/Hiperfoco y las representaciones de perfil profesional**. Cero duplicación.
 
 El panel de administración es el **taller de trastienda** donde ese modelo se gestiona y enriquece:
 1. **Fuente de verdad unificada:** Cada proyecto, experiencia laboral, tecnología o documento se redacta una sola vez. No existen silos fragmentados.
@@ -29,7 +29,7 @@ El diseño del panel debe satisfacer a dos usuarios muy distintos con la misma i
 ### Perfil B: Asistente Operativo / Curador de Contenido
 - **Objetivos:** Cargar nuevos proyectos asignados, redactar notas breves, subir imágenes de capturas, enlazar tecnologías y generar propuestas para vacantes de empleo.
 - **Fricciones a eliminar:** Desconocimiento de SQL, Prisma, tipos TypeScript o sintaxis JSON. No debe verse forzado a adivinar qué es un `slug` ni a lidiar con tablas rígidas sin previsualización de imágenes.
-- **Garantías requeridas:** Textos de ayuda explicativos en cada campo, sugerencia automática de slugs a partir del título, editor visual de métricas (clave-valor) y mensajes de confirmación comprensibles.
+- **Garantías requeridas:** Textos de ayuda explicativos en cada campo, sugerencia automática de slugs a partir del título, editor de métricas tipadas (valor y unidad o lista) y mensajes de confirmación comprensibles.
 
 ---
 
@@ -64,9 +64,9 @@ Inspirado en los mejores patrones de **Linear, Vercel Dashboard, Supabase Studio
 - En lugar de presentar un formulario infinito de 25 campos verticales, el editor divide el trabajo en pestañas lógicas:
   1. **Datos Básicos:** Identidad, título, slug, estado, rol, empresa y tecnologías.
   2. **Historia y Textos:** Síntesis ejecutiva, reto y resultado con pautas editoriales breves.
-  3. **Galería Multimedia:** Carga visual arrastrable, asignación de roles de imagen y previsualizador a pantalla completa (lightbox).
+  3. **Galería Multimedia:** Carga de imagen o video con póster, roles `COVER` y `GALLERY` (una portada por tipo), alt y caption, viewport, orden y tinte. Edición parcial con `PATCH /api/admin/media/:id`.
   4. **Enlaces y Pasos:** Enlaces a demostraciones y pasos numerados del caso de estudio.
-  5. **Métricas de Impacto:** Editor visual para métricas de negocio o técnicas con opción de modo avanzado en JSON.
+  5. **Métricas de Impacto:** Filas `Metric` tipadas (valor Decimal con unidad o lista, fuente, fecha de medición, rótulo opcional) y una vista "Ver JSON" de solo lectura.
 
 ---
 

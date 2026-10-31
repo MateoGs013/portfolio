@@ -1,0 +1,255 @@
+/* Transformar: view transitions con elementos compartidos (docs/diseno.md §2 y §4).
+   Los nombres son estáticos en la página de destino; el plugin de elementos compartidos
+   los apaga en línea (view-transition-name: none) en la página saliente antes de nombrar el par. */
+
+/* Un span nombrado que se parte en dos líneas hace que Chromium saltee toda la transición. El texto que
+   rueda ya es una caja que no se parte (inline-flex): pasarlo a inline-block lo baja de su renglón. */
+[data-vt='title'],
+[data-vt='page-title'],
+[data-travel-title]:not(.roll) {
+  display: inline-block;
+}
+
+[data-vt='title'] {
+  view-transition-name: title;
+}
+
+[data-vt='cover'] {
+  view-transition-name: cover;
+}
+
+[data-vt='page-title'] {
+  view-transition-name: page-title;
+}
+
+[data-vt='cv-sheet'] {
+  view-transition-name: cv-sheet;
+}
+
+/* «Ver CV» fuera de pantalla no viaja: AboutCvBlock marca la raíz y cambia la página entera. */
+:root[data-vt-off='cv-sheet'] [data-vt='cv-sheet'] {
+  view-transition-name: none;
+}
+
+/* La cabecera queda quieta mientras la página cambia debajo. */
+header[data-chrome] {
+  view-transition-name: hud;
+}
+
+/* La página sale hacia arriba y se apaga; la nueva entra desde abajo cuando la vieja ya casi no se ve.
+   Las dos páginas enteras a la vez se leen como una doble exposición: lo que une las dos es lo que viaja. */
+::view-transition-old(root) {
+  animation: 0.3s cubic-bezier(0.4, 0, 0.2, 1) both vt-out;
+}
+
+::view-transition-new(root) {
+  animation: 0.75s var(--e) 0.2s both vt-in;
+}
+
+::view-transition-group(title),
+::view-transition-group(cover),
+::view-transition-group(page-title),
+::view-transition-group(cv-sheet) {
+  animation-duration: 0.95s;
+  animation-timing-function: var(--e);
+}
+
+/* Un título que cambia de tamaño escala desde su esquina, sin deformarse. */
+::view-transition-old(title),
+::view-transition-new(title),
+::view-transition-old(page-title),
+::view-transition-new(page-title) {
+  object-fit: contain;
+  object-position: 0 0;
+}
+
+/* El título de una fila o una tarjeta (un renglón) llega al h1 del caso en dos: fundir las dos formas a
+   la vez deja un doble estirado. La vieja se apaga en el primer 20 % y la nueva entra del 12 al 40 %,
+   así el título viaja casi todo el recorrido entero y no lavado; el grupo sigue con su curva. */
+::view-transition-old(title) {
+  animation-name: vt-title-out;
+  animation-timing-function: linear;
+}
+
+::view-transition-new(title) {
+  animation-name: vt-title-in;
+  animation-timing-function: linear;
+}
+
+::view-transition-old(cover),
+::view-transition-new(cover) {
+  object-fit: cover;
+  animation-timing-function: linear;
+}
+
+/* Dos recortes de la misma captura (la escena de «Siguiente» a sangre y la portada del caso) no coinciden:
+   fundidos todo el viaje dejan el texto de la captura doble. La vieja se va en el primer tercio. */
+::view-transition-old(cover) {
+  animation-name: vt-cover-out;
+}
+
+::view-transition-new(cover) {
+  animation-name: vt-cover-in;
+}
+
+/* «Ver CV» crece hasta la hoja desde su borde superior. */
+::view-transition-old(cv-sheet),
+::view-transition-new(cv-sheet) {
+  object-fit: cover;
+  object-position: 50% 0;
+}
+
+/* Hacia un caso (tipo «caso»): el título viaja por encima de la portada que crece. */
+:root:active-view-transition-type(caso)::view-transition-group(title) {
+  z-index: 1;
+}
+
+/* El cambio de modo (tipo «hiperfoco») es un fundido corto, sin desplazar la página. */
+:root:active-view-transition-type(hiperfoco)::view-transition-old(root) {
+  animation: 220ms ease both vt-fade-out;
+}
+
+:root:active-view-transition-type(hiperfoco)::view-transition-new(root) {
+  animation: 220ms ease both vt-fade-in;
+}
+
+/* Hiperfoco: todo viaje dura 220 ms y nada espera. */
+:root[data-hyperfocus='true']::view-transition-group(*),
+:root[data-hyperfocus='true']::view-transition-old(*),
+:root[data-hyperfocus='true']::view-transition-new(*) {
+  animation-duration: 220ms;
+  animation-delay: 0s;
+}
+
+@keyframes vt-title-out {
+  0% {
+    opacity: 1;
+  }
+
+  20%,
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes vt-title-in {
+  0%,
+  12% {
+    opacity: 0;
+  }
+
+  40%,
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes vt-cover-out {
+  0% {
+    opacity: 1;
+  }
+
+  35%,
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes vt-cover-in {
+  0% {
+    opacity: 0;
+  }
+
+  25%,
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes vt-out {
+  to {
+    opacity: 0;
+    transform: translateY(-4vh);
+  }
+}
+
+@keyframes vt-in {
+  from {
+    opacity: 0;
+    transform: translateY(6vh);
+  }
+}
+
+@keyframes vt-fade-out {
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes vt-fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
+/* Cargador de la primera visita (IntroLoader, docs/diseno.md §6). Antes de JS, el CSS ya hace subir
+   las letras (1 s expo.out, 35 ms por letra) y avanzar contador y barra (1,5 s), así el nombre se ve
+   desde el primer pintado. Al hidratar, JS pone data-run y sigue desde donde va la animación.
+   Seguridad: a los 4 s deja de verse y de tapar, pase lo que pase. */
+@property --intro-n {
+  syntax: '<integer>';
+  inherits: false;
+  initial-value: 0;
+}
+
+[data-intro] [data-intro-loader] {
+  animation: intro-safety 0.4s 4s both;
+}
+
+[data-intro] [data-intro-loader]:not([data-run]) .ch {
+  animation: intro-rise 1s var(--e) calc(var(--i, 0) * 35ms) both;
+}
+
+[data-intro] [data-intro-loader]:not([data-run]) [data-bar] {
+  animation: intro-bar 1.5s cubic-bezier(0.45, 0, 0.55, 1) both;
+}
+
+[data-intro] [data-intro-loader]:not([data-run]) [data-count]::after {
+  content: counter(intro-n);
+  counter-reset: intro-n var(--intro-n);
+  animation: intro-count 1.5s cubic-bezier(0.45, 0, 0.55, 1) both;
+}
+
+@keyframes intro-safety {
+  to {
+    opacity: 0;
+    visibility: hidden;
+  }
+}
+
+@keyframes intro-rise {
+  from {
+    transform: translateY(110%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+@keyframes intro-bar {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+@keyframes intro-count {
+  from {
+    --intro-n: 0;
+  }
+  to {
+    --intro-n: 100;
+  }
+}

@@ -6,6 +6,36 @@ Formato: decisión · alternativa descartada · por qué.
 
 ---
 
+## Rediseño «movimiento» (30-oct-2026)
+
+Las reglas que salen de estas decisiones viven en `docs/diseno.md`.
+
+**Un portafolio de estructura convencional donde lo memorable es el movimiento.**
+*Descartado:* el explorador técnico (una ventana de archivos con carpetas, baldosas, barra de dirección y barra de estado) como forma de navegar el sitio público.
+*Por qué:* el visitante tenía que aprender un concepto antes de ver la obra. El explorador ya había reemplazado a «Dos Mundos» y después se probaron «La costura» con cursor y con scroll; Mateo los encontró complejos e innecesarios. La lección es la misma en todos: la estructura es la de siempre (inicio, obra, caso, sobre mí, contacto) y la diferencia está en el oficio. Del explorador queda lo que sí era propio: la ruta como estado y «ver como registro» (R) como herramienta, no como tesis.
+
+**El Hiperfoco existente, revisado, como único modo de lectura.**
+*Descartado:* la «lectura enfocada» de la demo (tecla propia, desenfocar y atenuar todo lo que no está bajo el cursor) y la barra inferior que la alojaba junto a Registro, Ir a y Tema.
+*Por qué:* duplicaba al Hiperfoco con otra tecla y otro comportamiento, y el atenuado dependía del puntero, así que no servía en táctil ni con teclado. Se conserva el Hiperfoco (`H`), con estado en cookie para que el SSR no parpadee, la navegación intacta y el movimiento ambiental apagado. Atenuar queda solo como hover en listas. Las acciones de la barra pasan a la cabecera.
+
+**El Hiperfoco sin componentes propios.**
+*Descartado:* el dossier escrito a mano que la home mostraba solo en Hiperfoco.
+*Por qué:* era contenido fuera de la base (invariante 1) y una segunda versión de la home que había que mantener. El Hiperfoco es una capa de presentación sobre las mismas páginas, marcada con `data-hf` y `data-ornament`.
+
+**Sonido opcional, apagado y en cinco gestos.**
+*Descartado:* sonido en cada click, cambio de modo y apertura (`useBenchoSound`), junto con los destellos de click, los bordes láser y la física de resortes como regla general.
+*Por qué:* el sonido en cada interacción es ruido y no significa nada; un portafolio se lee muchas veces con el volumen alto en una oficina. Queda un tic de 70 ms, apagado por defecto, que se activa desde la paleta y solo suena en R, H, copiar el email, la paleta y Asomar.
+
+**Una sola fuente de reglas para Claude y Gemini.**
+*Descartado:* `.agents/rules/architectural-guardrails.md` con reglas propias de Gemini, incluido «push antes de mirar» (inspeccionar solo en producción después de desplegar).
+*Por qué:* contradecía a `.claude/rules` (Bencho y Awwwards contra tinta sobre papel) y obligaba a probar en producción. `AGENTS.md` ahora apunta a `docs/diseno.md` y a `.claude/rules`, y todo se verifica en local antes de un push que solo hace Mateo.
+
+**Sin página Stack.**
+*Descartado:* una página de tecnologías con filtros por categoría y la «máquina del tiempo» por año.
+*Por qué:* el prototipo aprobado no la tiene y sumaba una superficie más. Las tecnologías facetan la obra (`/projects?stack=`) y su relación con las obras se ve con «Asomar» en el caso.
+
+---
+
 ## Evolución Arquitectónica (Septiembre - Octubre 2026)
 
 **Portafolio unificado con Modo Focus (Hiperfoco) en lugar de "Dos Mundos".**

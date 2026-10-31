@@ -1,0 +1,1522 @@
+<!doctype html>
+<html lang="es" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mateo Sonzogni — demo de rediseño</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Martian+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script>try{var t=localStorage.getItem('demo-theme');if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
+<style>
+/* ── Tokens ─────────────────────────────────────────────────────────────── */
+@font-face{font-family:'General Sans';src:url('../../app/assets/fonts/GeneralSans-Variable.woff2') format('woff2');font-weight:200 700;font-display:swap}
+:root{
+  --bg:#0b0b0c;--surface:#141416;--ink:#ededee;--dim:#a1a1a9;--faint:#83838c;
+  --rule:rgba(255,255,255,.085);--rule-strong:rgba(255,255,255,.16);--hl:rgba(255,255,255,.065);
+  --sig:#ff3e00;--ok:#3ecf6e;--wip:#e5a00d;
+  --sans:'General Sans',system-ui,-apple-system,sans-serif;--mono:'Martian Mono',ui-monospace,monospace;
+  --fs-xs:.8125rem;--fs-s:.9375rem;--fs-m:1.0625rem;--fs-l:1.375rem;--fs-xl:clamp(1.6rem,3vw,2.25rem);
+  --fs-hero:clamp(2.6rem,6.6vw,6rem);
+  --gutter:clamp(1rem,4vw,3rem);--max:80rem;
+  --e-out:cubic-bezier(.16,1,.3,1);
+  color-scheme:dark;
+}
+:root[data-theme="light"]{
+  --bg:#f1f2f2;--surface:#e6e7e8;--ink:#121315;--dim:#55565d;--faint:#66676e;
+  --rule:rgba(0,0,0,.1);--rule-strong:rgba(0,0,0,.2);--hl:rgba(0,0,0,.055);color-scheme:light;
+}
+/* ── Base ───────────────────────────────────────────────────────────────── */
+*,*::before,*::after{box-sizing:border-box}
+*{margin:0}
+html{background:var(--bg);color:var(--ink);font-family:var(--sans);-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+body{min-height:100dvh;padding-bottom:3.25rem;font-size:var(--fs-m);line-height:1.5;font-weight:420;background:var(--bg);overflow-x:clip}
+a{color:inherit;text-decoration:none}
+button{font:inherit;color:inherit}
+img{max-width:100%}
+::selection{background:var(--sig);color:#0b0b0c}
+:focus-visible{outline:2px solid var(--sig);outline-offset:3px;border-radius:3px}
+[tabindex="-1"]:focus{outline:none}
+[hidden]{display:none!important}
+.wrap{max-width:var(--max);margin:0 auto;padding:0 var(--gutter)}
+.num{font-variant-numeric:tabular-nums}
+.skip{position:fixed;left:.75rem;top:.75rem;z-index:99;padding:.5rem .8rem;background:var(--ink);color:var(--bg);border-radius:6px;transform:translateY(-200%)}
+.skip:focus{transform:none}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+.sq{display:inline-block;width:.16em;height:.16em;background:var(--sig);margin-left:.06em;vertical-align:baseline}
+.dot{display:inline-block;width:.45rem;height:.45rem;border-radius:50%;background:var(--ok);margin-right:.55rem;vertical-align:.08em}
+.dot.WIP{background:var(--wip)}
+.dot.pulse{animation:breathe 2.6s ease-in-out infinite}
+@keyframes breathe{50%{opacity:.35}}
+kbd{font-family:var(--mono);font-size:.66rem;line-height:1;color:var(--faint);border:1px solid var(--rule-strong);border-radius:4px;padding:.18rem .32rem}
+
+/* Link: la línea entra por la izquierda y sale por la derecha */
+.link{background:linear-gradient(currentColor,currentColor) 100% 100%/0 1px no-repeat;transition:background-size .45s var(--e-out);padding-bottom:.08em}
+.link:hover,.link:focus-visible{background-position:0 100%;background-size:100% 1px}
+button.link{border:0;background-color:transparent;cursor:pointer;padding:0 0 .08em}
+
+/* Resaltado que viaja: un solo rectángulo que se desliza entre opciones */
+.hl{position:absolute;left:0;top:0;width:0;height:0;border-radius:6px;background:var(--hl);opacity:0;pointer-events:none;z-index:0}
+
+/* ── Cabecera ───────────────────────────────────────────────────────────── */
+.top{display:flex;align-items:center;justify-content:space-between;gap:1rem;max-width:var(--max);margin:0 auto;padding:1.1rem var(--gutter);view-transition-name:top}
+.brand{font-weight:560;font-size:var(--fs-s);letter-spacing:-.01em}
+.brand .sq{width:.42em;height:.42em}
+.nav{position:relative;display:flex;gap:.1rem;margin-right:-.6rem}
+.nav a{position:relative;z-index:1;padding:.4rem .6rem;font-size:var(--fs-s);color:var(--dim);transition:color .2s}
+.nav a:hover,.nav a[aria-current]{color:var(--ink)}
+.nav a[aria-current]::after{content:'';position:absolute;left:.6rem;right:.6rem;bottom:.15rem;height:1px;background:var(--sig)}
+
+/* ── Barra de estado (ADN del explorador: la ruta es el estado) ─────────── */
+.bar{position:fixed;left:0;right:0;bottom:0;z-index:20;height:2.9rem;display:flex;align-items:center;gap:1.25rem;padding:0 var(--gutter);border-top:1px solid var(--rule);background:color-mix(in srgb,var(--bg) 84%,transparent);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);font-size:var(--fs-xs);color:var(--dim);view-transition-name:bar}
+.path{flex:1;min-width:0;font-family:var(--mono);font-size:.7rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--faint)}
+.path a{color:var(--dim)}
+.path a:hover{color:var(--ink)}
+.path .q{color:var(--sig)}
+.status{white-space:nowrap}
+.actions{display:flex;gap:.4rem}
+.btn{display:inline-flex;align-items:center;gap:.45rem;height:1.95rem;padding:0 .6rem;border:1px solid var(--rule);border-radius:6px;background:none;color:var(--dim);font-size:var(--fs-xs);cursor:pointer;white-space:nowrap;transition:color .2s,border-color .2s}
+.btn:hover{color:var(--ink);border-color:var(--rule-strong)}
+.btn[aria-pressed="true"]{color:var(--ink);border-color:var(--sig)}
+.btn svg{width:.95rem;height:.95rem}
+.lbl-short{display:none}
+
+/* ── Vista previa que sigue al cursor ───────────────────────────────────── */
+.preview{position:fixed;left:0;top:0;z-index:15;width:min(23rem,30vw);aspect-ratio:16/10;pointer-events:none;will-change:transform}
+.pv-in{width:100%;height:100%;overflow:hidden;border-radius:4px;opacity:0;transform:scale(.86);box-shadow:0 24px 70px rgba(0,0,0,.4)}
+.strip>*{display:block;width:100%;aspect-ratio:16/10;object-fit:cover}
+.plate{display:flex;align-items:flex-end;padding:1rem 1.1rem;background:var(--surface);font-size:1.6rem;font-weight:560;letter-spacing:-.025em;color:var(--ink)}
+@media (hover:none),(pointer:coarse){.preview{display:none}}
+
+/* ── Documento: modo diseño ─────────────────────────────────────────────── */
+.doc{position:relative}
+.fk,.ft,.rec-only,.rec-head,.thead{display:none}
+.doc:not(.rec) .is-null{display:none}
+
+.home{padding-top:clamp(2.5rem,9vh,6.5rem)}
+.intro{display:flex;flex-wrap:wrap;gap:.2rem 1rem;font-size:var(--fs-s);color:var(--dim)}
+.intro-name{color:var(--ink);font-weight:520}
+.hero-h{font-size:var(--fs-hero);font-weight:560;letter-spacing:-.038em;line-height:.98;max-width:14.5ch;margin-top:1.4rem}
+.hero-h .w{display:inline-block;overflow:hidden;vertical-align:top;padding-bottom:.12em;margin-bottom:-.12em}
+.hero-h .w>span{display:inline-block}
+.facts{display:flex;flex-wrap:wrap;gap:.4rem 2.25rem;margin-top:2rem;font-size:var(--fs-s);color:var(--dim)}
+.sec{display:block;margin-top:clamp(5rem,15vh,9rem)}
+.sec-head{display:flex;justify-content:space-between;align-items:baseline;gap:1rem;padding-bottom:1rem}
+.sec-head h2{font-size:var(--fs-s);font-weight:500;color:var(--dim)}
+.sec-head a{font-size:var(--fs-s)}
+
+/* Lista de obras */
+.works{list-style:none;padding:0;border-bottom:1px solid var(--rule)}
+.row-a{display:grid;grid-template-columns:minmax(0,1fr) auto;column-gap:2rem;align-items:baseline;padding:1.45rem 0;border-top:1px solid var(--rule);transition:opacity .4s var(--e-out)}
+.r-title{font-size:var(--fs-xl);font-weight:540;letter-spacing:-.022em;line-height:1.08}
+.r-tx{display:inline-block;transition:transform .55s var(--e-out)}
+.r-meta{grid-column:1;margin-top:.4rem;font-size:var(--fs-s);color:var(--dim)}
+.r-year{grid-column:2;grid-row:1;font-size:var(--fs-s);color:var(--dim)}
+.r-thumb{display:none}
+@media (hover:hover) and (pointer:fine){
+  .works:hover .row-a:not(:hover){opacity:.3}
+  .row-a:hover .r-tx{transform:translateX(.4rem)}
+}
+@media (hover:none),(pointer:coarse){
+  .row-a{grid-template-columns:4.75rem minmax(0,1fr) auto;column-gap:1rem}
+  .r-thumb{display:block;grid-row:1/3;grid-column:1;width:4.75rem;aspect-ratio:16/10;object-fit:cover;border-radius:3px;background:var(--surface);align-self:center}
+  .r-title,.r-meta{grid-column:2}
+  .r-year{grid-column:3}
+  .r-title{font-size:var(--fs-l)}
+}
+
+/* Contacto */
+.copy{display:inline-grid;background:none;border:0;padding:0;cursor:pointer;text-align:left;font-size:clamp(1.45rem,7vw,4.25rem);font-weight:540;letter-spacing:-.032em;line-height:1.1;color:var(--ink);max-width:100%}
+.cp-a,.cp-b{grid-area:1/1;overflow:hidden;white-space:nowrap;padding-bottom:.08em}
+.ch{display:inline-block;white-space:pre}
+.cp-b .ch{transform:translateY(115%)}
+.copy-hint{margin-top:.6rem;font-size:var(--fs-s);color:var(--dim)}
+.contact-links{display:flex;flex-wrap:wrap;gap:.6rem 2rem;margin-top:2.25rem;font-size:var(--fs-m)}
+
+/* Caso */
+.case{padding-top:clamp(1.5rem,5vh,3.5rem)}
+.back{font-size:var(--fs-s);color:var(--dim)}
+.case-top{display:block;margin-top:1.5rem}
+.case-h{font-size:clamp(2.5rem,7.4vw,6.5rem);font-weight:560;letter-spacing:-.042em;line-height:.95}
+.lead{font-size:var(--fs-l);line-height:1.42;color:var(--dim);max-width:40ch;margin-top:1.4rem}
+.meta{display:grid;grid-template-columns:repeat(auto-fit,minmax(10.5rem,1fr));gap:1.5rem 2rem;margin-top:3rem;padding-top:1.25rem;border-top:1px solid var(--rule)}
+.m-f{display:flex;flex-direction:column;gap:.3rem;font-size:var(--fs-s)}
+.m-lab{font-size:var(--fs-xs);color:var(--dim)}
+.f-media{margin-top:3rem}
+.cover{display:block;width:100%;height:auto;aspect-ratio:16/10;object-fit:cover;border-radius:4px;background:var(--surface)}
+.story{display:grid;gap:3.5rem;margin-top:clamp(4rem,11vh,6.5rem)}
+.blk{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,2.4fr);gap:.75rem 3rem;padding-top:1.25rem;border-top:1px solid var(--rule)}
+.blk-h{font-size:var(--fs-s);font-weight:500;color:var(--dim)}
+.blk p.fv{line-height:1.62;max-width:62ch}
+.steps{list-style:none;padding:0;display:grid;gap:1.6rem;counter-reset:st}
+.steps li{counter-increment:st;display:grid;grid-template-columns:1.75rem minmax(0,1fr)}
+.steps li::before{content:counter(st);grid-row:1/3;color:var(--faint);font-variant-numeric:tabular-nums}
+.step-t{font-weight:540}
+.step-b{color:var(--dim);margin-top:.3rem;max-width:62ch}
+.metrics{display:grid;grid-template-columns:repeat(auto-fill,minmax(8.5rem,1fr));gap:1.6rem 1.25rem;align-items:end}
+.m-v.is-text{font-size:var(--fs-m);font-weight:500;letter-spacing:-.005em;line-height:1.35}
+.m{display:flex;flex-direction:column-reverse;gap:.15rem}
+.m-v{font-size:var(--fs-xl);font-weight:520;letter-spacing:-.02em;line-height:1.1}
+.links{display:flex;flex-wrap:wrap;gap:1rem 2.5rem;margin-top:4rem}
+.links .fv{font-size:var(--fs-l);font-weight:520}
+.hint{margin-top:3rem;font-size:var(--fs-s);color:var(--dim)}
+.next{margin-top:clamp(5rem,14vh,8rem)}
+
+/* Colecciones */
+.coll{padding-top:clamp(2rem,7vh,4.5rem)}
+.coll-title,.page-title{font-size:clamp(2.75rem,7.4vw,6.25rem);font-weight:560;letter-spacing:-.042em;line-height:.95}
+.coll-title sup{font-size:.26em;font-weight:450;letter-spacing:0;color:var(--dim);vertical-align:super;margin-left:.2em}
+.coll-sub{max-width:52ch;margin-top:1.1rem;color:var(--dim)}
+.flt{position:relative;display:flex;flex-wrap:wrap;gap:.1rem;margin:2.5rem 0 1rem -.6rem}
+.flt button{position:relative;z-index:1;background:none;border:0;padding:.4rem .6rem;font-size:var(--fs-s);color:var(--dim);cursor:pointer;transition:color .2s}
+.flt button:hover,.flt button[aria-pressed="true"]{color:var(--ink)}
+.flt button[aria-pressed="true"]::after{content:'';position:absolute;left:.6rem;right:.6rem;bottom:.12rem;height:1px;background:var(--sig)}
+.flt sup{font-size:.68em;color:var(--faint);margin-left:.15em}
+.techs{list-style:none;padding:0;border-bottom:1px solid var(--rule)}
+.tech-a{display:grid;grid-template-columns:minmax(0,1fr) 9rem 6rem 6rem;column-gap:1rem;align-items:baseline;width:100%;padding:1.05rem 0;border:0;border-top:1px solid var(--rule);background:none;text-align:left;cursor:pointer}
+.t-name{font-size:var(--fs-l);font-weight:520;letter-spacing:-.01em}
+.t-cat,.t-since,.t-n{font-size:var(--fs-s);color:var(--dim)}
+.t-n{text-align:right}
+.tech-more{overflow:hidden;padding:0 0 1.35rem;max-width:60ch;color:var(--dim)}
+.tech-more p+p{margin-top:.5rem}
+.t-used a{color:var(--ink)}
+.tech.is-focus .t-name::after{content:'';display:inline-block;width:.32em;height:.32em;background:var(--sig);margin-left:.3em}
+
+/* Sobre mí */
+.about{padding-top:clamp(2rem,7vh,4.5rem)}
+.lead-xl{font-size:clamp(1.3rem,2.4vw,1.85rem);line-height:1.35;letter-spacing:-.012em;max-width:34ch;margin-top:2rem}
+.facts-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(15rem,1fr));gap:1.5rem 2rem;margin-top:3.5rem;padding-top:1.25rem;border-top:1px solid var(--rule)}
+.exp{list-style:none;padding:0;display:grid;gap:1.4rem}
+.exp-i{display:grid;grid-template-columns:6.5rem minmax(0,1fr);column-gap:1rem}
+.e-yrs{color:var(--dim);font-size:var(--fs-s)}
+.e-role{font-weight:520}
+.e-sum{grid-column:2;color:var(--dim);font-size:var(--fs-s);margin-top:.2rem;max-width:60ch}
+.cv{margin-top:3rem;display:flex;flex-wrap:wrap;gap:.5rem 2rem;font-size:var(--fs-m)}
+.nf{padding-top:6rem}
+.nf p{margin-top:1.5rem}
+
+/* Lectura enfocada (Hiperfoco): todo se atenúa menos el bloque bajo el cursor */
+body.focus-read .doc :is(p,li,.f,.m-f,.blk){transition:opacity .35s var(--e-out),filter .35s var(--e-out)}
+@media (hover:hover) and (pointer:fine){
+  body.focus-read .doc:not(.rec) :is(.blk,.meta,.case-top,.f-media,.links,.intro,.facts,.sec,.facts-grid,.lead-xl,.coll-list):not(:hover){opacity:.28;filter:blur(1.5px)}
+}
+
+/* ── Documento: modo registro (mismos nodos, otra lectura) ──────────────── */
+.doc.rec .ed-only{display:none!important}
+.doc.rec .rec-only{display:revert}
+.doc.rec .rec-head{display:flex;flex-wrap:wrap;gap:.5rem;grid-column:1/-1;padding-bottom:1rem;font-family:var(--mono);font-size:.7rem;color:var(--faint)}
+.rec-head b{font-weight:500;color:var(--ink)}
+.doc.rec:not(.coll){display:grid;grid-template-columns:minmax(7rem,13rem) minmax(6rem,15rem) minmax(0,1fr);column-gap:1.5rem;align-content:start}
+.doc.rec .grp{display:contents}
+.doc.rec .f{position:relative;display:grid;grid-column:1/-1;grid-template-columns:subgrid;align-items:baseline;padding:.7rem 0;margin:0}
+/* Las líneas de la tabla son pseudo-elementos para poder trazarlas (--rs de 0 a 1) */
+.doc.rec .f::before,.doc.coll.rec .coll-list .row-a::before,.doc.coll.rec .tech-a::before,.doc.coll.rec .thead::before{content:'';position:absolute;left:0;right:0;top:0;height:1px;background:var(--rule);transform:scaleX(var(--rs,1));transform-origin:0 50%;pointer-events:none}
+.doc span.fv,.doc a.fv,.doc span.flip{display:inline-block;max-width:100%}
+.ghosts{position:fixed!important;inset:0;z-index:25;display:block!important;margin:0!important;padding:0!important;max-width:none!important;min-height:0!important;pointer-events:none}
+.doc.rec .fk{display:block;font-family:var(--mono);font-size:.74rem;color:var(--ink)}
+.doc.rec .ft{display:block;font-family:var(--mono);font-size:.68rem;color:var(--faint)}
+.doc.rec .fv{font-size:var(--fs-s);font-weight:420;letter-spacing:0;line-height:1.55;color:var(--dim);max-width:68ch;margin:0}
+.doc.rec .fv.q::before,.doc.rec .fv.q::after{content:'"';color:var(--faint);transition:opacity .45s var(--e-out)}
+.doc.quotes-off .fv.q::before,.doc.quotes-off .fv.q::after{opacity:0}
+.doc.rec .fv.num,.doc.rec .null{font-family:var(--mono);font-size:.76rem}
+.null{font-family:var(--mono);color:var(--faint)}
+.doc.rec .copy{font-size:var(--fs-s);font-weight:420;letter-spacing:0;color:var(--dim)}.doc.rec .works,.doc.rec .techs{border-bottom:0}
+.doc.rec .works .row-a{grid-template-columns:minmax(0,1fr) 6rem 3.5rem;padding:.2rem 0;border-top:0}
+.doc.rec .row-a>*{grid-row:auto;grid-column:auto;margin:0}
+.doc.rec .r-title{font-size:var(--fs-s);font-weight:420;letter-spacing:0;line-height:1.55}
+.doc.rec .r-year,.doc.rec .r-status,.doc.rec .r-slug{font-family:var(--mono);font-size:.74rem;color:var(--dim)}
+.doc.rec .steps,.doc.rec .exp{display:block}
+.doc.rec .steps li,.doc.rec .exp-i{display:block}
+.doc.rec .steps li::before{content:none}
+.doc.rec .step-t,.doc.rec .e-role{font-weight:420}
+.doc.rec .e-yrs{font-family:var(--mono);font-size:.74rem;margin-right:.75rem}
+.doc.rec .metrics{display:block}
+.doc.rec .m{flex-direction:row;gap:.6rem}
+.doc.rec .m-key,.doc.rec .m-v{font-family:var(--mono);font-size:.74rem;letter-spacing:0;font-weight:400}
+.doc.rec .m-key{color:var(--faint)}
+.doc.rec .m-v{color:var(--dim)}
+.doc.rec .media-v{display:flex;align-items:center;gap:1rem}
+.doc.rec .f-media{align-items:start}
+.cover-thumb{display:block;width:8.5rem;aspect-ratio:16/10;object-fit:cover;border-radius:2px;background:var(--surface)}
+.media-meta{font-family:var(--mono);font-size:.7rem;color:var(--faint)}
+.doc.rec .lead-xl{font-size:var(--fs-s)}
+.doc.rec .links .fv{font-size:var(--fs-s);font-weight:420}
+/* Colección en modo registro: la carpeta se vuelve tabla */
+.doc.coll.rec .coll-title,.doc.rec .page-title{font-size:var(--fs-s);font-weight:500;letter-spacing:0;font-family:var(--mono);grid-column:1/-1}
+.doc.coll.rec .coll-title sup{font-size:.7rem}
+.doc.coll.rec .coll-list .row-a,.doc.coll.rec .thead{position:relative;display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr) 6rem 3.5rem;column-gap:1rem;align-items:baseline;padding:.5rem 0;border-top:0}
+.doc.coll.rec .tech-a{position:relative;border-top:0}
+.doc.coll.rec .techs .tech-a,.doc.coll.rec .techs .thead{grid-template-columns:minmax(0,1.3fr) 8rem 4rem 4.5rem;padding:.5rem 0}
+.doc.coll.rec .t-name{font-size:var(--fs-s);font-weight:420}
+.doc.coll.rec .t-cat,.doc.coll.rec .t-since,.doc.coll.rec .t-n{font-family:var(--mono);font-size:.74rem}
+.thead span{font-family:var(--mono);font-size:.66rem;color:var(--faint)}
+.doc.rec .page-title{padding-bottom:.5rem}
+
+/* ── Paleta "ir a" ──────────────────────────────────────────────────────── */
+.pal-bd{position:fixed;inset:0;z-index:40;display:grid;justify-items:center;align-items:start;padding-top:13vh;background:color-mix(in srgb,var(--bg) 55%,transparent);backdrop-filter:blur(5px);-webkit-backdrop-filter:blur(5px)}
+.pal{width:min(36rem,calc(100vw - 2rem));background:var(--surface);border:1px solid var(--rule-strong);border-radius:10px;overflow:hidden;box-shadow:0 30px 90px rgba(0,0,0,.45)}
+.pal-in{width:100%;padding:1rem 1.1rem;border:0;border-bottom:1px solid var(--rule);background:none;color:var(--ink);font-size:var(--fs-m);outline:none}
+.pal-in::placeholder{color:var(--faint)}
+.pal-scroll{position:relative;max-height:min(23rem,52vh);overflow:auto;padding:.35rem}
+.pal-list{position:relative;z-index:1;list-style:none;padding:0}
+.pal-g{padding:.65rem .7rem .3rem;font-size:.75rem;color:var(--faint)}
+.pal-it{display:flex;justify-content:space-between;gap:1rem;padding:.55rem .7rem;border-radius:6px;color:var(--dim);cursor:pointer}
+.pal-it[aria-selected="true"]{color:var(--ink)}
+.pal-it small{font-size:.75rem;color:var(--faint);white-space:nowrap}
+.pal-empty{padding:1rem .7rem;color:var(--faint)}
+.pal-ft{display:flex;flex-wrap:wrap;gap:.4rem 1.1rem;padding:.6rem 1rem;border-top:1px solid var(--rule);font-size:.75rem;color:var(--faint)}
+
+/* ── Transiciones entre rutas (View Transitions) ────────────────────────── */
+::view-transition-old(root),::view-transition-new(root){animation-duration:.32s;animation-timing-function:var(--e-out)}
+::view-transition-group(cover){animation-duration:.75s;animation-timing-function:cubic-bezier(.16,1,.3,1)}
+::view-transition-old(cover),::view-transition-new(cover){height:100%;object-fit:cover;overflow:hidden}
+
+/* ── Temperatura por obra: el fondo toma un poco del color de su portada ── */
+@property --tint{syntax:'<color>';inherits:true;initial-value:#7f7f7f}
+@property --tint-amt{syntax:'<percentage>';inherits:true;initial-value:0%}
+body{--page:color-mix(in srgb,var(--tint) var(--tint-amt),var(--bg));background:var(--page);transition:--tint 1.2s var(--e-out),--tint-amt 1.2s var(--e-out)}
+.bar{background:color-mix(in srgb,var(--page) 84%,transparent)}
+
+/* ── La portada que se abre: de la columna a pantalla completa con el scroll ── */
+.cover-stage{position:relative;margin:0}
+.cover-cap{margin-top:.75rem;font-size:var(--fs-xs);color:var(--faint);max-width:60ch}
+.cover-stage.is-scene{width:100vw;height:100svh;margin-left:calc(50% - 50vw);overflow:hidden}
+.cover-stage.is-scene .cover{position:absolute;inset:0;width:100%;height:100%;aspect-ratio:auto;border-radius:0;will-change:transform,clip-path}
+.cover-stage.is-scene .cover-cap{position:absolute;left:var(--gutter);bottom:1.4rem;margin:0;color:rgba(255,255,255,.86);text-shadow:0 1px 14px rgba(0,0,0,.55);opacity:0}
+
+/* ── La lista como selector de escena: la obra apuntada llena el fondo ─── */
+.backdrop{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none}
+/* Desenfocada: es atmósfera, no un segundo contenido que compita con el texto de la lista */
+.backdrop img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;filter:blur(5px) saturate(1.1)}
+.backdrop::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,var(--page) 0%,color-mix(in srgb,var(--page) 88%,transparent) 42%,color-mix(in srgb,var(--page) 58%,transparent) 100%)}
+.top,main{position:relative;z-index:1}
+@media (hover:none),(pointer:coarse){.backdrop{display:none}}
+
+/* ── Rótulos que se quedan mientras su texto avanza ─────────────────────── */
+.blk-h{position:sticky;top:5rem;align-self:start}
+
+/* ── La siguiente obra como escena ──────────────────────────────────────── */
+.next-a{position:relative;display:flex;flex-direction:column;justify-content:flex-end;gap:.5rem;width:100vw;margin-left:calc(50% - 50vw);min-height:clamp(24rem,72vh,46rem);padding:clamp(1.5rem,4vw,3rem) var(--gutter);overflow:hidden;color:#f4f4f5;background:#141416}
+.next-bg{position:absolute;inset:0;overflow:hidden;transition:transform 1.4s var(--e-out)}
+.next-img{position:absolute;left:0;top:-12%;width:100%;height:124%;object-fit:cover}
+/* Sombra fuerte abajo: el texto tiene que leerse aunque la portada sea clara */
+.next-bg::after{content:'';position:absolute;inset:0;background:linear-gradient(to top,rgba(8,8,9,.94) 0%,rgba(8,8,9,.78) 28%,rgba(8,8,9,.4) 62%,rgba(8,8,9,.28) 100%)}
+.next-a>:not(.next-bg){position:relative;z-index:1}
+.next-l,.next-meta{font-size:var(--fs-s);color:rgba(244,244,245,.72)}
+.next-title{font-size:clamp(2.6rem,7vw,6rem);font-weight:560;letter-spacing:-.042em;line-height:.95}
+@media (hover:hover) and (pointer:fine){
+  .next-a:hover .next-bg{transform:scale(1.03)}
+  .next-a:hover .r-tx{transform:translateX(.4rem)}
+}
+.next-a:focus-visible{outline-offset:-6px}
+
+/* ── Scroll con inercia (Lenis) ─────────────────────────────────────────── */
+html.lenis,html.lenis body{height:auto}
+.lenis.lenis-smooth{scroll-behavior:auto!important}
+.lenis.lenis-smooth [data-lenis-prevent]{overscroll-behavior:contain}
+.lenis.lenis-stopped{overflow:hidden}
+
+/* Filas por encima del resaltado de teclado */
+.row-a,.tech-a{position:relative;z-index:1}
+.kb-hl{border-radius:8px}
+
+/* ── Título que se abre y faceta que viaja (view transitions compartidas) ─ */
+.h-tx{display:inline-block;max-width:100%}
+::view-transition-group(title),::view-transition-group(facet){animation-duration:.72s;animation-timing-function:cubic-bezier(.16,1,.3,1)}
+::view-transition-old(title),::view-transition-new(title),::view-transition-old(facet),::view-transition-new(facet){object-fit:contain;object-position:0 0}
+.facets{display:flex;flex-wrap:wrap;gap:.5rem;margin-top:1.5rem}
+.facet-chip{display:inline-flex;align-items:baseline;gap:.55rem;padding:.35rem .6rem .35rem .7rem;border:1px solid var(--rule-strong);border-radius:6px;font-size:var(--fs-s);color:var(--ink);transition:border-color .25s}
+.facet-chip:hover,.facet-chip:focus-visible{border-color:var(--sig)}
+.facet-chip .k{font-family:var(--mono);font-size:.68rem;color:var(--faint)}
+.facet-chip .x{color:var(--faint);transition:color .2s}
+.facet-chip:hover .x{color:var(--ink)}
+
+/* ── Asomar: un popover que crece desde su ancla y viaja entre anclas ───── */
+.peek{position:fixed;left:0;top:0;z-index:30;width:max-content;max-width:min(19rem,calc(100vw - 2rem));padding:.75rem .85rem .8rem;overflow:hidden;background:var(--surface);border:1px solid var(--rule-strong);border-radius:8px;box-shadow:0 18px 50px rgba(0,0,0,.35);font-size:var(--fs-xs);line-height:1.45;color:var(--dim);visibility:hidden;opacity:0}
+.peek b{display:flex;align-items:baseline;gap:.5rem;font-size:var(--fs-s);font-weight:540;color:var(--ink)}
+.peek .pk-k{font-family:var(--mono);font-size:.64rem;font-weight:400;color:var(--faint)}
+.peek p{margin-top:.35rem}
+.peek a{color:var(--ink)}
+[data-peek]{cursor:help}
+a[data-peek]{cursor:pointer}
+.m[data-peek]:focus-visible{outline-offset:6px}
+
+/* ── Índice de campos: el registro como minimapa ────────────────────────── */
+.fidx{position:fixed;right:clamp(.75rem,1.5vw,1.4rem);top:50%;z-index:12;display:flex;flex-direction:column;align-items:flex-end;gap:.15rem;transform:translateY(-50%);transition:opacity .35s var(--e-out)}
+.fidx a{display:flex;align-items:center;justify-content:flex-end;gap:.6rem;height:1.05rem;color:var(--faint);font-family:var(--mono);font-size:.64rem}
+.fidx .t{display:block;width:.7rem;height:1px;background:currentColor;transition:width .5s var(--e-out),background-color .3s}
+.fidx a:hover{color:var(--ink)}
+.fidx a.is-on{color:var(--ink)}
+.fidx a.is-on .t{width:1.7rem;background:var(--sig)}
+.fidx .l{opacity:0;transform:translateX(8px);white-space:nowrap;transition:opacity .25s,transform .45s var(--e-out);transition-delay:calc(var(--i) * 18ms)}
+.fidx:hover .l,.fidx:focus-within .l{opacity:1;transform:none}
+body.is-rec .fidx{opacity:0;pointer-events:none}
+@media (max-width:1180px),(hover:none){.fidx{display:none}}
+
+/* ── Máquina del tiempo del stack ───────────────────────────────────────── */
+.tm{display:flex;flex-wrap:wrap;align-items:center;gap:.5rem 1rem;margin:0 0 1.25rem;font-size:var(--fs-s);color:var(--dim)}
+.tm-y{display:inline-flex;overflow:hidden;height:1.5em;min-width:2.6em;color:var(--ink);font-weight:540}
+.tm-y span{display:block}
+.tm input{-webkit-appearance:none;appearance:none;width:min(17rem,46vw);height:1.6rem;margin:0;background:transparent;cursor:ew-resize}
+.tm input::-webkit-slider-runnable-track{height:1px;background:var(--rule-strong)}
+.tm input::-webkit-slider-thumb{-webkit-appearance:none;width:.75rem;height:.75rem;margin-top:-.35rem;border-radius:1px;background:var(--ink);transition:transform .25s var(--e-out),background-color .2s}
+.tm input:active::-webkit-slider-thumb,.tm input:focus-visible::-webkit-slider-thumb{transform:scale(1.25);background:var(--sig)}
+.tm input::-moz-range-track{height:1px;background:var(--rule-strong)}
+.tm input::-moz-range-thumb{width:.75rem;height:.75rem;border:0;border-radius:1px;background:var(--ink)}
+.tm-ends{font-size:var(--fs-xs);color:var(--faint)}
+.tech{transition:opacity .5s var(--e-out)}
+.tech.is-future{opacity:.16}
+
+/* ── La ruta que rueda ──────────────────────────────────────────────────── */
+.path .q{display:inline-flex;overflow:hidden;vertical-align:bottom}
+.qc{display:inline-block;white-space:pre}
+
+/* ── Responsive ─────────────────────────────────────────────────────────── */
+@media (max-width:900px){
+  .status{display:none}
+  .tech-a{grid-template-columns:minmax(0,1fr) 6rem 5rem}
+  .tech-a .t-cat.ed-only{display:none}
+}
+@media (max-width:640px){
+  .top{flex-wrap:wrap;row-gap:.35rem}
+  .nav{width:100%;margin:0 0 0 -.6rem}
+  .lbl-long{display:none}
+  .lbl-short{display:inline}
+  .bar{gap:.6rem}
+  .bar kbd,.focus-btn{display:none}
+  .blk{grid-template-columns:1fr}
+  .blk-h{position:static}
+  .exp-i{grid-template-columns:1fr}
+  .e-sum{grid-column:1}
+  .tech-a{grid-template-columns:minmax(0,1fr) auto}
+  .tech-a .t-n{display:none}
+  .doc.rec:not(.coll){grid-template-columns:1fr}
+  .doc.rec .f{grid-template-columns:minmax(0,1fr) auto}
+  .doc.rec .fk{grid-column:1}
+  .doc.rec .ft{grid-column:2;text-align:right}
+  .doc.rec .fv,.doc.rec .f>.fv-list,.doc.rec .f>.null{grid-column:1/-1;margin-top:.3rem}
+  .doc.coll.rec .coll-list .row-a,.doc.coll.rec .thead{grid-template-columns:minmax(0,1fr) 4.5rem 3rem}
+  .doc.coll.rec .r-slug,.doc.coll.rec .thead .c-slug{display:none}
+  .doc.coll.rec .techs .tech-a,.doc.coll.rec .techs .thead{grid-template-columns:minmax(0,1fr) 3.5rem 3rem}
+  .doc.coll.rec .t-cat,.doc.coll.rec .thead .c-cat{display:none}
+}
+@media (hover:none){kbd{display:none}}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{transition-duration:.01ms!important;animation:none!important}
+  ::view-transition-group(*),::view-transition-old(*),::view-transition-new(*){animation:none!important}
+}
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Saltar al contenido</a>
+<header class="top">
+  <a class="brand" href="#/">Mateo Sonzogni<span class="sq" aria-hidden="true"></span></a>
+  <nav class="nav" aria-label="Principal">
+    <span class="hl" aria-hidden="true"></span>
+    <a href="#/obra" data-nav="obra">Obra</a>
+    <a href="#/stack" data-nav="stack">Stack</a>
+    <a href="#/sobre-mi" data-nav="sobre-mi">Sobre mí</a>
+    <a href="#/contacto" data-nav="contacto">Contacto</a>
+  </nav>
+</header>
+
+<main id="main" tabindex="-1"><noscript><p class="wrap">Esta demo necesita JavaScript. El sitio real se renderiza en el servidor.</p></noscript></main>
+
+<div class="bar">
+  <span class="path" aria-label="Ruta actual"></span>
+  <span class="status"><i class="dot pulse" aria-hidden="true"></i>Disponible · Río Negro, AR · <time class="clock">--:--</time></span>
+  <span class="actions">
+    <button class="btn rec-btn" type="button" aria-pressed="false"><kbd>R</kbd><span class="lbl-long">Ver como registro</span><span class="lbl-short">Registro</span></button>
+    <button class="btn focus-btn" type="button" aria-pressed="false"><kbd>F</kbd><span class="lbl-long">Lectura enfocada</span><span class="lbl-short">Foco</span></button>
+    <button class="btn goto-btn" type="button"><kbd class="kb-mod">Ctrl K</kbd><span class="lbl-long">Ir a</span><span class="lbl-short">Buscar</span></button>
+    <button class="btn theme-btn" type="button" aria-label="Cambiar tema"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.25" fill="none" stroke="currentColor" stroke-width="1.2"/><path d="M8 1.75a6.25 6.25 0 0 1 0 12.5z" fill="currentColor"/></svg></button>
+  </span>
+</div>
+
+<div class="backdrop" aria-hidden="true"></div>
+<div class="preview" aria-hidden="true"><div class="pv-in"><div class="strip"></div></div></div>
+<div class="peek" id="peek" role="tooltip"><div class="peek-in"></div></div>
+
+<div class="pal-bd" hidden>
+  <div class="pal" role="dialog" aria-modal="true" aria-label="Ir a">
+    <input class="pal-in" type="text" placeholder="Buscar obra, tecnología o acción" role="combobox" aria-expanded="true" aria-controls="pal-list" aria-autocomplete="list" autocomplete="off" spellcheck="false">
+    <div class="pal-scroll" data-lenis-prevent><span class="hl pal-hl" aria-hidden="true"></span><ul class="pal-list" id="pal-list" role="listbox" aria-label="Resultados"></ul></div>
+    <div class="pal-ft"><span><kbd>↑</kbd> <kbd>↓</kbd> moverse</span><span><kbd>Enter</kbd> abrir</span><span><kbd>Esc</kbd> cerrar</span></div>
+  </div>
+</div>
+<div class="sr" aria-live="polite"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/Flip.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+<script src="https://unpkg.com/lenis@1.1.13/dist/lenis.min.js"></script>
+<script src="demo-data.js"></script>
+<script>
+'use strict'
+const D = window.DATA
+const P = D.projects
+const bySlug = Object.fromEntries(P.map(p => [p.slug, p]))
+const techSlug = Object.fromEntries(D.stack.map(t => [t.name, t.slug]))
+const $ = (s, r = document) => r.querySelector(s)
+const $$ = (s, r = document) => [...r.querySelectorAll(s)]
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]))
+const reduce = matchMedia('(prefers-reduced-motion: reduce)')
+const finePointer = matchMedia('(hover: hover) and (pointer: fine)')
+if (window.gsap && window.Flip) gsap.registerPlugin(Flip)
+if (window.gsap && window.ScrollTrigger) gsap.registerPlugin(ScrollTrigger)
+const motion = () => !!(window.gsap && window.Flip) && !reduce.matches
+const visible = el => el.getClientRects().length > 0
+const main = $('#main')
+
+/* ── Scroll con inercia: Lenis sobre el ticker de GSAP ──────────────────── */
+let lenis = null
+if (window.Lenis && !reduce.matches) {
+  lenis = new Lenis({ lerp: 0.11 })
+  if (window.gsap) { gsap.ticker.add(t => lenis.raf(t * 1000)); gsap.ticker.lagSmoothing(0) }
+  else requestAnimationFrame(function raf(t) { lenis.raf(t); requestAnimationFrame(raf) })
+  if (window.ScrollTrigger) lenis.on('scroll', ScrollTrigger.update)
+}
+
+/* ── Temperatura por obra ───────────────────────────────────────────────── */
+// El fondo de toda la página toma un poco del color característico de la portada.
+// En un caso es su temperatura; en una lista, pasar por una obra la anticipa.
+let pageTint = null
+function setTint(color, strength = 1) {
+  const s = document.body.style
+  if (!color) { s.setProperty('--tint-amt', '0%'); return }
+  const base = document.documentElement.dataset.theme === 'light' ? 5 : 8
+  s.setProperty('--tint', color)
+  s.setProperty('--tint-amt', (base * strength).toFixed(1) + '%')
+}
+
+/* ── La portada que se abre a pantalla completa ─────────────────────────── */
+// La escena se fija mientras la imagen pasa del ancho de la columna (con su radio) a cubrir
+// la pantalla, alejándose un poco. Solo con movimiento, puntero fino y desde 768 px.
+let scene = null
+function buildScene(root) {
+  const stage = $('.cover-stage', root), doc = $('.doc', root)
+  if (!stage || !window.ScrollTrigger || !motion() || innerWidth < 768 || isRec()) return
+  const img = $('.cover', stage), cap = $('.cover-cap', stage)
+  stage.classList.add('is-scene')
+  const ease = gsap.parseEase('power2.inOut')
+  let W, H, cx0, cy0
+  const measure = () => {
+    const cs = getComputedStyle(doc)
+    const contentW = doc.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight)
+    W = stage.clientWidth; H = stage.clientHeight
+    cx0 = Math.max(0, (W - contentW) / 2)
+    cy0 = Math.max(0, (H - contentW * 10 / 16) / 2)
+  }
+  const apply = p => {
+    const e = ease(p), s = 1.14 - 0.14 * e
+    // El recorte se calcula en coordenadas de la imagen escalada para que lo visible abra parejo
+    const cxl = W / 2 - (W / 2 - cx0 * (1 - e)) / s, cyl = H / 2 - (H / 2 - cy0 * (1 - e)) / s, r = (4 * (1 - e)) / s
+    img.style.transform = `scale(${s})`
+    img.style.clipPath = `inset(${cyl}px ${cxl}px ${cyl}px ${cxl}px round ${r}px)`
+    cap.style.opacity = Math.max(0, (p - 0.78) / 0.22)
+  }
+  measure(); apply(0)
+  scene = ScrollTrigger.create({
+    trigger: stage, start: 'top top', end: '+=85%', pin: true, scrub: true,
+    onRefresh: self => { measure(); apply(self.progress) },
+    onUpdate: self => apply(self.progress),
+  })
+}
+/* ── La siguiente obra como escena: profundidad y traspaso de temperatura ── */
+let extras = []
+function buildCaseExtras(root) {
+  const link = $('.next-a', root)
+  if (!link || !window.ScrollTrigger || isRec()) return
+  const img = $('.next-img', link), to = bySlug[link.dataset.slug]?.cover?.tint ?? null, from = pageTint
+  // Capas con distinto ritmo: la imagen se mueve más lento que su marco (parallax sin WebGL)
+  if (motion() && img) {
+    const tw = gsap.fromTo(img, { yPercent: -10 }, { yPercent: 6, ease: 'none', scrollTrigger: { trigger: link, start: 'top bottom', end: 'bottom top', scrub: true } })
+    extras.push({ kill() { tw.scrollTrigger?.kill(); tw.kill() } })
+  }
+  // Mientras la siguiente obra entra, la página pasa de una temperatura a la otra
+  if (from || to) {
+    const blend = p => {
+      if (from && to) setTint(gsap.utils.interpolate(from, to, p))
+      else if (to) setTint(to, p)
+      else setTint(from, 1 - p)
+    }
+    extras.push(ScrollTrigger.create({ trigger: link, start: 'top 85%', end: 'top 25%', onUpdate: self => blend(self.progress), onLeaveBack: () => setTint(from) }))
+  }
+}
+function killCaseExtras() { extras.forEach(t => t.kill()); extras = [] }
+main.addEventListener('click', e => {
+  const a = e.target.closest('.next-a')
+  if (!a || isRec()) return
+  $$('.h-tx, .cover', main).forEach(el => { el.style.viewTransitionName = 'none' })
+  $('.r-tx', a).style.viewTransitionName = 'title'
+  const img = $('.next-img', a)
+  if (img) img.style.viewTransitionName = 'cover'
+})
+
+// Al desarmar la escena, lo que estás mirando queda en el mismo lugar
+function killScene(keepPlace = true) {
+  if (!scene) return
+  const anchor = keepPlace ? $$('.doc .f', main).find(el => visible(el) && el.getBoundingClientRect().bottom > 64) : null
+  const before = anchor?.getBoundingClientRect().top
+  const stage = scene.trigger
+  scene.kill(true); scene = null
+  stage.classList.remove('is-scene')
+  const img = $('.cover', stage), cap = $('.cover-cap', stage)
+  img.style.transform = ''; img.style.clipPath = ''; cap.style.opacity = ''
+  if (anchor && anchor.isConnected) scrollByY(anchor.getBoundingClientRect().top - before)
+}
+const scrollToY = y => lenis ? lenis.scrollTo(y, { immediate: true, force: true }) : window.scrollTo(0, y)
+const scrollByY = dy => scrollToY(window.scrollY + dy)
+function glideTo(el, offset = -96) {
+  if (lenis) lenis.scrollTo(el, { offset, duration: 1.15, easing: t => 1 - Math.pow(1 - t, 4) })
+  else window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY + offset, behavior: reduce.matches ? 'auto' : 'smooth' })
+}
+
+const STATUS = { LIVE: 'En producción', WIP: 'En desarrollo', ARCHIVED: 'Archivado' }
+const CAT = { LANGUAGE: 'Lenguajes', FRAMEWORK: 'Frameworks', BACKEND: 'Backend', DATA: 'Datos', MOTION: 'Motion', GRAPHICS: 'Gráficos', TOOLING: 'Tooling', DESIGN: 'Diseño' }
+const CAT1 = { LANGUAGE: 'Lenguaje', FRAMEWORK: 'Framework', BACKEND: 'Backend', DATA: 'Datos', MOTION: 'Motion', GRAPHICS: 'Gráficos', TOOLING: 'Tooling', DESIGN: 'Diseño' }
+const METRIC = { lcp: 'LCP', performanceScore: 'Performance', accessibilityScore: 'Accesibilidad', bestPracticesScore: 'Buenas prácticas', seoScore: 'SEO', bundleSizeKb: 'Bundle (KB)', localeCount: 'Idiomas', languages: 'Idiomas', commits: 'Commits', averageLatencyMs: 'Latencia media (ms)', encryptionLayers: 'Capas de cifrado', vectorDimensions: 'Dimensiones', localModels: 'Modelos locales', drawCalls: 'Draw calls', fpsTarget: 'FPS objetivo', graphNodes: 'Nodos del grafo', vaultNotesParsed: 'Notas procesadas' }
+
+/* ── Sonido opcional: un tic corto, apagado por defecto ─────────────────── */
+let soundOn = false, ac = null
+try { soundOn = localStorage.getItem('demo-sound') === 'on' } catch {}
+function tick(freq = 1700) {
+  if (!soundOn) return
+  try {
+    ac ??= new AudioContext()
+    const o = ac.createOscillator(), g = ac.createGain(), t = ac.currentTime
+    o.type = 'sine'; o.frequency.value = freq
+    g.gain.setValueAtTime(0.0001, t)
+    g.gain.exponentialRampToValueAtTime(0.045, t + 0.004)
+    g.gain.exponentialRampToValueAtTime(0.0001, t + 0.07)
+    o.connect(g).connect(ac.destination); o.start(t); o.stop(t + 0.08)
+  } catch {}
+}
+function toggleSound() {
+  soundOn = !soundOn
+  try { localStorage.setItem('demo-sound', soundOn ? 'on' : 'off') } catch {}
+  announce(soundOn ? 'Sonido activado' : 'Sonido apagado'); tick(2200)
+}
+
+/* ── Ruta ───────────────────────────────────────────────────────────────── */
+function parse() {
+  const h = location.hash.replace(/^#\/?/, '')
+  const [p, q = ''] = h.split('?')
+  return { path: p.split('/').filter(Boolean), query: new URLSearchParams(q) }
+}
+const toHash = r => '#/' + r.path.join('/') + (r.query.toString() ? '?' + r.query.toString() : '')
+function setQuery(key, value) {
+  const r = parse()
+  const was = r.query.get(key) ?? ''
+  value ? r.query.set(key, value) : r.query.delete(key)
+  history.replaceState(null, '', toHash(r))
+  pathBar(r, was !== (value ?? ''))
+}
+
+/* ── Piezas de marcado ──────────────────────────────────────────────────── */
+// Un campo: nombre y tipo (visibles solo como registro) y su valor.
+const F = (k, t, value, cls = '') =>
+  `<div class="f ${cls} ${value == null ? 'is-null' : ''}" data-k="${k}"><span class="fk">${k}</span><span class="ft">${esc(t)}</span>${value ?? '<span class="null">NULL</span>'}</div>`
+const M = (k, t, label, value) =>
+  `<div class="f m-f ${value == null ? 'is-null' : ''}" data-k="${k}"><span class="fk">${k}</span><span class="ft">${esc(t)}</span><span class="m-lab ed-only">${label}</span>${value ?? '<span class="null">NULL</span>'}</div>`
+const sw = (ed, rec) => `<span class="ed-only">${ed}</span><span class="rec-only">${rec}</span>`
+const blk = (label, field, isNull) => isNull ? field : `<div class="blk grp"><h2 class="blk-h ed-only">${label}</h2>${field}</div>`
+const recHead = (kind, name, extra) => `<p class="rec-head"><span>${kind}</span><span>·</span><b>${esc(name)}</b><span>·</span><span>${esc(extra)}</span></p>`
+const year = d => d ? d.slice(0, 4) : 'hoy'
+const span = e => { const a = year(e.startedAt), b = e.endedAt ? year(e.endedAt) : 'hoy'; return a === b ? a : `${a}–${b}` }
+const stepName = t => { const s = t.replace(/^\d+\s*·\s*/, ''); return s.charAt(0).toUpperCase() + s.slice(1) }
+
+function workRow(p, withSlug = false) {
+  return `<li class="row" data-slug="${p.slug}" data-status="${p.status.toLowerCase()}"><a class="row-a" href="#/obra/${p.slug}" data-slug="${p.slug}">
+    <span class="r-title flip"><span class="r-tx">${esc(p.title)}</span></span>
+    <span class="r-meta ed-only">${STATUS[p.status]} · ${esc(p.role)}</span>
+    ${withSlug ? `<span class="r-slug rec-only">${p.slug}</span>` : ''}
+    <span class="r-status rec-only">${p.status}</span>
+    <span class="r-year flip num">${p.year}</span>
+    ${p.cover ? `<img class="r-thumb ed-only" src="${p.cover.src}" alt="" loading="lazy" width="96" height="60">` : ''}
+  </a></li>`
+}
+function copyInner(text) {
+  const chars = s => [...s].map(c => `<span class="ch">${esc(c)}</span>`).join('')
+  return `<span class="cp-a" aria-hidden="true">${chars(text)}</span><span class="cp-b" aria-hidden="true">${chars('copiado')}</span><span class="sr">${esc(text)}</span>`
+}
+
+/* ── Vistas ─────────────────────────────────────────────────────────────── */
+function vHome() {
+  const a = D.about, c = D.contact, feat = P.filter(p => p.featured)
+  return `<article class="doc home wrap">
+  ${recHead('document', 'about + contact', '9 campos')}
+  <div class="intro grp">
+    ${F('name', 'string', `<span class="fv q intro-name">${esc(a.name)}</span>`)}
+    ${F('role', 'string', `<span class="fv q">${esc(a.role)}</span>`)}
+  </div>
+  ${F('headline', 'string · campo nuevo', `<h1 class="fv q hero-h" tabindex="-1">${esc(D.headline)}<span class="sq ed-only" aria-hidden="true"></span></h1>`)}
+  <div class="facts grp">
+    ${F('availability', 'string', `<span class="fv q"><i class="dot pulse ed-only" aria-hidden="true"></i>${esc(c.availability)}</span>`)}
+    ${F('location', 'string', `<span class="fv q">${esc(c.location)}</span>`)}
+  </div>
+  <section class="sec grp" aria-labelledby="h-obra">
+    <div class="sec-head ed-only"><h2 id="h-obra">Obra seleccionada</h2><a class="link" href="#/obra">Ver las ${P.length}</a></div>
+    ${F('projects', `relation → Project[] · featured ${feat.length}/${P.length}`, `<ol class="fv-list works">${feat.map(p => workRow(p)).join('')}</ol>`)}
+  </section>
+  <section class="sec grp" id="contacto" aria-labelledby="h-contacto">
+    <div class="sec-head ed-only"><h2 id="h-contacto">Contacto</h2></div>
+    ${F('email', 'string', `<button class="fv copy" type="button" aria-label="Copiar ${esc(c.email)}">${copyInner(c.email)}</button>`)}
+    <p class="copy-hint ed-only">Click para copiar. También estoy en:</p>
+    <div class="contact-links grp">
+      ${F('github', 'string', `<a class="fv q link" href="${c.github}" target="_blank" rel="noopener">${sw('GitHub ↗', esc(c.github))}</a>`)}
+      ${F('linkedin', 'string', `<a class="fv q link" href="${c.linkedin}" target="_blank" rel="noopener">${sw('LinkedIn ↗', esc(c.linkedin))}</a>`)}
+      <a class="link ed-only" href="https://mateogs.tech/cv/CV-ES-Mateo-Sonzogni-ATS.pdf" target="_blank" rel="noopener">CV en PDF ↗</a>
+    </div>
+  </section>
+</article>`
+}
+
+function metricsHtml(m) {
+  return `<div class="fv-list metrics">${Object.entries(m).map(([k, v]) => {
+    const isSec = typeof v === 'string' && /^\d+(\.\d+)?s$/.test(v)
+    const n = typeof v === 'number' ? v : isSec ? parseFloat(v) : null
+    const shown = Array.isArray(v) ? v.join(' · ') : v
+    const roll = n != null ? ` data-roll="${n}" data-suf="${isSec ? 's' : ''}" aria-label="${esc(shown)}"` : ''
+    return `<div class="m" data-peek="m:${k}" tabindex="0"><span class="m-lab ed-only">${METRIC[k] ?? k}</span><span class="m-key rec-only">${k}:</span><span class="m-v flip num${n == null ? ' is-text' : ''}"${roll}>${esc(shown)}</span></div>`
+  }).join('')}</div>`
+}
+
+function vCase(slug) {
+  const p = bySlug[slug]
+  if (!p) return vNotFound()
+  const next = P[(P.indexOf(p) + 1) % P.length]
+  const ext = (label, url) => url ? `<a class="fv q link" href="${url}" target="_blank" rel="noopener">${sw(label, esc(url))}</a>` : null
+  return `<article class="doc case wrap">
+  ${recHead('record', 'Project · ' + p.slug, `15 campos · updatedAt ${p.updatedAt.slice(0, 10)}`)}
+  <a class="back link ed-only" href="#/obra">← Obra</a>
+  <header class="case-top grp">
+    ${F('title', 'string', `<h1 class="fv q case-h" tabindex="-1"><span class="h-tx" style="view-transition-name:title">${esc(p.title)}</span></h1>`)}
+    ${F('summary', 'string', `<p class="fv q lead">${esc(p.summary)}</p>`)}
+  </header>
+  <div class="meta grp">
+    ${M('role', 'string', 'Rol', `<span class="fv q">${esc(p.role)}</span>`)}
+    ${M('year', 'int', 'Año', `<span class="fv num">${p.year}</span>`)}
+    ${M('org', 'relation → Org?', 'Cliente', p.org ? `<span class="fv">${esc(p.org)}</span>` : null)}
+    ${M('status', 'enum ProjectStatus', 'Estado', `<a class="fv link facet-link" data-facet="estado" href="#/obra?estado=${p.status.toLowerCase()}" title="Ver toda la obra en este estado">${sw(`<i class="dot ${p.status}" aria-hidden="true"></i>${STATUS[p.status]}`, p.status)}</a>`)}
+    ${M('techs', `relation → Tech[] (${p.techs.length})`, 'Stack', `<span class="fv">${p.techs.map(t => `<a class="link facet-link" data-facet="tec" data-peek="tec:${techSlug[t]}" href="#/obra?tec=${techSlug[t]}">${esc(t)}</a>`).join(', ')}</span>`)}
+  </div>
+  ${F('media', `relation → Media[] (${p.cover ? 1 : 0})`, p.cover ? `<figure class="cover-stage ed-only"><img class="cover" src="${p.cover.src}" alt="${esc(p.cover.alt)}" width="${p.cover.w}" height="${p.cover.h}" style="view-transition-name:cover"><figcaption class="cover-cap">${esc(p.cover.alt)}</figcaption></figure><div class="fv-list media-v rec-only"><img class="cover-thumb" src="${p.cover.src}" alt="" width="${p.cover.w}" height="${p.cover.h}"><span class="media-meta">${p.cover.src.replace('https://mateogs.tech', '')} · ${p.cover.w}×${p.cover.h}${p.cover.bytes ? ' · ' + Math.round(p.cover.bytes / 1024) + ' KB' : ''}${p.cover.tint ? ' · tint ' + p.cover.tint : ''}</span></div>` : null, 'f-media')}
+  <div class="story grp">
+    ${blk('El encargo', F('brief', 'text', p.brief ? `<p class="fv">${esc(p.brief)}</p>` : null), !p.brief)}
+    ${blk('Proceso', F('steps', `relation → ProcessStep[] (${p.steps.length})`, p.steps.length ? `<ol class="fv-list steps">${p.steps.map(s => `<li><span class="step-t flip">${sw(esc(stepName(s.title)), esc(s.title))}</span><p class="step-b ed-only">${esc(s.body)}</p></li>`).join('')}</ol>` : null), !p.steps.length)}
+    ${blk('Resultado', F('outcome', 'text', p.outcome ? `<p class="fv">${esc(p.outcome)}</p>` : null), !p.outcome)}
+    ${blk('Métricas', F('metrics', 'json', p.metrics ? metricsHtml(p.metrics) : null), !p.metrics)}
+  </div>
+  <div class="links grp">
+    ${F('url', 'string?', ext('Visitar el sitio ↗', p.url))}
+    ${F('repo', 'string?', ext('Ver el código ↗', p.repo))}
+  </div>
+  <p class="hint ed-only">Este caso es un registro de Postgres. <button class="link as-rec" type="button">Velo como registro</button> <kbd>R</kbd></p>
+  <section class="next ed-only" aria-label="Siguiente obra">
+    <a class="next-a" href="#/obra/${next.slug}" data-slug="${next.slug}">
+      <span class="next-bg" aria-hidden="true">${next.cover ? `<img class="next-img" src="${next.cover.src}" alt="" loading="lazy">` : ''}</span>
+      <span class="next-l">Siguiente</span>
+      <span class="next-title"><span class="r-tx">${esc(next.title)}</span></span>
+      <span class="next-meta">${STATUS[next.status]} · ${esc(next.role)}</span>
+    </a>
+  </section>
+</article>`
+}
+
+function vObra(q) {
+  // Faceta por relación: /obra?tec=gsap muestra solo la obra que usa esa tecnología
+  const tech = D.stack.find(t => t.slug === q.get('tec'))
+  const rows = tech ? P.filter(p => p.techs.includes(tech.name)) : P
+  const n = s => rows.filter(p => p.status === s).length
+  const keep = q.get('estado') ? `?estado=${q.get('estado')}` : ''
+  return `<article class="doc coll wrap">
+  ${recHead('collection', 'Project', `${rows.length} records${tech ? ` · where techs ∋ ${tech.slug}` : ''}`)}
+  <h1 class="coll-title flip" tabindex="-1">Obra<sup class="count num">${rows.length}</sup></h1>
+  <p class="coll-sub ed-only">${tech ? `La obra donde usé ${esc(tech.name)}.` : 'Proyectos para clientes, producto propio y la tesis. Cada uno es un registro con su proceso y sus métricas.'}</p>
+  ${tech ? `<div class="facets"><a class="facet-chip" href="#/obra${keep}" aria-label="Quitar el filtro ${esc(tech.name)}"><span class="k">tec</span>${esc(tech.name)}<span class="x" aria-hidden="true">×</span></a></div>` : ''}
+  <div class="flt" role="group" aria-label="Filtrar por estado"><span class="hl" aria-hidden="true"></span>
+    <button type="button" data-v="">Todas<sup>${rows.length}</sup></button>
+    <button type="button" data-v="live">En producción<sup>${n('LIVE')}</sup></button>
+    <button type="button" data-v="wip">En desarrollo<sup>${n('WIP')}</sup></button>
+  </div>
+  <ol class="works coll-list"><li class="thead"><span>title</span><span class="c-slug">slug</span><span>status</span><span>year</span></li>${rows.map(p => workRow(p, true)).join('')}</ol>
+</article>`
+}
+
+function vStack() {
+  const list = [...D.stack].sort((a, b) => b.projects.length - a.projects.length || a.since - b.since || a.name.localeCompare(b.name))
+  const cats = [...new Set(list.map(t => t.category))]
+  const minYear = Math.min(...list.map(t => t.since)), maxYear = Math.max(...list.map(t => t.since))
+  return `<article class="doc coll wrap stack">
+  ${recHead('collection', 'Tech', `${list.length} records`)}
+  <h1 class="coll-title flip" tabindex="-1">Stack<sup class="count num">${list.length}</sup></h1>
+  <p class="coll-sub ed-only">Qué uso, desde cuándo y en qué obra. Tocá una tecnología para ver dónde la usé.</p>
+  <div class="flt" role="group" aria-label="Filtrar por categoría"><span class="hl" aria-hidden="true"></span>
+    <button type="button" data-v="">Todas<sup>${list.length}</sup></button>
+    ${cats.map(c => `<button type="button" data-v="${c.toLowerCase()}">${CAT[c]}<sup>${list.filter(t => t.category === c).length}</sup></button>`).join('')}
+  </div>
+  <div class="tm">
+    <label for="tm-r">El stack en</label><output class="tm-y num" for="tm-r"><span>${maxYear}</span></output>
+    <span class="tm-ends num" aria-hidden="true">${minYear}</span>
+    <input id="tm-r" type="range" min="${minYear}" max="${maxYear}" step="1" value="${maxYear}">
+    <span class="tm-ends num" aria-hidden="true">${maxYear}</span>
+  </div>
+  <ol class="techs coll-list"><li class="thead"><span>name</span><span class="c-cat">category</span><span>since</span><span>projects</span></li>
+  ${list.map((t, i) => `<li class="tech" data-cat="${t.category.toLowerCase()}" data-slug="${t.slug}" data-since="${t.since}" data-o="${i}">
+    <button class="tech-a" type="button" aria-expanded="false" aria-controls="tm-${t.slug}">
+      <span class="t-name flip">${esc(t.name)}</span>
+      <span class="t-cat ed-only">${CAT1[t.category]}</span><span class="t-cat rec-only">${t.category}</span>
+      <span class="t-since flip num">${sw('desde ' + t.since, t.since)}</span>
+      <span class="t-n flip num">${sw(t.projects.length ? `${t.projects.length} ${t.projects.length === 1 ? 'obra' : 'obras'}` : '—', t.projects.length)}</span>
+    </button>
+    <div class="tech-more" id="tm-${t.slug}" hidden>${t.note ? `<p>${esc(t.note)}</p>` : ''}<p class="t-used">${t.projects.length ? 'Usada en ' + t.projects.map(s => `<a class="link" href="#/obra/${s}">${esc(bySlug[s].title)}</a>`).join(', ') : 'Todavía sin obra publicada.'}</p></div>
+  </li>`).join('')}</ol>
+</article>`
+}
+
+function vAbout() {
+  const a = D.about
+  return `<article class="doc about wrap">
+  ${recHead('document', 'about', '13 campos')}
+  <h1 class="page-title flip" tabindex="-1">Sobre mí</h1>
+  ${F('engineering_philosophy', 'text', `<p class="fv lead-xl">${esc(a.engineering_philosophy)}</p>`)}
+  <div class="facts-grid grp">
+    ${M('technical_degree', 'string', 'Formación técnica', `<span class="fv q">${esc(a.technical_degree)}</span>`)}
+    ${M('higher_education', 'string', 'Estudios', `<span class="fv q">${esc(a.higher_education)}</span>`)}
+    ${M('languages', 'string', 'Idiomas', `<span class="fv q">${esc(a.languages)}</span>`)}
+    ${M('work_modalities', 'string', 'Modalidad', `<span class="fv q">${esc(a.work_modalities)}</span>`)}
+  </div>
+  <div class="story grp">
+    ${blk('Hacia dónde voy', F('professional_goal', 'text', `<p class="fv">${esc(a.professional_goal)}</p>`))}
+    ${blk('Trayectoria', F('experience', `relation → Experience[] (${D.experience.length})`, `<ol class="fv-list exp">${D.experience.map(e => `<li class="exp-i"><span class="e-yrs flip num">${span(e)}</span><span class="e-role flip">${esc(e.role)}${e.org ? ` — ${esc(e.org)}` : ''}</span><span class="e-sum ed-only">${esc(e.summary)}</span></li>`).join('')}</ol>`))}
+  </div>
+  <div class="cv ed-only"><a class="link" href="https://mateogs.tech/cv/CV-ES-Mateo-Sonzogni-ATS.pdf" target="_blank" rel="noopener">CV en español (PDF) ↗</a><a class="link" href="https://mateogs.tech/cv/CV-EN-Mateo-Sonzogni-ATS.pdf" target="_blank" rel="noopener">CV in English (PDF) ↗</a></div>
+</article>`
+}
+
+const vNotFound = () => `<article class="doc wrap nf"><h1 class="page-title" tabindex="-1">Esa ruta no existe</h1><p><a class="link" href="#/">Volver al inicio</a></p></article>`
+
+/* ── Render ─────────────────────────────────────────────────────────────── */
+const titles = { obra: 'Obra', stack: 'Stack', 'sobre-mi': 'Sobre mí', contacto: 'Contacto' }
+function render(r) {
+  const [a, b] = r.path
+  let html
+  if (!a || a === 'contacto') html = vHome()
+  else if (a === 'obra' && b) html = vCase(b)
+  else if (a === 'obra') html = vObra(r.query)
+  else if (a === 'stack') html = vStack()
+  else if (a === 'sobre-mi') html = vAbout()
+  else html = vNotFound()
+  // Ya se capturó el estado viejo: los nombres prestados de la vista previa y del fondo no pueden llegar al nuevo
+  $$('.strip > *, .backdrop img').forEach(el => { el.style.viewTransitionName = '' })
+  hidePreview(true); hidePeek(true); hideBackdrop(true)
+  killScene(false); killCaseExtras()
+  $('.fidx')?.remove()
+  main.innerHTML = html
+  const doc = $('.doc', main), rec = r.query.get('vista') === 'registro'
+  doc?.classList.toggle('rec', rec)
+  syncRecUi(rec)
+  $$('.nav a').forEach(l => l.toggleAttribute('aria-current', l.dataset.nav === (a || '')))
+  pathBar(r)
+  bindPage(r)
+  receiveFacet()
+  if (a === 'contacto' && $('#contacto')) scrollToY($('#contacto').getBoundingClientRect().top + window.scrollY - 24)
+  else scrollToY(0)
+  const project = a === 'obra' && b ? bySlug[b] : null
+  pageTint = project?.cover?.tint ?? null
+  setTint(pageTint)
+  if (project) { buildScene(main); buildCaseExtras(main) }
+  $('h1', main)?.focus({ preventScroll: true })
+  const name = a === 'obra' && b ? bySlug[b]?.title : titles[a]
+  document.title = (name ? name + ' — ' : '') + 'Mateo Sonzogni'
+  announce(name || 'Inicio')
+}
+// La ruta que rueda: cuando cambia la query, sus caracteres suben desde abajo
+function pathBar(r, roll = false) {
+  let acc = '#'
+  const segs = r.path.map(s => { acc += '/' + s; return `<a href="${acc}">${esc(s)}</a>` })
+  const q = decodeURIComponent(r.query.toString())
+  $('.path').innerHTML = `<a href="#/">mateogs.tech</a>${segs.map(s => ' / ' + s).join('')}${q ? ` <span class="q">${[...'?' + q].map(c => `<span class="qc">${esc(c)}</span>`).join('')}</span>` : ''}`
+  if (roll && motion()) gsap.from($$('.path .qc'), { yPercent: 110, opacity: 0, duration: 0.45, ease: 'expo.out', stagger: 0.012 })
+}
+let firstRender = true
+// Nombres de view transition que se ponen solo para un viaje y se limpian al terminar
+const PERMANENT_VT = '.cover, .h-tx'
+function clearTempNames() {
+  $$('[style*="view-transition-name"]').forEach(el => { if (!el.matches(PERMANENT_VT)) el.style.viewTransitionName = '' })
+}
+function route() {
+  const r = parse(), go = () => render(r)
+  if (!firstRender && document.startViewTransition && !reduce.matches) {
+    const vt = document.startViewTransition(go)
+    vt.ready.catch(() => {})
+    vt.finished.catch(() => {}).finally(clearTempNames)
+  } else { go(); clearTempNames() }
+  if (firstRender && !r.path.length) intro()
+  firstRender = false
+}
+addEventListener('hashchange', route)
+
+/* ── Modo registro: los mismos nodos se reordenan con FLIP ──────────────── */
+const isRec = () => !!$('.doc.rec', main)
+function syncRecUi(on) {
+  document.body.classList.toggle('is-rec', on)
+  const b = $('.rec-btn')
+  b.setAttribute('aria-pressed', String(on))
+  $('.lbl-long', b).textContent = on ? 'Ver como diseño' : 'Ver como registro'
+  $('.lbl-short', b).textContent = on ? 'Diseño' : 'Registro'
+}
+let flipping = false
+function setRecord(on) {
+  const doc = $('.doc', main)
+  if (!doc || flipping || doc.classList.contains('rec') === on) return
+  setQuery('vista', on ? 'registro' : '')
+  syncRecUi(on); tick(on ? 1500 : 1900)
+  announce(on ? 'Vista de registro: los mismos datos con nombre y tipo de campo' : 'Vista de diseño')
+  if (!motion()) { doc.classList.toggle('rec', on); return }
+  flipping = true
+  if (on) { killScene(); killCaseExtras(); hideBackdrop(true); setTint(pageTint) }
+  morph(doc, on).then(() => { flipping = false; if (!on) { buildScene(main); buildCaseExtras(main) } })
+}
+
+/*
+ * Coreografía del cambio de lectura. Los valores nunca cambian de ancho en vuelo:
+ * - Valores de una línea y misma familia: FLIP solo con transform (traslación + escala
+ *   uniforme por la razón de font-size), alineados por la línea de base aproximada.
+ * - Valores que cambian de cortes de línea, de familia o de contenido: un "fantasma" con
+ *   el aspecto anterior viaja y se disuelve mientras el nodo real aparece en su lugar.
+ * - Lo que solo existe en un estado entra o sale como acompañamiento: líneas que se
+ *   trazan, rótulos que se descubren con una máscara, comillas que llegan al final.
+ */
+const MORPH = { dur: 0.95, ease: 'expo.inOut', step: 0.014, maxStagger: 0.22 }
+const REC_ONLY = '.fk, .ft, .rec-only, .rec-head, .null'
+function snap(el) {
+  const cs = getComputedStyle(el), r = el.getBoundingClientRect()
+  const fs = parseFloat(cs.fontSize), lh = parseFloat(cs.lineHeight) || fs * 1.3
+  return { r, fs, lh, ff: cs.fontFamily, fw: cs.fontWeight, ls: cs.letterSpacing, c: cs.color, ws: cs.whiteSpace, lines: Math.round(r.height / lh) }
+}
+// Solo los elementos de la lista que no están adentro de otro de la lista
+const topLevel = els => els.filter(el => !els.some(o => o !== el && o.contains(el)))
+function ghostOf(el, s, layer) {
+  const g = el.cloneNode(true)
+  g.removeAttribute('id'); $$('[id]', g).forEach(n => n.removeAttribute('id'))
+  // Un clon nunca puede llevar un nombre de view transition: duplicaría el del original
+  ;[g, ...$$('[style*="view-transition-name"]', g)].forEach(n => { n.style.viewTransitionName = 'none' })
+  Object.assign(g.style, {
+    position: 'fixed', left: s.r.left + 'px', top: s.r.top + 'px', width: s.r.width + 'px', height: s.r.height + 'px',
+    margin: '0', maxWidth: 'none', boxSizing: 'border-box', transformOrigin: '0 0',
+    fontSize: s.fs + 'px', lineHeight: s.lh + 'px', fontFamily: s.ff, fontWeight: s.fw, letterSpacing: s.ls, color: s.c, whiteSpace: s.ws,
+  })
+  layer.append(g)
+  return g
+}
+function morph(doc, on) {
+  const { dur, ease } = MORPH
+  const tl = gsap.timeline()
+  window.__morph = tl // para revisar cuadro por cuadro desde la consola: __morph.pause().progress(.4)
+  const layer = document.createElement('div')
+  layer.className = doc.className + ' ghosts'
+  layer.setAttribute('aria-hidden', 'true')
+  document.body.append(layer)
+
+  // 1 · Estado de partida
+  const targets = $$('.fv:not(.fv-list), .flip', doc)
+  const inTarget = el => targets.some(t => t !== el && t.contains(el))
+  const before = new Map()
+  targets.filter(visible).forEach(el => before.set(el, snap(el)))
+  const leaveSel = on ? '.ed-only' : REC_ONLY
+  const leaving = topLevel($$(leaveSel, doc).filter(el => visible(el) && !inTarget(el)), leaveSel)
+  const leavingSnaps = leaving.map(el => [el, snap(el)])
+  const lineSel = '.f, .coll-list .row-a, .coll-list .tech-a, .coll-list .thead'
+  const oldLines = on ? [] : $$(lineSel, doc).filter(visible).map(el => el.getBoundingClientRect())
+  const anchor = [...before.keys()].find(el => before.get(el).r.bottom > 64)
+
+  // 2 · Cambio de estado y ancla de scroll: lo que el ojo estaba mirando no salta
+  doc.classList.toggle('rec', on)
+  doc.classList.add('quotes-off')
+  if (anchor && visible(anchor)) scrollByY(anchor.getBoundingClientRect().top - before.get(anchor).r.top)
+
+  // 3 · Lo que se va: fantasmas que se apagan (ornamentos) o se tapan con una máscara (rótulos)
+  leavingSnaps.forEach(([el, s], i) => {
+    const g = ghostOf(el, s, layer), d = Math.min(i * 0.006, 0.12)
+    if (on) tl.to(g, { opacity: 0, y: -6, duration: 0.32, ease: 'power2.out' }, d)
+    else tl.fromTo(g, { clipPath: 'inset(0 0% 0 0)' }, { clipPath: 'inset(0 0 0 100%)', duration: 0.38, ease: 'power3.in' }, d)
+  })
+  oldLines.forEach((r, i) => {
+    const l = document.createElement('i')
+    Object.assign(l.style, { position: 'fixed', left: r.left + 'px', top: r.top + 'px', width: r.width + 'px', height: '1px', background: 'var(--rule)', transformOrigin: '100% 50%' })
+    layer.append(l)
+    tl.to(l, { scaleX: 0, duration: 0.5, ease: 'power3.in' }, Math.min(i * 0.012, 0.15))
+  })
+
+  // 4 · Lo que se queda: viaja desde donde estaba
+  const travelling = targets.filter(el => before.has(el) && visible(el))
+    .map(el => [el, before.get(el), snap(el)])
+    .sort((a, b) => a[2].r.top - b[2].r.top || a[2].r.left - b[2].r.left)
+  // Cada fila recuerda cuándo sale su primer valor: sus rótulos se descubren cuando ese valor llega
+  const rowSel = '.f, .row-a, .tech-a', rowDelay = new Map()
+  travelling.forEach(([el, s0, s1], i) => {
+    const d = (on ? 0.05 : 0.12) + Math.min(i * MORPH.step, MORPH.maxStagger)
+    for (let n = el.closest(rowSel); n; n = n.parentElement?.closest(rowSel)) if (!rowDelay.has(n)) rowDelay.set(n, d)
+    if (el.tagName === 'IMG') {
+      tl.fromTo(el, { x: s0.r.left - s1.r.left, y: s0.r.top - s1.r.top, scaleX: s0.r.width / s1.r.width, scaleY: s0.r.height / s1.r.height, transformOrigin: '0 0' },
+        { x: 0, y: 0, scaleX: 1, scaleY: 1, duration: dur, ease, clearProps: 'transform,transformOrigin' }, d)
+      return
+    }
+    const k = s0.fs / s1.fs
+    const baseline = (s, scale) => scale * (s.lh - s.fs) / 2
+    const dx = s0.r.left - s1.r.left
+    const dy = s0.r.top + baseline(s0, 1) - s1.r.top - baseline(s1, k)
+    const cross = s0.lines > 1 || s1.lines > 1 || s0.ff !== s1.ff || el.querySelector('.ed-only, .rec-only')
+    if (!cross) {
+      tl.fromTo(el, { x: dx, y: dy, scale: k, transformOrigin: '0 0', color: s0.c, fontWeight: s0.fw },
+        { x: 0, y: 0, scale: 1, color: s1.c, fontWeight: s1.fw, duration: dur, ease, clearProps: 'transform,transformOrigin,color,fontWeight' }, d)
+      return
+    }
+    // Fantasma: el aspecto anterior viaja hasta el lugar nuevo y se disuelve en el nodo real
+    const g = ghostOf(el, s0, layer)
+    const gx = s1.r.left - s0.r.left, gy = s1.r.top + baseline(s1, 1) - s0.r.top - baseline(s0, 1 / k)
+    // Se disuelve "a través": el viejo se apaga antes de que el nuevo aparezca, así nunca hay dos textos legibles a la vez
+    tl.to(g, { x: gx, y: gy, scale: 1 / k, duration: dur, ease }, d)
+      .to(g, { opacity: 0, duration: dur * 0.34, ease: 'power1.in' }, d + dur * 0.12)
+      .fromTo(el, { opacity: 0, y: 6 * Math.sign(-dy || 1) },
+        { opacity: 1, y: 0, duration: dur * 0.5, ease: 'power2.out', clearProps: 'opacity,transform' }, d + dur * 0.5)
+  })
+
+  // 5 · Lo que llega: líneas que se trazan, rótulos que se descubren, ornamentos que suben
+  if (on) {
+    const lines = $$(lineSel, doc).filter(visible).sort((a, b) => a.getBoundingClientRect().top - b.getBoundingClientRect().top)
+    lines.forEach((l, i) => tl.fromTo(l, { '--rs': 0 }, { '--rs': 1, duration: 0.85, ease: 'expo.out', clearProps: '--rs' }, 0.18 + Math.min(i * 0.022, 0.3)))
+    const labels = $$(REC_ONLY, doc).filter(el => visible(el) && !inTarget(el))
+      .sort((a, b) => a.getBoundingClientRect().top - b.getBoundingClientRect().top || a.getBoundingClientRect().left - b.getBoundingClientRect().left)
+    labels.forEach(el => {
+      const row = el.closest(rowSel)
+      const at = row && rowDelay.has(row) ? rowDelay.get(row) + dur * 0.5 : 0.3
+      tl.fromTo(el, { clipPath: 'inset(-2px 100% -2px 0)' }, { clipPath: 'inset(-2px 0% -2px 0)', duration: 0.6, ease: 'expo.out', clearProps: 'clipPath' }, at)
+    })
+  } else {
+    const shows = topLevel($$('.ed-only', doc).filter(el => visible(el) && !inTarget(el)), '.ed-only')
+    shows.forEach((el, i) => tl.fromTo(el, { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: 0.7, ease: 'expo.out', clearProps: 'opacity,transform' }, 0.5 + Math.min(i * 0.025, 0.3)))
+    const borders = $$('.row-a, .tech-a, .blk, .meta, .facts-grid', doc).filter(visible)
+    if (borders.length) tl.from(borders, { borderTopColor: 'transparent', duration: 0.6, ease: 'power1.out', clearProps: 'borderTopColor' }, 0.45)
+  }
+  tl.call(() => doc.classList.remove('quotes-off'), [], on ? 0.75 : 0)
+
+  return new Promise(resolve => tl.eventCallback('onComplete', () => { layer.remove(); doc.classList.remove('quotes-off'); resolve() }))
+}
+
+/* ── Lectura enfocada: atenúa todo menos lo que estás leyendo ───────────── */
+function setFocusRead(on) {
+  document.body.classList.toggle('focus-read', on)
+  $('.focus-btn').setAttribute('aria-pressed', String(on))
+  announce(on ? 'Lectura enfocada activada' : 'Lectura enfocada desactivada'); tick(on ? 1100 : 1300)
+}
+
+/* ── Vista previa con resorte ───────────────────────────────────────────── */
+const pv = $('.preview'), pvIn = $('.pv-in'), strip = $('.strip')
+strip.innerHTML = P.map(p => p.cover
+  ? `<img src="${p.cover.src}" alt="" data-slug="${p.slug}" decoding="async">`
+  : `<div class="plate" data-slug="${p.slug}">${esc(p.title)}</div>`).join('')
+let mx = innerWidth / 2, my = innerHeight / 2, px = mx, py = my, raf = 0, pvOn = false, pvIdx = -1
+addEventListener('pointermove', e => { mx = e.clientX; my = e.clientY; if (pvOn && !raf) raf = requestAnimationFrame(loop) }, { passive: true })
+function loop() {
+  const k = reduce.matches ? 1 : 0.16
+  const dx = mx - px, dy = my - py
+  px += dx * k; py += dy * k
+  const rot = reduce.matches ? 0 : Math.max(-7, Math.min(7, dx * 0.05))
+  // A la derecha del cursor para no tapar el título que se está leyendo; nunca fuera de pantalla.
+  const x = Math.min(px + 28, innerWidth - pv.offsetWidth - 24)
+  pv.style.transform = `translate3d(${x}px, ${py}px, 0) translateY(-50%) rotate(${rot}deg)`
+  raf = pvOn || Math.abs(dx) + Math.abs(dy) > 0.4 ? requestAnimationFrame(loop) : 0
+}
+function showPreview(slug) {
+  const i = P.findIndex(p => p.slug === slug)
+  if (i < 0 || !finePointer.matches || isRec()) return
+  if (!pvOn) { px = mx; py = my; pvOn = true; raf ||= requestAnimationFrame(loop); if (window.gsap) gsap.to(pvIn, { opacity: 1, scale: 1, duration: 0.45, ease: 'expo.out' }); else pvIn.style.cssText = 'opacity:1;transform:none' }
+  if (i !== pvIdx) {
+    const y = -i * pvIn.offsetHeight
+    if (motion() && pvIdx >= 0) gsap.to(strip, { y, duration: 0.6, ease: 'expo.out' }); else if (window.gsap) gsap.set(strip, { y }); else strip.style.transform = `translateY(${y}px)`
+    pvIdx = i; tick(2400)
+    setTint(P[i].cover?.tint ?? pageTint, P[i].cover?.tint ? 0.75 : 1)
+  }
+}
+function hidePreview(instant) {
+  if (!pvOn) return
+  pvOn = false; pvIdx = -1
+  setTint(pageTint)
+  if (window.gsap) gsap.to(pvIn, { opacity: 0, scale: 0.86, duration: instant ? 0 : 0.3, ease: 'power2.out' }); else pvIn.style.cssText = ''
+}
+/* ── La lista como selector de escena (página Obra) ─────────────────────── */
+// En vez de una vista previa chica, la obra apuntada llena el fondo, oscurecida, y la anterior se apaga.
+const backdrop = $('.backdrop')
+backdrop.innerHTML = P.filter(p => p.cover).map(p => `<img src="${p.cover.src}" alt="" data-slug="${p.slug}" decoding="async">`).join('')
+let bdSlug = null
+function showBackdrop(slug) {
+  if (!motion() || isRec() || slug === bdSlug) return
+  const prev = bdSlug && $(`img[data-slug="${bdSlug}"]`, backdrop), next = $(`img[data-slug="${slug}"]`, backdrop)
+  bdSlug = slug
+  if (prev) gsap.to(prev, { opacity: 0, duration: 0.7, ease: 'power2.out' })
+  if (next) gsap.fromTo(next, { opacity: 0, scale: 1.12 }, { opacity: 0.42, scale: 1.05, duration: 1.2, ease: 'expo.out', overwrite: true })
+  setTint(bySlug[slug]?.cover?.tint ?? pageTint, 0.75)
+  tick(2400)
+}
+function hideBackdrop(instant) {
+  if (!bdSlug) return
+  const el = $(`img[data-slug="${bdSlug}"]`, backdrop)
+  bdSlug = null
+  if (el) gsap.to(el, { opacity: 0, duration: instant ? 0 : 0.7, ease: 'power2.out', overwrite: true })
+  setTint(pageTint)
+}
+
+function bindWorks(root) {
+  $$('.works', root).forEach(list => {
+    const scenic = list.classList.contains('coll-list') && finePointer.matches && motion()
+    if (scenic) {
+      list.addEventListener('pointerover', e => { const a = e.target.closest('.row-a'); if (a) showBackdrop(a.dataset.slug) })
+      list.addEventListener('pointerleave', () => hideBackdrop(false))
+      list.addEventListener('focusin', e => { const a = e.target.closest('.row-a'); if (a?.matches(':focus-visible')) showBackdrop(a.dataset.slug) })
+      list.addEventListener('focusout', e => { if (!list.contains(e.relatedTarget)) hideBackdrop(false) })
+      list.addEventListener('click', e => {
+        const a = e.target.closest('.row-a')
+        if (!a || isRec()) return
+        $('.r-tx', a).style.viewTransitionName = 'title'
+        const bg = bdSlug === a.dataset.slug && $(`img[data-slug="${bdSlug}"]`, backdrop)
+        if (bg) bg.style.viewTransitionName = 'cover'
+      })
+      return
+    }
+    list.addEventListener('pointerover', e => { const a = e.target.closest('.row-a'); if (a) showPreview(a.dataset.slug) })
+    list.addEventListener('pointerleave', () => hidePreview(false))
+    // El registro se abre: el título de la fila se vuelve el título del caso y la vista previa, su portada
+    list.addEventListener('click', e => {
+      const a = e.target.closest('.row-a')
+      if (!a || isRec()) return
+      $$('.h-tx, .cover', main).forEach(el => { el.style.viewTransitionName = 'none' })
+      $('.r-tx', a).style.viewTransitionName = 'title'
+      if (!pvOn) return
+      const el = strip.children[P.findIndex(p => p.slug === a.dataset.slug)]
+      if (el?.tagName === 'IMG') el.style.viewTransitionName = 'cover'
+    })
+  })
+}
+
+/* ── Números que ruedan al entrar en pantalla ───────────────────────────── */
+function rollIn(root) {
+  if (!motion()) return
+  const io = new IntersectionObserver(entries => entries.forEach(e => {
+    if (!e.isIntersecting) return
+    io.unobserve(e.target)
+    const el = e.target, to = parseFloat(el.dataset.roll), dec = (el.dataset.roll.split('.')[1] || '').length, suf = el.dataset.suf || '', o = { v: 0 }
+    gsap.to(o, { v: to, duration: 1.2, ease: 'power3.out', onUpdate: () => { el.textContent = o.v.toFixed(dec) + suf } })
+  }), { threshold: 0.6 })
+  $$('[data-roll]', root).forEach(el => io.observe(el))
+}
+function rollTo(el, to) {
+  if (!el) return
+  const from = parseInt(el.textContent, 10) || 0
+  if (!motion()) { el.textContent = to; return }
+  const o = { v: from }
+  gsap.to(o, { v: to, duration: 0.5, ease: 'power2.out', onUpdate: () => { el.textContent = Math.round(o.v) } })
+}
+
+/* ── Resaltado que viaja (nav, filtros, paleta) ─────────────────────────── */
+function travel(box, sel, hl, { pointer = true, padX = 0 } = {}) {
+  let shown = false
+  const go = el => {
+    const host = hl.offsetParent ?? box
+    const r = el.getBoundingClientRect(), b = host.getBoundingClientRect()
+    const to = { x: r.left - b.left + host.scrollLeft - padX, y: r.top - b.top + host.scrollTop, width: r.width + padX * 2, height: r.height }
+    if (!window.gsap) { Object.assign(hl.style, { transform: `translate(${to.x}px,${to.y}px)`, width: to.width + 'px', height: to.height + 'px', opacity: 1 }); return }
+    if (!shown || reduce.matches) { gsap.set(hl, to); gsap.to(hl, { opacity: 1, duration: 0.15 }); shown = true }
+    else gsap.to(hl, { ...to, opacity: 1, duration: 0.3, ease: 'power3.out' })
+  }
+  const hide = () => { shown = false; window.gsap ? gsap.to(hl, { opacity: 0, duration: 0.2 }) : (hl.style.opacity = 0) }
+  if (sel) {
+    if (pointer) box.addEventListener('pointerover', e => { const el = e.target.closest(sel); if (el && box.contains(el)) go(el) })
+    box.addEventListener('focusin', e => { const el = e.target.closest(sel); if (el && (pointer || el.matches(':focus-visible'))) go(el) })
+    if (pointer) box.addEventListener('pointerleave', hide)
+    box.addEventListener('focusout', e => { if (!box.contains(e.relatedTarget)) hide() })
+  }
+  return { go, hide }
+}
+travel($('.nav'), 'a', $('.nav .hl'))
+
+/* ── Filtros: la URL cambia y la lista se reacomoda con FLIP ────────────── */
+function bindFilter(root, attr, param) {
+  const box = $('.flt', root)
+  if (!box) return
+  const list = $('.coll-list', root), count = $('.count', root)
+  const apply = (v, animate) => {
+    $$('button', box).forEach(b => b.setAttribute('aria-pressed', String(b.dataset.v === v)))
+    const items = $$(':scope > li:not(.thead)', list)
+    const state = animate && motion() ? Flip.getState(items) : null
+    items.forEach(li => { li.hidden = !(!v || li.dataset[attr] === v) })
+    const n = items.filter(li => !li.hidden && !li.classList.contains('is-future')).length
+    if (state) Flip.from(state, {
+      duration: 0.6, ease: 'expo.out', absolute: true,
+      onEnter: els => gsap.fromTo(els, { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: 0.45, delay: 0.12, stagger: 0.02 }),
+      onLeave: els => gsap.to(els, { opacity: 0, duration: 0.18 }),
+    })
+    animate ? rollTo(count, n) : (count.textContent = n)
+  }
+  box.addEventListener('click', e => {
+    const b = e.target.closest('button')
+    if (!b) return
+    setQuery(param, b.dataset.v); apply(b.dataset.v, true); tick(1400)
+    announce(`${$$(':scope > li:not(.thead):not([hidden])', list).length} resultados`)
+  })
+  apply(parse().query.get(param) || '', false)
+  travel(box, 'button', $('.hl', box))
+}
+
+/* ── Stack: abrir una tecnología muestra su relación con la obra ────────── */
+function bindStack(root, r) {
+  $$('.tech-a', root).forEach(btn => btn.addEventListener('click', () => toggleTech(btn)))
+  const focus = r.query.get('tec')
+  if (focus) {
+    const li = $(`.tech[data-slug="${CSS.escape(focus)}"]`, root)
+    if (li) { li.classList.add('is-focus'); toggleTech($('.tech-a', li), true); requestAnimationFrame(() => glideTo(li, -innerHeight / 3)) }
+  }
+}
+function toggleTech(btn, instant) {
+  const more = btn.nextElementSibling, open = btn.getAttribute('aria-expanded') === 'true'
+  btn.setAttribute('aria-expanded', String(!open)); tick(open ? 1300 : 1600)
+  if (!open) {
+    more.hidden = false
+    if (motion() && !instant) {
+      gsap.from(more, { height: 0, paddingBottom: 0, opacity: 0, duration: 0.5, ease: 'expo.out', clearProps: 'all' })
+      gsap.from($$('p, a', more), { y: 8, opacity: 0, duration: 0.4, stagger: 0.04, delay: 0.08, clearProps: 'all' })
+    }
+  } else if (motion()) {
+    gsap.to(more, { height: 0, paddingBottom: 0, opacity: 0, duration: 0.32, ease: 'power2.in', onComplete: () => { more.hidden = true; gsap.set(more, { clearProps: 'all' }) } })
+  } else more.hidden = true
+}
+
+/* ── Copiar email: las letras ruedan a "copiado" y vuelven ──────────────── */
+let copying = false
+function copyEmail() {
+  try { navigator.clipboard?.writeText(D.contact.email) } catch {}
+  announce('Email copiado: ' + D.contact.email); tick(2000)
+  const btn = $('.copy', main)
+  if (!btn || copying || !window.gsap) return
+  const a = $$('.cp-a .ch', btn), b = $$('.cp-b .ch', btn)
+  copying = true
+  if (reduce.matches) {
+    gsap.set(a, { opacity: 0 }); gsap.set(b, { yPercent: 0 })
+    setTimeout(() => { gsap.set(a, { opacity: 1 }); gsap.set(b, { yPercent: 115 }); copying = false }, 1400)
+    return
+  }
+  gsap.timeline({ onComplete: () => { copying = false } })
+    .to(a, { yPercent: -115, duration: 0.45, ease: 'expo.in', stagger: 0.012 })
+    .fromTo(b, { yPercent: 115 }, { yPercent: 0, duration: 0.55, ease: 'expo.out', stagger: 0.025 }, '-=0.2')
+    .to(b, { yPercent: -115, duration: 0.4, ease: 'expo.in', stagger: 0.015 }, '+=1.1')
+    .fromTo(a, { yPercent: 115 }, { yPercent: 0, duration: 0.6, ease: 'expo.out', stagger: 0.01 }, '-=0.2')
+}
+
+function bindPage(r) {
+  bindWorks(main)
+  rollIn(main)
+  bindKeyboardHighlight(main)
+  $('.copy', main)?.addEventListener('click', copyEmail)
+  $('.as-rec', main)?.addEventListener('click', () => setRecord(true))
+  if (r.path[0] === 'obra' && !r.path[1]) bindFilter(main, 'status', 'estado')
+  if (r.path[0] === 'obra' && r.path[1]) bindFieldIndex(main)
+  if (r.path[0] === 'stack') { bindTimeMachine(main, r); bindFilter(main, 'cat', 'cat'); bindStack(main, r) }
+}
+
+/* ── Resaltado de teclado: con j/k o Tab, una barra se desliza detrás de la fila ── */
+function bindKeyboardHighlight(root) {
+  const doc = $('.doc', root)
+  const lists = $$('.works, .techs', root)
+  if (!doc || !lists.length) return
+  const hl = document.createElement('span')
+  hl.className = 'hl kb-hl'; hl.setAttribute('aria-hidden', 'true')
+  doc.prepend(hl)
+  lists.forEach(list => travel(list, '.row-a, .tech-a', hl, { pointer: false, padX: 10 }))
+}
+
+/* ── Faceta que viaja: el valor tocado en un caso vuela hasta el filtro de la colección ── */
+let pendingFacet = null
+main.addEventListener('click', e => {
+  const a = e.target.closest('.facet-link')
+  if (!a || isRec()) return
+  $$('.h-tx, .cover', main).forEach(el => { el.style.viewTransitionName = 'none' })
+  a.style.viewTransitionName = 'facet'
+  pendingFacet = a.dataset.facet
+  hidePeek(true)
+})
+function receiveFacet() {
+  if (!pendingFacet) return
+  const target = pendingFacet === 'tec' ? $('.facet-chip', main) : $('.flt button[aria-pressed="true"]', main)
+  if (target) target.style.viewTransitionName = 'facet'
+  pendingFacet = null
+}
+
+/* ── Asomar: la relación y el significado, sin salir de la página ───────── */
+const METRIC_DEF = {
+  lcp: 'Largest Contentful Paint: cuánto tarda en aparecer lo más grande de la primera pantalla. Por debajo de 2,5 s se considera bueno.',
+  performanceScore: 'Puntaje de rendimiento de Lighthouse, de 0 a 100.',
+  accessibilityScore: 'Puntaje de accesibilidad de Lighthouse: contraste, etiquetas, orden de foco y semántica.',
+  bestPracticesScore: 'Puntaje de buenas prácticas de Lighthouse: seguridad, APIs actuales y consola sin errores.',
+  seoScore: 'Puntaje SEO de Lighthouse: metadatos, indexación y enlaces rastreables.',
+  bundleSizeKb: 'JavaScript inicial que descarga la página, en kilobytes.',
+  localeCount: 'Idiomas en los que se publica el sitio.',
+  languages: 'Idiomas en los que se publica el sitio.',
+  commits: 'Commits propios en el repositorio de la tesis.',
+  averageLatencyMs: 'Latencia media de respuesta del asistente, en milisegundos.',
+  encryptionLayers: 'Capas de cifrado de la memoria del asistente.',
+  vectorDimensions: 'Dimensiones de los embeddings guardados en pgvector.',
+  localModels: 'Modelos de lenguaje que corren en local, sin mandar datos afuera.',
+  drawCalls: 'Llamadas de dibujo por cuadro en la escena WebGL. Menos es más fluido.',
+  fpsTarget: 'Cuadros por segundo objetivo de la animación.',
+  graphNodes: 'Nodos del grafo de conocimiento.',
+  vaultNotesParsed: 'Notas de Obsidian procesadas por el agente.',
+}
+const peek = $('.peek'), peekIn = $('.peek-in')
+let peekAnchor = null, peekShow = 0, peekHide = 0
+function peekHtml(key) {
+  const [kind, id] = key.split(':')
+  if (kind === 'm') return `<b>${METRIC[id] ?? id}<span class="pk-k">${id}</span></b><p>${METRIC_DEF[id] ?? ''}</p>`
+  const t = D.stack.find(x => x.slug === id)
+  if (!t) return ''
+  const current = parse().path[1]
+  const others = t.projects.filter(s => s !== current)
+  return `<b>${esc(t.name)}<span class="pk-k">${t.category} · since ${t.since}</span></b>${t.note ? `<p>${esc(t.note)}</p>` : ''}<p>${others.length ? 'También en ' + others.map(s => `<a class="link" href="#/obra/${s}">${esc(bySlug[s].title)}</a>`).join(', ') : 'Por ahora, solo en esta obra.'}</p>`
+}
+// Centrado en el ancla, pero debajo de todo el valor: así nunca tapa a sus vecinos de la misma lista
+function placePeek(anchor) {
+  const r = anchor.getBoundingClientRect(), block = (anchor.closest('.fv') ?? anchor).getBoundingClientRect()
+  const w = peek.offsetWidth, h = peek.offsetHeight
+  const x = Math.max(16, Math.min(r.left + r.width / 2 - w / 2, innerWidth - w - 16))
+  const below = block.bottom + 10 + h < innerHeight - 56
+  return { x, y: below ? block.bottom + 10 : block.top - 10 - h, origin: `${r.left + r.width / 2 - x}px ${below ? '0' : '100%'}` }
+}
+function showPeek(anchor) {
+  const html = peekHtml(anchor.dataset.peek)
+  if (!html) return
+  const wasOn = !!peekAnchor
+  peekAnchor?.removeAttribute('aria-describedby')
+  peekAnchor = anchor
+  anchor.setAttribute('aria-describedby', 'peek')
+  const ow = peek.offsetWidth, oh = peek.offsetHeight
+  peekIn.innerHTML = html
+  const pos = placePeek(anchor)
+  if (!window.gsap) { Object.assign(peek.style, { visibility: 'visible', opacity: 1, transform: `translate(${pos.x}px,${pos.y}px)` }); return }
+  gsap.killTweensOf(peek)
+  if (!wasOn || reduce.matches) {
+    // Crece desde su ancla: nunca desde cero, con un desenfoque mínimo que se aclara
+    gsap.set(peek, { visibility: 'visible', x: pos.x, y: pos.y, transformOrigin: pos.origin })
+    gsap.fromTo(peek, { opacity: 0, scale: 0.96, filter: 'blur(2px)' }, { opacity: 1, scale: 1, filter: 'blur(0px)', duration: reduce.matches ? 0 : 0.26, ease: 'expo.out' })
+  } else {
+    // Ya abierto: viaja hasta la nueva ancla y cambia de tamaño en el camino
+    const nw = peek.offsetWidth, nh = peek.offsetHeight
+    gsap.fromTo(peek, { width: ow, height: oh }, { width: nw, height: nh, x: pos.x, y: pos.y, opacity: 1, scale: 1, filter: 'blur(0px)', duration: 0.34, ease: 'power3.out', clearProps: 'width,height' })
+    gsap.fromTo(peekIn, { opacity: 0 }, { opacity: 1, duration: 0.25, delay: 0.06 })
+  }
+  tick(2800)
+}
+function hidePeek(instant) {
+  clearTimeout(peekShow); clearTimeout(peekHide)
+  if (!peekAnchor) return
+  peekAnchor.removeAttribute('aria-describedby')
+  peekAnchor = null
+  if (!window.gsap || instant) { window.gsap?.killTweensOf(peek); Object.assign(peek.style, { visibility: 'hidden', opacity: 0 }); return }
+  gsap.to(peek, { opacity: 0, scale: 0.97, duration: 0.16, ease: 'power2.in', onComplete: () => { if (!peekAnchor) peek.style.visibility = 'hidden' } })
+}
+document.addEventListener('pointerover', e => {
+  if (!finePointer.matches) return
+  const a = e.target.closest('[data-peek]')
+  if (a && !isRec()) {
+    clearTimeout(peekHide)
+    if (a !== peekAnchor) { clearTimeout(peekShow); peekShow = setTimeout(() => showPeek(a), peekAnchor ? 40 : 160) }
+  } else if (e.target.closest('.peek')) clearTimeout(peekHide)
+  else if (peekAnchor) { clearTimeout(peekShow); clearTimeout(peekHide); peekHide = setTimeout(() => hidePeek(), 140) }
+})
+document.addEventListener('focusin', e => { const a = e.target.closest?.('[data-peek]'); if (a && !isRec() && a.matches(':focus-visible')) showPeek(a); else if (peekAnchor && !e.target.closest?.('.peek')) hidePeek() })
+addEventListener('scroll', () => { if (peekAnchor) hidePeek() }, { passive: true })
+
+/* ── Índice de campos: el registro como minimapa en el borde ────────────── */
+function bindFieldIndex(root) {
+  const keys = ['title', 'media', 'brief', 'steps', 'outcome', 'metrics', 'url']
+  const fields = keys.map(k => $(`.f[data-k="${k}"]:not(.is-null)`, root)).filter(Boolean)
+  if (fields.length < 3) return
+  const nav = document.createElement('nav')
+  nav.className = 'fidx'; nav.setAttribute('aria-label', 'Campos del registro')
+  nav.innerHTML = fields.map((f, i) => `<a href="#" data-i="${i}" style="--i:${i}"><span class="l">${f.dataset.k}</span><span class="t" aria-hidden="true"></span></a>`).join('')
+  document.body.append(nav)
+  const targetOf = f => f.closest('.blk') ?? f
+  nav.addEventListener('click', e => { const a = e.target.closest('a'); if (!a) return; e.preventDefault(); glideTo(targetOf(fields[+a.dataset.i])); tick(2100) })
+  let current = -1
+  const update = () => {
+    const line = innerHeight * 0.38
+    let i = 0
+    fields.forEach((f, j) => { if (targetOf(f).getBoundingClientRect().top < line) i = j })
+    if (i === current) return
+    current = i
+    $$('a', nav).forEach((a, j) => a.classList.toggle('is-on', j === i))
+  }
+  update()
+  const onScroll = () => { if (!nav.isConnected) return removeEventListener('scroll', onScroll); update() }
+  addEventListener('scroll', onScroll, { passive: true })
+}
+
+/* ── Máquina del tiempo: el stack que había en cada año ─────────────────── */
+function bindTimeMachine(root, r) {
+  const input = $('#tm-r', root), out = $('.tm-y', root)
+  if (!input) return
+  const max = +input.max
+  const list = $('.techs', root)
+  const set = (y, animate) => {
+    const prev = +out.textContent
+    const items = $$('.tech', list)
+    const state = animate && motion() ? Flip.getState(items) : null
+    items.forEach(li => li.classList.toggle('is-future', +li.dataset.since > y))
+    // Lo que ya existía en ese año sube; lo que todavía no, baja apagado. En el año actual, el orden original.
+    items.sort((a, b) => (a.classList.contains('is-future') - b.classList.contains('is-future')) || (+a.dataset.o - +b.dataset.o))
+      .forEach(li => list.append(li))
+    if (state) Flip.from(state, { duration: 0.7, ease: 'expo.inOut', stagger: { amount: 0.12 } })
+    input.value = y; input.setAttribute('aria-valuetext', `${y}`)
+    if (prev !== y) {
+      out.innerHTML = `<span>${y}</span>`
+      if (animate && motion()) gsap.from(out.firstChild, { yPercent: y > prev ? 100 : -100, duration: 0.4, ease: 'expo.out' })
+    }
+    const count = $$('.tech', root).filter(li => !li.hidden && !li.classList.contains('is-future')).length
+    animate ? rollTo($('.count', root), count) : ($('.count', root).textContent = count)
+  }
+  input.addEventListener('input', () => {
+    const y = +input.value
+    set(y, true)
+    setQuery('hasta', y < max ? String(y) : '')
+    tick(900 + (y - +input.min) * 220) // el tono sube con los años
+    announce(`El stack en ${y}`)
+  })
+  const start = +(r.query.get('hasta') || max)
+  set(Math.min(max, Math.max(+input.min, start)), false)
+}
+
+/* ── Entrada de la home: solo la primera visita de la sesión ────────────── */
+function intro() {
+  if (!motion()) return
+  try { if (sessionStorage.getItem('demo-visited')) return; sessionStorage.setItem('demo-visited', '1') } catch {}
+  const h = $('.hero-h', main)
+  if (!h) return
+  const sq = $('.sq', h)
+  const words = h.firstChild.textContent.trim().split(/\s+/)
+  h.firstChild.replaceWith(...words.flatMap((w, i) => {
+    const s = document.createElement('span'); s.className = 'w'; s.innerHTML = `<span>${esc(w)}</span>`
+    return i < words.length - 1 ? [s, document.createTextNode(' ')] : [s]
+  }))
+  gsap.from($$('.w > span', h), { yPercent: 108, duration: 1.05, ease: 'expo.out', stagger: 0.05, delay: 0.1 })
+  gsap.from(sq, { scale: 0, duration: 0.6, ease: 'back.out(3)', delay: 0.75 })
+  gsap.from($$('.intro, .facts, .sec', main), { opacity: 0, y: 14, duration: 0.9, ease: 'expo.out', stagger: 0.08, delay: 0.35, clearProps: 'all' })
+}
+
+/* ── Paleta "ir a" ──────────────────────────────────────────────────────── */
+const palBd = $('.pal-bd'), pal = $('.pal'), palIn = $('.pal-in'), palList = $('.pal-list')
+const palHl = travel($('.pal-scroll'), null, $('.pal-hl'))
+let palItems = [], palActive = 0, palReturn = null
+const norm = s => s.normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase()
+function palSource() {
+  return [
+    { g: 'Páginas', l: 'Inicio', h: '#/' },
+    { g: 'Páginas', l: 'Obra', h: '#/obra', s: P.length + ' registros' },
+    { g: 'Páginas', l: 'Stack', h: '#/stack', s: D.stack.length + ' registros' },
+    { g: 'Páginas', l: 'Sobre mí', h: '#/sobre-mi' },
+    { g: 'Páginas', l: 'Contacto', h: '#/contacto' },
+    ...P.map(p => ({ g: 'Obra', l: p.title, h: '#/obra/' + p.slug, s: String(p.year) })),
+    ...D.stack.map(t => ({ g: 'Stack', l: t.name, h: '#/stack?tec=' + t.slug, s: CAT1[t.category] })),
+    { g: 'Acciones', l: 'Copiar email', run: copyEmail, s: D.contact.email },
+    { g: 'Acciones', l: isRec() ? 'Ver como diseño' : 'Ver como registro', run: () => setRecord(!isRec()), s: 'R' },
+    { g: 'Acciones', l: document.body.classList.contains('focus-read') ? 'Salir de lectura enfocada' : 'Lectura enfocada', run: () => setFocusRead(!document.body.classList.contains('focus-read')), s: 'F' },
+    { g: 'Acciones', l: 'Cambiar tema', run: toggleTheme },
+    { g: 'Acciones', l: soundOn ? 'Apagar sonido' : 'Activar sonido', run: toggleSound, s: 'apagado por defecto' },
+  ]
+}
+function palRender() {
+  const q = norm(palIn.value.trim())
+  palItems = palSource().filter(it => !q || norm(it.l + ' ' + it.g).includes(q))
+  let g = '', html = ''
+  palItems.forEach((it, i) => {
+    if (it.g !== g) { g = it.g; html += `<li class="pal-g" role="presentation">${g}</li>` }
+    html += `<li class="pal-it" role="option" id="pi-${i}" data-i="${i}" aria-selected="false"><span>${esc(it.l)}</span>${it.s ? `<small>${esc(it.s)}</small>` : ''}</li>`
+  })
+  palList.innerHTML = html || '<li class="pal-empty" role="presentation">Sin resultados</li>'
+  palSelect(0, true)
+}
+function palSelect(i, instant) {
+  if (!palItems.length) { palHl.hide(); palIn.removeAttribute('aria-activedescendant'); return }
+  palActive = (i + palItems.length) % palItems.length
+  $$('.pal-it', palList).forEach(el => el.setAttribute('aria-selected', String(+el.dataset.i === palActive)))
+  const el = $(`#pi-${palActive}`)
+  palIn.setAttribute('aria-activedescendant', el.id)
+  el.scrollIntoView({ block: 'nearest' })
+  if (instant) palHl.hide()
+  palHl.go(el)
+}
+function palRun(i) {
+  const it = palItems[i]
+  if (!it) return
+  palClose(false)
+  if (it.run) it.run(); else location.hash = it.h
+}
+function palOpen() {
+  if (!palBd.hidden) return
+  palReturn = document.activeElement
+  lenis?.stop(); hidePeek(true)
+  palBd.hidden = false; palIn.value = ''; palRender(); palIn.focus(); tick(1800)
+  if (motion()) gsap.fromTo(pal, { opacity: 0, y: -10, scale: 0.975 }, { opacity: 1, y: 0, scale: 1, duration: 0.32, ease: 'expo.out' })
+}
+function palClose(restore = true) {
+  if (palBd.hidden) return
+  const done = () => { palBd.hidden = true; lenis?.start(); if (restore) palReturn?.focus?.() }
+  if (motion()) gsap.to(pal, { opacity: 0, y: -6, scale: 0.985, duration: 0.16, ease: 'power2.in', onComplete: done }); else done()
+}
+palIn.addEventListener('input', palRender)
+palIn.addEventListener('keydown', e => {
+  if (e.key === 'ArrowDown') { e.preventDefault(); palSelect(palActive + 1); tick(2600) }
+  else if (e.key === 'ArrowUp') { e.preventDefault(); palSelect(palActive - 1); tick(2600) }
+  else if (e.key === 'Enter') { e.preventDefault(); palRun(palActive) }
+  else if (e.key === 'Escape' || e.key === 'Tab') { e.preventDefault(); palClose() }
+})
+palList.addEventListener('pointermove', e => { const el = e.target.closest('.pal-it'); if (el && +el.dataset.i !== palActive) palSelect(+el.dataset.i) })
+palList.addEventListener('click', e => { const el = e.target.closest('.pal-it'); if (el) palRun(+el.dataset.i) })
+palBd.addEventListener('pointerdown', e => { if (e.target === palBd) palClose() })
+
+/* ── Tema, reloj, atajos ────────────────────────────────────────────────── */
+function toggleTheme() {
+  const next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark'
+  const apply = () => { document.documentElement.dataset.theme = next; setTint(pageTint); try { localStorage.setItem('demo-theme', next) } catch {} }
+  document.startViewTransition && !reduce.matches ? document.startViewTransition(apply) : apply()
+  tick(1200)
+}
+function clock() { $('.clock').textContent = new Intl.DateTimeFormat('es-AR', { timeZone: 'America/Argentina/Buenos_Aires', hour: '2-digit', minute: '2-digit', hour12: false }).format(new Date()) }
+clock(); setInterval(clock, 20000)
+const isMac = /Mac|iPhone|iPad/.test(navigator.platform)
+$('.kb-mod').textContent = isMac ? '⌘K' : 'Ctrl K'
+$('.rec-btn').addEventListener('click', () => setRecord(!isRec()))
+$('.focus-btn').addEventListener('click', () => setFocusRead(!document.body.classList.contains('focus-read')))
+$('.goto-btn').addEventListener('click', palOpen)
+$('.theme-btn').addEventListener('click', toggleTheme)
+function announce(t) { const s = $('.sr[aria-live]'); s.textContent = ''; setTimeout(() => { s.textContent = t }, 30) }
+function up() { const r = parse(); if (!r.path.length) return; r.path.pop(); r.query = new URLSearchParams(); location.hash = toHash(r) }
+addEventListener('keydown', e => {
+  const typing = /^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement?.tagName) || document.activeElement?.isContentEditable
+  if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); palBd.hidden ? palOpen() : palClose(); return }
+  if (!palBd.hidden || typing || e.metaKey || e.ctrlKey || e.altKey) return
+  if (e.key === '/') { e.preventDefault(); palOpen() }
+  else if (e.key === 'r' || e.key === 'R') setRecord(!isRec())
+  else if (e.key === 'f' || e.key === 'F') setFocusRead(!document.body.classList.contains('focus-read'))
+  else if (e.key === 'Escape' || e.key === 'Backspace') { if (isRec() && e.key === 'Escape') setRecord(false); else up() }
+  else if (e.key === 'j' || e.key === 'k') {
+    const items = $$('.row-a, .tech-a', main).filter(visible)
+    if (!items.length) return
+    const i = items.indexOf(document.activeElement)
+    items[Math.max(0, Math.min(items.length - 1, i + (e.key === 'j' ? 1 : -1)))].focus()
+  }
+})
+
+route()
+</script>
+</body>
+</html>

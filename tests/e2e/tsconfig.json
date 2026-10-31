@@ -1,0 +1,15 @@
+{
+  // La suite e2e y su configuración: fuera de los tsconfig de Nuxt, se revisan con `pnpm typecheck`.
+  "compilerOptions": {
+    "target": "es2023",
+    "lib": ["es2023", "dom", "dom.iterable"],
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "types": ["node"],
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "skipLibCheck": true,
+    "noEmit": true
+  },
+  "include": ["./**/*.ts", "../../playwright.config.ts"]
+}

@@ -90,7 +90,7 @@ El repositorio cuenta con Dockerfiles optimizados para producción:
 4. En **"Ports Exposes"**, indicá `3001`.
 5. En **"Domains"**, podés dejarlo sin dominio público (si Nuxt actuará como proxy inverso completo) o asignarle un subdominio como `https://api.mateogs.tech`.
 6. En la pestaña **"Persistent Storage" / "Storages"**:
-   - Montar volumen persistente: destino `/app/public/media/projects` (o `/app/public/media`). Esto garantiza que las imágenes subidas desde el CMS no se eliminen al redeployar.
+   - Montar volumen persistente: destino `/app/public/media/projects` (o `/app/public/media`). Esto garantiza que las imágenes subidas desde el CMS no se eliminen al redeployar. **Ojo:** el volumen tapa lo que la imagen trae en esa ruta (las capturas versionadas en `public/media/projects/<slug>/`). Antes del parche 11-01 y de `import-captures.ts --db-only`, copiar `public/media/projects/{la-rucula,argpiscinas,barberpole,eros}/` al volumen (`docker cp`) o montar el volumen en una ruta que no cubra esas carpetas; ver la cabecera de `server/src/scripts/import-captures.ts`.
 7. En la pestaña **"Environment Variables"**, definí:
    ```env
    NODE_ENV=production
@@ -110,6 +110,14 @@ El repositorio cuenta con Dockerfiles optimizados para producción:
      pnpm db:seed
      ```
    - Esto creará las tablas relacionales y poblará los datos iniciales de proyectos, trayectoria y habilidades.
+
+> [!WARNING] Actualizar una base ya cargada al rediseño «movimiento»
+> El contenedor de la API corre `npx prisma migrate deploy` en cada arranque (`CMD` de `Dockerfile.api`): la migración `20261101000000_rediseno_movimiento`, que es destructiva (saca `Media.layer`, rehace `MediaRole` y pasa las capas a la galería), se aplica sola en cuanto Coolify despliega el código nuevo. Por eso:
+> 1. **Antes** del merge a `main` o de cualquier deploy de la rama: `pg_dump --format=custom --file=antes-rediseno.dump "$DATABASE_URL"`.
+> 2. Desplegar. El arranque aplica las migraciones; `20261101000100_rediseno_ocultar_obras` deja null-net y lampone sin publicar desde ese momento.
+> 3. Apenas arranca el contenedor nuevo, en su terminal: `pnpm tsx server/src/patches/2026-10-30-eros-barberpole.ts`, `2026-11-01-rediseno-datos.ts --dry`, sin `--dry`, `--dry` otra vez («sin cambios»), y lo mismo con `2026-11-02-traducciones-en.ts`. Hasta entonces el sitio sirve los datos con la forma de main (Eros sin portada, el inicio sin `display_name` ni `headline`).
+> 4. Reiniciar la API: los parches borran `data/content-last-good.json`, pero el proceso guarda en memoria respuestas de antes de los parches.
+> Para volver atrás: `pg_restore --clean --if-exists --dbname="$DATABASE_URL" antes-rediseno.dump` y desplegar el código anterior.
 
 > [!NOTE] Seguridad de Eros Agent
 > Eros no debe publicarse con un dominio en Internet. Debe correr en la misma red de Coolify bajo `http://eros:8000` y con `EROS_API_KEY` compartida requerida en todas sus peticiones.
@@ -134,7 +142,9 @@ El repositorio cuenta con Dockerfiles optimizados para producción:
    PORT=3000
    HOST=0.0.0.0
    NUXT_PUBLIC_API_BASE=http://portfolio-api:3001/api
+   NUXT_PUBLIC_SITE_URL=https://mateogs.tech
    ```
+   *`NUXT_PUBLIC_SITE_URL` tiene que estar disponible también en el build (en Coolify, marcala como «Build Variable»): `nuxt.config.ts` la lee al compilar para la CSP (`upgrade-insecure-requests`) y en runtime para el canonical, hreflang, og:url, JSON-LD, sitemap y `robots.txt`. Sin ella todo apunta a `http://localhost:3000`.*
    *(Nota: si el backend y frontend están en la misma red de Coolify, podés usar el hostname interno del contenedor `http://portfolio-api:3001/api`; alternativamente, usá `https://api.mateogs.tech/api`).*
 7. Hacé clic en **"Deploy"**.
 

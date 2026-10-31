@@ -1,30 +1,19 @@
 import { Router, type Request, type Response } from 'express'
-import { env } from '../env.js'
-import { createCvTicket, isAdminAuthorized, validateCvTicket } from './auth.js'
-import { forwardToEros, getParamId, getErosBaseUrl, isCircuitOpen, recordErosFailure } from './proxy.js'
-import {
-  fallbackHunterJobs,
-  type HunterJob,
-  evaluateJobHeuristic,
-  evaluateMultipleJobsHeuristic,
-  computeHunterStats,
-  generatePitchHeuristic,
-  generateCvHeuristic,
-  renderCvHtmlHeuristic,
-} from './fallbackHunterData.js'
+import { forwardToEros, getParamId } from './proxy.js'
+import { fallbackHunterJobs, findJob } from './fallbackHunterData.js'
+import { computeHunterStats, evaluateJobHeuristic, evaluateMultipleJobsHeuristic, evaluateSampleOnce, generatePitchHeuristic } from './hunterHeuristics.js'
+import { jobLang } from './hunterMatch.js'
+import { hunterApplyRouter } from './hunterApply.js'
+import { hunterCvRouter } from './hunterCvRoutes.js'
+import { loadProfile } from './profile.js'
 
+/**
+ * /api/admin/hunter/*: proxy a Eros con respaldo local cuando el agente no responde. El CV
+ * (hunterCvRoutes.ts) y la postulación (hunterApply.ts) tienen su propio módulo.
+ */
 export const hunterRouter = Router()
 
-/** POST /api/admin/hunter/cv/:id/ticket - Ticket de un solo uso para abrir CV HTML */
-hunterRouter.post(['/cv/:id/ticket', '/jobs/:id/cv/ticket'], (req: Request, res: Response) => {
-  const id = getParamId(req)
-  if (!id) {
-    res.status(400).json({ error: 'ID de vacante requerido' })
-    return
-  }
-  const ticket = createCvTicket(id)
-  res.json({ ticket })
-})
+hunterRouter.use(hunterCvRouter, hunterApplyRouter)
 
 /** GET /api/admin/hunter/stats */
 hunterRouter.get('/stats', async (_req: Request, res: Response) => {
@@ -32,6 +21,7 @@ hunterRouter.get('/stats', async (_req: Request, res: Response) => {
   if (result.ok) {
     res.status(result.status).json(result.data)
   } else {
+    await evaluateSampleOnce(() => loadProfile('es'))
     res.setHeader('X-Eros-Source', 'fallback')
     res.json({
       ...computeHunterStats(),
@@ -55,7 +45,8 @@ hunterRouter.get('/jobs', async (req: Request, res: Response) => {
     return
   }
 
-  // Fallback si Eros está desconectado o no autorizado
+  // Fallback si Eros está desconectado o no autorizado: la cola de ejemplo evaluada contra la base
+  await evaluateSampleOnce(() => loadProfile('es'))
   res.setHeader('X-Eros-Source', 'fallback')
   let jobs = fallbackHunterJobs.map(j => ({ ...j, _source: 'fallback' }))
   const statusFilter = req.query['status'] as string | undefined
@@ -105,7 +96,7 @@ hunterRouter.post('/evaluate', async (req: Request, res: Response) => {
     res.status(result.status).json(result.data)
     return
   }
-  const fallbackResult = evaluateMultipleJobsHeuristic(Number(limit) || 15)
+  const fallbackResult = evaluateMultipleJobsHeuristic(Number(limit) || 15, await loadProfile('es'))
   res.setHeader('X-Eros-Source', 'fallback')
   res.json({ ...fallbackResult, _source: 'fallback' })
 })
@@ -122,12 +113,12 @@ hunterRouter.post(['/evaluate/:id', '/jobs/:id/evaluate'], async (req: Request, 
     res.status(result.status).json(result.data)
     return
   }
-  const job = fallbackHunterJobs.find(j => j.id === id || j.external_id === id)
+  const job = findJob(id)
   if (!job) {
     res.status(404).json({ error: 'Vacante no encontrada' })
     return
   }
-  const evalResult = evaluateJobHeuristic(job)
+  const evalResult = evaluateJobHeuristic(job, await loadProfile('es'))
   res.setHeader('X-Eros-Source', 'fallback')
   res.json({
     ok: true,
@@ -206,140 +197,13 @@ hunterRouter.post(['/pitch/:id', '/jobs/:id/pitch'], async (req: Request, res: R
     res.status(result.status).json(result.data)
     return
   }
-  const job = fallbackHunterJobs.find(j => j.id === id || j.external_id === id)
+  const job = findJob(id)
   if (!job) {
     res.status(404).json({ error: 'Vacante no encontrada' })
     return
   }
   res.setHeader('X-Eros-Source', 'fallback')
-  res.json({ ...generatePitchHeuristic(job), _source: 'fallback' })
-})
-
-/** POST /api/admin/hunter/cv/:id */
-hunterRouter.post(['/cv/:id', '/jobs/:id/cv'], async (req: Request, res: Response) => {
-  const id = getParamId(req)
-  if (!id) {
-    res.status(400).json({ error: 'ID de vacante requerido' })
-    return
-  }
-  const result = await forwardToEros(`api/cv/${encodeURIComponent(id)}`, { method: 'POST' }, 45000)
-  if (result.ok) {
-    res.status(result.status).json(result.data)
-    return
-  }
-  const job = fallbackHunterJobs.find(j => j.id === id || j.external_id === id)
-  if (!job) {
-    res.status(404).json({ error: 'Vacante no encontrada' })
-    return
-  }
-  res.setHeader('X-Eros-Source', 'fallback')
-  res.json({ ...generateCvHeuristic(job), _source: 'fallback' })
-})
-
-/** GET /api/admin/hunter/cv/:id/html */
-hunterRouter.get(['/cv/:id/html', '/jobs/:id/cv/html'], async (req: Request, res: Response) => {
-  const id = getParamId(req)
-  if (!id) {
-    res.status(400).type('html').send('<h1>ID de vacante requerido</h1>')
-    return
-  }
-  const ticketParam = req.query['ticket']
-  const hasValidTicket = typeof ticketParam === 'string' && validateCvTicket(ticketParam, id)
-  if (!hasValidTicket && !isAdminAuthorized(req)) {
-    res.status(401).type('html').send('<h1>Acceso no autorizado al CV</h1><p>Se requiere sesión de administración o un ticket válido para esta vacante.</p>')
-    return
-  }
-  const baseUrl = getErosBaseUrl()
-  let html: string | null = null
-  let isFallbackHtml = false
-
-  if (baseUrl && !isCircuitOpen()) {
-    try {
-      const upstreamRes = await fetch(`${baseUrl}/api/cv/${encodeURIComponent(id)}/html`, {
-        headers: {
-          ...(env.erosApiKey ? { Authorization: `Bearer ${env.erosApiKey}`, 'X-Eros-Key': env.erosApiKey } : {}),
-        },
-        signal: AbortSignal.timeout(10000),
-      })
-      if (upstreamRes.ok) {
-        html = await upstreamRes.text()
-      } else {
-        recordErosFailure()
-      }
-    } catch {
-      recordErosFailure()
-    }
-  }
-
-  if (!html) {
-    const job = fallbackHunterJobs.find(j => j.id === id || j.external_id === id) || {
-      id,
-      title: (req.query['title'] as string) || 'Full Stack Software Engineer',
-      company: (req.query['company'] as string) || 'Hiring Team',
-      description: '',
-      contact_email: (req.query['email'] as string) || '',
-      status: 'active' as const,
-      match_score: 90,
-      url: 'https://mateogs.tech',
-    }
-    html = renderCvHtmlHeuristic(job as unknown as import('./fallbackHunterData.js').HunterJob)
-    isFallbackHtml = true
-  }
-
-  if (isFallbackHtml) {
-    res.setHeader('X-Eros-Source', 'fallback')
-  }
-
-  if (req.query['auto_print'] === 'true') {
-    html = html.replace('</body>', '<script>window.addEventListener("load", () => { setTimeout(() => window.print(), 350); });</script></body>')
-  }
-  if (req.query['download'] === 'true') {
-    res.setHeader('Content-Disposition', 'attachment; filename="CV_Mateo_Sonzogni_Harvard_ATS.html"')
-  }
-  // Sandbox CSP: origen opaco, sin allow-same-origin para aislar de credenciales de admin
-  res.setHeader('Content-Security-Policy', "sandbox allow-scripts allow-modals; default-src 'none'; script-src 'unsafe-inline' 'unsafe-eval'; style-src 'unsafe-inline'; img-src data: https:;")
-  res.setHeader('X-Content-Type-Options', 'nosniff')
-  res.status(200).type('html').send(html)
-})
-
-/** GET /api/admin/hunter/cv/:id/pdf */
-hunterRouter.get(['/cv/:id/pdf', '/jobs/:id/cv/pdf'], async (req: Request, res: Response) => {
-  const id = getParamId(req)
-  if (!id) {
-    res.status(400).json({ error: 'ID de vacante requerido' })
-    return
-  }
-  const ticketParam = req.query['ticket']
-  const hasValidTicket = typeof ticketParam === 'string' && validateCvTicket(ticketParam, id)
-  if (!hasValidTicket && !isAdminAuthorized(req)) {
-    res.status(401).json({ error: 'Acceso no autorizado al CV PDF' })
-    return
-  }
-
-  const baseUrl = getErosBaseUrl()
-  if (baseUrl && !isCircuitOpen()) {
-    try {
-      const upstreamRes = await fetch(`${baseUrl}/api/cv/${encodeURIComponent(id)}/pdf`, {
-        headers: {
-          ...(env.erosApiKey ? { Authorization: `Bearer ${env.erosApiKey}`, 'X-Eros-Key': env.erosApiKey } : {}),
-        },
-        signal: AbortSignal.timeout(15000),
-      })
-      if (upstreamRes.ok) {
-        const buffer = await upstreamRes.arrayBuffer()
-        res.setHeader('Content-Type', 'application/pdf')
-        const disposition = req.query['download'] === 'true' ? 'attachment' : 'inline'
-        res.setHeader('Content-Disposition', `${disposition}; filename="CV_Mateo_Sonzogni.pdf"`)
-        res.send(Buffer.from(buffer))
-        return
-      }
-      recordErosFailure()
-    } catch {
-      recordErosFailure()
-    }
-  }
-
-  res.status(503).json({ error: 'Generación nativa de PDF no disponible en modo offline o contingencia' })
+  res.json({ ...generatePitchHeuristic(job, await loadProfile(jobLang(job))), _source: 'fallback' })
 })
 
 /** PATCH /api/admin/hunter/jobs/:id/status */
@@ -357,7 +221,7 @@ hunterRouter.patch(['/jobs/:id/status', '/status/:id'], async (req: Request, res
     res.status(result.status).json(result.data)
     return
   }
-  const job = fallbackHunterJobs.find(j => j.id === id || j.external_id === id)
+  const job = findJob(id)
   if (job && req.body?.status) {
     job.status = req.body.status
     res.json({ ok: true, job })
@@ -396,116 +260,3 @@ hunterRouter.delete(['/jobs/:id', '/:id'], async (req: Request, res: Response) =
   res.json({ ok: true })
 })
 
-/** GET /api/admin/hunter/jobs/:id/apply-preview - Vista previa de correo de postulación */
-hunterRouter.get(['/jobs/:id/apply-preview', '/apply-preview/:id'], async (req: Request, res: Response) => {
-  const id = getParamId(req)
-  if (!id) {
-    res.status(400).json({ error: 'ID de vacante requerido' })
-    return
-  }
-  const result = await forwardToEros(`api/jobs/${encodeURIComponent(id)}/apply-preview`, { method: 'GET' }, 20000)
-  if (result.ok && result.data && typeof result.data === 'object' && ((result.data as Record<string, unknown>)['subject'] || (result.data as Record<string, unknown>)['body'])) {
-    res.status(result.status).json(result.data)
-    return
-  }
-  const job = fallbackHunterJobs.find(j => j.id === id || j.external_id === id) || {
-    id,
-    title: (req.query['title'] as string) || 'Full Stack Software Engineer',
-    company: (req.query['company'] as string) || 'Hiring Team',
-    contact_email: (req.query['email'] as string) || '',
-    description: '',
-    status: 'active' as const,
-    match_score: 90,
-    url: 'https://mateogs.tech',
-  }
-  const pitch = generatePitchHeuristic(job as unknown as HunterJob).data
-  res.setHeader('X-Eros-Source', 'fallback')
-  res.json({
-    ok: true,
-    _source: 'fallback',
-    to_email: job.contact_email || 'hr@company.com',
-    contact_email: job.contact_email || 'hr@company.com',
-    subject: pitch.subject,
-    body: `${pitch.elevator_pitch}\n\n${pitch.cover_letter}`,
-    channel: 'email',
-  })
-})
-
-/** POST /api/admin/hunter/jobs/:id/find-email - Búsqueda y resolución automática de email con Hunter.io / guessing */
-hunterRouter.post(['/jobs/:id/find-email', '/find-email/:id'], async (req: Request, res: Response) => {
-  const id = getParamId(req)
-  if (!id) {
-    res.status(400).json({ error: 'ID de vacante requerido' })
-    return
-  }
-  const result = await forwardToEros(`api/jobs/${encodeURIComponent(id)}/find-email`, { method: 'POST' }, 25000)
-  if (result.ok) {
-    res.status(result.status).json(result.data)
-    return
-  }
-  const job = fallbackHunterJobs.find(j => j.id === id || j.external_id === id)
-  const companyClean = (job?.company || 'company').toLowerCase().replace(/[^a-z0-9]/g, '')
-  const guessedDomain = `${companyClean || 'empresa'}.com`
-  const guessedEmail = job?.contact_email || `talent@${guessedDomain}`
-  res.setHeader('X-Eros-Source', 'fallback')
-  res.json({
-    ok: true,
-    email: guessedEmail,
-    domain: guessedDomain,
-    confidence: job?.contact_email ? 90 : 65,
-    sources: ['heuristic_domain_fallback'],
-    _source: 'fallback',
-  })
-})
-
-/** POST /api/admin/hunter/jobs/:id/apply-email - Despacho de postulación por email / n8n */
-hunterRouter.post(['/jobs/:id/apply-email', '/apply-email/:id'], async (req: Request, res: Response) => {
-  const id = getParamId(req)
-  if (!id) {
-    res.status(400).json({ error: 'ID de vacante requerido' })
-    return
-  }
-  const result = await forwardToEros(`api/jobs/${encodeURIComponent(id)}/apply-email`, {
-    method: 'POST',
-    body: JSON.stringify(req.body),
-  }, 35000)
-  if (result.ok) {
-    res.status(result.status).json(result.data)
-    return
-  }
-  // Contingencia cuando Eros Agent o SMTP no están configurados en entorno local
-  const job = fallbackHunterJobs.find(j => j.id === id || j.external_id === id)
-  const recipient = req.body?.to_email || job?.contact_email || 'hr@company.com'
-  res.setHeader('X-Eros-Source', 'fallback')
-  res.json({
-    ok: true,
-    provider: 'local_registered',
-    dispatched_to: recipient,
-    applied_at: new Date().toISOString(),
-    _source: 'fallback',
-  })
-})
-
-/** PATCH /api/admin/hunter/jobs/:id/contact-email - Actualizar correo de contacto de vacante */
-hunterRouter.patch(['/jobs/:id/contact-email', '/contact-email/:id'], async (req: Request, res: Response) => {
-  const id = getParamId(req)
-  if (!id) {
-    res.status(400).json({ error: 'ID de vacante requerido' })
-    return
-  }
-  const result = await forwardToEros(`api/jobs/${encodeURIComponent(id)}/contact-email`, {
-    method: 'PATCH',
-    body: JSON.stringify(req.body),
-  }, 15000)
-  if (result.ok) {
-    res.status(result.status).json(result.data)
-    return
-  }
-  const job = fallbackHunterJobs.find(j => j.id === id || j.external_id === id)
-  if (job && req.body?.contact_email !== undefined) {
-    job.contact_email = req.body.contact_email
-    res.json({ ok: true, job })
-    return
-  }
-  res.status(result.status).json(result.data)
-})

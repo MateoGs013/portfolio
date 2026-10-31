@@ -3,6 +3,7 @@
 
 import { api } from './api.js'
 import { MODELS } from './config.js'
+import { TRANSLATABLE_SECTIONS, missingEn } from './translations.js'
 
 const { reactive } = window.Vue
 
@@ -31,11 +32,12 @@ export const store = reactive({
   initialSnapshot: null,
   slugLocked: true,
   activeTab: 'general',
+  lang: 'es', // idioma que se edita: 'es' (el registro) | 'en' (sus traducciones, con el español de referencia)
   mobileView: 'list', // 'list' | 'detail' for responsive master-detail
 
   // Metadatos relacionales
   meta: {
-    enums: { ProjectStatus: [], TechCategory: [], MediaKind: [], MediaRole: [] },
+    enums: { ProjectStatus: [], TechCategory: [], MediaKind: [], MediaRole: [], MediaViewport: [], ExperienceKind: [], MetricUnit: [] },
     options: { orgs: [], techs: [], projects: [] },
   },
   allTechs: [],
@@ -108,8 +110,21 @@ export const store = reactive({
   // Flags operativos
   uploading: false,
   importingGitHub: false,
-  metricsList: [],
-  advancedMetricsMode: false,
+
+  /** Filas Metric de la obra abierta (viven en form.metrics; la pestaña muestra cuántas hay). */
+  get metricsList() {
+    return this.section === 'projects' && Array.isArray(this.form?.metrics) ? this.form.metrics : []
+  },
+
+  /** En inglés solo se editan las secciones que tienen traducción. */
+  get editingEn() {
+    return this.lang === 'en' && TRANSLATABLE_SECTIONS.includes(this.section)
+  },
+
+  /** Campos del registro abierto que tienen español y no tienen inglés. */
+  get missingEnList() {
+    return TRANSLATABLE_SECTIONS.includes(this.section) ? missingEn(this.section, this.form) : []
+  },
 
   // ─── ACCIONES DE TOAST & MENSAJES ─────────────────────────────────────────
   toast(kind, text, timeout = 3600) {
@@ -347,7 +362,6 @@ export const store = reactive({
     this.form = model.toForm(JSON.parse(JSON.stringify(row)))
     this.slugLocked = true
     this.markClean(this.form)
-    this.initMetricsFromForm()
   },
 
   createRecord() {
@@ -358,47 +372,48 @@ export const store = reactive({
     this.form = model.blank()
     this.slugLocked = true
     this.markClean(this.form)
-    this.initMetricsFromForm()
   },
 
-  initMetricsFromForm() {
-    if (this.section !== 'projects' || !this.form) {
-      this.metricsList = []
-      this.advancedMetricsMode = false
-      return
-    }
-    const raw = this.form.metrics
-    if (!raw) {
-      this.metricsList = []
-      this.advancedMetricsMode = false
-      return
-    }
-    try {
-      const parsed = typeof raw === 'string' ? JSON.parse(raw) : raw
-      if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
-        this.metricsList = Object.entries(parsed).map(([key, value]) => ({ key, value: String(value) }))
-        this.advancedMetricsMode = false
-      } else {
-        this.advancedMetricsMode = true
-      }
-    } catch {
-      this.advancedMetricsMode = true
-    }
-  },
-
-  syncMetricsToJson() {
-    if (!this.form || this.advancedMetricsMode) return
-    const valid = this.metricsList.filter(m => (m.key || '').trim())
-    if (valid.length === 0) {
-      this.form.metrics = ''
-    } else {
-      const obj = {}
-      for (const m of valid) {
-        obj[m.key.trim()] = (m.value || '').trim()
-      }
-      this.form.metrics = JSON.stringify(obj, null, 2)
+  /**
+   * Aplica un cambio que ya se guardó en el server (media, orden) al formulario, a su foto
+   * limpia y al registro de la lista: así no aparece como cambio pendiente ni se pisa al guardar.
+   */
+  applySaved(change) {
+    if (this.form) change(this.form)
+    if (this.current) change(this.current)
+    if (this.initialSnapshot) {
+      const snapshot = JSON.parse(this.initialSnapshot)
+      change(snapshot)
+      this.initialSnapshot = JSON.stringify(snapshot)
     }
     this.checkDirty()
+  },
+
+  /** Sube o baja una obra en la lista y renumera sortOrder 1..n con PATCH solo donde cambió. */
+  async moveProject(row, dir) {
+    const rows = [...this.rows]
+    const from = rows.indexOf(row)
+    const to = from + dir
+    if (from === -1 || to < 0 || to >= rows.length) return
+    rows.splice(to, 0, ...rows.splice(from, 1))
+    const changed = rows
+      .map((r, i) => ({ r, sortOrder: i + 1 }))
+      .filter(({ r, sortOrder }) => r.sortOrder !== sortOrder)
+    try {
+      await Promise.all(changed.map(({ r, sortOrder }) => api.patchRecord('projects', r.id, { sortOrder })))
+      for (const { r, sortOrder } of changed) {
+        if (this.current && this.current.id === r.id) this.applySaved((f) => { f.sortOrder = sortOrder })
+        else r.sortOrder = sortOrder
+      }
+      this.rows = rows
+      this.toast('ok', `«${row.title}» quedó en el puesto ${to + 1}`)
+    } catch (err) {
+      this.toast('err', `No se pudo reordenar: ${err.message}`)
+      // Algunos PATCH pudieron entrar: la lista vuelve a leerse para mostrar el orden real.
+      try {
+        this.rows = (await api.getCollection('projects')) || []
+      } catch { /* la lista queda como estaba */ }
+    }
   },
 
   // ─── OPERACIONES DE JOB HUNTER ────────────────────────────────────────────
@@ -800,7 +815,7 @@ export const store = reactive({
     const s = this || store
     try {
       const res = await api.publishPostToBlog(id)
-      s.toast('ok', `Artículo publicado exitosamente en el Blog: /blog/${res?.article?.slug || ''}`)
+      s.toast('ok', `Artículo publicado en /articles/${res?.article?.slug || ''}`)
       await s.loadContentPosts()
       await s.refreshCounts()
       return res

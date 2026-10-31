@@ -208,18 +208,41 @@ export const AdmJobHunter = {
       }
     }
 
+    // Encabezados del texto plano en el idioma del CV (el respaldo manda `lang`; Eros, en inglés).
+    const plainHeadings = {
+      es: { summary: 'PERFIL PROFESIONAL', skills: 'HABILIDADES TÉCNICAS', experience: 'EXPERIENCIA', education: 'EDUCACIÓN', extra: 'IDIOMAS Y METODOLOGÍA', languages: 'IDIOMAS', methodologies: 'METODOLOGÍA' },
+      en: { summary: 'PROFESSIONAL SUMMARY', skills: 'CORE COMPETENCIES & STACK', experience: 'EXPERIENCE & SHIPPED WORK', education: 'EDUCATION', extra: 'LANGUAGES & ENGINEERING STANDARDS', languages: 'LANGUAGES', methodologies: 'ENGINEERING PRACTICES & METHODOLOGIES' },
+    }
+
+    const cvHeadings = computed(() => plainHeadings[cvData.value?.lang === 'es' ? 'es' : 'en'])
+
+    // «https://www.linkedin.com/in/x/» → «linkedin.com/in/x»
+    function shortUrl(url) {
+      return String(url || '').replace(/^https?:[/][/](www[.])?/i, '').replace(/[/]+$/, '')
+    }
+
+    // Nombre de archivo desde el nombre que trae el CV: «Ana Pérez» → CV_Ana_Perez_<sufijo>.
+    function cvFileName(suffix) {
+      const stem = String(cvData.value?.name || '')
+        .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^A-Za-z0-9]+/g, '_').replace(/^_+|_+$/g, '')
+      return ['CV', stem, suffix].filter(Boolean).join('_')
+    }
+
     async function copyTailoredCVText() {
       const cv = cvData.value
       if (!cv) return
+      const h = plainHeadings[cv.lang === 'es' ? 'es' : 'en']
+      const row = values => values.filter(Boolean).join(' | ')
       const lines = [
-        cv.name || 'MATEO GABRIEL SONZOGNI',
-        `${cv.title || ''} | ${cv.location || ''} | ${cv.email || 'mateogabus@gmail.com'}`,
-        `${cv.portfolio || 'https://mateogs.tech'} | ${cv.github || ''} | ${cv.linkedin || ''}`,
+        cv.name || '',
+        row([cv.title, cv.location, cv.email]),
+        row([cv.portfolio, cv.github, cv.linkedin]),
         '',
-        'PROFESSIONAL SUMMARY',
+        h.summary,
         cv.summary || '',
         '',
-        'CORE COMPETENCIES & STACK',
+        h.skills,
       ]
       if (cv.skills && typeof cv.skills === 'object') {
         for (const [cat, items] of Object.entries(cv.skills)) {
@@ -227,10 +250,11 @@ export const AdmJobHunter = {
           lines.push(`${cat}: ${list}`)
         }
       }
-      lines.push('', 'EXPERIENCE & SHIPPED WORK')
+      lines.push('', h.experience)
       if (Array.isArray(cv.experience)) {
         for (const exp of cv.experience) {
-          lines.push(`${exp.title || exp.company || ''} — ${exp.role || ''} (${exp.period || ''})`)
+          const org = exp.title || exp.company
+          lines.push(`${[org, exp.role !== org ? exp.role : null].filter(Boolean).join(' — ')} (${[exp.period, exp.location].filter(Boolean).join(' · ')})`)
           if (Array.isArray(exp.bullets)) {
             for (const b of exp.bullets) {
               lines.push(`• ${b}`)
@@ -240,9 +264,9 @@ export const AdmJobHunter = {
         }
       }
       if (Array.isArray(cv.education)) {
-        lines.push('EDUCATION')
+        lines.push(h.education)
         for (const edu of cv.education) {
-          lines.push(`${edu.degree || edu.title || ''} — ${edu.institution || ''} (${edu.period || ''})`)
+          lines.push(`${[edu.degree || edu.title, edu.institution].filter(Boolean).join(' — ')} (${[edu.period, edu.location].filter(Boolean).join(' · ')})`)
           if (edu.details) {
             lines.push(edu.details)
           }
@@ -250,12 +274,12 @@ export const AdmJobHunter = {
         lines.push('')
       }
       if (cv.languages && cv.languages.length) {
-        lines.push('LANGUAGES')
+        lines.push(h.languages)
         lines.push(Array.isArray(cv.languages) ? cv.languages.join(' · ') : String(cv.languages))
         lines.push('')
       }
       if (cv.methodologies && cv.methodologies.length) {
-        lines.push('ENGINEERING PRACTICES & METHODOLOGIES')
+        lines.push(h.methodologies)
         lines.push(Array.isArray(cv.methodologies) ? cv.methodologies.join(' · ') : String(cv.methodologies))
         lines.push('')
       }
@@ -304,7 +328,7 @@ export const AdmJobHunter = {
         const a = document.createElement('a')
         a.href = url
         const comp = (store.hunter.selected.company || 'Job').replace(/[^a-zA-Z0-9_-]/g, '_')
-        a.download = `CV_Mateo_Sonzogni_Harvard_ATS_${comp}.pdf`
+        a.download = `${cvFileName('Harvard_ATS_' + comp)}.pdf`
         document.body.appendChild(a)
         a.click()
         a.remove()
@@ -356,7 +380,7 @@ export const AdmJobHunter = {
         const url = URL.createObjectURL(blob)
         const a = document.createElement('a')
         a.href = url
-        a.download = 'CV_Mateo_Sonzogni_Harvard_ATS.html'
+        a.download = `${cvFileName('Harvard_ATS')}.html`
         document.body.appendChild(a)
         a.click()
         a.remove()
@@ -421,6 +445,14 @@ export const AdmJobHunter = {
       await store.deleteSingleHunterJob(store.hunter.selected.id)
     }
 
+    // Asunto mínimo en el idioma de la vacante, con el nombre del CV si ya se generó.
+    function applySubject(sel) {
+      const text = `${sel.title} ${sel.description || ''}`.toLowerCase()
+      const isEs = text.includes('desarrollador') || text.includes('experiencia')
+      const name = cvData.value?.name
+      return [`${isEs ? 'Postulación' : 'Application'}: ${sel.title}`, name].filter(Boolean).join(' — ')
+    }
+
     async function openApplyModal() {
       if (!store.hunter.selected) return
       applyModalOpen.value = true
@@ -428,16 +460,9 @@ export const AdmJobHunter = {
       isCustomizingText.value = false
 
       const sel = store.hunter.selected
-      const isEn = !((sel.title + ' ' + (sel.description || '')).toLowerCase().includes('desarrollador') || (sel.title + ' ' + (sel.description || '')).toLowerCase().includes('experiencia'))
-
-      // 1. Asunto y cuerpo por defecto inmediatos (garantizan que jamás quede en blanco)
-      const defaultSubject = isEn
-        ? `Application: ${sel.title} — Mateo Sonzogni`
-        : `Postulación: ${sel.title} — Mateo Gabriel Sonzogni`
-
-      const defaultBody = isEn
-        ? `Dear Hiring Team at ${sel.company},\n\nI am writing to express my strong interest in the ${sel.title} position. With hands-on experience designing and operating production full-stack systems using TypeScript, Node.js, and PostgreSQL 17, my background aligns closely with your technical requirements.\n\nYou can review my production code and live portfolio at https://mateogs.tech.\n\nBest regards,\nMateo Sonzogni`
-        : `Estimado equipo de selección de ${sel.company},\n\nMe pongo en contacto para presentar mi postulación a la búsqueda de ${sel.title}. Mi perfil combina desarrollo full stack riguroso, arquitectura de bases de datos relacionales (PostgreSQL 17) y micro-interacciones accesibles en producción.\n\nEn mi portafolio (https://mateogs.tech) pueden explorar casos de estudio reales con código abierto y métricas de producción.\n\nSaludos cordiales,\nMateo Gabriel Sonzogni`
+      // 1. Asunto por defecto inmediato; el cuerpo lo arma el servidor desde la base (Eros o su respaldo)
+      const defaultSubject = applySubject(sel)
+      const defaultBody = ''
 
       applyForm.toEmail = sel.contact_email || ''
       applyForm.subject = defaultSubject
@@ -492,11 +517,7 @@ export const AdmJobHunter = {
       }
 
       const sel = store.hunter.selected
-      const isEn = !((sel.title + ' ' + (sel.description || '')).toLowerCase().includes('desarrollador') || (sel.title + ' ' + (sel.description || '')).toLowerCase().includes('experiencia'))
-      const fallbackSubject = isEn
-        ? `Application: ${sel.title} — Mateo Sonzogni`
-        : `Postulación: ${sel.title} — Mateo Gabriel Sonzogni`
-      const finalSubject = (applyForm.subject || fallbackSubject).trim()
+      const finalSubject = (applyForm.subject || applySubject(sel)).trim()
       const finalBody = applyForm.body || ''
 
       // 1. Descarga en paralelo del CV Harvard ATS nativo para adjuntar
@@ -527,15 +548,11 @@ export const AdmJobHunter = {
         return
       }
       const sel = store.hunter.selected
-      const isEn = !((sel.title + ' ' + (sel.description || '')).toLowerCase().includes('desarrollador') || (sel.title + ' ' + (sel.description || '')).toLowerCase().includes('experiencia'))
-      const fallbackSubject = isEn
-        ? `Application: ${sel.title} — Mateo Sonzogni`
-        : `Postulación: ${sel.title} — Mateo Gabriel Sonzogni`
 
       try {
         await store.applyHunterJobByEmail(store.hunter.selected.id, {
           to_email: applyForm.toEmail.trim(),
-          subject: (applyForm.subject || fallbackSubject).trim(),
+          subject: (applyForm.subject || applySubject(sel)).trim(),
           body: applyForm.body,
           channel: 'n8n',
           confirmed: true,
@@ -579,6 +596,9 @@ export const AdmJobHunter = {
       pitchData,
       currentTailoredCV,
       cvData,
+      cvHeadings,
+      shortUrl,
+      cvFileName,
       activePitchTab,
       filteredJobs,
       pendingJobsCount,
@@ -1632,16 +1652,17 @@ export const AdmJobHunter = {
                   <div>
                     <!-- Cabecera Harvard -->
                     <div class="text-center pb-2">
-                      <h1 class="text-xl sm:text-2xl font-bold font-sans tracking-wide text-black uppercase">{{ cvData.name || 'MATEO GABRIEL SONZOGNI' }}</h1>
-                      <div class="text-[11px] font-sans font-semibold text-zinc-800 mt-1">
-                        {{ cvData.title || 'Full Stack Developer & Software Engineer' }}
+                      <h1 class="text-xl sm:text-2xl font-bold font-sans tracking-wide uppercase" :class="cvData.name ? 'text-black' : 'text-zinc-400'">{{ cvData.name || 'Sin nombre' }}</h1>
+                      <div class="text-[11px] font-sans font-semibold mt-1" :class="cvData.title ? 'text-zinc-800' : 'text-zinc-400'">
+                        {{ cvData.title || 'Sin rol' }}
                       </div>
                       <div class="text-[10px] font-sans text-zinc-600 mt-1 flex flex-wrap justify-center items-center gap-x-2 gap-y-0.5">
-                        <span>{{ cvData.location || 'Río Negro, Patagonia Argentina (UTC-3)' }}</span>
+                        <span :class="cvData.location ? '' : 'text-zinc-400'">{{ cvData.location || 'Sin ubicación' }}</span>
                         <span class="text-zinc-400">·</span>
-                        <a :href="'mailto:' + (cvData.email || 'mateogabus@gmail.com')" class="text-zinc-800 hover:underline">{{ cvData.email || 'mateogabus@gmail.com' }}</a>
-                        <span class="text-zinc-400">·</span>
-                        <a :href="cvData.portfolio || 'https://mateogs.tech'" target="_blank" class="text-zinc-800 hover:underline">mateogs.tech</a>
+                        <a v-if="cvData.email" :href="'mailto:' + cvData.email" class="text-zinc-800 hover:underline">{{ cvData.email }}</a>
+                        <span v-else class="text-zinc-400">Sin email</span>
+                        <span v-if="cvData.portfolio" class="text-zinc-400">·</span>
+                        <a v-if="cvData.portfolio" :href="cvData.portfolio" target="_blank" class="text-zinc-800 hover:underline">{{ shortUrl(cvData.portfolio) }}</a>
                         <span v-if="cvData.linkedin" class="text-zinc-400">·</span>
                         <a v-if="cvData.linkedin" :href="cvData.linkedin" target="_blank" class="text-zinc-800 hover:underline">LinkedIn</a>
                         <span v-if="cvData.github" class="text-zinc-400">·</span>
@@ -1653,17 +1674,17 @@ export const AdmJobHunter = {
                     <!-- Professional Summary -->
                     <div class="mb-3.5">
                       <h2 class="text-[11px] font-sans font-bold uppercase tracking-wider text-black border-b border-black pb-0.5 mb-1.5">
-                        Professional Summary
+                        {{ cvHeadings.summary }}
                       </h2>
-                      <p class="text-[10px] leading-relaxed text-justify text-zinc-800 font-serif">
-                        {{ cvData.summary || 'Software engineer specialized in reactive web architectures, high-performance UI, and robust backend systems.' }}
+                      <p class="text-[10px] leading-relaxed text-justify font-serif" :class="cvData.summary ? 'text-zinc-800' : 'text-zinc-400'">
+                        {{ cvData.summary || 'Sin resumen' }}
                       </p>
                     </div>
 
                     <!-- Core Competencies & Stack -->
                     <div v-if="cvData.skills && Object.keys(cvData.skills).length" class="mb-3.5">
                       <h2 class="text-[11px] font-sans font-bold uppercase tracking-wider text-black border-b border-black pb-0.5 mb-1.5">
-                        Core Competencies & Stack
+                        {{ cvHeadings.skills }}
                       </h2>
                       <div class="space-y-1 text-[9.5px] font-serif leading-snug">
                         <div v-for="(skillsList, category) in cvData.skills" :key="category">
@@ -1676,12 +1697,12 @@ export const AdmJobHunter = {
                     <!-- Prioritized Experience & Shipped Projects -->
                     <div v-if="cvData.experience && cvData.experience.length" class="mb-3.5">
                       <h2 class="text-[11px] font-sans font-bold uppercase tracking-wider text-black border-b border-black pb-0.5 mb-2">
-                        Relevant Experience & Shipped Projects
+                        {{ cvHeadings.experience }}
                       </h2>
                       <div v-for="(exp, expIdx) in cvData.experience" :key="expIdx" class="mb-2.5 last:mb-0">
                         <div class="flex justify-between items-baseline font-sans text-[10.5px] font-bold text-black">
-                          <span>{{ (exp.title || exp.company || '').toUpperCase() }} — <span class="font-semibold text-zinc-800">{{ exp.role }}</span></span>
-                          <span class="text-[9.5px] font-normal font-sans text-zinc-600">{{ exp.period || '2026' }}</span>
+                          <span>{{ (exp.title || exp.company || '').toUpperCase() }}<span v-if="exp.role && exp.role !== (exp.title || exp.company)" class="font-semibold text-zinc-800"> — {{ exp.role }}</span></span>
+                          <span class="text-[9.5px] font-normal font-sans text-zinc-600">{{ [exp.period, exp.location].filter(Boolean).join(' · ') }}</span>
                         </div>
                         <ul class="list-disc pl-4 mt-0.5 space-y-0.5 text-[9.5px] leading-relaxed text-zinc-800 font-serif">
                           <li v-for="(b, bIdx) in (exp.bullets || [])" :key="bIdx">{{ b }}</li>
@@ -1695,12 +1716,12 @@ export const AdmJobHunter = {
                     <!-- Education -->
                     <div v-if="cvData.education && cvData.education.length" class="mb-2">
                       <h2 class="text-[11px] font-sans font-bold uppercase tracking-wider text-black border-b border-black pb-0.5 mb-1.5">
-                        Education
+                        {{ cvHeadings.education }}
                       </h2>
                       <div v-for="(edu, eduIdx) in cvData.education" :key="eduIdx" class="mb-1 last:mb-0">
                         <div class="flex justify-between items-baseline font-sans text-[10px]">
-                          <span class="font-bold text-black">{{ edu.degree || edu.title }} — <span class="font-normal text-zinc-800">{{ edu.institution }}</span></span>
-                          <span class="text-[9.5px] text-zinc-600">{{ edu.period || '' }}</span>
+                          <span class="font-bold text-black">{{ edu.degree || edu.title }}<span v-if="edu.institution" class="font-normal text-zinc-800"> — {{ edu.institution }}</span></span>
+                          <span class="text-[9.5px] text-zinc-600">{{ [edu.period, edu.location].filter(Boolean).join(' · ') }}</span>
                         </div>
                         <p v-if="edu.details" class="text-[9px] text-zinc-600 font-serif leading-snug mt-0.5">{{ edu.details }}</p>
                       </div>
@@ -1709,15 +1730,15 @@ export const AdmJobHunter = {
                     <!-- Languages & Engineering Practices -->
                     <div v-if="(cvData.languages && cvData.languages.length) || (cvData.methodologies && cvData.methodologies.length)" class="mb-2">
                       <h2 class="text-[11px] font-sans font-bold uppercase tracking-wider text-black border-b border-black pb-0.5 mb-1.5">
-                        Languages & Engineering Standards
+                        {{ cvHeadings.extra }}
                       </h2>
                       <div class="space-y-1 text-[9.5px] font-serif leading-snug">
                         <div v-if="cvData.languages && cvData.languages.length">
-                          <span class="font-sans font-bold text-black uppercase tracking-tight text-[9.5px]">Languages: </span>
+                          <span class="font-sans font-bold text-black uppercase tracking-tight text-[9.5px]">{{ cvHeadings.languages }}: </span>
                           <span class="text-zinc-800">{{ Array.isArray(cvData.languages) ? cvData.languages.join(' · ') : cvData.languages }}</span>
                         </div>
                         <div v-if="cvData.methodologies && cvData.methodologies.length">
-                          <span class="font-sans font-bold text-black uppercase tracking-tight text-[9.5px]">Methodologies & Practices: </span>
+                          <span class="font-sans font-bold text-black uppercase tracking-tight text-[9.5px]">{{ cvHeadings.methodologies }}: </span>
                           <span class="text-zinc-800">{{ Array.isArray(cvData.methodologies) ? cvData.methodologies.join(' · ') : cvData.methodologies }}</span>
                         </div>
                       </div>
@@ -1858,7 +1879,7 @@ export const AdmJobHunter = {
               <div class="flex items-center gap-2 min-w-0">
                 <svg class="adm-icon sm text-emerald-400 shrink-0" viewBox="0 0 24 24"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
                 <div class="truncate">
-                  <span class="text-white font-medium">CV_Mateo_Sonzogni.pdf</span>
+                  <span class="text-white font-medium">{{ cvFileName('Harvard_ATS') }}.pdf</span>
                   <span class="text-zinc-500 ml-1.5">(Harvard ATS · 1 pág A4 nativa)</span>
                 </div>
               </div>
@@ -1917,7 +1938,7 @@ export const AdmJobHunter = {
             <div class="pt-3 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 border-t border-white/10 shrink-0">
               <div class="flex items-center gap-1.5 text-[11px] text-zinc-500">
                 <span class="w-1.5 h-1.5 rounded-full bg-emerald-500/60"></span>
-                <span>Remitente: <span class="text-zinc-300 font-mono-code">mateogabus@gmail.com</span></span>
+                <span>Remitente: <span class="text-zinc-300 font-mono-code">{{ cvData?.email || 'la cuenta configurada en Eros' }}</span></span>
               </div>
 
               <div class="flex items-center justify-end gap-2">

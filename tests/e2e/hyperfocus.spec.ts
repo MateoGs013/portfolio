@@ -1,0 +1,274 @@
+import { readdirSync, readFileSync } from 'node:fs'
+import { join } from 'node:path'
+import { expect, test, type BrowserContext, type Page } from '@playwright/test'
+import focus from '../../app/lib/dict/focus'
+import { A4, axeViolations, HYPERFOCUS_COOKIE, observeShifts, PAGES, prefs } from './support'
+
+/**
+ * Hiperfoco (X1, docs/diseno.md §5): la cookie llega al SSR sin cambio de layout, la navegación sigue
+ * entera, el botón alterna con aria-pressed sin perder el foco, Esc cierra capas antes de salir, Lenis
+ * no existe en el modo, axe no encuentra violaciones serias y el CV se imprime en una página. Corre en
+ * 375 y 1440 px, en oscuro y en claro: cada bloque fija su viewport y su tema, así que la spec corre en
+ * un solo proyecto (1440-dark en playwright.config.ts).
+ */
+const WIDTHS = [375, 1440] as const
+const THEMES = ['dark', 'light'] as const
+
+async function focusCookie(context: BrowserContext) {
+  return (await context.cookies()).find(c => c.name === HYPERFOCUS_COOKIE)?.value
+}
+
+/** axe sin violaciones serias ni críticas (la cabecera se mide aparte, ver support.ts). */
+const seriousViolations = (page: Page) => axeViolations(page, ['critical', 'serious'])
+
+/** En angosto el botón vive en el menú de la cabecera: se abre si el resumen se ve. */
+async function toggleButton(page: Page) {
+  const summary = page.locator('header[data-chrome] summary')
+  if (await summary.isVisible()) await summary.click()
+  const button = page.locator('header[data-chrome] button[aria-keyshortcuts="h"]')
+  await expect(button).toBeVisible()
+  return button
+}
+
+const isNarrow = async (page: Page) => page.locator('header[data-chrome] summary').isVisible()
+
+/**
+ * Marca el bloque que se está leyendo (el mismo criterio que useHyperfocus: el primero que empieza
+ * debajo de la cabecera y no está pegado, como los rótulos `md:sticky`) y devuelve su alto.
+ */
+const anchorTop = (page: Page) => page.evaluate(() => {
+  const floor = document.querySelector('header[data-chrome]')?.getBoundingClientRect().bottom ?? 0
+  const readable = '#contenido :is(h1, h2, h3, p, li, dt, dd, blockquote, pre, [data-row], [data-card])'
+  const skip = '[data-hf="hide"], [data-ornament], [aria-hidden="true"]'
+  const stuck = (b: HTMLElement) => {
+    for (let n: HTMLElement | null = b; n && n.id !== 'contenido'; n = n.parentElement) {
+      if (['sticky', 'fixed'].includes(getComputedStyle(n).position)) return true
+      if ([...n.classList].some(c => /(^|:)sticky$/.test(c))) return true
+    }
+    return false
+  }
+  const el = [...document.querySelectorAll<HTMLElement>(readable)]
+    .find((b) => {
+      const r = b.getBoundingClientRect()
+      return r.height > 0 && r.top >= floor && r.top < window.innerHeight && !b.closest(skip) && !stuck(b)
+    })
+  if (!el) throw new Error('no hay un bloque visible')
+  el.dataset.anchorProbe = ''
+  return el.getBoundingClientRect().top
+})
+const probeTop = (page: Page) => page.evaluate(() => document.querySelector('[data-anchor-probe]')!.getBoundingClientRect().top)
+
+for (const width of WIDTHS) {
+  for (const theme of THEMES) {
+    test.describe(`${width} px · ${theme}`, () => {
+      test.use({ viewport: { width, height: width < 768 ? 812 : 900 } })
+
+      for (const path of PAGES) {
+        test(`${path}: SSR en Hiperfoco, sin cambio de layout, sin Lenis y sin violaciones serias`, async ({ page, context, baseURL }) => {
+          await prefs(context, baseURL, theme, true)
+          await page.addInitScript(observeShifts)
+          // Se mide la primera visita, la del SSR con la cookie: las fuentes se precargan (usePreloadFonts).
+          const res = await page.goto(path, { waitUntil: 'networkidle' })
+          expect(await res?.text()).toMatch(/<html[^>]*\bdata-hyperfocus="true"/)
+          await expect(page.locator('html')).toHaveAttribute('data-theme', theme)
+          await page.waitForTimeout(800)
+
+          expect(await page.evaluate(() => (window as unknown as { __cls: number }).__cls)).toBe(0)
+          await expect(page.locator('html')).toHaveAttribute('data-hyperfocus', 'true')
+          await expect(page.locator('html')).not.toHaveClass(/\blenis\b/)
+          await expect(page.locator('.pin-spacer')).toHaveCount(0)
+          // Lo que el modo oculta no se ve y la columna de lectura mide 68ch como mucho.
+          for (const hidden of await page.locator('[data-hf="hide"], [data-ornament]').all()) await expect(hidden).toBeHidden()
+          const [columnWidth, measure] = await page.locator('#contenido article[data-hf="measure"]').evaluate(el => [el.getBoundingClientRect().width, parseFloat(getComputedStyle(el).maxWidth)])
+          expect(columnWidth).toBeLessThanOrEqual(measure! + 0.5)
+          expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
+
+          expect(await seriousViolations(page)).toEqual([])
+        })
+      }
+
+      test('la navegación sigue entera con el modo activo', async ({ page, context, baseURL }) => {
+        await prefs(context, baseURL, theme, true)
+        await page.goto('/', { waitUntil: 'networkidle' })
+
+        await page.locator('header[data-chrome] nav a[href="/projects"]').click()
+        await expect(page).toHaveURL(/\/projects$/)
+        await expect(page.locator('h1')).toBeVisible()
+        await expect(page.locator('section[data-track]')).toHaveCount(0)
+
+        await page.locator('#contenido a[data-card]').first().click()
+        await expect(page).toHaveURL(/\/projects\/[\w-]+$/)
+        // La escena de la siguiente obra no se ve; queda el enlace llano.
+        await expect(page.locator('nav a[data-travel="next"]:visible')).toHaveCount(1)
+
+        await page.locator('body').press('Backspace')
+        await expect(page).toHaveURL(/\/projects$/)
+        await page.locator('body').press('3')
+        await expect(page).toHaveURL(/\/about$/)
+        await expect(page.locator('html')).toHaveAttribute('data-hyperfocus', 'true')
+      })
+
+      test('el botón alterna con aria-pressed, conserva el foco y Esc cierra capas antes de salir', async ({ page, context, baseURL }) => {
+        await prefs(context, baseURL, theme, false)
+        await page.goto('/projects', { waitUntil: 'networkidle' })
+        const html = page.locator('html')
+        const status = page.locator('[role="status"][aria-live="polite"]')
+
+        const button = await toggleButton(page)
+        await expect(button).toHaveAttribute('aria-pressed', 'false')
+        await button.click()
+        await expect(button).toHaveAttribute('aria-pressed', 'true')
+        await expect(html).toHaveAttribute('data-hyperfocus', 'true')
+        await expect(button).toBeFocused()
+        await expect(status).toHaveText(focus['focus.on'].es)
+        expect(await focusCookie(context)).toBe('true')
+
+        // H con el foco en el botón alterna y el foco no se mueve.
+        await page.keyboard.press('h')
+        await expect(button).toHaveAttribute('aria-pressed', 'false')
+        await expect(html).not.toHaveAttribute('data-hyperfocus', /.*/)
+        await expect(status).toHaveText(focus['focus.off'].es)
+        await expect(button).toBeFocused()
+        expect(await focusCookie(context)).toBeUndefined()
+        await page.keyboard.press('h')
+        await expect(html).toHaveAttribute('data-hyperfocus', 'true')
+
+        // Esc: primero la capa abierta (el menú angosto), después el modo.
+        if (await isNarrow(page)) {
+          await page.keyboard.press('Escape')
+          await expect(page.locator('header[data-chrome] details')).not.toHaveAttribute('open', /.*/)
+          await expect(html).toHaveAttribute('data-hyperfocus', 'true')
+        }
+        await page.keyboard.press('Escape')
+        await expect(html).not.toHaveAttribute('data-hyperfocus', /.*/)
+        expect(await focusCookie(context)).toBeUndefined()
+      })
+
+      test('H no cambia el modo detrás de la paleta y Esc la cierra antes de salir', async ({ page, context, baseURL }) => {
+        await prefs(context, baseURL, theme, true)
+        await page.goto('/about', { waitUntil: 'networkidle' })
+        const html = page.locator('html')
+
+        await page.locator('body').press('/')
+        const dialog = page.locator('dialog[open]')
+        await expect(dialog).toBeVisible()
+        await page.keyboard.press('h')
+        await expect(html).toHaveAttribute('data-hyperfocus', 'true')
+        await page.keyboard.press('Escape')
+        await expect(dialog).toHaveCount(0)
+        await expect(html).toHaveAttribute('data-hyperfocus', 'true')
+        await page.keyboard.press('Escape')
+        await expect(html).not.toHaveAttribute('data-hyperfocus', /.*/)
+      })
+    })
+  }
+}
+
+test.describe('entrada y salida', () => {
+  test('?foco=1 entra por el SSR, deja la cookie y se va de la URL al hidratar', async ({ page, context }) => {
+    const res = await page.goto('/projects?foco=1', { waitUntil: 'networkidle' })
+    expect(await res?.text()).toMatch(/<html[^>]*\bdata-hyperfocus="true"/)
+    await expect(page).toHaveURL(/\/projects$/)
+    await expect(page.locator('html')).toHaveAttribute('data-hyperfocus', 'true')
+    expect(await focusCookie(context)).toBe('true')
+    // Salir borra la cookie: recargar ya no vuelve a entrar.
+    await page.locator('body').press('h')
+    await expect(page.locator('html')).not.toHaveAttribute('data-hyperfocus', /.*/)
+    await page.reload({ waitUntil: 'networkidle' })
+    await expect(page.locator('html')).not.toHaveAttribute('data-hyperfocus', /.*/)
+  })
+
+  for (const theme of THEMES) {
+    test(`el CV se imprime en una página A4 con el modo activo (${theme})`, async ({ page, context, baseURL }, info) => {
+      await prefs(context, baseURL, theme, true)
+      await page.setViewportSize(A4)
+      await page.goto('/about?cv=ats', { waitUntil: 'networkidle' })
+      await expect(page.locator('html')).toHaveAttribute('data-hyperfocus', 'true')
+      await expect(page.locator('.cv-harvard').first()).toBeVisible()
+
+      await page.emulateMedia({ media: 'print' })
+      const pdf = await page.pdf({ printBackground: true, preferCSSPageSize: true, margin: { top: '0', right: '0', bottom: '0', left: '0' } })
+      await info.attach(`cv-hiperfoco-${theme}.pdf`, { body: pdf, contentType: 'application/pdf' })
+      expect(pdf.toString('binary').match(/\/Type\s*\/Page\b/g)?.length ?? 0).toBe(1)
+    })
+  }
+})
+
+test.describe('el cambio de modo', () => {
+  test.use({ viewport: { width: 1440, height: 900 } })
+
+  test('con movimiento corre una view transition de tipo hiperfoco', async ({ page, context, baseURL }) => {
+    await prefs(context, baseURL, 'dark', false)
+    await page.goto('/about', { waitUntil: 'networkidle' })
+    // Chromium tiene view transitions: si faltaran, el cambio no podría ser una.
+    expect(await page.evaluate(() => typeof document.startViewTransition === 'function')).toBe(true)
+    await page.evaluate(() => {
+      const w = window as unknown as { __types: string[] }
+      w.__types = []
+      const start = document.startViewTransition.bind(document)
+      document.startViewTransition = ((arg: Parameters<typeof start>[0]) => {
+        const types = typeof arg === 'object' && arg && 'types' in arg ? [...(arg.types ?? [])] : []
+        w.__types.push(...types)
+        return start(arg)
+      }) as typeof document.startViewTransition
+    })
+    await page.locator('body').press('h')
+    await expect(page.locator('html')).toHaveAttribute('data-hyperfocus', 'true')
+    expect(await page.evaluate(() => (window as unknown as { __types: string[] }).__types)).toContain('hiperfoco')
+  })
+
+  // docs/diseno.md §5: el primer bloque visible debajo de la cabecera queda a la misma altura al entrar
+  // y al salir, también con la view transition de 220 ms, el rearmado de escenas y Lenis.
+  for (const path of ['/projects/la-rucula', '/about']) {
+    test(`con movimiento la lectura de ${path} queda a la misma altura al entrar y al salir`, async ({ page, context, baseURL }) => {
+      await prefs(context, baseURL, 'dark', false)
+      await page.goto(path, { waitUntil: 'networkidle' })
+      await page.evaluate(() => window.scrollTo({ top: 2200, behavior: 'instant' }))
+      // Las líneas y las filas que entran terminan de revelarse antes de medir.
+      await page.waitForTimeout(1500)
+
+      const before = await anchorTop(page)
+      await page.locator('body').press('h')
+      await expect(page.locator('html')).toHaveAttribute('data-hyperfocus', 'true')
+      await page.waitForTimeout(900)
+      expect(Math.abs(await probeTop(page) - before)).toBeLessThanOrEqual(2)
+
+      await page.locator('body').press('h')
+      await expect(page.locator('html')).not.toHaveAttribute('data-hyperfocus', /.*/)
+      await page.waitForTimeout(900)
+      expect(Math.abs(await probeTop(page) - before)).toBeLessThanOrEqual(2)
+    })
+  }
+
+  test.describe('con reduced motion', () => {
+    test.use({ reducedMotion: 'reduce' })
+
+    test('es instantáneo y la lectura queda a la misma altura', async ({ page, context, baseURL }) => {
+      await prefs(context, baseURL, 'dark', false)
+      await page.goto('/projects/la-rucula', { waitUntil: 'networkidle' })
+      await page.evaluate(() => window.scrollTo({ top: document.documentElement.scrollHeight / 3, behavior: 'instant' }))
+      await page.waitForTimeout(300)
+
+      const before = await anchorTop(page)
+      await page.locator('body').press('h')
+      await expect(page.locator('html')).toHaveAttribute('data-hyperfocus', 'true')
+      await page.waitForTimeout(300)
+      expect(Math.abs(await probeTop(page) - before)).toBeLessThanOrEqual(1)
+
+      await page.evaluate(() => document.querySelector('[data-anchor-probe]')?.removeAttribute('data-anchor-probe'))
+      const inside = await anchorTop(page)
+      await page.locator('body').press('h')
+      await expect(page.locator('html')).not.toHaveAttribute('data-hyperfocus', /.*/)
+      await page.waitForTimeout(300)
+      expect(Math.abs(await probeTop(page) - inside)).toBeLessThanOrEqual(1)
+    })
+  })
+})
+
+test('ningún componente se renderiza solo en Hiperfoco', () => {
+  const files = (dir: string): string[] => readdirSync(dir, { withFileTypes: true })
+    .flatMap(entry => (entry.isDirectory() ? files(join(dir, entry.name)) : [join(dir, entry.name)]))
+  const offenders = files(join(process.cwd(), 'app/components'))
+    .filter(file => file.endsWith('.vue') && /v-(?:if|show)="!?isHyperfocus/.test(readFileSync(file, 'utf8')))
+  expect(offenders).toEqual([])
+})

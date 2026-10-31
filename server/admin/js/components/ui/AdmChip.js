@@ -25,9 +25,10 @@ export const AdmChip = {
         v-if="removable"
         type="button"
         @click.stop="$emit('remove', $event)"
+        aria-label="Quitar"
         class="text-zinc-500 hover:text-red-400 ml-0.5 text-xs inline-flex items-center"
       >
-        ✕
+        <span aria-hidden="true">✕</span>
       </button>
     </span>
   `,

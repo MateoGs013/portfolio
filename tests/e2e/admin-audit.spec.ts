@@ -1,191 +1,94 @@
-import { test, expect } from '@playwright/test'
+import { expect, test, type APIRequestContext, type Page } from '@playwright/test'
+import { api } from './support'
 
-test.describe('Admin Console 2026 Audit', () => {
-  test('Login screen renders with Obsidian dark and blueprint grid', async ({ page }) => {
-    // Navigate directly to the admin console on API server (port 3001)
-    await page.goto('http://localhost:3001/admin', { waitUntil: 'networkidle' })
+/**
+ * Consola /admin (invariante 6): el generador del Job Hunter analiza una vacante, adapta el CV Harvard
+ * ATS, lo previsualiza, lo imprime en una página A4 y lo copia en texto plano. Corre sin Eros (la API
+ * de la prueba apunta HUNTER_API_URL a un puerto cerrado): todo sale del respaldo desde la base. El
+ * token es el de esta corrida (playwright.config.ts) y nunca se imprime.
+ */
+const token = process.env.PW_ADMIN_TOKEN!
+const auth = { Authorization: `Bearer ${token}` }
 
-    // Verify Title
-    await expect(page).toHaveTitle(/CMS 2026/)
+interface Job { id: string, title: string, company: string, match_score: number | null }
+interface Evaluation { ok: boolean, job: Job, match: { score: number, verdict: string } }
+const VERDICTS = ['EXCELENTE_MATCH', 'BUEN_MATCH', 'REGULAR', 'DESCARTAR']
 
-    // Verify Login Screen Elements
-    await expect(page.locator('text=Consola de Administración')).toBeVisible()
-    await expect(page.locator('text=PG-17 ACID')).toBeVisible()
+async function firstJob(request: APIRequestContext) {
+  const res = await request.get('/api/admin/hunter/jobs', { headers: auth })
+  expect(res.status()).toBe(200)
+  const jobs = await res.json() as Job[]
+  expect(jobs.length).toBeGreaterThan(0)
+  return jobs[0]!
+}
 
-    // Take screenshot of Login Screen
-    await page.screenshot({ path: 'tests/e2e/screenshots/admin-login.png' })
+async function login(page: Page) {
+  await page.goto('/admin', { waitUntil: 'networkidle' })
+  await page.locator('form input[type="password"]').fill(token)
+  await page.locator('form button[type="submit"]').click()
+  await expect(page.locator('aside button', { hasText: 'Job Hunter' })).toBeVisible({ timeout: 15000 })
+}
 
-    // Fill dev-token or click dev-token button
-    const devTokenBtn = page.locator('button:has-text("dev-token rápido")')
-    if (await devTokenBtn.isVisible()) {
-      await devTokenBtn.click()
-    } else {
-      await page.fill('input[type="password"], input[type="text"]', 'dev-token')
-      await page.click('button[type="submit"]')
-    }
-
-    // Wait for Dashboard to render
-    await expect(page.locator('text=Panel Ejecutivo y Telemetría')).toBeVisible({ timeout: 10000 })
-    await expect(page.locator('text=00 // Consola de Operaciones')).toBeVisible()
-
-    // Take screenshot of Desktop Dashboard
-    await page.screenshot({ path: 'tests/e2e/screenshots/admin-dashboard-desktop.png' })
+test.describe('sin token', () => {
+  test('la API del admin responde 401 y la consola pide la clave', async ({ page, request }) => {
+    expect((await request.get('/api/admin/projects')).status()).toBe(401)
+    expect((await request.get('/api/admin/hunter/jobs', { headers: { Authorization: 'Bearer otra-cosa' } })).status()).toBe(401)
+    await page.goto('/admin', { waitUntil: 'networkidle' })
+    await expect(page.locator('form input[type="password"]')).toBeVisible()
   })
+})
 
-  test('Mobile drawer sheet opens and closes cleanly without bottom bar clutter', async ({ page }) => {
-    await page.setViewportSize({ width: 375, height: 667 })
-    await page.goto('http://localhost:3001/admin', { waitUntil: 'networkidle' })
+test.describe('Job Hunter', () => {
+  test.use({ viewport: { width: 1440, height: 900 } })
 
-    // Login
-    const devTokenBtn = page.locator('button:has-text("dev-token rápido")')
-    if (await devTokenBtn.isVisible()) {
-      await devTokenBtn.click()
-    } else {
-      await page.fill('input[type="password"], input[type="text"]', 'dev-token')
-      await page.click('button[type="submit"]')
-    }
+  test('analiza, adapta, previsualiza, imprime en A4 y copia el CV en texto plano', async ({ page, context, request }) => {
+    const job = await firstJob(request)
 
-    // Wait for header to be visible
-    await expect(page.locator('header')).toBeVisible({ timeout: 10000 })
+    // Analizar: la evaluación de la vacante (respaldo heurístico contra la base, sin Eros).
+    const evaluated = await request.post(`/api/admin/hunter/jobs/${job.id}/evaluate`, { headers: auth })
+    expect(evaluated.status()).toBe(200)
+    const { match } = await evaluated.json() as Evaluation
+    expect(match.score).toBeGreaterThanOrEqual(0)
+    expect(match.score).toBeLessThanOrEqual(100)
+    expect(VERDICTS).toContain(match.verdict)
+    const listed = (await (await request.get('/api/admin/hunter/jobs', { headers: auth })).json() as Job[]).find(j => j.id === job.id)
+    expect(listed?.match_score).toBe(match.score)
 
-    // Mobile header button should show current section
-    const mobileMenuBtn = page.locator('header button[aria-label="Abrir menú de navegación"]')
-    await expect(mobileMenuBtn).toBeVisible()
+    const cv = await api<{ header: { name: string }, experience: { title: string }[] }>(request, '/cv')
+    await context.grantPermissions(['clipboard-read', 'clipboard-write'])
+    await login(page)
 
-    // Screenshot mobile dashboard
-    await page.screenshot({ path: 'tests/e2e/screenshots/admin-dashboard-mobile.png' })
+    await page.locator('aside button', { hasText: 'Job Hunter' }).click()
+    await page.getByText(job.title, { exact: true }).first().click()
 
-    // Open mobile menu drawer sheet
-    await mobileMenuBtn.click()
-    await page.waitForTimeout(300)
+    // La consola muestra el análisis: puntaje y veredicto de la vacante.
+    await expect(page.getByText(`${match.score}% Match IA`)).toBeVisible()
+    await expect(page.getByText(match.verdict, { exact: true }).first()).toBeVisible()
 
-    // Verify drawer contents
-    await expect(page.locator('text=00-09 // Navegación CMS')).toBeVisible()
-    await expect(page.locator('.blueprint-grid button:has-text("01.")')).toBeVisible()
+    // Adaptar y previsualizar.
+    await page.getByRole('button', { name: 'Generar CV Harvard ATS' }).first().click()
+    await expect(page.getByText('CV Harvard ATS Adaptado · Formato A4')).toBeVisible({ timeout: 15000 })
+    await expect(page.getByText(cv.header.name).first()).toBeVisible()
 
-    // Screenshot mobile drawer sheet
-    await page.screenshot({ path: 'tests/e2e/screenshots/admin-drawer-mobile.png' })
+    // Copiar en texto plano: el nombre y la experiencia de la base, sin marcado.
+    await page.getByRole('button', { name: 'Copiar ATS' }).click()
+    await expect.poll(() => page.evaluate(() => navigator.clipboard.readText()), { timeout: 5000 }).toContain(cv.header.name)
+    const text = await page.evaluate(() => navigator.clipboard.readText())
+    expect(text).toContain(cv.experience[0]!.title)
+    expect(text).not.toMatch(/<[a-z][^>]*>/i)
 
-    // Close drawer
-    await page.click('button:has-text("✕ Cerrar")')
-    await page.waitForTimeout(300)
-    await expect(page.locator('text=00-09 // Navegación CMS')).not.toBeVisible()
-  })
-
-  test('Job Hunter view renders vacancies and evaluates successfully', async ({ page }) => {
-    await page.setViewportSize({ width: 1440, height: 900 })
-    await page.goto('http://localhost:3001/admin', { waitUntil: 'networkidle' })
-
-    // Login
-    const devTokenBtn = page.locator('button:has-text("dev-token rápido")')
-    if (await devTokenBtn.isVisible()) {
-      await devTokenBtn.click()
-    } else {
-      await page.fill('input[type="password"], input[type="text"]', 'dev-token')
-      await page.click('button[type="submit"]')
-    }
-
-    // Wait for Dashboard to render
-    await expect(page.locator('text=Panel Ejecutivo y Telemetría')).toBeVisible({ timeout: 10000 })
-
-    // Click Job Hunter in sidebar
-    await page.click('aside button:has-text("Job Hunter (Eros)")')
-
-    // Wait for Hunter view to load
-    await expect(page.locator('text=Job Hunter')).toBeVisible({ timeout: 10000 })
-    await page.waitForTimeout(500)
-
-    // Verify vacancy list has items
-    const jobCards = page.locator('.space-y-1\\.5 > div')
-    await expect(jobCards.first()).toBeVisible()
-
-    // Click the first vacancy card
-    await jobCards.first().click()
-    await page.waitForTimeout(300)
-
-    // Verify detail panel elements
-    await expect(page.locator('text=Evaluación Estratégica de Perfil')).toBeVisible()
-    await expect(page.locator('text=CV Harvard ATS').first()).toBeVisible()
-
-    // Test evaluating batch button if visible
-    const evalBatchBtn = page.locator('button:has-text("Evaluar")')
-    if (await evalBatchBtn.isVisible()) {
-      await evalBatchBtn.click()
-      await page.waitForTimeout(1000)
-    }
-
-    // Screenshot Job Hunter in action
-    await page.screenshot({ path: 'tests/e2e/screenshots/admin-job-hunter.png' })
-  })
-
-  test('Contenido Omnicanal renders posts, platform tabs, and carousel preview', async ({ page }) => {
-    await page.setViewportSize({ width: 1440, height: 900 })
-    await page.goto('http://localhost:3001/admin', { waitUntil: 'networkidle' })
-
-    // Login
-    const devTokenBtn = page.locator('button:has-text("dev-token rápido")')
-    if (await devTokenBtn.isVisible()) {
-      await devTokenBtn.click()
-    } else {
-      await page.fill('input[type="password"], input[type="text"]', 'dev-token')
-      await page.click('button[type="submit"]')
-    }
-
-    await expect(page.locator('text=Panel Ejecutivo y Telemetría')).toBeVisible({ timeout: 10000 })
-
-    // Click Contenido Omnicanal in sidebar
-    await page.click('aside button:has-text("Contenido Omnicanal")')
-
-    // Wait for Content view to load
-    await expect(page.locator('text=Gestión de Contenido Omnicanal')).toBeVisible({ timeout: 10000 })
-    await page.waitForTimeout(500)
-
-    // Verify platform tabs and action buttons
-    await expect(page.locator('button:has-text("LinkedIn Post")')).toBeVisible()
-    await expect(page.locator('button:has-text("Hilo de X")')).toBeVisible()
-    await expect(page.locator('button:has-text("Dev.to Markdown")')).toBeVisible()
-    await expect(page.locator('button:has-text("Carrusel PDF")')).toBeVisible()
-    await expect(page.locator('button:has-text("Ver Carrusel Web")')).toBeVisible()
-
-    // Screenshot Content Omnicanal
-    await page.screenshot({ path: 'tests/e2e/screenshots/admin-content-omnichannel.png' })
-  })
-
-  test('TrendRadar renders technical trends and allows 1-click post generation', async ({ page }) => {
-    await page.setViewportSize({ width: 1440, height: 900 })
-    await page.goto('http://localhost:3001/admin', { waitUntil: 'networkidle' })
-
-    // Login
-    const devTokenBtn = page.locator('button:has-text("dev-token rápido")')
-    if (await devTokenBtn.isVisible()) {
-      await devTokenBtn.click()
-    } else {
-      await page.fill('input[type="password"], input[type="text"]', 'dev-token')
-      await page.click('button[type="submit"]')
-    }
-
-    await expect(page.locator('text=Panel Ejecutivo y Telemetría')).toBeVisible({ timeout: 10000 })
-
-    // Click TrendRadar in sidebar
-    await page.click('aside button:has-text("TrendRadar (Eros)")')
-
-    // Wait for Radar view to load
-    await expect(page.locator('text=TrendRadar · Exploración de Tendencias')).toBeVisible({ timeout: 10000 })
-    await page.waitForTimeout(500)
-
-    // Verify trends list has items
-    const trendItems = page.locator('aside .cursor-pointer')
-    await expect(trendItems.first()).toBeVisible()
-
-    // Select first trend
-    await trendItems.first().click()
-    await page.waitForTimeout(300)
-
-    // Verify engineering angle and generator box
-    await expect(page.locator('text=Ángulo de Ingeniería Sugerido')).toBeVisible()
-    await expect(page.locator('text=Generador Omnicanal de Publicación & Blog')).toBeVisible()
-
-    // Screenshot TrendRadar
-    await page.screenshot({ path: 'tests/e2e/screenshots/admin-trend-radar.png' })
+    // Imprimir en A4: abre la hoja con un ticket firmado y entra en una página.
+    const [sheet] = await Promise.all([
+      page.waitForEvent('popup'),
+      page.getByRole('button', { name: 'Imprimir en A4' }).click(),
+    ])
+    await sheet.waitForLoadState('networkidle')
+    expect(sheet.url()).toMatch(new RegExp(`/api/admin/hunter/cv/${job.id}/html\\?ticket=[^&]+&auto_print=true$`))
+    await expect(sheet.getByText(cv.header.name).first()).toBeVisible()
+    await sheet.emulateMedia({ media: 'print' })
+    const pdf = await sheet.pdf({ preferCSSPageSize: true, printBackground: true })
+    expect(pdf.toString('latin1').match(/\/Type\s*\/Page\b/g)?.length ?? 0).toBe(1)
+    // El ticket vale solo para esa vacante: con otro id no abre nada.
+    expect((await request.get(sheet.url().replace(`/cv/${job.id}/`, '/cv/otra-vacante/'))).status()).toBe(401)
   })
 })

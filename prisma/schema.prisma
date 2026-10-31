@@ -1,5 +1,5 @@
 // Portafolio Técnico Mateo Sonzogni — Esquema Relacional de Base de Datos
-// Modelado para el Explorador Técnico Unificado y Modo Focus sobre PostgreSQL 17
+// Modelado sobre PostgreSQL 17. El español vive en cada registro; el inglés, en las tablas *Translation.
 
 generator client {
   provider = "prisma-client"
@@ -19,31 +19,37 @@ datasource db {
 //   articles    ¿qué escribió y qué arquitectura profundizó?
 
 model Project {
-  id          Int           @id @default(autoincrement())
-  slug        String        @unique
-  title       String
-  year        Int
-  role        String // "Lead", "Dev", "Diseño + Front"
-  status      ProjectStatus @default(LIVE)
-  featured    Boolean       @default(false)
-  summary     String // una línea
-  brief       String?       @db.Text
-  outcome     String?       @db.Text
-  url         String?
-  repo        String?
-  metrics     Json? // { lcp, bundleKb, a11y, ... }
-  sortOrder   Int           @default(0)
-  publishedAt DateTime?
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
+  id            Int           @id @default(autoincrement())
+  slug          String        @unique
+  title         String
+  year          Int
+  role          String // "Lead", "Dev", "Diseño + Front"
+  status        ProjectStatus @default(LIVE)
+  featured      Boolean       @default(false)
+  summary       String // una línea
+  brief         String?       @db.Text
+  outcome       String?       @db.Text
+  url           String?
+  repo          String?
+  // Columna vieja `metrics` (Json). La migración 20261101 la convirtió en filas Metric y el parche
+  // 2026-11-01 verifica la conversión. Se borra en una migración posterior: no leer ni escribir.
+  legacyMetrics Json?         @map("metrics")
+  sortOrder     Int           @default(0)
+  // Visibilidad: la obra se muestra en el sitio solo si publishedAt no es nulo y ya pasó.
+  publishedAt   DateTime?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
 
-  org      Org?          @relation(fields: [orgId], references: [id])
-  orgId    Int?
-  techs    Tech[]
-  media    Media[]
-  steps    ProcessStep[]
-  links    Link[]
-  articles Article[]
+  org          Org?                 @relation(fields: [orgId], references: [id])
+  orgId        Int?
+  techs        Tech[]
+  media        Media[]
+  steps        ProcessStep[]
+  links        Link[]
+  articles     Article[]
+  metrics      Metric[]
+  experiences  Experience[]
+  translations ProjectTranslation[]
 
   @@index([year])
   @@index([orgId])
@@ -53,6 +59,26 @@ enum ProjectStatus {
   LIVE
   ARCHIVED
   WIP
+}
+
+// Una métrica medible de una obra: un número con unidad (`value` + `unit`) o una lista (`items`).
+// La etiqueta y qué mide salen del diccionario de interfaz por `key`. `label` solo se usa
+// cuando el diccionario no conoce la clave. `source` y `measuredAt` quedan en NULL si no se documentaron.
+model Metric {
+  id         Int       @id @default(autoincrement())
+  key        String // "lcp", "bundleSizeKb", "languages"…
+  value      Decimal?  @db.Decimal(14, 4)
+  items      String[]
+  unit       String? // una de metricUnits (app/lib/fieldMeta.ts); NULL = conteo o puntaje
+  label      String?
+  source     String?
+  measuredAt DateTime? @db.Date
+  order      Int       @default(0)
+  project    Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  projectId  Int
+
+  @@unique([projectId, key])
+  @@index([projectId, order])
 }
 
 // Subvista `process` de un proyecto con desglose secuencial de pasos y decisiones técnicas.
@@ -66,25 +92,34 @@ model ProcessStep {
   media     Media?  @relation(fields: [mediaId], references: [id])
   mediaId   Int?
 
+  translations ProcessStepTranslation[]
+
   @@unique([projectId, order])
   @@index([mediaId])
 }
 
-// Una pieza visual o multimedia asociada a proyectos.
+// Una pieza visual o multimedia de una obra. La portada en movimiento es role COVER + kind VIDEO
+// (src en mp4, srcWebm y poster).
 model Media {
   id        Int           @id @default(autoincrement())
   kind      MediaKind     @default(IMAGE)
   role      MediaRole     @default(GALLERY)
   src       String
+  srcWebm   String? // variante WebM de un VIDEO
+  poster    String? // primer cuadro de un VIDEO: lo que se ve con movimiento reducido
   alt       String
+  caption   String? // pie de foto en la galería del caso
+  tint      String? // hex: color característico de la imagen (temperatura de la obra)
+  viewport  MediaViewport @default(DESKTOP)
   width     Int
   height    Int
-  layer     Int? // 0 = fondo … n = frente. NULL = pieza completa.
   order     Int           @default(0)
   bytes     Int? // Peso en bytes del archivo para métricas de optimización
   project   Project       @relation(fields: [projectId], references: [id], onDelete: Cascade)
   projectId Int
   steps     ProcessStep[]
+
+  translations MediaTranslation[]
 
   @@index([projectId, role, order])
 }
@@ -97,7 +132,12 @@ enum MediaKind {
 enum MediaRole {
   COVER
   GALLERY
-  LAYER
+}
+
+// Dónde se capturó la pieza: pantalla de escritorio o de celular.
+enum MediaViewport {
+  DESKTOP
+  MOBILE
 }
 
 model Link {
@@ -106,6 +146,8 @@ model Link {
   url       String
   project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
   projectId Int
+
+  translations LinkTranslation[]
 
   @@index([projectId])
 }
@@ -122,6 +164,8 @@ model Tech {
   projects    Project[]
   experiences Experience[]
   articles    Article[]
+
+  translations TechTranslation[]
 }
 
 enum TechCategory {
@@ -135,21 +179,37 @@ enum TechCategory {
   DESIGN
 }
 
-// Colección `experience`. Registro cronológico de trayectoria profesional, encargos y consultoría.
+// Colección `experience`. Trayectoria: formación, tesis, clientes, freelance y proyectos propios.
+// El CV toma las entradas con cvOrder (en ese orden) y la formación por kind EDUCATION.
 model Experience {
-  id        Int       @id @default(autoincrement())
-  slug      String    @unique
-  role      String
-  startedAt DateTime  @db.Date
-  endedAt   DateTime? @db.Date // NULL = actual
-  summary   String // Síntesis ejecutiva de responsabilidades y logros
-  story     String?   @db.Text // Profundización técnica y aprendizajes clave
-  org       Org?      @relation(fields: [orgId], references: [id])
-  orgId     Int?
-  techs     Tech[]
+  id         Int            @id @default(autoincrement())
+  slug       String         @unique
+  kind       ExperienceKind @default(FREELANCE)
+  role       String
+  startedAt  DateTime       @db.Date
+  endedAt    DateTime?      @db.Date // NULL = actual
+  summary    String // Síntesis ejecutiva de responsabilidades y logros
+  story      String?        @db.Text // Profundización técnica y aprendizajes clave
+  highlights String[] // viñetas del CV: hasta 3, de 160 caracteres como máximo (cota A4)
+  location   String? // NULL = la ciudad de la org; sin org, remoto
+  cvOrder    Int? // posición en la experiencia del CV; NULL = no entra en esa sección
+  org        Org?           @relation(fields: [orgId], references: [id])
+  orgId      Int?
+  techs      Tech[]
+  projects   Project[] // obras ligadas, en pares explícitos (nunca por compartir org)
+
+  translations ExperienceTranslation[]
 
   @@index([startedAt])
   @@index([orgId])
+}
+
+enum ExperienceKind {
+  EDUCATION
+  THESIS
+  FREELANCE
+  CLIENT
+  PERSONAL
 }
 
 // Clientes, empresas y empleadores con vinculación relacional a proyectos y experiencia.
@@ -165,6 +225,7 @@ model Org {
 
 // ─── Documentos ─────────────────────────────────────────────────────────────
 // `about` y `contact` son documentos estructurados configurables.
+// Cada item de `fields` es un DocField (app/lib/fieldMeta.ts); el inglés va en su clave `en`.
 model Doc {
   key       String   @id // "about" | "contact"
   title     String
@@ -180,21 +241,22 @@ model Article {
   id             Int           @id @default(autoincrement())
   slug           String        @unique
   title          String
-  summary        String        // Síntesis técnica de 1-2 líneas
+  summary        String // Síntesis técnica de 1-2 líneas
   content        String        @db.Text // Markdown completo con código y tablas
   readingTimeMin Int           @default(5)
   status         ArticleStatus @default(DRAFT)
   featured       Boolean       @default(false)
-  coverImage     String?       // URL o path de portada
-  canonicalUrl   String?       // URL original si fue cross-posteado (Dev.to / Medium / X)
+  coverImage     String? // URL o path de portada
+  canonicalUrl   String? // URL original si fue cross-posteado (Dev.to / Medium / X)
   sortOrder      Int           @default(0)
   publishedAt    DateTime?
   createdAt      DateTime      @default(now())
   updatedAt      DateTime      @updatedAt
 
-  techs          Tech[]
-  project        Project?      @relation(fields: [projectId], references: [id], onDelete: SetNull)
-  projectId      Int?
+  techs        Tech[]
+  project      Project?             @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  projectId    Int?
+  translations ArticleTranslation[]
 
   @@index([status, publishedAt])
   @@index([projectId])
@@ -204,4 +266,88 @@ enum ArticleStatus {
   DRAFT
   PUBLISHED
   ARCHIVED
+}
+
+// ─── Traducciones ───────────────────────────────────────────────────────────
+// Cada tabla guarda otro idioma con los mismos nombres de campo que su registro.
+// Un campo NULL (o una lista vacía) no está traducido: la API sirve el español y lo lista en `untranslated`.
+
+enum Locale {
+  es
+  en
+}
+
+model ProjectTranslation {
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  projectId Int
+  locale    Locale
+  title     String?
+  role      String?
+  summary   String?
+  brief     String? @db.Text
+  outcome   String? @db.Text
+
+  @@id([projectId, locale])
+}
+
+model ProcessStepTranslation {
+  step   ProcessStep @relation(fields: [stepId], references: [id], onDelete: Cascade)
+  stepId Int
+  locale Locale
+  title  String?
+  body   String?     @db.Text
+
+  @@id([stepId, locale])
+}
+
+model MediaTranslation {
+  media   Media   @relation(fields: [mediaId], references: [id], onDelete: Cascade)
+  mediaId Int
+  locale  Locale
+  alt     String?
+  caption String?
+
+  @@id([mediaId, locale])
+}
+
+model LinkTranslation {
+  link   Link    @relation(fields: [linkId], references: [id], onDelete: Cascade)
+  linkId Int
+  locale Locale
+  label  String?
+
+  @@id([linkId, locale])
+}
+
+model ExperienceTranslation {
+  experience   Experience @relation(fields: [experienceId], references: [id], onDelete: Cascade)
+  experienceId Int
+  locale       Locale
+  role         String?
+  summary      String?
+  story        String?    @db.Text
+  highlights   String[]
+  location     String?
+
+  @@id([experienceId, locale])
+}
+
+model TechTranslation {
+  tech   Tech    @relation(fields: [techId], references: [id], onDelete: Cascade)
+  techId Int
+  locale Locale
+  note   String?
+
+  @@id([techId, locale])
+}
+
+model ArticleTranslation {
+  article   Article @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  articleId Int
+  locale    Locale
+  title     String?
+  summary   String?
+  content   String? @db.Text
+
+  @@id([articleId, locale])
 }

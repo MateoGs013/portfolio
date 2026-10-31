@@ -2,14 +2,28 @@ import { Router, type Request, type Response } from 'express'
 import { db } from '../db.js'
 import { env } from '../env.js'
 import { createCarouselTicket, isAdminAuthorized, validateCarouselTicket } from './auth.js'
-import { forwardToEros, getParamId, getErosBaseUrl } from './proxy.js'
+import { renderCarouselHtmlHeuristic } from './contentCarousel.js'
 import {
+  articleUrl,
   fallbackContentPosts,
+  findContentPost,
   generateContentPostHeuristic,
-  renderCarouselHtmlHeuristic,
+  generatedPosts,
 } from './fallbackContentData.js'
+import { loadSignature } from './profile.js'
+import { forwardToEros, getParamId, getErosBaseUrl, type ForwardResult } from './proxy.js'
 
 export const contentRouter = Router()
+
+/**
+ * Sin Eros no hay despacho ni cambio de estado: se responde su error en lugar de fingir un éxito
+ * en memoria. Si Eros contestó (404, 409…), su estado pasa tal cual.
+ */
+function sendErosFailure(res: Response, result: ForwardResult, fallback: string) {
+  const data = result.data as { error?: unknown } | null
+  const error = typeof data?.error === 'string' && data.error ? data.error : fallback
+  res.status(result.status >= 400 ? result.status : 502).json({ error })
+}
 
 /** GET /api/admin/content/posts - Lista de publicaciones omnicanal */
 contentRouter.get('/posts', async (req: Request, res: Response) => {
@@ -26,12 +40,13 @@ contentRouter.get('/posts', async (req: Request, res: Response) => {
     return
   }
 
-  // Fallback resiliente si Eros está desconectado o no autorizado
-  let posts = [...fallbackContentPosts]
+  // Ejemplos generados desde la base si Eros está desconectado o no autorizado
+  let posts = await fallbackContentPosts()
   const statusFilter = req.query['status'] as string | undefined
   if (statusFilter && statusFilter !== 'all') {
     posts = posts.filter(p => p.status === statusFilter)
   }
+  res.setHeader('X-Eros-Source', 'fallback')
   res.json(posts)
 })
 
@@ -47,11 +62,12 @@ contentRouter.get('/posts/:id', async (req: Request, res: Response) => {
     res.status(result.status).json(result.data)
     return
   }
-  const post = fallbackContentPosts.find(p => p.id === id)
+  const post = await findContentPost(id)
   if (!post) {
     res.status(404).json({ error: 'Publicación no encontrada' })
     return
   }
+  res.setHeader('X-Eros-Source', 'fallback')
   res.json({ data: post, post })
 })
 
@@ -65,11 +81,12 @@ contentRouter.post('/generate', async (req: Request, res: Response) => {
     res.status(result.status).json(result.data)
     return
   }
-  const post = generateContentPostHeuristic(req.body || {})
+  const post = await generateContentPostHeuristic(req.body || {})
+  res.setHeader('X-Eros-Source', 'fallback')
   res.json({ ok: true, post, data: post })
 })
 
-/** POST /api/admin/content/posts/:id/publish - Aprobar y despachar a n8n */
+/** POST /api/admin/content/posts/:id/publish - Aprobar y despachar a n8n (solo con Eros) */
 contentRouter.post('/posts/:id/publish', async (req: Request, res: Response) => {
   const id = getParamId(req)
   if (!id) {
@@ -83,21 +100,10 @@ contentRouter.post('/posts/:id/publish', async (req: Request, res: Response) => 
     res.status(result.status).json(result.data)
     return
   }
-  const post = fallbackContentPosts.find(p => p.id === id)
-  if (post) {
-    post.status = 'published'
-    post.n8n_published_at = new Date().toISOString()
-  }
-  res.json({
-    ok: true,
-    post_id: id,
-    status: 'published',
-    provider: 'local-dispatcher',
-    dispatched_at: new Date().toISOString(),
-  })
+  sendErosFailure(res, result, 'Eros no está disponible: la publicación no se despachó')
 })
 
-/** PATCH /api/admin/content/posts/:id/status - Actualizar estado (draft, published, rejected) */
+/** PATCH /api/admin/content/posts/:id/status - Actualizar estado (draft, published, rejected), solo con Eros */
 contentRouter.patch('/posts/:id/status', async (req: Request, res: Response) => {
   const id = getParamId(req)
   if (!id) {
@@ -112,14 +118,7 @@ contentRouter.patch('/posts/:id/status', async (req: Request, res: Response) => 
     res.status(result.status).json(result.data)
     return
   }
-  const post = fallbackContentPosts.find(p => p.id === id)
-  if (post && req.body?.status) {
-    post.status = req.body.status
-    post.updated_at = new Date().toISOString()
-    res.json({ ok: true, post_id: id, new_status: req.body.status })
-    return
-  }
-  res.status(result.status).json(result.data)
+  sendErosFailure(res, result, 'Eros no está disponible: el estado no cambió')
 })
 
 /** DELETE /api/admin/content/posts/:id - Eliminar publicación */
@@ -136,10 +135,13 @@ contentRouter.delete('/posts/:id', async (req: Request, res: Response) => {
     res.status(result.status).json(result.data)
     return
   }
-  const idx = fallbackContentPosts.findIndex(p => p.id === id)
-  if (idx !== -1) {
-    fallbackContentPosts.splice(idx, 1)
+  // Sin Eros solo se pueden borrar los borradores que viven en memoria; los ejemplos salen de la base.
+  const idx = generatedPosts.findIndex(p => p.id === id)
+  if (idx === -1) {
+    sendErosFailure(res, result, 'Eros no está disponible: la publicación no se eliminó')
+    return
   }
+  generatedPosts.splice(idx, 1)
   res.json({ ok: true, deleted: id })
 })
 
@@ -187,9 +189,9 @@ contentRouter.get('/carousel/:id/html', async (req: Request, res: Response) => {
   }
 
   if (!html) {
-    const post = fallbackContentPosts.find(p => p.id === id)
+    const post = await findContentPost(id)
     if (post) {
-      html = renderCarouselHtmlHeuristic(post, req.query['auto_print'] === 'true')
+      html = renderCarouselHtmlHeuristic(post, await loadSignature(), req.query['auto_print'] === 'true')
     }
   }
 
@@ -203,29 +205,24 @@ contentRouter.get('/carousel/:id/html', async (req: Request, res: Response) => {
   res.status(200).type('html').send(html)
 })
 
-/** POST /api/admin/content/posts/:id/publish-to-blog - Convierte y publica el post en la tabla Article */
+/**
+ * POST /api/admin/content/posts/:id/publish-to-blog - Convierte el post de Eros en un Article.
+ * Necesita a Eros (la publicación original) y a la base: si falta uno de los dos, responde error.
+ */
 contentRouter.post('/posts/:id/publish-to-blog', async (req: Request, res: Response) => {
   const id = getParamId(req)
   if (!id) {
     res.status(400).json({ error: 'ID de publicación requerido' })
     return
   }
-  let post: Record<string, unknown> | null = null
 
   const result = await forwardToEros(`api/content/posts/${encodeURIComponent(id)}`)
-  if (result.ok && result.data) {
-    post = ((result.data as { post?: Record<string, unknown>; data?: Record<string, unknown> })?.post || (result.data as { data?: Record<string, unknown> })?.data || result.data) as Record<string, unknown>
-  } else {
-    const fallback = fallbackContentPosts.find(p => p.id === id)
-    if (fallback) {
-      post = fallback as unknown as Record<string, unknown>
-    }
-  }
-
-  if (!post) {
-    res.status(404).json({ error: 'Publicación no encontrada en Eros ni en snapshot local' })
+  if (!result.ok || !result.data || typeof result.data !== 'object') {
+    sendErosFailure(res, result, 'Eros no está disponible: sin la publicación original no se crea el artículo')
     return
   }
+  const payload = result.data as { post?: Record<string, unknown>, data?: Record<string, unknown> }
+  const post = (payload.post || payload.data || result.data) as Record<string, unknown>
 
   const title = String(post['title'] || 'Publicación Técnica').trim()
   const content = String(post['devto_markdown'] || post['body'] || post['linkedin_text'] || '').trim()
@@ -245,24 +242,13 @@ contentRouter.post('/posts/:id/publish-to-blog', async (req: Request, res: Respo
         readingTimeMin: Math.max(2, Math.ceil(content.split(/\s+/).length / 200)),
         status: 'PUBLISHED',
         publishedAt: new Date(),
-        canonicalUrl: `https://mateogs.tech/blog/${slug}`,
+        // El blog se conserva en /articles/:slug; sin sitio cargado en contact no hay URL canónica.
+        canonicalUrl: articleUrl(await loadSignature(), slug),
       },
     })
     res.status(201).json({ ok: true, article })
   } catch (err: unknown) {
-    // Si la BD relacional está en reposo o inaccesible en local, responder con artículo simulado
-    console.warn('[Content] Error al persistir artículo en BD (activando fallback):', err instanceof Error ? err.message : err)
-    const fallbackArticle = {
-      id: Math.floor(Date.now() % 100000),
-      slug,
-      title,
-      summary,
-      content,
-      readingTimeMin: Math.max(2, Math.ceil(content.split(/\s+/).length / 200)),
-      status: 'PUBLISHED',
-      publishedAt: new Date().toISOString(),
-      canonicalUrl: `https://mateogs.tech/blog/${slug}`,
-    }
-    res.status(201).json({ ok: true, article: fallbackArticle, fallback: true })
+    console.warn('[Content] la base no guardó el artículo:', err instanceof Error ? err.message : err)
+    res.status(503).json({ error: 'La base no respondió: el artículo no se guardó. Probá de nuevo en un momento.' })
   }
 })

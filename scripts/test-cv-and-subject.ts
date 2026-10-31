@@ -27,6 +27,12 @@ async function run() {
   const html1 = await cvRes1.text()
   if (html1.includes('Acceso no autorizado al CV')) throw new Error('Returned unauthorized error!')
   if (!html1.includes('Mateo Gabriel Sonzogni')) throw new Error('Missing candidate name in CV')
+  if (cvRes1.headers.get('X-Eros-Source') === 'fallback') {
+    // Respaldo: el CV sale de la base (composeCv), no de un candidato escrito a mano.
+    if (!html1.includes('Río Negro, Argentina')) throw new Error('Fallback CV must take its location from the contact doc')
+    if (/Paran[aá]|\+54 343|UTN/.test(html1)) throw new Error('Fallback CV still carries the hand-written candidate')
+    if (!html1.includes('@page { size: A4; margin: 10.5mm 12mm; }')) throw new Error('Fallback CV lost its A4 @page')
+  }
   console.log('[PASS] CV HTML cargado exitosamente sin error de autorizacion')
 
   // 3. Re-visitar el CV HTML con el mismo ticket (simulando recarga o navegacion)

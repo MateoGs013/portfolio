@@ -1,0 +1,54 @@
+/* Impresión (docs/diseno.md §8). La única regla de página del CSS de app/: el CV
+   Harvard ATS entra en una hoja A4 con este margen. La paleta de papel está en tokens.css. */
+@media print {
+  @page {
+    size: A4;
+    margin: 10.5mm 12mm;
+  }
+
+  /* Sin temperatura: useTint la escribe en línea y el papel es siempre blanco. */
+  :root {
+    background: var(--bg);
+  }
+
+  /* El cromo, lo que el Hiperfoco oculta y lo decorativo no se imprimen.
+     [data-hf='measure'] sí: solo pierde su límite de 68ch (hyperfocus.css es de pantalla). */
+  [data-chrome],
+  [data-hf='hide'],
+  [data-ornament],
+  .no-print {
+    display: none;
+  }
+
+  /* GSAP deja transform y opacity en línea. Una animación detenida en su primer cuadro
+     le gana a la declaración en línea sin forzar con important y deja todo en su lugar, visible. */
+  [data-motion],
+  [data-motion] * {
+    animation: print-settle 1s linear both paused;
+  }
+
+  /* /about?cv=ats: queda solo la hoja del CV. Se oculta todo lo que no es la hoja,
+     no está adentro ni la contiene; sus ancestros pierden márgenes y rellenos. */
+  :root:has([data-vt='cv-sheet'], .cv-harvard)
+    body
+    :not([data-vt='cv-sheet'], [data-vt='cv-sheet'] *, .cv-harvard, .cv-harvard *, :has([data-vt='cv-sheet'], .cv-harvard)) {
+    display: none;
+  }
+
+  :root:has([data-vt='cv-sheet'], .cv-harvard) :has([data-vt='cv-sheet'], .cv-harvard) {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    min-height: 0;
+    max-width: none;
+  }
+}
+
+@keyframes print-settle {
+  from,
+  to {
+    transform: none;
+    opacity: 1;
+    visibility: visible;
+  }
+}

@@ -1,95 +1,69 @@
-# Mateo Sonzogni — Technical Portfolio & Relational Explorer
+# Mateo Sonzogni · Portafolio
 
-> Explorador relacional de base de datos técnica, CV dual interactivo (**Harvard ATS** / **Modern IDE**) y sistema de micro-interacciones espaciales de 60 FPS.
+Portafolio de proyectos, trayectoria y CV sobre PostgreSQL 17, Express 5 y Nuxt 4. La estructura es la de un portafolio convencional (inicio, obra, caso, sobre mí y artículos) y lo memorable es cómo se mueve: lo que tocás se transforma en la página. Todo el contenido, en castellano y en inglés, sale de la base.
 
-[![Production](https://img.shields.io/badge/Status-Live_Production-10b981?style=flat-square)](https://mateogs.tech)
-[![Nuxt 4](https://img.shields.io/badge/Nuxt-4.x-00DC82?style=flat-square&logo=nuxtdotjs&logoColor=white)](https://nuxt.com)
-[![Vue 3](https://img.shields.io/badge/Vue-3.x-42b883?style=flat-square&logo=vuedotjs&logoColor=white)](https://vuejs.org)
-[![Express 5](https://img.shields.io/badge/Express-5.x-000000?style=flat-square&logo=express&logoColor=white)](https://expressjs.com)
-[![Prisma 7](https://img.shields.io/badge/Prisma-7.x-2D3748?style=flat-square&logo=prisma&logoColor=white)](https://www.prisma.io)
-[![PostgreSQL 17](https://img.shields.io/badge/PostgreSQL-17-4169E1?style=flat-square&logo=postgresql&logoColor=white)](https://www.postgresql.org)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178C6?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org)
-[![Tailwind CSS v4](https://img.shields.io/badge/Tailwind-v4-06B6D4?style=flat-square&logo=tailwindcss&logoColor=white)](https://tailwindcss.com)
+En producción: [mateogs.tech](https://mateogs.tech).
 
----
+## Qué tiene
 
-## 🏛️ Concepto y Filosofía de Diseño
+- **Cinco páginas desde la base:** `/`, `/projects`, `/projects/:slug`, `/about` y `/articles`, en ES y EN (`?lang=en`). Ningún texto de contenido vive en los componentes; la interfaz usa un diccionario chico (`app/lib/dict/`).
+- **Movimiento con criterio:** cargador de la primera visita, nombre por letras, filas con vista previa, galería horizontal con pin, captura que crece, líneas que se revelan, palabras que se encienden y view transitions con elementos compartidos (GSAP, Lenis y la API de View Transitions). Con `prefers-reduced-motion` nada anima.
+- **Ver como registro (`R`):** cada página se transforma en el registro tipado de la base que la alimenta (`?vista=registro`, también sin JS).
+- **Hiperfoco (`H`):** una columna de lectura en monocromo, sin ornamentos ni movimiento ambiental y con la navegación intacta. Se comparte con `?foco=1`.
+- **CV Harvard ATS:** `/about?cv=ats`, imprimible en una sola página A4, con un PDF por idioma en `public/cv/`.
+- **Teclado completo:** `1`–`5`, `j`/`k`, `Enter`, `Esc`, `Backspace`, `R`, `H`, `/` y `Ctrl/⌘K`, apagables desde la paleta.
+- **Consola de administración (`/admin`):** CMS propio y centro de operaciones del agente de empleo Job Hunter, con el generador de CV Harvard ATS adaptado a cada vacante.
+- **Respaldo generado:** si la base no responde, la API sirve la última respuesta buena o el snapshot versionado (`server/src/snapshot/content.json`).
 
-Este portafolio reemplaza la clásica plantilla estática de tarjetas por un **explorador técnico relacional** inspirado en Linear, Raycast y hojas de especificaciones de ingeniería:
+El diseño completo (tokens, anclas del DOM, política de movimiento, teclas y rutas) está en [`docs/diseno.md`](docs/diseno.md).
 
-* **La base de datos completa es navegable:** Colecciones como carpetas (`/projects`, `/stack`, `/experience`, `/orgs`, `/docs`) y registros como hojas de especificaciones técnicas con relaciones bidireccionales automáticas.
-* **Facetar es tocar un valor:** Hacer clic en cualquier tecnología, año, organización o estado agrega el filtro correspondiente a la URL de forma instantánea.
-* **Navegación Continua por Teclado:** Soporte nativo para `Cmd+K` (Go To dialog), flechas de navegación, `Enter`, `Esc` y `/` para búsqueda global.
-* **CV Dual Reactivo (`/docs/about`):**
-  * **Modo Harvard ATS:** Diseño editorial académico de alta legibilidad, preparado para escaneo algorítmico y exportación perfecta a PDF / impresión A4.
-  * **Modo Modern IDE:** Editor de código interactivo con inspectores de datos, pestañas y telemetría de ingeniería en tiempo real.
-* **Modo Hiperfoco (`useHyperfocus.ts`):** Modo de lectura concentrada en alto contraste monocromático que despoja la interfaz de adornos visuales.
-* **Micro-interacciones Bencho UI:** Dynamic Island, tarjetas holográficas de refracción (`UiHoloCard`), botones con barrido de luz (`UiBorderBeam`), efectos de desencriptado (`UiDecryptedText`) y trazas de pensamiento de agentes de IA (`UiThinkingTrace`).
-* **Resiliencia & Fallback Offline:** Si la base de datos externa entra en reposo, el servidor activa un fallback estático en memoria (`server/src/fallbackData.ts`) sin degradación de la experiencia ni interrupciones HTTP 500.
+## Stack
 
----
+- **Frontend:** Nuxt 4, Vue 3, TypeScript, Tailwind CSS v4, GSAP 3 (ScrollTrigger, SplitText, Flip), Lenis y View Transitions. General Sans y Martian Mono servidas en local.
+- **Backend:** Express 5, Prisma 7, PostgreSQL 17 y Multer.
+- **Admin:** Vue 3 sin build y Tailwind CSS v4 (`@tailwindcss/cli`).
+- **Infraestructura:** Hostinger VPS con Coolify, Dockerfiles multi-stage y Traefik. Ver [`DEPLOY.md`](DEPLOY.md).
 
-## 🛠️ Stack Arquitectónico
+## Puesta en marcha
 
-### Frontend
-- **Framework:** Nuxt 4 + Vue 3 (Composition API estricta, SSR y pre-render selectivo).
-- **Estilos:** Tailwind CSS v4 + Design Tokens con soporte para temas *Obsidian Dark*, *Technical Paper* e *Hyperfocus*.
-- **Tipografía:** *General Sans Variable* (editorial / UI) + *Martian Mono* (identificadores y tipos relacionales).
-- **Accesibilidad:** 100/100 Lighthouse, semántica ARIA completa y lectores de pantalla.
-
-### Backend & API
-- **Core Server:** Express 5 montado en Node.js y compatible con Nitro.
-- **ORM & DB:** Prisma 7 conectando a PostgreSQL 17.
-- **Admin Console (`/admin`):** Consola interna inspirada en Linear 2026 con métricas operativas, editor de contenido y monitoreo del agente de empleo Eros.
-
----
-
-## 🚀 Puesta en Marcha Local
-
-### Requisitos previos
-- Node.js `>= 20.x`
-- npm `>= 10.x`
-- PostgreSQL 17 (opcional en desarrollo; el sistema cuenta con fallback en memoria automático)
-
-### Instalación
+Requisitos: Node 24, pnpm 10 y Docker (para PostgreSQL).
 
 ```bash
-# 1. Clonar el repositorio
-git clone https://github.com/MateoGs013/portfolio.git
-cd portfolio
-
-# 2. Instalar dependencias
-npm install
-
-# 3. Generar el cliente de Prisma
-npx prisma generate --schema=./prisma/schema.prisma
-
-# 4. Iniciar el entorno de desarrollo
-npm run dev
+cp .env.example .env
+pnpm install
+pnpm db:up              # PostgreSQL 17 en Docker
+pnpm prisma migrate deploy
+pnpm db:seed            # contenido real: seis obras, experiencia, stack, documentos y artículos
+pnpm dev:api            # API en :3001
+pnpm dev                # sitio en :3000
 ```
 
-La aplicación quedará disponible en `http://localhost:3000`.
-
----
-
-## 🧪 Calidad y Auditoría
+## Comandos
 
 ```bash
-# Ejecutar verificación de tipos
-npm run typecheck
-
-# Ejecutar tests end-to-end con Playwright
-npx playwright test
+pnpm typecheck          # Nuxt, server y la suite e2e
+pnpm lint               # ESLint
+pnpm build && pnpm start    # build de producción del sitio (pnpm start:api para la API)
+pnpm build:admin-css    # Tailwind del admin
+pnpm db:snapshot        # regenerar el respaldo versionado desde la base
+pnpm db:snapshot:check  # comparar respaldo y base
+pnpm cv:pdf             # regenerar los dos PDF ATS desde el sitio local
+pnpm test:e2e           # Playwright contra el build: 375, 768 y 1440 px en los dos temas, reduced motion y sin JS
 ```
 
-### Métricas de Rendimiento (Lighthouse)
-- **Performance:** 99+
-- **Accessibility:** 100
-- **Best Practices:** 100
-- **SEO:** 100
+`pnpm test:e2e` compila una vez y corre cada spec de cada proyecto con una API nueva (el límite de la API pública es de 300 pedidos cada 15 minutos). Las capturas de referencia están en `tests/e2e/visual.spec.ts-snapshots/` y se regeneran a propósito con `pnpm test:e2e visual --update-snapshots`. Son de Windows (sufijo `-win32`) y dependen del seed: en otra plataforma, o tras cambiar el seed o el diseño, hay que regenerarlas.
 
----
+## Calidad
 
-## 📄 Licencia
+Cada cambio visual pasa el piso de calidad (`.claude/skills/piso-calidad/`): funciona sin JS, se navega entero con teclado, el lector de pantalla lo entiende, respeta reduced motion e Hiperfoco, CLS 0, responsive de 320 a 2560 px, degrada con la base caída y el CV entra en una página A4. La última auditoría y las cifras de Lighthouse están en [`docs/fases.md`](docs/fases.md).
+
+## Documentación
+
+- [`CLAUDE.md`](CLAUDE.md) y [`AGENTS.md`](AGENTS.md): invariantes, estructura y comandos.
+- [`docs/diseno.md`](docs/diseno.md): fuente única del diseño del sitio público.
+- [`docs/admin.md`](docs/admin.md): la consola de administración.
+- [`docs/decisiones.md`](docs/decisiones.md) y [`docs/fases.md`](docs/fases.md): decisiones y estado del proyecto.
+
+## Licencia
 
 MIT © [Mateo Gabriel Sonzogni](https://github.com/MateoGs013)

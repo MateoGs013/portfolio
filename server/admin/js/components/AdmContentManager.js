@@ -601,7 +601,7 @@ export const AdmContentManager = {
                       @click="handlePublishToBlog(store.content.selected.id)"
                       :disabled="isPublishingToBlog"
                       class="btn-primary !h-[28px] !text-xs font-mono-code cursor-pointer bg-emerald-600 hover:bg-emerald-500 border-emerald-500 text-white"
-                      title="Publicar directamente como artículo en mateogs.tech/blog"
+                      title="Publicar directamente como artículo en /articles"
                     >
                       <svg v-if="isPublishingToBlog" class="adm-icon xs animate-spin inline-block mr-1" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
                       <span>{{ isPublishingToBlog ? 'Publicando...' : 'Publicar en Blog del Portafolio' }}</span>
@@ -638,7 +638,8 @@ export const AdmContentManager = {
                     @click="openCarouselWindow(store.content.selected.id)"
                     class="btn-primary !h-[32px] !text-xs inline-flex items-center gap-1.5 font-mono-code cursor-pointer"
                   >
-                    <span>Abrir Visor Web ↗</span>
+                    <span>Abrir Visor Web</span>
+                    <svg class="adm-icon sm" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17 17 7"/><polyline points="7 7 17 7 17 17"/></svg>
                   </button>
                 </div>
 

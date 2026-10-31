@@ -48,10 +48,10 @@ export const AdmToast = {
           <button
             type="button"
             @click="$emit('dismiss', t.id)"
-            aria-label="Cerrar notificacion"
+            aria-label="Cerrar notificación"
             class="text-zinc-500 hover:text-white shrink-0 ml-1 cursor-pointer"
           >
-            ✕
+            <span aria-hidden="true">✕</span>
           </button>
         </div>
       </transition-group>

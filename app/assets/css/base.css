@@ -1,55 +1,245 @@
-@import "tailwindcss";
+/* Sistema visual del sitio público sobre Tailwind v4 (docs/diseno.md §3).
+   Los colores viven en tokens.css; acá se exponen como utilidades.
+   Las hojas globales miran solo el contrato de anclas del DOM (§4). */
+@import 'tailwindcss';
+@import './motion.css';
+@import './print.css';
+@import './hyperfocus.css';
 
+/* Solo los colores del sistema y un único corte de diseño (768 px). */
 @theme {
-  --font-mono: 'Martian Mono Variable', ui-monospace, monospace;
+  --color-*: initial;
+  --breakpoint-*: initial;
+  --breakpoint-md: 48rem;
+
   --font-sans: 'General Sans Variable', system-ui, -apple-system, sans-serif;
-  --font-display: 'General Sans Variable', system-ui, -apple-system, sans-serif;
-  --font-poster: 'Bebas Neue', Impact, 'General Sans Variable', sans-serif;
-
-  --color-paper: var(--d-paper);
-  --color-surface: var(--d-surface);
-  --color-surface-raised: var(--d-surface-raised);
-  --color-ink: var(--d-ink);
-  --color-rule: var(--d-rule);
-  --color-rule-strong: var(--d-rule-strong);
-  --color-dim: var(--d-dim);
-  --color-faint: var(--d-faint);
-  --color-hover: var(--d-hover);
-  --color-sig: var(--d-sig);
-  --color-sig-hover: var(--d-sig-hover);
-  --color-sig-glow: var(--d-sig-glow);
-  --color-accent: var(--d-accent);
-  --color-amber: var(--d-amber);
-  --color-green: var(--d-green);
-  --color-orange: var(--d-orange);
-  --color-orange-deep: var(--d-orange-deep);
-  --color-orange-glow: var(--d-orange-glow);
-  --color-orange-bg: var(--d-orange-bg);
-  --color-inv-dim: var(--d-inv-dim);
-  --color-on-sig: var(--d-on-sig);
-}
-
-/* Tipografías del Portafolio Técnico Mateo Sonzogni
-   --font-mono: Martian Mono (claves, metadatos, tablas, telemetría, código)
-   --font-text / --font-display: General Sans (títulos, etiquetas, lectura, UI) */
-:root {
-  --font-display: 'General Sans Variable', system-ui, -apple-system, sans-serif;
-  --font-text: 'General Sans Variable', system-ui, -apple-system, sans-serif;
   --font-mono: 'Martian Mono Variable', ui-monospace, monospace;
+  --font-serif: initial;
+
+  /* Cuerpo en 420, titulares en 540–560, la frase grande en 500 (medium). */
+  --font-weight-body: 420;
+  --font-weight-title: 540;
+  --font-weight-display: 560;
+
+  /* Medidas de lectura en ch, nunca un contenedor fijo. */
+  --container-read: 58ch;
+  --container-phrase: 26ch;
+  --container-focus: 68ch;
 }
 
-*, *::before, *::after { box-sizing: border-box; }
+/* Los colores cambian con el tema y el Hiperfoco: las utilidades leen el token vivo. */
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-ink: var(--ink);
+  --color-dim: var(--dim);
+  --color-faint: var(--faint);
+  --color-rule: var(--rule);
+  --color-sig: var(--sig);
+  --color-sig-text: var(--sig-text);
+  --color-ok: var(--ok);
+  --color-wip: var(--wip);
+  --color-white: #ffffff;
+  --color-black: #000000;
 
-html { -webkit-text-size-adjust: 100%; overflow-x: hidden; max-width: 100vw; }
-body { margin: 0; font-family: var(--font-text); line-height: 1.5; touch-action: manipulation; -webkit-tap-highlight-color: transparent; overflow-x: hidden; max-width: 100vw; width: 100%; }
+  --spacing-pad: var(--pad);
+  --spacing-section: clamp(5rem, 16vh, 10rem);
 
-img, svg, video { display: block; max-width: 100%; }
+  --ease-expo: var(--e);
+  --ease-expo-in: cubic-bezier(0.7, 0, 0.84, 0);
+}
 
+/* Seis tamaños de lectura y la escala monumental. `static` los publica siempre
+   en :root, así las hojas y los <style> de componentes pueden leerlos con var(). */
+@theme static {
+  --text-*: initial;
+
+  --text-xs: 0.8125rem;
+  --text-xs--line-height: 1.45;
+  --text-s: 0.9375rem;
+  --text-s--line-height: 1.45;
+  --text-m: 1.0625rem;
+  --text-m--line-height: 1.5;
+  --text-l: clamp(1.05rem, 1.5vw, 1.375rem);
+  --text-l--line-height: 1.6;
+  --text-xl: clamp(1.5rem, 2.6vw, 2.4rem);
+  --text-xl--line-height: 1;
+  --text-xl--letter-spacing: -0.03em;
+  --text-xl--font-weight: 540;
+  --text-hero: clamp(1.6rem, 3.6vw, 3.4rem);
+  --text-hero--line-height: 1.12;
+  --text-hero--letter-spacing: -0.03em;
+  --text-hero--font-weight: 500;
+
+  --text-display-row: clamp(2rem, 5.6vw, 5.4rem);
+  --text-display-row--line-height: 0.95;
+  --text-display-row--letter-spacing: -0.045em;
+  --text-display-row--font-weight: 560;
+  --text-display-mail: clamp(1.8rem, 7.4vw, 8rem);
+  --text-display-mail--line-height: 1;
+  --text-display-mail--letter-spacing: -0.05em;
+  --text-display-mail--font-weight: 560;
+  --text-display-case: clamp(3rem, 11vw, 11.5rem);
+  --text-display-case--line-height: 0.84;
+  --text-display-case--letter-spacing: -0.055em;
+  --text-display-case--font-weight: 560;
+  --text-display-page: clamp(3.4rem, 13vw, 13rem);
+  --text-display-page--line-height: 0.82;
+  --text-display-page--letter-spacing: -0.058em;
+  --text-display-page--font-weight: 560;
+  --text-display-name: clamp(3.4rem, 15.5vw, 16rem);
+  --text-display-name--line-height: 0.82;
+  --text-display-name--letter-spacing: -0.058em;
+  --text-display-name--font-weight: 560;
+  /* El nombre del cargador tiene su propio tamaño: viaja con FLIP hasta display-name. */
+  --text-display-loader: clamp(2rem, 5.4vw, 5rem);
+  --text-display-loader--line-height: 0.86;
+  --text-display-loader--letter-spacing: -0.05em;
+  --text-display-loader--font-weight: 560;
+}
+
+/* Estados de lectura en <html> que pone el SSR (§4). */
+@custom-variant focus-mode (&:where([data-hyperfocus='true'], [data-hyperfocus='true'] *));
+@custom-variant record (&:where([data-vista='registro'], [data-vista='registro'] *));
+@custom-variant light (&:where([data-theme='light'], [data-theme='light'] *));
+@custom-variant dark (&:where(:root:not([data-theme='light']), :root:not([data-theme='light']) *));
+/* Atenuar, vista previa, burbuja e imanes: solo con puntero fino. */
+@custom-variant fine (@media (hover: hover) and (pointer: fine));
+/* Táctil: áreas de 44 px y aire entre controles que, si no, se pisarían. */
+@custom-variant coarse (@media (pointer: coarse));
+
+/* Área táctil de 44 × 44 px (piso de calidad §6) sin mover el layout: con puntero grueso, una capa
+   transparente centrada en el control crece hasta 44 px en el eje que le falte. El control es su
+   propio contenedor de posición: no va en uno absolute (ahí, size-11 con margen negativo). */
+@utility hit {
+  position: relative;
+
+  @media (pointer: coarse) {
+    &::after {
+      content: '';
+      position: absolute;
+      inset: min(0px, calc(50% - 22px));
+    }
+  }
+}
+
+/* Máscara de una línea que se revela: deja lugar a los descendentes. */
+@utility ln {
+  display: block;
+  overflow: hidden;
+  padding-bottom: 0.1em;
+  margin-bottom: -0.1em;
+
+  & > span {
+    display: inline-block;
+  }
+}
+
+/* Máscara de una letra del nombre (la g de Sonzogni necesita más aire). */
+@utility chm {
+  display: inline-block;
+  overflow: hidden;
+  vertical-align: top;
+  padding-bottom: 0.2em;
+  margin-bottom: -0.2em;
+}
+
+/* Texto que rueda: <span class="roll"><span data-t="Obra">Obra</span></span>.
+   La copia es contenido generado con texto alternativo vacío: el lector la saltea.
+   align-items: flex-start: estirada al alto de la caja (un renglón), la columna de dos copias rodaría
+   solo media línea y el texto quedaría cortado por la mitad. */
+@utility roll {
+  display: inline-flex;
+  align-items: flex-start;
+  overflow: hidden;
+  height: 1.25em;
+  line-height: 1.25;
+  vertical-align: top;
+
+  & > span {
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.6s var(--e);
+  }
+
+  & > span::after {
+    content: attr(data-t);
+    content: attr(data-t) / '';
+  }
+
+  :is(a, button):focus-visible & > span {
+    transform: translateY(-50%);
+  }
+
+  @media (hover: hover) {
+    :is(a, button):hover & > span {
+      transform: translateY(-50%);
+    }
+  }
+}
+
+@layer base {
+  /* El canal de la barra queda reservado: cuando Lenis se detiene (view transition, paleta) pone
+     overflow: clip en <html> y, sin esto, la página se ensancharía y volvería a angostarse con cada
+     navegación en Windows con barras clásicas. */
+  html {
+    scrollbar-gutter: stable;
+    -webkit-text-size-adjust: 100%;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* El único recorte horizontal del sitio; sin max-width: 100vw (corta con barra de scroll). */
+  body {
+    overflow-x: clip;
+    font-weight: var(--font-weight-body);
+    font-size: var(--text-m);
+    line-height: var(--text-m--line-height);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--sig-text);
+    outline-offset: 3px;
+  }
+
+  /* main y los destinos de salto reciben foco por programa: sin anillo. */
+  [tabindex='-1']:focus:not(:focus-visible) {
+    outline: none;
+  }
+
+  ::selection {
+    background-color: var(--ink);
+    color: var(--bg);
+  }
+}
+
+/* Registro (§2.1 y §4): .fk, .ft y .rec-only solo existen en registro;
+   .ed-only y los ornamentos, solo en diseño. El SSR ya entrega el estado. */
+:root:not([data-vista='registro']) :is(.fk, .ft, .rec-only) {
+  display: none;
+}
+
+[data-vista='registro'] :is(.ed-only, [data-ornament]) {
+  display: none;
+}
+
+/* Reduced motion: todo llega a su estado final sin animar.
+   Sin forzar con important: fuera de toda capa le gana a Tailwind, y :not(#_) suma peso de id
+   para ganarle también a los <style> de los componentes. */
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
-    animation-duration: 0.001ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.001ms !important;
-    scroll-behavior: auto !important;
+  :not(#_),
+  :not(#_)::before,
+  :not(#_)::after {
+    animation-duration: 0.01ms;
+    animation-iteration-count: 1;
+    transition-duration: 0.01ms;
+    scroll-behavior: auto;
+  }
+
+  /* :not(#_) sube la especificidad sobre los tipos de motion.css (hiperfoco, caso) sin !important. */
+  :root:not(#_)::view-transition-group(*),
+  :root:not(#_)::view-transition-old(*),
+  :root:not(#_)::view-transition-new(*) {
+    animation: none;
   }
 }

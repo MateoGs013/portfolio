@@ -1,13 +1,17 @@
 // Formulario Especializado: ExperienceForm (AdmExperienceForm)
-// Editor de experiencia laboral con cálculo de duración en tiempo real y chips
+// Editor de experiencia laboral con cálculo de duración en tiempo real y chips.
+// En modo EN, cargo, síntesis e historia se editan en inglés con el español de referencia.
 
 import { store } from '../../store.js'
 import { slugify } from '../../config.js'
+import { EnField } from './EnField.js'
+import { ExperienceCvFields } from './ExperienceCvFields.js'
 
 const { computed } = window.Vue
 
 export const ExperienceForm = {
   name: 'AdmExperienceForm',
+  components: { EnField, ExperienceCvFields },
   setup() {
     const categorizedTechs = computed(() => {
       const q = store.techSearchQuery.trim().toLowerCase()
@@ -114,8 +118,9 @@ export const ExperienceForm = {
   },
   template: `
     <div class="max-w-2xl space-y-5">
+      <EnField v-if="store.editingEn" id="exp-role-en" label="Cargo o posición" :es="store.form.role" v-model="store.form.en.role" />
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div>
+        <div v-if="!store.editingEn">
           <label class="field-label">Cargo o Posición *</label>
           <input
             type="text"
@@ -199,6 +204,8 @@ export const ExperienceForm = {
         </div>
       </div>
 
+      <ExperienceCvFields />
+
       <!-- Selector de Tecnologías -->
       <div>
         <label class="field-label">Tecnologías Principales Utilizadas ({{ (store.form.techIds || []).length }})</label>
@@ -206,22 +213,26 @@ export const ExperienceForm = {
           <div v-for="cat in categorizedTechs" :key="cat.key" class="space-y-1">
             <div class="text-[10px] font-mono-code uppercase tracking-wider text-zinc-500">{{ cat.label }}</div>
             <div class="flex flex-wrap gap-1.5">
-              <span
+              <button
                 v-for="t in cat.items"
                 :key="t.id"
+                type="button"
                 @click="toggleTech(t.id)"
                 class="tech-chip"
                 :class="{ selected: isTechSelected(t.id) }"
-              >
-                {{ t.name }}
-              </span>
+                :aria-pressed="isTechSelected(t.id)"
+              >{{ t.name }}</button>
             </div>
           </div>
         </div>
       </div>
 
       <!-- Textareas -->
-      <div>
+      <template v-if="store.editingEn">
+        <EnField id="exp-summary-en" label="Síntesis de desempeño (1 línea)" :es="store.form.summary" v-model="store.form.en.summary" :rows="2" />
+        <EnField id="exp-story-en" label="Historia, retos y aprendizajes" :es="store.form.story" v-model="store.form.en.story" :rows="4" />
+      </template>
+      <div v-if="!store.editingEn">
         <label class="field-label">Síntesis de Desempeño (1 Línea) *</label>
         <textarea
           v-model="store.form.summary"
@@ -232,7 +243,7 @@ export const ExperienceForm = {
         ></textarea>
       </div>
 
-      <div>
+      <div v-if="!store.editingEn">
         <label class="field-label">Historia, Retos y Aprendizajes</label>
         <textarea
           v-model="store.form.story"

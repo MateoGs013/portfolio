@@ -1,65 +1,43 @@
 ---
 paths:
-  - "app/components/explorer/**"
-  - "app/components/cv/**"
-  - "app/components/ui/**"
-  - "app/lib/explorer.ts"
+  - "app/components/**"
+  - "app/pages/**"
+  - "app/lib/**"
 ---
 
-# Explorador Técnico & CV
+# Sitio público: reglas estructurales
 
-Una ventana de explorador de archivos apoyada sobre el papel. Tinta sobre papel: claro, frío, plano. Se ve una carpeta o un archivo abierto, nunca las dos cosas; se entra con un click o Enter y se vuelve por la barra de dirección o con `Backspace`.
+El sistema visual, el vocabulario de movimiento, el contrato de anclas del DOM, el Hiperfoco, la política de movimiento, las teclas y las rutas están en **`docs/diseno.md`**, que es la fuente única. Leelo antes de tocar un componente, una página o `app/lib/`. Este archivo solo agrega lo estructural, que no cambia con el diseño.
 
-## Reglas
+## DOM accesible y SSR
 
-- **DOM semántico y accesible, nunca WebGL.** El texto tiene que seguir siendo DOM: seleccionable, buscable con Ctrl+F, leíble por lector de pantalla, indexable. Este frontend es el piso de accesibilidad del sitio; construirlo sobre canvas lo contradice.
-- **Gana la claridad sobre el efecto.** El explorador existe para argumentar precisión técnica y criterio. La profundidad es solo el gesto de entrar o salir de una carpeta: el panel se acerca o se aleja `--d-z` (56px).
-- **Un solo renderer para todas las colecciones.** Una base de datos trata a todos los records igual: la misma carpeta, la misma baldosa, la misma cabecera, el mismo archivo abierto. No hacer tratamientos especiales por colección.
-- **Una sola cosa por pantalla.** Una carpeta muestra solo sus items; recién al abrir uno aparece su contenido. Si una pantalla combina dos superficies, está mal aunque cada una sea sobria. Para Mateo "abrumador" es cantidad de cosas a la vez, no densidad tipográfica.
-- **La estructura del dato es la decoración.** Tipos declarados (`string`, `relation → Org`), `NULL` a la vista, `05 records` en lugar de un título decorativo, el conteo o el año dibujado adentro del ícono. Identificadores en minúscula y sin espaciado, tal como están en el schema. No inventar ornamento.
-## Sistema de Estilos: Tailwind CSS v4 Unificado
+- **Todo el texto es DOM, nunca WebGL ni canvas:** seleccionable, buscable con Ctrl+F, legible por lector de pantalla e indexable. Las letras partidas para animar llevan `aria-hidden` y el texto completo va en un `.sr` o en el `aria-label` del contenedor.
+- **El SSR entrega la página completa.** Datos con `useAsyncData`, nunca con `fetch` en `onMounted`. Con JS apagado se lee todo y se navega por enlaces reales (`<NuxtLink>` / `<a href>`). Ninguna animación deja contenido en `opacity: 0` si JS no corre.
+- **Un `<h1>` por página** y jerarquía sin saltos. Botones solo con ícono llevan `aria-label`. Los interruptores usan `aria-pressed`. Una sola región `aria-live` para anuncios.
+- **Teclado:** todo interactivo es alcanzable con Tab y tiene `:focus-visible` con `--sig-text`. Los diálogos atrapan el foco y lo devuelven al disparador. Las teclas de una letra son las de `docs/diseno.md` §7, en un solo `useHotkeys`.
+- **Contraste AA** en los dos temas y en Hiperfoco. `prefers-reduced-motion` lleva todo a su estado final sin animar.
 
-Toda la aplicación utiliza **Tailwind CSS v4** mediante `@tailwindcss/vite` (`@import "tailwindcss"` en `app/assets/css/base.css`).
-- Los tokens del diseño constructivista se mapean en el bloque `@theme` de `base.css`:
-  - Colores semánticos: `bg-paper`, `bg-surface`, `bg-surface-raised`, `bg-hover`, `text-ink`, `text-dim`, `text-faint`, `text-sig`, `border-rule`, `border-rule-strong`, `text-green`, `text-amber`.
-  - Tipografías técnicas: `font-mono` (Martian Mono), `font-sans` / `font-display` (General Sans), `font-poster` (Bebas Neue).
-- Los componentes priorizan clases utilitarias de Tailwind manteniendo las clases de anclaje semántico (`cabecera`, `sidebar`, `cuerpo-ventana`, `exp`, `hoja`, etc.) para los estilos globales del modo Hiperfoco (`html[data-hyperfocus="true"]`) y las reglas de medios `@media print`.
-- El layout de 1 página A4 de `CvHarvardAts.vue` es estricto, inmutable y de **cota dual**:
-  1. **Anti-Overflow:** Bajo ninguna circunstancia generará una 2ª página (`pageCount === 1`, altura `<= 276mm`).
-  2. **Anti-Vacío:** Debe llenar entre el **90% y 95%** de la altura imprimible A4 (`248mm - 265mm`), evitando huecos en blanco desproporcionados al pie.
-  3. **Escala Tipográfica ATS:** Nombre a 19–21pt, títulos de sección a 11–11.5pt, cuerpo y viñetas a 9.2–9.5pt (line-height 1.3–1.35). Jamás reducir a tamaños ilegibles (< 9pt) para forzar encaje; en su lugar, calibrar el número de entregables (4–5 proyectos insignia) y la concisión de sus viñetas de impacto.
-  4. **Puppeteer / Playwright:** Usar siempre `preferCSSPageSize: true` y delegar los márgenes al `@page { margin: 10.5mm 12mm; }` de CSS para prevenir doble marginación.
+## Una cosa por pantalla
 
-## Anatomía y Componentes (`app/components/`)
+Cada página muestra una superficie a la vez y tiene un solo gesto de imagen (la vista previa en el inicio, la galería en Obra, la captura que crece en el caso). Si una pantalla combina dos superficies o dos gestos, está mal aunque cada uno sea sobrio. Para Mateo «abrumador» es cantidad de cosas a la vez, no densidad tipográfica.
 
-Toda la lógica de resolución vive en `app/lib/explorer.ts`: resuelve el path en lo que hay que dibujar, y los componentes renderizan la vista:
+## Contenido
 
-- **La ventana** (`ExplorerView.vue`, `.ventana`): recuadro de tinta de hasta 1320px centrado en el papel. El marco alrededor es `--d-frame` a los lados y abajo. Adentro, la barra, el contenido y la barra de estado comparten el margen `--d-inset`: todo lo que empieza a la izquierda empieza en la misma vertical.
-  - **Barra de herramientas:** `←` `→` (historial del navegador), `↑` (subir un nivel), la ruta como barra de dirección (cada segmento es una carpeta a la que se vuelve) y el "ir a".
-  - **Barra de estado:** conteo, el request real con status y milisegundos, las teclas.
-- **La cabecera** (`ExplorerHeader.vue`), igual en los tres niveles: el ícono con el dato dominante adentro, el nombre a 22px (`--d-fs-title`), la línea de tipo en mono debajo (`database · 05 tables`, `collection · Project · 06 records`, `record · Project · updatedAt · 14 fields`) y, a la derecha, botones de 30px con borde gris: los filtros activos en una carpeta (`stack = vue ×`), los vecinos `‹ ›` en un archivo.
-- **El ícono e indicador** (`ExplorerBadge.vue` y `AppIcon.vue`): silueta de carpeta o archivo con indicador numérico integrado en SVG inline, sin relleno ni sombras.
-- **La carpeta** (`ExplorerFolder.vue`), para la base y para cada colección: la cabecera y una grilla de baldosas (`--d-tile` de ancho mínimo, `auto-fill`). En la raíz, carpeta por tabla y archivo por documento; la persona está en `about` y `contact`. En una colección, un archivo por record con el dato dominante adentro (año, `since`, año de inicio) y el nombre debajo.
-- **El archivo abierto** (`ExplorerDetail.vue`): la cabecera y los campos en orden de lectura, con el tipo en su columna al lado del valor. Las relaciones están a la vista y cada item es un link; los valores filtrables (`year`, `role`, `category`, `featured`) son links con subrayado punteado que dejan la carpeta filtrada.
-- **CV Dual Modular** (`app/components/cv/`):
-  - `CvContainer.vue`: controlador orquestador, toolbar con selector y exportación A4.
-  - `CvHarvardAts.vue`: render académico ATS en blanco y negro, sin foto, 1 página A4 estricta.
-  - `CvModernIde.vue`: render moderno en modo editor de código / IDE dark con fotografía técnica.
-- **"Ir a"** (`ExplorerGoto.vue`): índice filtrado al escribir.
-- **Ventana de archivo rápido** (`ExplorerFileWindow.vue`): previsualizador modal.
+- Cero texto de contenido en los componentes: nombres, ubicaciones, cifras, obras y enlaces salen de la API. La interfaz (rótulos, estados, aria, etiquetas de métricas) va en `app/lib/dict/`, un archivo por área, ES y EN.
+- Campos vacíos: no se ven en diseño y aparecen como `NULL` en registro. Nunca `undefined`, `null` ni un bloque vacío en pantalla.
+- Solo las obras publicadas en la base existen en el sitio; la visibilidad la resuelve la API, nunca un componente.
 
-## Teclado y mouse
+## Código
 
-Las cuatro flechas mueven el foco por la grilla · `Enter` abre la baldosa con foco · `Backspace` / `Esc` suben un nivel y dejan el foco en la baldosa de la que se venía · `/` o `Cmd+K` abren el "ir a". Mover el foco no navega: la ruta sigue siendo el único estado. El mouse hace lo mismo: click en una baldosa, en un segmento de la ruta o en los botones de la barra.
+- Archivos de menos de 300 líneas; las páginas son orquestadores delgados. Carpetas por área en `app/components/`: `site/`, `home/`, `work/`, `case/`, `about/`, `record/`, `motion/`, `media/`, `cv/`, `articles/` y `ui/`.
+- Tailwind CSS v4 primero, con los tokens del `@theme` (sin `text-[Npx]` ni colores sueltos). Las hojas globales (`tokens.css`, `motion.css`, `print.css`, `hyperfocus.css`) solo miran las anclas del contrato.
+- Toda animación pasa por `useMotion` y respeta `useMotionPrefs`. Ningún componente escribe `innerHTML`.
 
-Todo el contenido tiene que ser alcanzable sin mouse y con JS apagado.
+## CV Harvard ATS: cota dual
 
-## Mobile
+La hoja del CV (`/about?cv=ats`, los PDF de `public/cv/` y el generador del Job Hunter) entra en **una sola página A4**:
 
-Por debajo de ~900px la ventana sigue siendo una ventana: el mismo marco, y crece con el contenido en vez de scrollear adentro. Bajo 640px las baldosas se achican (`--d-tile-sm`) para que entren tres por fila y los botones de la cabecera bajan a su propia fila.
-
-## Defaults a evitar
-
-- **Cero cosplay de terminal o consola de servidor:** Prohibido usar prefijos `//` en títulos, falsas consolas SQL que bloqueen la navegación (`UiRouteLoader` solo se invoca programáticamente en tests, nunca bloqueando clics del usuario), o ventanas OS anidadas con `READ-ONLY · UTF-8`.
-- **Cero síndrome de "cajas dentro de cajas" ni "sopa de píldoras":** Evitar encerrar tarjetas dentro de tarjetas con bordes duros o apilar 8 badges con borde por proyecto. Usar la grilla suiza de 1px (`border-rule`), superíndices tabulares (`⁰⁶`) y bloques verticales de créditos alineados a la derecha estilo Awwwards (`danielebuser.com` / `dennissnellenberg.com`).
-- **Uso quirúrgico del color de acento (`--d-sig: #ff3e00`):** Solo como signo gráfico puntual (apóstrofe `'26`, punto cuadrado final en `Say Hello.`, o indicador activo), nunca en bordes estructurales masivos.
+1. **Sin desborde:** nunca una segunda página (`pageCount === 1`).
+2. **Sin vacío:** la hoja mide entre 248 y 265 mm (del 90 % al 96 % de los 276 mm imprimibles).
+3. **Escala ATS:** nombre de 19 a 21 pt, títulos de sección de 11 a 11,5 pt, cuerpo y viñetas de 9,2 a 9,5 pt con interlineado de 1,3 a 1,35. Nunca bajar de 9 pt para que entre: se ajusta la cantidad y la concisión de las viñetas.
+4. **Un único `@page { size: A4; margin: 10.5mm 12mm }`** en el CSS de `app/`. Puppeteer y Playwright imprimen con `preferCSSPageSize: true` y sin márgenes propios. El generador del Job Hunter (`server/src/admin/`) conserva su propio `@page` y sus márgenes: los decide A3 de forma explícita, esta regla no lo obliga a cambiar (invariante 6).

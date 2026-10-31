@@ -1,0 +1,602 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mateo Sonzogni</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Martian+Mono:wght@400&display=swap" rel="stylesheet">
+<style>
+/*
+ * Dirección "movimiento". Sitio de estructura convencional (inicio, obra, caso, sobre mí);
+ * lo memorable es cómo se mueve. Regla única: lo que tocás se transforma en la página.
+ * Nada de telones: los elementos viajan.
+ */
+@font-face{font-family:'General Sans';src:url('../../app/assets/fonts/GeneralSans-Variable.woff2') format('woff2');font-weight:200 700;font-display:swap}
+:root{
+  --bg:#0b0b0c;--surface:#141416;--ink:#ededee;--dim:#a1a1a9;--faint:#7d7d86;--rule:rgba(255,255,255,.1);
+  --sig:#ff3e00;--ok:#3ecf6e;--wip:#e5a00d;
+  --sans:'General Sans',system-ui,sans-serif;--mono:'Martian Mono',ui-monospace,monospace;
+  --pad:clamp(1rem,3.2vw,3rem);
+  --e:cubic-bezier(.16,1,.3,1);
+}
+*,*::before,*::after{box-sizing:border-box}
+*{margin:0}
+html{background:var(--bg);color:var(--ink);font-family:var(--sans);-webkit-font-smoothing:antialiased}
+body{overflow-x:clip;font-weight:420;font-size:1.0625rem;line-height:1.5}
+a{color:inherit;text-decoration:none}
+button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer}
+img{display:block;max-width:100%}
+:focus-visible{outline:2px solid var(--sig);outline-offset:3px}
+[tabindex="-1"]:focus{outline:none}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+html.lenis,html.lenis body{height:auto}
+.lenis.lenis-smooth{scroll-behavior:auto!important}
+.lenis.lenis-stopped{overflow:hidden}
+.wrap{padding:0 var(--pad)}
+.sq{display:inline-block;width:.13em;height:.13em;background:var(--sig);margin-left:.04em}
+.dot{display:inline-block;width:.45rem;height:.45rem;border-radius:50%;background:var(--ok);margin-right:.5rem;vertical-align:.08em}
+.dot.WIP{background:var(--wip)}
+
+/* Revelado por líneas y por letras */
+.ln{display:block;overflow:hidden;padding-bottom:.1em;margin-bottom:-.1em}
+.ln>span{display:inline-block}
+.ch{display:inline-block;will-change:transform}
+/* La máscara deja lugar a los descendentes (la g de Sonzogni) */
+.chm{display:inline-block;overflow:hidden;vertical-align:top;padding-bottom:.2em;margin-bottom:-.2em}
+
+/* Texto que rueda al pasar: dos copias apiladas */
+.roll{display:inline-flex;overflow:hidden;height:1.25em;line-height:1.25}
+.roll>span{display:flex;flex-direction:column;transition:transform .6s var(--e)}
+.roll>span::after{content:attr(data-t)}
+.roll:hover>span,.roll:focus-visible>span{transform:translateY(-50%)}
+
+/* ── Cabecera ───────────────────────────────────────────────────────────── */
+.hud{position:fixed;top:0;left:0;right:0;z-index:40;display:flex;justify-content:space-between;align-items:center;padding:calc(var(--pad) * .6) var(--pad);font-size:.9375rem;mix-blend-mode:difference;color:#fff;view-transition-name:hud}
+.hud .brand{font-weight:560}
+.hud nav{display:flex;gap:clamp(1rem,2.4vw,2rem)}
+.hud nav a[aria-current] .roll>span{color:#fff}
+.hud nav a{opacity:.72;transition:opacity .3s}
+.hud nav a:hover,.hud nav a[aria-current]{opacity:1}
+
+/* ── Loader: el nombre aparece y viaja hasta su lugar en el inicio ──────── */
+.loader{position:fixed;inset:0;z-index:60;display:grid;place-items:center;background:var(--bg)}
+.loader .name{font-size:clamp(2rem,5.4vw,5rem);font-weight:560;letter-spacing:-.05em;line-height:.86;transform-origin:0 0}
+.loader .count{position:absolute;right:var(--pad);bottom:var(--pad);font-size:.875rem;color:var(--dim);font-variant-numeric:tabular-nums}
+.loader .bar{position:absolute;left:0;bottom:0;height:2px;width:100%;background:var(--sig);transform:scaleX(0);transform-origin:0 50%}
+
+/* ── Inicio ─────────────────────────────────────────────────────────────── */
+.hero{position:relative;min-height:100svh;display:flex;flex-direction:column;justify-content:flex-end;padding:var(--pad);padding-bottom:clamp(1.5rem,6vh,4rem)}
+.hero-name{font-size:clamp(3.4rem,15.5vw,16rem);font-weight:560;letter-spacing:-.058em;line-height:.82;margin-left:-.045em}
+.hero-row{display:flex;justify-content:space-between;align-items:flex-end;gap:2rem;margin-top:clamp(1.5rem,4vh,3rem)}
+.hero-row p{max-width:30ch;font-size:clamp(1.05rem,1.6vw,1.4rem);line-height:1.35}
+.hero-meta{font-size:.875rem;color:var(--dim);text-align:right}
+.sec{padding:clamp(5rem,16vh,10rem) var(--pad) 0}
+.sec-h{display:flex;justify-content:space-between;align-items:baseline;gap:1rem;padding-bottom:1.25rem;font-size:.9375rem;color:var(--dim)}
+.sec-h a{color:var(--ink)}
+.rows{list-style:none;padding:0;border-bottom:1px solid var(--rule)}
+.row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2rem;align-items:baseline;padding:clamp(1.2rem,3vh,2rem) 0;border-top:1px solid var(--rule);transition:opacity .5s var(--e)}
+.row-t{font-size:clamp(2rem,5.6vw,5.4rem);font-weight:560;letter-spacing:-.045em;line-height:.95}
+.row-t span{display:inline-block;transition:transform .7s var(--e)}
+.row-m{font-size:.9375rem;color:var(--dim);text-align:right}
+@media (hover:hover) and (pointer:fine){
+  .rows:hover .row:not(:hover){opacity:.25}
+  .row:hover .row-t span{transform:translateX(1.2rem)}
+}
+.statement{font-size:clamp(1.6rem,3.6vw,3.4rem);font-weight:500;letter-spacing:-.03em;line-height:1.12;max-width:26ch}
+.statement .w{display:inline}
+
+/* Vista previa que sigue al cursor (inicio) */
+.preview{position:fixed;left:0;top:0;z-index:15;width:min(26rem,30vw);aspect-ratio:16/10;pointer-events:none}
+.pv-in{width:100%;height:100%;overflow:hidden;border-radius:3px;opacity:0;transform:scale(.8)}
+.strip>*{display:block;width:100%;aspect-ratio:16/10;object-fit:cover}
+.plate{display:flex;align-items:flex-end;padding:1rem;background:var(--surface);font-size:1.8rem;font-weight:560;letter-spacing:-.03em}
+@media (hover:none),(pointer:coarse){.preview{display:none}}
+
+/* ── Obra: galería horizontal que se mueve con el scroll vertical ───────── */
+.page-head{padding:clamp(7rem,22vh,12rem) var(--pad) clamp(2rem,6vh,4rem)}
+.page-title{font-size:clamp(3.4rem,13vw,13rem);font-weight:560;letter-spacing:-.058em;line-height:.82;margin-left:-.045em}
+.page-title sup{font-size:.2em;letter-spacing:0;font-weight:450;color:var(--dim);vertical-align:super;margin-left:.2em}
+.gallery{position:relative;height:100svh;overflow:hidden}
+.track{position:absolute;left:0;top:50%;display:flex;gap:clamp(1.5rem,4vw,4rem);padding:0 var(--pad);transform:translateY(-50%);will-change:transform}
+.card{flex:none;width:clamp(18rem,46vw,46rem)}
+.card-media{position:relative;aspect-ratio:16/10;overflow:hidden;border-radius:3px;background:var(--surface)}
+.card-media img{position:absolute;top:0;left:-8%;width:116%;height:100%;object-fit:cover}
+.card-media .plate{position:absolute;inset:0;font-size:clamp(2rem,4vw,3.6rem)}
+.card-meta{display:flex;justify-content:space-between;gap:1rem;margin-top:1rem}
+.card-t{font-size:clamp(1.5rem,2.6vw,2.4rem);font-weight:540;letter-spacing:-.03em;line-height:1}
+.card-y{font-size:.875rem;color:var(--dim);white-space:nowrap}
+.card-r{margin-top:.35rem;font-size:.875rem;color:var(--dim)}
+.gal-progress{position:absolute;left:var(--pad);right:var(--pad);bottom:clamp(1.5rem,5vh,3rem);height:1px;background:var(--rule)}
+.gal-progress i{position:absolute;inset:0;background:var(--ink);transform:scaleX(0);transform-origin:0 50%}
+@media (max-width:760px){
+  .gallery{height:auto;overflow:visible}
+  .track{position:static;transform:none;flex-direction:column;gap:3rem;padding-bottom:4rem}
+  .card{width:100%}
+  .gal-progress{display:none}
+}
+
+/* Burbuja "Ver caso" que acompaña al cursor sobre las tarjetas */
+.bubble{position:fixed;left:0;top:0;z-index:35;width:5.5rem;height:5.5rem;margin:-2.75rem 0 0 -2.75rem;border-radius:50%;background:var(--ink);color:var(--bg);display:grid;place-items:center;font-size:.8125rem;font-weight:540;pointer-events:none;transform:scale(0)}
+@media (hover:none),(pointer:coarse){.bubble{display:none}}
+
+/* ── Caso ───────────────────────────────────────────────────────────────── */
+/* Las portadas son capturas de sitios: se muestran como pantalla enmarcada que crece, no de fondo */
+.case-top{padding:clamp(8rem,24vh,13rem) var(--pad) clamp(2rem,6vh,4rem)}
+.case-k{display:flex;justify-content:space-between;gap:1rem;margin-top:clamp(1.5rem,4vh,2.5rem);font-size:.9375rem;color:var(--dim)}
+.case-shot{overflow:hidden}
+.grow{width:100%;aspect-ratio:16/10;max-height:100svh;overflow:hidden;border-radius:6px;transform-origin:50% 0;background:var(--surface)}
+.grow img{width:100%;height:112%;object-fit:cover;object-position:top}
+.grow .plate{width:100%;height:100%}
+.case-h{font-size:clamp(3rem,11vw,11.5rem);font-weight:560;letter-spacing:-.055em;line-height:.84;margin-left:-.04em;max-width:12ch}
+.case-h>span{display:inline-block}
+.case-intro{padding:clamp(5rem,16vh,10rem) var(--pad)}
+.case-intro p{font-size:clamp(1.6rem,3.4vw,3.2rem);font-weight:500;letter-spacing:-.03em;line-height:1.12;max-width:24ch}
+.case-body{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.9fr);gap:clamp(2rem,5vw,6rem);padding:0 var(--pad)}
+.aside{position:sticky;top:6rem;align-self:start;display:grid;gap:1.25rem;font-size:.9375rem}
+.aside dt{color:var(--faint);font-size:.8125rem}
+.aside a{border-bottom:1px solid var(--rule)}
+.flow{display:grid;gap:clamp(3rem,10vh,6rem);padding-bottom:clamp(4rem,12vh,8rem)}
+.flow h2{font-size:.9375rem;font-weight:500;color:var(--dim);margin-bottom:1rem}
+.flow p{font-size:clamp(1.05rem,1.4vw,1.25rem);line-height:1.6;max-width:58ch}
+.frame{position:relative;aspect-ratio:16/10;overflow:hidden;border-radius:3px;background:var(--surface)}
+.frame img{position:absolute;left:0;top:-10%;width:100%;height:120%;object-fit:cover}
+.frame video,.grow video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.grow{position:relative}
+.frame-f figcaption{margin-top:.75rem;font-size:.8125rem;color:var(--dim)}
+/* El video de la tarjeta aparece sobre la captura solo mientras se lo mira */
+.card-media .hover-video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .6s var(--e)}
+.card-media.playing .hover-video{opacity:1}
+.phones{display:flex;justify-content:center;gap:clamp(1rem,4vw,3rem)}
+.phone{width:min(17rem,40vw);aspect-ratio:390/844;overflow:hidden;border-radius:clamp(1.2rem,2.4vw,2.2rem);border:1px solid var(--rule);background:var(--surface);box-shadow:0 30px 80px rgba(0,0,0,.45)}
+.phone img{width:100%;height:100%;object-fit:cover;object-position:top}
+.steps{list-style:none;padding:0;display:grid;gap:2rem}
+.steps b{display:block;font-weight:540;margin-bottom:.35rem}
+.metrics{display:grid;grid-template-columns:repeat(auto-fill,minmax(9rem,1fr));gap:2rem 1.5rem}
+.metrics b{display:block;font-size:clamp(2rem,4vw,3.6rem);font-weight:540;letter-spacing:-.04em;line-height:1;font-variant-numeric:tabular-nums}
+.metrics b.txt{font-size:clamp(1.05rem,1.5vw,1.3rem);letter-spacing:-.01em;line-height:1.3}
+.metrics span{font-size:.8125rem;color:var(--dim)}
+.next{position:relative;display:block;height:clamp(28rem,85svh,56rem);overflow:hidden;color:#f4f4f5}
+.next .media{position:absolute;inset:-10% 0}
+.next img{width:100%;height:100%;object-fit:cover;filter:brightness(.42) blur(2px)}
+.next .plate{position:absolute;inset:0}
+.next .shade{position:absolute;inset:0;background:linear-gradient(to top,rgba(8,8,9,.92),rgba(8,8,9,.25) 60%)}
+.next .t{position:absolute;left:var(--pad);right:var(--pad);bottom:clamp(1.5rem,6vh,4rem)}
+.next small{display:block;font-size:.9375rem;color:rgba(244,244,245,.72);margin-bottom:1rem}
+.next .case-h>span{transition:transform .9s var(--e)}
+@media (hover:hover){.next:hover .case-h>span{transform:translateX(1.5rem)}}
+@media (max-width:760px){.case-body{grid-template-columns:1fr}.aside{position:static}}
+
+/* ── Sobre mí ───────────────────────────────────────────────────────────── */
+.exp{list-style:none;padding:0;border-bottom:1px solid var(--rule)}
+.exp li{display:grid;grid-template-columns:8rem minmax(0,1fr) minmax(0,1.3fr);gap:1.5rem;padding:1.5rem 0;border-top:1px solid var(--rule)}
+.exp .y{color:var(--dim);font-variant-numeric:tabular-nums}
+.exp .r{font-size:1.25rem;font-weight:540;letter-spacing:-.015em;line-height:1.2}
+.exp .s{color:var(--dim);font-size:.9375rem}
+@media (max-width:760px){.exp li{grid-template-columns:1fr;gap:.4rem}}
+
+/* ── Pie: el contacto, en todas las páginas ─────────────────────────────── */
+.foot{padding:clamp(6rem,20vh,12rem) var(--pad) var(--pad)}
+.foot small{font-size:.9375rem;color:var(--dim)}
+.mail{display:inline-block;margin-top:1rem;font-size:clamp(1.8rem,7.4vw,8rem);font-weight:560;letter-spacing:-.05em;line-height:1;white-space:nowrap}
+.mail .chm{padding-bottom:.1em}
+.foot-row{display:flex;flex-wrap:wrap;justify-content:space-between;gap:1rem 2rem;margin-top:clamp(3rem,10vh,6rem);padding-top:1.25rem;border-top:1px solid var(--rule);font-size:.9375rem;color:var(--dim)}
+.foot-row nav{display:flex;gap:1.5rem;color:var(--ink)}
+.magnet{display:inline-block;will-change:transform}
+
+/* ── Transiciones entre páginas ─────────────────────────────────────────── */
+::view-transition-old(root){animation:.45s cubic-bezier(.7,0,.84,0) both vt-out}
+::view-transition-new(root){animation:.9s cubic-bezier(.16,1,.3,1) .08s both vt-in}
+@keyframes vt-out{to{opacity:0;transform:translateY(-4vh)}}
+@keyframes vt-in{from{opacity:0;transform:translateY(6vh)}}
+::view-transition-group(title),::view-transition-group(cover),::view-transition-group(page-title){animation-duration:.95s;animation-timing-function:cubic-bezier(.16,1,.3,1)}
+::view-transition-old(title),::view-transition-new(title),::view-transition-old(page-title),::view-transition-new(page-title){object-fit:contain;object-position:0 0}
+::view-transition-old(cover),::view-transition-new(cover){object-fit:cover}
+
+@media (max-width:760px){
+  .hero-row{flex-direction:column;align-items:flex-start}
+  .hero-meta{text-align:left}
+  .row{grid-template-columns:1fr}
+  .row-m{text-align:left}
+}
+@media (prefers-reduced-motion:reduce){
+  *{transition-duration:.01ms!important}
+  ::view-transition-group(*),::view-transition-old(*),::view-transition-new(*){animation:none!important}
+}
+</style>
+</head>
+<body>
+<header class="hud">
+  <a class="brand" href="#/" data-nav="">Mateo Sonzogni</a>
+  <nav aria-label="Principal">
+    <a href="#/obra" data-nav="obra"><span class="roll"><span data-t="Obra">Obra</span></span></a>
+    <a href="#/sobre-mi" data-nav="sobre-mi"><span class="roll"><span data-t="Sobre mí">Sobre mí</span></span></a>
+    <a href="#/contacto" data-nav="contacto"><span class="roll"><span data-t="Contacto">Contacto</span></span></a>
+  </nav>
+</header>
+<main id="main" tabindex="-1"></main>
+<div class="preview" aria-hidden="true"><div class="pv-in"><div class="strip"></div></div></div>
+<div class="bubble" aria-hidden="true">Ver caso</div>
+<p class="sr" aria-live="polite" id="live"></p>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+<script src="https://unpkg.com/lenis@1.1.13/dist/lenis.min.js"></script>
+<script src="capturas/manifest.js" onerror="window.CAPTURAS = {}"></script>
+<script src="demo-data.js"></script>
+<script>
+'use strict'
+const D = window.DATA, P = D.projects
+const bySlug = Object.fromEntries(P.map(p => [p.slug, p]))
+const $ = (s, r = document) => r.querySelector(s)
+const $$ = (s, r = document) => [...r.querySelectorAll(s)]
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]))
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches
+const fine = matchMedia('(hover: hover) and (pointer: fine)').matches
+const STATUS = { LIVE: 'En producción', WIP: 'En desarrollo', ARCHIVED: 'Archivado' }
+const METRIC = { lcp: 'LCP', performanceScore: 'Performance', accessibilityScore: 'Accesibilidad', bestPracticesScore: 'Buenas prácticas', seoScore: 'SEO', bundleSizeKb: 'Bundle KB', localeCount: 'Idiomas', languages: 'Idiomas', commits: 'Commits', averageLatencyMs: 'Latencia ms', encryptionLayers: 'Capas de cifrado', vectorDimensions: 'Dimensiones', localModels: 'Modelos locales', drawCalls: 'Draw calls', fpsTarget: 'FPS objetivo', graphNodes: 'Nodos', vaultNotesParsed: 'Notas' }
+gsap.registerPlugin(ScrollTrigger)
+const main = $('#main')
+
+/* ── Scroll con inercia y velocidad ─────────────────────────────────────── */
+let lenis = null
+if (!reduce) {
+  lenis = new Lenis({ lerp: 0.1 })
+  gsap.ticker.add(t => lenis.raf(t * 1000)); gsap.ticker.lagSmoothing(0)
+  lenis.on('scroll', ScrollTrigger.update)
+}
+const toTop = () => lenis ? lenis.scrollTo(0, { immediate: true, force: true }) : scrollTo(0, 0)
+
+/* ── Utilidades de texto: líneas y letras con máscara ───────────────────── */
+function splitLines(el) {
+  const words = el.textContent.trim().split(/\s+/)
+  el.innerHTML = words.map(w => `<span class="w">${esc(w)}</span>`).join(' ')
+  const lines = []
+  let top = null
+  $$('.w', el).forEach(w => { if (w.offsetTop !== top) { lines.push([]); top = w.offsetTop } lines.at(-1).push(w.textContent) })
+  // Un espacio entre líneas: sin él, un lector de pantalla junta la última palabra de una con la primera de la otra
+  el.innerHTML = lines.map(l => `<span class="ln"><span>${esc(l.join(' '))}</span></span>`).join(' ')
+  return $$('.ln > span', el)
+}
+const splitChars = text => [...text].map(c => c === ' ' ? ' ' : `<span class="chm"><span class="ch">${esc(c)}</span></span>`).join('')
+const plate = (p, cls = '') => `<div class="plate ${cls}" style="background:color-mix(in srgb,${p.cover?.tint ?? '#2a2a30'} 22%,#141416)">${esc(p.title)}</div>`
+
+/* ── Capturas reales (docs/rediseno/capturar.mjs); sin ellas, la portada de la base ── */
+const C = window.CAPTURAS || {}
+const cap = slug => C[slug] || null
+const capPath = (slug, file) => `capturas/${slug}/${file}`
+// Eros no tiene sitio público: su portada es Job Hunter dentro de la consola, y su video, el recorrido por sus módulos
+const HERO = { eros: 'admin-hunter' }, MAIN_VIDEO = { eros: 'admin-recorrido' }, SKIP = ['admin-proyectos']
+const heroSrc = p => {
+  const shot = cap(p.slug)?.shots.includes(HERO[p.slug] ?? 'hero') ? HERO[p.slug] ?? 'hero' : null
+  return shot ? capPath(p.slug, shot + '.webp') : p.cover?.src
+}
+const mainVideo = slug => { const v = MAIN_VIDEO[slug] ?? 'scroll'; return cap(slug)?.videos.includes(v) ? v : null }
+const vid = (slug, name) => ({ webm: capPath(slug, name + '.webm'), mp4: capPath(slug, name + '.mp4'), poster: capPath(slug, name + '-poster.webp') })
+const videoTag = (v, { autoplay = false, cls = '', name = '' } = {}) =>
+  `<video class="${cls}" muted loop playsinline ${autoplay && !reduce ? 'autoplay' : ''} preload="${autoplay ? 'auto' : 'none'}" poster="${v.poster}"${name ? ` style="view-transition-name:${name}"` : ''}><source src="${v.webm}" type="video/webm"><source src="${v.mp4}" type="video/mp4"></video>`
+const media = (p, eager) => heroSrc(p) ? `<img src="${heroSrc(p)}" alt="${esc(p.cover?.alt ?? p.title)}" ${eager ? '' : 'loading="lazy"'} decoding="async">` : plate(p)
+// Nombres legibles de cada pieza capturada, para el pie de cada imagen del caso
+// Orden de lectura del caso: el recorrido de un visitante real, no el alfabético
+const ORDER = ['menu', 'carta', 'atardeceres', 'proyectos', 'proyecto', 'blog', 'portal', 'claro', 'admin-hunter', 'admin-contenido', 'admin-radar', 'admin-dashboard', 'admin-paleta']
+const CAPTION = {
+  'admin-hunter': 'Job Hunter: cada vacante evaluada con IA (datos de ejemplo)', 'admin-contenido': 'Contenido omnicanal: un tema, cuatro formatos',
+  'admin-radar': 'TrendRadar: temas técnicos afines al stack', 'admin-dashboard': 'Eros dentro de la consola del portafolio', 'admin-paleta': 'Paleta de comandos',
+  'admin-recorrido': 'Recorrido por los tres módulos', menu: 'La carta, entrando desde el QR', carta: 'Una categoría de la carta', atardeceres: 'Atardeceres', proyectos: 'Obras terminadas', proyecto: 'El caso de una obra', blog: 'El blog', portal: 'El portal público de reservas', claro: 'Modo claro', intro: 'La entrada del sitio', idiomas: 'El mismo sitio en español, inglés y alemán' }
+
+/* ── Vistas ─────────────────────────────────────────────────────────────── */
+const foot = () => `<footer class="foot" id="contacto">
+  <small>¿Hablamos? Respondo en el día.</small><br>
+  <a class="mail magnet" href="mailto:${esc(D.contact.email)}" data-copy>${splitChars(D.contact.email)}</a>
+  <div class="foot-row"><span><i class="dot"></i>${esc(D.contact.availability.split('·')[0].trim())} · Río Negro, AR · <time class="clock">--:--</time></span>
+    <nav aria-label="Redes"><a class="magnet" href="${D.contact.github}" target="_blank" rel="noopener"><span class="roll"><span data-t="GitHub">GitHub</span></span></a><a class="magnet" href="${D.contact.linkedin}" target="_blank" rel="noopener"><span class="roll"><span data-t="LinkedIn">LinkedIn</span></span></a><a class="magnet" href="https://mateogs.tech/cv/CV-ES-Mateo-Sonzogni-ATS.pdf" target="_blank" rel="noopener"><span class="roll"><span data-t="CV">CV</span></span></a></nav></div>
+</footer>`
+
+function vHome() {
+  const feat = P.filter(p => p.featured)
+  return `<section class="hero">
+    <h1 class="hero-name" tabindex="-1"><span class="hn-l">${splitChars('Mateo')}</span><br><span class="hn-l">${splitChars('Sonzogni')}</span><span class="sq"></span></h1>
+    <div class="hero-row"><p data-lines>${esc(D.headline)}.</p><span class="hero-meta">${esc(D.about.role)}<br><i class="dot"></i>${esc(D.contact.availability.split('·')[0].trim())}</span></div>
+  </section>
+  <section class="sec" aria-labelledby="h-sel">
+    <div class="sec-h"><h2 id="h-sel">Obra seleccionada</h2><a href="#/obra"><span class="roll"><span data-t="Ver toda la obra (${P.length})">Ver toda la obra (${P.length})</span></span></a></div>
+    <ul class="rows">${feat.map(p => `<li><a class="row" href="#/obra/${p.slug}" data-slug="${p.slug}"><span class="row-t"><span>${esc(p.title)}</span></span><span class="row-m">${STATUS[p.status]} · ${p.year}</span></a></li>`).join('')}</ul>
+  </section>
+  <section class="sec"><p class="statement" data-scrub>${esc(D.about.engineering_philosophy)}</p></section>
+  ${foot()}`
+}
+
+function vObra() {
+  return `<section class="page-head"><h1 class="page-title" tabindex="-1"><span class="pt" style="view-transition-name:page-title">Obra</span><sup>${P.length}</sup></h1></section>
+  <section class="gallery" aria-label="Proyectos">
+    <div class="track">${P.map((p, i) => `<a class="card" href="#/obra/${p.slug}" data-slug="${p.slug}" data-view>
+      <div class="card-media">${media(p, i < 2)}${mainVideo(p.slug) ? videoTag(vid(p.slug, mainVideo(p.slug)), { cls: 'hover-video' }) : ''}</div>
+      <div class="card-meta"><span class="card-t">${esc(p.title)}</span><span class="card-y">${p.year}</span></div>
+      <p class="card-r">${STATUS[p.status]} · ${esc(p.role)}</p></a>`).join('')}</div>
+    <div class="gal-progress" aria-hidden="true"><i></i></div>
+  </section>
+  ${foot()}`
+}
+
+function vCase(slug) {
+  const p = bySlug[slug]
+  if (!p) return vNotFound()
+  const next = P[(P.indexOf(p) + 1) % P.length]
+  // Con capturas: cada pieza real en su marco, con pie. Sin ellas, recortes de la portada.
+  const c = cap(slug)
+  const mainV = mainVideo(slug)
+  const extras = c ? [
+    ...c.videos.filter(v => v !== mainV).map(v => ({ v })),
+    ...c.shots.filter(s => s !== 'hero' && !s.startsWith('movil') && !SKIP.includes(s)).sort((a, b) => ORDER.indexOf(a) - ORDER.indexOf(b)).map(s => ({ s })),
+  ] : []
+  const piece = x => `<figure class="frame-f"><div class="frame">${x.v ? videoTag(vid(slug, x.v), { cls: 'in-view' }) : `<img src="${capPath(slug, x.s + '.webp')}" alt="${esc(CAPTION[x.s] ?? x.s)}" loading="lazy">`}</div><figcaption>${esc(CAPTION[x.v ?? x.s] ?? '')}</figcaption></figure>`
+  const fallback = [['left top', 1.35], ['right center', 1.5]]
+  const crop = i => extras[i] ? piece(extras[i]) : (!c && p.cover && fallback[i]) ? `<figure class="frame"><img src="${p.cover.src}" alt="" loading="lazy" style="object-position:${fallback[i][0]};transform:scale(${fallback[i][1]})"></figure>` : ''
+  const rest = extras.slice(2).map(piece).join('')
+  const phones = c ? c.shots.filter(s => s.startsWith('movil')) : []
+  const grow = mainV ? videoTag(vid(slug, mainV), { autoplay: true, name: 'cover' })
+    : heroSrc(p) ? `<img src="${heroSrc(p)}" alt="${esc(p.cover?.alt ?? p.title)}" style="view-transition-name:cover">`
+    : `<div class="plate" style="view-transition-name:cover;background:color-mix(in srgb,#2a2a30 22%,#141416)">${esc(p.title)}</div>`
+  const metrics = p.metrics ? Object.entries(p.metrics).map(([k, v]) => {
+    const n = typeof v === 'number' ? v : /^\d+(\.\d+)?s$/.test(v) ? parseFloat(v) : null
+    return `<div><b class="${n == null ? 'txt' : ''}" ${n != null ? `data-count="${n}" data-suf="${typeof v === 'string' ? 's' : ''}"` : ''}>${esc(Array.isArray(v) ? v.join(' · ') : v)}</b><span>${METRIC[k] ?? k}</span></div>`
+  }).join('') : ''
+  return `<section class="case-top">
+    <h1 class="case-h" tabindex="-1"><span style="view-transition-name:title">${esc(p.title)}</span></h1>
+    <div class="case-k"><span>${esc(p.role)}</span><span><i class="dot ${p.status}"></i>${STATUS[p.status]} · ${p.year}</span></div>
+  </section>
+  <section class="case-shot"><div class="grow" data-grow>${grow}</div></section>
+  <section class="case-intro"><p data-lines>${esc(p.summary)}</p></section>
+  <section class="case-body">
+    <dl class="aside">
+      <div><dt>Rol</dt><dd>${esc(p.role)}</dd></div>
+      <div><dt>Año</dt><dd>${p.year}</dd></div>
+      ${p.org ? `<div><dt>Cliente</dt><dd>${esc(p.org)}</dd></div>` : ''}
+      <div><dt>Estado</dt><dd><i class="dot ${p.status}"></i>${STATUS[p.status]}</dd></div>
+      <div><dt>Stack</dt><dd>${esc(p.techs.join(', '))}</dd></div>
+      <div><dt>Enlaces</dt><dd>${p.url ? `<a href="${p.url}" target="_blank" rel="noopener">Sitio ↗</a> ` : ''}${p.repo ? `<a href="${p.repo}" target="_blank" rel="noopener">Código ↗</a>` : ''}</dd></div>
+    </dl>
+    <div class="flow">
+      ${p.brief ? `<div><h2>El encargo</h2><p data-lines>${esc(p.brief)}</p></div>` : ''}
+      ${crop(0)}
+      ${p.steps.length ? `<div><h2>Proceso</h2><ol class="steps">${p.steps.map(s => `<li><b>${esc(s.title.replace(/^\d+\s*·\s*/, '').replace(/^./, ch => ch.toUpperCase()))}</b><p data-lines>${esc(s.body)}</p></li>`).join('')}</ol></div>` : ''}
+      ${crop(1)}
+      ${p.outcome ? `<div><h2>Resultado</h2><p data-lines>${esc(p.outcome)}</p></div>` : ''}
+      ${rest}
+      ${metrics ? `<div><h2>Métricas</h2><div class="metrics">${metrics}</div></div>` : ''}
+      ${phones.length ? `<div><h2>En el teléfono</h2><div class="phones">${phones.map((s, i) => `<figure class="phone" data-phone="${i}"><img src="${capPath(slug, s + '.webp')}" alt="${esc(p.title)} en un teléfono" loading="lazy"></figure>`).join('')}</div></div>` : ''}
+    </div>
+  </section>
+  <a class="next" href="#/obra/${next.slug}" data-slug="${next.slug}">
+    <div class="media" data-parallax>${heroSrc(next) ? `<img src="${heroSrc(next)}" alt="" loading="lazy">` : plate(next)}</div><div class="shade"></div>
+    <div class="t"><small>Siguiente</small><p class="case-h"><span>${esc(next.title)}</span></p></div>
+  </a>
+  ${foot()}`
+}
+
+function vAbout() {
+  const yr = d => d ? d.slice(0, 4) : 'hoy'
+  return `<section class="page-head"><h1 class="page-title" tabindex="-1"><span class="pt" style="view-transition-name:page-title">Sobre mí</span></h1></section>
+  <section class="sec" style="padding-top:0"><p class="statement" data-scrub>${esc(D.about.engineering_philosophy)}</p></section>
+  <section class="sec"><div class="sec-h"><h2>Hacia dónde voy</h2></div><p class="statement" style="font-size:clamp(1.3rem,2.4vw,2.2rem);max-width:34ch" data-lines>${esc(D.about.professional_goal)}</p></section>
+  <section class="sec"><div class="sec-h"><h2>Trayectoria</h2><span>${esc(D.about.languages)}</span></div>
+    <ul class="exp">${D.experience.map(e => `<li data-reveal><span class="y">${yr(e.startedAt)}–${e.endedAt ? yr(e.endedAt) : 'hoy'}</span><span class="r">${esc(e.role)}${e.org ? ` — ${esc(e.org)}` : ''}</span><span class="s">${esc(e.summary)}</span></li>`).join('')}</ul>
+  </section>
+  ${foot()}`
+}
+const vNotFound = () => `<section class="page-head"><h1 class="page-title" tabindex="-1">404</h1><p style="margin-top:2rem"><a href="#/">Volver al inicio</a></p></section>`
+
+/* ── Movimiento de cada página ──────────────────────────────────────────── */
+function revealLines(root) {
+  $$('[data-lines]', root).forEach(el => {
+    const lines = splitLines(el)
+    if (reduce) return
+    gsap.from(lines, { yPercent: 115, duration: 1.15, ease: 'expo.out', stagger: 0.085, scrollTrigger: { trigger: el, start: 'top 88%' } })
+  })
+  $$('[data-reveal]', root).forEach(el => { if (!reduce) gsap.from(el, { y: 40, opacity: 0, duration: 1, ease: 'expo.out', scrollTrigger: { trigger: el, start: 'top 92%' } }) })
+  // Las palabras se encienden a medida que se lee
+  $$('[data-scrub]', root).forEach(el => {
+    el.innerHTML = el.textContent.trim().split(/\s+/).map(w => `<span class="w">${esc(w)}</span>`).join(' ')
+    if (reduce) return
+    gsap.fromTo($$('.w', el), { opacity: 0.16 }, { opacity: 1, ease: 'none', stagger: 0.1, scrollTrigger: { trigger: el, start: 'top 78%', end: 'bottom 42%', scrub: true } })
+  })
+  $$('[data-count]', root).forEach(el => {
+    if (reduce) return
+    const to = +el.dataset.count, dec = (el.dataset.count.split('.')[1] || '').length, suf = el.dataset.suf, o = { v: 0 }
+    gsap.to(o, { v: to, duration: 1.6, ease: 'power3.out', scrollTrigger: { trigger: el, start: 'top 90%' }, onUpdate: () => { el.textContent = o.v.toFixed(dec) + suf } })
+  })
+  $$('[data-parallax]', root).forEach(m => { if (!reduce) gsap.fromTo(m, { yPercent: -6 }, { yPercent: 6, ease: 'none', scrollTrigger: { trigger: m.parentElement, start: 'top bottom', end: 'bottom top', scrub: true } }) })
+  // La pantalla del caso arranca con margen y crece hasta el borde mientras baja; la captura se desliza adentro
+  $$('[data-grow]', root).forEach(g => {
+    if (reduce) return
+    gsap.fromTo(g, { scale: 0.88, borderRadius: 6 }, { scale: 1, borderRadius: 0, ease: 'none', scrollTrigger: { trigger: g, start: 'top 85%', end: 'top 10%', scrub: true } })
+    const img = $('img', g)
+    if (img) gsap.fromTo(img, { yPercent: 0 }, { yPercent: -8, ease: 'none', scrollTrigger: { trigger: g, start: 'top bottom', end: 'bottom top', scrub: true } })
+  })
+  // Los videos del caso corren solo mientras se ven
+  const io = new IntersectionObserver(es => es.forEach(e => { if (reduce) return; e.isIntersecting ? e.target.play().catch(() => {}) : e.target.pause() }), { threshold: 0.35 })
+  $$('video.in-view', root).forEach(v => io.observe(v))
+  // Los teléfonos suben a distinto ritmo
+  $$('[data-phone]', root).forEach(ph => { if (!reduce) gsap.fromTo(ph, { y: ph.dataset.phone % 2 ? 90 : 20 }, { y: ph.dataset.phone % 2 ? -30 : -10, ease: 'none', scrollTrigger: { trigger: ph.parentElement, start: 'top bottom', end: 'bottom top', scrub: true } }) })
+  $$('.frame img', root).forEach(img => { if (!reduce) gsap.fromTo(img, { yPercent: -6 }, { yPercent: 6, ease: 'none', scrollTrigger: { trigger: img.parentElement, start: 'top bottom', end: 'bottom top', scrub: true } }) })
+}
+
+// Galería: el scroll vertical la desplaza en horizontal; las imágenes se mueven adentro de su marco
+function bindGallery(root) {
+  const gal = $('.gallery', root)
+  if (!gal || reduce || innerWidth <= 760) return
+  const track = $('.track', gal)
+  const dist = () => track.scrollWidth - innerWidth
+  const tween = gsap.to(track, { x: () => -dist(), ease: 'none' })
+  ScrollTrigger.create({ trigger: gal, start: 'top top', end: () => '+=' + dist(), pin: true, scrub: 0.8, animation: tween, invalidateOnRefresh: true,
+    onUpdate: self => gsap.set($('.gal-progress i', gal), { scaleX: self.progress }) })
+  $$('.card-media img', gal).forEach(img => gsap.fromTo(img, { xPercent: -5 }, { xPercent: 5, ease: 'none', scrollTrigger: { trigger: img.closest('.card'), containerAnimation: tween, start: 'left right', end: 'right left', scrub: true } }))
+  // La velocidad inclina apenas las tarjetas, y vuelven a su lugar al frenar
+  const skew = gsap.quickTo($$('.card', gal), 'skewX', { duration: 0.6, ease: 'power3' })
+  lenis?.on('scroll', ({ velocity }) => { if (gal.isConnected) skew(gsap.utils.clamp(-6, 6, -velocity * 0.18)) })
+}
+
+// Vista previa con resorte para la lista del inicio
+const pv = $('.preview'), pvIn = $('.pv-in'), strip = $('.strip')
+strip.innerHTML = P.map(p => heroSrc(p) ? `<img src="${heroSrc(p)}" alt="" data-slug="${p.slug}">` : plate(p)).join('')
+let mx = 0, my = 0, px = 0, py = 0, pvOn = false, pvIdx = -1
+addEventListener('pointermove', e => { mx = e.clientX; my = e.clientY }, { passive: true })
+gsap.ticker.add(() => {
+  if (!pvOn && !bubbleOn) return
+  const dx = mx - px
+  px += dx * 0.14; py += (my - py) * 0.14
+  if (pvOn) pv.style.transform = `translate3d(${Math.min(px + 32, innerWidth - pv.offsetWidth - 24)}px, ${py}px, 0) translateY(-50%) rotate(${gsap.utils.clamp(-8, 8, dx * 0.06)}deg)`
+  if (bubbleOn) bubble.style.transform = `translate3d(${px}px, ${py}px, 0) scale(${bubbleScale})`
+})
+function bindRows(root) {
+  const list = $('.rows', root)
+  if (!list || !fine) return
+  list.addEventListener('pointerover', e => {
+    const a = e.target.closest('.row'); if (!a) return
+    const i = P.findIndex(p => p.slug === a.dataset.slug)
+    if (!pvOn) { px = mx; py = my; pvOn = true; gsap.to(pvIn, { opacity: 1, scale: 1, duration: 0.5, ease: 'expo.out' }) }
+    if (i !== pvIdx) { gsap.to(strip, { y: -i * pvIn.offsetHeight, duration: pvIdx < 0 ? 0 : 0.7, ease: 'expo.out' }); pvIdx = i }
+  })
+  list.addEventListener('pointerleave', hidePreview)
+}
+function hidePreview() { if (!pvOn) return; pvOn = false; pvIdx = -1; gsap.to(pvIn, { opacity: 0, scale: 0.8, duration: 0.35, ease: 'power2.out' }) }
+
+// Burbuja "Ver caso" sobre las tarjetas de la galería
+const bubble = $('.bubble')
+let bubbleOn = false, bubbleScale = 0
+function bindBubble(root) {
+  // El video de cada tarjeta arranca al pasar y se funde sobre la captura cuando ya tiene cuadros
+  $$('.card', root).forEach(card => {
+    const m = $('.card-media', card), v = $('.hover-video', card)
+    if (!v || reduce) return
+    v.addEventListener('playing', () => m.classList.add('playing'))
+    card.addEventListener('pointerenter', () => { v.preload = 'auto'; v.play().catch(() => {}) })
+    card.addEventListener('pointerleave', () => { m.classList.remove('playing'); setTimeout(() => v.pause(), 500) })
+  })
+  if (!fine || reduce) return
+  $$('[data-view]', root).forEach(el => {
+    el.addEventListener('pointerenter', () => { if (!bubbleOn) { px = mx; py = my } bubbleOn = true; gsap.to({ s: bubbleScale }, { s: 1, duration: 0.5, ease: 'expo.out', onUpdate() { bubbleScale = this.targets()[0].s } }) })
+    el.addEventListener('pointerleave', () => gsap.to({ s: bubbleScale }, { s: 0, duration: 0.3, ease: 'power2.in', onUpdate() { bubbleScale = this.targets()[0].s }, onComplete: () => { if (bubbleScale === 0) bubbleOn = false } }))
+  })
+}
+
+// Imanes: lo que se toca se acerca un poco al cursor y vuelve con rebote
+function bindMagnets(root) {
+  if (!fine || reduce) return
+  $$('.magnet', root).forEach(el => {
+    const x = gsap.quickTo(el, 'x', { duration: 0.6, ease: 'power3' }), y = gsap.quickTo(el, 'y', { duration: 0.6, ease: 'power3' })
+    const k = el.classList.contains('mail') ? 0.12 : 0.35
+    el.addEventListener('pointermove', e => { const r = el.getBoundingClientRect(); x((e.clientX - r.left - r.width / 2) * k); y((e.clientY - r.top - r.height / 2) * k) })
+    el.addEventListener('pointerleave', () => gsap.to(el, { x: 0, y: 0, duration: 1, ease: 'elastic.out(1, .4)' }))
+  })
+}
+
+// El email se copia: sus letras ruedan una por una
+function bindMail(root) {
+  const a = $('[data-copy]', root)
+  if (!a) return
+  a.addEventListener('click', e => {
+    e.preventDefault()
+    navigator.clipboard?.writeText(D.contact.email).catch(() => {})
+    $('#live').textContent = 'Email copiado'
+    if (reduce) return
+    gsap.timeline()
+      .to($$('.ch', a), { yPercent: -110, duration: 0.45, ease: 'expo.in', stagger: 0.012 })
+      .set($$('.ch', a), { yPercent: 110 })
+      .to($$('.ch', a), { yPercent: 0, duration: 0.7, ease: 'expo.out', stagger: 0.012 })
+  })
+}
+
+/* ── Lo que tocás se transforma en la página ────────────────────────────── */
+// Antes de cada salto se nombra lo tocado; la página nueva trae su par con el mismo nombre.
+function prepareTravel(e) {
+  const a = e.target.closest('a[href^="#/"]')
+  if (!a || reduce) return
+  $$('[style*="view-transition-name"]', main).forEach(el => { el.style.viewTransitionName = 'none' })
+  // El contenedor que recorta, no el texto: así la foto de salida no trae la copia de abajo
+  if (a.matches('.hud nav a') && a.dataset.nav !== 'contacto') $('.roll', a).style.viewTransitionName = 'page-title'
+  if (a.matches('.row')) {
+    $('.row-t > span', a).style.viewTransitionName = 'title'
+    const i = P.findIndex(p => p.slug === a.dataset.slug), shot = strip.children[i]
+    if (pvOn && shot) shot.style.viewTransitionName = 'cover'
+  }
+  if (a.matches('.card')) { $('.card-t', a).style.viewTransitionName = 'title'; $('.card-media > *', a).style.viewTransitionName = 'cover' }
+  if (a.matches('.next')) { $('.case-h > span', a).style.viewTransitionName = 'title'; $('.media > *', a).style.viewTransitionName = 'cover' }
+}
+document.addEventListener('click', prepareTravel, true)
+
+function render() {
+  const [a, b] = location.hash.replace(/^#\/?/, '').split('/').filter(Boolean)
+  // Ya se capturó el estado viejo: lo prestado fuera de la página no puede llegar al nuevo
+  $$('[style*="view-transition-name"]').forEach(el => { if (!main.contains(el) && !el.matches('.hud')) el.style.viewTransitionName = '' })
+  ScrollTrigger.getAll().forEach(t => t.kill())
+  hidePreview(); bubbleOn = false; bubbleScale = 0; bubble.style.transform = 'scale(0)'
+  main.innerHTML = !a || a === 'contacto' ? vHome() : a === 'obra' && b ? vCase(b) : a === 'obra' ? vObra() : a === 'sobre-mi' ? vAbout() : vNotFound()
+  $$('.hud nav a').forEach(l => l.toggleAttribute('aria-current', l.dataset.nav === (a || '') && a !== 'contacto'))
+  toTop()
+  revealLines(main); bindGallery(main); bindRows(main); bindBubble(main); bindMagnets(main); bindMail(main); clock()
+  // Un video insertado por código no siempre respeta autoplay: se lo arranca explícitamente, siempre mudo
+  if (!reduce) $$('video[autoplay]', main).forEach(v => { v.muted = true; v.play().catch(() => {}) })
+  ScrollTrigger.refresh()
+  if (a === 'contacto') requestAnimationFrame(() => lenis ? lenis.scrollTo('#contacto', { duration: 1.4 }) : $('#contacto').scrollIntoView())
+  $('h1', main)?.focus({ preventScroll: true })
+  document.title = (a === 'obra' && b ? bySlug[b]?.title + ' — ' : a === 'obra' ? 'Obra — ' : a === 'sobre-mi' ? 'Sobre mí — ' : '') + 'Mateo Sonzogni'
+  $('#live').textContent = document.title
+}
+let first = true
+function route() {
+  if (!first && document.startViewTransition && !reduce) {
+    const vt = document.startViewTransition(render)
+    vt.ready.catch(() => {}); vt.finished.catch(() => {})
+  } else render()
+  if (first) intro()
+  first = false
+}
+addEventListener('hashchange', route)
+
+/* ── Primera visita: el nombre aparece y viaja hasta su lugar ───────────── */
+function intro() {
+  const hero = $('.hero-name', main)
+  const chars = hero ? $$('.ch', hero) : []
+  let seen = false
+  try { seen = !!sessionStorage.getItem('mov-visited'); sessionStorage.setItem('mov-visited', '1') } catch {}
+  if (reduce || !hero) return
+  const rest = $$('.hero-row, .sec, .foot, .hud', document)
+  if (seen) {
+    gsap.from(chars, { yPercent: 110, duration: 1.1, ease: 'expo.out', stagger: 0.025 })
+    gsap.from(rest, { opacity: 0, y: 20, duration: 1, ease: 'expo.out', delay: 0.4, clearProps: 'all' })
+    return
+  }
+  lenis?.stop()
+  const loader = document.createElement('div')
+  loader.className = 'loader'
+  loader.innerHTML = `<p class="name">${splitChars('Mateo')}<br>${splitChars('Sonzogni')}</p><span class="count">0</span><i class="bar"></i>`
+  document.body.append(loader)
+  const name = $('.name', loader), count = $('.count', loader)
+  gsap.set(hero, { opacity: 0 }); gsap.set(rest, { opacity: 0 })
+  const o = { v: 0 }
+  gsap.timeline({ onComplete: () => { loader.remove(); lenis?.start() } })
+    .from($$('.ch', name), { yPercent: 110, duration: 1, ease: 'expo.out', stagger: 0.035 })
+    .to(o, { v: 100, duration: 1.5, ease: 'power2.inOut', onUpdate: () => { count.textContent = Math.round(o.v) } }, 0)
+    .to($('.bar', loader), { scaleX: 1, duration: 1.5, ease: 'power2.inOut' }, 0)
+    .add(() => {
+      // El nombre del loader viaja y crece hasta ocupar el lugar del nombre del inicio
+      const a = name.getBoundingClientRect(), b = hero.getBoundingClientRect()
+      const s = parseFloat(getComputedStyle(hero).fontSize) / parseFloat(getComputedStyle(name).fontSize)
+      gsap.to(name, { x: b.left - a.left, y: b.top - a.top, scale: s, duration: 1.15, ease: 'expo.inOut' })
+      gsap.to([count, $('.bar', loader)], { opacity: 0, duration: 0.4 })
+      gsap.to(loader, { backgroundColor: 'rgba(11,11,12,0)', duration: 0.6, delay: 0.55 })
+      gsap.set(hero, { opacity: 1, delay: 1.15 }); gsap.set(name, { opacity: 0, delay: 1.15 })
+      gsap.to(rest, { opacity: 1, duration: 1, ease: 'power2.out', delay: 0.9, stagger: 0.08 })
+    }, 1.6)
+    .to({}, { duration: 1.2 })
+  loader.addEventListener('click', () => gsap.globalTimeline.getChildren(false, false, true).forEach(t => t.progress?.(1)))
+}
+
+function clock() { const el = $('.clock', main); if (el) el.textContent = new Intl.DateTimeFormat('es-AR', { timeZone: 'America/Argentina/Buenos_Aires', hour: '2-digit', minute: '2-digit', hour12: false }).format(new Date()) }
+setInterval(clock, 30000)
+route()
+</script>
+</body>
+</html>

@@ -154,11 +154,24 @@ export class ApiClient {
     })
   }
 
-  async updateMediaRole(id, role) {
+  /** PATCH parcial: el server actualiza solo las claves presentes (alt, caption, role, order, tint, viewport, poster, en: { alt?, caption? }). */
+  async updateMedia(id, fields) {
     return this.fetch(`media/${encodeURIComponent(id)}`, {
-      method: 'PUT',
+      method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ role, alt: 'Imagen de proyecto' }),
+      body: JSON.stringify(fields),
+    })
+  }
+
+  async updateMediaRole(id, role) {
+    return this.updateMedia(id, { role })
+  }
+
+  /** Póster nuevo para un video (multipart: poster + tint opcional). */
+  async uploadMediaPoster(id, formData) {
+    return this.fetch(`media/${encodeURIComponent(id)}/poster`, {
+      method: 'POST',
+      body: formData,
     })
   }
 

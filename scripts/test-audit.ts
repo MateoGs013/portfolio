@@ -104,11 +104,16 @@ async function run() {
     })
     if (res.status !== 200) throw new Error(`Status ${res.status}`)
     const data = await res.json()
-    if (!data.email) throw new Error('No email found')
+    // Sin Eros no se adivina una dirección: el contacto de la vacante o null.
+    if (res.headers.get('x-eros-source') === 'fallback') {
+      if (data.email !== null && typeof data.email !== 'string') throw new Error('email de respaldo inválido')
+      if (typeof data.email === 'string' && /^talent@/.test(data.email)) throw new Error('email adivinado')
+    }
+    else if (!data.email) throw new Error('No email found')
     console.log('   resolved email:', data.email)
   })
 
-  await test('POST /api/admin/hunter/jobs/0cf33b331de5caf9/apply-email -> 200', async () => {
+  await test('POST /api/admin/hunter/jobs/0cf33b331de5caf9/apply-email -> 200 con Eros, error sin Eros', async () => {
     const res = await fetch(`${base}/api/admin/hunter/jobs/0cf33b331de5caf9/apply-email`, {
       method: 'POST',
       headers: {
@@ -117,12 +122,21 @@ async function run() {
       },
       body: JSON.stringify({ to_email: 'test@epam.com', subject: 'Application', body: 'Hello' }),
     })
-    if (res.status !== 200) throw new Error(`Status ${res.status}`)
     const data = await res.json()
+    if (res.status >= 400) {
+      // Sin Eros no hay envío y no se finge uno: tiene que venir el error.
+      if (!data.error) throw new Error(`Status ${res.status} sin error`)
+      console.log('   sin Eros:', res.status, data.error)
+      return
+    }
+    if (res.status !== 200) throw new Error(`Status ${res.status}`)
     if (!data.ok) throw new Error('Apply not ok')
   })
 
-  // 5. Content endpoints
+  // 5. Content endpoints. Sin Eros, los posts son ejemplos generados desde los artículos de la base
+  // y publicar, despachar o cambiar el estado responde error (nunca un éxito en memoria).
+  let postId = ''
+  let erosOffline = false
   await test('GET /api/admin/content/posts -> 200', async () => {
     const res = await fetch(`${base}/api/admin/content/posts`, {
       headers: { Authorization: `Bearer ${token}` },
@@ -130,11 +144,14 @@ async function run() {
     if (res.status !== 200) throw new Error(`Status ${res.status}`)
     const posts = await res.json()
     if (!Array.isArray(posts)) throw new Error('Expected array')
-    console.log('   content posts length:', posts.length)
+    erosOffline = res.headers.get('X-Eros-Source') === 'fallback'
+    postId = posts[0]?.id ?? ''
+    if (!postId) throw new Error('No posts to test with')
+    console.log('   content posts length:', posts.length, erosOffline ? '(ejemplos desde la base)' : '(Eros)')
   })
 
-  await test('POST /api/admin/content/carousel/post_202610111633_fa798f/ticket -> 200', async () => {
-    const res = await fetch(`${base}/api/admin/content/carousel/post_202610111633_fa798f/ticket`, {
+  await test('POST /api/admin/content/carousel/:id/ticket -> 200 and HTML', async () => {
+    const res = await fetch(`${base}/api/admin/content/carousel/${encodeURIComponent(postId)}/ticket`, {
       method: 'POST',
       headers: { Authorization: `Bearer ${token}` },
     })
@@ -142,22 +159,42 @@ async function run() {
     const data = await res.json()
     if (!data.ticket) throw new Error('No carousel ticket')
 
-    const htmlRes = await fetch(`${base}/api/admin/content/carousel/post_202610111633_fa798f/html?ticket=${data.ticket}`)
+    const htmlRes = await fetch(`${base}/api/admin/content/carousel/${encodeURIComponent(postId)}/html?ticket=${data.ticket}`)
     if (htmlRes.status !== 200) throw new Error(`Carousel HTML Status ${htmlRes.status}`)
     const html = await htmlRes.text()
-    if (!html.includes('carousel') && !html.includes('Blindaje')) throw new Error('Invalid Carousel HTML')
+    if (!html.includes('carousel-stage')) throw new Error('Invalid Carousel HTML')
   })
 
-  await test('POST /api/admin/content/posts/post_202610111633_fa798f/publish-to-blog -> 201', async () => {
-    const res = await fetch(`${base}/api/admin/content/posts/post_202610111633_fa798f/publish-to-blog`, {
+  await test('POST /api/admin/content/posts/:id/publish-to-blog -> 201 with Eros, error without it', async () => {
+    const before = await fetch(`${base}/api/admin/articles`, { headers: { Authorization: `Bearer ${token}` } }).then(r => r.json())
+    const res = await fetch(`${base}/api/admin/content/posts/${encodeURIComponent(postId)}/publish-to-blog`, {
       method: 'POST',
       headers: { Authorization: `Bearer ${token}` },
     })
-    if (res.status !== 201) throw new Error(`Status ${res.status}`)
     const data = await res.json()
-    if (!data.article) throw new Error('No article returned')
-    console.log('   published article slug:', data.article.slug)
+    if (!erosOffline) {
+      if (res.status !== 201 || !data.article) throw new Error(`Status ${res.status}`)
+      console.log('   published article slug:', data.article.slug)
+      return
+    }
+    if (res.status < 400 || !data.error) throw new Error(`Expected an error without Eros, got ${res.status}`)
+    const after = await fetch(`${base}/api/admin/articles`, { headers: { Authorization: `Bearer ${token}` } }).then(r => r.json())
+    if (after.length !== before.length) throw new Error('An article was created without Eros')
+    console.log(`   sin Eros: ${res.status} ${data.error}`)
   })
+
+  for (const [method, path] of [['POST', 'publish'], ['PATCH', 'status']] as const) {
+    await test(`${method} /api/admin/content/posts/:id/${path} without Eros -> error`, async () => {
+      if (!erosOffline) return
+      const res = await fetch(`${base}/api/admin/content/posts/${encodeURIComponent(postId)}/${path}`, {
+        method,
+        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'published' }),
+      })
+      const data = await res.json()
+      if (res.status < 400 || !data.error) throw new Error(`Expected an error, got ${res.status}`)
+    })
+  }
 
   // 6. Radar endpoints
   await test('GET /api/admin/radar/trends -> 200', async () => {
