@@ -2,6 +2,8 @@ node_modules/
 .nuxt/
 .output/
 dist/
+# El build del admin nuevo (pnpm build:admin) se arma en la imagen del API.
+server/admin/dist/
 .env
 .env.*
 !.env.example

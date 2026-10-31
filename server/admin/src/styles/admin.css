@@ -1,0 +1,96 @@
+/* Hoja única del admin nuevo: Tailwind v4 con los tokens del sitio. source(none) evita escanear app/
+   y docs/: solo cuentan las clases de server/admin/src. */
+@import 'tailwindcss' source(none);
+@import './fonts.css';
+@import './tokens.css';
+
+@source '../**/*.{vue,ts,html}';
+
+@layer base {
+  html,
+  body {
+    background-color: var(--bg);
+    color: var(--ink);
+  }
+
+  body {
+    font-family: var(--font-sans);
+    font-size: 14px;
+    line-height: 1.45;
+    font-weight: 420;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  ::selection {
+    background-color: color-mix(in oklab, var(--sig) 32%, transparent);
+    color: var(--ink);
+  }
+
+  /* Un solo anillo de foco para todo: 2 px en --sig-text, separado 2 px. */
+  :focus-visible {
+    outline: 2px solid var(--sig-text);
+    outline-offset: 2px;
+  }
+
+  :focus:not(:focus-visible) {
+    outline: none;
+  }
+
+  button:not(:disabled),
+  [role='button']:not([aria-disabled='true']),
+  [role='switch'],
+  [role='tab'],
+  [role='option'],
+  [role='menuitem'],
+  summary {
+    cursor: pointer;
+  }
+
+  ::placeholder {
+    color: var(--faint);
+    opacity: 1;
+  }
+
+  dialog::backdrop {
+    background-color: var(--scrim);
+  }
+}
+
+/* Entrada escalonada de las filas: el índice llega como --i (`:style`, por CSSOM). */
+@utility stagger {
+  animation-delay: calc(var(--i, 0) * 45ms);
+}
+
+/* El título viaja de la fila al encabezado del editor (View Transition, 0,7 s con --e). */
+::view-transition-group(record-title) {
+  animation-duration: 0.7s;
+  animation-timing-function: var(--e);
+}
+
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 0.2s;
+}
+
+/* Sin capa a propósito: una regla sin capa le gana a cualquier utilidad. Todo movimiento se apaga. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after,
+  ::backdrop {
+    animation-duration: 0.01ms;
+    animation-delay: 0s;
+    animation-iteration-count: 1;
+    transition-duration: 0.01ms;
+    transition-delay: 0s;
+    scroll-behavior: auto;
+  }
+
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none;
+  }
+}

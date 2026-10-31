@@ -7,6 +7,7 @@ import { db } from './db.js'
 import { env } from './env.js'
 import { adminApi, adminUi } from './admin/router.js'
 import { isAdminAuthorized } from './admin/auth.js'
+import { adminNextCsp, adminUiNext } from './admin/uiNext.js'
 import { envelope } from './envelope.js'
 import { docs } from './routes/docs.js'
 import { experience } from './routes/experience.js'
@@ -154,6 +155,8 @@ app.use('/uploads', express.static(path.resolve('public/media'), {
 // Rutas de administración: parser de 2mb y rate limiter de auth desacoplado
 app.use('/api/admin', express.json({ limit: '2mb' }), adminAuthFailuresLimiter, adminApi)
 app.use('/admin', adminUi)
+// El admin nuevo (Vite) convive en /admin-next con su propia CSP, sin eval ni estilos en línea.
+app.use('/admin-next', adminNextCsp, adminUiNext)
 
 // Rutas de API pública: parser de 100kb y publicApiLimiter desacoplado del admin
 app.use('/api', express.json({ limit: '100kb' }), publicApiLimiter, schema, projects, experience, stack, orgs, docs, articles, cv)
