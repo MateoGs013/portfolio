@@ -63,7 +63,7 @@
     "eslint": "^10.10.0",
     "puppeteer-core": "^25.13.0",
     "tailwindcss": "^4.3.3",
-    "typescript": "^5.9.0",
+    "typescript": "^6.0.3",
     "vue-tsc": "^3.3.11"
   },
   "pnpm": {
