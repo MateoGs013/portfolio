@@ -7,10 +7,13 @@
 // vuelve a la mezcla normal para que el panel se lea. Contacto es el pie. El DOM sigue el orden visual
 // (nombre, navegación, utilidades) para que Tab recorra lo que se ve; en angosto la grilla los acomoda.
 //
-// Debajo de 768 px son dos renglones y, transparentes, se mezclarían con el texto que pasa debajo. Ahí
-// la cabecera solo es transparente arriba de todo: al bajar se esconde y al subir vuelve con el fondo de
-// la página y la mezcla normal. Nunca se esconde con el foco adentro ni con el menú abierto. Sin JS
-// queda arriba de la página (absolute) y se va con el scroll, así no tapa nada.
+// La mezcla sola pierde contraste sobre lo que pasa debajo (texto, capturas de medio tono). Por eso solo
+// mezcla arriba de todo: apenas la página se mueve, debajo aparece el borde de lectura (SiteEdge, un
+// desenfoque que se disuelve en gradiente) y el texto vuelve a --ink con la mezcla normal. Cada estado
+// pone su propio color: text-white y text-ink juntos los resolvería el orden de Tailwind.
+// Debajo de 768 px son dos renglones: además se esconde al bajar y vuelve al subir. Nunca se esconde con
+// el foco adentro ni con el menú abierto. Sin JS queda arriba de la página (absolute) y se va con el
+// scroll, así no tapa nada.
 import { CONTACT_ID } from '~/composables/useHotkeys'
 
 const route = useRoute()
@@ -88,10 +91,11 @@ function onContact(e: MouseEvent) {
   <header
     ref="header"
     data-chrome
-    class="fixed inset-x-0 top-0 z-40 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-6 gap-y-1 px-pad coarse:gap-y-6 py-[calc(var(--pad)*0.6)] text-s text-white mix-blend-difference has-[details[open]]:text-ink has-[details[open]]:mix-blend-normal max-md:transition-[translate,background-color] max-md:duration-300 max-md:ease-expo motion-reduce:transition-none md:flex md:justify-between"
+    class="fixed inset-x-0 top-0 z-40 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-6 gap-y-1 px-pad coarse:gap-y-6 py-[calc(var(--pad)*0.6)] text-s has-[details[open]]:text-ink has-[details[open]]:mix-blend-normal max-md:transition-[translate] max-md:duration-300 max-md:ease-expo motion-reduce:transition-none md:flex md:justify-between"
     :class="{
       'max-md:absolute': !live,
-      'max-md:bg-[color-mix(in_oklab,var(--bg),var(--tint)_var(--tint-amt))] max-md:text-ink max-md:mix-blend-normal': scrolled,
+      'text-white mix-blend-difference': !scrolled,
+      'text-ink': scrolled,
       'max-md:-translate-y-full': tucked,
     }"
     v-on:focusin="onFocusIn"

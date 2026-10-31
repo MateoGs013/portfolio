@@ -2,10 +2,11 @@
    Los nombres son estáticos en la página de destino; el plugin de elementos compartidos
    los apaga en línea (view-transition-name: none) en la página saliente antes de nombrar el par. */
 
-/* Un span nombrado que se parte en dos líneas hace que Chromium saltee toda la transición. */
+/* Un span nombrado que se parte en dos líneas hace que Chromium saltee toda la transición. El texto que
+   rueda ya es una caja que no se parte (inline-flex): pasarlo a inline-block lo baja de su renglón. */
 [data-vt='title'],
 [data-vt='page-title'],
-[data-travel-title] {
+[data-travel-title]:not(.roll) {
   display: inline-block;
 }
 
@@ -35,13 +36,14 @@ header[data-chrome] {
   view-transition-name: hud;
 }
 
-/* La página sale hacia arriba y se apaga; la nueva entra desde abajo, un poco después. */
+/* La página sale hacia arriba y se apaga; la nueva entra desde abajo cuando la vieja ya casi no se ve.
+   Las dos páginas enteras a la vez se leen como una doble exposición: lo que une las dos es lo que viaja. */
 ::view-transition-old(root) {
-  animation: 0.45s cubic-bezier(0.7, 0, 0.84, 0) both vt-out;
+  animation: 0.3s cubic-bezier(0.4, 0, 0.2, 1) both vt-out;
 }
 
 ::view-transition-new(root) {
-  animation: 0.9s var(--e) 0.08s both vt-in;
+  animation: 0.75s var(--e) 0.2s both vt-in;
 }
 
 ::view-transition-group(title),
@@ -62,8 +64,8 @@ header[data-chrome] {
 }
 
 /* El título de una fila o una tarjeta (un renglón) llega al h1 del caso en dos: fundir las dos formas a
-   la vez deja un doble estirado. La vieja se apaga en el primer cuarto y la nueva entra desde el 30 %,
-   como el fantasma del morph (§2.1); el grupo sigue viajando con su curva. */
+   la vez deja un doble estirado. La vieja se apaga en el primer 20 % y la nueva entra del 12 al 40 %,
+   así el título viaja casi todo el recorrido entero y no lavado; el grupo sigue con su curva. */
 ::view-transition-old(title) {
   animation-name: vt-title-out;
   animation-timing-function: linear;
@@ -77,6 +79,17 @@ header[data-chrome] {
 ::view-transition-old(cover),
 ::view-transition-new(cover) {
   object-fit: cover;
+  animation-timing-function: linear;
+}
+
+/* Dos recortes de la misma captura (la escena de «Siguiente» a sangre y la portada del caso) no coinciden:
+   fundidos todo el viaje dejan el texto de la captura doble. La vieja se va en el primer tercio. */
+::view-transition-old(cover) {
+  animation-name: vt-cover-out;
+}
+
+::view-transition-new(cover) {
+  animation-name: vt-cover-in;
 }
 
 /* «Ver CV» crece hasta la hoja desde su borde superior. */
@@ -113,7 +126,7 @@ header[data-chrome] {
     opacity: 1;
   }
 
-  25%,
+  20%,
   100% {
     opacity: 0;
   }
@@ -121,10 +134,33 @@ header[data-chrome] {
 
 @keyframes vt-title-in {
   0%,
-  30% {
+  12% {
     opacity: 0;
   }
 
+  40%,
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes vt-cover-out {
+  0% {
+    opacity: 1;
+  }
+
+  35%,
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes vt-cover-in {
+  0% {
+    opacity: 0;
+  }
+
+  25%,
   100% {
     opacity: 1;
   }

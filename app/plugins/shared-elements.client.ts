@@ -10,6 +10,9 @@
  *    Así nunca hay dos elementos con el mismo nombre y el navegador no saltea la transición.
  * 3. En `router.afterEach` (la foto vieja ya se tomó) se limpian todos los nombres puestos en línea:
  *    lo que vive fuera de la página (menú, vista previa) no puede llegar con nombre al estado nuevo.
+ * 4. Atrás y Adelante cambian sin transición, como el navegador: la página vuelve directo a la altura
+ *    guardada. Con transición, la vuelta a esa altura compite con las fotos y a veces la página vieja
+ *    se fotografía ya corrida o la nueva termina arriba.
  *
  * Vista previa del inicio (P1): la caja visible es `[data-preview]` y cada imagen de la tira lleva
  * `data-preview-cover="<ruta de la obra>"`; si la fila tocada no trae `[data-travel-cover]`, viaja la
@@ -63,6 +66,10 @@ export default defineNuxtPlugin({
     const router = useRouter()
     const named = new Set<HTMLElement>()
     let touched: { link: HTMLAnchorElement, at: number } | null = null
+    // El historial del router avisa Atrás y Adelante en el mismo turno en que el router empieza a navegar,
+    // antes de sus guardas; un listener de popstate propio llega tarde (el del router corre primero).
+    let popped = false
+    router.options.history.listen((_to, _from, info) => { popped = info.type === 'pop' })
 
     function setName(el: HTMLElement, name: VtName | 'none') {
       el.style.viewTransitionName = name
@@ -104,7 +111,11 @@ export default defineNuxtPlugin({
 
     router.beforeEach((to, from) => {
       const link = takeTouched(to)
+      const history = popped
+      popped = false
       if (to.path === from.path) return
+      // to.meta es un objeto nuevo en cada navegación: esto no toca la definición de la ruta.
+      if (history) to.meta.viewTransition = false
       clear()
       document.querySelectorAll<HTMLElement>('[data-vt]').forEach(el => setName(el, 'none'))
       const travel = link?.dataset.travel

@@ -145,9 +145,12 @@
 }
 
 /* Texto que rueda: <span class="roll"><span data-t="Obra">Obra</span></span>.
-   La copia es contenido generado con texto alternativo vacío: el lector la saltea. */
+   La copia es contenido generado con texto alternativo vacío: el lector la saltea.
+   align-items: flex-start: estirada al alto de la caja (un renglón), la columna de dos copias rodaría
+   solo media línea y el texto quedaría cortado por la mitad. */
 @utility roll {
   display: inline-flex;
+  align-items: flex-start;
   overflow: hidden;
   height: 1.25em;
   line-height: 1.25;

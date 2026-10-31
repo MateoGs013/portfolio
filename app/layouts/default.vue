@@ -1,5 +1,6 @@
 <script setup lang="ts">
-// Marco de todas las páginas: salto al contenido, cabecera, la página, el pie de contacto, la paleta
+// Marco de todas las páginas: salto al contenido, cabecera, los bordes de lectura (SiteEdge), la página,
+// el pie de contacto, la paleta
 // (diferida hasta que se pide) y la única región aria-live, que también anuncia la página nueva al
 // navegar (en lugar de NuxtRouteAnnouncer). Monta los atajos de teclado.
 // La fuente se precarga acá: error.vue también usa este layout.
@@ -32,11 +33,13 @@ onBeforeUnmount(stop)
     >
       {{ t('shell.skip') }}
     </a>
+    <SiteEdge side="top" />
     <SiteHeader />
     <main id="contenido" tabindex="-1" class="flex-1 outline-none">
       <slot />
     </main>
     <SiteFooter />
+    <SiteEdge side="bottom" />
     <LazySitePalette v-if="requested" />
     <p class="sr-only" role="status" aria-live="polite" aria-atomic="true">
       {{ message }}
