@@ -1,4 +1,4 @@
-/** Hiperfoco. F1 deja lo mínimo; dueño desde la ola 6: X1. */
+/** Hiperfoco (X1): el nombre del botón y los anuncios del cambio por la región aria-live. */
 import type { DictEntry } from './index'
 
 export default {

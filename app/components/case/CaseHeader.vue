@@ -4,6 +4,7 @@
  * «Siguiente») y la ficha sobre una línea: rol, cliente (nombre y ciudad, solo si la base los tiene),
  * año, estado y tecnologías. Cada tecnología faceta /projects?stack= y se asoma con su categoría, desde
  * cuándo se usa, la nota y las otras obras visibles. Cada valor es un campo del registro (tecla R).
+ * En Hiperfoco la ficha deja de ser una fila de columnas y se lee como lista de definiciones en la columna.
  */
 import type { Project, ProjectTech } from '~/lib/api'
 import { yearsSince } from '~/lib/format'
@@ -57,7 +58,7 @@ const link = 'underline decoration-rule decoration-1 underline-offset-4 transiti
 
     <component
       :is="isRecord ? 'div' : 'dl'"
-      class="mt-[clamp(1.5rem,4vh,2.5rem)] grid gap-y-1 border-t border-rule pt-5 text-s md:grid-flow-col md:grid-rows-[auto_auto] md:justify-start md:gap-x-[clamp(2rem,5vw,5rem)] md:gap-y-1.5 record:mt-0 record:block record:border-0 record:pt-0 [&_dd]:mb-4 md:[&_dd]:mb-0"
+      class="mt-[clamp(1.5rem,4vh,2.5rem)] grid gap-y-1 border-t border-rule pt-5 text-s md:grid-flow-col md:grid-rows-[auto_auto] md:justify-start md:gap-x-[clamp(2rem,5vw,5rem)] md:gap-y-1.5 focus-mode:md:grid-flow-row focus-mode:md:grid-cols-[minmax(7rem,auto)_1fr] focus-mode:md:grid-rows-none focus-mode:md:gap-x-8 focus-mode:md:items-baseline focus-mode:md:gap-y-3 record:mt-0 record:block record:border-0 record:pt-0 [&_dd]:mb-4 md:[&_dd]:mb-0"
     >
       <RecordField v-slot="{ fv }" collection="projects" k="role" :value="project.role" :record="project">
         <dt :class="dt">

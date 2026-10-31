@@ -32,7 +32,7 @@ useMotion(frame, ({ el, ambient }) => {
 
 <template>
   <header class="flex flex-wrap items-end justify-between gap-x-8 gap-y-6 px-pad pt-[clamp(7rem,22vh,12rem)] pb-[clamp(2rem,6vh,4rem)] record:block record:space-y-12">
-    <PageTitle :title="t('nav.about')" />
+    <PageTitle :title="t('nav.about')" class="focus-mode:text-display-row" />
 
     <RecordField collection="about" k="portrait" :value="portrait" :record="about">
       <template #default="{ fv }">
