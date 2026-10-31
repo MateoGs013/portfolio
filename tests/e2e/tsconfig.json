@@ -1,5 +1,6 @@
 {
-  // La suite e2e y su configuración: fuera de los tsconfig de Nuxt, se revisan con `pnpm typecheck`.
+  // La suite e2e, las pruebas de la API del admin (tests/admin) y sus configuraciones: fuera de los
+  // tsconfig de Nuxt, se revisan con `pnpm typecheck`.
   "compilerOptions": {
     "target": "es2023",
     "lib": ["es2023", "dom", "dom.iterable"],
@@ -11,5 +12,5 @@
     "skipLibCheck": true,
     "noEmit": true
   },
-  "include": ["./**/*.ts", "../../playwright.config.ts"]
+  "include": ["./**/*.ts", "../admin/**/*.ts", "../../playwright.config.ts", "../../playwright.admin.config.ts"]
 }

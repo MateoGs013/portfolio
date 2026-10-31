@@ -40,6 +40,24 @@ export function translate<R, K extends keyof R & string>(
   return { values, untranslated }
 }
 
+/**
+ * Una lista traducida posición por posición (las viñetas del CV): cada elemento sin inglés cae al
+ * español y se lista como `campo[i]`. Si no quedó ninguno traducido, también se lista el campo entero,
+ * así quien marca la lista completa con `lang="es"` sigue funcionando.
+ */
+export function translateItems(field: string, es: readonly string[], other: readonly string[] | undefined, lang: Lang): { items: string[], untranslated: string[] } {
+  if (lang === defaultLang) return { items: [...es], untranslated: [] }
+  const pending: string[] = []
+  const items = es.map((item, i) => {
+    const translated = other?.[i]
+    if (typeof translated === 'string' && translated.trim() !== '') return translated
+    if (item.trim() !== '') pending.push(`${field}[${i}]`)
+    return item
+  })
+  const none = pending.length > 0 && pending.length === es.filter(item => item.trim() !== '').length
+  return { items, untranslated: none ? [field, ...pending] : pending }
+}
+
 /** Fecha y hora en ISO (los Date de Prisma y el texto del snapshot dan lo mismo). */
 export function toIso(value: Date | string): string
 export function toIso(value: Date | string | null): string | null

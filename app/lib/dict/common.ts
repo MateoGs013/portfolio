@@ -1,28 +1,17 @@
 /**
  * Vocabulario que comparten todas las áreas: estados, tipos de experiencia, categorías de tecnología,
  * métricas (qué son y qué miden), unidades e idiomas. Dueño: F1.
+ *
+ * Los rótulos de los enums de la base (estado, tipo, categoría y unidad) viven en
+ * server/src/shared/labels.ts, que también usa el admin: acá se reexportan con sus claves de siempre.
  */
+import { experienceKindLabels, metricUnitFormats, prefixed, projectStatusLabels, techCategoryLabels } from '../../../server/src/shared/labels.js'
 import type { DictEntry } from './index'
 
 export default {
-  'status.LIVE': { es: 'En producción', en: 'Live' },
-  'status.WIP': { es: 'En desarrollo', en: 'In development' },
-  'status.ARCHIVED': { es: 'Archivado', en: 'Archived' },
-
-  'kind.EDUCATION': { es: 'Formación', en: 'Education' },
-  'kind.THESIS': { es: 'Tesis', en: 'Thesis' },
-  'kind.FREELANCE': { es: 'Freelance', en: 'Freelance' },
-  'kind.CLIENT': { es: 'Cliente', en: 'Client' },
-  'kind.PERSONAL': { es: 'Proyecto propio', en: 'Personal project' },
-
-  'category.LANGUAGE': { es: 'Lenguajes', en: 'Languages' },
-  'category.FRAMEWORK': { es: 'Frameworks', en: 'Frameworks' },
-  'category.MOTION': { es: 'Movimiento', en: 'Motion' },
-  'category.GRAPHICS': { es: 'Gráficos', en: 'Graphics' },
-  'category.BACKEND': { es: 'Backend', en: 'Backend' },
-  'category.DATA': { es: 'Datos', en: 'Data' },
-  'category.TOOLING': { es: 'Herramientas', en: 'Tooling' },
-  'category.DESIGN': { es: 'Diseño', en: 'Design' },
+  ...prefixed('status', projectStatusLabels),
+  ...prefixed('kind', experienceKindLabels),
+  ...prefixed('category', techCategoryLabels),
 
   'metric.lcp.label': { es: 'LCP', en: 'LCP' },
   'metric.lcp.desc': { es: 'Cuánto tarda en pintarse el elemento más grande de la primera pantalla.', en: 'How long the largest element of the first screen takes to paint.' },
@@ -71,13 +60,7 @@ export default {
   'metric.ephemeralTTL.label': { es: 'Vida de los datos', en: 'Data lifetime' },
   'metric.ephemeralTTL.desc': { es: 'Tiempo que un dato vive antes de borrarse solo.', en: 'How long a piece of data lives before it deletes itself.' },
 
-  'unit.s': { es: '{n} s', en: '{n} s' },
-  'unit.ms': { es: '{n} ms', en: '{n} ms' },
-  'unit.kb': { es: '{n} KB', en: '{n} KB' },
-  'unit.fps': { es: '{n} fps', en: '{n} fps' },
-  'unit.h': { es: '{n} h', en: '{n} h' },
-  'unit.req_day': { es: '{n}/día', en: '{n}/day' },
-  'unit.usd_month': { es: '{n}/mes', en: '{n}/month' },
+  ...prefixed('unit', metricUnitFormats),
 
   'lang.es': { es: 'Español', en: 'Spanish' },
   'lang.en': { es: 'Inglés', en: 'English' },

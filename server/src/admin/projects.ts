@@ -8,7 +8,7 @@ import { Router } from 'express'
 import { db } from '../db.js'
 import { ProjectStatus, type Prisma } from '../../generated/prisma/client.js'
 import { DB_UNAVAILABLE, paramId } from './common.js'
-import { HttpError, bool, enumOf, int, intList, list, optDate, optInt, optStr, optUrl, slug, str, url } from './input.js'
+import { HttpError, bool, enumOf, int, intList, list, optDate, optInt, optStr, optUrl, slug, str, url, validate } from './input.js'
 import { removeMediaFiles } from './media.js'
 import { metricList, type MetricData } from './metrics.js'
 import { enBody, saveLinkEn, saveProjectEn, saveStepEn, withTranslations } from './translations.js'
@@ -66,6 +66,11 @@ function projectNested(b: Body) {
     en: enBody(s),
   }))
   return { links, steps, techIds: intList(b, 'techIds'), metrics: metricList(b), en: enBody(b) }
+}
+
+/** Todo el body validado de una vez: los fallos vuelven juntos, cada uno en su campo. */
+function projectInput(b: Body) {
+  return validate('Project', b, () => ({ data: projectData(b), ...projectNested(b) }))
 }
 
 async function syncLinks(tx: Tx, projectId: number, links: LinkInput[]): Promise<void> {
@@ -126,14 +131,13 @@ projectsRouter.get('/projects/:id', async (req, res) => {
     res.status(503).json(DB_UNAVAILABLE)
     return
   }
-  if (!row) throw new HttpError(404, 'not found')
+  if (!row) throw new HttpError(404, 'No encontramos esa obra: puede que se haya borrado. Recargá la lista.')
   res.json(row)
 })
 
 /** Una obra nueva todavía no tiene media: los pasos llegan sin imagen y sin ids. */
 projectsRouter.post('/projects', async (req, res) => {
-  const data = projectData(req.body)
-  const { links, steps, techIds, metrics, en } = projectNested(req.body)
+  const { data, links, steps, techIds, metrics, en } = projectInput(req.body)
   const row = await db.$transaction(async (tx) => {
     const { id } = await tx.project.create({
       data: { ...data, techs: { connect: techIds.map(id => ({ id })) }, metrics: { create: metrics ?? [] } },
@@ -149,8 +153,7 @@ projectsRouter.post('/projects', async (req, res) => {
 
 projectsRouter.put('/projects/:id', async (req, res) => {
   const pid = paramId(req)
-  const data = projectData(req.body)
-  const { links, steps, techIds, metrics, en } = projectNested(req.body)
+  const { data, links, steps, techIds, metrics, en } = projectInput(req.body)
   const row = await db.$transaction(async (tx) => {
     await tx.project.update({ where: { id: pid }, data: { ...data, techs: { set: techIds.map(id => ({ id })) } } })
     await syncLinks(tx, pid, links)
@@ -166,11 +169,12 @@ projectsRouter.put('/projects/:id', async (req, res) => {
 projectsRouter.patch('/projects/:id', async (req, res) => {
   const pid = paramId(req)
   const b = (req.body ?? {}) as Body
-  const patchData: Prisma.ProjectUpdateInput = {}
-  if ('status' in b) patchData.status = enumOf(b, 'status', PROJECT_STATUS)
-  if ('featured' in b) patchData.featured = bool(b, 'featured')
-  if ('sortOrder' in b) patchData.sortOrder = int(b, 'sortOrder')
-  if (Object.keys(patchData).length === 0) throw new HttpError(400, 'no llegó ningún campo para actualizar')
+  const patchData: Prisma.ProjectUpdateInput = validate('Project', b, () => ({
+    ...('status' in b ? { status: enumOf(b, 'status', PROJECT_STATUS) } : {}),
+    ...('featured' in b ? { featured: bool(b, 'featured') } : {}),
+    ...('sortOrder' in b ? { sortOrder: int(b, 'sortOrder') } : {}),
+  }))
+  if (Object.keys(patchData).length === 0) throw new HttpError(400, 'No llegó ningún cambio para guardar.')
   res.json(await db.project.update({ where: { id: pid }, data: patchData, include: projectInclude, omit: projectOmit }))
 })
 
