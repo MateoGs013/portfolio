@@ -420,3 +420,12 @@ Mandan sobre cualquier paso de los paquetes que diga otra cosa.
 4. **Resumen dirigido de Eros:** entra al CV solo como propuesta, al lado, aceptable con un clic. Por defecto queda el resumen de la base.
 5. **Slugs:** dirección fija; se cambia solo con «Cambiar dirección», que avisa que los enlaces viejos dejan de andar. Sin tabla de alias.
 6. **PDF del CV del sitio:** se regenera a mano (`pnpm cv:pdf` y commit). Inicio avisa cuando el PDF ya no coincide con la base.
+
+## Dirección elegida en la demo (31-oct-2026)
+
+Mateo vio `docs/rediseno-admin/demo.html` y eligió la segunda dirección. Manda sobre la §2 y la §3 donde choquen.
+
+- **Una cosa por pantalla.** No hay columna de lista fija: cada colección (Obras, Trayectoria, Artículos, Vacantes) es su propia pantalla con filas grandes, como las del inicio del sitio. El editor ocupa la pantalla solo, en una columna, con «← Obras» para volver. La rejilla es `220px 1fr`.
+- **Carácter del sitio.** Títulos de pantalla y de registro en display (clamp 38–72 px, −0,045em). Filas de 24–34 px que entran escalonadas (45 ms), con la atenuación del sitio al apuntar (las hermanas a .28, la apuntada se corre 14 px) y el título que viaja de la fila al encabezado del editor (0,7 s, `--e`).
+- **Campos livianos.** Sin cajas: texto de 16–17 px sobre una línea de 1 px que se enciende en `--ink` con el foco, y más aire entre campos (34 px).
+- **Escanear vacantes desde el admin** es requisito explícito de Mateo: «Buscar vacantes nuevas» en la pantalla de Vacantes (H1), con el estado mientras Eros recorre los portales y el aviso con lo que encontró.
