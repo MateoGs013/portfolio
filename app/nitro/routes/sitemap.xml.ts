@@ -1,6 +1,7 @@
 /**
- * Sitemap: las páginas fijas, las obras y los artículos publicados (la visibilidad la resuelve la API), cada una con
- * su alternativa en inglés (`?lang=en`) y x-default. `lastmod` sale solo de `updatedAt` de la base.
+ * Sitemap: las páginas fijas, las obras y los artículos publicados (la visibilidad la resuelve la API). Cada página
+ * va dos veces, en castellano y en inglés (`?lang=en`), y cada `<url>` lleva el juego completo de alternativas (es,
+ * en y x-default), como pide la guía de hreflang en sitemaps: así la versión en inglés también se descubre directo. `lastmod` sale solo de `updatedAt` de la base.
  * Si la API no responde se devuelve 503 sin caché: nunca un sitemap incompleto.
  */
 import { defineEventHandler, setResponseHeader, setResponseStatus } from 'h3'
@@ -23,15 +24,18 @@ const latest = (dates: string[]) => dates.reduce<string | undefined>((max, d) =>
 function urlXml(siteUrl: string, entry: Entry): string {
   const es = new URL(entry.path, siteUrl).toString()
   const en = new URL(`${entry.path}?lang=en`, siteUrl).toString()
-  return [
-    '  <url>',
-    `    <loc>${escapeXml(es)}</loc>`,
-    ...(entry.lastmod ? [`    <lastmod>${entry.lastmod.slice(0, 10)}</lastmod>`] : []),
+  const alternates = [
     `    <xhtml:link rel="alternate" hreflang="es" href="${escapeXml(es)}"/>`,
     `    <xhtml:link rel="alternate" hreflang="en" href="${escapeXml(en)}"/>`,
     `    <xhtml:link rel="alternate" hreflang="x-default" href="${escapeXml(es)}"/>`,
+  ]
+  return [es, en].flatMap(loc => [
+    '  <url>',
+    `    <loc>${escapeXml(loc)}</loc>`,
+    ...(entry.lastmod ? [`    <lastmod>${entry.lastmod.slice(0, 10)}</lastmod>`] : []),
+    ...alternates,
     '  </url>',
-  ].join('\n')
+  ]).join('\n')
 }
 
 export default defineEventHandler(async (event) => {

@@ -98,7 +98,7 @@ export function useSiteActions() {
 
   /** El cambio en sí (view transition, cookie, lectura en su lugar) es de useHyperfocus. */
   function toggleHyperfocus() {
-    const next = !focus.isHyperfocus.value
+    const next = !focus.target()
     sound.tick(1400)
     void focus.setHyperfocus(next)
     announce(t(next ? 'focus.on' : 'focus.off'))
@@ -176,7 +176,7 @@ export function useHotkeys() {
     if (key === 'Escape') {
       // Cerrar una capa abierta anda en cualquier contexto; salir del Hiperfoco no, con foco en un campo.
       if (closeTopLayer()) e.preventDefault()
-      else if (keys.shortcutsOn.value && focus.isHyperfocus.value && !isEditable(e.target)) actions.toggleHyperfocus()
+      else if (keys.shortcutsOn.value && focus.target() && !isEditable(e.target)) actions.toggleHyperfocus()
       return
     }
     if (e.ctrlKey || e.metaKey || e.altKey || e.repeat || !keys.shortcutsOn.value || isEditable(e.target)) return

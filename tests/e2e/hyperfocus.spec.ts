@@ -59,6 +59,26 @@ async function toggleButton(page: Page) {
 
 const isNarrow = async (page: Page) => page.locator('header[data-chrome] summary').isVisible()
 
+// Cada bloque fija su viewport: correrlo también en mobile-320 duplicaría la corrida (y las ~200
+// peticiones a la API) sin cubrir nada nuevo.
+// eslint-disable-next-line no-empty-pattern
+test.beforeEach(({}, info) => {
+  test.skip(info.project.name !== 'desktop-chromium', 'hyperfocus.spec fija sus propios viewports')
+})
+
+/** Marca el bloque que se está leyendo (el mismo criterio que useHyperfocus) y devuelve su alto. */
+const anchorTop = (page: Page) => page.evaluate(() => {
+  const floor = document.querySelector('header[data-chrome]')?.getBoundingClientRect().bottom ?? 0
+  const readable = '#contenido :is(h1, h2, h3, p, li, dt, dd, figure, blockquote, pre, [data-row], [data-card])'
+  const skip = '[data-hf="hide"], [data-ornament], [aria-hidden="true"]'
+  const el = [...document.querySelectorAll<HTMLElement>(readable)]
+    .find(b => !b.closest(skip) && b.getBoundingClientRect().height > 0 && b.getBoundingClientRect().bottom > floor)
+  if (!el) throw new Error('no hay un bloque visible')
+  el.dataset.anchorProbe = ''
+  return el.getBoundingClientRect().top
+})
+const probeTop = (page: Page) => page.evaluate(() => document.querySelector('[data-anchor-probe]')!.getBoundingClientRect().top)
+
 for (const width of WIDTHS) {
   for (const theme of THEMES) {
     test.describe(`${width} px · ${theme}`, () => {
@@ -195,6 +215,54 @@ test.describe('entrada y salida', () => {
       expect(pdf.toString('binary').match(/\/Type\s*\/Page\b/g)?.length ?? 0).toBe(1)
     })
   }
+})
+
+test.describe('el cambio de modo', () => {
+  test.use({ viewport: { width: 1440, height: 900 } })
+
+  test('con movimiento corre una view transition de tipo hiperfoco', async ({ page, context, baseURL }) => {
+    await prefs(context, baseURL, 'dark', false)
+    await page.goto('/about', { waitUntil: 'networkidle' })
+    const supported = await page.evaluate(() => typeof document.startViewTransition === 'function')
+    test.skip(!supported, 'el navegador no tiene view transitions')
+    await page.evaluate(() => {
+      const w = window as unknown as { __types: string[] }
+      w.__types = []
+      const start = document.startViewTransition.bind(document)
+      document.startViewTransition = ((arg: Parameters<typeof start>[0]) => {
+        const types = typeof arg === 'object' && arg && 'types' in arg ? [...(arg.types ?? [])] : []
+        w.__types.push(...types)
+        return start(arg)
+      }) as typeof document.startViewTransition
+    })
+    await page.locator('body').press('h')
+    await expect(page.locator('html')).toHaveAttribute('data-hyperfocus', 'true')
+    expect(await page.evaluate(() => (window as unknown as { __types: string[] }).__types)).toContain('hiperfoco')
+  })
+
+  test.describe('con reduced motion', () => {
+    test.use({ reducedMotion: 'reduce' })
+
+    test('es instantáneo y la lectura queda a la misma altura', async ({ page, context, baseURL }) => {
+      await prefs(context, baseURL, 'dark', false)
+      await page.goto('/projects/la-rucula', { waitUntil: 'networkidle' })
+      await page.evaluate(() => window.scrollTo({ top: document.documentElement.scrollHeight / 3, behavior: 'instant' }))
+      await page.waitForTimeout(300)
+
+      const before = await anchorTop(page)
+      await page.locator('body').press('h')
+      await expect(page.locator('html')).toHaveAttribute('data-hyperfocus', 'true')
+      await page.waitForTimeout(300)
+      expect(Math.abs(await probeTop(page) - before)).toBeLessThanOrEqual(1)
+
+      await page.evaluate(() => document.querySelector('[data-anchor-probe]')?.removeAttribute('data-anchor-probe'))
+      const inside = await anchorTop(page)
+      await page.locator('body').press('h')
+      await expect(page.locator('html')).not.toHaveAttribute('data-hyperfocus', /.*/)
+      await page.waitForTimeout(300)
+      expect(Math.abs(await probeTop(page) - inside)).toBeLessThanOrEqual(1)
+    })
+  })
 })
 
 test('ningún componente se renderiza solo en Hiperfoco', () => {

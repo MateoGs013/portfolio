@@ -61,11 +61,6 @@ const about = useDoc('about')
 const absolute = (path: string) => new URL(path, siteUrl).toString()
 const ogImage = computed(() => cover.value && (cover.value.kind === 'IMAGE' || cover.value.poster) ? cover.value : null)
 
-useSeoMeta({
-  ogImageWidth: () => ogImage.value?.width,
-  ogImageHeight: () => ogImage.value?.height,
-})
-
 /** La obra como CreativeWork, con su autor desde about. */
 const creativeWork = computed(() => {
   const image = ogImage.value
@@ -83,7 +78,8 @@ const creativeWork = computed(() => {
     'image': src ? { '@type': 'ImageObject', 'url': absolute(src), 'width': image?.width, 'height': image?.height, 'caption': image?.alt } : undefined,
     'keywords': p.value.techs.map(tech => tech.name).join(', ') || undefined,
     'sameAs': p.value.url ?? undefined,
-    'author': { '@type': 'Person', 'name': docText(about.data.value, 'name') ?? undefined, 'url': absolute('/') },
+    // El mismo Person que emite usePageSeo (ld-person), enlazado por su @id.
+    'author': { '@type': 'Person', '@id': absolute('/#person'), 'name': docText(about.data.value, 'name') ?? undefined, 'url': absolute('/') },
   }
 })
 

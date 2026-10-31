@@ -134,7 +134,9 @@ El repositorio cuenta con Dockerfiles optimizados para producción:
    PORT=3000
    HOST=0.0.0.0
    NUXT_PUBLIC_API_BASE=http://portfolio-api:3001/api
+   NUXT_PUBLIC_SITE_URL=https://mateogs.tech
    ```
+   *`NUXT_PUBLIC_SITE_URL` tiene que estar disponible también en el build (en Coolify, marcala como «Build Variable»): `nuxt.config.ts` la lee al compilar para la CSP (`upgrade-insecure-requests`) y en runtime para el canonical, hreflang, og:url, JSON-LD, sitemap y `robots.txt`. Sin ella todo apunta a `http://localhost:3000`.*
    *(Nota: si el backend y frontend están en la misma red de Coolify, podés usar el hostname interno del contenedor `http://portfolio-api:3001/api`; alternativamente, usá `https://api.mateogs.tech/api`).*
 7. Hacé clic en **"Deploy"**.
 

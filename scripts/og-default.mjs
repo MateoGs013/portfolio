@@ -20,8 +20,21 @@ const out = resolve(root, 'public/og/default.png')
 const base = (process.env.OG_BASE_URL ?? process.env.PLAYWRIGHT_BASE_URL ?? 'http://localhost:3000').replace(/\/+$/, '')
 const SIZE = { width: 1200, height: 630 }
 
-/** Los tokens del tema oscuro (app/assets/css/tokens.css), el tema por defecto del sitio. */
-const TOKENS = { bg: '#0b0b0c', ink: '#ededee', dim: '#a1a1a9', sig: '#ff3e00', rule: 'rgb(255 255 255 / 0.1)' }
+/**
+ * Los tokens del tema oscuro, el tema por defecto del sitio, leídos del primer bloque `:root { … }` de
+ * app/assets/css/tokens.css: una sola fuente, sin copiar los valores.
+ */
+async function darkTokens() {
+  const css = await readFile(resolve(root, 'app/assets/css/tokens.css'), 'utf8')
+  const block = css.match(/:root\s*\{([\s\S]*?)\n\}/)?.[1]
+  if (!block) throw new Error('tokens.css no tiene un bloque :root')
+  const token = (name) => {
+    const value = block.match(new RegExp(`--${name}:([^;]+);`))?.[1]?.trim()
+    if (!value) throw new Error(`tokens.css no define --${name} en :root`)
+    return value
+  }
+  return { bg: token('bg'), ink: token('ink'), dim: token('dim'), sig: token('sig'), rule: token('rule') }
+}
 
 async function aboutFields() {
   const res = await fetch(`${base}/api/docs/about`)
@@ -40,7 +53,7 @@ async function fontFace() {
   return `@font-face{font-family:'General Sans Variable';font-weight:200 700;src:url(data:font/woff2;base64,${woff2.toString('base64')}) format('woff2-variations')}`
 }
 
-const page = (face) => `<!doctype html><html lang="es"><head><meta charset="utf-8"><style>
+const page = (face, TOKENS) => `<!doctype html><html lang="es"><head><meta charset="utf-8"><style>
 ${face}
 *{margin:0;box-sizing:border-box}
 html,body{width:${SIZE.width}px;height:${SIZE.height}px;background:${TOKENS.bg};overflow:hidden}
@@ -55,7 +68,7 @@ async function render({ name, headline }) {
   const browser = await chromium.launch()
   try {
     const tab = await browser.newPage({ viewport: SIZE, deviceScaleFactor: 1 })
-    await tab.setContent(page(await fontFace()))
+    await tab.setContent(page(await fontFace(), await darkTokens()))
     // El texto entra por textContent: lo que venga de la base nunca se lee como HTML.
     await tab.evaluate(({ name, headline }) => {
       const title = document.getElementById('name')

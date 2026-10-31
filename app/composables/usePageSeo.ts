@@ -89,7 +89,9 @@ export async function usePageSeo(input: MaybeRefOrGetter<PageSeo>) {
     if (cover && src && cover.width && cover.height) {
       return { url: absolute(src), width: cover.width, height: cover.height, alt: cover.alt ?? undefined }
     }
-    const alt = headline.value ? t('seo.ogAlt', { site: site.value, headline: headline.value }) : site.value
+    // La imagen por defecto lleva el titular en castellano (scripts/og-default.mjs): en otro idioma el
+    // alt no describe un texto que la imagen no tiene, se queda en el nombre.
+    const alt = headline.value && lang.value === 'es' ? t('seo.ogAlt', { site: site.value, headline: headline.value }) : site.value
     return { url: absolute(OG_DEFAULT.src), width: OG_DEFAULT.width, height: OG_DEFAULT.height, alt: alt || undefined }
   })
 

@@ -4,12 +4,13 @@
  * hay localStorage ni lecturas en onMounted por consumidor. `?foco=1` entra desde un enlace (prefs.ts).
  *
  * En el cliente el cambio es una view transition de tipo «hiperfoco» (220 ms, hyperfocus.css: la
- * la cabecera queda quieta y la columna se angosta). Con reduced motion, o sin view transitions,
+ * cabecera queda quieta y la columna se angosta). Con reduced motion, o sin view transitions,
  * es instantáneo. En los dos casos la lectura no se pierde: el primer bloque que se estaba leyendo
  * vuelve a quedar a la misma altura después del cambio, aunque la columna haya cambiado de ancho.
  */
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { nextTick } from 'vue'
+import { prefersReducedMotion } from './useSound'
 
 export const HYPERFOCUS_COOKIE = 'pf-hyperfocus'
 
@@ -56,7 +57,12 @@ function restoreAnchor(anchor: ReadingAnchor | null) {
 /** Un cuadro entero: con reduced motion todo transiciona en 0,01 ms y el estilo final llega después. */
 const frame = () => new Promise<void>(resolve => requestAnimationFrame(() => resolve()))
 
-const reduceMotion = () => matchMedia('(prefers-reduced-motion: reduce)').matches
+/**
+ * El estado al que va el modo mientras un cambio está en curso. Con view transition, `commit` corre
+ * uno o más cuadros después de pedirlo: dos pulsaciones seguidas (H y Esc) se comparan contra esto y
+ * no contra el estado viejo, así la segunda revierte la primera en lugar de repetirla.
+ */
+let pending: boolean | null = null
 
 export function useHyperfocus() {
   const cookie = useCookie<string | null>(HYPERFOCUS_COOKIE, { maxAge: YEAR, sameSite: 'lax', path: '/', encode: plain, decode: plain })
@@ -83,20 +89,28 @@ export function useHyperfocus() {
     else delete root.dataset.hyperfocus
     await nextTick()
     await nextTick()
-    if (settle) {
-      await frame()
-      await frame()
-    }
+    // Todavía en la misma tarea que escribió el atributo: el navegador no pintó la página corrida.
     restoreAnchor(anchor)
+    if (settle) {
+      // Con reduced motion el estilo final llega un cuadro después; solo se corrige si hace falta.
+      await frame()
+      await frame()
+      restoreAnchor(anchor)
+    }
   }
 
   /** Cambia el modo. En el servidor (`?foco=1`) solo deja el estado y la cookie para el SSR. */
   function setHyperfocus(on: boolean): Promise<void> {
-    if (import.meta.server || on === state.value) {
+    if (import.meta.server) {
       commit(on)
       return Promise.resolve()
     }
-    if (reduceMotion() || !document.startViewTransition) return apply(on, true)
+    if (on === target()) return Promise.resolve()
+    pending = on
+    const done = () => {
+      if (pending === on) pending = null
+    }
+    if (prefersReducedMotion() || !document.startViewTransition) return apply(on, true).finally(done)
     let transition: ViewTransition
     try {
       transition = document.startViewTransition({ update: () => apply(on), types: ['hiperfoco'] })
@@ -106,10 +120,13 @@ export function useHyperfocus() {
       transition = document.startViewTransition(() => apply(on))
     }
     transition.finished.catch(() => {})
-    return transition.updateCallbackDone.catch(() => {})
+    return transition.updateCallbackDone.catch(() => {}).finally(done)
   }
 
-  const toggleHyperfocus = () => setHyperfocus(!state.value)
+  /** Cómo queda el modo cuando termine el cambio en curso (o el estado actual, si no hay ninguno). */
+  const target = () => (import.meta.client && pending !== null ? pending : state.value)
 
-  return { isHyperfocus: readonly(state), setHyperfocus, toggleHyperfocus }
+  const toggleHyperfocus = () => setHyperfocus(!target())
+
+  return { isHyperfocus: readonly(state), target, setHyperfocus, toggleHyperfocus }
 }

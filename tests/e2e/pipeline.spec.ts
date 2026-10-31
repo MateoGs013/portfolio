@@ -84,11 +84,12 @@ test.describe('direcciones canónicas', () => {
   }
 })
 
-test('el sitemap lista 11 URL con su alternativa en inglés', async ({ request }) => {
-  // /, /projects, /about, las 6 obras, /articles y el artículo del seed.
+test('el sitemap lista 11 páginas en castellano y en inglés, cada una con sus alternativas', async ({ request }) => {
+  // /, /projects, /about, las 6 obras, /articles y el artículo del seed; cada una como ES y como EN.
   const xml = await (await request.get('/sitemap.xml')).text()
-  expect(xml.match(/<url>/g)).toHaveLength(11)
-  expect(xml.match(/hreflang="en"/g)).toHaveLength(11)
+  expect(xml.match(/<url>/g)).toHaveLength(22)
+  expect(xml.match(/<loc>[^<]+\?lang=en<\/loc>/g)).toHaveLength(11)
+  expect(xml.match(/hreflang="en"/g)).toHaveLength(22)
   expect(xml).not.toContain('null-net')
   expect(xml).not.toContain('lampone')
 })
