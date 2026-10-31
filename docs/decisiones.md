@@ -6,6 +6,30 @@ Formato: decisión · alternativa descartada · por qué.
 
 ---
 
+## Rediseño del admin (nov-2026)
+
+El plan está en `docs/rediseno-admin/plan.md` y la dirección aprobada en `docs/rediseno-admin/demo.html` (la capa «Dirección 2»).
+
+**El admin como la mesa de trabajo del sitio: una cosa por pantalla.**
+*Descartado:* las tres columnas fijas (navegación, explorador y editor a la vez) y el panel «CMS 2026» con bento, glow, numeración 00–09, rótulos «NN // …», mono en mayúsculas, colores por módulo y botón azul.
+*Por qué:* Mateo eligió en la demo la segunda dirección. Cada colección es su propia pantalla con filas grandes, como el inicio del sitio: entran escalonadas (45 ms) y al apuntar una las hermanas bajan a .28 y la apuntada se corre 14 px. El editor ocupa la pantalla solo, con el título en display que viaja desde la fila. Los campos no tienen caja: texto de 16–17 px sobre una línea de 1 px que se enciende con el foco, con 34 px entre campos. La rejilla es `220px 1fr`.
+
+**Los tokens del sitio, con densidad de herramienta.**
+Tema oscuro en `:root[data-theme=dark]`: `--bg` #0b0b0c, `--panel` #111113, `--surface` #161618, `--surface-2` #1c1c1f, `--rule` 8 % y `--rule-strong` 14 % de blanco, `--ink` #ededee, `--dim` #a1a1a9, `--faint` #83838c, `--sig` y `--sig-text` #ff3e00 (texto #0b0b0c sobre el primario), `--ok` #3ecf6e y `--wip` #e5a00d solo en el punto de estado, `--danger` #f0524f. Curva `--e` cubic-bezier(.16,1,.3,1). Seis tamaños de herramienta (meta 12, label 13, body 14/1,45 peso 420, row 15, title 20, figure 28) más los de la dirección elegida (field 16, prose 17/1,6, list 24–34, heading 38–60 y display 44–72). Radios de 6 px en controles, 10 en diálogos y 3 en imágenes. El tema claro queda declarado con los valores del sitio, sin activar. `scripts/check-admin-contrast.mjs` mide cada par y compara los compartidos con `app/assets/css/tokens.css`.
+
+**Vite + componentes .vue + TypeScript, compilado en la imagen del API (pregunta 1).**
+*Descartado:* seguir sin build (Vue global desde `vendor/`, `@tailwindcss/cli` y JSDoc), que era el plan B.
+*Por qué:* Mateo respondió que sí al build. Con SFC y tipos estrictos el admin se lee como el resto del repo y la CSP del admin nuevo queda sin `unsafe-eval` ni `unsafe-inline`. La base de Vite es absoluta (`/admin-next/` mientras convive, `/admin/` desde S1): con `./`, `/admin-next` sin barra final pediría los assets al sitio y daría 404. Las routeRules de Nitro no distinguen `/admin-next` de `/admin-next/` (el matcher ignora la barra final), así que la entrada la resuelve `app/nitro/routes/admin-next.ts` y las routeRules solo pasan los assets.
+
+**General Sans y Martian Mono servidas por el propio admin.**
+*Descartado:* Plus Jakarta Sans, JetBrains Mono y las fuentes desde Fontshare o Google.
+*Por qué:* son las familias del sitio y la CSP solo admite `font-src 'self'`. General Sans es una copia de `app/assets/fonts` con su licencia y un hash la compara con el original.
+
+**Guardarraíles en `pnpm lint`.**
+`scripts/admin-checks.mjs` corre cada `scripts/check-admin-*.mjs`. `check-admin-style` falla con hex sueltos, `text-[N…]`, paletas de Tailwind, « // » en plantillas, mayúsculas forzadas o espaciadas, `font-mono` fuera de `ui/Mono.vue` y `ui/Kbd.vue`, `transition-all`, `style` estático (la CSP no lo admite), `!important`, emojis y archivos de más de 300 líneas. eslint prohíbe `confirm`, `alert` y `prompt`: las confirmaciones van por `requestConfirm`.
+
+---
+
 ## Rediseño «movimiento» (30-oct-2026)
 
 Las reglas que salen de estas decisiones viven en `docs/diseno.md`.

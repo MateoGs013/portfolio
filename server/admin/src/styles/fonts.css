@@ -1,0 +1,13 @@
+/* Las dos familias del sitio, servidas por el propio admin (sin CDN).
+   General Sans es una copia de app/assets/fonts (Fontshare, ITF Free Font License; la licencia va al
+   lado) y check-admin-contrast compara su hash con el original. Martian Mono sale de fontsource
+   (variable) y solo marca identificadores: slug, clave de métrica, URL, id y kbd. */
+@import '@fontsource-variable/martian-mono/wght.css';
+
+@font-face {
+  font-family: 'General Sans Variable';
+  font-style: normal;
+  font-weight: 200 700;
+  font-display: swap;
+  src: url('../assets/fonts/GeneralSans-Variable.woff2') format('woff2-variations');
+}

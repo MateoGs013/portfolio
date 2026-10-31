@@ -1,0 +1,171 @@
+/* Tokens del admin (docs/rediseno-admin/plan.md §2 y «Dirección elegida en la demo»).
+   El mismo frío, las mismas familias y el mismo acento que el sitio, con densidad de herramienta.
+   bg, ink, dim, faint, sig, ok y wip son los de app/assets/css/tokens.css: scripts/check-admin-contrast.mjs
+   los compara y mide el contraste de cada par de texto y fondo. */
+
+:root,
+:root[data-theme='dark'] {
+  color-scheme: dark;
+
+  --bg: #0b0b0c;
+  --panel: #111113;
+  --surface: #161618;
+  --surface-2: #1c1c1f;
+  --rule: rgb(255 255 255 / 0.08);
+  --rule-strong: rgb(255 255 255 / 0.14);
+  --rule-hover: rgb(255 255 255 / 0.22);
+
+  --ink: #ededee;
+  --dim: #a1a1a9;
+  --faint: #83838c;
+
+  /* --sig rellena el primario, marca lo activo y subraya la pestaña; --sig-text es el anillo de foco
+     y el único texto en acento. Sobre --sig el texto es siempre --on-sig. */
+  --sig: #ff3e00;
+  --sig-hover: #ff5520;
+  --sig-text: #ff3e00;
+  --on-sig: #0b0b0c;
+
+  /* Solo el punto de estado, siempre con una palabra al lado. */
+  --ok: #3ecf6e;
+  --wip: #e5a00d;
+  --danger: #f0524f;
+
+  --scrim: rgb(0 0 0 / 0.55);
+  --dialog-shadow: 0 30px 80px rgb(0 0 0 / 0.6);
+
+  --e: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Preparado con los valores del sitio; el admin no lo activa todavía. */
+:root[data-theme='light'] {
+  color-scheme: light;
+
+  --bg: #f1f2f2;
+  --panel: #ebeced;
+  --surface: #e6e7e8;
+  --surface-2: #dfe0e2;
+  --rule: rgb(0 0 0 / 0.1);
+  --rule-strong: rgb(0 0 0 / 0.16);
+  --rule-hover: rgb(0 0 0 / 0.26);
+
+  --ink: #121315;
+  --dim: #55565d;
+  --faint: #616268;
+
+  --sig: #ff3e00;
+  --sig-hover: #ff5520;
+  --sig-text: #b82d00;
+  --on-sig: #0b0b0c;
+
+  --ok: #1f8a4c;
+  --wip: #a86a00;
+  --danger: #b3261e;
+
+  --scrim: rgb(0 0 0 / 0.3);
+  --dialog-shadow: 0 30px 80px rgb(0 0 0 / 0.18);
+}
+
+@theme inline {
+  --color-*: initial;
+  --color-bg: var(--bg);
+  --color-panel: var(--panel);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-rule: var(--rule);
+  --color-rule-strong: var(--rule-strong);
+  --color-rule-hover: var(--rule-hover);
+  --color-ink: var(--ink);
+  --color-dim: var(--dim);
+  --color-faint: var(--faint);
+  --color-sig: var(--sig);
+  --color-sig-hover: var(--sig-hover);
+  --color-sig-text: var(--sig-text);
+  --color-on-sig: var(--on-sig);
+  --color-ok: var(--ok);
+  --color-wip: var(--wip);
+  --color-danger: var(--danger);
+  --color-scrim: var(--scrim);
+  --color-transparent: transparent;
+  --color-current: currentcolor;
+
+  --font-*: initial;
+  --font-sans: 'General Sans Variable', system-ui, sans-serif;
+  --font-mono: 'Martian Mono Variable', ui-monospace, monospace;
+
+  /* Seis tamaños de herramienta. */
+  --text-*: initial;
+  --text-meta: 12px;
+  --text-meta--line-height: 1.4;
+  --text-label: 13px;
+  --text-label--line-height: 1.4;
+  --text-body: 14px;
+  --text-body--line-height: 1.45;
+  --text-row: 15px;
+  --text-row--line-height: 1.35;
+  --text-row--font-weight: 520;
+  --text-title: 20px;
+  --text-title--line-height: 1.2;
+  --text-title--font-weight: 560;
+  --text-title--letter-spacing: -0.02em;
+  --text-figure: 28px;
+  --text-figure--line-height: 1.1;
+  --text-figure--font-weight: 500;
+  --text-figure--letter-spacing: -0.02em;
+
+  /* Dirección elegida: campos livianos, filas grandes y títulos en display, como el sitio. */
+  --text-field: 16px;
+  --text-field--line-height: 1.4;
+  --text-prose: 17px;
+  --text-prose--line-height: 1.6;
+  --text-lead: 16px;
+  --text-lead--line-height: 1.5;
+  --text-list: clamp(24px, 2.6vw, 34px);
+  --text-list--line-height: 1.05;
+  --text-list--font-weight: 540;
+  --text-list--letter-spacing: -0.03em;
+  --text-heading: clamp(38px, 4.2vw, 60px);
+  --text-heading--line-height: 0.98;
+  --text-heading--font-weight: 560;
+  --text-heading--letter-spacing: -0.045em;
+  --text-display: clamp(44px, 5vw, 72px);
+  --text-display--line-height: 0.95;
+  --text-display--font-weight: 560;
+  --text-display--letter-spacing: -0.045em;
+
+  --radius-*: initial;
+  --radius-media: 3px;
+  --radius-kbd: 4px;
+  --radius-control: 6px;
+  --radius-dialog: 10px;
+  --radius-full: 9999px;
+
+  --shadow-*: initial;
+  --shadow-dialog: var(--dialog-shadow);
+
+  --ease-e: var(--e);
+
+  --animate-rise: rise 0.7s var(--e) backwards;
+  --animate-enter: enter 0.2s var(--e) backwards;
+  --animate-spin: spin 0.8s linear infinite;
+
+  @keyframes rise {
+    from {
+      opacity: 0;
+      transform: translateY(14px);
+    }
+  }
+
+  @keyframes enter {
+    from {
+      opacity: 0;
+      transform: translateY(6px);
+    }
+  }
+
+  @keyframes spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+}
