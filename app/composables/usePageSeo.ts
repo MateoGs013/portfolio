@@ -1,11 +1,14 @@
 /**
- * Metadatos de cada página desde la base: título, descripción, canonical (lista blanca: `lang` y
- * las facetas de /projects y /articles), hreflang recíproco es/en/x-default, Open Graph y JSON-LD Person (about + contact). El
- * origen absoluto sale solo de `runtimeConfig.public.siteUrl`. X3 lo completa (imagen OG por defecto).
+ * Metadatos de cada página desde la base: título, descripción, canonical (lista blanca: `lang` y las
+ * facetas de /projects y /articles), hreflang recíproco es/en/x-default, Open Graph con imagen medida y
+ * JSON-LD (Person y WebSite desde about + contact, BreadcrumbList por ruta). El CreativeWork de cada
+ * obra (`ld-case`) y los del blog (`ld-blog`, `ld-article`) los arman sus páginas y apuntan a la misma
+ * Person. El origen absoluto sale solo de `runtimeConfig.public.siteUrl`.
  */
 import type { MaybeRefOrGetter } from 'vue'
 import type { LocationQuery } from 'vue-router'
 import type { Media } from '~/lib/api'
+import type { DictKey } from '~/lib/dict'
 import { apiParams, type ApiCollection } from './useApi'
 import { langFrom, withLang } from './useLocale'
 import { docList, docText, useDoc } from './useSiteContent'
@@ -14,15 +17,28 @@ export interface PageSeo {
   /** Título propio de la página; sin él (el inicio) se usa el nombre del sitio. */
   title?: string | null
   description?: string | null
-  /** Portada de la obra; sin ella, el retrato de about. */
+  /** Portada de la obra; sin ella (o sin medidas), la imagen OG por defecto. */
   image?: Pick<Media, 'src' | 'alt' | 'width' | 'height' | 'kind' | 'poster'> | null
   type?: 'website' | 'article' | 'profile'
 }
 
+interface OgImage {
+  url: string
+  width: number
+  height: number
+  alt: string | undefined
+}
+
 const ogLocale = { es: 'es_AR', en: 'en_US' } as const
+
+/** La imagen OG por defecto: la genera scripts/og-default.mjs desde about (1200 x 630). */
+const OG_DEFAULT = { src: '/og/default.png', width: 1200, height: 630 } as const
 
 /** Colecciones cuyas facetas forman parte de la dirección canónica de su página. */
 const FACETED: Record<string, ApiCollection> = { '/projects': 'projects', '/articles': 'articles' }
+
+/** Rótulo de cada sección para las migas de pan (el primer segmento de la ruta). */
+const SECTIONS: Record<string, DictKey> = { projects: 'nav.work', about: 'nav.about', articles: 'nav.articles' }
 
 /**
  * La query pública de la página, por lista blanca: `lang=en` y, en una página con facetas, sus filtros
@@ -37,6 +53,7 @@ function publicQuery(path: string, query: LocationQuery): Record<string, string>
 
 /** Escapa `<` para que el JSON no pueda cerrar el `<script>` que lo contiene. */
 const jsonLd = (data: unknown) => JSON.stringify(data).replace(/</g, '\\u003c')
+const ldScript = (key: string, data: unknown) => ({ key, type: 'application/ld+json' as const, innerHTML: jsonLd(data) })
 
 export async function usePageSeo(input: MaybeRefOrGetter<PageSeo>) {
   const route = useRoute()
@@ -49,49 +66,95 @@ export async function usePageSeo(input: MaybeRefOrGetter<PageSeo>) {
   const contact = contactDoc.data
 
   const absolute = (path: string) => new URL(path, siteUrl).toString()
-  const urlFor = (query: LocationQuery) => {
-    const search = new URLSearchParams(publicQuery(route.path, query)).toString()
-    return absolute(`${route.path}${search ? `?${search}` : ''}`)
+  const urlFor = (path: string, query: LocationQuery) => {
+    const search = new URLSearchParams(publicQuery(path, query)).toString()
+    return absolute(`${path}${search ? `?${search}` : ''}`)
   }
+  const localized = (path: string) => absolute(lang.value === 'en' ? `${path}?lang=en` : path)
 
   const seo = computed(() => toValue(input))
   const site = computed(() => docText(about.value, 'display_name') ?? docText(about.value, 'name') ?? '')
+  const headline = computed(() => docText(about.value, 'headline'))
   const title = computed(() => {
     const page = seo.value.title
     return page ? t('seo.title', { page, site: site.value }) : site.value
   })
-  const description = computed(() => seo.value.description ?? docText(about.value, 'headline') ?? '')
-  const canonical = computed(() => urlFor(withLang(route.query, lang.value)))
-  const image = computed(() => {
+  const description = computed(() => seo.value.description ?? headline.value ?? '')
+  const canonical = computed(() => urlFor(route.path, withLang(route.query, lang.value)))
+
+  /** La portada solo sirve de og:image si se conocen sus medidas; si no, la imagen por defecto. */
+  const image = computed<OgImage>(() => {
     const cover = seo.value.image
     const src = cover?.kind === 'VIDEO' ? cover.poster : cover?.src
-    const fallback = docText(about.value, 'portrait')
-    return src ? { url: absolute(src), alt: cover?.alt } : fallback ? { url: absolute(fallback), alt: docText(about.value, 'portrait_alt') ?? undefined } : null
+    if (cover && src && cover.width && cover.height) {
+      return { url: absolute(src), width: cover.width, height: cover.height, alt: cover.alt ?? undefined }
+    }
+    const alt = headline.value ? t('seo.ogAlt', { site: site.value, headline: headline.value }) : site.value
+    return { url: absolute(OG_DEFAULT.src), width: OG_DEFAULT.width, height: OG_DEFAULT.height, alt: alt || undefined }
   })
 
-  const person = computed(() => ({
+  const personId = computed(() => absolute('/#person'))
+  const person = computed(() => {
+    const portrait = docText(about.value, 'portrait')
+    const email = docText(contact.value, 'email')
+    const location = docText(contact.value, 'location')
+    return {
+      '@context': 'https://schema.org',
+      '@type': 'Person',
+      '@id': personId.value,
+      'name': docText(about.value, 'name') ?? undefined,
+      'alternateName': docText(about.value, 'display_name') ?? undefined,
+      'jobTitle': docText(about.value, 'role') ?? undefined,
+      'description': headline.value ?? undefined,
+      'url': absolute('/'),
+      'image': portrait ? { '@type': 'ImageObject', 'url': absolute(portrait), 'caption': docText(about.value, 'portrait_alt') ?? undefined } : undefined,
+      'email': email ? `mailto:${email}` : undefined,
+      'homeLocation': location ? { '@type': 'Place', 'name': location } : undefined,
+      'knowsLanguage': docList(about.value, 'languages'),
+      'sameAs': ['github', 'linkedin'].map(name => docText(contact.value, name)).filter((u): u is string => !!u),
+    }
+  })
+
+  const website = computed(() => ({
     '@context': 'https://schema.org',
-    '@type': 'Person',
-    'name': docText(about.value, 'name') ?? undefined,
-    'jobTitle': docText(about.value, 'role') ?? undefined,
-    'description': docText(about.value, 'headline') ?? undefined,
+    '@type': 'WebSite',
+    '@id': absolute('/#website'),
+    'name': site.value || undefined,
+    'description': headline.value ?? undefined,
     'url': absolute('/'),
-    'image': docText(about.value, 'portrait') ? absolute(docText(about.value, 'portrait')!) : undefined,
-    'email': docText(contact.value, 'email') ? `mailto:${docText(contact.value, 'email')}` : undefined,
-    'homeLocation': docText(contact.value, 'location') ? { '@type': 'Place', 'name': docText(contact.value, 'location') } : undefined,
-    'knowsLanguage': docList(about.value, 'languages'),
-    'sameAs': ['github', 'linkedin'].map(name => docText(contact.value, name)).filter((u): u is string => !!u),
+    'inLanguage': lang.value,
+    'author': { '@id': personId.value },
+    'publisher': { '@id': personId.value },
   }))
+
+  /** Inicio › sección › página. El inicio no lleva migas: sería una lista de un solo elemento. */
+  const breadcrumbs = computed(() => {
+    const [section, ...rest] = route.path.split('/').filter(Boolean)
+    if (!section) return null
+    const label = SECTIONS[section]
+    const crumbs = [{ name: t('nav.home'), url: localized('/') }]
+    crumbs.push({ name: label ? t(label) : (seo.value.title ?? site.value), url: localized(`/${section}`) })
+    if (rest.length && seo.value.title) crumbs.push({ name: seo.value.title, url: localized(route.path) })
+    return {
+      '@context': 'https://schema.org',
+      '@type': 'BreadcrumbList',
+      'itemListElement': crumbs.map((crumb, i) => ({ '@type': 'ListItem', 'position': i + 1, 'name': crumb.name, 'item': crumb.url })),
+    }
+  })
 
   useHead({
     title,
     link: [
       { rel: 'canonical', href: canonical },
-      { rel: 'alternate', hreflang: 'es', href: computed(() => urlFor(withLang(route.query, 'es'))) },
-      { rel: 'alternate', hreflang: 'en', href: computed(() => urlFor(withLang(route.query, 'en'))) },
-      { rel: 'alternate', hreflang: 'x-default', href: computed(() => urlFor(withLang(route.query, 'es'))) },
+      { rel: 'alternate', hreflang: 'es', href: computed(() => urlFor(route.path, withLang(route.query, 'es'))) },
+      { rel: 'alternate', hreflang: 'en', href: computed(() => urlFor(route.path, withLang(route.query, 'en'))) },
+      { rel: 'alternate', hreflang: 'x-default', href: computed(() => urlFor(route.path, withLang(route.query, 'es'))) },
     ],
-    script: [{ key: 'ld-person', type: 'application/ld+json', innerHTML: computed(() => jsonLd(person.value)) }],
+    script: computed(() => [
+      ldScript('ld-person', person.value),
+      ldScript('ld-website', website.value),
+      ...(breadcrumbs.value ? [ldScript('ld-breadcrumbs', breadcrumbs.value)] : []),
+    ]),
   })
 
   useSeoMeta({
@@ -103,9 +166,12 @@ export async function usePageSeo(input: MaybeRefOrGetter<PageSeo>) {
     ogSiteName: site,
     ogLocale: computed(() => ogLocale[lang.value]),
     ogLocaleAlternate: computed(() => ogLocale[lang.value === 'es' ? 'en' : 'es']),
-    ogImage: computed(() => image.value?.url),
-    ogImageAlt: computed(() => image.value?.alt),
+    ogImage: computed(() => image.value.url),
+    ogImageWidth: computed(() => image.value.width),
+    ogImageHeight: computed(() => image.value.height),
+    ogImageAlt: computed(() => image.value.alt),
     twitterCard: 'summary_large_image',
+    twitterImageAlt: computed(() => image.value.alt),
   })
 
   // El SSR espera los documentos antes de escribir el <head>; en el cliente ya vienen del payload.
