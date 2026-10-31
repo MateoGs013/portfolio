@@ -42,7 +42,7 @@ const countLabel = computed(() => t(count.value === 1 ? 'work.count.one' : 'work
     <WorkGallery v-else-if="list.length" :projects="list" />
     <p v-else class="flex flex-wrap gap-x-4 gap-y-2 px-pad text-m text-dim">
       {{ t('work.empty') }}
-      <NuxtLink :to="localeRoute('/projects')" class="text-ink underline underline-offset-4">
+      <NuxtLink :to="localeRoute('/projects')" class="hit text-ink underline underline-offset-4">
         {{ t('work.clear') }}
       </NuxtLink>
     </p>

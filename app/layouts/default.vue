@@ -28,7 +28,7 @@ onBeforeUnmount(stop)
     <a
       data-chrome
       href="#contenido"
-      class="fixed top-2 left-2 z-50 -translate-y-[200%] rounded-sm bg-ink px-3.5 py-2 text-s text-bg no-underline transition-transform duration-150 focus-visible:translate-y-0 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sig-text"
+      class="fixed top-2 left-2 z-50 inline-flex min-h-11 -translate-y-[200%] items-center rounded-sm bg-ink px-3.5 py-2 text-s text-bg no-underline transition-transform duration-150 focus-visible:translate-y-0 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sig-text"
     >
       {{ t('shell.skip') }}
     </a>

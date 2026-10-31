@@ -51,13 +51,13 @@ onBeforeUnmount(() => {
       role="group"
       :aria-label="t('cv.actions')"
       data-chrome
-      class="no-print mx-auto flex w-full max-w-[210mm] flex-wrap items-center justify-between gap-x-6 gap-y-3"
+      class="no-print mx-auto flex w-full max-w-[210mm] flex-wrap items-center justify-between gap-x-6 gap-y-3 coarse:gap-y-6"
     >
       <CvDownloads />
       <button
         type="button"
         :title="t('cv.printHint')"
-        class="inline-flex cursor-pointer items-center gap-2 text-s text-ink"
+        class="hit inline-flex cursor-pointer items-center gap-2 text-s text-ink"
         @click="printCv"
       >
         <AppIcon name="printer" :size="15" class="text-dim" />

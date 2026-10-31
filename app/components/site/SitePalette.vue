@@ -156,6 +156,9 @@ function hide() {
 
 function onClose() {
   const box = dialog.value
+  // Con reduced motion el cierre es inmediato y el evento close llega en una tarea aparte: si para
+  // entonces otra tecla ya volvió a abrir la paleta, este cierre es viejo y no se toca nada.
+  if (box?.open) return
   closing = false
   if (box) {
     delete box.dataset.closing

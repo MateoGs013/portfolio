@@ -14,7 +14,7 @@ const { t, localeRoute, langAttr } = useLocale()
 const { isRecord } = useRecordView()
 
 const dt = 'text-xs text-faint'
-const link = 'underline decoration-rule decoration-1 underline-offset-4 transition-colors duration-200 hover:decoration-current'
+const link = 'hit underline decoration-rule decoration-1 underline-offset-4 transition-colors duration-200 hover:decoration-current'
 </script>
 
 <template>
@@ -33,7 +33,7 @@ const link = 'underline decoration-rule decoration-1 underline-offset-4 transiti
       <RecordField collection="articles" k="techs" :value="article.techs" :record="article">
         <dt :class="dt">{{ t('articles.techs') }}</dt>
         <dd>
-          <ul class="flex flex-wrap gap-x-4 gap-y-1">
+          <ul class="flex flex-wrap gap-x-4 gap-y-1 coarse:gap-y-5">
             <li v-for="tech in article.techs" :key="tech.slug">
               <NuxtLink :to="localeRoute({ path: '/articles', query: { stack: tech.slug } })" :class="link">{{ tech.name }}</NuxtLink>
             </li>

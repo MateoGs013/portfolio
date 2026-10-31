@@ -63,7 +63,7 @@ useHead({
 <template>
   <article data-hf="measure" class="px-pad pt-[clamp(8rem,24vh,13rem)] pb-section">
     <header class="flex flex-col gap-[clamp(1.5rem,4vh,2.5rem)] record:gap-0">
-      <NuxtLink data-chrome :to="localeRoute('/articles')" class="w-fit text-s text-dim transition-colors duration-200 hover:text-ink record:mb-6">
+      <NuxtLink data-chrome :to="localeRoute('/articles')" class="hit w-fit text-s text-dim transition-colors duration-200 hover:text-ink record:mb-6">
         <RollText :text="t('articles.back')" />
       </NuxtLink>
       <RecordField v-slot="{ fv }" collection="articles" k="title" :value="a.title" :record="a" shared>

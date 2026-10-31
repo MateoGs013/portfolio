@@ -21,7 +21,7 @@ const options = computed(() => langs.map((l: Lang) => ({
 </script>
 
 <template>
-  <div role="group" :aria-label="t('shell.lang')" class="flex items-center gap-3">
+  <div role="group" :aria-label="t('shell.lang')" class="flex items-center gap-3 coarse:gap-7">
     <NuxtLink
       v-for="o in options"
       :key="o.lang"
@@ -29,7 +29,7 @@ const options = computed(() => langs.map((l: Lang) => ({
       :lang="o.lang"
       :hreflang="o.lang"
       :aria-current="o.current ? 'true' : undefined"
-      class="inline-flex min-h-6 items-center uppercase opacity-72 transition-opacity duration-300 hover:opacity-100 aria-[current]:opacity-100 aria-[current]:underline aria-[current]:decoration-1 aria-[current]:underline-offset-4"
+      class="hit inline-flex min-h-6 items-center uppercase opacity-72 transition-opacity duration-300 hover:opacity-100 aria-[current]:opacity-100 aria-[current]:underline aria-[current]:decoration-1 aria-[current]:underline-offset-4"
     >
       {{ o.lang }}<span class="sr-only"> ({{ t(`shell.autonym.${o.lang}`) }})</span>
     </NuxtLink>

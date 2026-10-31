@@ -15,7 +15,8 @@ import { defineConfig, devices, type PlaywrightTestConfig } from '@playwright/te
  * cada 15 minutos por IP y la suite entera pasa de largo ese número.
  *
  * Proyectos: 375, 768 y 1440 px en oscuro y en claro, uno con reduced motion y uno sin JS. Las specs
- * que no dependen del ancho ni del tema corren una sola vez, en 1440 oscuro.
+ * que no dependen del ancho ni del tema corren una sola vez, en 1440 oscuro. Las capturas de referencia
+ * (visual.spec.ts) quedan en tests/e2e/visual.spec.ts-snapshots/, una por vista y proyecto.
  */
 const webPort = process.env.PW_WEB_PORT || '3000'
 const apiPort = process.env.PW_API_PORT || '3001'
@@ -45,8 +46,8 @@ const widths: Record<number, Use> = {
   1440: { ...devices['Desktop Chrome'], viewport: { width: 1440, height: 900 } },
 }
 
-/** Lo que cambia con el ancho o con el tema: accesibilidad y estabilidad del layout. */
-const LAYOUT = ['**/a11y.spec.ts', '**/cls.spec.ts']
+/** Lo que cambia con el ancho o con el tema: accesibilidad, estabilidad del layout y capturas de referencia. */
+const LAYOUT = ['**/a11y.spec.ts', '**/cls.spec.ts', '**/visual.spec.ts']
 /** Teclado: no depende del tema, sí del ancho (menú angosto, galería en columna). */
 const KEYS = [...LAYOUT, '**/keyboard.spec.ts']
 

@@ -41,7 +41,7 @@ function techLines(tech: ProjectTech): PeekLine[] {
 }
 
 const dt = 'text-xs text-faint'
-const link = 'underline decoration-rule decoration-1 underline-offset-4 transition-colors duration-300 hover:decoration-current'
+const link = 'hit underline decoration-rule decoration-1 underline-offset-4 transition-colors duration-300 hover:decoration-current'
 </script>
 
 <template>
@@ -102,7 +102,7 @@ const link = 'underline decoration-rule decoration-1 underline-offset-4 transiti
           {{ t('case.stack') }}
         </dt>
         <dd>
-          <ul data-peek-group class="flex flex-wrap items-center gap-x-3 gap-y-1">
+          <ul data-peek-group class="flex flex-wrap items-center gap-x-3 gap-y-1 coarse:gap-y-5">
             <CasePeekTrigger
               v-for="tech in project.techs"
               :key="tech.slug"

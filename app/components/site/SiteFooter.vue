@@ -51,14 +51,14 @@ const external = computed(() => [
       </p>
 
       <nav :aria-label="t('shell.elsewhere')">
-        <ul class="flex flex-wrap gap-x-6 gap-y-2 text-ink">
+        <ul class="flex flex-wrap gap-x-6 gap-y-2 text-ink coarse:gap-y-5">
           <li>
-            <NuxtLink v-magnet :to="localeRoute('/articles')" class="inline-flex min-h-6 items-center">
+            <NuxtLink v-magnet :to="localeRoute('/articles')" class="hit inline-flex min-h-6 items-center">
               <RollText :text="t('nav.articles')" />
             </NuxtLink>
           </li>
           <li v-for="link in external" :key="link.field">
-            <a v-magnet :href="link.href" target="_blank" rel="noopener noreferrer" class="inline-flex min-h-6 items-center gap-1">
+            <a v-magnet :href="link.href" target="_blank" rel="noopener noreferrer" class="hit inline-flex min-h-6 items-center gap-1">
               <RollText :text="link.label" />
               <AppIcon name="external" :size="12" class="text-dim" />
               <span class="sr-only">{{ t('shell.newTab') }}</span>

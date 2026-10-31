@@ -6,7 +6,7 @@ paths:
 
 # Admin y Consola de Gestión (CMS)
 
-El panel de administración (`/admin`) es la mesa de trabajo interna del portafolio. No es una pieza de exhibición para el visitante público ni un cosplay de terminal: es la herramienta con la que Mateo y cualquier asistente o colaborador crean, curan y mantienen el contenido que alimenta el portafolio (explorador técnico, modo Focus/Hiperfoco y ficha de perfil), además de operar el agente autónomo de búsqueda laboral (**Job Hunter**) con generación de propuestas y CV Harvard ATS.
+El panel de administración (`/admin`) es la mesa de trabajo interna del portafolio. No es una pieza de exhibición para el visitante público ni un cosplay de terminal: es la herramienta con la que Mateo y cualquier asistente o colaborador crean, curan y mantienen el contenido que alimenta el portafolio (el sitio público con su vista de registro, el modo Focus/Hiperfoco y la ficha de perfil), además de operar el agente autónomo de búsqueda laboral (**Job Hunter**) con generación de propuestas y CV Harvard ATS.
 
 ---
 
@@ -22,7 +22,7 @@ Si se violan, la herramienta pierde su propósito.
 6. **Layout desktop elástico y robusto.** La estructura responde a un sistema flex y grid limpio:
    - Modo Dashboard: `grid-template-columns: 240px 1fr;` con contenedor centralizado y fluido.
    - Modo Colecciones: `grid-template-columns: 240px minmax(300px, 340px) 1fr;` donde el editor es una columna flex autónoma (`display: flex; flex-direction: column; height: 100%;`) con cabecera fija, scroll central y barra de acciones anclada al pie del contenedor.
-7. **Coherencia con el explorador y modo Focus.** Un registro alimenta tanto la vista detallada de datos técnicos como el modo Focus (lectura limpia sin distracciones) y la ficha de perfil/CV. El editor debe explicar al operador el propósito de cada campo (`summary` sintetiza la tarjeta y vista rápida; `brief`, `outcome` y `steps` articulan el relato técnico y casos de estudio; `metrics` sustentan el impacto medible).
+7. **Coherencia con el sitio, el registro y el modo Focus.** Un registro alimenta la página del caso, su vista de registro (`R`), el modo Focus (lectura limpia sin distracciones) y la ficha de perfil/CV. El editor debe explicar al operador el propósito de cada campo (`summary` sintetiza la tarjeta y vista rápida; `brief`, `outcome` y `steps` articulan el relato técnico y casos de estudio; `metrics` sustentan el impacto medible).
 8. **Métricas tipadas, sin JSON a mano.** Cada métrica es una fila `Metric`: clave, valor numérico (Decimal) con unidad (`server/src/shared/metricUnits.ts`) o lista de items, fuente, fecha de medición y rótulo propio opcional. Las claves sugeridas salen de las otras obras de la base, nunca de presets inventados. La vista "Ver JSON" es solo lectura del payload tipado.
 9. **Lenguaje claro y tranquilizador.** Los modales de confirmación y mensajes de error deben redactarse en español claro y empático. Prohibidos los tecnicismos intimidantes como *"mutación DELETE ACID irreversible"*.
 

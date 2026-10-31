@@ -12,7 +12,7 @@ const label = computed(() => t(toLight.value ? 'shell.theme.toLight' : 'shell.th
 <template>
   <button
     type="button"
-    class="inline-flex min-h-6 min-w-6 cursor-pointer items-center gap-2 opacity-72 transition-opacity duration-300 hover:opacity-100"
+    class="hit inline-flex min-h-6 min-w-6 cursor-pointer items-center gap-2 opacity-72 transition-opacity duration-300 hover:opacity-100"
     :aria-label="label"
     v-on:click="toggleTheme"
   >

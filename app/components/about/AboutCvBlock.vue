@@ -120,7 +120,7 @@ onBeforeUnmount(() => {
       <h1 id="cv-titulo" ref="heading" tabindex="-1" class="text-xl text-ink">
         {{ t('cv.title') }}
       </h1>
-      <NuxtLink :to="toggleTo" aria-keyshortcuts="Escape Backspace" class="text-s text-dim transition-colors duration-300 hover:text-ink focus-visible:text-ink">
+      <NuxtLink :to="toggleTo" aria-keyshortcuts="Escape Backspace" class="hit text-s text-dim transition-colors duration-300 hover:text-ink focus-visible:text-ink">
         <span class="roll"><span :data-t="t('about.closeCv')">{{ t('about.closeCv') }}</span></span>
       </NuxtLink>
     </div>

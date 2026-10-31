@@ -170,7 +170,7 @@ onBeforeUnmount(() => {
       type="button"
       data-chrome
       :aria-label="playing ? t('motion.pause') : t('motion.play')"
-      class="absolute right-3 bottom-3 grid size-10 place-items-center rounded-full bg-black/60 text-white transition-colors duration-200 hover:bg-black/80"
+      class="absolute right-3 bottom-3 grid size-11 place-items-center rounded-full bg-black/60 text-white transition-colors duration-200 hover:bg-black/80"
       @click="toggle"
     >
       <svg aria-hidden="true" viewBox="0 0 16 16" class="size-4" fill="currentColor">
