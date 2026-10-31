@@ -10,10 +10,25 @@ import { show, type Change } from './change.js'
 
 type DocKey = typeof docs[number]['key']
 
-/** Claves que salen: la ubicación, la disponibilidad y la zona horaria pasan a contact. */
-const REMOVED: Record<DocKey, string[]> = {
-  about: ['location', 'availability_status', 'timezone'],
-  contact: ['timezone'],
+/**
+ * Claves que salen (la ubicación, la disponibilidad y la zona horaria pasan a contact), con los valores
+ * que se conocen de main. Solo se quitan con uno de esos valores: si alguien las editó en el admin, se
+ * conservan al final del doc y el parche lo avisa.
+ */
+const REMOVED: Record<DocKey, Record<string, string[]>> = {
+  about: {
+    location: ['Río Negro, Patagonia Argentina'],
+    availability_status: ['DISPONIBLE · Búsqueda de equipo o proyectos de alto impacto', 'DISPONIBLE // Búsqueda de equipo o proyectos de alto impacto'],
+    timezone: ['UTC-3 (Argentina / Compatible con US & EU)'],
+  },
+  contact: { timezone: ['UTC-3'] },
+}
+
+/** Claves renombradas: si la nueva falta, hereda el valor (y su inglés) de la vieja cuando le sirve. */
+const RENAMED: Record<DocKey, Record<string, { to: string, accepts: (value: string) => boolean }>> = {
+  about: {},
+  // El reloj del pie necesita una zona IANA; 'UTC-3' no lo es y se reemplaza por la del seed.
+  contact: { timezone: { to: 'time_zone', accepts: isTimeZone } },
 }
 
 /** Valores viejos conocidos que se reemplazan por los del seed (si alguien los editó, se respetan). */
@@ -24,6 +39,23 @@ const LEGACY_VALUES: Record<DocKey, Record<string, string[]>> = {
     freelance_experience: ['Activo desde 2023 · ', 'Activo desde 2023 ·', 'Activo desde 2023'],
   },
   contact: { location: ['Río Negro, AR (Disponible para relocalización o remoto)'] },
+}
+
+/** Listas viejas conocidas (texto de main o la lista que sale de partirlo) que pasan a la del seed. */
+const LEGACY_LISTS: Record<DocKey, Record<string, string[][]>> = {
+  about: { languages: [['Español (Nativo)', 'Inglés (B2 Profesional Técnico)']] },
+  contact: {},
+}
+
+function isTimeZone(value: string): boolean {
+  if (!value.includes('/')) return false
+  try {
+    new Intl.DateTimeFormat('en', { timeZone: value })
+    return true
+  }
+  catch {
+    return false
+  }
 }
 
 /** Tipo que debe tener cada campo; un valor de texto pasa a lista partiéndolo por '·'. */
@@ -41,14 +73,31 @@ function asList(value: DocField['value']): string[] {
   return Array.isArray(value) ? value : value.split('·').map(s => s.trim()).filter(Boolean)
 }
 
-/** Devuelve los campos reformados y una línea por cada diferencia. */
-export function reform(key: DocKey, current: DocField[]): { fields: DocField[], what: string[] } {
+/** Devuelve los campos reformados, una línea por cada diferencia y los avisos para el admin. */
+export function reform(key: DocKey, current: DocField[]): { fields: DocField[], what: string[], warnings: string[] } {
   const what: string[] = []
+  const warnings: string[] = []
   const seed = docs.find(d => d.key === key)!.fields
   const byName = new Map(current.map(f => [f.name, { ...f }]))
 
-  for (const name of REMOVED[key]) {
-    if (byName.delete(name)) what.push(`${key}.${name}: se quita`)
+  for (const [name, { to, accepts }] of Object.entries(RENAMED[key])) {
+    const field = byName.get(name)
+    if (!field || byName.has(to) || typeof field.value !== 'string' || !accepts(field.value)) continue
+    byName.delete(name)
+    byName.set(to, { ...field, name: to })
+    what.push(`${key}.${name} → ${key}.${to} (${show(field.value)})`)
+  }
+  for (const [name, known] of Object.entries(REMOVED[key])) {
+    const field = byName.get(name)
+    if (!field) continue
+    const value = Array.isArray(field.value) ? field.value.join(' · ') : field.value
+    if (value.trim() === '' || known.includes(value)) {
+      byName.delete(name)
+      what.push(`${key}.${name}: se quita`)
+    }
+    else {
+      warnings.push(`doc ${key}.${name}: se editó en el admin (${show(value)}); se conserva, borralo desde el admin si ya no hace falta`)
+    }
   }
   for (const [name, olds] of Object.entries(LEGACY_VALUES[key])) {
     const field = byName.get(name)
@@ -64,6 +113,16 @@ export function reform(key: DocKey, current: DocField[]): { fields: DocField[], 
     what.push(`${key}.${name}: type ${field.type} → ${type}`)
     field.type = type
     if (type === 'list') field.value = asList(field.value)
+  }
+  for (const [name, olds] of Object.entries(LEGACY_LISTS[key])) {
+    const field = byName.get(name)
+    const next = seed.find(f => f.name === name)
+    if (!field || !next || !Array.isArray(field.value)) continue
+    const value = field.value
+    if (olds.some(old => old.length === value.length && old.every((item, i) => item === value[i]))) {
+      what.push(`${key}.${name}: ${show(value)} → ${show(next.value)}`)
+      field.value = next.value
+    }
   }
   for (const field of byName.values()) {
     if (typeof field.value !== 'string' || field.type === 'url') continue
@@ -82,11 +141,12 @@ export function reform(key: DocKey, current: DocField[]): { fields: DocField[], 
 
   const ordered = seed.map(f => byName.get(f.name)!)
   const extra = [...byName.values()].filter(f => !seed.some(s => s.name === f.name))
-  return { fields: [...ordered, ...extra], what }
+  return { fields: [...ordered, ...extra], what, warnings }
 }
 
-export async function docChanges(db: PrismaClient): Promise<Change[]> {
+export async function docChanges(db: PrismaClient): Promise<{ changes: Change[], warnings: string[] }> {
   const changes: Change[] = []
+  const warnings: string[] = []
 
   const home = await db.doc.findUnique({ where: { key: 'home' }, select: { key: true } })
   if (home) changes.push({ what: ['doc home: se borra'], apply: tx => tx.doc.delete({ where: { key: 'home' } }) })
@@ -101,11 +161,12 @@ export async function docChanges(db: PrismaClient): Promise<Change[]> {
       continue
     }
     const current = Array.isArray(row.fields) ? (row.fields as unknown as DocField[]) : []
-    const { fields, what } = reform(d.key, current)
+    const { fields, what, warnings: docWarnings } = reform(d.key, current)
+    warnings.push(...docWarnings)
     if (what.length) {
       changes.push({ what, apply: tx => tx.doc.update({ where: { key: d.key }, data: { fields } }) })
     }
   }
 
-  return changes
+  return { changes, warnings }
 }

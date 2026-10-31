@@ -3,6 +3,8 @@
  * snapshot en una matriz fija: las 5 listas × filtros (status, stack, featured) × es/en, el detalle
  * de cada obra, tecnología, experiencia, org, documento y artículo, /api/schema y /api/cv × es/en.
  * Termina con código 1 si alguna difiere: hay que regenerar con `pnpm db:snapshot`.
+ * createdAt y updatedAt no cuentan: cambian con cada seed o parche aunque el contenido sea el mismo,
+ * así que solo se informan aparte. publishedAt sí cuenta (decide la visibilidad).
  */
 import { isDeepStrictEqual } from 'node:util'
 import { Locale } from '../../generated/prisma/client.js'
@@ -57,6 +59,16 @@ function listCases<S extends Parameters<typeof readFilters>[1], W, O>(
   return [...cases.values()]
 }
 
+/** Marcas de tiempo que cambian solas con cada escritura; no son contenido. */
+const TIMESTAMPS = new Set(['createdAt', 'updatedAt'])
+
+/** El valor sin sus marcas de tiempo, a cualquier profundidad. */
+function withoutTimestamps(value: unknown): unknown {
+  if (Array.isArray(value)) return value.map(withoutTimestamps)
+  if (typeof value !== 'object' || value === null) return value
+  return Object.fromEntries(Object.entries(value).filter(([k]) => !TIMESTAMPS.has(k)).map(([k, v]) => [k, withoutTimestamps(v)]))
+}
+
 /** Primer camino donde dos valores difieren, para que el aviso diga qué cambió. */
 function firstDiff(a: unknown, b: unknown, path = ''): string {
   if (isDeepStrictEqual(a, b)) return ''
@@ -92,15 +104,22 @@ async function main() {
   ]
 
   let failures = 0
+  let stamps = 0
   for (const c of cases) {
     for (const lang of Object.values(Locale)) {
       const [fromDb, fromSnapshot] = await Promise.all([c.run('db', lang), c.run('snapshot', lang)])
-      const diff = firstDiff(JSON.parse(JSON.stringify(fromDb ?? null)), JSON.parse(JSON.stringify(fromSnapshot ?? null)))
-      if (!diff) continue
+      const a = JSON.parse(JSON.stringify(fromDb ?? null)) as unknown
+      const b = JSON.parse(JSON.stringify(fromSnapshot ?? null)) as unknown
+      const diff = firstDiff(withoutTimestamps(a), withoutTimestamps(b))
+      if (!diff) {
+        if (!isDeepStrictEqual(a, b)) stamps++
+        continue
+      }
       failures++
       console.error(`difiere  ${c.label} (${lang})  ${diff}`)
     }
   }
+  if (stamps > 0) console.log(`info: ${stamps} respuestas difieren solo en createdAt/updatedAt (no cuenta)`)
 
   const total = cases.length * Object.values(Locale).length
   if (failures > 0) {

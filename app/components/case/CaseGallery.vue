@@ -48,7 +48,7 @@ useMotion(root, ({ el, ambient, desktop }) => {
     <div v-if="phones" class="flex flex-wrap justify-center gap-[clamp(1rem,4vw,3rem)]">
       <figure v-for="(m, i) in items" :key="m.src" :data-phone="i" data-motion class="m-0 w-[min(17rem,40vw)]">
         <div
-          class="overflow-hidden rounded-[clamp(1.2rem,2.4vw,2.2rem)] border border-rule bg-surface shadow-[0_30px_80px_rgb(0_0_0/0.45)]"
+          class="overflow-hidden rounded-[clamp(1.2rem,2.4vw,2.2rem)] border border-rule bg-surface shadow-[0_24px_60px_color-mix(in_oklab,var(--bg)_20%,rgb(0_0_0/0.28))]"
           :style="ratio(m)"
         >
           <MediaVideo v-if="m.kind === 'VIDEO'" :media="m" class="size-full" />

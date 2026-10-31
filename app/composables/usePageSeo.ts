@@ -20,6 +20,8 @@ export interface PageSeo {
   /** Portada de la obra; sin ella (o sin medidas), la imagen OG por defecto. */
   image?: Pick<Media, 'src' | 'alt' | 'width' | 'height' | 'kind' | 'poster'> | null
   type?: 'website' | 'article' | 'profile'
+  /** Canónico propio de la base (Article.canonicalUrl, si se publicó primero en otro sitio). */
+  canonical?: string | null
 }
 
 interface OgImage {
@@ -80,7 +82,7 @@ export async function usePageSeo(input: MaybeRefOrGetter<PageSeo>) {
     return page ? t('seo.title', { page, site: site.value }) : site.value
   })
   const description = computed(() => seo.value.description ?? headline.value ?? '')
-  const canonical = computed(() => urlFor(route.path, withLang(route.query, lang.value)))
+  const canonical = computed(() => seo.value.canonical || urlFor(route.path, withLang(route.query, lang.value)))
 
   /** La portada solo sirve de og:image si se conocen sus medidas; si no, la imagen por defecto. */
   const image = computed<OgImage>(() => {

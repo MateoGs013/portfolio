@@ -61,7 +61,7 @@ export const publicProjects: SeedProject[] = [
     slug: 'ynara',
     title: 'Ynara',
     year: 2026,
-    role: 'Tesis Da Vinci 2026 · contribuidor principal, 382 commits',
+    role: 'Tesis Da Vinci 2026 · contribuidor principal',
     status: ProjectStatus.WIP,
     featured: true,
     published: true,
@@ -149,7 +149,7 @@ export const publicProjects: SeedProject[] = [
     metrics: { freeTierQuota: 1500, operatingCost: 0, platformsCount: 4, responseLatencyMs: 35 },
     links: [
       { label: 'código fuente', url: 'https://github.com/MateoGs013/eros-agent' },
-      { label: 'control center', url: 'https://eros.mateogs.tech' },
+      { label: 'centro de control', url: 'https://eros.mateogs.tech' },
     ],
     steps: [
       { title: '01 · fuentes', body: 'Rastreo de vacantes en LinkedIn, Get on Board y RemoteOK, con filtros de stack, modalidad y salario.' },

@@ -10,7 +10,8 @@
  *
  * Arrancar solo es ambiental (docs/diseno.md §6): con reduced motion, Hiperfoco o ahorro de datos se ve
  * el póster y nada arranca sin que lo pidan. El SSR nunca pinta `autoplay`: decide el cliente.
- * Pausa visible (WCAG 2.2.2): un botón sobre el video. Dentro de un enlace no puede haber un botón,
+ * Pausa visible (WCAG 2.2.2): un botón sobre el video, abajo a la izquierda (las capturas suelen tener
+ * su propio botón flotante abajo a la derecha). Dentro de un enlace no puede haber un botón,
  * así que ahí lo que arranca solo se detiene a los 5 s (el margen que da la pauta).
  */
 import type { Media } from '~/lib/api'
@@ -100,6 +101,16 @@ watch([shouldPlay, video], ([on, el]) => {
   else stop(el, trigger.value === 'hover' ? HOVER_PAUSE_MS : 0)
 })
 
+// Al apagarse lo ambiental (Hiperfoco, reduced motion) lo que corría solo vuelve al póster
+// (docs/diseno.md §5), no se queda quieto en el cuadro en que estaba. load() descarta lo cargado y
+// vuelve a mostrar el póster; lo que la persona arrancó con el botón sigue siendo suyo.
+watch(ambient, (on) => {
+  const el = video.value
+  if (on || !el || !mounted.value || choice.value !== 'auto') return
+  stop(el, 0)
+  if (props.media.poster && el.currentTime > 0) el.load()
+})
+
 function toggle() {
   choice.value = playing.value ? 'pause' : 'play'
 }
@@ -170,7 +181,7 @@ onBeforeUnmount(() => {
       type="button"
       data-chrome
       :aria-label="playing ? t('motion.pause') : t('motion.play')"
-      class="absolute right-3 bottom-3 grid size-11 place-items-center rounded-full bg-black/60 text-white transition-colors duration-200 hover:bg-black/80"
+      class="absolute start-3 bottom-3 grid size-11 place-items-center rounded-full bg-black/60 text-white transition-colors duration-200 hover:bg-black/80"
       @click="toggle"
     >
       <svg aria-hidden="true" viewBox="0 0 16 16" class="size-4" fill="currentColor">

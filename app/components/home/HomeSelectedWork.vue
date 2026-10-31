@@ -20,7 +20,7 @@ const preview = useTemplateRef<{ show: (index: number, e: PointerEvent) => void,
 </script>
 
 <template>
-  <section v-if="featured.length" aria-labelledby="obra-seleccionada" class="px-pad pt-section">
+  <section v-if="featured.length" aria-labelledby="obra-seleccionada" class="px-pad pt-section record:pt-16">
     <div class="flex items-baseline justify-between gap-4 pb-5 text-s text-dim">
       <h2 id="obra-seleccionada">
         {{ t('home.featured') }}

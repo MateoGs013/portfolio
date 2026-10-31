@@ -66,7 +66,7 @@ server/src/routes/    cada endpoint como Resource { db, snapshot, present } + su
 
 ## Respaldos
 
-Generados, nunca escritos a mano. Si la consulta a la base falla, la ruta responde con la última respuesta buena de esa misma consulta (memoria y `data/content-last-good.json`) y, si nunca hubo una, con `server/src/snapshot/content.json`. Las dos copias pasan por el mismo `present` y los mismos `matches`, así que la forma es idéntica. La última respuesta buena guarda el `at` del content.json como formato (un archivo de otra versión se descarta), no recuerda listas vacías, se escribe a lo sumo cada 5 s y se olvida entera después de cada escritura del admin (`forgetLastGood`). Si una copia recordada no pasa por `present`, se cae a content.json.
+Generados, nunca escritos a mano. Si la consulta a la base falla, la ruta responde con la última respuesta buena de esa misma consulta (memoria y `data/content-last-good.json`) y, si nunca hubo una, con `server/src/snapshot/content.json`. Las dos copias pasan por el mismo `present` y los mismos `matches`, así que la forma es idéntica. La última respuesta buena guarda el `at` del content.json como formato (un archivo de otra versión se descarta), no recuerda listas vacías ni registros que ya no existen (y borra la copia que tenía de esa consulta), los parches la borran del disco al aplicar (después se reinicia la API), se escribe a lo sumo cada 5 s y se olvida entera después de cada escritura del admin (`forgetLastGood`). Si una copia recordada no pasa por `present`, se cae a content.json.
 
 ```bash
 pnpm db:snapshot          # regenera content.json desde la base (sin filtros, solo lo visible)

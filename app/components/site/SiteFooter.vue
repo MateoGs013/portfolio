@@ -1,6 +1,7 @@
 <script setup lang="ts">
 // Pie: el contacto, en todas las páginas (#contacto). Todo sale del doc contact en el idioma de la
-// página: email, disponibilidad, ubicación, zona horaria, GitHub, LinkedIn y el PDF del CV.
+// página: email, tiempo de respuesta, disponibilidad, ubicación, zona horaria, GitHub, LinkedIn y el PDF
+// del CV.
 import { CONTACT_ID } from '~/composables/useHotkeys'
 
 const { t, localeRoute, langAttr } = useLocale()
@@ -12,6 +13,7 @@ const email = computed(() => docText(doc.value, 'email'))
 const availability = computed(() => docText(doc.value, 'availability')?.split('·')[0]?.trim() || null)
 const location = computed(() => docText(doc.value, 'location'))
 const timeZone = computed(() => docText(doc.value, 'time_zone'))
+const responseTime = computed(() => docText(doc.value, 'response_time'))
 
 const external = computed(() => [
   { field: 'github', label: t('shell.github') },
@@ -27,11 +29,15 @@ const external = computed(() => [
   <footer :id="CONTACT_ID" data-chrome tabindex="-1" class="px-pad pt-[clamp(6rem,20vh,12rem)] pb-pad outline-none">
     <MailCopy v-if="email" :email="email">
       <p class="text-s text-dim">
-        {{ t('shell.talk') }}
+        {{ t('shell.talk') }}<template v-if="responseTime">
+          {{ ' ' }}<span :lang="langAttr(doc, 'response_time')">{{ responseTime }}</span>
+        </template>
       </p>
     </MailCopy>
     <p v-else class="text-s text-dim">
-      {{ t('shell.talk') }}
+      {{ t('shell.talk') }}<template v-if="responseTime">
+        {{ ' ' }}<span :lang="langAttr(doc, 'response_time')">{{ responseTime }}</span>
+      </template>
     </p>
 
     <div class="mt-[clamp(3rem,10vh,6rem)] flex flex-wrap justify-between gap-x-8 gap-y-4 border-t border-rule pt-5 text-s text-dim">

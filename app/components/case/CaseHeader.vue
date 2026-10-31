@@ -91,7 +91,9 @@ const link = 'hit underline decoration-rule decoration-1 underline-offset-4 tran
         <dt :class="dt">
           {{ t('case.status') }}
         </dt>
-        <dd class="flex items-center gap-2">
+        <!-- self-start: si otra columna de la ficha ocupa más renglones (en papel), la fila se estira y el
+             valor centrado quedaría un renglón más abajo que los demás. -->
+        <dd class="flex items-center gap-2 self-start">
           <span aria-hidden="true" class="inline-block size-[0.45rem] shrink-0 rounded-full" :class="dot[project.status]" />
           <NuxtLink :to="statusRoute" :class="[fv, link]">{{ t(`status.${project.status}`) }}</NuxtLink>
         </dd>

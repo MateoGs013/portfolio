@@ -90,17 +90,16 @@ export function fmt(type: FieldType, value: unknown): string | null {
   }
 }
 
-/**
- * Tipos de los campos de los documentos que no son `string`. Es el esquema de `server/src/seed/docs.ts`
- * (la API manda el tipo en Doc.fields, pero useDoc entrega solo los valores).
- */
-const docFieldTypes: Record<DocKey, Record<string, FieldType>> = {
-  about: { languages: 'list', engineering_philosophy: 'text', professional_goal: 'text' },
-  contact: { email: 'email', github: 'url', linkedin: 'url', website: 'url' },
+/** Lo que un documento (useDoc) dice de sus campos: el tipo y el ancho que declara Doc.fields. */
+interface DocFieldsSource {
+  fields?: Record<string, { type: FieldType, wide: boolean }>
 }
 
 const isDoc = (collection: RecordCollection): collection is DocKey => collection === 'about' || collection === 'contact'
 const isRelationRecord = (collection: RecordCollection): collection is keyof typeof relationMeta => collection in relationMeta
+
+/** El modelo de Prisma de los documentos about y contact (`Doc · about`). */
+export const DOC_MODEL = 'Doc'
 
 /** El modelo de Prisma de cada colección, para el encabezado de la tabla (`colección Project`). */
 export const modelName: Record<CollectionKey, string> = {
@@ -115,11 +114,15 @@ function inferType(value: unknown): FieldType {
   return 'string'
 }
 
-/** La entrada de fieldMeta de un campo; el campo nombre (`title`, `name`) es un string. */
-export function metaFor(collection: RecordCollection, name: string, value?: unknown): FieldMeta {
+/**
+ * La entrada de fieldMeta de un campo; el campo nombre (`title`, `name`) es un string. En los
+ * documentos, el tipo es el que declara el propio documento (`record`, de useDoc).
+ */
+export function metaFor(collection: RecordCollection, name: string, value?: unknown, record?: unknown): FieldMeta {
   if (isDoc(collection)) {
-    const type = docFieldTypes[collection][name] ?? inferType(value)
-    return { type, wide: type === 'text' }
+    const declared = (record as DocFieldsSource | null | undefined)?.fields?.[name]
+    const type = declared?.type ?? inferType(value)
+    return { type, wide: declared?.wide ?? type === 'text' }
   }
   const fields: Record<string, FieldMeta> = isRelationRecord(collection) ? relationMeta[collection].fields : fieldMeta[collection].fields
   return fields[name] ?? { type: inferType(value) }

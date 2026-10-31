@@ -2,7 +2,9 @@
 /**
  * Cuatro datos de about (título técnico, formación superior, idiomas y modalidades) y, debajo, hacia
  * dónde va (about.professional_goal) con líneas que se revelan. Cada valor es un RecordField: en
- * registro (R) es su fila tipada. En desktop el rótulo de la sección queda fijo mientras se lee.
+ * registro (R) es su fila tipada, y el registro suma el resto de los campos del documento (los que
+ * esta página no dibuja en diseño), así refleja el documento entero. En desktop el rótulo de la
+ * sección queda fijo mientras se lee.
  */
 import type { DictKey } from '~/lib/dict'
 import type { SiteDoc } from '~/composables/useSiteContent'
@@ -20,10 +22,21 @@ const FACTS: readonly (readonly [name: string, label: DictKey])[] = [
   ['work_modalities', 'about.modalities'],
 ]
 
-const facts = computed(() => FACTS.flatMap(([name, label]) => {
-  const value = props.about?.values[name]
-  return value === undefined ? [] : [{ name, label, value, text: docText(props.about, name) ?? '' }]
-}))
+/** Campos de about que la página ya muestra en otra sección (AboutIntro y el objetivo). */
+const ELSEWHERE = new Set(['portrait', 'engineering_philosophy', 'professional_goal'])
+
+const facts = computed(() => {
+  const named = FACTS.flatMap(([name, label]) => {
+    const value = props.about?.values[name]
+    return value === undefined ? [] : [{ name, label: label as DictKey | null, value, text: docText(props.about, name) ?? '' }]
+  })
+  if (!isRecord.value) return named
+  const shown = new Set([...ELSEWHERE, ...FACTS.map(([name]) => name)])
+  const rest = Object.keys(props.about?.fields ?? {})
+    .filter(name => !shown.has(name))
+    .map(name => ({ name, label: null, value: props.about?.values[name] ?? null, text: docText(props.about, name) ?? '' }))
+  return [...named, ...rest]
+})
 
 const goal = computed(() => docText(props.about, 'professional_goal'))
 </script>
@@ -44,7 +57,7 @@ const goal = computed(() => docText(props.about, 'professional_goal'))
     >
       <RecordField v-for="f in facts" :key="f.name" collection="about" :k="f.name" :value="f.value" :record="about">
         <template #default="{ fv }">
-          <dt class="border-t border-rule pt-3 text-xs text-faint">
+          <dt v-if="f.label" class="border-t border-rule pt-3 text-xs text-faint">
             {{ t(f.label) }}
           </dt>
           <dd :class="fv" class="pt-1 pb-7 text-m text-ink">

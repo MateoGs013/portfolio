@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test'
+import { skipIntro } from './support'
 
 /**
  * Ver como registro (X2, docs/diseno.md §2.1): R cambia `?vista=registro` al instante y el morph es solo
@@ -128,6 +129,27 @@ test.describe('con movimiento', () => {
     expect(back).not.toBeNull()
     expect(Math.abs(back! - start!.top)).toBeLessThanOrEqual(8)
   })
+
+  // §2.1: sin mover el scroll en registro, la segunda R vuelve al scroll exacto de antes, también
+  // dentro de la galería con pin de Obra (donde un ancla de lectura no alcanza).
+  for (const [path, y] of [['/', 0], ['/projects', 0], ['/projects', 1500]] as const) {
+    test(`en ${path} desde ${y}, R y R de nuevo vuelven al mismo scroll`, async ({ page }) => {
+      // El cargador de la primera visita al inicio no deja usar las teclas mientras corre.
+      await skipIntro(page)
+      await open(page, path)
+      await page.evaluate(top => window.scrollTo({ top, behavior: 'instant' }), y)
+      await page.waitForTimeout(600)
+      const start = await page.evaluate(() => window.scrollY)
+
+      await page.keyboard.press('r')
+      await settled(page)
+      expect(isRecordUrl(page)).toBe(true)
+      await page.keyboard.press('r')
+      await settled(page)
+      await page.waitForTimeout(300)
+      expect(Math.abs(await page.evaluate(() => window.scrollY) - start)).toBeLessThanOrEqual(2)
+    })
+  }
 
   test('ningún texto cambia de ancho mientras viaja', async ({ page }) => {
     await open(page, CASE)

@@ -120,11 +120,18 @@ function persistLastGood() {
   writeTimer.unref()
 }
 
+/**
+ * Guarda la respuesta buena de `key`. Un registro que ya no existe (null) o una lista vacía no se
+ * recuerdan y borran la copia anterior: una obra que se ocultó por fuera del admin (un parche) deja
+ * de tener copia en cuanto alguien vuelve a pedirla con la base arriba. Una URL inventada
+ * (?stack=a1, ?stack=a2…) tampoco desplaza así a las consultas reales del tope.
+ */
 function remember(key: string, raw: unknown) {
-  // Una lista vacía no se recuerda: así una URL inventada (?stack=a1, ?stack=a2…) no desplaza
-  // a las consultas reales del tope. Si la base cae, esa lista sale del snapshot.
-  if (Array.isArray(raw) && raw.length === 0) return
   loadLastGood()
+  if (raw === null || (Array.isArray(raw) && raw.length === 0)) {
+    if (lastGood.delete(key)) persistLastGood()
+    return
+  }
   const json = JSON.stringify(raw)
   const previous = lastGood.get(key)
   lastGood.delete(key)
@@ -154,6 +161,20 @@ export function forgetLastGood() {
   persistLastGood()
 }
 
+/**
+ * Borra el archivo de últimas respuestas buenas. Lo llaman los parches, que corren en otro proceso
+ * y cambian la base por fuera del admin: después hay que reiniciar la API para vaciar su memoria.
+ */
+export function dropLastGoodFile(): boolean {
+  try {
+    fs.unlinkSync(LAST_GOOD_FILE)
+    return true
+  }
+  catch {
+    return false
+  }
+}
+
 function warnDbDown(name: string, err: unknown) {
   if (Date.now() - warnedAt < 60_000) return
   warnedAt = Date.now()
@@ -181,7 +202,7 @@ export async function resolve<A, W, O>(
   if (force !== 'snapshot') {
     try {
       const raw = await resource.db(args)
-      if (!force && raw !== null) remember(key, raw)
+      if (!force) remember(key, raw)
       return publish(raw, 'db')
     }
     catch (err) {

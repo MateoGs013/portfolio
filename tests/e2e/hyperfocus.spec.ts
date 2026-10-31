@@ -32,13 +32,26 @@ async function toggleButton(page: Page) {
 
 const isNarrow = async (page: Page) => page.locator('header[data-chrome] summary').isVisible()
 
-/** Marca el bloque que se está leyendo (el mismo criterio que useHyperfocus) y devuelve su alto. */
+/**
+ * Marca el bloque que se está leyendo (el mismo criterio que useHyperfocus: el primero que empieza
+ * debajo de la cabecera y no está pegado, como los rótulos `md:sticky`) y devuelve su alto.
+ */
 const anchorTop = (page: Page) => page.evaluate(() => {
   const floor = document.querySelector('header[data-chrome]')?.getBoundingClientRect().bottom ?? 0
-  const readable = '#contenido :is(h1, h2, h3, p, li, dt, dd, figure, blockquote, pre, [data-row], [data-card])'
+  const readable = '#contenido :is(h1, h2, h3, p, li, dt, dd, blockquote, pre, [data-row], [data-card])'
   const skip = '[data-hf="hide"], [data-ornament], [aria-hidden="true"]'
+  const stuck = (b: HTMLElement) => {
+    for (let n: HTMLElement | null = b; n && n.id !== 'contenido'; n = n.parentElement) {
+      if (['sticky', 'fixed'].includes(getComputedStyle(n).position)) return true
+      if ([...n.classList].some(c => /(^|:)sticky$/.test(c))) return true
+    }
+    return false
+  }
   const el = [...document.querySelectorAll<HTMLElement>(readable)]
-    .find(b => !b.closest(skip) && b.getBoundingClientRect().height > 0 && b.getBoundingClientRect().bottom > floor)
+    .find((b) => {
+      const r = b.getBoundingClientRect()
+      return r.height > 0 && r.top >= floor && r.top < window.innerHeight && !b.closest(skip) && !stuck(b)
+    })
   if (!el) throw new Error('no hay un bloque visible')
   el.dataset.anchorProbe = ''
   return el.getBoundingClientRect().top
@@ -203,6 +216,29 @@ test.describe('el cambio de modo', () => {
     await expect(page.locator('html')).toHaveAttribute('data-hyperfocus', 'true')
     expect(await page.evaluate(() => (window as unknown as { __types: string[] }).__types)).toContain('hiperfoco')
   })
+
+  // docs/diseno.md §5: el primer bloque visible debajo de la cabecera queda a la misma altura al entrar
+  // y al salir, también con la view transition de 220 ms, el rearmado de escenas y Lenis.
+  for (const path of ['/projects/la-rucula', '/about']) {
+    test(`con movimiento la lectura de ${path} queda a la misma altura al entrar y al salir`, async ({ page, context, baseURL }) => {
+      await prefs(context, baseURL, 'dark', false)
+      await page.goto(path, { waitUntil: 'networkidle' })
+      await page.evaluate(() => window.scrollTo({ top: 2200, behavior: 'instant' }))
+      // Las líneas y las filas que entran terminan de revelarse antes de medir.
+      await page.waitForTimeout(1500)
+
+      const before = await anchorTop(page)
+      await page.locator('body').press('h')
+      await expect(page.locator('html')).toHaveAttribute('data-hyperfocus', 'true')
+      await page.waitForTimeout(900)
+      expect(Math.abs(await probeTop(page) - before)).toBeLessThanOrEqual(2)
+
+      await page.locator('body').press('h')
+      await expect(page.locator('html')).not.toHaveAttribute('data-hyperfocus', /.*/)
+      await page.waitForTimeout(900)
+      expect(Math.abs(await probeTop(page) - before)).toBeLessThanOrEqual(2)
+    })
+  }
 
   test.describe('con reduced motion', () => {
     test.use({ reducedMotion: 'reduce' })

@@ -66,11 +66,12 @@ onBeforeUnmount(() => document.removeEventListener('pointerdown', onPointerDown)
         type="button"
         aria-haspopup="dialog"
         aria-keyshortcuts="Control+K Meta+K /"
-        class="hit inline-flex min-h-6 cursor-pointer items-center gap-2 opacity-72 transition-opacity duration-300 hover:opacity-100"
+        class="hit inline-flex min-h-6 cursor-pointer items-center gap-2.5 opacity-72 transition-opacity duration-300 [word-spacing:0.14em] hover:opacity-100"
         v-on:click="goto"
       >
+        <!-- «Ir a» es corto: con el espacio de la fuente a este tamaño se leía «Ira». -->
         <RollText :text="t('shell.goto')" />
-        <kbd aria-hidden="true" class="hidden font-mono text-xs leading-none md:inline">{{ shortcut }}</kbd>
+        <kbd aria-hidden="true" class="hidden font-mono text-xs leading-none [word-spacing:normal] md:inline">{{ shortcut }}</kbd>
       </button>
     </div>
   </details>

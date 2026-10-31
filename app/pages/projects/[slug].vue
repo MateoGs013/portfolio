@@ -18,8 +18,7 @@ const { public: { siteUrl } } = useRuntimeConfig()
 const slug = computed(() => String(route.params.slug))
 
 const [project, all] = await Promise.all([useProject(slug), useProjects()])
-failOn(project.error)
-const p = computed(() => project.data.value!)
+const p = failOnDetail(project)
 
 const covers = computed(() => p.value.media.filter(m => m.role === 'COVER'))
 const cover = computed(() => covers.value.find(m => m.kind === 'IMAGE') ?? covers.value[0])

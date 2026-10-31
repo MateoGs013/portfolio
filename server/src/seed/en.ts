@@ -120,7 +120,7 @@ export const EN: EnSeed = {
       links: { 'https://www.argpiscinas.es/': LIVE, 'https://github.com/MateoGs013/argpiscinas': SOURCE },
     },
     'ynara': {
-      role: 'Da Vinci Thesis 2026 · lead contributor, 382 commits',
+      role: 'Da Vinci Thesis 2026 · lead contributor',
       summary: 'Team thesis, pre-approved. An adaptive, on-prem personal AI assistant with encrypted semantic, episodic and procedural memory on Postgres and pgvector.',
       brief: 'An assistant that runs on your machine, talks like you and remembers. Dual LLM (Gemma and Qwen via Ollama), its own encrypted three-layer memory, and a FastAPI, Next.js and Expo monorepo.',
       outcome: 'Thesis pre-approved with commendation at Da Vinci. 382 commits leading the backend architecture, the vector database and the local inference engine.',
@@ -265,7 +265,7 @@ export const EN: EnSeed = {
     about: {
       ...unchanged(aboutFields, ['name', 'display_name', 'portrait']),
       role: 'Full Stack Designer & Developer · Creative Developer',
-      headline: 'I design and build entire web products, from idea to deploy',
+      headline: 'I design and build entire web products, from idea to deploy.',
       portrait_alt: 'Portrait of Mateo Sonzogni',
       technical_degree: 'Programming Technician · CET N.º 30 (2017–2023)',
       higher_education: 'Web Design and Development · Escuela Da Vinci (2024–2026) · Pre-approved Thesis',
@@ -280,6 +280,7 @@ export const EN: EnSeed = {
       ...unchanged(contactFields, ['email', 'github', 'linkedin', 'website', 'location', 'time_zone']),
       cv: '/cv/CV-EN-Mateo-Sonzogni-ATS.pdf',
       availability: 'Immediate · Direct hire, contractor or freelance',
+      response_time: 'I reply the same day',
       preferred_contact: 'Direct email, LinkedIn or a message via GitHub',
     },
   },

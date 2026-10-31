@@ -97,6 +97,26 @@ export function failOn(error: Ref<{ statusCode?: number, statusMessage?: string 
   if (e) throw createError({ statusCode: e.statusCode ?? 503, statusMessage: e.statusMessage, fatal: true })
 }
 
+type LoadError = { statusCode?: number, statusMessage?: string } | null | undefined
+
+/**
+ * El registro de una página de detalle (caso, artículo), a prueba de recargas. La primera carga pasa
+ * por failOn; después, Nuxt vacía `data` cuando una recarga del cliente falla (otro idioma, otro slug),
+ * así que la página dibuja el último valor bueno y el error de esa recarga se muestra con error.vue en
+ * lugar de dejar la página en blanco.
+ */
+export function failOnDetail<T>(load: { data: Ref<T | null | undefined>, error: Ref<LoadError> }): Readonly<Ref<T>> {
+  failOn(load.error)
+  const last = shallowRef(load.data.value as T)
+  watch(load.data, (value) => {
+    if (value !== undefined && value !== null) last.value = value
+  })
+  watch(load.error, (e) => {
+    if (e) showError({ statusCode: e.statusCode ?? 503, statusMessage: e.statusMessage, fatal: true })
+  })
+  return last
+}
+
 /**
  * Lista de obras visibles, en sortOrder. Sin filtros comparte una sola clave por idioma
  * ('projects:es'), que reusan el inicio, Obra, el caso y la siguiente obra; la siguiente obra sale

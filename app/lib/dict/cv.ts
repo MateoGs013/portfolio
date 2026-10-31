@@ -11,6 +11,7 @@ export default {
   'cv.education': { es: 'Educación', en: 'Education' },
   'cv.skills': { es: 'Habilidades técnicas', en: 'Technical skills' },
   'cv.languages': { es: 'Idiomas', en: 'Languages' },
+  'cv.methodologies': { es: 'Metodología', en: 'Methodology' },
   'cv.techs': { es: 'Tecnologías', en: 'Technologies' },
   'cv.contact': { es: 'Contacto', en: 'Contact' },
   'cv.actions': { es: 'Acciones del currículum', en: 'Résumé actions' },

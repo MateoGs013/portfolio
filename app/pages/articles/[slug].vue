@@ -23,10 +23,9 @@ const [article, all] = await Promise.all([
     { getCachedData: cachedApiData },
   ),
 ])
-failOn(article.error)
-const a = computed(() => article.data.value!)
+const a = failOnDetail(article)
 
-await usePageSeo(() => ({ title: a.value.title, description: a.value.summary, type: 'article' }))
+await usePageSeo(() => ({ title: a.value.title, description: a.value.summary, type: 'article', canonical: a.value.canonicalUrl }))
 
 const url = computed(() => new URL(`/articles/${a.value.slug}${lang.value === 'en' ? '?lang=en' : ''}`, siteUrl).toString())
 const author = computed(() => docText(about.data.value, 'name') ?? docText(about.data.value, 'display_name'))

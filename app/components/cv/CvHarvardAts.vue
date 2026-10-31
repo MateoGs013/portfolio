@@ -122,13 +122,17 @@ const sectionTitle = 'mb-[3.2pt] border-b-[0.85pt] border-black pb-[1.5pt] text-
       </div>
     </section>
 
-    <section v-if="cv.skills.length || cv.languages.length">
+    <section v-if="cv.skills.length || cv.languages.length || cv.methodologies">
       <h3 :class="sectionTitle">{{ t('cv.skills') }}</h3>
       <p v-for="g in cv.skills" :key="g.category" class="mb-(--cv-gap-bullet)">
         <strong>{{ t(`cv.skill.${g.category}`) }}:</strong> {{ g.items.join(', ') }}
       </p>
       <p v-if="cv.languages.length" :lang="langAttr(cv, 'languages')">
         <strong>{{ t('cv.languages') }}:</strong> {{ cv.languages.join(', ') }}
+      </p>
+      <!-- La misma línea que el generador del Job Hunter: about.core_competencies. -->
+      <p v-if="cv.methodologies" :lang="langAttr(cv, 'methodologies')">
+        <strong>{{ t('cv.methodologies') }}:</strong> {{ cv.methodologies }}
       </p>
     </section>
   </article>
@@ -143,9 +147,9 @@ const sectionTitle = 'mb-[3.2pt] border-b-[0.85pt] border-black pb-[1.5pt] text-
   --cv-section: 11pt;
   --cv-entry: 10pt;
   --cv-body: 9.3pt;
-  --cv-lh: 1.32;
+  --cv-lh: 1.3;
   --cv-gap-section: 7pt;
-  --cv-gap-entry: 5pt;
+  --cv-gap-entry: 4pt;
   --cv-gap-bullet: 1pt;
 
   font-family: 'Times New Roman', Times, 'Liberation Serif', Georgia, serif;

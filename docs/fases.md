@@ -173,3 +173,13 @@ Plan en `docs/rediseno/plan.md` y `docs/rediseno/implementacion.md`, paquetes en
 | `/projects/la-rucula` | escritorio | 95 | 100 | 100 | 100 | 0 | 1,3 s |
 
 El caso en móvil simulado (CPU ×4) es lo único flojo: 3,9 s de estilo y layout en el hilo principal durante la hidratación (escenas de GSAP, SplitText y ScrollTrigger) retrasan el pintado de la portada. Queda como trabajo siguiente; no afecta CLS ni accesibilidad.
+
+### Verificación final del rediseño (31-oct-2026)
+
+Tres verificadores independientes (corrección, datos escritos a mano, UX contra el prototipo). Lo corregido está en el commit `fix(rediseno): verificación final`. Queda pendiente, con motivo:
+
+- **Capturas que faltan o no aguantan el tamaño:** Ynara Web no tiene portada ni galería (la tarjeta y el caso muestran la placa con el título, que es provisoria hasta capturarla) e Ynara no tiene galería. `la-rucula/atardeceres.webp` es casi todo fondo y la paleta de Eros es chica en su marco: hay que volver a capturarlas con `capturar.mjs`.
+- **Videos:** `la-rucula/intro.{mp4,webm}` arranca con cuadros en blanco y el video de las tarjetas no coincide con la captura en el primer cuadro. Se resuelve recodificando (sin la entrada en blanco y con el mismo encuadre que la captura), no en código. En táctil, el video de una tarjeta se detiene a los 5 s a propósito: está dentro de un enlace, no puede tener botón de pausa y WCAG 2.2.2 pide ese tope.
+- **Campos cargados que el diseño no muestra:** `Experience.story`, `contact.preferred_contact` y el pie del video de portada de Eros. El registro (`R`) de Sobre mí ya lista todos los campos del documento about; falta decidir si la trayectoria muestra `story` y dónde va `preferred_contact`.
+- **Duplicación a decidir:** `Project.url` y `Project.repo` repiten las URL de los Link «sitio en vivo» y «código fuente», y los 382 commits de Ynara siguen en textos narrativos (outcome y la experiencia) además de su Metric (del rol ya salieron). Cambiar cualquiera de las dos cosas es una decisión de esquema o de redacción.
+- **Article.coverImage:** la API no manda sus medidas, así que todavía no puede ser og:image; el canonical propio (`canonicalUrl`) ya se usa.

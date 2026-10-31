@@ -68,18 +68,20 @@ onBeforeUnmount(() => release?.())
 /**
  * Cada fila sube al entrar (movimiento.html, `.exp li[data-reveal]`: y 40, 1 s `expo.out`, desde el
  * 92 %). Solo con movimiento ambiental; las que ya están en pantalla (al llegar por el ancla o al
- * volver) quedan quietas.
+ * volver) quedan quietas, y las que ya se revelaron una vez también: la escena se rehace al cambiar
+ * el tamaño de la ventana y una fila leída no puede volver a esconderse.
  */
 const list = useTemplateRef<HTMLElement>('list')
+const revealed = new WeakSet<Element>()
 useMotion(list, ({ el, ambient }) => {
   if (!ambient) return undefined
-  const below = [...el.children].filter(li => li.getBoundingClientRect().top > window.innerHeight * 0.92)
+  const below = [...el.children].filter(li => !revealed.has(li) && li.getBoundingClientRect().top > window.innerHeight * 0.92)
   below.forEach(li => gsap.from(li, {
     y: 40,
     opacity: 0,
     duration: 1,
     ease: 'expo.out',
-    scrollTrigger: { trigger: li, start: 'top 92%', once: true },
+    scrollTrigger: { trigger: li, start: 'top 92%', once: true, onEnter: () => revealed.add(li) },
   }))
   return undefined
 })

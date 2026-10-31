@@ -19,6 +19,7 @@
  * Con --force también reemplaza el inglés ya cargado por el del seed (combinable con --dry).
  */
 import { db } from '../db.js'
+import { dropLastGoodFile } from '../content/snapshot.js'
 import { Locale } from '../../generated/prisma/client.js'
 import type { DocField, DocFieldValue } from '../../../app/lib/fieldMeta.js'
 import { applyEnglish, withEnglish } from '../seed/apply.js'
@@ -228,6 +229,10 @@ async function main() {
     for (const d of docUpdates) await tx.doc.update({ where: { key: d.key }, data: { fields: d.fields } })
   }, { timeout: 60000 })
   console.log('listo')
+  // La API guarda la última respuesta buena de cada consulta: sin esto, una obra recién ocultada
+  // podría volver desde esa copia si la base cae. La memoria del proceso se vacía reiniciándola.
+  if (dropLastGoodFile()) console.log('se borró la última respuesta buena guardada en disco')
+  console.log('reiniciá la API para que olvide también las respuestas que tiene en memoria')
 }
 
 main()

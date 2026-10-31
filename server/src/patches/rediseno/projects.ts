@@ -4,6 +4,9 @@
  * - Portada: tint si falta, ancho/alto/peso leídos del archivo, y la portada de Eros si no hay ninguna.
  * - Métricas: verifica que cada clave del Json viejo tenga su fila Metric y completa las que falten.
  *   Una obra sin métricas de ningún tipo recibe las del seed.
+ * - Textos viejos conocidos: el rol de Ynara sin la cifra de commits (vive en su Metric), el rótulo
+ *   en español del enlace de Eros y el canonicalUrl de los artículos que apuntaba al alias /blog/.
+ *   Solo se reemplazan si siguen con el valor viejo exacto: lo editado en el admin se respeta.
  */
 import { MediaKind, MediaRole, type PrismaClient } from '../../../generated/prisma/client.js'
 import { imageFile } from '../../seed/files.js'
@@ -51,6 +54,51 @@ async function coverChanges(db: PrismaClient, projectId: number, p: SeedProject)
   return what.length ? [{ what, apply: tx => tx.media.update({ where: { id: row.id }, data }) }] : []
 }
 
+/** Rol viejo conocido de cada obra → el del seed. */
+const LEGACY_ROLES: Record<string, string[]> = {
+  ynara: ['Tesis Da Vinci 2026 · contribuidor principal, 382 commits'],
+}
+
+/** Rótulos viejos conocidos de un enlace, por url → el del seed. */
+const LEGACY_LINK_LABELS: Record<string, string[]> = {
+  'https://eros.mateogs.tech': ['control center'],
+}
+
+/** canonicalUrl de main: un alias que solo redirige. El canónico del artículo es su propia URL. */
+const LEGACY_CANONICAL = /^https:\/\/mateogs\.tech\/blog\//
+
+async function textChanges(db: PrismaClient, projectId: number, p: SeedProject): Promise<Change[]> {
+  const changes: Change[] = []
+  const row = await db.project.findUnique({ where: { id: projectId }, select: { role: true, links: { select: { id: true, label: true, url: true } } } })
+  if (!row) return changes
+  if (LEGACY_ROLES[p.slug]?.includes(row.role) && row.role !== p.role) {
+    changes.push({
+      what: [`project ${p.slug}: role ${show(row.role)} → ${show(p.role)}`],
+      apply: tx => tx.project.update({ where: { id: projectId }, data: { role: p.role } }),
+    })
+  }
+  for (const link of row.links) {
+    const next = p.links.find(l => l.url === link.url)
+    if (!next || next.label === link.label || !LEGACY_LINK_LABELS[link.url]?.includes(link.label)) continue
+    changes.push({
+      what: [`project ${p.slug}: link ${link.url} label ${show(link.label)} → ${show(next.label)}`],
+      apply: tx => tx.link.update({ where: { id: link.id }, data: { label: next.label } }),
+    })
+  }
+  return changes
+}
+
+/** Artículos: canonicalUrl NULL si todavía apunta al alias viejo /blog/<slug>. */
+export async function articleChanges(db: PrismaClient): Promise<Change[]> {
+  const rows = await db.article.findMany({ where: { canonicalUrl: { not: null } }, select: { id: true, slug: true, canonicalUrl: true } })
+  return rows
+    .filter(a => a.canonicalUrl !== null && LEGACY_CANONICAL.test(a.canonicalUrl) && a.canonicalUrl.endsWith(`/blog/${a.slug}`))
+    .map(a => ({
+      what: [`article ${a.slug}: canonicalUrl ${show(a.canonicalUrl)} → NULL`],
+      apply: tx => tx.article.update({ where: { id: a.id }, data: { canonicalUrl: null } }),
+    }))
+}
+
 async function metricChanges(db: PrismaClient, projectId: number, p: SeedProject, legacy: unknown): Promise<Change[]> {
   const rows = await db.metric.findMany({ where: { projectId }, select: { key: true, order: true } })
   const legacyRows = legacyMetricRows(legacy)
@@ -91,6 +139,7 @@ export async function projectChanges(db: PrismaClient): Promise<{ changes: Chang
     }
 
     changes.push(...await coverChanges(db, row.id, p))
+    changes.push(...await textChanges(db, row.id, p))
     changes.push(...await metricChanges(db, row.id, p, row.legacyMetrics))
   }
 

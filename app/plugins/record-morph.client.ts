@@ -25,12 +25,23 @@ interface Pending {
   /** Claves de los valores candidatos a ancla, en orden de preferencia. */
   anchors: string[]
   animate: boolean
+  /** El scroll antes de este cambio: la vuelta con la segunda R lo devuelve tal cual. */
+  originY: number
+  /**
+   * Una segunda R sin haber movido el scroll vuelve al scroll exacto de antes de la primera, no a un
+   * ancla: así el inicio y la galería con pin de Obra quedan donde estaban (§2.1).
+   */
+  returnTo: number | null
 }
 
-/** El último ancla, para que R y R de nuevo vuelvan exactamente al mismo lugar. */
+/** El último cambio, para que R y R de nuevo vuelvan exactamente al mismo lugar. */
 interface Memory {
-  key: string
+  key: string | null
   scrollY: number
+  /** La lectura a la que se llegó y el scroll que había antes de llegar, en esta página. */
+  on: boolean
+  originY: number
+  path: string
 }
 
 /** Lo más que se espera a Martian Mono antes de cambiar la URL. */
@@ -46,7 +57,7 @@ function anchorKeys(before: Before, memory: Memory | null): string[] {
   const starts = list.filter(([, t]) => t.snap.rect.top >= top && t.snap.rect.top < window.innerHeight)
   const peeks = list.filter(([, t]) => t.snap.rect.bottom > top && t.snap.rect.top < window.innerHeight)
   const keys = [...starts, ...peeks].map(([key]) => key)
-  if (memory && Math.abs(window.scrollY - memory.scrollY) <= 1 && before.travelers.has(memory.key)) keys.unshift(memory.key)
+  if (memory?.key && Math.abs(window.scrollY - memory.scrollY) <= 1 && before.travelers.has(memory.key)) keys.unshift(memory.key)
   return [...new Set(keys)]
 }
 
@@ -106,18 +117,34 @@ export default defineNuxtPlugin({
       return null
     }
 
+    /**
+     * Ubica la lectura nueva: de vuelta al scroll exacto de antes (segunda R sin mover el scroll) o con
+     * el ancla de lectura. Devuelve la clave del ancla, o null si no hubo.
+     */
+    function place(p: Pending, keys = travelerKeys(p.root)): string | null {
+      if (p.returnTo === null) return anchor(p, keys)
+      unlockHeight()
+      const y = Math.round(Math.max(0, Math.min(p.returnTo, html.scrollHeight - window.innerHeight)))
+      if (Math.abs(y - window.scrollY) >= 1) scrollToY(y)
+      return p.anchors[0] ?? null
+    }
+
     function writeVista(on: boolean) {
       if (on) html.dataset.vista = 'registro'
       else delete html.dataset.vista
     }
 
     /** El alto libre, los ScrollTrigger medidos de nuevo y la lectura corregida si algo se corrió. */
-    async function settle(p: Pending, key: string | null) {
+    async function settle(p: Pending, key: string | null, on: boolean) {
       unlockHeight()
       await nextTick()
       ScrollTrigger.refresh()
-      if (key) anchor(p)
-      memory = key ? { key, scrollY: window.scrollY } : null
+      if (key || p.returnTo !== null) place(p)
+      remember(p, key, on)
+    }
+
+    function remember(p: Pending, key: string | null, on: boolean) {
+      memory = { key, scrollY: window.scrollY, on, originY: p.originY, path: router.currentRoute.value.path }
     }
 
     /**
@@ -149,7 +176,11 @@ export default defineNuxtPlugin({
         return
       }
       const before = captureBefore(root, on, animate)
-      pending = { root, before, anchors: anchorKeys(before, memory), animate }
+      const originY = window.scrollY
+      const last = memory
+      const same = !!last && last.path === router.currentRoute.value.path && Math.abs(originY - last.scrollY) <= 1
+      const returnTo = same && last.on !== on ? last.originY : null
+      pending = { root, before, anchors: anchorKeys(before, memory), animate, originY, returnTo }
       lockHeight()
       // Las comillas nacen apagadas: si se apagaran después, su transición de opacidad se vería.
       if (animate) root.classList.add('quotes-off')
@@ -171,21 +202,21 @@ export default defineNuxtPlugin({
       // Todo hasta el primer cuadro corre en esta misma tarea: el navegador no pinta el salto.
       // Primero un ancla aproximada, sin escenas: las que deciden al armarse qué está en pantalla
       // (RevealLines no parte lo que ya se ve) miden en el scroll de la lectura nueva, no en el viejo.
-      anchor(p)
+      place(p)
       // Las escenas se arman antes de medir: el pin y la pista de Obra, la captura que crece y lo que
       // ya está en pantalla quedan como se van a ver, así el morph llega a la composición final.
       armScenes()
       ScrollTrigger.refresh()
       const keys = travelerKeys(p.root)
-      const key = anchor(p, keys)
+      const key = place(p, keys)
       if (!p.animate) {
-        await settle(p, key)
+        await settle(p, key, on)
         // Con reduced motion el estilo final llega un cuadro después: se corrige solo si hace falta.
         await frame()
         await frame()
-        if (key) {
-          anchor(p)
-          memory = { key, scrollY: window.scrollY }
+        if (key || p.returnTo !== null) {
+          place(p)
+          remember(p, key, on)
         }
         return
       }
@@ -199,7 +230,7 @@ export default defineNuxtPlugin({
       await morph.done
       running = null
       delete html.dataset.morphing
-      await settle(p, key)
+      await settle(p, key, on)
     })
 
     // Una navegación o un cambio de Hiperfoco a mitad del morph lo terminan ya, sin capa.

@@ -39,7 +39,7 @@ const { isRecord } = useRecordView()
 const { langAttr } = useLocale()
 
 const meta = computed(() => {
-  const found = metaFor(props.collection, props.k, props.value)
+  const found = metaFor(props.collection, props.k, props.value, props.record)
   return props.type ? { ...found, type: props.type } : found
 })
 const cell = computed(() => cellFor({ [props.k]: props.value }, props.k, meta.value, props.collection))

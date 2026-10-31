@@ -6,6 +6,11 @@
 // header[data-chrome] y el contraste se mide con scripts/check-contrast.mjs. Con el menú angosto abierto
 // vuelve a la mezcla normal para que el panel se lea. Contacto es el pie. El DOM sigue el orden visual
 // (nombre, navegación, utilidades) para que Tab recorra lo que se ve; en angosto la grilla los acomoda.
+//
+// Debajo de 768 px son dos renglones y, transparentes, se mezclarían con el texto que pasa debajo. Ahí
+// la cabecera solo es transparente arriba de todo: al bajar se esconde y al subir vuelve con el fondo de
+// la página y la mezcla normal. Nunca se esconde con el foco adentro ni con el menú abierto. Sin JS
+// queda arriba de la página (absolute) y se va con el scroll, así no tapa nada.
 import { CONTACT_ID } from '~/composables/useHotkeys'
 
 const route = useRoute()
@@ -17,6 +22,49 @@ const about = useDoc('about')
 const brand = computed(() => docText(about.data.value, 'display_name'))
 const home = computed(() => localeRoute('/'))
 const contactHref = computed(() => router.resolve({ path: route.path, query: route.query, hash: `#${CONTACT_ID}` }).href)
+
+const header = useTemplateRef<HTMLElement>('header')
+const live = ref(false)
+const scrolled = ref(false)
+const tucked = ref(false)
+
+/** Lo que el lector está usando dentro de la cabecera la mantiene a la vista. */
+function busy(): boolean {
+  const el = header.value
+  return !!el && (el.contains(document.activeElement) || !!el.querySelector('details[open]'))
+}
+
+let lastY = 0
+let frame = 0
+function update() {
+  frame = 0
+  const y = window.scrollY
+  scrolled.value = y > 4
+  if (Math.abs(y - lastY) < 6) return
+  tucked.value = y > lastY && y > (header.value?.offsetHeight ?? 0) && !busy()
+  lastY = y
+}
+function onScroll() {
+  if (!frame) frame = requestAnimationFrame(update)
+}
+function onFocusIn() {
+  tucked.value = false
+}
+
+onMounted(() => {
+  live.value = true
+  lastY = window.scrollY
+  scrolled.value = lastY > 4
+  window.addEventListener('scroll', onScroll, { passive: true })
+})
+onBeforeUnmount(() => {
+  window.removeEventListener('scroll', onScroll)
+  cancelAnimationFrame(frame)
+})
+// Cada página nueva arranca con la cabecera a la vista.
+watch(() => route.path, () => {
+  tucked.value = false
+})
 
 const links = computed(() => [
   { path: '/projects', label: t('nav.work') },
@@ -38,8 +86,15 @@ function onContact(e: MouseEvent) {
 
 <template>
   <header
+    ref="header"
     data-chrome
-    class="fixed inset-x-0 top-0 z-40 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-6 gap-y-1 px-pad coarse:gap-y-6 py-[calc(var(--pad)*0.6)] text-s text-white mix-blend-difference has-[details[open]]:text-ink has-[details[open]]:mix-blend-normal md:flex md:justify-between"
+    class="fixed inset-x-0 top-0 z-40 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-6 gap-y-1 px-pad coarse:gap-y-6 py-[calc(var(--pad)*0.6)] text-s text-white mix-blend-difference has-[details[open]]:text-ink has-[details[open]]:mix-blend-normal max-md:transition-[translate,background-color] max-md:duration-300 max-md:ease-expo motion-reduce:transition-none md:flex md:justify-between"
+    :class="{
+      'max-md:absolute': !live,
+      'max-md:bg-[color-mix(in_oklab,var(--bg),var(--tint)_var(--tint-amt))] max-md:text-ink max-md:mix-blend-normal': scrolled,
+      'max-md:-translate-y-full': tucked,
+    }"
+    v-on:focusin="onFocusIn"
   >
     <NuxtLink
       :to="home"

@@ -9,6 +9,7 @@
  * vuelve a quedar a la misma altura después del cambio, aunque la columna haya cambiado de ancho.
  */
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
+import type Lenis from 'lenis'
 import { nextTick } from 'vue'
 import { prefersReducedMotion } from './useSound'
 
@@ -19,8 +20,11 @@ const YEAR = 60 * 60 * 24 * 365
 /** La cookie viaja tal cual (pf-hyperfocus=true), sin el JSON que useCookie pone por defecto. */
 const plain = (value: string | null) => value ?? ''
 
-/** Bloques de lectura candidatos a ancla, en orden de documento. */
-const READABLE = '#contenido :is(h1, h2, h3, p, li, dt, dd, figure, blockquote, pre, [data-row], [data-card])'
+/**
+ * Bloques de lectura candidatos a ancla, en orden de documento. Texto, no figuras: una captura cambia
+ * de alto con el ancho de la columna y, anclada por arriba, correría el texto que viene después.
+ */
+const READABLE = '#contenido :is(h1, h2, h3, p, li, dt, dd, blockquote, pre, [data-row], [data-card])'
 
 /** Lo que el Hiperfoco oculta (cargador, vista previa, escena) o que no se lee: nunca es ancla. */
 const SKIP = '[data-hf="hide"], [data-ornament], [aria-hidden="true"]'
@@ -28,18 +32,53 @@ const SKIP = '[data-hf="hide"], [data-ornament], [aria-hidden="true"]'
 interface ReadingAnchor {
   el: HTMLElement
   top: number
+  /** La instancia de Lenis en este momento (la crea y la destruye el plugin de movimiento). */
+  lenis: () => Lenis | null
 }
 
-/** El primer bloque visible debajo de la cabecera fija: lo que el lector tiene delante. */
-function readingAnchor(): ReadingAnchor | null {
-  const floor = document.querySelector('header[data-chrome]')?.getBoundingClientRect().bottom ?? 0
-  for (const el of document.querySelectorAll<HTMLElement>(READABLE)) {
-    if (el.closest(SKIP)) continue
-    const rect = el.getBoundingClientRect()
-    if (rect.height > 0 && rect.bottom > floor) return { el, top: rect.top }
-    if (rect.top > window.innerHeight) break
+/**
+ * Un bloque pegado (los rótulos de sección `md:sticky`, la cabecera) queda a la misma altura haga lo
+ * que haga la página: como ancla no sostiene nada. Cuenta también el que se pega solo en uno de los dos
+ * modos (`md:sticky … focus-mode:static`): al salir del Hiperfoco vuelve a pegarse.
+ */
+function isStuck(el: HTMLElement): boolean {
+  for (let node: HTMLElement | null = el; node && node.id !== 'contenido'; node = node.parentElement) {
+    const position = getComputedStyle(node).position
+    if (position === 'sticky' || position === 'fixed') return true
+    if ([...node.classList].some(c => /(^|:)sticky$/.test(c))) return true
   }
-  return null
+  return false
+}
+
+/**
+ * El primer bloque visible debajo de la cabecera fija, que no esté pegado: lo que el lector tiene
+ * delante. Se prefiere el primero que empieza debajo de la cabecera; si un bloque largo ocupa toda la
+ * pantalla, ese.
+ */
+function readingAnchor(lenis: () => Lenis | null): ReadingAnchor | null {
+  const floor = document.querySelector('header[data-chrome]')?.getBoundingClientRect().bottom ?? 0
+  let covering: ReadingAnchor | null = null
+  for (const el of document.querySelectorAll<HTMLElement>(READABLE)) {
+    const rect = el.getBoundingClientRect()
+    if (rect.top > window.innerHeight) break
+    if (rect.height === 0 || rect.bottom <= floor || el.closest(SKIP) || isStuck(el)) continue
+    if (rect.top >= floor) return { el, top: rect.top, lenis }
+    covering ??= { el, top: rect.top, lenis }
+  }
+  return covering
+}
+
+/**
+ * El scroll a `top`, por Lenis si está corriendo (si no, su próximo cuadro lo devolvería). Lenis mide
+ * el alto de la página con un observador diferido: recién creado al salir del modo, todavía tiene el
+ * tope de antes y recortaría el destino. resize() lo mide ya.
+ */
+function scrollToTop(top: number, lenis: Lenis | null) {
+  if (lenis) {
+    lenis.resize()
+    lenis.scrollTo(top, { immediate: true, force: true })
+  }
+  else window.scrollTo({ top, behavior: 'instant' })
 }
 
 /** Devuelve el ancla a su altura. Si el bloque quedó oculto (vista previa, escena), no se mueve nada. */
@@ -49,13 +88,29 @@ function restoreAnchor(anchor: ReadingAnchor | null) {
   if (rect.height === 0) return
   const delta = rect.top - anchor.top
   if (Math.abs(delta) < 1) return
-  window.scrollTo({ top: window.scrollY + delta, behavior: 'instant' })
+  scrollToTop(window.scrollY + delta, anchor.lenis())
   // ScrollTrigger guarda el scroll en caché y su próximo refresh lo restauraría: que lea el nuevo.
   ScrollTrigger.update()
 }
 
 /** Un cuadro entero: con reduced motion todo transiciona en 0,01 ms y el estilo final llega después. */
 const frame = () => new Promise<void>(resolve => requestAnimationFrame(() => resolve()))
+
+/**
+ * La corrección final, cuando la página ya se asentó: el plugin de movimiento rearma las escenas y
+ * pide un ScrollTrigger.refresh en el cuadro siguiente (los pines suman o quitan su espaciador y el
+ * refresh devuelve el scroll que tenía en caché). Se espera ese cuadro, se mide con un refresh propio
+ * y se corrige; un cuadro después, otra vez si algo se movió.
+ */
+async function settleAnchor(anchor: ReadingAnchor | null) {
+  if (!anchor) return
+  await frame()
+  await frame()
+  ScrollTrigger.refresh()
+  restoreAnchor(anchor)
+  await frame()
+  restoreAnchor(anchor)
+}
 
 /**
  * El estado al que va el modo mientras un cambio está en curso. Con view transition, `commit` corre
@@ -67,6 +122,8 @@ let pending: boolean | null = null
 export function useHyperfocus() {
   const cookie = useCookie<string | null>(HYPERFOCUS_COOKIE, { maxAge: YEAR, sameSite: 'lax', path: '/', encode: plain, decode: plain })
   const state = useState<boolean>(HYPERFOCUS_COOKIE, () => cookie.value === 'true')
+  const nuxtApp = useNuxtApp()
+  const lenis = () => nuxtApp.$lenis?.value ?? null
 
   /** Entrar escribe la cookie; salir la borra, así un enlace viejo no lo vuelve a encender. */
   function commit(on: boolean) {
@@ -81,8 +138,7 @@ export function useHyperfocus() {
    * transition (`settle`) se espera además un cuadro; dentro de una no, porque el navegador no pinta
    * hasta que este callback termina.
    */
-  async function apply(on: boolean, settle = false) {
-    const anchor = readingAnchor()
+  async function apply(on: boolean, anchor: ReadingAnchor | null, settle = false) {
     commit(on)
     const root = document.documentElement
     if (on) root.dataset.hyperfocus = 'true'
@@ -110,16 +166,21 @@ export function useHyperfocus() {
     const done = () => {
       if (pending === on) pending = null
     }
-    if (prefersReducedMotion() || !document.startViewTransition) return apply(on, true).finally(done)
+    // El ancla se mide antes de tocar nada: es lo que el lector tenía delante.
+    const anchor = readingAnchor(lenis)
+    if (prefersReducedMotion() || !document.startViewTransition) {
+      return apply(on, anchor, true).then(() => settleAnchor(anchor)).finally(done)
+    }
     let transition: ViewTransition
     try {
-      transition = document.startViewTransition({ update: () => apply(on), types: ['hiperfoco'] })
+      transition = document.startViewTransition({ update: () => apply(on, anchor), types: ['hiperfoco'] })
     }
     catch {
       // Navegadores con view transitions pero sin tipos: solo aceptan la función (y fundido común).
-      transition = document.startViewTransition(() => apply(on))
+      transition = document.startViewTransition(() => apply(on, anchor))
     }
-    transition.finished.catch(() => {})
+    // Después de los 220 ms, con las escenas ya rearmadas, la lectura vuelve a su lugar si se corrió.
+    void transition.finished.catch(() => {}).then(() => settleAnchor(anchor))
     return transition.updateCallbackDone.catch(() => {}).finally(done)
   }
 

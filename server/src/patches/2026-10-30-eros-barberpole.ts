@@ -36,7 +36,7 @@ const EROS_METRICS = metricRows(EROS_METRICS_JSON)
 const EROS_TECHS = ['fastapi', 'python', 'typescript', 'postgresql']
 const EROS_LINKS = [
   { label: 'código fuente', url: 'https://github.com/MateoGs013/eros-agent' },
-  { label: 'control center', url: 'https://eros.mateogs.tech' },
+  { label: 'centro de control', url: 'https://eros.mateogs.tech' },
 ]
 const EROS_STEPS = [
   { title: '01 · fuentes', body: 'Rastreo de vacantes en LinkedIn, Get on Board y RemoteOK, con filtros de stack, modalidad y salario.' },

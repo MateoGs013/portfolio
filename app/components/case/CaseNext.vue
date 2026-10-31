@@ -50,7 +50,8 @@ useMotion(scene, ({ el, ambient }) => {
 
 <template>
   <nav :aria-label="t('case.next')">
-    <div ref="scene" data-hf="hide">
+    <!-- En registro la siguiente obra es un enlace llano, como en Hiperfoco: la escena es diseño. -->
+    <div ref="scene" data-hf="hide" class="record:hidden">
       <NuxtLink
         :to="to"
         data-travel="next"
@@ -72,7 +73,7 @@ useMotion(scene, ({ el, ambient }) => {
       </NuxtLink>
     </div>
 
-    <div data-hf="measure" class="hidden px-pad pb-section focus-mode:block">
+    <div data-hf="measure" class="hidden px-pad pb-section focus-mode:block record:block">
       <NuxtLink :to="to" data-travel="next" class="flex flex-col gap-2 border-t border-rule pt-6 text-ink">
         <span class="text-s text-dim">{{ t('case.next') }}</span>
         <span data-travel-title class="text-xl font-title">{{ next.title }}</span>

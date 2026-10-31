@@ -61,6 +61,19 @@ header[data-chrome] {
   object-position: 0 0;
 }
 
+/* El título de una fila o una tarjeta (un renglón) llega al h1 del caso en dos: fundir las dos formas a
+   la vez deja un doble estirado. La vieja se apaga en el primer cuarto y la nueva entra desde el 30 %,
+   como el fantasma del morph (§2.1); el grupo sigue viajando con su curva. */
+::view-transition-old(title) {
+  animation-name: vt-title-out;
+  animation-timing-function: linear;
+}
+
+::view-transition-new(title) {
+  animation-name: vt-title-in;
+  animation-timing-function: linear;
+}
+
 ::view-transition-old(cover),
 ::view-transition-new(cover) {
   object-fit: cover;
@@ -93,6 +106,28 @@ header[data-chrome] {
 :root[data-hyperfocus='true']::view-transition-new(*) {
   animation-duration: 220ms;
   animation-delay: 0s;
+}
+
+@keyframes vt-title-out {
+  0% {
+    opacity: 1;
+  }
+
+  25%,
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes vt-title-in {
+  0%,
+  30% {
+    opacity: 0;
+  }
+
+  100% {
+    opacity: 1;
+  }
 }
 
 @keyframes vt-out {

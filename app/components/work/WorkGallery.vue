@@ -221,13 +221,13 @@ useMotion(root, ({ el, desktop, ambient, transitions, hyperfocus, add }) => {
       <ul
         ref="track"
         data-motion="track"
-        class="relative grid gap-x-(--gal-gap) gap-y-[clamp(3rem,9vh,6rem)] px-pad md:grid-cols-[repeat(2,var(--card-w))] focus-mode:md:grid-cols-1 group-data-[track]/gallery:flex group-data-[track]/gallery:w-max"
+        class="relative grid gap-x-(--gal-gap) gap-y-[clamp(3rem,9vh,6rem)] px-pad md:grid-cols-2 focus-mode:md:grid-cols-1 group-data-[track]/gallery:flex group-data-[track]/gallery:w-max"
       >
         <li
           v-for="(p, i) in projects"
           :key="p.slug"
           :data-flip-id="p.slug"
-          class="min-w-0 md:w-(--card-w) focus-mode:md:w-auto group-data-[track]/gallery:flex-none"
+          class="min-w-0 group-data-[track]/gallery:w-(--card-w) group-data-[track]/gallery:flex-none"
         >
           <WorkCard :project="p" :eager="i < 2" :priority="i === 0" />
         </li>
