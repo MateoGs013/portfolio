@@ -30,22 +30,10 @@ export const AdmLogin = {
       }
     }
 
-    // Ambiente de desarrollo: ocultar estrictamente en producción (HTTPS o dominios no locales)
-    const isProduction = window.location.protocol === 'https:' || !['localhost', '127.0.0.1', '::1'].includes(window.location.hostname)
-    const showDevToken = !isProduction
-
-    function useDevToken() {
-      if (!showDevToken) return
-      store.tokenInput = 'dev-token'
-      login()
-    }
-
     return {
       store,
       icons: ICONS,
       login,
-      useDevToken,
-      showDevToken,
       isAuthenticating,
     }
   },
@@ -111,22 +99,6 @@ export const AdmLogin = {
             <span>{{ isAuthenticating ? 'Autenticando...' : 'Ingresar a la Consola' }}</span>
           </button>
         </form>
-
-        <!-- Ambiente Local / Dev Helper (Oculto estrictamente en producción) -->
-        <div v-if="showDevToken" class="pt-3 border-t border-white/10 flex items-center justify-between text-[11px] font-mono-code text-zinc-400">
-          <span class="flex items-center gap-1.5">
-            <span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
-            <span>Localhost</span>
-          </span>
-          <button
-            type="button"
-            @click="useDevToken"
-            :disabled="isAuthenticating"
-            class="h-6 px-2.5 rounded bg-white/5 hover:bg-white/10 border border-white/15 text-zinc-200 hover:text-white font-mono-code text-[10px] active:scale-[0.96] transition-all cursor-pointer disabled:opacity-50"
-          >
-            dev-token rápido
-          </button>
-        </div>
       </div>
 
       <!-- Enlace al Portafolio Público -->

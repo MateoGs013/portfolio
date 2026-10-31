@@ -70,16 +70,16 @@ window.addEventListener('keydown', (e) => {
     return
   }
 
-  // Ctrl+N / Cmd+N: Crear nuevo registro
+  // Ctrl+N / Cmd+N: Crear nuevo registro (pide confirmación si hay cambios; en el Panel no hace nada)
   if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'n') {
     e.preventDefault()
-    store.createRecord()
+    if (!store.modals.confirm) store.requestNewRecord()
     return
   }
 
   // Ctrl+D / Cmd+D: Duplicar registro activo
   if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'd') {
-    if (store.form || store.current) {
+    if (store.form && store.canCreate) {
       e.preventDefault()
       const dupBtn = document.querySelector('button[title*="Ctrl+D"]')
       if (dupBtn) dupBtn.click()

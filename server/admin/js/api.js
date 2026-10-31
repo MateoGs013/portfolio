@@ -1,6 +1,36 @@
 // Portfolio CMS 2026 · Cliente API Administrativa
 // Manejo centralizado de peticiones HTTP a /api/admin/*
 
+/** El único aviso ante un 401: lo muestra el store una vez y los llamadores no suman otro. */
+export const AUTH_MESSAGE = 'La sesión se cerró o la clave no es válida. Ingresala de nuevo.'
+
+/** Error de la API con su código HTTP y el `code` del cuerpo (por ejemplo 'cv_expired' en un 409). */
+export class ApiError extends Error {
+  constructor(message, status, code = '') {
+    super(message)
+    this.name = 'ApiError'
+    this.status = status
+    this.code = code
+    this.isAuth = status === 401
+  }
+}
+
+/** Lo que la API necesita de una vacante para analizarla, redactar el mensaje o adaptar el CV sin Eros. */
+export function jobBody(job) {
+  if (!job) return {}
+  const tags = Array.isArray(job.tags) ? job.tags : (typeof job.tags === 'string' && job.tags ? job.tags.split(',').map(t => t.trim()).filter(Boolean) : [])
+  return {
+    job: {
+      title: job.title || '',
+      company: job.company || '',
+      description: job.description || '',
+      tags,
+      url: job.url || '',
+      contact_email: job.contact_email || '',
+    },
+  }
+}
+
 export class ApiClient {
   constructor() {
     this.token = sessionStorage.getItem('admin-token') || ''
@@ -28,6 +58,14 @@ export class ApiClient {
     return !!this.token
   }
 
+  /** Cierra la sesión una sola vez aunque varios pedidos vuelvan con 401 a la vez. */
+  failAuth() {
+    const hadSession = !!this.token
+    this.setToken('')
+    if (hadSession && typeof this.onAuthError === 'function') this.onAuthError()
+    throw new ApiError(AUTH_MESSAGE, 401)
+  }
+
   async fetch(path, init = {}) {
     const headers = {
       Authorization: `Bearer ${this.token}`,
@@ -37,13 +75,7 @@ export class ApiClient {
     const url = `/api/admin/${path.replace(/^\//, '')}`
     const res = await window.fetch(url, { ...init, headers })
 
-    if (res.status === 401) {
-      this.setToken('')
-      if (typeof this.onAuthError === 'function') {
-        this.onAuthError()
-      }
-      throw new Error('Sesión expirada o token no autorizado. Ingresá la clave de acceso nuevamente.')
-    }
+    if (res.status === 401) this.failAuth()
 
     if (res.status === 204) {
       return null
@@ -54,10 +86,10 @@ export class ApiClient {
     const body = isJson ? await res.json().catch(() => null) : await res.text()
 
     if (!res.ok) {
-      const errorMsg = (body && typeof body === 'object' && body.error) 
-        ? body.error 
+      const errorMsg = (body && typeof body === 'object' && body.error)
+        ? body.error
         : `Error en la solicitud (código ${res.status})`
-      throw new Error(errorMsg)
+      throw new ApiError(errorMsg, res.status, (body && typeof body === 'object' && body.code) || '')
     }
 
     // Detección de fallback de Eros Agent vía cabecera HTTP
@@ -87,16 +119,11 @@ export class ApiClient {
     const url = `/api/admin/${path.replace(/^\//, '')}`
     const res = await window.fetch(url, { ...init, headers })
 
-    if (res.status === 401) {
-      this.setToken('')
-      if (typeof this.onAuthError === 'function') {
-        this.onAuthError()
-      }
-      throw new Error('Sesión expirada o token no autorizado. Ingresá la clave de acceso nuevamente.')
-    }
+    if (res.status === 401) this.failAuth()
 
     if (!res.ok) {
-      throw new Error(`Error en la solicitud (código ${res.status})`)
+      const body = (res.headers.get('content-type') || '').includes('application/json') ? await res.json().catch(() => null) : null
+      throw new ApiError(body?.error || `Error en la solicitud (código ${res.status})`, res.status, body?.code || '')
     }
 
     return res.blob()
@@ -201,10 +228,17 @@ export class ApiClient {
     })
   }
 
-  async evaluateHunterJob(id) {
-    return this.fetch(`hunter/jobs/${encodeURIComponent(id)}/evaluate`, {
+  /** POST con la vacante en el cuerpo: así la API la analiza aunque Eros no la conozca. */
+  postJob(path, job) {
+    return this.fetch(path, {
       method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(jobBody(job)),
     })
+  }
+
+  async evaluateHunterJob(job) {
+    return this.postJob(`hunter/jobs/${encodeURIComponent(job.id)}/evaluate`, job)
   }
 
   async purgeHunterJobs() {
@@ -243,22 +277,28 @@ export class ApiClient {
     })
   }
 
-  async generateHunterPitch(id) {
-    return this.fetch(`hunter/jobs/${encodeURIComponent(id)}/pitch`, {
-      method: 'POST',
-    })
+  async generateHunterPitch(job) {
+    return this.postJob(`hunter/jobs/${encodeURIComponent(job.id)}/pitch`, job)
   }
 
-  async generateHunterCV(id) {
-    return this.fetch(`hunter/jobs/${encodeURIComponent(id)}/cv`, {
-      method: 'POST',
-    })
+  async generateHunterCV(job) {
+    return this.postJob(`hunter/cv/${encodeURIComponent(job.id)}`, job)
   }
 
   async getHunterCVTicket(id) {
     return this.fetch(`hunter/cv/${encodeURIComponent(id)}/ticket`, {
       method: 'POST',
     })
+  }
+
+  /** Pide la hoja con la sesión para saber si el CV sigue en la caché de la API (409 si no). */
+  async probeHunterCVHtml(id) {
+    return this.fetchBlob(`hunter/cv/${encodeURIComponent(id)}/html`)
+  }
+
+  /** Texto plano del CV armado por la API (404 mientras la API no lo ofrezca). */
+  async getHunterCVText(id) {
+    return this.fetch(`hunter/cv/${encodeURIComponent(id)}/txt`)
   }
 
   async downloadHunterCVHtml(id) {

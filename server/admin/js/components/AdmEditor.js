@@ -32,46 +32,74 @@ export const AdmEditor = {
 
     const isSaving = ref(false)
 
+    /**
+     * Guarda el registro abierto. Se niega si el formulario es de otra sección (una lista que no cargó,
+     * un cambio de sección a medias). La respuesta del servidor se aplica en el acto, así un segundo
+     * Ctrl+S actualiza y no crea otro; la lista se refresca aparte y nunca le cambia el registro a
+     * quien ya abrió otro.
+     */
     async function save() {
       if (!store.form || isSaving.value) return
       const m = model.value
       if (!m) return
+      if (store.formSection !== store.section || store.loadError) {
+        store.toast('err', 'Este formulario no corresponde a la sección abierta. Volvé a abrir el registro antes de guardar.')
+        return
+      }
 
+      const section = store.section
+      const form = store.form
+      const key = m.idKey || 'id'
+      const sent = store.calcSnapshot(form)
+      const wasNew = store.isNew
       isSaving.value = true
+      let saved
       try {
-        const payload = m.toPayload(store.form)
-        let saved = null
-
-        if (store.isNew) {
+        const payload = m.toPayload(form)
+        if (wasNew) {
           saved = await api.createRecord(m.path, payload)
-          store.toast('ok', `${m.singular} creado exitosamente`)
         } else {
-          const idVal = store.current[m.idKey || 'id']
+          const idVal = store.current[key]
           const method = m.saveMethod ? m.saveMethod() : 'PUT'
-          const savePath = m.saveUrl ? m.saveUrl(store.form) : `${m.path}/${encodeURIComponent(idVal)}`
+          const savePath = m.saveUrl ? m.saveUrl(form) : `${m.path}/${encodeURIComponent(idVal)}`
           saved = await api.fetch(savePath, {
             method,
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload),
           })
-          store.toast('ok', `${m.singular} actualizado`)
-        }
-
-        // Recargar lista y seleccionar el registro guardado
-        const refreshedRows = await api.getCollection(m.path)
-        store.rows = refreshedRows || []
-        store.counts[store.section] = store.rows.length
-
-        const targetKey = m.idKey || 'id'
-        const savedId = saved ? saved[targetKey] : (store.current ? store.current[targetKey] : null)
-        const match = store.rows.find(r => r[targetKey] === savedId) || store.rows[0]
-        if (match) {
-          store.selectRecord(match)
         }
       } catch (err) {
-        store.toast('err', `Error al guardar: ${err.message}`)
-      } finally {
+        store.toast('err', `No se pudo guardar: ${err.message}`)
         isSaving.value = false
+        return
+      }
+
+      const stillOpen = store.form === form && store.section === section
+      if (stillOpen && saved && typeof saved === 'object' && saved[key] != null) {
+        // Lo guardado pasa a ser el registro abierto, salvo que el operador haya seguido escribiendo.
+        if (store.calcSnapshot(form) === sent) {
+          store.selectRecord(saved)
+        } else {
+          store.current = saved
+          store.isNew = false
+          store.initialSnapshot = sent
+          store.checkDirty()
+        }
+      }
+      store.toast('ok', wasNew ? `${m.singular} creado` : `${m.singular} guardado`)
+      isSaving.value = false
+
+      try {
+        const rows = (await api.getCollection(m.path)) || []
+        if (store.section !== section) return
+        store.rows = rows
+        store.counts[section] = rows.length
+        const savedId = saved?.[key]
+        const row = rows.find(r => r[key] === savedId)
+        // La fila de la lista reemplaza a la respuesta solo si el registro guardado sigue abierto.
+        if (row && store.current && store.current[key] === savedId) store.current = row
+      } catch {
+        if (store.section === section) store.toast('err', 'Se guardó; no pudimos actualizar la lista.')
       }
     }
 
@@ -196,7 +224,7 @@ export const AdmEditor = {
             </div>
             <div class="hidden lg:flex items-center gap-3 border-l border-white/10 pl-3 text-[11px]">
               <span>Guardar: <kbd class="bg-black/40 text-zinc-300 px-1 py-0.5 rounded border border-white/10">Ctrl+S</kbd></span>
-              <span>Nuevo: <kbd class="bg-black/40 text-zinc-300 px-1 py-0.5 rounded border border-white/10">Ctrl+N</kbd></span>
+              <span v-if="store.canCreate">Nuevo: <kbd class="bg-black/40 text-zinc-300 px-1 py-0.5 rounded border border-white/10">Ctrl+N</kbd></span>
             </div>
           </div>
 
@@ -211,7 +239,7 @@ export const AdmEditor = {
             </button>
 
             <button
-              v-if="!store.isNew"
+              v-if="store.canRemove"
               type="button"
               @click="remove"
               class="btn-danger !h-[30px] !text-[11px] sm:!text-xs cursor-pointer"
@@ -235,6 +263,16 @@ export const AdmEditor = {
         </footer>
 
 
+      </div>
+
+      <div v-else-if="store.loadError" role="alert" class="h-full flex flex-col items-center justify-center gap-3 px-6 text-center">
+        <p class="max-w-md text-sm text-zinc-200">{{ store.loadError }}</p>
+        <p class="max-w-md text-xs text-zinc-400">No hay nada abierto para editar, así que no se guarda ningún cambio hasta que la lista cargue.</p>
+        <button type="button" class="btn-secondary !h-[30px] !text-xs cursor-pointer" @click="store.loadSection(store.section, false)">Reintentar</button>
+      </div>
+
+      <div v-else-if="store.loadingSection" class="h-full flex items-center justify-center text-zinc-400 text-xs" role="status">
+        Cargando…
       </div>
 
       <div v-else class="h-full flex items-center justify-center text-zinc-500 text-xs font-mono-code">

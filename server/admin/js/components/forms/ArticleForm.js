@@ -84,7 +84,7 @@ export const ArticleForm = {
               class="text-[10px] font-mono-code px-1.5 py-0.5 rounded border transition-colors cursor-pointer"
               :class="store.slugLocked ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/25' : 'text-zinc-400 bg-white/5 border-white/10 hover:text-white'"
             >
-              {{ store.slugLocked ? '[BLOQUEADO] Auto' : '[MANUAL] Desbloqueado' }}
+              {{ store.slugLocked ? 'Sigue al título' : 'Manual' }}
             </button>
           </div>
           <input

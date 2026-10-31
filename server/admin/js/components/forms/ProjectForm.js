@@ -19,7 +19,7 @@ export const ProjectForm = {
   components: { EnField, ProjectMedia, ProjectMetrics, ProjectStack, ProjectSteps },
   setup() {
     function onTitleInput() {
-      if (store.slugLocked && store.form) {
+      if (store.isNew && store.slugLocked && store.form) {
         store.form.slug = slugify(store.form.title)
       }
       store.checkDirty()
@@ -27,7 +27,7 @@ export const ProjectForm = {
 
     function toggleSlugLock() {
       store.slugLocked = !store.slugLocked
-      if (store.slugLocked && store.form) {
+      if (store.isNew && store.slugLocked && store.form) {
         store.form.slug = slugify(store.form.title)
       }
       store.checkDirty()
@@ -100,10 +100,11 @@ export const ProjectForm = {
                 class="text-[10px] font-mono-code px-1.5 py-0.5 rounded border transition-colors cursor-pointer"
                 :class="store.slugLocked ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20' : 'text-zinc-400 bg-white/5 border-white/10 hover:text-white'"
               >
-                {{ store.slugLocked ? '[BLOQUEADO] Vinculado' : '[MANUAL] Desbloqueado' }}
+                {{ store.isNew ? (store.slugLocked ? 'Sigue al título' : 'Manual') : (store.slugLocked ? 'Fija' : 'Editable') }}
               </button>
             </div>
-            <input id="project-slug" type="text" v-model="store.form.slug" :readonly="store.slugLocked" placeholder="mi-proyecto" class="text-input font-mono-code" />
+            <input id="project-slug" type="text" v-model="store.form.slug" :readonly="store.slugLocked" placeholder="mi-proyecto" class="text-input font-mono-code" aria-describedby="project-slug-hint" />
+            <span id="project-slug-hint" class="field-hint">{{ store.isNew ? 'Ruta en el sitio: /projects/' + (store.form.slug || 'slug') : 'Cambiar el título no cambia la dirección. Si la cambiás a mano, los enlaces viejos dejan de andar.' }}</span>
           </div>
         </div>
 

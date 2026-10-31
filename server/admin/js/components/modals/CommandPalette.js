@@ -23,8 +23,8 @@ export const CommandPalette = {
           category: 'Acciones Rápidas',
           badge: MODELS[store.section]?.singular || 'Nuevo',
           action: () => {
-            store.createRecord()
             emit('close')
+            store.requestNewRecord()
           },
         },
         {

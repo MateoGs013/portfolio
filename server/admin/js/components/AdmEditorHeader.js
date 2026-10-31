@@ -33,7 +33,7 @@ export const AdmEditorHeader = {
     }
 
     function duplicateRecord() {
-      if (!store.form) return
+      if (!store.form || !store.canCreate) return
       const baseTitle = store.form.title || store.form.name || store.form.role || 'Copia'
       const cloned = JSON.parse(JSON.stringify(store.form))
       delete cloned.id
@@ -111,6 +111,7 @@ export const AdmEditorHeader = {
         </template>
 
         <button
+          v-if="store.canCreate"
           type="button"
           @click="duplicateRecord"
           class="btn-secondary !h-[28px] !text-[11px] cursor-pointer"
