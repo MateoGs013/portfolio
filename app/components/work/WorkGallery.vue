@@ -217,7 +217,7 @@ useMotion(root, ({ el, desktop, ambient, transitions, hyperfocus, add }) => {
     :aria-label="t('work.gallery')"
     class="group/gallery [--card-w:min(calc((100cqw-2*var(--pad)-var(--gal-gap))/2),42vw,46rem,calc((100svh-13rem)*1.6))] [--gal-gap:clamp(1.5rem,4vw,4rem)]"
   >
-    <div ref="stage" class="@container group-data-[track]/gallery:overflow-clip group-data-[track]/gallery:[overflow-clip-margin:1rem]">
+    <div ref="stage" class="@container group-data-[track]/gallery:overflow-x-clip">
       <ul
         ref="track"
         data-motion="track"

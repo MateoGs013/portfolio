@@ -164,7 +164,8 @@ useMotion(() => (props.scope ? root.value : null), ({ el, ambient }) => {
         <span v-for="l in word" :key="l.i" class="chm"><span class="ch inline-block [transform:translateY(110%)]" :style="{ '--i': l.i }">{{ l.ch }}</span></span>
       </span>
     </p>
-    <span data-count class="absolute right-pad bottom-pad text-s text-dim tabular-nums" />
+    <!-- Ancho fijo de tres cifras, alineado a la derecha: al contar, la caja no se corre (CLS 0). -->
+    <span data-count class="absolute right-pad bottom-pad min-w-[3ch] text-end text-s text-dim tabular-nums" />
     <i data-bar class="absolute inset-x-0 bottom-0 h-0.5 origin-left bg-sig [transform:scaleX(0)]" />
   </div>
 </template>
