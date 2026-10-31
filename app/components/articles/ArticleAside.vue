@@ -33,7 +33,7 @@ const link = 'hit underline decoration-rule decoration-1 underline-offset-4 tran
       <RecordField collection="articles" k="techs" :value="article.techs" :record="article">
         <dt :class="dt">{{ t('articles.techs') }}</dt>
         <dd>
-          <ul class="flex flex-wrap gap-x-4 gap-y-1 coarse:gap-y-5">
+          <ul class="flex flex-wrap gap-x-4 gap-y-1 coarse:gap-y-6">
             <li v-for="tech in article.techs" :key="tech.slug">
               <NuxtLink :to="localeRoute({ path: '/articles', query: { stack: tech.slug } })" :class="link">{{ tech.name }}</NuxtLink>
             </li>

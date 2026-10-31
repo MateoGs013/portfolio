@@ -128,7 +128,10 @@ async function show() {
     return
   }
   if (box.open) return
-  returnTo = document.activeElement instanceof HTMLElement ? document.activeElement : null
+  // Si un cierre todavía no llegó (reduced motion: el evento close va en otra tarea), returnTo sigue
+  // siendo el disparador original y el foco ya está en body: se conserva en vez de guardar body.
+  const current = document.activeElement
+  if (!returnTo || (current !== document.body && !box.contains(current))) returnTo = current instanceof HTMLElement ? current : null
   query.value = ''
   active.value = 0
   shown = false
@@ -157,8 +160,12 @@ function hide() {
 function onClose() {
   const box = dialog.value
   // Con reduced motion el cierre es inmediato y el evento close llega en una tarea aparte: si para
-  // entonces otra tecla ya volvió a abrir la paleta, este cierre es viejo y no se toca nada.
-  if (box?.open) return
+  // entonces otra tecla ya volvió a abrir la paleta, este cierre es viejo: no se cierra nada, pero la
+  // entrada elegida antes de reabrir se descarta para que no corra en un cierre posterior.
+  if (box?.open) {
+    pending = null
+    return
+  }
   closing = false
   if (box) {
     delete box.dataset.closing

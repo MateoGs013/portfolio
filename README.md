@@ -51,7 +51,7 @@ pnpm cv:pdf             # regenerar los dos PDF ATS desde el sitio local
 pnpm test:e2e           # Playwright contra el build: 375, 768 y 1440 px en los dos temas, reduced motion y sin JS
 ```
 
-`pnpm test:e2e` compila una vez y corre cada spec de cada proyecto con una API nueva (el límite de la API pública es de 300 pedidos cada 15 minutos). Las capturas de referencia están en `tests/e2e/visual.spec.ts-snapshots/` y se regeneran a propósito con `pnpm test:e2e visual --update-snapshots`.
+`pnpm test:e2e` compila una vez y corre cada spec de cada proyecto con una API nueva (el límite de la API pública es de 300 pedidos cada 15 minutos). Las capturas de referencia están en `tests/e2e/visual.spec.ts-snapshots/` y se regeneran a propósito con `pnpm test:e2e visual --update-snapshots`. Son de Windows (sufijo `-win32`) y dependen del seed: en otra plataforma, o tras cambiar el seed o el diseño, hay que regenerarlas.
 
 ## Calidad
 

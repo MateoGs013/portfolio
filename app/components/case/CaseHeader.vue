@@ -102,7 +102,7 @@ const link = 'hit underline decoration-rule decoration-1 underline-offset-4 tran
           {{ t('case.stack') }}
         </dt>
         <dd>
-          <ul data-peek-group class="flex flex-wrap items-center gap-x-3 gap-y-1 coarse:gap-y-5">
+          <ul data-peek-group class="flex flex-wrap items-center gap-x-3 gap-y-1 coarse:gap-y-6">
             <CasePeekTrigger
               v-for="tech in project.techs"
               :key="tech.slug"

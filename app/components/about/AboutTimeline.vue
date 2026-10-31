@@ -115,7 +115,7 @@ useMotion(list, ({ el, ambient }) => {
           <p v-if="meta(e)" class="text-s text-dim">
             {{ meta(e) }}
           </p>
-          <p v-if="e.projects.length" class="mt-2 flex flex-wrap items-baseline gap-x-4 gap-y-1 text-s coarse:gap-y-5">
+          <p v-if="e.projects.length" class="mt-2 flex flex-wrap items-baseline gap-x-4 gap-y-1 text-s coarse:gap-y-6">
             <span class="text-faint">{{ t('about.works') }}</span>
             <NuxtLink
               v-for="p in e.projects"
