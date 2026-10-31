@@ -18,8 +18,8 @@ const { isRecord } = useRecordView()
 
 const listLocale = { es: 'es-AR', en: 'en-US' } as const
 
-/** Debajo de 768 px el valor va en su propia línea en registro; acá se ubica el h1 igual que un `.fv`. */
-const titlePlace = 'record:col-span-full record:mt-1 md:record:col-auto md:record:mt-0'
+/** Debajo de 768 px (y en la columna del Hiperfoco) el valor va en su propia línea en registro; acá se ubica el h1 igual que un `.fv`. */
+const titlePlace = 'record:col-span-full record:mt-1 md:not-focus-mode:record:col-auto md:not-focus-mode:record:mt-0'
 
 const dot = { LIVE: 'bg-ok', WIP: 'bg-wip', ARCHIVED: 'bg-faint' } as const
 

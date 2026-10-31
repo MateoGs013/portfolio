@@ -6,7 +6,8 @@
  * - `page:view-transition:start`: Lenis se detiene hasta que termina la transición; después se
  *   reanuda y ScrollTrigger recalcula con la página nueva.
  * - `site:overlay` ({ open }): una capa encima (la paleta) pausa Lenis y lo reanuda al cerrarse.
- * - `record:before` / `record:after`: las escenas se revierten con el DOM viejo y se arman con el nuevo.
+ * - `record:before` / `record:after`: las escenas las revierte y las vuelve a armar record-morph.client.ts,
+ *   que necesita medir antes de revertir y armar recién cuando termina el morph.
  * - Hiperfoco: al cambiar, las escenas se rearman con el movimiento ambiental apagado o encendido.
  */
 import gsap from 'gsap'
@@ -101,13 +102,6 @@ export default defineNuxtPlugin({
     })
 
     nuxtApp.hook('site:overlay', ({ open }) => (open ? hold('overlay') : release('overlay')))
-
-    nuxtApp.hook('record:before', () => revertScenes())
-    nuxtApp.hook('record:after', async () => {
-      await nextTick()
-      armScenes()
-      refresh()
-    })
 
     // El atributo data-hyperfocus lo pone el head: se rearma después de que el DOM lo tenga.
     watch(prefs.hyperfocus, async () => {

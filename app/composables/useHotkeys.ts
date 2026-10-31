@@ -63,6 +63,18 @@ export function usePalette() {
   return { open: readonly(open), requested: readonly(requested), openPalette, closePalette, togglePalette }
 }
 
+/** Hay una view transition en curso. Sin `:active-view-transition`, el selector no se entiende y no hay. */
+function viewTransitionActive(): boolean {
+  try {
+    return document.documentElement.matches(':active-view-transition')
+  }
+  catch {
+    return false
+  }
+}
+
+const recordBlocked = () => import.meta.client && (document.documentElement.hasAttribute('data-intro') || viewTransitionActive())
+
 /** Los verbos del sitio: los usan las teclas, la cabecera y la paleta, con su anuncio y su sonido. */
 export function useSiteActions() {
   const router = useRouter()
@@ -121,7 +133,12 @@ export function useSiteActions() {
 
   const toggleLang = () => setLang(lang.value === 'es' ? 'en' : 'es')
 
+  /**
+   * R se ignora mientras corre el morph (busy), durante la entrada del inicio (`data-intro`) y con una
+   * view transition en curso (página, Hiperfoco, CV): el morph mediría una página a medio cambiar.
+   */
   function toggleRecord() {
+    if (record.busy.value || recordBlocked()) return
     sound.tick(2000)
     return record.toggleRecord()
   }

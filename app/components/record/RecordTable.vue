@@ -68,10 +68,10 @@ const numeric = (name: string) => ['int', 'decimal'].includes(metaFor(props.coll
     <tbody>
       <tr v-for="row in body" :key="row.key" class="f" :class="recordLine" :data-f="row.key">
         <template v-for="({ name, cell }, i) in row.cells" :key="name">
-          <th v-if="i === 0" scope="row" class="py-3 pr-4 align-baseline font-normal">
+          <th v-if="i === 0" scope="row" :data-f="name" class="py-3 pr-4 align-baseline font-normal">
             <RecordValue :cell="cell" :quoted="false" :to="row.to" :lang="langAttr(row.record, name)" :data-row="row.to ? '' : undefined" />
           </th>
-          <td v-else class="py-3 pr-4 align-baseline last:pr-0" :class="[narrow(name), numeric(name)]">
+          <td v-else :data-f="name" class="py-3 pr-4 align-baseline last:pr-0" :class="[narrow(name), numeric(name)]">
             <RecordValue :cell="cell" :quoted="false" :lang="langAttr(row.record, name)" />
           </td>
         </template>

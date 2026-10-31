@@ -7,6 +7,10 @@
  * El slot recibe `fv`: la clase del nodo que viaja en el morph. Con `shared`, el slot se queda también
  * en registro y su nodo con `fv` es el mismo en las dos lecturas (`record:` le cambia la tipografía);
  * sin `shared`, el registro lo reemplaza por `RecordValue`. Sin slot, el valor se lee igual en ambos.
+ *
+ * El morph de R (record-morph.client.ts) empareja los dos nodos por clave: el `data-f` de esta fila (y
+ * los de afuera, como el slug de una tabla) y el orden del `.fv` dentro del campo. Por eso el slot pone
+ * `fv` en el mismo orden que RecordValue: un nodo por valor, uno por item en las listas.
  */
 import type { FieldType } from '~/lib/fieldMeta'
 import type { Translatable } from '~/lib/api'
@@ -43,8 +47,11 @@ const empty = computed(() => isEmptyCell(cell.value))
 const lang = computed(() => langAttr(props.record, props.k))
 const design = computed(() => !empty.value && !!slots.default && (props.shared || !isRecord.value))
 
-/** En registro el valor va en la tercera columna; debajo de 768 px, en su propia línea. */
-const place = 'record:col-span-full record:mt-1 md:record:col-auto md:record:mt-0'
+/**
+ * En registro el valor va en la tercera columna; debajo de 768 px y en la columna angosta del Hiperfoco
+ * (68ch no alcanzan para tres), en su propia línea debajo del nombre y el tipo.
+ */
+const place = 'record:col-span-full record:mt-1 md:not-focus-mode:record:col-auto md:not-focus-mode:record:mt-0'
 const fv = computed(() => `${valueClass(cell.value.kind)} ${place}`)
 </script>
 
@@ -52,13 +59,13 @@ const fv = computed(() => `${valueClass(cell.value.kind)} ${place}`)
   <component
     :is="as"
     v-if="isRecord || !empty"
-    class="f contents record:relative record:grid record:grid-cols-[minmax(0,1fr)_auto] record:items-baseline record:gap-x-6 record:py-3 record:bg-[linear-gradient(var(--rule),var(--rule))] record:bg-no-repeat record:bg-[length:calc(var(--rs,1)*100%)_1px] md:record:grid-cols-[minmax(7rem,13rem)_minmax(6rem,15rem)_minmax(0,1fr)]"
+    class="f contents record:relative record:grid record:grid-cols-[minmax(0,1fr)_auto] record:items-baseline record:gap-x-6 record:py-3 record:bg-[linear-gradient(var(--rule),var(--rule))] record:bg-no-repeat record:bg-[length:calc(var(--rs,1)*100%)_1px] md:not-focus-mode:record:grid-cols-[minmax(7rem,13rem)_minmax(6rem,15rem)_minmax(0,1fr)]"
     :data-f="k"
     :lang="design ? lang : undefined"
   >
     <template v-if="isRecord">
       <span class="fk font-mono text-xs text-ink wrap-anywhere">{{ k }}</span>
-      <span class="ft font-mono text-xs text-faint text-right wrap-anywhere md:text-left">{{ typeLabel(meta) }}</span>
+      <span class="ft font-mono text-xs text-faint text-right wrap-anywhere md:not-focus-mode:text-left">{{ typeLabel(meta) }}</span>
     </template>
     <slot v-if="design" :fv="fv" :record="isRecord" />
     <RecordValue v-else :cell="cell" :class="place" :lang="lang" />

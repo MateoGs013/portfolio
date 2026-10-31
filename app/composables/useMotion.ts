@@ -5,7 +5,7 @@
  * todo (incluidos los pin-spacers), así que:
  *
  * - se revierte en `onBeforeUnmount`, antes de que Vue saque el DOM;
- * - se revierte en `record:before` y se vuelve a armar en `record:after` (lo avisa motion.client.ts);
+ * - se revierte en `record:before` y se vuelve a armar cuando termina el morph de R (record-morph.client.ts);
  * - se vuelve a armar cuando cambia el Hiperfoco o cuando el elemento `scope` es otro (un `:key`).
  *
  * Nunca corre en el servidor ni durante el render: solo desde `onMounted`.
@@ -54,7 +54,7 @@ interface Scene {
   revert: () => void
 }
 
-/** Escenas montadas; motion.client.ts las revierte y las vuelve a armar en bloque. */
+/** Escenas montadas; motion.client.ts (Hiperfoco) y record-morph.client.ts (R) las revierten y las arman en bloque. */
 const scenes = new Set<Scene>()
 
 /**
