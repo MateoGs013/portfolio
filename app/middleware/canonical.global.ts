@@ -1,7 +1,7 @@
 /**
  * Una sola dirección por página (docs/diseno.md §8). Todo lo demás redirige con 301 conservando la
  * query: las rutas del explorador anterior, los alias en español, las mayúsculas y los prefijos de
- * mundo (/datos, /diseno, /umbral). /lab y sus alias redirigen desde routeRules (nuxt.config.ts).
+ * mundo (/datos, /diseno, /umbral). /lab y sus alias se archivaron (docs/archive/lab/): van al inicio.
  */
 import type { LocationQuery } from 'vue-router'
 
@@ -28,6 +28,9 @@ const SLUG_ALIASES: Record<string, string> = { 'arg-piscinas': 'argpiscinas' }
 
 const WORLD_PREFIXES = new Set(['datos', 'diseno', 'umbral'])
 
+/** Secciones archivadas: la ruta y todo lo que cuelga de ella van al inicio. */
+const ARCHIVED = new Set(['lab', 'library', 'libreria', 'componentes', 'components', 'showcase'])
+
 /** Minúsculas, salvo en segmentos codificados (%C3%A9): cambiar su hex daría otra dirección. */
 const lower = (seg: string) => (seg.includes('%') ? seg : seg.toLowerCase())
 
@@ -39,6 +42,7 @@ export function canonicalTarget(path: string, query: LocationQuery): Target | nu
   const [rawRoot, ...rest] = segs
   const root = rawRoot ? (ALIASES[rawRoot] ?? rawRoot) : undefined
   const slug = rest[0]
+  if (root && ARCHIVED.has(root)) return { path: '/', query }
 
   switch (root) {
     case undefined:

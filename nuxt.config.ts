@@ -14,17 +14,22 @@ const siteUrl = process.env.NUXT_PUBLIC_SITE_URL || 'http://localhost:3000'
 /**
  * CSP por entorno. Sin hash de scripts: un hash anula 'unsafe-inline' y bloquearía window.__NUXT__ y
  * el script del head. En desarrollo se suman eval y los websockets de Vite; en producción no.
- * Las fuentes son locales: no hay dominios de fuentes externas. Se arma en el hook nitro:config, que
- * sabe si es `nuxt dev` o `nuxt build` (NODE_ENV todavía no está fijado al leer este archivo).
+ * Todo se sirve desde el mismo origen: las fuentes son locales (sin dominios de fuentes externas), la
+ * media llega por el proxy /media/** y el navegador le habla a la API por /api. Por eso la API no
+ * figura en ninguna directiva. `data:` queda para las fuentes y SVG que Vite incrusta. Se arma en el
+ * hook nitro:config, que sabe si es `nuxt dev` o `nuxt build` (NODE_ENV todavía no está fijado acá).
  */
 const cspFor = (isDev: boolean) => [
   "default-src 'self'",
   `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ''}`,
+  "script-src-attr 'none'",
   "style-src 'self' 'unsafe-inline'",
   "font-src 'self' data:",
-  `img-src 'self' data: blob: ${apiOrigin}`,
-  `media-src 'self' blob: ${apiOrigin}`,
+  "img-src 'self' data:",
+  "media-src 'self'",
   `connect-src 'self'${isDev ? ' http://localhost:* ws://localhost:* wss://localhost:*' : ''}`,
+  "frame-src 'none'",
+  "worker-src 'none'",
   "object-src 'none'",
   "frame-ancestors 'none'",
   "base-uri 'self'",
@@ -44,11 +49,6 @@ const securityHeaders = {
  * una vez por sesión (P1 escribe `mov-visited`). Tema e Hiperfoco ya vienen del SSR por cookie.
  */
 const introScript = `(function(){try{var d=document.documentElement;if(location.pathname!=='/'||location.hash||d.getAttribute('data-hyperfocus')==='true'||/[?&]foco=1(&|$)/.test(location.search)||sessionStorage.getItem('mov-visited')||matchMedia('(prefers-reduced-motion: reduce)').matches)return;d.setAttribute('data-intro','')}catch(e){}})()`
-
-/** /lab se archiva (docs/archive/lab/): la ruta y sus alias van a la home (Respuestas de Mateo). */
-const labRedirects = ['lab', 'library', 'libreria', 'componentes', 'components', 'showcase']
-  .flatMap(seg => [`/${seg}`, `/${seg}/**`])
-  .map(path => [path, { redirect: { to: '/', statusCode: 301 } }] as const)
 
 /** Los PDF sin -ATS eran copias: redirigen al único CV por idioma. */
 const cvRedirects = ['ES', 'EN'].map(lang => [
@@ -77,7 +77,6 @@ export default defineNuxtConfig({
 
   // routeRules de Nuxt (no de Nitro): también aplican en la navegación del cliente.
   routeRules: {
-    ...Object.fromEntries(labRedirects),
     ...Object.fromEntries(cvRedirects),
     // public/cv/ es una carpeta: sin esta regla el servidor estático respondería /cv con /cv/.
     '/cv': { redirect: { to: '/about?cv=ats', statusCode: 301 } },
