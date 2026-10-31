@@ -16,14 +16,14 @@
     "preview": "nuxt preview",
     "start": "node .output/server/index.mjs",
     "start:api": "tsx server/src/index.ts",
-    "typecheck": "nuxt typecheck && tsc -p server/tsconfig.json --noEmit",
+    "typecheck": "nuxt typecheck && tsc -p server/tsconfig.json --noEmit && tsc -p tests/e2e/tsconfig.json",
     "lint": "eslint .",
     "db:up": "docker compose up -d",
     "db:down": "docker compose down",
     "db:seed": "tsx server/src/seed.ts",
     "db:snapshot": "tsx server/src/scripts/snapshot.ts",
     "db:snapshot:check": "tsx server/src/scripts/snapshot-check.ts",
-    "test:e2e": "playwright test",
+    "test:e2e": "node tests/e2e/run.mjs",
     "postinstall": "prisma generate && nuxt prepare"
   },
   "prisma": {

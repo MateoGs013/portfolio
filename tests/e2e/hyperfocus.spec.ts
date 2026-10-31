@@ -1,52 +1,25 @@
 import { readdirSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
-import AxeBuilder from '@axe-core/playwright'
 import { expect, test, type BrowserContext, type Page } from '@playwright/test'
 import focus from '../../app/lib/dict/focus'
+import { A4, axeViolations, HYPERFOCUS_COOKIE, observeShifts, PAGES, prefs } from './support'
 
 /**
  * Hiperfoco (X1, docs/diseno.md §5): la cookie llega al SSR sin cambio de layout, la navegación sigue
  * entera, el botón alterna con aria-pressed sin perder el foco, Esc cierra capas antes de salir, Lenis
  * no existe en el modo, axe no encuentra violaciones serias y el CV se imprime en una página. Corre en
- * 375 y 1440 px, en oscuro y en claro (el viewport lo fija cada bloque: basta un proyecto).
+ * 375 y 1440 px, en oscuro y en claro: cada bloque fija su viewport y su tema, así que la spec corre en
+ * un solo proyecto (1440-dark en playwright.config.ts).
  */
-const PAGES = ['/', '/projects', '/projects/la-rucula', '/about'] as const
 const WIDTHS = [375, 1440] as const
 const THEMES = ['dark', 'light'] as const
-const COOKIE = 'pf-hyperfocus'
-const A4 = { width: 794, height: 1123 }
-
-async function prefs(context: BrowserContext, baseURL: string | undefined, theme: string, hyperfocus: boolean) {
-  const url = baseURL ?? 'http://localhost:3000'
-  await context.addCookies([
-    { name: 'pf-theme', value: theme, url },
-    ...(hyperfocus ? [{ name: COOKIE, value: 'true', url }] : []),
-  ])
-}
 
 async function focusCookie(context: BrowserContext) {
-  return (await context.cookies()).find(c => c.name === COOKIE)?.value
+  return (await context.cookies()).find(c => c.name === HYPERFOCUS_COOKIE)?.value
 }
 
-/** Suma de los layout-shift sin input reciente desde el primer pintado (CLS de la carga). */
-function observeShifts() {
-  const w = window as unknown as { __cls: number }
-  w.__cls = 0
-  new PerformanceObserver((list) => {
-    for (const entry of list.getEntries() as unknown as { value: number, hadRecentInput: boolean }[]) {
-      if (!entry.hadRecentInput) w.__cls += entry.value
-    }
-  }).observe({ type: 'layout-shift', buffered: true })
-}
-
-/** axe sin violaciones serias. La cabecera usa mix-blend-difference: su contraste lo mide check-contrast. */
-async function seriousViolations(page: Page) {
-  const serious = (v: { impact?: string | null }) => v.impact === 'serious' || v.impact === 'critical'
-  // axe no admite dos corridas a la vez en la misma página.
-  const all = await new AxeBuilder({ page }).disableRules(['color-contrast']).analyze()
-  const contrast = await new AxeBuilder({ page }).withRules(['color-contrast']).exclude('header[data-chrome]').analyze()
-  return [...all.violations, ...contrast.violations].filter(serious).map(v => `${v.id}: ${v.nodes.map(n => n.target.join(' ')).join(', ')}`)
-}
+/** axe sin violaciones serias ni críticas (la cabecera se mide aparte, ver support.ts). */
+const seriousViolations = (page: Page) => axeViolations(page, ['critical', 'serious'])
 
 /** En angosto el botón vive en el menú de la cabecera: se abre si el resumen se ve. */
 async function toggleButton(page: Page) {
@@ -58,13 +31,6 @@ async function toggleButton(page: Page) {
 }
 
 const isNarrow = async (page: Page) => page.locator('header[data-chrome] summary').isVisible()
-
-// Cada bloque fija su viewport: correrlo también en mobile-320 duplicaría la corrida (y las ~200
-// peticiones a la API) sin cubrir nada nuevo.
-// eslint-disable-next-line no-empty-pattern
-test.beforeEach(({}, info) => {
-  test.skip(info.project.name !== 'desktop-chromium', 'hyperfocus.spec fija sus propios viewports')
-})
 
 /** Marca el bloque que se está leyendo (el mismo criterio que useHyperfocus) y devuelve su alto. */
 const anchorTop = (page: Page) => page.evaluate(() => {
@@ -223,8 +189,8 @@ test.describe('el cambio de modo', () => {
   test('con movimiento corre una view transition de tipo hiperfoco', async ({ page, context, baseURL }) => {
     await prefs(context, baseURL, 'dark', false)
     await page.goto('/about', { waitUntil: 'networkidle' })
-    const supported = await page.evaluate(() => typeof document.startViewTransition === 'function')
-    test.skip(!supported, 'el navegador no tiene view transitions')
+    // Chromium tiene view transitions: si faltaran, el cambio no podría ser una.
+    expect(await page.evaluate(() => typeof document.startViewTransition === 'function')).toBe(true)
     await page.evaluate(() => {
       const w = window as unknown as { __types: string[] }
       w.__types = []

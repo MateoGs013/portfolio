@@ -29,7 +29,9 @@ useMotion(root, ({ el, ambient, entering }) => {
     opacity: 1,
     ease: 'none',
     stagger: 0.1,
-    scrollTrigger: { trigger: el, start: `top ${START * 100}%`, end: 'bottom 42%', scrub: true },
+    // clamp(): cerca del final de la página `bottom 42%` puede quedar fuera del scroll posible y las
+    // últimas palabras no se encenderían nunca; así terminan a más tardar al llegar al pie.
+    scrollTrigger: { trigger: el, start: `top ${START * 100}%`, end: 'clamp(bottom 42%)', scrub: true },
   })
 
   return () => split.revert()
