@@ -41,7 +41,7 @@ export const ExperienceForm = {
     })
 
     function onRoleInput() {
-      if (store.slugLocked && store.form) {
+      if (store.isNew && store.slugLocked && store.form) {
         store.form.slug = slugify(store.form.role)
       }
       store.checkDirty()
@@ -49,7 +49,7 @@ export const ExperienceForm = {
 
     function toggleSlugLock() {
       store.slugLocked = !store.slugLocked
-      if (store.slugLocked && store.form) {
+      if (store.isNew && store.slugLocked && store.form) {
         store.form.slug = slugify(store.form.role)
       }
       store.checkDirty()
@@ -132,22 +132,26 @@ export const ExperienceForm = {
         </div>
         <div>
           <div class="flex items-center justify-between mb-1">
-            <label class="field-label !mb-0">Slug Web *</label>
+            <label for="exp-slug" class="field-label !mb-0">Slug Web *</label>
             <button
               type="button"
               @click="toggleSlugLock"
+              :aria-pressed="store.slugLocked"
               class="text-[10px] font-mono-code px-1.5 py-0.5 rounded border transition-colors cursor-pointer"
               :class="store.slugLocked ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20' : 'text-zinc-400 bg-white/5 border-white/10 hover:text-white'"
             >
-              {{ store.slugLocked ? '[BLOQUEADO]' : '[MANUAL]' }}
+              {{ store.isNew ? (store.slugLocked ? 'Sigue al cargo' : 'Manual') : (store.slugLocked ? 'Fija' : 'Editable') }}
             </button>
           </div>
           <input
+            id="exp-slug"
             type="text"
             v-model="store.form.slug"
             :readonly="store.slugLocked"
             class="text-input font-mono-code"
+            aria-describedby="exp-slug-hint"
           />
+          <span v-if="!store.isNew" id="exp-slug-hint" class="field-hint">Cambiar el cargo no cambia la dirección. Si la cambiás a mano, los enlaces viejos dejan de andar.</span>
         </div>
       </div>
 

@@ -150,7 +150,7 @@ export const AdmJobHunter = {
       if (!store.hunter.selected || store.hunter.isPitching) return
       store.hunter.isPitching = true
       try {
-        const res = await api.generateHunterPitch(store.hunter.selected.id)
+        const res = await api.generateHunterPitch(store.hunter.selected)
         const data = res?.data || res?.pitch || res
         hunterPitch.value = data
         store.hunter.selected.pitch_draft = typeof data === 'object' ? JSON.stringify(data) : data
@@ -159,6 +159,18 @@ export const AdmJobHunter = {
         store.toast('err', `Error al redactar propuesta: ${err.message}`)
       } finally {
         store.hunter.isPitching = false
+      }
+    }
+
+    /** Copia al portapapeles y avisa en los dos casos: el navegador puede negar el permiso. */
+    async function copyText(text, okMessage) {
+      try {
+        await navigator.clipboard.writeText(text)
+        store.toast('ok', okMessage)
+        return true
+      } catch {
+        store.toast('err', 'No pudimos copiar al portapapeles: el navegador no dio permiso. Probá de nuevo o seleccioná el texto y copialo a mano.', 6000)
+        return false
       }
     }
 
@@ -175,9 +187,8 @@ export const AdmJobHunter = {
       }
 
       if (!text) return
-      await navigator.clipboard.writeText(text)
+      if (!(await copyText(text, 'Texto copiado al portapapeles'))) return
       store.hunter.copiedPitch = true
-      store.toast('ok', 'Texto copiado al portapapeles')
       setTimeout(() => { store.hunter.copiedPitch = false }, 2500)
     }
 
@@ -186,20 +197,40 @@ export const AdmJobHunter = {
     async function copyConnectionNoteText() {
       const note = store.hunter.selected?.connection_note
       if (!note) return
-      await navigator.clipboard.writeText(note)
+      if (!(await copyText(note, 'Nota de conexión copiada al portapapeles (< 280 caracteres)'))) return
       copiedNote.value = true
-      store.toast('ok', 'Nota de conexión copiada al portapapeles (< 280 caracteres)')
       setTimeout(() => { copiedNote.value = false }, 2500)
+    }
+
+    /** POST /cv con la vacante completa: deja el CV en la caché de la API y en la vista. */
+    async function buildCv(job) {
+      const res = await api.generateHunterCV(job)
+      const data = res?.data || res?.cv || res
+      if (store.hunter.selected === job) currentTailoredCV.value = data
+      job.tailored_cv = typeof data === 'object' ? JSON.stringify(data) : data
+      store._persistHunterJobs()
+      return data
+    }
+
+    /**
+     * Corre una acción sobre el CV en la API. Si responde 409 (la API se reinició o pasó más de una
+     * hora), vuelve a generar el CV con la vacante en el cuerpo y repite la acción una sola vez.
+     */
+    async function withFreshCv(job, task) {
+      try {
+        return await task()
+      } catch (err) {
+        if (err?.status !== 409) throw err
+      }
+      await buildCv(job)
+      return task()
     }
 
     async function generateTailoredCV() {
       if (!store.hunter.selected || store.hunter.isGeneratingCV) return
       store.hunter.isGeneratingCV = true
       try {
-        const res = await api.generateHunterCV(store.hunter.selected.id)
-        const data = res?.data || res?.cv || res
-        currentTailoredCV.value = data
-        store.hunter.selected.tailored_cv = typeof data === 'object' ? JSON.stringify(data) : data
+        await buildCv(store.hunter.selected)
         store.toast('ok', 'CV Harvard ATS adaptado y priorizado')
       } catch (err) {
         store.toast('err', `Error al adaptar CV: ${err.message}`)
@@ -229,9 +260,33 @@ export const AdmJobHunter = {
       return ['CV', stem, suffix].filter(Boolean).join('_')
     }
 
+    /** Texto plano que arma la API desde su caché, o null si no lo ofrece (404) o no responde. */
+    async function serverPlainText(job) {
+      try {
+        const res = await withFreshCv(job, () => api.getHunterCVText(job.id))
+        const text = typeof res === 'string' ? res : res?.text
+        return typeof text === 'string' && text.trim() ? text : null
+      } catch (err) {
+        if (err?.isAuth) throw err
+        return null
+      }
+    }
+
     async function copyTailoredCVText() {
+      const job = store.hunter.selected
+      if (!job || !cvData.value) return
+      let text
+      try {
+        text = (await serverPlainText(job)) || localPlainText()
+      } catch {
+        return
+      }
+      if (text) await copyText(text, 'CV ATS copiado en texto plano')
+    }
+
+    function localPlainText() {
       const cv = cvData.value
-      if (!cv) return
+      if (!cv) return ''
       const h = plainHeadings[cv.lang === 'es' ? 'es' : 'en']
       const row = values => values.filter(Boolean).join(' | ')
       const lines = [
@@ -283,8 +338,7 @@ export const AdmJobHunter = {
         lines.push(Array.isArray(cv.methodologies) ? cv.methodologies.join(' · ') : String(cv.methodologies))
         lines.push('')
       }
-      await navigator.clipboard.writeText(lines.join('\n'))
-      store.toast('ok', 'CV ATS copiado en texto plano')
+      return lines.join('\n')
     }
 
     async function getCVTicket() {
@@ -298,8 +352,34 @@ export const AdmJobHunter = {
       }
     }
 
+    /**
+     * Comprueba que la API tenga el CV de la vacante antes de abrir la hoja (una ventana o un iframe no
+     * dejan leer el 409). Ante un 409 lo vuelve a generar con la vacante en el cuerpo, y la hoja que se
+     * abre después es el reintento. Devuelve false si no hay hoja que abrir.
+     */
+    async function ensureCvSheet() {
+      const job = store.hunter.selected
+      if (!job) return false
+      try {
+        await api.probeHunterCVHtml(job.id)
+        return true
+      } catch (err) {
+        if (err?.isAuth) return false
+        // Otro error (Eros lento, red): la hoja se abre igual y muestra lo que responda la API.
+        if (err?.status !== 409) return true
+      }
+      try {
+        await buildCv(job)
+        return true
+      } catch (err) {
+        if (!err?.isAuth) store.toast('err', `No pudimos volver a generar el CV: ${err.message}`)
+        return false
+      }
+    }
+
     async function openTailoredCVHtml() {
       if (!store.hunter.selected) return
+      if (!(await ensureCvSheet())) return
       const ticket = await getCVTicket()
       const query = ticket ? `?ticket=${encodeURIComponent(ticket)}` : ''
       window.open(`/api/admin/hunter/cv/${encodeURIComponent(store.hunter.selected.id)}/html${query}`, '_blank', 'noopener')
@@ -307,6 +387,7 @@ export const AdmJobHunter = {
 
     async function printTailoredCV() {
       if (!store.hunter.selected) return
+      if (!(await ensureCvSheet())) return
       const ticket = await getCVTicket()
       const query = ticket ? `?ticket=${encodeURIComponent(ticket)}&auto_print=true` : '?auto_print=true'
       window.open(`/api/admin/hunter/cv/${encodeURIComponent(store.hunter.selected.id)}/html${query}`, '_blank', 'noopener')
@@ -347,6 +428,10 @@ export const AdmJobHunter = {
       cvPreviewLoading.value = true
       cvPreviewModalOpen.value = true
       try {
+        if (!(await ensureCvSheet())) {
+          closeCvPreviewModal()
+          return
+        }
         const ticket = await getCVTicket()
         if (ticket) {
           cvPreviewUrl.value = `/api/admin/hunter/cv/${encodeURIComponent(store.hunter.selected.id)}/html?ticket=${encodeURIComponent(ticket)}`
@@ -376,7 +461,8 @@ export const AdmJobHunter = {
     async function downloadTailoredCVHtml() {
       if (!store.hunter.selected) return
       try {
-        const blob = await api.downloadHunterCVHtml(store.hunter.selected.id)
+        const job = store.hunter.selected
+        const blob = await withFreshCv(job, () => api.downloadHunterCVHtml(job.id))
         const url = URL.createObjectURL(blob)
         const a = document.createElement('a')
         a.href = url
@@ -416,7 +502,7 @@ export const AdmJobHunter = {
 
     async function evaluateCurrentJob() {
       if (!store.hunter.selected) return
-      await store.evaluateSingleHunterJob(store.hunter.selected.id)
+      await store.evaluateSingleHunterJob(store.hunter.selected)
     }
 
     async function purgeJobs() {

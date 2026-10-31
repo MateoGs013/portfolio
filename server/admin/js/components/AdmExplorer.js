@@ -72,14 +72,7 @@ export const AdmExplorer = {
     }
 
     async function onCreate() {
-      store.mobileView = 'detail'
-      if (store.isNew) return
-      if (store.isDirty) {
-        const proceed = await store.checkDirtyDiscard(() => store.createRecord())
-        if (!proceed) return
-      } else {
-        store.createRecord()
-      }
+      if (await store.requestNewRecord()) store.mobileView = 'detail'
     }
 
     return {
@@ -112,6 +105,7 @@ export const AdmExplorer = {
           </div>
 
           <button
+            v-if="store.canCreate"
             type="button"
             @click="onCreate"
             class="btn-primary !h-[26px] !px-2.5 !text-xs cursor-pointer"
@@ -247,7 +241,13 @@ export const AdmExplorer = {
           </div>
         </div>
 
-        <div v-if="filteredRows.length === 0" class="p-8 text-center text-xs text-zinc-500 font-mono-code">
+        <div v-if="store.loadingSection" class="p-8 text-center text-xs text-zinc-400" role="status">
+          Cargando…
+        </div>
+        <div v-else-if="store.loadError" class="p-8 text-center text-xs text-zinc-300">
+          La lista no cargó.
+        </div>
+        <div v-else-if="filteredRows.length === 0" class="p-8 text-center text-xs text-zinc-500 font-mono-code">
           Sin registros coincidentes.
         </div>
       </div>

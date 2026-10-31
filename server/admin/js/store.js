@@ -1,20 +1,17 @@
 // Portfolio CMS 2026 · Estado Reactivo Compartido (Vue 3 Store)
 // Manejo centralizado de datos, navegación, dirty tracking y modales
 
-import { api } from './api.js'
+import { api, AUTH_MESSAGE } from './api.js'
 import { MODELS } from './config.js'
 import { TRANSLATABLE_SECTIONS, missingEn } from './translations.js'
+import { clearCachedJobs, isSampleJob, readCachedJobs as getCachedHunterJobs, writeCachedJobs } from './hunterCache.js'
 
 const { reactive } = window.Vue
 
-function getCachedHunterJobs() {
-  try {
-    const raw = localStorage.getItem('eros_hunter_jobs')
-    return raw ? JSON.parse(raw) : []
-  } catch {
-    return []
-  }
-}
+/** Secciones cuyo slug queda fijo al abrir un registro guardado: ya no sigue al título ni al cargo. */
+const FIXED_SLUG_SECTIONS = ['projects', 'experience', 'articles']
+/** Páginas y Textos son documentos fijos (about, contact): no se crean, duplican ni eliminan. */
+const FIXED_RECORD_SECTIONS = ['docs']
 
 export const store = reactive({
   // Autenticación
@@ -27,6 +24,9 @@ export const store = reactive({
   rows: [],
   current: null,
   form: null,
+  formSection: null, // sección a la que pertenece el formulario abierto: guardar se niega si no coincide
+  loadingSection: false,
+  loadError: '', // la colección no se pudo leer: no hay formulario y no se guarda nada
   isNew: false,
   isDirty: false,
   initialSnapshot: null,
@@ -128,6 +128,11 @@ export const store = reactive({
 
   // ─── ACCIONES DE TOAST & MENSAJES ─────────────────────────────────────────
   toast(kind, text, timeout = 3600) {
+    // Un 401 tiene un solo aviso: los mensajes que lo repiten («Error al cargar…: <401>») no suman otro.
+    if (kind === 'err' && String(text).includes(AUTH_MESSAGE)) {
+      if (this.toasts.some(t => t.text === AUTH_MESSAGE)) return null
+      text = AUTH_MESSAGE
+    }
     const id = Date.now().toString(36) + Math.random().toString(36).slice(2, 6)
     this.toasts.push({ id, kind, text })
     if (timeout > 0) {
@@ -191,6 +196,7 @@ export const store = reactive({
     return this.isDirty
   },
 
+  /** true si se puede seguir (no había cambios o se descartaron); false si el operador sigue editando. */
   async checkDirtyDiscard(nextAction) {
     if (!this.isDirty) {
       if (typeof nextAction === 'function') nextAction()
@@ -288,70 +294,88 @@ export const store = reactive({
     }
   },
 
+  /** Abre una sección. Devuelve false si el operador decidió seguir editando o si la lectura falló. */
   async loadSection(sec, preserveDirtyCheck = true) {
-    if (preserveDirtyCheck && this.isDirty) {
-      const proceed = await this.checkDirtyDiscard(() => this.loadSection(sec, false))
-      if (!proceed) return
-    }
+    if (preserveDirtyCheck && this.isDirty && !(await this.checkDirtyDiscard())) return false
 
     this.section = sec
+    this.loadError = ''
+    this.loadingSection = false
+    this.clearForm()
     this.searchQuery = ''
     this.filter = 'all'
     this.activeTab = 'general'
     this.mobileView = 'list'
 
     if (sec === 'dashboard') {
-      this.current = null
-      this.form = null
-      this.isNew = false
-      this.isDirty = false
       await this.refreshCounts()
-      return
+      return true
     }
 
     if (sec === 'hunter') {
-      this.current = null
-      this.form = null
-      this.isNew = false
-      this.isDirty = false
       await this.loadHunterJobs()
-      return
+      return true
     }
 
     if (sec === 'content') {
-      this.current = null
-      this.form = null
-      this.isNew = false
-      this.isDirty = false
       await this.loadContentPosts()
-      return
+      return true
     }
 
     if (sec === 'radar') {
-      this.current = null
-      this.form = null
-      this.isNew = false
-      this.isDirty = false
       await this.loadRadarTrends()
-      return
+      return true
     }
 
     const model = MODELS[sec]
-    if (!model) return
+    if (!model) return false
 
+    this.rows = []
+    this.loadingSection = true
     try {
       const rows = await api.getCollection(model.path)
+      if (this.section !== sec) return false
       this.rows = rows || []
       this.counts[sec] = this.rows.length
+      this.loadingSection = false
 
       if (this.rows.length > 0) {
         this.selectRecord(this.rows[0])
       } else {
         this.createRecord()
       }
+      return true
     } catch (err) {
-      this.toast('err', `Error al cargar ${model.label}: ${err.message}`)
+      if (this.section !== sec) return false
+      // Sin la lista no queda nada que editar: un Ctrl+S no puede mandar un formulario de otra sección.
+      this.rows = []
+      this.clearForm()
+      this.loadError = `No pudimos cargar ${model.label}. ${err.message}`
+      this.toast('err', this.loadError)
+      return false
+    } finally {
+      if (this.section === sec) this.loadingSection = false
     }
+  },
+
+  /** Cierra el formulario abierto sin tocar la lista. */
+  clearForm() {
+    this.current = null
+    this.form = null
+    this.formSection = null
+    this.isNew = false
+    this.isDirty = false
+    this.initialSnapshot = null
+  },
+
+  /** true si en esta sección se pueden crear registros (no en el Panel, el Job Hunter ni los documentos). */
+  get canCreate() {
+    return !!MODELS[this.section] && !FIXED_RECORD_SECTIONS.includes(this.section) && !this.loadError && !this.loadingSection
+  },
+
+  /** true si el registro abierto se puede duplicar o eliminar. */
+  get canRemove() {
+    return !this.isNew && !!this.current && !FIXED_RECORD_SECTIONS.includes(this.section)
   },
 
   selectRecord(row) {
@@ -360,18 +384,29 @@ export const store = reactive({
     this.current = row
     this.isNew = false
     this.form = model.toForm(JSON.parse(JSON.stringify(row)))
-    this.slugLocked = true
+    this.formSection = this.section
+    this.slugLocked = !FIXED_SLUG_SECTIONS.includes(this.section)
     this.markClean(this.form)
   },
 
   createRecord() {
     const model = MODELS[this.section]
-    if (!model) return
+    if (!model || !this.canCreate) return false
     this.current = null
     this.isNew = true
     this.form = model.blank()
+    this.formSection = this.section
     this.slugLocked = true
     this.markClean(this.form)
+    return true
+  },
+
+  /** «Nuevo» (botón, Ctrl+N, paleta): pide confirmación si hay cambios; en el Panel Principal no hace nada. */
+  async requestNewRecord() {
+    if (!this.canCreate) return false
+    if (this.isNew && !this.isDirty) return true
+    if (!(await this.checkDirtyDiscard())) return false
+    return this.createRecord()
   },
 
   /**
@@ -418,11 +453,7 @@ export const store = reactive({
 
   // ─── OPERACIONES DE JOB HUNTER ────────────────────────────────────────────
   _persistHunterJobs() {
-    try {
-      localStorage.setItem('eros_hunter_jobs', JSON.stringify(this.hunter.jobs || []))
-    } catch (err) {
-      console.warn('Error al persistir vacantes en localStorage:', err)
-    }
+    writeCachedJobs(this.hunter.jobs)
   },
 
   async loadHunterJobs() {
@@ -441,7 +472,14 @@ export const store = reactive({
     try {
       const res = await api.getHunterJobs()
       const list = Array.isArray(res) ? res : (res && Array.isArray(res.data) ? res.data : [])
-      if (list.length > 0 || (s.hunter.jobs.length === 0)) {
+      const onlySample = list.length > 0 && list.every(isSampleJob)
+      const realJobs = s.hunter.jobs.filter(j => !isSampleJob(j))
+      if (onlySample && realJobs.length > 0) {
+        // Eros no respondió y la API mandó su cola de ejemplo: se quedan las vacantes reales guardadas.
+        s.hunter.jobs = realJobs
+        s.counts.hunter = realJobs.length
+        s.toast('info', 'Eros no respondió. Te mostramos las vacantes que tenías guardadas.')
+      } else if (list.length > 0 || (s.hunter.jobs.length === 0)) {
         s.hunter.jobs = list
         s.counts.hunter = list.length
         s._persistHunterJobs()
@@ -466,8 +504,8 @@ export const store = reactive({
     s.hunter.isScanning = true
     try {
       const res = await api.scanHunterJobs()
-      const total = res?.scanned ?? res?.data?.scanned ?? 0
-      const newJobs = res?.new_jobs ?? res?.data?.new_jobs ?? 0
+      const total = res?.scanned ?? res?.scanned_count ?? res?.data?.scanned ?? res?.data?.scanned_count ?? 0
+      const newJobs = res?.new_jobs ?? res?.new_jobs_count ?? res?.data?.new_jobs ?? res?.data?.new_jobs_count ?? 0
       const evaluated = res?.evaluated_count ?? res?.data?.evaluated_count
       const evalText = evaluated ? ` (${evaluated} evaluadas con IA)` : ''
       const newText = newJobs > 0 ? ` (${newJobs} nuevas guardadas)` : ''
@@ -519,7 +557,7 @@ export const store = reactive({
       s.hunter.jobs = []
       s.hunter.selected = null
       s.counts.hunter = 0
-      localStorage.removeItem('eros_hunter_jobs')
+      clearCachedJobs()
       s.toast('ok', `Se eliminaron ${count} vacantes escaneadas. Listo para escanear de cero.`)
     } catch (err) {
       s.toast('err', `Error al eliminar vacantes: ${err.message}`)
@@ -612,22 +650,27 @@ export const store = reactive({
     }
   },
 
-  async evaluateSingleHunterJob(id) {
+  /** Analiza una vacante: la manda entera en el cuerpo para que la API la evalúe aunque Eros no la tenga. */
+  async evaluateSingleHunterJob(target) {
     const s = this || store
+    const id = target?.id
     if (!id || s.hunter.isEvaluatingSingle) return
     s.hunter.isEvaluatingSingle = true
     try {
-      const res = await api.evaluateHunterJob(id)
+      const res = await api.evaluateHunterJob(target)
       const job = res?.job || res?.data?.job || (res?.id ? res : null)
       const match = res?.match || res?.data?.match || null
 
       const idx = s.hunter.jobs.findIndex(j => j.id === id || j.external_id === id)
       if (idx !== -1) {
         const current = s.hunter.jobs[idx]
+        // El análisis no cambia de dónde viene la vacante: una real evaluada por el respaldo sigue siendo real.
         const updated = {
           ...current,
           ...(job || {}),
+          _source: current._source,
         }
+        if (!updated._source) delete updated._source
         if (match) {
           updated.match_score = match.score ?? updated.match_score
           updated.match_analysis = typeof match === 'string' ? match : JSON.stringify(match)
@@ -895,13 +938,20 @@ export const store = reactive({
     }
   },
 
-  logout() {
+  /** Lo que queda en el navegador al cerrar la sesión: nada del editor ni de la cola de vacantes. */
+  clearSession() {
     api.setToken('')
     this.token = ''
     this.tokenInput = ''
-    this.isDirty = false
-    this.current = null
-    this.form = null
+    this.clearForm()
+    this.hunter.jobs = []
+    this.hunter.selected = null
+    this.counts.hunter = 0
+    clearCachedJobs()
+  },
+
+  logout() {
+    this.clearSession()
     this.toast('ok', 'Sesión cerrada correctamente')
   },
 })
@@ -915,9 +965,7 @@ for (const key of Object.keys(store)) {
 
 // Deslogueo unificado y limpio ante respuesta 401 de la API
 api.setOnAuthError(() => {
-  api.setToken('')
-  store.token = ''
-  store.tokenInput = ''
-  store.toast('err', 'Sesión expirada o token no autorizado.')
+  store.clearSession()
+  store.toast('err', AUTH_MESSAGE)
 })
 
