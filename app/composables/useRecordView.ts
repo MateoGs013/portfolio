@@ -1,8 +1,10 @@
 /**
  * Ver como registro (tecla R): el estado es `?vista=registro`, que el SSR renderiza sin JS. El cambio
  * reemplaza la URL al instante, conserva el resto de la query y no se apila: una segunda llamada
- * mientras corre se ignora. Los hooks `record:before` y `record:after` dejan engancharse al morph
- * (X2) y a useMotion (F4): `before` corre con el DOM viejo y `after` con el nuevo ya pintado.
+ * mientras corre se ignora. Los hooks `record:before` y `record:after` los escucha el morph
+ * (record-morph.client.ts, que revierte y vuelve a armar las escenas de useMotion) y CasePeek:
+ * `before` corre con el DOM viejo y `after` con el nuevo ya renderizado. Si la navegación falla
+ * (otra la canceló), `after` no se emite y el morph devuelve lo que tomó en el `afterEach`.
  */
 import type { LocationQuery } from 'vue-router'
 
@@ -40,7 +42,8 @@ export function useRecordView() {
     try {
       await nuxtApp.callHook('record:before', change)
       const { [RECORD_PARAM]: _drop, ...rest } = route.query
-      await router.replace({ path: route.path, hash: route.hash, query: on ? { ...rest, [RECORD_PARAM]: RECORD_VALUE } : rest })
+      const failure = await router.replace({ path: route.path, hash: route.hash, query: on ? { ...rest, [RECORD_PARAM]: RECORD_VALUE } : rest })
+      if (failure) return
       await nextTick()
       await nuxtApp.callHook('record:after', change)
     }

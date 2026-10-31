@@ -33,7 +33,7 @@ El rediseño son 23 paquetes repartidos en 8 olas. Los paquetes de una misma ola
 
 - **API y tipos:** los define D2 (server) y F1 los refleja en `app/lib/api.ts`.
 - **Anclas DOM:** las define D0 en `docs/diseno.md`: `data-chrome`, `data-hf`, `data-ornament`, `data-vt`, `data-travel*`, `data-motion`, `data-tint`, `.f/.fk/.ft/.fv`.
-- **Hooks de Nuxt:** `record:before` / `record:after` (los emite `useRecordView` y los escuchan el morph y `useMotion`) y `site:overlay` (paleta → Lenis).
+- **Hooks de Nuxt:** `record:before` / `record:after` (los emite `useRecordView`; los escucha `record-morph.client.ts`, que revierte y vuelve a armar las escenas de `useMotion`, y CasePeek; `record:after` solo llega si la navegación pasó) y `site:overlay` (paleta → Lenis).
 - **Política de movimiento:** `useMotionPrefs` → `allowAmbient = !reduce && !hyperfocus`, `allowTransitions = !reduce`.
 
 ## De dónde sale cada dato del front

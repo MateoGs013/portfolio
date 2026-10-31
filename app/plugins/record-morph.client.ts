@@ -4,9 +4,10 @@
  *
  * - `record:before`, con la página vieja: mide los valores, las cajas y el ancla de lectura, bloquea el
  *   alto del documento y recién entonces revierte las escenas de useMotion (pin, líneas partidas).
- * - `record:after`, con el DOM nuevo ya renderizado y antes de que se pinte: escribe `data-vista`, vuelve
- *   a armar las escenas (el morph llega a la composición final, con su pin), ancla la página al primer
- *   valor visible, arma la coreografía (lib/morph) y la espera. Mientras corre, `busy` sigue en true y
+ * - `record:after`, con el DOM nuevo ya renderizado y antes de que se pinte (solo si la navegación pasó):
+ *   escribe `data-vista` desde la ruta, ancla la página al primer valor visible, vuelve a armar las
+ *   escenas (el morph llega a la composición final, con su pin), corrige el ancla, arma la coreografía
+ *   (lib/morph) y la espera. Mientras corre, `busy` sigue en true y
  *   una segunda R se ignora.
  *
  * Con reduced motion el cambio es instantáneo, con la lectura en su lugar; en Hiperfoco los valores
@@ -31,6 +32,9 @@ interface Memory {
   key: string
   scrollY: number
 }
+
+/** Lo más que se espera a Martian Mono antes de cambiar la URL. */
+const MONO_WAIT = 100
 
 const frame = () => new Promise<void>(resolve => requestAnimationFrame(() => resolve()))
 const floor = () => document.querySelector('header[data-chrome]')?.getBoundingClientRect().bottom ?? 0
@@ -58,6 +62,8 @@ export default defineNuxtPlugin({
     let pending: Pending | null = null
     let running: Morph | null = null
     let memory: Memory | null = null
+    /** Las escenas quedaron revertidas por un `record:before` que todavía no tuvo su `record:after`. */
+    let reverted = false
 
     function scrollToY(y: number) {
       const instance = lenis.value
@@ -119,36 +125,57 @@ export default defineNuxtPlugin({
      * registro se mediría con la fuente de reemplazo y el morph caería corrido un cuadro después.
      */
     const mono = () => `1em ${getComputedStyle(html).getPropertyValue('--font-mono').trim() || 'monospace'}`
-    const loadMono = () => (document.fonts.check(mono()) ? Promise.resolve() : document.fonts.load(mono()).then(() => {}, () => {}))
+    const loadMono = (): Promise<boolean> => (document.fonts.check(mono())
+      ? Promise.resolve(true)
+      : document.fonts.load(mono()).then(() => true, () => false))
     onNuxtReady(() => loadMono())
+
+    /**
+     * La URL cambia al instante: la mono se espera solo si el morph va a animar, y como mucho
+     * MONO_WAIT ms. Si no llegó, el cambio es instantáneo (sin medir con la fuente de reemplazo).
+     */
+    const monoReady = () => Promise.race([
+      loadMono(),
+      new Promise<boolean>(resolve => setTimeout(() => resolve(false), MONO_WAIT)),
+    ])
 
     nuxtApp.hook('record:before', async ({ on }) => {
       running?.tl.progress(1)
-      await loadMono()
+      const animate = prefs.allowTransitions.value && await monoReady()
       const root = document.getElementById('contenido')
       if (!root) {
+        reverted = true
         revertScenes()
         return
       }
-      const animate = prefs.allowTransitions.value
       const before = captureBefore(root, on, animate)
       pending = { root, before, anchors: anchorKeys(before, memory), animate }
       lockHeight()
       // Las comillas nacen apagadas: si se apagaran después, su transición de opacidad se vería.
       if (animate) root.classList.add('quotes-off')
+      reverted = true
       revertScenes()
     })
 
     nuxtApp.hook('record:after', async ({ on }) => {
       const p = pending
       pending = null
-      writeVista(on)
+      reverted = false
+      // data-vista sale de la ruta, no del pedido: la ruta es el estado.
+      writeVista(isRecordQuery(router.currentRoute.value.query))
+      if (!p) {
+        armScenes()
+        ScrollTrigger.refresh()
+        return
+      }
+      // Todo hasta el primer cuadro corre en esta misma tarea: el navegador no pinta el salto.
+      // Primero un ancla aproximada, sin escenas: las que deciden al armarse qué está en pantalla
+      // (RevealLines no parte lo que ya se ve) miden en el scroll de la lectura nueva, no en el viejo.
+      anchor(p)
       // Las escenas se arman antes de medir: el pin y la pista de Obra, la captura que crece y lo que
       // ya está en pantalla quedan como se van a ver, así el morph llega a la composición final.
       armScenes()
       ScrollTrigger.refresh()
-      if (!p) return
-      // Todo hasta el primer cuadro corre en esta misma tarea: el navegador no pinta el salto.
       const keys = travelerKeys(p.root)
       const key = anchor(p, keys)
       if (!p.animate) {
@@ -184,9 +211,10 @@ export default defineNuxtPlugin({
 
     // Si la navegación de R falló, record:after no llega: se devuelve lo que se tomó.
     router.afterEach((_to, _from, failure) => {
-      if (!failure || !pending) return
-      pending.root.classList.remove('quotes-off')
+      if (!failure || !reverted) return
+      pending?.root.classList.remove('quotes-off')
       pending = null
+      reverted = false
       unlockHeight()
       armScenes()
     })
