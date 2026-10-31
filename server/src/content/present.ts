@@ -13,7 +13,7 @@ import { docFieldsOf, hasDocValue, untranslatedFields } from './docFields.js'
 import type { Lang } from './lang.js'
 import { visibleUsage } from './matches.js'
 import type { Wire } from './snapshot.js'
-import { presentExperienceStubs, presentProjectStubs, toDay, toIso, toNumber, translate } from './translate.js'
+import { presentExperienceStubs, presentProjectStubs, toDay, toIso, toNumber, translate, translateItems } from './translate.js'
 
 type Project = Wire<ProjectRecord>
 type Media = Project['media'][number]
@@ -135,21 +135,25 @@ export function presentTech(t: Wire<TechRecord>, lang: Lang) {
   }
 }
 
-const experienceFields = ['role', 'summary', 'story', 'highlights', 'location'] as const
+const experienceFields = ['role', 'summary', 'story', 'location'] as const
 
+/** Las viñetas se traducen una por una: la que no tiene inglés queda en español como `highlights[i]`. */
 export function presentExperience(e: Wire<ExperienceRecord>, lang: Lang) {
   const { values, untranslated } = translate(e, e.translations, experienceFields, lang)
+  const english = e.translations.find(t => t.locale === lang)
+  const bullets = translateItems('highlights', e.highlights, english?.highlights, lang)
   return {
     slug: e.slug,
     kind: e.kind,
     ...values,
+    highlights: bullets.items,
     startedAt: toDay(e.startedAt),
     endedAt: toDay(e.endedAt),
     cvOrder: e.cvOrder,
     org: e.org,
     techs: e.techs,
     projects: presentProjectStubs(e.projects, lang),
-    untranslated,
+    untranslated: [...untranslated, ...bullets.untranslated],
   }
 }
 

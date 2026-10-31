@@ -1,0 +1,95 @@
+/**
+ * GET /api/admin/meta: lo que el admin necesita para armar formularios y contar. Los conteos de
+ * `summary` usan las mismas reglas de visibilidad que la API pública (content/visibility.ts): las
+ * obras visibles de acá son las que lista GET /api/projects. Se vuelve a pedir después de cada escritura.
+ */
+import { Router } from 'express'
+import { db } from '../db.js'
+import { visibleArticle, visibleProject } from '../content/visibility.js'
+import { adminSchema, modelNames } from '../shared/adminSchema.js'
+import type { AdminMeta, AdminOptions, AdminSummary, EnumOption } from '../shared/adminContracts.js'
+import { enumLabels, type EnumName } from '../shared/labels.js'
+import { readOr503 } from './common.js'
+
+/** Cada enum con su valor y su rótulo en español, en el orden en que se declaró. */
+function enumOptions(): Record<EnumName, EnumOption[]> {
+  return Object.fromEntries((Object.keys(enumLabels) as EnumName[]).map((name) => {
+    const labels: Readonly<Record<string, { es: string }>> = enumLabels[name]
+    return [name, Object.entries(labels).map(([value, label]) => ({ value, label: label.es }))]
+  })) as Record<EnumName, EnumOption[]>
+}
+
+/** Los valores sueltos que lee el admin actual. */
+function legacyEnums(): Record<EnumName, string[]> {
+  return Object.fromEntries(Object.entries(enumOptions()).map(([name, options]) => [name, options.map(o => o.value)])) as Record<EnumName, string[]>
+}
+
+async function summary(): Promise<AdminSummary> {
+  const now = new Date()
+  const [visible, scheduled, hidden, published, draft, experience, cv, stack, orgs] = await Promise.all([
+    db.project.count({ where: visibleProject() }),
+    db.project.count({ where: { publishedAt: { gt: now } } }),
+    db.project.count({ where: { publishedAt: null } }),
+    db.article.count({ where: visibleArticle() }),
+    db.article.count({ where: { status: 'DRAFT' } }),
+    db.experience.count(),
+    db.experience.count({ where: { cvOrder: { not: null } } }),
+    db.tech.count(),
+    db.org.count(),
+  ])
+  return {
+    projects: { visible, hidden, scheduled },
+    articles: { published, draft },
+    experience: { total: experience, cv },
+    stack,
+    orgs,
+  }
+}
+
+async function options(): Promise<AdminOptions> {
+  const now = Date.now()
+  const [orgs, techs, projects, experiences, articles] = await Promise.all([
+    db.org.findMany({ select: { id: true, name: true, slug: true }, orderBy: { name: 'asc' } }),
+    db.tech.findMany({ select: { id: true, name: true, slug: true, category: true }, orderBy: { name: 'asc' } }),
+    db.project.findMany({ select: { id: true, title: true, slug: true, status: true, publishedAt: true }, orderBy: { title: 'asc' } }),
+    db.experience.findMany({ select: { id: true, role: true, slug: true, kind: true, cvOrder: true }, orderBy: { startedAt: 'desc' } }),
+    db.article.findMany({ select: { id: true, title: true, slug: true, status: true }, orderBy: { title: 'asc' } }),
+  ])
+  return {
+    orgs,
+    techs,
+    projects: projects.map(({ publishedAt, ...p }) => ({ ...p, visible: publishedAt !== null && publishedAt.getTime() <= now })),
+    experiences: experiences.map(({ role, ...e }) => ({ ...e, title: role })),
+    articles,
+  }
+}
+
+export const metaRouter = Router()
+
+metaRouter.get('/meta', async (_req, res) => {
+  const loaded = await readOr503(res, () => Promise.all([summary(), options(), db.doc.count(), db.project.count(), db.article.count()]))
+  if (!loaded) return
+  const [counts, choices, docs, projects, articles] = loaded
+  const meta: AdminMeta = {
+    summary: counts,
+    enumOptions: enumOptions(),
+    schema: adminSchema,
+    models: modelNames,
+    options: choices,
+    counts: {
+      projects,
+      experiences: counts.experience.total,
+      experience: counts.experience.total,
+      stack: counts.stack,
+      orgs: counts.orgs,
+      education: 0,
+      certs: 0,
+      labs: 0,
+      articles,
+      docs,
+      inbox: 0,
+    },
+    enums: legacyEnums(),
+  }
+  res.json(meta)
+})
