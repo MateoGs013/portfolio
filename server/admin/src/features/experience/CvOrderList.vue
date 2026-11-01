@@ -95,7 +95,7 @@ const meta = (e: Experience) => [enumLabel('ExperienceKind', e.kind), periodText
           :data-handle="entry.id"
           :aria-label="t.cv.handle(titleOf(entry), index + 1, entries.length)"
           :aria-describedby="helpId"
-          aria-keyshortcuts="ArrowUp ArrowDown"
+          aria-keyshortcuts="ArrowUp ArrowDown Home End"
           :disabled="disabled"
           class="grid size-8 cursor-grab place-items-center rounded-control border-0 bg-transparent text-faint transition-colors duration-120 ease-e hover:bg-surface hover:text-ink active:cursor-grabbing disabled:cursor-not-allowed disabled:opacity-45"
           @keydown="onKeydown($event, index)"

@@ -6,7 +6,7 @@
  */
 import type { DocBlock } from '@shared/docSchema'
 import { CV_PATH } from '@shared/docSchema'
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import Field from '../../ui/Field.vue'
 import Mono from '../../ui/Mono.vue'
 import TextInput from '../../ui/TextInput.vue'
@@ -28,12 +28,15 @@ const sides = computed(() => [
   { id: 'en', label: t.en, lang: t.inEnglish, model: en, placeholder: t.placeholderEn },
 ] as const)
 
-/** El aviso en el lugar mientras se escribe; el del servidor (o el de Guardar) manda si hay uno. */
+/** Un lado se revisa en el lugar recién al salir de él: mientras se escribe la ruta no se marca a medias. */
+const touched = ref<Record<'value' | 'en', boolean>>({ value: false, en: false })
+
+/** El aviso en el lugar; el del servidor (o el de Guardar) manda si hay uno. */
 function errorOf(id: 'value' | 'en', text: string, lang: string, example: string): string | null {
   const server = editor?.messageFor(`${base.value}.${id}`) ?? null
   if (server) return server
   const clean = text.trim()
-  return clean && !CV_PATH.test(clean) ? t.invalid(lang, example) : null
+  return clean && touched.value[id] && !CV_PATH.test(clean) ? t.invalid(lang, example) : null
 }
 </script>
 
@@ -57,6 +60,7 @@ function errorOf(id: 'value' | 'en', text: string, lang: string, example: string
           :placeholder="side.placeholder"
           :readonly="locked"
           autocomplete="off"
+          @blur="touched[side.id] = true"
         />
       </Field>
     </div>

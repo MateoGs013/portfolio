@@ -34,7 +34,7 @@ const kind = computed({
   },
 })
 
-const today = () => new Date().toISOString().slice(0, 10)
+const today = () => new Date().toLocaleDateString('sv-SE')
 /** «Actual» es el «Hasta» vacío: apagarlo propone hoy, que se corrige en el campo. */
 const current = computed({
   get: () => !form.value.endedAt,

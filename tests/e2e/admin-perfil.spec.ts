@@ -155,6 +155,7 @@ test.describe('formularios', () => {
 
     const english = page.getByLabel('PDF en inglés')
     await english.fill('/cv/CV-EN.docx')
+    await english.blur()
     await expect(page.locator('[data-field="fields.cv.en"]')).toContainText('tiene que ser un archivo de /cv/')
     await page.keyboard.press(`${mod}+s`)
     await expect(page.getByRole('region', { name: 'Hay un campo para revisar' })).toBeVisible()

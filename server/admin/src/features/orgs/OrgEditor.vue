@@ -43,8 +43,8 @@ function completeUrl(): void {
         :endpoint="endpoint"
         @changed="onSlugChanged"
       />
-      <div class="grid items-start gap-8.5 lg:grid-cols-2 lg:gap-x-10" @focusout="completeUrl">
-        <SchemaField v-model="form.url" model="Org" name="url" kind="url" :hint="orgs.fields.urlHint" />
+      <div class="grid items-start gap-8.5 lg:grid-cols-2 lg:gap-x-10">
+        <SchemaField v-model="form.url" model="Org" name="url" kind="url" :hint="orgs.fields.urlHint" @focusout="completeUrl" />
         <SchemaField v-model="form.city" model="Org" name="city" :hint="orgs.fields.cityHint" />
       </div>
       <CatalogUsage v-if="record" :id="record.id" path="/orgs" class="mt-4" />

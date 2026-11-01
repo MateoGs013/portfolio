@@ -48,6 +48,16 @@ const project = computed<number | null>({
   set: (value) => { form.value.projectId = value === NONE || value === null ? null : value },
 })
 
+/** Los campos numéricos se editan como texto: el formulario guarda lo escrito y el servidor lo lee como entero. */
+const minutes = computed<string>({
+  get: () => String(form.value.readingTimeMin ?? ''),
+  set: (value) => { form.value.readingTimeMin = value },
+})
+const order = computed<string>({
+  get: () => String(form.value.sortOrder ?? ''),
+  set: (value) => { form.value.sortOrder = value },
+})
+
 const words = computed(() => form.value.content.split(/\s+/).filter(Boolean).length)
 function calculate(): void {
   const minutes = readingMinutes(form.value.content)
@@ -103,7 +113,16 @@ const quiet = 'rounded-control border-0 bg-transparent p-0 text-meta text-dim un
           {{ t.calculate }}
         </button>
       </template>
-      <TextInput v-model="form.readingTimeMin" type="number" inputmode="numeric" :readonly="locked" />
+      <TextInput v-model="minutes" inputmode="numeric" :readonly="locked" />
+    </Field>
+    <Field
+      data-field="sortOrder"
+      class="max-w-[22rem]"
+      :label="fieldOf('Article', 'sortOrder')?.label ?? t.order"
+      :hint="t.orderHint"
+      :error="editor?.messageFor('sortOrder') ?? null"
+    >
+      <TextInput v-model="order" inputmode="numeric" :readonly="locked" />
     </Field>
     <SchemaField v-model="form.canonicalUrl" model="Article" name="canonicalUrl" kind="url" :label="t.canonical" :hint="t.canonicalHint" />
     <div data-field="featured">

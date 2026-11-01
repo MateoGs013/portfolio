@@ -7,8 +7,9 @@
  * - El rol vacío se nombra con su frase («Falta el rol que tuviste en la obra»), junto al campo y
  *   antes de mandar nada; el resto lo valida el marco con el esquema.
  */
-import { computed, nextTick, provide, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, provide, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { api } from '../../api/client'
 import { useEditor } from '../../composables/useEditor'
 import { onShortcut } from '../../composables/useShortcuts'
 import { validatePayload } from '../../models/validate'
@@ -50,10 +51,41 @@ const editor = useEditor({
 const { form, record } = editor
 provide(projectKey, { form, record })
 
+/*
+ * Lo que este editor todavía no edita (tecnologías, enlaces e imágenes, hasta U7) se cambia en el panel
+ * actual, en otra pestaña. El PUT reemplaza tecnologías y enlaces con lo que manda, así que antes de
+ * guardar (y al volver a la pestaña) se toman de una copia fresca de la obra: nunca se pisa lo que se
+ * cargó allá. Un paso que apuntaba a una imagen borrada queda sin imagen.
+ */
+const UNEDITED = ['techIds', 'links'] as const
+async function syncUnedited(): Promise<void> {
+  const current = record.value
+  if (!current || editor.busy.value) return
+  let fresh: AdminProject
+  try {
+    fresh = await api.get<AdminProject>(`${projectModel.path}/${current.id}`)
+  }
+  catch {
+    return
+  }
+  if (record.value?.id !== fresh.id) return
+  editor.applyPatch(fresh, [...UNEDITED])
+  const media = new Set(fresh.media.map(m => m.id))
+  for (const step of form.value.steps) if (step.mediaId !== null && !media.has(step.mediaId)) step.mediaId = null
+}
+function onVisible(): void {
+  if (document.visibilityState === 'visible') void syncUnedited()
+}
+onMounted(() => document.addEventListener('visibilitychange', onVisible))
+onBeforeUnmount(() => document.removeEventListener('visibilitychange', onVisible))
+
 /** Primero el rol con su frase; si falta, se muestran todos los problemas juntos y no se manda nada. */
 async function save(): Promise<void> {
   if (!editor.ready.value || editor.busy.value) return
-  if (form.value.role.trim()) return editor.save()
+  if (form.value.role.trim()) {
+    await syncUnedited()
+    return editor.save()
+  }
   const payload = projectModel.toPayload(form.value, record.value)
   const others = validatePayload(projectModel.schema, payload, { creating: !record.value }).filter(i => i.path !== 'role')
   await editor.errors.show([{ path: 'role', message: t.essentials.roleMissing }, ...others, ...projectIssues(form.value)])

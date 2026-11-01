@@ -16,8 +16,13 @@ export async function saveCvOrder(ids: readonly number[]): Promise<Experience[]>
   return rows
 }
 
-/** Suma una entrada al final del CV; devuelve la trayectoria y el puesto en que quedó. */
-export async function addToCv(rows: readonly Experience[], id: number): Promise<{ rows: Experience[], place: number }> {
+/**
+ * Suma una entrada al final del CV; devuelve la trayectoria y el puesto en que quedó. El PATCH saca del
+ * CV todo lo que no nombra, así que el orden sale de una lectura fresca y nunca de la copia en memoria
+ * (que puede no haber llegado, haber fallado o estar vieja si otra pestaña reordenó).
+ */
+export async function addToCv(id: number): Promise<{ rows: Experience[], place: number }> {
+  const rows = await api.get<Experience[]>(experienceModel.path)
   const ids = [...cvEntries(rows).map(e => e.id).filter(other => other !== id), id]
   return { rows: await saveCvOrder(ids), place: ids.length }
 }

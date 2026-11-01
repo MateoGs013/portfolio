@@ -241,12 +241,14 @@ test.describe('publicaciones', () => {
     }
     await page.getByRole('option', { name: /Diseño de una API con señales claras/ }).click()
     await page.getByRole('button', { name: 'Publicar en el blog' }).click()
-    await expect(page).toHaveURL(/#\/articulos\/\d+$/)
+    await expect(page).toHaveURL(/#\/articulos\/\d+\?origen=eros$/)
     await expect(toast(page, /Revisá tecnologías, obra e inglés antes de publicarlo/)).toBeVisible()
-    const id = page.url().match(/articulos\/(\d+)$/)![1]
+    const id = page.url().match(/articulos\/(\d+)/)![1]
     const article = await (await request.get(`/api/admin/articles/${id}`, { headers: auth })).json() as { status: string, publishedAt: string | null, title: string }
     expect(article).toMatchObject({ status: 'DRAFT', publishedAt: null, title: 'Diseño de una API con señales claras' })
-    await expect(page.locator('#main h1')).toBeVisible()
+    // El editor de U6 abre el borrador con el aviso de revisión.
+    await expect(page.locator('#main h1')).toHaveText('Diseño de una API con señales claras')
+    await expect(page.getByText('Llegó desde Publicaciones: revisalo antes de publicar')).toBeVisible()
 
     // Generar: el formulario pide el tema y Eros escribe la publicación en borrador.
     await page.goto(`${ADMIN}#/busqueda/publicaciones`)

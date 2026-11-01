@@ -42,9 +42,13 @@ export function blankStep(): StepForm {
   return { id: null, title: '', body: '', mediaId: null, translations: { en: { title: '', body: '' } } }
 }
 
+/** El tope del título de un paso en el servidor (str(s, 'title', 200) en admin/projects.ts). */
+const STEP_TITLE_MAX = 200
+
 function stepIssues(form: ProjectForm): FieldIssue[] {
   return form.steps.flatMap((step, i) => [
     ...(step.title.trim() ? [] : [{ path: `steps[${i}].title`, message: `Completá el título del paso ${i + 1}.` }]),
+    ...(step.title.length > STEP_TITLE_MAX ? [{ path: `steps[${i}].title`, message: `El título del paso ${i + 1} tiene más de ${STEP_TITLE_MAX} caracteres.` }] : []),
     ...(step.body.trim() ? [] : [{ path: `steps[${i}].body`, message: `Contá qué hiciste en el paso ${i + 1}.` }]),
   ])
 }

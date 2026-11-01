@@ -3,7 +3,7 @@
  * Texto largo, sin caja. `prose` (por defecto) es el relato: 17/1,6 con medida de lectura de 68ch.
  * Crece con el contenido desde `rows` hasta `maxRows`; después scrollea.
  */
-import { nextTick, onMounted, ref, watch } from 'vue'
+import { nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { lineControl, lineState, useFieldControl } from './field'
 
 const props = withDefaults(defineProps<{
@@ -37,7 +37,24 @@ function fit(): void {
   el.style.overflowY = el.scrollHeight > max ? 'auto' : 'hidden'
 }
 
-onMounted(fit)
+/*
+ * Montado en un panel oculto (Tabs con v-show, una vista previa) mide cero: al hacerse visible o
+ * cambiar de ancho vuelve a medirse. Solo reacciona al ancho, así el propio ajuste de alto no lo dispara.
+ */
+let observer: ResizeObserver | null = null
+let width = -1
+onMounted(() => {
+  fit()
+  if (typeof ResizeObserver === 'undefined' || !area.value) return
+  observer = new ResizeObserver((entries) => {
+    const next = Math.round(entries[0]?.contentRect.width ?? 0)
+    if (next === width) return
+    width = next
+    if (next > 0) fit()
+  })
+  observer.observe(area.value)
+})
+onBeforeUnmount(() => observer?.disconnect())
 watch(model, () => nextTick(fit))
 
 defineExpose({ focus: () => area.value?.focus() })

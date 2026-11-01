@@ -288,6 +288,8 @@ test.describe('vacante pegada', () => {
     await signedIn(page)
     await pasteJob(page)
     await page.goto(`${ADMIN}#/inicio`)
+    // El cambio de hash lo procesa el router después: sin esperar a Inicio, la paleta puede navegar antes.
+    await expect(page.locator('#main h1')).toHaveText('Inicio')
     await page.keyboard.press(`${mod}+k`)
     const palette = page.getByRole('dialog', { name: 'Ir a' })
     await palette.getByRole('combobox').fill('Estudio de Prueba')

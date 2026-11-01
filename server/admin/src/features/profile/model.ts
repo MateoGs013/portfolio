@@ -59,11 +59,9 @@ export function toForm(doc: AdminDoc): DocForm {
   return { fields, free }
 }
 
-let next = 0
-
+/** La clave de un bloque nuevo, única aunque se recupere un borrador después de recargar. */
 export function blankFree(): FreeForm {
-  next += 1
-  return { uid: `nuevo:${next}`, name: '', type: 'string', value: '', en: '' }
+  return { uid: `nuevo:${crypto.randomUUID()}`, name: '', type: 'string', value: '', en: '' }
 }
 
 /** El valor como lo guarda la base: lista para `list`, texto para el resto. */

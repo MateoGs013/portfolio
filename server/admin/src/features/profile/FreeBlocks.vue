@@ -39,8 +39,13 @@ function tidyName(index: number): void {
   if (name !== block.name) update(index, { name })
 }
 
+/** Al pasar a texto corto, los renglones se unen: un campo de una línea no los muestra y se guardarían ocultos. */
+const oneLine = (text: string) => text.split(/\r?\n/).map(line => line.trim()).filter(Boolean).join(' · ')
 function setType(index: number, type: FreeType | null): void {
-  if (type && isFreeType(type)) update(index, { type })
+  if (!type || !isFreeType(type)) return
+  const block = blocks.value[index]
+  if (type === 'string' && block) update(index, { type, value: oneLine(block.value), en: oneLine(block.en) })
+  else update(index, { type })
 }
 
 async function add(): Promise<void> {
@@ -76,6 +81,8 @@ function remove(index: number): void {
         v-for="(block, index) in blocks"
         :key="block.uid"
         :data-field="`free[${index}]`"
+        role="group"
+        :aria-label="titleOf(block)"
         class="grid animate-enter gap-7"
       >
         <div class="flex items-start gap-6">

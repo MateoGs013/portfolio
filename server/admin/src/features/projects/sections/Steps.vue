@@ -50,11 +50,14 @@ function remove(index: number): void {
   const step = form.value.steps[index]
   if (!step || locked.value) return
   form.value.steps.splice(index, 1)
+  // El editor se reusa al pasar a otra obra: deshacer solo vale en la obra de la que se quitó.
+  const owner = record.value?.id ?? null
   toast(t.removed(index + 1), {
     tone: 'info',
     action: {
       label: t.undo,
       run: () => {
+        if ((record.value?.id ?? null) !== owner) return
         form.value.steps.splice(Math.min(index, form.value.steps.length), 0, step)
         void focusIn(step, 'input')
       },

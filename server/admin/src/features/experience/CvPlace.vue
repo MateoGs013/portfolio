@@ -21,6 +21,8 @@ const emit = defineEmits<{ changed: [record: Experience] }>()
 
 const editor = useEditorContext()
 const { items } = useCollection<Experience>(experienceModel)
+/** Sin la lista no se sabe el puesto: la línea espera y Sumar no se ofrece. */
+const known = computed(() => items.value !== null)
 const rows = computed<Experience[]>(() => {
   const list = items.value ?? []
   const own = props.record
@@ -29,12 +31,12 @@ const rows = computed<Experience[]>(() => {
 
 /** El tipo del formulario manda: pasar a Formación ya la saca de la experiencia del CV. */
 const education = computed(() => isEducation({ kind: props.kind }))
-const place = computed(() => (props.record && !education.value ? cvPlace(rows.value, props.record.id) : null))
+const place = computed(() => (props.record && !education.value && known.value ? cvPlace(rows.value, props.record.id) : null))
 
 const { run: add, pending: adding } = useAsyncAction(async () => {
   const own = props.record
   if (!own) return
-  const { rows: saved, place: n } = await addToCv(rows.value, own.id)
+  const { rows: saved, place: n } = await addToCv(own.id)
   const next = saved.find(e => e.id === own.id)
   if (next) emit('changed', next)
   return n
@@ -51,6 +53,9 @@ const link = 'inline-flex items-center rounded-control text-body text-dim underl
       <RouterLink :to="{ name: 'trayectoria-cv' }" :class="link">
         {{ t.place.see }}
       </RouterLink>
+    </template>
+    <template v-else-if="record && !known">
+      <span class="text-label text-faint">{{ t.place.loading }}</span>
     </template>
     <template v-else-if="place">
       <StatusDot tone="ok" :label="t.place.inCv(place)" strong />

@@ -3,22 +3,18 @@
  * El relato del caso: la síntesis (la tarjeta y la vista rápida), el reto que lo abre, el resultado que
  * lo cierra y los pasos del proceso, cada texto con su inglés al lado.
  */
-import { ref } from 'vue'
 import { fieldOf } from '../../../models/validate'
 import BilingualField from '../../collections/BilingualField.vue'
 import { useProject } from '../context'
 import { projectsText } from '../dict'
-import { useRefitTextareas } from '../refit'
 import Steps from './Steps.vue'
 
 const t = projectsText.story
 const { form } = useProject()
-const root = ref<HTMLElement | null>(null)
-useRefitTextareas(root)
 </script>
 
 <template>
-  <div ref="root" class="grid gap-8.5">
+  <div class="grid gap-8.5">
     <BilingualField
       v-model:es="form.summary"
       v-model:en="form.translations.en.summary"

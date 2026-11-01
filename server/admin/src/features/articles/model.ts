@@ -7,6 +7,7 @@
 import type { ChecklistItem, Model, RecordStatus } from '../../models/types'
 import { enumLabel } from '../../models/labels'
 import { articles, shortDate } from './dict'
+import { readingMinutes } from '@shared/markdown'
 import { fromDay, sameDay, toDay } from './dates'
 
 export type ArticleStatus = 'DRAFT' | 'PUBLISHED' | 'ARCHIVED'
@@ -43,8 +44,10 @@ export interface ArticleForm {
   slug: string
   summary: string
   content: string
-  /** Como se escribe en el campo; el servidor lo lee como entero. */
-  readingTimeMin: string
+  /** Como se escribe en el campo; el servidor lo lee como entero. Un input numérico puede dejar un número. */
+  readingTimeMin: string | number
+  /** Posición en la lista del sitio (más bajo, más arriba), como se escribe en el campo. */
+  sortOrder: string | number
   status: ArticleStatus
   /** YYYY-MM-DD en la hora local; vacío si no tiene fecha. */
   publishedAt: string
@@ -95,6 +98,13 @@ function publishedAtOut(form: ArticleForm, record: AdminArticle | null): string 
 
 const text = (value: string) => value.trim() || null
 
+/** Los minutos escritos, o los calculados del texto si el campo quedó vacío (el servidor pondría 5). */
+function minutesOut(form: ArticleForm): string | number {
+  const typed = String(form.readingTimeMin ?? '').trim()
+  if (typed) return typed
+  return form.content.trim() ? readingMinutes(form.content) : ''
+}
+
 export function articleChecklist(form: ArticleForm): ChecklistItem[] {
   const t = articles.checklist
   const en = form.translations.en
@@ -124,6 +134,7 @@ export const articleModel: Model<AdminArticle, ArticleForm> = {
     summary: '',
     content: '',
     readingTimeMin: '',
+    sortOrder: '0',
     status: 'DRAFT',
     publishedAt: '',
     featured: false,
@@ -140,6 +151,7 @@ export const articleModel: Model<AdminArticle, ArticleForm> = {
       summary: a.summary,
       content: a.content,
       readingTimeMin: String(a.readingTimeMin),
+      sortOrder: String(a.sortOrder),
       status: a.status,
       publishedAt: a.publishedAt ? toDay(a.publishedAt) : '',
       featured: a.featured,
@@ -153,7 +165,8 @@ export const articleModel: Model<AdminArticle, ArticleForm> = {
     title: form.title,
     summary: form.summary,
     content: form.content,
-    readingTimeMin: form.readingTimeMin.trim(),
+    readingTimeMin: minutesOut(form),
+    sortOrder: String(form.sortOrder ?? '').trim() || '0',
     // Al crear, el servidor lo deja en borrador y sin fecha diga lo que diga.
     status: form.status,
     publishedAt: publishedAtOut(form, record),
@@ -163,7 +176,7 @@ export const articleModel: Model<AdminArticle, ArticleForm> = {
     techIds: form.techIds,
     translations: { en: { title: form.translations.en.title, summary: form.translations.en.summary, content: form.translations.en.content } },
     // Lo que el admin no edita viaja como está guardado: el PUT reemplaza el registro entero.
-    ...(record ? { sortOrder: record.sortOrder, coverImage: record.coverImage } : { slug: form.slug }),
+    ...(record ? { coverImage: record.coverImage } : { slug: form.slug }),
   }),
   title: a => a.title,
   formTitle: form => form.title,
@@ -180,7 +193,7 @@ export const articleModel: Model<AdminArticle, ArticleForm> = {
   status: a => articleStatus(a.status, dateOf(a.publishedAt)),
   publicUrl: a => (isLive(a.status, dateOf(a.publishedAt)) ? `/articles/${a.slug}` : null),
   sections: [
-    { id: 'esencial', label: articles.sections.essentials, fields: ['title', 'slug', 'summary', 'projectId', 'techIds', 'readingTimeMin', 'canonicalUrl', 'featured', 'status', 'publishedAt'] },
+    { id: 'esencial', label: articles.sections.essentials, fields: ['title', 'slug', 'summary', 'projectId', 'techIds', 'readingTimeMin', 'sortOrder', 'canonicalUrl', 'featured', 'status', 'publishedAt'] },
     { id: 'texto', label: articles.sections.text, fields: ['content', 'translations.en.content'] },
   ],
   filters: [

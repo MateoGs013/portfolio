@@ -47,7 +47,12 @@ watch(() => [props.path, props.id], () => {
 }, { immediate: true })
 
 // Lo que se guarda en otra pantalla (una obra que ahora la usa) se ve al volver; acá, al guardar.
-onScopeDispose(onWrite(() => void load()))
+// El borrado del propio registro no recarga: ya no existe y la pantalla se va a la lista.
+onScopeDispose(onWrite((detail) => {
+  const own = `${props.path}/${props.id}`
+  if (detail.method === 'DELETE' && detail.path.split('?')[0] === own) return
+  void load()
+}))
 
 type Group = { label: string, items: ImpactItem[], to: (id: number) => RouteLocationRaw }
 const groups = computed<Group[]>(() => {

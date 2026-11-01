@@ -48,7 +48,9 @@ export const articles = {
     canonical: 'Publicación original',
     canonicalHint: 'Solo si salió primero en otro sitio (Dev.to, Medium): los buscadores la toman como la original.',
     featured: 'Destacado',
-    featuredHint: 'Los destacados encabezan la lista de Artículos del sitio.',
+    featuredHint: 'Marca el artículo como destacado: el sitio lo puede filtrar con ?featured.',
+    order: 'Orden',
+    orderHint: 'Posición en la lista de Artículos del sitio: más bajo, más arriba. Con el mismo número, primero el más reciente.',
   },
   text: {
     label: 'Texto',
@@ -83,7 +85,7 @@ export const articles = {
   },
   review: {
     title: 'Llegó desde Publicaciones: revisalo antes de publicar',
-    text: 'Eros armó este borrador con el texto de Dev.to. Revisá el título, la bajada, la obra y las tecnologías, y escribí el inglés: el sitio no lo muestra hasta que lo publiques.',
+    text: 'Eros armó este borrador con el texto de la publicación. Revisá el título, la bajada, la obra y las tecnologías, y escribí el inglés: el sitio no lo muestra hasta que lo publiques.',
     dismiss: 'Entendido',
   },
 } as const

@@ -5,7 +5,7 @@
  * se ve) con su checklist, y en «Más acciones», Archivar o Sacar del archivo. Uno nuevo nace borrador:
  * la publicación aparece después de crearlo. Si llegó desde «Publicar en el blog», avisa qué revisar.
  */
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useEditor } from '../../composables/useEditor'
 import type { RecordStatus } from '../../models/types'
@@ -65,20 +65,33 @@ async function onAction(id: string): Promise<void> {
     })
     if (!yes) return
   }
+  if (!editor.ready.value || editor.busy.value) return
   const before = form.value.status
-  form.value.status = archiving ? 'ARCHIVED' : 'DRAFT'
+  const target = archiving ? 'ARCHIVED' : 'DRAFT'
+  form.value.status = target
   await editor.save()
-  if (editor.status.value === 'error') form.value.status = before
-  else announce(archiving ? a.archived : a.unarchived)
+  // Solo se anuncia lo que quedó guardado; si el guardado no salió (error o no corrió), vuelve el estado.
+  if (record.value?.status === target) announce(archiving ? a.archived : a.unarchived)
+  else form.value.status = before
 }
 
 /* ── Llegó desde Publicaciones ──────────────────────────── */
 
 const route = useRoute()
-const back = (window.history.state as { back?: unknown } | null)?.back
-const fromPosts = route.query['origen'] === 'eros' || (typeof back === 'string' && back.startsWith('/busqueda/publicaciones'))
+const historyBack = () => (window.history.state as { back?: unknown } | null)?.back
+const cameFromPosts = () => {
+  const back = historyBack()
+  return typeof back === 'string' && back.startsWith('/busqueda/publicaciones')
+}
+/** Se recalcula con cada artículo: el editor se reusa al pasar de uno a otro. */
+const fromHistory = ref(cameFromPosts())
 const reviewDismissed = ref(false)
-const review = computed(() => fromPosts && !reviewDismissed.value && record.value?.status === 'DRAFT')
+watch(() => props.id, () => {
+  fromHistory.value = cameFromPosts()
+  reviewDismissed.value = false
+})
+const fromPosts = computed(() => route.query['origen'] === 'eros' || fromHistory.value)
+const review = computed(() => fromPosts.value && !reviewDismissed.value && record.value?.status === 'DRAFT')
 </script>
 
 <template>

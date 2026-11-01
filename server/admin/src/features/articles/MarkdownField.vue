@@ -78,9 +78,10 @@ const quiet = 'rounded-control border-0 bg-transparent p-0 text-meta text-dim un
         </div>
         <span class="ml-auto text-meta text-faint tabular-nums">{{ t.words(words) }}</span>
       </div>
-      <TextArea v-if="mode === 'write'" v-model="value" :rows="12" :max-rows="32" :readonly="locked" :lang="lang" spellcheck="true" />
+      <!-- Montado siempre (oculto en la vista previa): el rótulo y la ayuda del campo siguen apuntando a él. -->
+      <TextArea v-show="mode === 'write'" v-model="value" :rows="12" :max-rows="32" :readonly="locked" :lang="lang" spellcheck="true" />
       <section
-        v-else
+        v-if="mode === 'preview'"
         :aria-label="t.previewOf(label)"
         class="min-h-40 min-w-0 animate-enter border-0 border-b border-rule-strong pt-3 pb-8"
       >

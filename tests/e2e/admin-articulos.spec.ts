@@ -83,7 +83,7 @@ test.afterAll(() => {
   else nuxt.kill('SIGTERM')
 })
 
-interface Article { id: number, slug: string, title: string, status: string, publishedAt: string | null, readingTimeMin: number, translations: { title: string | null }[] }
+interface Article { id: number, slug: string, title: string, status: string, publishedAt: string | null, readingTimeMin: number, sortOrder: number, translations: { title: string | null }[] }
 
 async function adminGet<T>(path: string): Promise<T> {
   const res = await fetch(`${api}/api/admin${path}`, { headers: auth })
@@ -217,6 +217,11 @@ test('publicar: el título no cambia la dirección, el inglés aparece en ?lang=
   await expect(page.getByLabel('Dirección', { exact: true })).toHaveAttribute('readonly', '')
   await page.getByLabel('Título · Inglés').fill('Fast architecture on a rhea')
   await page.getByLabel('Bajada · Inglés').fill('A fast API with a single query and the view on the same trip.')
+  // A mano también se guarda (un input numérico dejaba un número y el guardado fallaba sin aviso).
+  await page.getByLabel('Minutos de lectura').fill('7')
+  await page.getByLabel('Orden', { exact: true }).fill('3')
+  await save(page)
+  expect(await adminGet<Article>(`/articles/${created}`)).toMatchObject({ readingTimeMin: 7, sortOrder: 3 })
   await page.getByRole('button', { name: 'Calcular' }).click()
   await expect(page.getByLabel('Minutos de lectura')).toHaveValue('1')
 
@@ -275,7 +280,7 @@ test('archivar: sale del sitio y queda en la lista como Archivado', async ({ pag
   await page.getByRole('menuitem', { name: 'Archivar' }).click()
   await page.getByRole('dialog', { name: 'Archivar este artículo' }).getByRole('button', { name: 'Archivar' }).click()
   await expect(page.getByRole('button', { name: /^Archivado ·/ })).toBeVisible()
-  expect((await adminGet<Article>(`/articles/${created}`)).status).toBe('ARCHIVED')
+  await expect.poll(async () => (await adminGet<Article>(`/articles/${created}`)).status).toBe('ARCHIVED')
   expect((await publicGet(`/articles/${MOVED}`)).status).toBe(404)
   await page.getByRole('link', { name: 'Artículos' }).first().click()
   await expect(page.getByRole('option', { name: new RegExp(TITLE) })).toContainText('Archivado')

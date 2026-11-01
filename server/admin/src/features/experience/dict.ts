@@ -90,6 +90,7 @@ export const experience = {
     adding: 'Sumando al CV',
     added: (n: number) => `Sumada al CV en el puesto ${n}.`,
     afterSave: 'Se puede sumar al CV después de guardarla.',
+    loading: 'Buscando su puesto en el CV',
   },
   cv: {
     lead: 'La hoja real, armada con la base. Lo que cambiás acá se ve en vivo.',
@@ -97,7 +98,7 @@ export const experience = {
     es: 'Español',
     en: 'Inglés',
     order: 'Orden en el CV',
-    orderHelp: 'Arrastrá una entrada o, con el foco en su asa, usá ↑ y ↓. Se guarda solo y la hoja se actualiza.',
+    orderHelp: 'Arrastrá una entrada o, con el foco en su asa, usá ↑ y ↓, o Inicio y Fin. Se guarda solo y la hoja se actualiza.',
     handle: (title: string, n: number, total: number) => `Mover ${title}, puesto ${n} de ${total}`,
     moved: (title: string, n: number, total: number) => `${title} pasó al puesto ${n} de ${total}.`,
     remove: (title: string) => `Sacar ${title} del CV`,

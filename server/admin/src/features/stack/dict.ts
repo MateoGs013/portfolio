@@ -8,7 +8,7 @@ export const stack = {
   noun: { one: 'tecnología', many: 'tecnologías', gender: 'f' },
   lead: (total: number, used: number) =>
     total
-      ? `${used} de ${total} están en alguna obra o experiencia. Las categorías ordenan los filtros de Obra y las habilidades del CV.`
+      ? `${used} de ${total} están en alguna obra, experiencia o artículo. Las categorías ordenan los filtros de Obra y las habilidades del CV.`
       : 'Las categorías ordenan los filtros de Obra y las habilidades del CV.',
   filters: {
     all: 'Todas',
@@ -28,7 +28,7 @@ export const stack = {
     sinceShort: (to: number) => `Entre ${FIRST_YEAR} y ${to}.`,
     sinceRange: (label: string, to: number) => `«${label}» tiene que ser un año entre ${FIRST_YEAR} y ${to}.`,
     noteHint: 'Una línea de criterio: cuándo la elegís. Aparece al asomar la tecnología en el caso.',
-    colorHint: 'Solo se ve en el registro R, en las marcas de la tecnología.',
+    colorHint: 'Solo se ve en el registro R.',
     colorNone: 'Sin color',
     colorClear: 'Quitar el color',
     colorCleared: 'Color quitado: se guarda sin color.',

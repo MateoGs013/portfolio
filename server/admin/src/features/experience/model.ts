@@ -120,7 +120,8 @@ export const experienceModel: Model<Experience, ExperienceForm> = {
       summary: form.summary,
       story: orNull(form.story),
       highlights: form.highlights,
-      cvOrder: e?.cvOrder ?? null,
+      // La formación entra al CV por fecha: no guarda puesto en la experiencia (no deja huecos en 1..n).
+      cvOrder: form.kind === 'EDUCATION' ? null : e?.cvOrder ?? null,
       techIds: form.techIds,
       projectIds: form.projectIds,
       translations: {

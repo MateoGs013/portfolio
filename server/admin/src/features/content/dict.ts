@@ -19,6 +19,7 @@ export const content = {
   },
   generate: 'Generar una publicación',
   sample: 'Muestra de prueba: cada publicación sale de un artículo del blog y no se puede cambiar ni despachar.',
+  sampleGenerate: 'Con la muestra de prueba no se generan publicaciones: hace falta que Eros responda.',
   offline: {
     title: 'Eros no responde',
     text: 'Las publicaciones viven en Eros: hasta que responda no hay ninguna para mostrar, generar ni despachar. Los artículos del blog siguen en Artículos.',

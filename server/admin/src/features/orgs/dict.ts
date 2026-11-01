@@ -20,7 +20,8 @@ export function hostOf(url: string | null): string {
 export function withHttps(url: string): string {
   const text = url.trim()
   if (!text || /^[a-z][a-z0-9+.-]*:/i.test(text)) return text
-  return `https://${text.replace(/^\/\//, '')}`
+  const bare = text.replace(/^\/\//, '')
+  return /^[^\s/@]+\.[^\s/@]{2,}(?:[/?#]\S*)?$/.test(bare) ? `https://${bare}` : text
 }
 
 export const catalog = {

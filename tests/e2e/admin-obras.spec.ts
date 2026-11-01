@@ -65,6 +65,28 @@ async function bySlug(request: APIRequestContext, slug: string): Promise<Project
   return found!
 }
 
+type En = { locale: string } & Record<string, string | null>
+interface RawProject {
+  title: string, year: number, role: string, status: string, featured: boolean, summary: string, brief: string | null, outcome: string | null
+  url: string | null, repo: string | null, publishedAt: string | null, orgId: number | null, techs: { id: number }[]
+  links: { id: number, label: string, url: string, translations: En[] }[]
+  steps: { id: number, title: string, body: string, mediaId: number | null, translations: En[] }[]
+  translations: En[]
+}
+
+/** El mismo PUT que arma el editor (sin métricas: el servidor las conserva), con las tecnologías dadas. */
+function payloadOf(p: RawProject, techIds: number[]) {
+  const en = (list: En[]) => list.find(t => t.locale === 'en') ?? null
+  const pick = (list: En[], key: string) => en(list)?.[key] ?? ''
+  return {
+    title: p.title, year: p.year, role: p.role, status: p.status, featured: p.featured, summary: p.summary, brief: p.brief, outcome: p.outcome,
+    url: p.url, repo: p.repo, publishedAt: p.publishedAt, orgId: p.orgId, techIds,
+    links: p.links.map(l => ({ id: l.id, label: l.label, url: l.url, translations: { en: { label: pick(l.translations, 'label') } } })),
+    steps: p.steps.map(st => ({ id: st.id, title: st.title, body: st.body, mediaId: st.mediaId, translations: { en: { title: pick(st.translations, 'title'), body: pick(st.translations, 'body') } } })),
+    translations: { en: Object.fromEntries(['title', 'role', 'summary', 'brief', 'outcome'].map(k => [k, pick(p.translations, k)])) },
+  }
+}
+
 const tabs = (page: Page) => page.getByRole('tablist', { name: 'Secciones del registro' }).getByRole('tab')
 
 test.describe('Obras', () => {
@@ -128,6 +150,35 @@ test.describe('Obras', () => {
     await title.fill(before.title)
     await page.getByRole('button', { name: /^Guardar/ }).click()
     await expect.poll(async () => (await bySlug(request, 'la-rucula')).title).toBe(before.title)
+  })
+
+  test('lo que se cambió en otra pestaña (tecnologías y enlaces) no se pisa al guardar desde el editor', async ({ page, request }) => {
+    const before = await bySlug(request, 'la-rucula')
+    expect(before.techs.length).toBeGreaterThan(1)
+    await signedIn(page, `#/obras/${before.id}`)
+    await expect(page.locator('#main h1')).toHaveText(before.title)
+
+    // Con el editor abierto, otra pestaña (el panel actual) le saca una tecnología a la obra.
+    const raw = await (await request.get(`/api/admin/projects/${before.id}`, { headers: auth })).json() as RawProject
+    const techIds = raw.techs.map(t => t.id)
+    const fewer = techIds.slice(0, -1)
+    const put = (ids: number[]) => request.put(`/api/admin/projects/${before.id}`, { headers: auth, data: payloadOf(raw, ids) })
+    expect((await put(fewer)).ok()).toBe(true)
+
+    try {
+      const title = page.getByLabel('Título', { exact: true })
+      await title.fill(`${before.title} (otra pestaña)`)
+      await page.keyboard.press(`${mod}+s`)
+      await expect(page.getByText('Obra guardada').first()).toBeVisible()
+      const after = await bySlug(request, 'la-rucula')
+      expect(after.title).toBe(`${before.title} (otra pestaña)`)
+      expect((after.techs as { id: number }[]).map(t => t.id).sort()).toEqual([...fewer].sort())
+      expect(after.links.length).toBe(before.links.length)
+    }
+    finally {
+      const restore = await (await request.get(`/api/admin/projects/${before.id}`, { headers: auth })).json() as RawProject
+      expect((await request.put(`/api/admin/projects/${before.id}`, { headers: auth, data: { ...payloadOf(restore, techIds), title: before.title } })).ok()).toBe(true)
+    }
   })
 
   test('las cuatro pestañas entran a 1366 px y en 390 px la sección es una lista', async ({ page, request }, info) => {

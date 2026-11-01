@@ -54,7 +54,7 @@ async function publishToBlog(): Promise<void> {
   toBlog.value = true
   try {
     const { article } = await contentApi.publishToBlog(props.post.id)
-    await router.push(`/articulos/${article.id}`)
+    await router.push({ path: `/articulos/${article.id}`, query: { origen: 'eros' } })
     toast(t.blog.done, { duration: 0 })
   }
   catch (err) {

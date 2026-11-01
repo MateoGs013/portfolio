@@ -82,7 +82,7 @@ watch(() => route.query['generar'], (value) => {
   const { generar: _drop, ...rest } = route.query
   void router.replace({ path: route.path, query: rest })
   void posts.load(false).then(() => {
-    if (locked.value) toast(posts.isSample.value ? content.sample : content.offline.locked, { tone: 'info' })
+    if (locked.value) toast(posts.isSample.value ? content.sampleGenerate : content.offline.locked, { tone: 'info' })
     else startGenerate()
   })
 }, { immediate: true })
