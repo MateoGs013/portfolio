@@ -8,8 +8,6 @@ export const ui = {
     name: 'Mateo Sonzogni',
     area: 'Administración',
     title: 'Admin',
-    building: 'El panel nuevo se está armando',
-    buildingText: 'Mientras tanto, todo se edita desde el panel actual. Nada de lo que hay acá cambia datos.',
     openCurrent: 'Abrir el panel actual',
   },
   actions: {
