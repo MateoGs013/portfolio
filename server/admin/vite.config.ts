@@ -7,7 +7,9 @@ import { defineConfig } from 'vite'
  * El admin: Vue + TypeScript compilado por Vite y servido por la API en /admin (server/src/admin/ui.ts).
  *
  * La base es absoluta a propósito. Con './' una visita a /admin sin barra final pediría /assets/* al
- * sitio y daría 404. ADMIN_BASE la cambia si hiciera falta servirlo en otra dirección.
+ * sitio y daría 404. ADMIN_BASE existe solo para el servidor de desarrollo y las pruebas: la API
+ * (server/src/admin/ui.ts y app.ts) y el proxy de Nuxt (app/nitro/routes/admin*.ts) sirven siempre
+ * /admin/, así que un build con otra base cargaría en blanco en producción.
  *
  * `pnpm dev:admin` levanta Vite en ADMIN_DEV_PORT (3002) y le pasa /api a la API local
  * (ADMIN_API_ORIGIN, http://localhost:3001), así el navegador habla con un solo origen.

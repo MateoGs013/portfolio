@@ -65,7 +65,8 @@ export const adminUi = Router()
 // Sin barra final: 301 a la base, conservando la consulta.
 adminUi.get('/', (req, res, next) => {
   const [pathname, query] = req.originalUrl.split('?')
-  if (pathname === BASE) {
+  // Express enruta sin distinguir mayúsculas: /ADMIN también va a la base canónica.
+  if (pathname?.toLowerCase() === BASE) {
     res.redirect(301, `${BASE}/${query ? `?${query}` : ''}`)
     return
   }
