@@ -84,6 +84,13 @@ const routes: RouteRecordRaw[] = [
 // El Muestrario de los componentes base: solo en `pnpm dev:admin`, el build lo deja afuera.
 if (import.meta.env.DEV) {
   routes.unshift({ path: '/muestrario', name: 'muestrario', component: () => import('./ui/Muestrario.vue'), meta: { public: true, bare: true } })
+  // El marco de colecciones (C0) sobre las empresas de la base: con sesión y dentro del shell.
+  routes.unshift({
+    path: '/muestrario/coleccion/:id(\\d+|nueva)?/:seccion(esencial|ubicacion|componentes)?',
+    name: 'muestrario-coleccion',
+    component: () => import('./features/collections/sample/SampleIndex.vue'),
+    meta: { section: 'Muestrario' },
+  })
 }
 
 export const router = createRouter({
