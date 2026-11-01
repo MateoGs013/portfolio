@@ -1,5 +1,17 @@
-import { app } from '../server/src/app.js'
+/**
+ * Recorrido de integración del admin contra la app en un puerto libre, con el token del entorno
+ * (dev-token no vale con ADMIN_TOKEN definido). Sin ids fijos: la vacante es una pegada
+ * (manual-<azar>) y la tendencia, la primera que lista el radar. El CV se compara contra /api/cv.
+ *
+ *   ADMIN_TOKEN=<aleatorio> pnpm tsx scripts/test-audit.ts
+ */
+import { randomBytes } from 'node:crypto'
 import type { Server } from 'node:http'
+import { app } from '../server/src/app.js'
+import type { CvDocument } from '../server/src/content/cv.js'
+
+const token = process.env['ADMIN_TOKEN']
+if (!token) throw new Error('Falta ADMIN_TOKEN en el entorno: ADMIN_TOKEN=<aleatorio> pnpm tsx scripts/test-audit.ts')
 
 async function run() {
   const server: Server = await new Promise((resolve) => {
@@ -10,7 +22,8 @@ async function run() {
   const base = `http://127.0.0.1:${addr.port}`
   console.log('Testing server against', base)
 
-  const token = 'dev-token'
+  const jobId = `manual-${randomBytes(4).toString('hex')}`
+  const jobBody = JSON.stringify({ job: { title: 'Frontend Engineer', company: 'Example', description: 'React, Next.js and TypeScript.', tags: [], url: '', contact_email: 'jobs@example.com' } })
   let failed = 0
 
   async function test(name: string, fn: () => Promise<void>) {
@@ -42,7 +55,12 @@ async function run() {
     if (res.status !== 401) throw new Error(`Status ${res.status}`)
   })
 
-  await test('GET /api/admin/meta with dev-token -> 200', async () => {
+  await test('GET /api/admin/meta with dev-token -> 401 (ADMIN_TOKEN definido)', async () => {
+    const res = await fetch(`${base}/api/admin/meta`, { headers: { Authorization: 'Bearer dev-token' } })
+    if (res.status !== 401) throw new Error(`Status ${res.status}`)
+  })
+
+  await test('GET /api/admin/meta with ADMIN_TOKEN -> 200', async () => {
     const res = await fetch(`${base}/api/admin/meta`, {
       headers: { Authorization: `Bearer ${token}` },
     })
@@ -71,18 +89,30 @@ async function run() {
   }
 
   // 4. Hunter endpoints
-  await test('GET /api/admin/hunter/jobs -> 200', async () => {
+  await test('GET /api/admin/hunter/jobs -> 200 con Eros, 503 { offline } sin Eros', async () => {
     const res = await fetch(`${base}/api/admin/hunter/jobs`, {
       headers: { Authorization: `Bearer ${token}` },
     })
-    if (res.status !== 200) throw new Error(`Status ${res.status}`)
     const jobs = await res.json()
+    if (res.status === 503) {
+      if (jobs.offline !== true || !/^Eros no/.test(jobs.error)) throw new Error('503 sin offline o sin mensaje en español')
+      console.log('   sin Eros:', jobs.error)
+      return
+    }
+    if (res.status !== 200) throw new Error(`Status ${res.status}`)
     if (!Array.isArray(jobs)) throw new Error('Expected array')
     console.log('   hunter jobs length:', jobs.length)
   })
 
-  await test('POST /api/admin/hunter/cv/0cf33b331de5caf9/ticket -> 200', async () => {
-    const res = await fetch(`${base}/api/admin/hunter/cv/0cf33b331de5caf9/ticket`, {
+  await test('POST /api/admin/hunter/cv/:id, ticket y hoja HTML con el CV de /api/cv', async () => {
+    const cv = ((await (await fetch(`${base}/api/cv?lang=en`)).json()) as { data: CvDocument }).data
+    const built = await fetch(`${base}/api/admin/hunter/cv/${jobId}`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+      body: jobBody,
+    })
+    if (built.status !== 200) throw new Error(`CV Status ${built.status}`)
+    const res = await fetch(`${base}/api/admin/hunter/cv/${jobId}/ticket`, {
       method: 'POST',
       headers: { Authorization: `Bearer ${token}` },
     })
@@ -90,31 +120,27 @@ async function run() {
     const data = await res.json()
     if (!data.ticket) throw new Error('No ticket')
 
-    // test opening HTML with ticket
-    const htmlRes = await fetch(`${base}/api/admin/hunter/cv/0cf33b331de5caf9/html?ticket=${data.ticket}`)
+    const htmlRes = await fetch(`${base}/api/admin/hunter/cv/${jobId}/html?ticket=${data.ticket}`)
     if (htmlRes.status !== 200) throw new Error(`HTML Status ${htmlRes.status}`)
     const html = await htmlRes.text()
-    if (!html.includes('Harvard ATS')) throw new Error('Invalid CV HTML')
+    if (!html.includes('Harvard ATS') || !html.includes('<html lang="en">')) throw new Error('Invalid CV HTML')
+    if (cv.header.name && !html.includes(cv.header.name)) throw new Error('La hoja no trae el nombre de /api/cv')
   })
 
-  await test('POST /api/admin/hunter/jobs/0cf33b331de5caf9/find-email -> 200', async () => {
-    const res = await fetch(`${base}/api/admin/hunter/jobs/0cf33b331de5caf9/find-email`, {
+  await test('POST /api/admin/hunter/jobs/:id/find-email -> el contacto de la vacante, nunca uno adivinado', async () => {
+    const res = await fetch(`${base}/api/admin/hunter/jobs/${jobId}/find-email`, {
       method: 'POST',
-      headers: { Authorization: `Bearer ${token}` },
+      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+      body: jobBody,
     })
     if (res.status !== 200) throw new Error(`Status ${res.status}`)
     const data = await res.json()
-    // Sin Eros no se adivina una dirección: el contacto de la vacante o null.
-    if (res.headers.get('x-eros-source') === 'fallback') {
-      if (data.email !== null && typeof data.email !== 'string') throw new Error('email de respaldo inválido')
-      if (typeof data.email === 'string' && /^talent@/.test(data.email)) throw new Error('email adivinado')
-    }
-    else if (!data.email) throw new Error('No email found')
+    if (data.email !== 'jobs@example.com' || data.confidence !== null) throw new Error(`email de respaldo inválido: ${JSON.stringify(data)}`)
     console.log('   resolved email:', data.email)
   })
 
-  await test('POST /api/admin/hunter/jobs/0cf33b331de5caf9/apply-email -> 200 con Eros, error sin Eros', async () => {
-    const res = await fetch(`${base}/api/admin/hunter/jobs/0cf33b331de5caf9/apply-email`, {
+  await test('POST /api/admin/hunter/jobs/:id/apply-email -> 200 con Eros, error sin Eros', async () => {
+    const res = await fetch(`${base}/api/admin/hunter/jobs/${randomBytes(6).toString('hex')}/apply-email`, {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${token}`,
@@ -207,8 +233,11 @@ async function run() {
     console.log('   radar trends length:', trends.length)
   })
 
-  await test('POST /api/admin/radar/trends/trend_pgvector_hn/generate -> 200', async () => {
-    const res = await fetch(`${base}/api/admin/radar/trends/trend_pgvector_hn/generate`, {
+  await test('POST /api/admin/radar/trends/:id/generate -> 200', async () => {
+    const trends = await (await fetch(`${base}/api/admin/radar/trends`, { headers: { Authorization: `Bearer ${token}` } })).json() as { id: string }[]
+    const trendId = trends[0]?.id
+    if (!trendId) throw new Error('El radar no lista tendencias')
+    const res = await fetch(`${base}/api/admin/radar/trends/${encodeURIComponent(trendId)}/generate`, {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${token}`,

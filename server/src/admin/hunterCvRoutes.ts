@@ -1,142 +1,107 @@
 import { Router, type Request, type Response } from 'express'
-import { env } from '../env.js'
+import type { HunterSource, TailoredCv } from '../shared/hunterContracts.js'
 import { createCvTicket, isAdminAuthorized, validateCvTicket } from './auth.js'
-import { findJob, jobFromQuery } from './fallbackHunterData.js'
-import { generateCvHeuristic } from './hunterCv.js'
-import { renderCvHtmlHeuristic } from './hunterCvHtml.js'
-import { cvFileName, loadSignature } from './profile.js'
-import { forwardToEros, getErosBaseUrl, getParamId, isCircuitOpen, recordErosFailure } from './proxy.js'
+import { isManualJob, jobFromBody, missingJob } from './erosContract.js'
+import { extractHints, normalizeErosCv } from './erosHints.js'
+import { findDemoJob, inputOf } from './fallbackHunterData.js'
+import { jobHints, tailorCv, type CvHints } from './hunterCv.js'
+import { recallCv, rememberCv, cvExpired } from './hunterCvCache.js'
+import { renderCvHtml, sheetHeaders, sheetTarget } from './hunterCvHtml.js'
+import { renderCvText } from './hunterCvText.js'
+import { jobLang } from './hunterMatch.js'
+import { cvFileName, loadCv } from './profile.js'
+import { forwardToEros, getParamId } from './proxy.js'
 
-/** CV Harvard ATS adaptado: tickets, datos, hoja HTML y PDF (Eros primero, respaldo desde la base). */
+/**
+ * CV Harvard ATS de una vacante: se compone siempre desde la base (GET /api/cv) y de Eros solo se
+ * toman pistas de orden (erosHints.ts). El resultado queda en la caché (hunterCvCache.ts) y de ahí
+ * salen la hoja, la impresión y el texto plano: una sola fuente. El PDF que armaba Eros no existe más.
+ */
 export const hunterCvRouter = Router()
 
-/** POST /api/admin/hunter/cv/:id/ticket - Ticket firmado para abrir la hoja HTML del CV: vale 1 hora y solo para esa vacante (no es de un solo uso: la hoja se puede recargar) */
-hunterCvRouter.post(['/cv/:id/ticket', '/jobs/:id/cv/ticket'], (req: Request, res: Response) => {
-  const id = getParamId(req)
-  if (!id) {
-    res.status(400).json({ error: 'ID de vacante requerido' })
+/** Respuesta de error para una hoja: una página legible si la abrió el navegador, JSON si fue un pedido. */
+export function refuse(req: Request, res: Response, status: number, body: { error: string, code: string }): void {
+  if (req.accepts(['json', 'html']) === 'html') {
+    res.status(status).type('html').send(`<!DOCTYPE html><html lang="es"><meta charset="utf-8"><title>CV</title><p>${body.error}</p></html>`)
     return
   }
-  const ticket = createCvTicket(id)
-  res.json({ ticket })
+  res.status(status).json({ ...body, errors: [] })
+}
+
+const unauthorized = { error: 'Esta hoja necesita la sesión del admin o un ticket vigente para esta vacante.', code: 'unauthorized' }
+
+/** Las pistas de Eros para esta vacante, o null si no hay (vacante manual, Eros caído o sin CV usable). */
+async function erosHintsFor(id: string, job: unknown, base: Awaited<ReturnType<typeof loadCv>>): Promise<CvHints | null> {
+  if (isManualJob(id)) return null
+  const result = await forwardToEros(`api/cv/${encodeURIComponent(id)}`, { method: 'POST', body: JSON.stringify({ job }) }, 45000)
+  if (!result.ok) return null
+  const eros = normalizeErosCv(result.data)
+  return eros ? extractHints(eros, base) : null
+}
+
+/** POST /api/admin/hunter/cv/:id/ticket - Ticket firmado para abrir la hoja o el texto: 1 hora, solo esa vacante. */
+hunterCvRouter.post('/cv/:id/ticket', (req: Request, res: Response) => {
+  const id = getParamId(req)
+  res.json({ ticket: createCvTicket(id) })
 })
 
-/** POST /api/admin/hunter/cv/:id */
-hunterCvRouter.post(['/cv/:id', '/jobs/:id/cv'], async (req: Request, res: Response) => {
+/**
+ * POST /api/admin/hunter/cv/:id { job, useSummaryProposal? } → TailoredCv. Sin `job` en el cuerpo
+ * solo sirve una vacante de la muestra (EROS_DEMO). Con `useSummaryProposal` el resumen es el que
+ * propuso Eros; si ya había pistas en la caché, no se le vuelve a preguntar.
+ */
+hunterCvRouter.post('/cv/:id', async (req: Request, res: Response) => {
   const id = getParamId(req)
-  if (!id) {
-    res.status(400).json({ error: 'ID de vacante requerido' })
-    return
-  }
-  const result = await forwardToEros(`api/cv/${encodeURIComponent(id)}`, { method: 'POST' }, 45000)
-  if (result.ok) {
-    res.status(result.status).json(result.data)
-    return
-  }
-  const job = findJob(id)
+  const demo = findDemoJob(id)
+  const job = jobFromBody(req.body) ?? (demo ? inputOf(demo) : null)
   if (!job) {
-    res.status(404).json({ error: 'Vacante no encontrada' })
+    res.status(400).json(missingJob)
     return
   }
-  res.setHeader('X-Eros-Source', 'fallback')
-  res.json({ ...(await generateCvHeuristic(job)), _source: 'fallback' })
+
+  const base = await loadCv(jobLang(job))
+  const useProposal = req.body?.useSummaryProposal === true
+  const cached = useProposal ? recallCv(id)?.hints ?? null : null
+  const eros = cached ?? await erosHintsFor(id, job, base)
+  const fromJob = jobHints(base, job)
+  // Si Eros no ordenó el stack, el orden lo da la vacante.
+  const hints: CvHints = eros
+    ? { ...eros, categories: eros.categories.length ? eros.categories : fromJob.categories, techs: eros.techs.length ? eros.techs : fromJob.techs }
+    : fromJob
+
+  const { cv, adaptation, usesProposal } = tailorCv(base, job, hints, useProposal)
+  rememberCv(id, { cv, job, hints: eros })
+
+  const source: HunterSource = eros ? 'eros' : 'fallback'
+  const body: TailoredCv = { data: cv, summaryProposal: eros?.summaryProposal ?? null, usesSummaryProposal: usesProposal, _adaptation: adaptation, _source: source }
+  if (source === 'fallback') res.setHeader('X-Eros-Source', 'fallback')
+  res.json(body)
 })
 
-/** GET /api/admin/hunter/cv/:id/html */
-hunterCvRouter.get(['/cv/:id/html', '/jobs/:id/cv/html'], async (req: Request, res: Response) => {
+function allowed(req: Request, id: string): boolean {
+  return validateCvTicket(req.query['ticket'], id) || isAdminAuthorized(req)
+}
+
+/** GET /api/admin/hunter/cv/:id/html[?ticket=&auto_print=true&download=true] - La hoja A4 del CV en caché. */
+hunterCvRouter.get('/cv/:id/html', async (req: Request, res: Response) => {
   const id = getParamId(req)
-  if (!id) {
-    res.status(400).type('html').send('<h1>ID de vacante requerido</h1>')
-    return
-  }
-  const ticketParam = req.query['ticket']
-  const hasValidTicket = typeof ticketParam === 'string' && validateCvTicket(ticketParam, id)
-  if (!hasValidTicket && !isAdminAuthorized(req)) {
-    res.status(401).type('html').send('<h1>Acceso no autorizado al CV</h1><p>Se requiere sesión de administración o un ticket válido para esta vacante.</p>')
-    return
-  }
-  const baseUrl = getErosBaseUrl()
-  let html: string | null = null
-  let isFallbackHtml = false
+  if (!allowed(req, id)) return refuse(req, res, 401, unauthorized)
+  const entry = recallCv(id)
+  if (!entry) return refuse(req, res, 409, cvExpired)
 
-  if (baseUrl && !isCircuitOpen()) {
-    try {
-      const upstreamRes = await fetch(`${baseUrl}/api/cv/${encodeURIComponent(id)}/html`, {
-        headers: {
-          ...(env.erosApiKey ? { Authorization: `Bearer ${env.erosApiKey}`, 'X-Eros-Key': env.erosApiKey } : {}),
-        },
-        signal: AbortSignal.timeout(10000),
-      })
-      if (upstreamRes.ok) {
-        html = await upstreamRes.text()
-      } else {
-        recordErosFailure()
-      }
-    } catch {
-      recordErosFailure()
-    }
-  }
-
-  if (!html) {
-    const job = jobFromQuery(id, req.query)
-    html = renderCvHtmlHeuristic((await generateCvHeuristic(job)).data, job)
-    isFallbackHtml = true
-  }
-
-  if (isFallbackHtml) {
-    res.setHeader('X-Eros-Source', 'fallback')
-  }
-
-  if (req.query['auto_print'] === 'true') {
-    html = html.replace('</body>', '<script>window.addEventListener("load", () => { setTimeout(() => window.print(), 350); });</script></body>')
-  }
+  res.set(sheetHeaders)
   if (req.query['download'] === 'true') {
-    const { name } = await loadSignature()
-    res.setHeader('Content-Disposition', `attachment; filename="${cvFileName(name, 'Harvard_ATS')}.html"`)
+    res.setHeader('Content-Disposition', `attachment; filename="${cvFileName(entry.cv.name, 'Harvard_ATS')}.html"`)
   }
-  // Sandbox CSP: origen opaco, sin allow-same-origin para aislar de credenciales de admin
-  res.setHeader('Content-Security-Policy', "sandbox allow-scripts allow-modals; default-src 'none'; script-src 'unsafe-inline' 'unsafe-eval'; style-src 'unsafe-inline'; img-src data: https:;")
-  res.setHeader('X-Content-Type-Options', 'nosniff')
-  res.status(200).type('html').send(html)
+  res.type('html').send(renderCvHtml(entry.cv, { target: sheetTarget(entry.job), autoPrint: req.query['auto_print'] === 'true' }))
 })
 
-/** GET /api/admin/hunter/cv/:id/pdf */
-hunterCvRouter.get(['/cv/:id/pdf', '/jobs/:id/cv/pdf'], async (req: Request, res: Response) => {
+/** GET /api/admin/hunter/cv/:id/txt[?ticket=] - El mismo CV en texto plano para un formulario ATS. */
+hunterCvRouter.get('/cv/:id/txt', (req: Request, res: Response) => {
   const id = getParamId(req)
-  if (!id) {
-    res.status(400).json({ error: 'ID de vacante requerido' })
-    return
-  }
-  const ticketParam = req.query['ticket']
-  const hasValidTicket = typeof ticketParam === 'string' && validateCvTicket(ticketParam, id)
-  if (!hasValidTicket && !isAdminAuthorized(req)) {
-    res.status(401).json({ error: 'Acceso no autorizado al CV PDF' })
-    return
-  }
-
-  const baseUrl = getErosBaseUrl()
-  if (baseUrl && !isCircuitOpen()) {
-    try {
-      const upstreamRes = await fetch(`${baseUrl}/api/cv/${encodeURIComponent(id)}/pdf`, {
-        headers: {
-          ...(env.erosApiKey ? { Authorization: `Bearer ${env.erosApiKey}`, 'X-Eros-Key': env.erosApiKey } : {}),
-        },
-        signal: AbortSignal.timeout(15000),
-      })
-      if (upstreamRes.ok) {
-        const buffer = await upstreamRes.arrayBuffer()
-        res.setHeader('Content-Type', 'application/pdf')
-        const disposition = req.query['download'] === 'true' ? 'attachment' : 'inline'
-        const { name } = await loadSignature()
-        res.setHeader('Content-Disposition', `${disposition}; filename="${cvFileName(name)}.pdf"`)
-        res.send(Buffer.from(buffer))
-        return
-      }
-      recordErosFailure()
-    } catch {
-      recordErosFailure()
-    }
-  }
-
-  res.status(503).json({ error: 'Generación nativa de PDF no disponible en modo offline o contingencia' })
+  if (!allowed(req, id)) return refuse(req, res, 401, unauthorized)
+  const entry = recallCv(id)
+  if (!entry) return refuse(req, res, 409, cvExpired)
+  res.set({ 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff' })
+  res.type('text/plain; charset=utf-8').send(renderCvText(entry.cv))
 })

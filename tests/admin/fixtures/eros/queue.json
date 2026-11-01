@@ -1,0 +1,25 @@
+{
+  "stats": { "data": { "total": 2, "high_match": 1, "pending": 1, "applied_count": 0, "discarded_count": 0 } },
+  "scan": { "scanned_count": 42, "new_jobs_count": 2, "evaluated_count": 0 },
+  "vectorize": { "vectorized": 2 },
+  "purge": { "data": { "purged_count": 1 } },
+  "evaluate": {
+    "evaluated_count": 1,
+    "evaluated": [{ "id": "eros-mock-backend", "title": "Backend Developer (Node.js and PostgreSQL)", "score": 71, "verdict": "BUEN_MATCH" }]
+  },
+  "match": {
+    "score": 77,
+    "verdict": "BUEN_MATCH",
+    "summary": "El stack de la vacante coincide en buena parte.",
+    "pros": ["Node.js", "PostgreSQL"],
+    "cons": ["Pide más años de los que figuran"],
+    "missing_skills": [],
+    "matching_projects": [],
+    "salary_estimate": null,
+    "recruiter_note": "Hola, vi la búsqueda.",
+    "hiring_manager_name": null,
+    "hiring_manager_title": null,
+    "hiring_manager_url": null
+  },
+  "semanticScore": 0.82
+}
