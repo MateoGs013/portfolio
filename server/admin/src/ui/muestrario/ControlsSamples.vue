@@ -2,6 +2,7 @@
 /** Botones, botones con icono, menú y marcas (punto, atajo, mono, espera e iconos). */
 import Button from '../Button.vue'
 import { ui } from '../dict'
+import { muestrario } from './dict'
 import Icon from '../Icon.vue'
 import { ICON_NAMES } from '../icons'
 import IconButton from '../IconButton.vue'
@@ -17,7 +18,7 @@ import type { SampleProject } from './useSampleProjects'
 
 defineProps<{ project: SampleProject | null }>()
 
-const t = ui.muestrario
+const t = muestrario
 const s = t.sample
 
 const menuItems = [

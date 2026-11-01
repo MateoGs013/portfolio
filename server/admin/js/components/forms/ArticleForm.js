@@ -90,13 +90,13 @@ export const ArticleForm = {
           <input
             type="text"
             v-model="store.form.slug"
-            :readonly="store.slugLocked && store.isNew"
+            :readonly="(store.slugLocked && store.isNew) || !store.isNew"
             @input="store.checkDirty()"
             placeholder="arquitectura-rag-postgresql"
             class="text-input font-mono-code"
             :class="(store.slugLocked && store.isNew) && '!bg-[#0c0d11] !text-zinc-400 !cursor-not-allowed'"
           />
-          <span class="field-hint">Ruta en el sitio: /articles/{{ store.form.slug || 'slug' }}</span>
+          <span class="field-hint">Ruta en el sitio: /articles/{{ store.form.slug || 'slug' }}.<template v-if="!store.isNew"> La dirección queda fija al guardar: el servidor no la cambia desde acá, porque los enlaces que ya circulan dejarían de andar.</template></span>
         </div>
       </div>
 

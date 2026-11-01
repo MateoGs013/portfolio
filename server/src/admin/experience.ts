@@ -11,7 +11,7 @@ import { Router } from 'express'
 import { db } from '../db.js'
 import { ExperienceKind, type Prisma } from '../../generated/prisma/client.js'
 import { paramId, readOr503 } from './common.js'
-import { HttpError, date, enumOf, fail, guardSlugChange, intList, optDate, optInt, optStr, slug, str, validate } from './input.js'
+import { HttpError, date, enumOf, fail, guardSlugChange, intList, newSlug, optDate, optInt, optStr, slug, str, validate } from './input.js'
 import { EN, enBody, enTexts, isBlank, withTranslations } from './translations.js'
 
 type Body = Record<string, unknown>
@@ -121,7 +121,11 @@ experienceRouter.get('/experience', async (_req, res) => {
 
 experienceRouter.post('/experience', async (req, res) => {
   const b = req.body as Body
-  const { data, english, techIds, projectIds, address } = validate('Experience', b, () => ({ ...experienceData(b), address: slug(b, 'slug') }))
+  const { data, english, techIds, projectIds, address } = validate('Experience', b, () => {
+    const fields = experienceData(b)
+    // Como en las otras colecciones: sin dirección, sale del cargo (después queda fija).
+    return { ...fields, address: newSlug(b, 'slug', fields.data.role) }
+  })
   res.status(201).json(await db.experience.create({
     data: {
       ...data,

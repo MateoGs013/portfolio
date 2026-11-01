@@ -71,7 +71,8 @@ const ariaShortcut = computed(() => props.shortcut
     <span class="inline-flex items-center gap-2" :class="loading ? 'invisible' : ''">
       <Icon v-if="icon" :name="icon" />
       <slot />
-      <Kbd v-if="shortcut" :keys="shortcut" :on-sig="variant === 'primary'" />
+      <!-- El atajo ya va en aria-keyshortcuts: no se suma al nombre del botón. -->
+      <Kbd v-if="shortcut" :keys="shortcut" :on-sig="variant === 'primary'" aria-hidden="true" />
     </span>
     <span v-if="loading" class="absolute inset-0 grid place-items-center">
       <Spinner :live="false" :label="loadingLabel" />

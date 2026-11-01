@@ -5,6 +5,7 @@
  */
 import { computed, onMounted } from 'vue'
 import { ui } from './dict'
+import { muestrario } from './muestrario/dict'
 import ControlsSamples from './muestrario/ControlsSamples.vue'
 import FeedbackSamples from './muestrario/FeedbackSamples.vue'
 import FieldsSamples from './muestrario/FieldsSamples.vue'
@@ -15,7 +16,7 @@ const { items, loading, error, load } = useSampleProjects()
 const first = computed(() => items.value[0] ?? null)
 
 onMounted(() => {
-  document.title = `${ui.muestrario.title} · ${ui.app.title}`
+  document.title = `${muestrario.title} · ${ui.app.title}`
   void load()
 })
 </script>
@@ -27,10 +28,10 @@ onMounted(() => {
         {{ ui.app.name }} · {{ ui.app.area }}
       </p>
       <h1 class="m-0 animate-rise text-display">
-        {{ ui.muestrario.title }}
+        {{ muestrario.title }}
       </h1>
       <p class="m-0 max-w-[64ch] animate-rise text-lead text-dim stagger [--i:2]">
-        {{ ui.muestrario.lead }}
+        {{ muestrario.lead }}
       </p>
     </header>
     <ControlsSamples :project="first" />

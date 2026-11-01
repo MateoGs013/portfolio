@@ -3,6 +3,7 @@
  * (http sin permiso, foco fuera de la pestaña), un textarea con execCommand. Devuelve ok o error.
  */
 import { ref } from 'vue'
+import { activeLayerRoot } from '../ui/topLayer'
 
 export type CopyResult = 'ok' | 'error'
 
@@ -13,7 +14,8 @@ function legacyCopy(text: string): boolean {
   area.setAttribute('aria-hidden', 'true')
   area.className = 'fixed top-0 -left-full opacity-0'
   const active = document.activeElement instanceof HTMLElement ? document.activeElement : null
-  document.body.append(area)
+  // Con un diálogo modal abierto el body es inerte y select() no anda: va adentro del diálogo.
+  activeLayerRoot().append(area)
   area.select()
   let ok: boolean
   try {

@@ -1,4 +1,3 @@
-/* eslint-disable -- prototipo aprobado de la dirección visual, no es código de producción */
 // Demo del admin nuevo: rutas por hash, explorador, editor por secciones, paleta Ctrl/⌘K y guardado.
 // Todo el contenido sale de window.DEMO (snapshot real); las vacantes de abajo son ficticias.
 const D = window.DEMO

@@ -28,6 +28,13 @@ Tema oscuro en `:root[data-theme=dark]`: `--bg` #0b0b0c, `--panel` #111113, `--s
 **Guardarraíles en `pnpm lint`.**
 `scripts/admin-checks.mjs` corre cada `scripts/check-admin-*.mjs`. `check-admin-style` falla con hex sueltos, `text-[N…]`, paletas de Tailwind, « // » en plantillas, mayúsculas forzadas o espaciadas, `font-mono` fuera de `ui/Mono.vue` y `ui/Kbd.vue`, `transition-all`, `style` estático (la CSP no lo admite), `!important`, emojis y archivos de más de 300 líneas. eslint prohíbe `confirm`, `alert` y `prompt`: las confirmaciones van por `requestConfirm`.
 
+**Foco y línea de los campos.**
+*Descartado:* el anillo global de 2 px en los campos de texto (el plan §7 lo pedía en todo `:focus-visible`).
+*Por qué:* los campos de texto siempre cuentan como `:focus-visible`, también con el mouse, y en la demo aprobada no llevan anillo: el foco se marca con la línea, que pasa a 2 px en `--ink` (más de 15:1 sobre `--bg`). Botones, filas, pestañas y enlaces siguen con el anillo. La línea en reposo (`--rule-strong`, alrededor de 1,4:1) es decorativa: lo que identifica al campo es su rótulo visible, siempre presente, así que no es el límite que pide WCAG 1.4.11.
+
+**Regiones vivas y avisos adentro del diálogo abierto.**
+Con un `<dialog>` modal todo lo de afuera queda inerte: el lector no lee las regiones `aria-live` y los avisos no se pueden tocar. Cada `Dialog` abierto apila un punto de montaje propio (`ui/topLayer.ts`) y `Announcer` y `Toaster` se teletransportan al de arriba; el textarea de respaldo de copiar va al mismo lugar.
+
 ---
 
 ## Rediseño «movimiento» (30-oct-2026)

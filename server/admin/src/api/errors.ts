@@ -13,11 +13,16 @@ export interface FieldIssue {
 /** Qué servicio no respondió: la base, Eros o el admin entero (sin clave configurada). */
 export type ServiceName = 'db' | 'eros' | 'admin'
 
-/** Códigos que manda el servidor en `error` y su explicación para quien edita. */
+/**
+ * Códigos que manda el servidor y su explicación para quien edita. El contrato nuevo los manda en
+ * `code` (con el texto en español en `error`); las rutas viejas, directamente en `error`.
+ */
 const CODES: Record<string, string> = {
   db_unavailable: 'La base de datos no responde. Lo que escribiste sigue acá; probá de nuevo en un momento.',
   offline: 'Eros no responde ahora. Lo que se arma desde la base sigue funcionando.',
+  eros_unreachable: 'Eros no respondió a tiempo. Lo que se arma desde la base sigue funcionando; probá de nuevo en un momento.',
   'not found': 'No encontramos ese registro. Puede que lo hayan borrado.',
+  not_found: 'No encontramos ese registro. Puede que lo hayan borrado.',
   internal: 'Algo falló en el servidor. Probá de nuevo; si sigue, avisá con lo que estabas haciendo.',
   unauthorized: 'La sesión venció. Volvé a ingresar la clave para seguir.',
 }
@@ -45,10 +50,14 @@ function sentence(text: string): string {
   return first + t.slice(1) + (/[.!?]$/.test(t) ? '' : '.')
 }
 
+/** Un código de máquina (`in_use`, `conflict`) no se muestra tal cual: no es una frase. */
+const MACHINE_CODE = /^[a-z]+(?:_[a-z]+)*$/
+
 /** El mensaje para mostrar: el código conocido, el texto del servidor o el del código HTTP. */
-export function explain(status: number, code?: string | null): string {
+export function explain(status: number, code?: string | null, text?: string | null): string {
   if (code && CODES[code]) return CODES[code]
-  if (code) return sentence(code)
+  if (text) return sentence(text)
+  if (code && !MACHINE_CODE.test(code)) return sentence(code)
   return BY_STATUS[status] ?? `El servidor respondió con un error (${status}).`
 }
 
@@ -56,7 +65,7 @@ export class ApiError extends Error {
   readonly status: number
   readonly code: string | null
 
-  constructor(status: number, code: string | null, message = explain(status, code)) {
+  constructor(status: number, code: string | null, message: string = explain(status, code)) {
     super(message)
     this.name = 'ApiError'
     this.status = status
@@ -100,9 +109,9 @@ export class NetworkError extends ApiError {
 export class FieldErrors extends ApiError {
   readonly issues: FieldIssue[]
 
-  constructor(code: string | null, issues: FieldIssue[]) {
+  constructor(code: string | null, issues: FieldIssue[], text: string | null = null) {
     const count = issues.length
-    super(400, code, count > 1 ? `Hay ${count} campos para revisar antes de guardar.` : (issues[0]?.message ?? explain(400, code)))
+    super(400, code, count > 1 ? `Hay ${count} campos para revisar antes de guardar.` : (issues[0]?.message ?? explain(400, code, text)))
     this.name = 'FieldErrors'
     this.issues = issues
   }
@@ -110,8 +119,8 @@ export class FieldErrors extends ApiError {
 
 /** Cualquier otra respuesta con error (404, 409, 413, 500…), con el motivo del servidor. */
 export class RequestError extends ApiError {
-  constructor(status: number, code: string | null) {
-    super(status, code)
+  constructor(status: number, code: string | null, text: string | null = null) {
+    super(status, code, explain(status, code, text))
     this.name = 'RequestError'
   }
 }
@@ -136,13 +145,19 @@ function isIssue(value: unknown): value is FieldIssue {
 /** Convierte una respuesta con error en la clase que le corresponde. */
 export function fromResponse(status: number, body: unknown, eros: boolean): ApiError {
   const payload = body && typeof body === 'object' ? body as Record<string, unknown> : {}
-  const code = typeof payload['error'] === 'string' ? payload['error'] : null
+  const error = typeof payload['error'] === 'string' ? payload['error'] : null
+  const machine = typeof payload['code'] === 'string' ? payload['code'] : null
+  // Contrato nuevo: código en `code` y texto en `error`. Contrato viejo: todo en `error`.
+  const code = machine ?? error
+  const text = machine ? error : null
   if (status === 401) return new SessionError(code)
   if (status === 503) {
     const service: ServiceName = code === 'db_unavailable' ? 'db' : eros ? 'eros' : 'admin'
     return new ServiceError(service, code)
   }
+  // El proxy de Eros explica sus 502/504 con la URL interna y jerga del agente: no se muestra.
+  if (eros && (status === 502 || status === 504)) return new RequestError(status, 'eros_unreachable')
   const issues = Array.isArray(payload['errors']) ? payload['errors'].filter(isIssue) : []
-  if (status === 400 && issues.length) return new FieldErrors(code, issues)
-  return new RequestError(status, code)
+  if (status === 400 && issues.length) return new FieldErrors(code, issues, text)
+  return new RequestError(status, code, text)
 }

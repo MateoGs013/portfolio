@@ -1,7 +1,7 @@
 <script setup lang="ts">
 /** Campos livianos (texto, dirección, prosa) y elecciones (interruptor, opciones y lista nativa). */
 import { ref } from 'vue'
-import { ui } from '../dict'
+import { muestrario } from './dict'
 import Field from '../Field.vue'
 import RadioGroup from '../RadioGroup.vue'
 import Select from '../Select.vue'
@@ -13,7 +13,7 @@ import type { SampleProject } from './useSampleProjects'
 
 const props = defineProps<{ projects: SampleProject[] }>()
 
-const t = ui.muestrario
+const t = muestrario
 const s = t.sample
 const SUMMARY_MAX = 160
 

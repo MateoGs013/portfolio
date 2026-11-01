@@ -11,7 +11,7 @@ export const StackForm = {
   components: { EnField },
   setup() {
     function onNameInput() {
-      if (store.slugLocked && store.form) {
+      if (store.isNew && store.slugLocked && store.form) {
         store.form.slug = slugify(store.form.name)
       }
       store.checkDirty()
@@ -19,7 +19,7 @@ export const StackForm = {
 
     function toggleSlugLock() {
       store.slugLocked = !store.slugLocked
-      if (store.slugLocked && store.form) {
+      if (store.isNew && store.slugLocked && store.form) {
         store.form.slug = slugify(store.form.name)
       }
       store.checkDirty()
@@ -59,6 +59,7 @@ export const StackForm = {
           <div class="flex items-center justify-between mb-1">
             <label class="field-label !mb-0">Identificador (Slug) *</label>
             <button
+              v-if="store.isNew"
               type="button"
               @click="toggleSlugLock"
               class="text-[10px] font-mono-code px-1.5 py-0.5 rounded border transition-colors cursor-pointer"
@@ -70,9 +71,10 @@ export const StackForm = {
           <input
             type="text"
             v-model="store.form.slug"
-            :readonly="store.slugLocked"
+            :readonly="store.slugLocked || !store.isNew"
             class="text-input font-mono-code"
           />
+          <span v-if="!store.isNew" class="field-hint">La dirección queda fija al guardar: el servidor no la cambia desde acá, porque los enlaces que ya circulan dejarían de andar.</span>
         </div>
       </div>
 

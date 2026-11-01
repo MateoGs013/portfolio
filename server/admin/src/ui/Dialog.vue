@@ -8,6 +8,7 @@ import { nextTick, onBeforeUnmount, ref, watch } from 'vue'
 import { useId } from '../composables/useId'
 import { ui } from './dict'
 import IconButton from './IconButton.vue'
+import { popLayer, pushLayer } from './topLayer'
 
 const props = withDefaults(defineProps<{
   title: string
@@ -15,16 +16,19 @@ const props = withDefaults(defineProps<{
   /** Selector del control que recibe el foco al abrir (`[data-initial]`, `#nombre`). */
   initialFocus?: string
   size?: 'sm' | 'md' | 'lg'
-  /** Tocar el fondo cierra. Apagalo si cerrar puede perder lo escrito. */
+  /** Tocar el fondo cierra. Apagalo si cerrar puede perder lo escrito (Esc y la cruz siguen). */
   dismissible?: boolean
   /** Muestra la cruz de cerrar en el encabezado. */
   closeButton?: boolean
-}>(), { size: 'md', dismissible: true, closeButton: true })
+  /** Mientras algo corre (guardar, borrar): ni Esc, ni el fondo, ni la cruz cierran. */
+  locked?: boolean
+}>(), { size: 'md', dismissible: true, closeButton: true, locked: false })
 
 const open = defineModel<boolean>('open', { default: false })
 const emit = defineEmits<{ close: [] }>()
 
 const dialog = ref<HTMLDialogElement | null>(null)
+const layer = ref<HTMLElement | null>(null)
 const closing = ref(false)
 const titleId = useId('dlg')
 const descId = `${titleId}-desc`
@@ -35,11 +39,14 @@ const reduced = () => matchMedia('(prefers-reduced-motion: reduce)').matches
 
 async function show(): Promise<void> {
   const el = dialog.value
-  if (!el || el.open) return
+  if (!el) return
+  // Reabierto durante la salida (Esc y un clic rápido en quien abre): se cancela el cierre pendiente.
   clearTimeout(timer)
   closing.value = false
+  if (el.open) return
   opener = document.activeElement instanceof HTMLElement ? document.activeElement : null
   el.showModal()
+  if (layer.value) pushLayer(layer.value)
   await nextTick()
   focusInitial(el)
 }
@@ -57,6 +64,9 @@ function focusInitial(el: HTMLDialogElement): void {
 function finish(): void {
   const el = dialog.value
   closing.value = false
+  // Si mientras salía lo volvieron a abrir, se queda abierto.
+  if (open.value) return
+  if (layer.value) popLayer(layer.value)
   if (el?.open) el.close()
   emit('close')
   // Si quien abrió ya no está (la fila se borró), el foco queda en el documento.
@@ -84,7 +94,7 @@ watch(dialog, (el) => {
 /** Esc: el navegador cerraría solo; se cierra por el estado para animar y devolver el foco. */
 function onCancel(event: Event): void {
   event.preventDefault()
-  open.value = false
+  if (!props.locked) open.value = false
 }
 
 /**
@@ -94,7 +104,7 @@ function onCancel(event: Event): void {
 function onKeydown(event: KeyboardEvent): void {
   if (event.key === 'Escape') {
     event.preventDefault()
-    open.value = false
+    if (!props.locked) open.value = false
     return
   }
   if (event.key !== 'Tab' || !dialog.value) return
@@ -117,12 +127,13 @@ function onPointerDown(event: PointerEvent): void {
   downOnBackdrop = event.target === dialog.value
 }
 function onClick(event: MouseEvent): void {
-  if (props.dismissible && downOnBackdrop && event.target === dialog.value) open.value = false
+  if (props.dismissible && !props.locked && downOnBackdrop && event.target === dialog.value) open.value = false
   downOnBackdrop = false
 }
 
 onBeforeUnmount(() => {
   clearTimeout(timer)
+  if (layer.value) popLayer(layer.value)
   if (dialog.value?.open) dialog.value.close()
 })
 
@@ -154,7 +165,7 @@ const widths = { sm: 'w-[min(420px,calc(100vw-32px))]', md: 'w-[min(560px,calc(1
             {{ description }}
           </p>
         </div>
-        <IconButton v-if="closeButton" icon="close" :label="ui.actions.close" class="-mt-1 -mr-2" @click="open = false" />
+        <IconButton v-if="closeButton" icon="close" :label="ui.actions.close" class="-mt-1 -mr-2" :disabled="locked" @click="open = false" />
       </header>
       <div class="min-h-0 flex-1 overflow-auto px-6 pt-5 pb-6" data-dialog-body>
         <slot />
@@ -163,5 +174,7 @@ const widths = { sm: 'w-[min(420px,calc(100vw-32px))]', md: 'w-[min(560px,calc(1
         <slot name="footer" />
       </footer>
     </div>
+    <!-- Regiones vivas y avisos mientras este diálogo es el de arriba (ui/topLayer.ts). -->
+    <div ref="layer" data-dialog-layer />
   </dialog>
 </template>

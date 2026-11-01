@@ -47,6 +47,7 @@ const initialFocus = props.destructive ? '[data-confirm-cancel]' : '[data-confir
     size="sm"
     :initial-focus="initialFocus"
     :dismissible="!loading"
+    :locked="loading"
     @close="onClose"
   >
     <div class="grid gap-4">

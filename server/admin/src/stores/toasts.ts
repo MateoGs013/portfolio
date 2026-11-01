@@ -17,6 +17,8 @@ export interface Toast {
   message: string
   tone: ToastTone
   action?: ToastAction
+  /** Milisegundos hasta cerrarse; 0 es que se queda hasta que lo cierren. */
+  duration: number
 }
 
 export interface ToastOptions {
@@ -45,10 +47,14 @@ export function dismissToast(id: number): void {
 export function toast(message: string, options: ToastOptions = {}): number {
   const tone = options.tone ?? 'ok'
   const id = ++nextId
-  state.items.push({ id, message, tone, action: options.action })
-  while (state.items.length > MAX_VISIBLE) dismissToast(state.items[0]!.id)
-  announce(message, tone === 'error' ? 'assertive' : 'polite')
   const duration = options.duration ?? (tone === 'error' ? 0 : AUTO_CLOSE_MS)
+  state.items.push({ id, message, tone, action: options.action, duration })
+  // Al pasarse del tope se va el más viejo que no sea un error: los errores esperan a que los cierren.
+  while (state.items.length > MAX_VISIBLE) {
+    const oldest = state.items.find(t => t.tone !== 'error') ?? state.items[0]!
+    dismissToast(oldest.id)
+  }
+  announce(message, tone === 'error' ? 'assertive' : 'polite')
   if (duration > 0) timers.set(id, setTimeout(() => dismissToast(id), duration))
   return id
 }
@@ -56,7 +62,7 @@ export function toast(message: string, options: ToastOptions = {}): number {
 /** Pausa el cierre mientras el puntero o el foco están sobre el aviso, y lo retoma después. */
 export function holdToast(id: number, hold: boolean): void {
   const item = state.items.find(t => t.id === id)
-  if (!item || item.tone === 'error') return
+  if (!item || item.duration <= 0) return
   clearTimeout(timers.get(id))
-  if (!hold) timers.set(id, setTimeout(() => dismissToast(id), AUTO_CLOSE_MS))
+  if (!hold) timers.set(id, setTimeout(() => dismissToast(id), item.duration))
 }

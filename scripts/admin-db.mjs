@@ -6,9 +6,11 @@
  *   node scripts/admin-db.mjs create [x]   → crea portfolio_admin_<x> (x al azar si falta) e imprime su nombre
  *   node scripts/admin-db.mjs drop <nombre|x>
  *
- * El origen es la base de DATABASE_URL (del entorno o del .env; `portfolio` en el docker-compose) y se
- * puede cambiar con ADMIN_DB_SOURCE. Usa el contenedor del docker-compose (ADMIN_DB_CONTAINER,
- * `portfolio-db`) y, si no está corriendo, pg_dump y psql locales.
+ * El origen es siempre la base `portfolio` del docker-compose (ADMIN_DB_SOURCE la cambia): el .env de
+ * un worktree puede apuntar a una base que ya no existe. De DATABASE_URL solo se toman el servidor y
+ * el usuario. Antes de copiar se comprueba que el origen existe y tiene tablas, y el volcado va a un
+ * archivo: si pg_dump falla, no queda una copia vacía. Usa el contenedor del docker-compose
+ * (ADMIN_DB_CONTAINER, `portfolio-db`) y, si no está corriendo, pg_dump y psql locales.
  */
 import { spawnSync } from 'node:child_process'
 import { randomBytes } from 'node:crypto'
@@ -18,13 +20,14 @@ import { parseEnv } from 'node:util'
 
 export const PREFIX = 'portfolio_admin_'
 const CONTAINER = process.env.ADMIN_DB_CONTAINER || 'portfolio-db'
+const DEFAULT_SOURCE = 'portfolio'
 
 function sourceUrl() {
   const fileEnv = existsSync('.env') ? parseEnv(readFileSync('.env', 'utf8')) : {}
   const raw = process.env.DATABASE_URL || fileEnv.DATABASE_URL
   if (!raw) throw new Error('Falta DATABASE_URL (en el entorno o en .env) para saber qué base copiar.')
   const url = new URL(raw)
-  if (process.env.ADMIN_DB_SOURCE) url.pathname = `/${process.env.ADMIN_DB_SOURCE}`
+  url.pathname = `/${process.env.ADMIN_DB_SOURCE || DEFAULT_SOURCE}`
   return url
 }
 
@@ -67,7 +70,11 @@ export function createCopy(suffix = randomBytes(4).toString('hex')) {
   const name = copyName(suffix)
   if (!isIdentifier(source)) throw new Error(`Nombre de base de origen inválido: ${source}`)
   if (source === name || source.startsWith(PREFIX)) throw new Error(`La base de origen (${source}) no puede ser una copia.`)
-  sh(`dropdb --if-exists --force ${name} && createdb ${name} && pg_dump --no-owner --no-privileges ${source} | psql -q -v ON_ERROR_STOP=1 -d ${name} > /dev/null`, url)
+  const tables = sh(`psql -At -d postgres -c "select 1 from pg_database where datname = '${source}'" | grep -q 1 && psql -At -d ${source} -c "select count(*) from information_schema.tables where table_schema = 'public'" || echo missing`, url).trim()
+  if (tables === 'missing') throw new Error(`La base de origen ${source} no existe. Levantala con pnpm db:up y cargala con pnpm db:seed.`)
+  if (tables === '0') throw new Error(`La base de origen ${source} no tiene tablas. Corré pnpm prisma migrate deploy y pnpm db:seed.`)
+  // Sin tubería: el estado de pg_dump se comprueba antes de volcar, así una copia vacía no pasa por buena.
+  sh(`f=$(mktemp) && pg_dump --no-owner --no-privileges -f "$f" ${source} && dropdb --if-exists --force ${name} && createdb ${name} && psql -q -v ON_ERROR_STOP=1 -d ${name} -f "$f" > /dev/null; s=$?; rm -f "$f"; exit $s`, url)
   return name
 }
 

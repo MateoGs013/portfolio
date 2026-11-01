@@ -134,6 +134,7 @@ export const ExperienceForm = {
           <div class="flex items-center justify-between mb-1">
             <label for="exp-slug" class="field-label !mb-0">Slug Web *</label>
             <button
+              v-if="store.isNew"
               type="button"
               @click="toggleSlugLock"
               :aria-pressed="store.slugLocked"
@@ -147,11 +148,11 @@ export const ExperienceForm = {
             id="exp-slug"
             type="text"
             v-model="store.form.slug"
-            :readonly="store.slugLocked"
+            :readonly="store.slugLocked || !store.isNew"
             class="text-input font-mono-code"
             aria-describedby="exp-slug-hint"
           />
-          <span v-if="!store.isNew" id="exp-slug-hint" class="field-hint">Cambiar el cargo no cambia la dirección. Si la cambiás a mano, los enlaces viejos dejan de andar.</span>
+          <span v-if="!store.isNew" id="exp-slug-hint" class="field-hint">Cambiar el cargo no cambia la dirección. La dirección queda fija al guardar: el servidor no la cambia desde acá, porque los enlaces que ya circulan dejarían de andar.</span>
         </div>
       </div>
 

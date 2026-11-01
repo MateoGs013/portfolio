@@ -275,9 +275,22 @@ export const AdmJobHunter = {
     async function copyTailoredCVText() {
       const job = store.hunter.selected
       if (!job || !cvData.value) return
+      const textPromise = serverPlainText(job).then(text => text || localPlainText())
+      // El portapapeles se reserva dentro del clic: Safari y Firefox rechazan writeText después de
+      // esperar a la red. ClipboardItem acepta la promesa del texto y la resuelve después.
+      if (typeof ClipboardItem !== 'undefined' && navigator.clipboard?.write) {
+        try {
+          const blob = textPromise.then(text => new Blob([text], { type: 'text/plain' }))
+          await navigator.clipboard.write([new ClipboardItem({ 'text/plain': blob })])
+          store.toast('ok', 'CV ATS copiado en texto plano')
+          return
+        } catch {
+          // Sin permiso o sin soporte de promesas: se prueba con el texto ya resuelto.
+        }
+      }
       let text
       try {
-        text = (await serverPlainText(job)) || localPlainText()
+        text = await textPromise
       } catch {
         return
       }
@@ -377,20 +390,46 @@ export const AdmJobHunter = {
       }
     }
 
-    async function openTailoredCVHtml() {
-      if (!store.hunter.selected) return
-      if (!(await ensureCvSheet())) return
+    /**
+     * Abre la hoja del CV en otra pestaña. La pestaña se abre dentro del clic, vacía: después de esperar
+     * a la API (comprobar la hoja, regenerarla ante un 409, pedir el ticket) el navegador ya no la deja
+     * abrir y el bloqueador la descarta sin avisar. Cuando la hoja está lista, la pestaña va a ella.
+     */
+    async function openCvSheet(autoPrint) {
+      const job = store.hunter.selected
+      if (!job) return
+      const win = window.open('', '_blank')
+      if (win) {
+        try {
+          win.opener = null
+          win.document.title = 'Preparando el CV'
+          win.document.body.textContent = 'Preparando el CV…'
+        } catch {
+          // Si el navegador no deja escribir en la pestaña vacía, igual se navega después.
+        }
+      }
+      if (!(await ensureCvSheet())) {
+        win?.close()
+        return
+      }
       const ticket = await getCVTicket()
-      const query = ticket ? `?ticket=${encodeURIComponent(ticket)}` : ''
-      window.open(`/api/admin/hunter/cv/${encodeURIComponent(store.hunter.selected.id)}/html${query}`, '_blank', 'noopener')
+      const params = new URLSearchParams()
+      if (ticket) params.set('ticket', ticket)
+      if (autoPrint) params.set('auto_print', 'true')
+      const query = params.toString()
+      const url = `/api/admin/hunter/cv/${encodeURIComponent(job.id)}/html${query ? `?${query}` : ''}`
+      if (win && !win.closed) win.location.replace(url)
+      else if (!window.open(url, '_blank', 'noopener')) {
+        store.toast('err', 'El navegador bloqueó la pestaña del CV. Permití las ventanas emergentes de este sitio o usá la vista previa.', 6000)
+      }
     }
 
-    async function printTailoredCV() {
-      if (!store.hunter.selected) return
-      if (!(await ensureCvSheet())) return
-      const ticket = await getCVTicket()
-      const query = ticket ? `?ticket=${encodeURIComponent(ticket)}&auto_print=true` : '?auto_print=true'
-      window.open(`/api/admin/hunter/cv/${encodeURIComponent(store.hunter.selected.id)}/html${query}`, '_blank', 'noopener')
+    function openTailoredCVHtml() {
+      return openCvSheet(false)
+    }
+
+    function printTailoredCV() {
+      return openCvSheet(true)
     }
 
     const isDownloadingPdf = ref(false)

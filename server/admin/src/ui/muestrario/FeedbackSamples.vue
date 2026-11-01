@@ -6,6 +6,7 @@ import { toast } from '../../stores/toasts'
 import Button from '../Button.vue'
 import Dialog from '../Dialog.vue'
 import { ui } from '../dict'
+import { muestrario } from './dict'
 import EmptyState from '../EmptyState.vue'
 import ErrorState from '../ErrorState.vue'
 import Field from '../Field.vue'
@@ -17,7 +18,7 @@ import type { SampleProject } from './useSampleProjects'
 
 const props = defineProps<{ project: SampleProject | null }>()
 
-const t = ui.muestrario
+const t = muestrario
 const s = t.sample
 
 const dialogOpen = ref(false)

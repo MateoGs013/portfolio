@@ -18,7 +18,7 @@ export interface RequestOptions {
   query?: Record<string, string | number | boolean | null | undefined>
   /** La señal de la vista (useRequestScope): al salir de la vista se cancela lo pendiente. */
   signal?: AbortSignal
-  /** Por defecto 15 s, y 60 s en las rutas que pasan por Eros. */
+  /** Por defecto 15 s, y 90 s en las rutas que pasan por Eros. */
   timeoutMs?: number
 }
 
@@ -30,7 +30,13 @@ export interface WriteEventDetail {
 const BASE = '/api/admin'
 const TOKEN_KEY = 'adm-token'
 const TIMEOUT_MS = 15_000
-const EROS_TIMEOUT_MS = 60_000
+/**
+ * El servidor corta a Eros a los 60 s (server/src/admin/proxy.ts y hunter.ts) y en desarrollo puede
+ * sumar un reintento local de 4 s antes de responder el respaldo o un 504 con su motivo. El cliente
+ * espera más que el servidor para leer esa respuesta honesta: el tope del servidor queda siempre
+ * por debajo de este.
+ */
+const EROS_TIMEOUT_MS = 90_000
 const RETRY_DELAY_MS = 400
 /** Rutas que esperan a Eros: el agente puede tardar en recorrer portales o redactar. */
 const EROS_PREFIXES = ['/hunter', '/content', '/radar']
@@ -138,12 +144,16 @@ async function once(method: Method, path: string, options: RequestOptions): Prom
 
 const wait = () => new Promise(resolve => setTimeout(resolve, RETRY_DELAY_MS))
 
-/** Una lectura se reintenta una vez si no hubo conexión o el proxy respondió 502–504. */
+/**
+ * Una lectura se reintenta una vez si no hubo conexión o el proxy respondió 502–504. En las rutas de
+ * Eros un 504 ya consumió el tope entero del servidor: no se repite, así la espera no se duplica.
+ */
 async function withRetry(method: Method, path: string, options: RequestOptions): Promise<Response> {
   if (method !== 'GET') return once(method, path, options)
+  const lastRetryable = isEros(path) ? 503 : 504
   try {
     const res = await once(method, path, options)
-    if (res.status < 502 || res.status > 504) return res
+    if (res.status < 502 || res.status > lastRetryable) return res
   }
   catch (err) {
     if (!(err instanceof NetworkError) || err.timedOut) throw err

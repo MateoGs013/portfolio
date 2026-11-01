@@ -45,8 +45,9 @@ export function useFieldControl(props: ControlProps) {
 
 /**
  * Los controles livianos de la dirección elegida: sin caja, texto de 16 px sobre una línea de 1 px que
- * se enciende en --ink con el foco (en --danger si hay error). El anillo de foco global queda para el
- * teclado.
+ * se enciende en --ink con el foco (en --danger si hay error). Los campos de texto no llevan el anillo
+ * global: como en la demo aprobada, el foco se marca con la línea a 2 px en --ink (ver
+ * docs/decisiones.md, «Foco y línea de los campos»). Botones, filas y pestañas sí lo llevan.
  */
 export const lineControl = 'w-full min-w-0 border-0 border-b bg-transparent px-0 text-ink transition-colors duration-120 ease-e placeholder:text-faint focus:outline-none focus-visible:outline-none disabled:cursor-not-allowed disabled:text-faint read-only:text-dim'
 

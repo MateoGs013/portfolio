@@ -504,6 +504,12 @@ export const store = reactive({
     s.hunter.isScanning = true
     try {
       const res = await api.scanHunterJobs()
+      // Sin Eros el servidor responde el respaldo con los conteos de la muestra: no se escaneó nada.
+      if (res?._source === 'fallback' || res?._source === 'demo') {
+        s.toast('info', 'Eros no respondió, así que no se buscaron vacantes nuevas. La lista muestra lo que ya estaba guardado.')
+        await s.loadHunterJobs()
+        return
+      }
       const total = res?.scanned ?? res?.scanned_count ?? res?.data?.scanned ?? res?.data?.scanned_count ?? 0
       const newJobs = res?.new_jobs ?? res?.new_jobs_count ?? res?.data?.new_jobs ?? res?.data?.new_jobs_count ?? 0
       const evaluated = res?.evaluated_count ?? res?.data?.evaluated_count

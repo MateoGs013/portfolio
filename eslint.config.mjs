@@ -3,8 +3,9 @@ import withNuxt from './.nuxt/eslint.config.mjs'
 
 export default withNuxt({
   // Solo `ignores` en el objeto: así el patrón vale para todo el lint, no para un bloque de reglas.
-  // El build del admin nuevo y la demo aprobada del rediseño (referencia de look, no código).
-  ignores: ['server/admin/dist/**', 'docs/rediseno-admin/**'],
+  // El build del admin nuevo, la demo aprobada del rediseño (referencia de look, no código)
+  // y los worktrees de agentes en .claude/worktrees (copias del repo, no son este árbol).
+  ignores: ['server/admin/dist/**', 'docs/rediseno-admin/**', '.claude/worktrees/**'],
 }, {
   ignores: [
     'server/generated/**',

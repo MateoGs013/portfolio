@@ -112,7 +112,7 @@ const rows = computed(() => props.variant === 'rows')
       :data-key="item.key"
       :style="rows ? { '--i': Math.min(index, 12) } : undefined"
       :class="rows
-        ? 'group/row grid animate-rise grid-cols-[minmax(0,1fr)_auto] items-baseline gap-6 border-b border-rule pt-5 pb-5.5 stagger transition-opacity duration-500 ease-e group-hover/rows:not-hover:opacity-28 focus-visible:outline-offset-[-2px] max-sm:grid-cols-1 max-sm:gap-2'
+        ? 'group/row grid animate-rise grid-cols-[minmax(0,1fr)_auto] items-baseline gap-6 border-b border-rule pt-5 pb-5.5 stagger transition-opacity duration-500 ease-e group-hover/rows:not-hover:opacity-28 group-hover/rows:focus-visible:opacity-100 focus-visible:outline-offset-[-2px] max-sm:grid-cols-1 max-sm:gap-2'
         : 'grid gap-1 border-b border-rule px-4 pt-2.75 pb-3 transition-colors duration-120 ease-e hover:bg-surface aria-selected:bg-surface-2 focus-visible:-outline-offset-2'"
       @click="onClick(item, index)"
     >

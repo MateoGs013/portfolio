@@ -1,7 +1,7 @@
 <script setup lang="ts">
 /** Pestañas con marcas y la lista como pantalla (filas grandes) y densa, sobre las obras de la base. */
 import { ref } from 'vue'
-import { ui } from '../dict'
+import { muestrario } from './dict'
 import EmptyState from '../EmptyState.vue'
 import ErrorState from '../ErrorState.vue'
 import Listbox from '../Listbox.vue'
@@ -19,7 +19,7 @@ defineProps<{
 
 defineEmits<{ retry: [] }>()
 
-const t = ui.muestrario
+const t = muestrario
 const s = t.sample
 
 const section = ref('essentials')
