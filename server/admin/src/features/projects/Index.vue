@@ -1,27 +1,49 @@
 <script setup lang="ts">
-/** #/obras[/:id[/:seccion]] y #/obras/nueva, provisorio hasta U1: el título real de la obra. */
-import { computed } from 'vue'
-import { useRoute } from 'vue-router'
-import { shell } from '../../shell/dict'
-import Placeholder from '../../shell/Placeholder.vue'
-import { useRecordTitle } from '../../shell/title'
-import { options } from '../../stores/meta'
+/**
+ * #/obras: la lista como pantalla (filtros, búsqueda y filas grandes), o el orden del sitio con
+ * ?vista=orden. #/obras/nueva y #/obras/:id[/:seccion]: el editor de la obra.
+ */
+import { computed, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import { focusView } from '../../shell/title'
+import Button from '../../ui/Button.vue'
+import { summary } from '../../stores/meta'
+import Explorer from '../collections/Explorer.vue'
+import { projectsText } from './dict'
+import { projectModel } from './model'
+import ProjectEditor from './ProjectEditor.vue'
+import ProjectOrder from './ProjectOrder.vue'
 
 const route = useRoute()
-const record = computed(() => options.value?.projects.find(p => p.id === Number(route.params['id']))?.title ?? null)
-useRecordTitle(record)
+const router = useRouter()
+
+const id = computed<number | 'nueva' | null>(() => {
+  if (route.name === 'obra-nueva') return 'nueva'
+  if (route.name !== 'obra') return null
+  const n = Number(route.params['id'])
+  return Number.isInteger(n) ? n : null
+})
+
+const ordering = computed(() => route.name === 'obras' && route.query['vista'] === 'orden')
+const orderHref = computed(() => router.resolve({ name: 'obras', query: { vista: 'orden' } }).href)
+// Lista y orden son la misma ruta: el router no mueve el foco, lo hace esta vista.
+watch(ordering, () => void focusView())
+
+const lead = computed(() => {
+  const counts = summary.value?.projects
+  if (!counts) return undefined
+  return projectsText.lead(counts.visible, counts.visible + counts.hidden + counts.scheduled)
+})
 </script>
 
 <template>
-  <Placeholder
-    v-if="route.name === 'obra'"
-    :title="record ?? shell.nav.projects"
-    :back="{ label: shell.nav.projects, to: '/obras' }"
-  />
-  <Placeholder
-    v-else-if="route.name === 'obra-nueva'"
-    :title="shell.palette.newProject"
-    :back="{ label: shell.nav.projects, to: '/obras' }"
-  />
-  <Placeholder v-else :title="shell.nav.projects" :count="options?.projects.length ?? null" />
+  <ProjectEditor v-if="id !== null" :id="id" />
+  <ProjectOrder v-else-if="ordering" />
+  <Explorer v-else :model="projectModel" :lead="lead">
+    <template #actions>
+      <Button :href="orderHref">
+        {{ projectsText.order }}
+      </Button>
+    </template>
+  </Explorer>
 </template>
