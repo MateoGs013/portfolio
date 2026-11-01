@@ -1,95 +1,36 @@
 /**
- * Media de las obras: subida de imagen o video (con WebM y póster opcionales), edición parcial y borrado.
- * El tamaño y el formato se leen del archivo (magic bytes), nunca del nombre ni del tipo declarado.
- * Los archivos van a `public/media/projects/<slug>/`, como las capturas versionadas.
+ * Media de las obras: subida de imagen o video (con WebM y póster opcionales), reemplazo del archivo,
+ * edición parcial y borrado. El tamaño y el formato se leen del archivo (magic bytes, mediaFiles.ts),
+ * nunca del nombre ni del tipo declarado. Los archivos van a `public/media/projects/<slug>/`.
  * El alt y el pie en inglés llegan por PATCH en `en: { alt?, caption? }` (MediaTranslation).
+ *
+ * Reemplazar el archivo (POST /media/:id/file) conserva la fila: su id, su inglés y los pasos que la
+ * muestran siguen iguales; cambian el archivo, el ancho, el alto y el peso, y el anterior se borra.
  */
-import { mkdir, unlink, writeFile } from 'node:fs/promises'
-import path from 'node:path'
 import { Router } from 'express'
-import multer from 'multer'
 import { db } from '../db.js'
 import { MediaKind, MediaRole, MediaViewport, type Prisma } from '../../generated/prisma/client.js'
 import { optHex, paramId } from './common.js'
-import { IMAGE_MIME, imageDims } from './image.js'
-import { HttpError, enumOf, int, optInt, optStr, str } from './input.js'
+import { HttpError, enumOf, int, optInt, optStr, str, validate } from './input.js'
+import { fileStem, removeMediaFiles, saveFile, sniff, sniffImage, undoWrites, upload } from './mediaFiles.js'
 import { saveMediaEn, withTranslations } from './translations.js'
-import { VIDEO_MIME, videoDims } from './video.js'
-
-const MEDIA_DIR = path.resolve('public/media/projects')
-const IMAGE_MAX_BYTES = 10 * 1024 * 1024
-export const MEDIA_MAX_BYTES = 20 * 1024 * 1024
 
 const MEDIA_ROLE = Object.values(MediaRole)
 const MEDIA_VIEWPORT = Object.values(MediaViewport)
 
-const upload = multer({
-  storage: multer.memoryStorage(),
-  limits: { files: 3, fields: 16, fileSize: MEDIA_MAX_BYTES },
-})
-
 type Body = Record<string, unknown>
 type Tx = Prisma.TransactionClient
+type Files = Record<string, Express.Multer.File[] | undefined>
 
-interface Sniffed { kind: MediaKind, ext: string, width: number, height: number }
-
-/** Formato real del archivo; tiene que coincidir con el tipo MIME declarado. */
-function sniff(file: Express.Multer.File, field: string): Sniffed {
-  const declared = IMAGE_MIME[file.mimetype] ?? VIDEO_MIME[file.mimetype]
-  if (!declared) throw new HttpError(400, `${field}: tipo no soportado (${file.mimetype}). Se aceptan PNG, JPG, WebP, MP4 y WebM`)
-  const image = imageDims(file.buffer)
-  const found = image ?? videoDims(file.buffer)
-  if (!found) throw new HttpError(400, `${field}: no se pudo leer el tamaño o el formato del archivo`)
-  if (found.format !== declared) throw new HttpError(400, `${field}: el contenido del archivo no coincide con su tipo`)
-  if (image && file.size > IMAGE_MAX_BYTES) throw new HttpError(413, `${field}: una imagen puede pesar hasta 10MB`)
-  return { kind: image ? MediaKind.IMAGE : MediaKind.VIDEO, ext: found.format, width: found.width, height: found.height }
-}
+const NOT_FOUND = 'No encontramos esa imagen: puede que se haya borrado. Recargá la obra.'
 
 /** Ruta pública de un archivo de media ya existente (para el póster). */
 function optMediaPath(b: Body, k: string): string | null {
   const v = optStr(b, k, 300)
   if (v !== null && (!v.startsWith('/media/') || v.includes('..'))) {
-    throw new HttpError(400, `campo "${k}": se esperaba una ruta /media/…`)
+    throw new HttpError(400, 'El póster tiene que ser un archivo ya subido a la obra (/media/…).')
   }
   return v
-}
-
-/** Escribe el archivo y lo anota en `written` para poder deshacerlo si algo falla después. */
-async function saveFile(slug: string, name: string, buffer: Buffer, written: string[]): Promise<string> {
-  const dir = path.resolve(MEDIA_DIR, slug)
-  const target = path.resolve(dir, path.basename(name))
-  if (!target.startsWith(MEDIA_DIR + path.sep)) throw new HttpError(400, 'nombre de archivo inválido')
-  await mkdir(dir, { recursive: true })
-  await writeFile(target, buffer)
-  written.push(target)
-  return `/media/projects/${slug}/${path.basename(name)}`
-}
-
-async function removeFile(src: string | null): Promise<void> {
-  if (!src) return
-  const abs = path.resolve('public', '.' + src)
-  if (!abs.startsWith(MEDIA_DIR + path.sep)) return
-  await unlink(abs).catch(() => undefined)
-}
-
-/** Rutas que alguna fila de Media todavía usa como src, WebM o póster. */
-async function pathsInUse(paths: string[]): Promise<Set<string>> {
-  if (paths.length === 0) return new Set()
-  const rows = await db.media.findMany({
-    where: { OR: [{ src: { in: paths } }, { srcWebm: { in: paths } }, { poster: { in: paths } }] },
-    select: { src: true, srcWebm: true, poster: true },
-  })
-  return new Set(rows.flatMap(r => [r.src, r.srcWebm, r.poster]).filter((p): p is string => p !== null))
-}
-
-/**
- * Borra del disco el archivo, su WebM y su póster de filas ya borradas o reemplazadas. Una ruta
- * que otra fila sigue usando (por ejemplo, un póster que apunta a la imagen de otra pieza) se deja.
- */
-export async function removeMediaFiles(rows: { src: string | null, srcWebm: string | null, poster: string | null }[]): Promise<void> {
-  const paths = [...new Set(rows.flatMap(m => [m.src, m.srcWebm, m.poster]).filter((p): p is string => !!p))]
-  const used = await pathsInUse(paths)
-  await Promise.all(paths.filter(p => !used.has(p)).map(removeFile))
 }
 
 /**
@@ -114,8 +55,24 @@ async function demoteCovers(tx: Tx, projectId: number, kind: MediaKind, keepId?:
 function enPatch(b: Body): Body | null {
   const en = b['en']
   if (en === undefined || en === null) return null
-  if (typeof en !== 'object' || Array.isArray(en)) throw new HttpError(400, 'campo "en": se esperaba { alt?, caption? }')
+  if (typeof en !== 'object' || Array.isArray(en)) throw new HttpError(400, 'El inglés de la imagen llegó con un formato que no esperábamos. Recargá y volvé a guardar.')
   return 'alt' in en || 'caption' in en ? en as Body : null
+}
+
+/** La pieza con la carpeta de su obra, o 404. */
+async function currentMedia(id: number) {
+  const media = await db.media.findUnique({
+    where: { id },
+    select: { id: true, kind: true, src: true, srcWebm: true, poster: true, project: { select: { slug: true } } },
+  })
+  if (!media) throw new HttpError(404, NOT_FOUND)
+  return media
+}
+
+/** Un WebM que acompaña a un video MP4. */
+function checkWebm(webm: Express.Multer.File, mainExt: string): void {
+  if (sniff(webm, 'Versión WebM').ext !== 'webm') throw new HttpError(400, 'Versión WebM: se esperaba un archivo WebM.')
+  if (mainExt === 'webm') throw new HttpError(400, 'El video ya es WebM: la versión WebM acompaña a un MP4.')
 }
 
 export const mediaRouter = Router()
@@ -131,32 +88,32 @@ mediaRouter.get('/media', async (req, res) => {
 
 /** multipart: file (imagen o video) + webm? + poster? · projectId, alt, caption?, role, order?, viewport?, tint? */
 mediaRouter.post('/media', upload.fields([{ name: 'file', maxCount: 1 }, { name: 'webm', maxCount: 1 }, { name: 'poster', maxCount: 1 }]), async (req, res) => {
-  const files = (req.files ?? {}) as Record<string, Express.Multer.File[] | undefined>
+  const files = (req.files ?? {}) as Files
   const main = files['file']?.[0]
-  if (!main) throw new HttpError(400, 'falta el archivo (campo "file")')
-  const info = sniff(main, 'archivo')
+  if (!main) throw new HttpError(400, 'Falta el archivo: elegí una imagen o un video.')
+  const info = sniff(main, 'Archivo')
   const webm = files['webm']?.[0]
   const poster = files['poster']?.[0]
-  if ((webm || poster) && info.kind !== MediaKind.VIDEO) throw new HttpError(400, 'la variante WebM y el póster solo acompañan a un video')
-  if (webm && sniff(webm, 'webm').ext !== 'webm') throw new HttpError(400, 'webm: se esperaba un archivo WebM')
-  if (webm && info.ext === 'webm') throw new HttpError(400, 'el archivo ya es WebM: la variante WebM acompaña a un MP4')
-  const posterInfo = poster ? sniff(poster, 'póster') : null
-  if (posterInfo && posterInfo.kind !== MediaKind.IMAGE) throw new HttpError(400, 'póster: se esperaba una imagen')
+  if ((webm || poster) && info.kind !== MediaKind.VIDEO) throw new HttpError(400, 'La versión WebM y el póster solo acompañan a un video.')
+  if (webm) checkWebm(webm, info.ext)
+  const posterInfo = poster ? sniffImage(poster, 'Póster') : null
 
   const body = req.body as Body
-  const projectId = int(body, 'projectId')
+  const { projectId, fields } = validate('Media', body, () => ({
+    projectId: int(body, 'projectId'),
+    fields: {
+      alt: str(body, 'alt', 300),
+      caption: optStr(body, 'caption', 300),
+      role: enumOf(body, 'role', MEDIA_ROLE),
+      order: optInt(body, 'order', 0, 10000) ?? 0,
+      viewport: body['viewport'] ? enumOf(body, 'viewport', MEDIA_VIEWPORT) : MediaViewport.DESKTOP,
+      tint: optHex(body, 'tint'),
+    },
+  }))
   const project = await db.project.findUnique({ where: { id: projectId }, select: { slug: true } })
-  if (!project) throw new HttpError(404, 'proyecto inexistente')
-  const fields = {
-    alt: str(body, 'alt', 300),
-    caption: optStr(body, 'caption', 300),
-    role: enumOf(body, 'role', MEDIA_ROLE),
-    order: optInt(body, 'order', 0, 10000) ?? 0,
-    viewport: body['viewport'] ? enumOf(body, 'viewport', MEDIA_VIEWPORT) : MediaViewport.DESKTOP,
-    tint: optHex(body, 'tint'),
-  }
+  if (!project) throw new HttpError(404, 'No encontramos esa obra: puede que se haya borrado. Recargá la lista.')
 
-  const stem = `${project.slug}-${Date.now().toString(36)}`
+  const stem = fileStem(project.slug)
   const written: string[] = []
   try {
     const src = await saveFile(project.slug, `${stem}.${info.ext}`, main.buffer, written)
@@ -172,55 +129,115 @@ mediaRouter.post('/media', upload.fields([{ name: 'file', maxCount: 1 }, { name:
     res.status(201).json(row)
   }
   catch (err) {
-    await Promise.all(written.map(f => unlink(f).catch(() => undefined)))
+    await undoWrites(written)
+    throw err
+  }
+})
+
+/**
+ * Archivo nuevo para una pieza ya cargada (multipart: file, y webm? si es un video MP4). Tiene que
+ * ser del mismo tipo (imagen por imagen, video por video). La versión WebM de un video reemplazado
+ * era del video anterior: se borra, salvo que llegue una nueva en el mismo envío.
+ */
+mediaRouter.post('/media/:id/file', upload.fields([{ name: 'file', maxCount: 1 }, { name: 'webm', maxCount: 1 }]), async (req, res) => {
+  const media = await currentMedia(paramId(req))
+  const files = (req.files ?? {}) as Files
+  const main = files['file']?.[0]
+  if (!main) throw new HttpError(400, 'Falta el archivo: elegí el que reemplaza al actual.')
+  const info = sniff(main, 'Archivo')
+  if (info.kind !== media.kind) {
+    throw new HttpError(400, media.kind === MediaKind.IMAGE ? 'Esta pieza es una imagen: se reemplaza por otra imagen.' : 'Esta pieza es un video: se reemplaza por otro video.')
+  }
+  const webm = files['webm']?.[0]
+  if (webm && info.kind !== MediaKind.VIDEO) throw new HttpError(400, 'La versión WebM solo acompaña a un video.')
+  if (webm) checkWebm(webm, info.ext)
+
+  const slug = media.project.slug
+  const stem = fileStem(slug)
+  const written: string[] = []
+  try {
+    const src = await saveFile(slug, `${stem}.${info.ext}`, main.buffer, written)
+    const srcWebm = webm ? await saveFile(slug, `${stem}.webm`, webm.buffer, written) : null
+    const row = await db.media.update({
+      where: { id: media.id },
+      data: { src, srcWebm, width: info.width, height: info.height, bytes: main.size },
+      include: withTranslations,
+    })
+    await removeMediaFiles([{ src: media.src, srcWebm: media.srcWebm, poster: null }])
+    res.json(row)
+  }
+  catch (err) {
+    await undoWrites(written)
+    throw err
+  }
+})
+
+/** Versión WebM nueva para un video MP4 ya subido (multipart: webm). Reemplaza la anterior. */
+mediaRouter.post('/media/:id/webm', upload.single('webm'), async (req, res) => {
+  const media = await currentMedia(paramId(req))
+  if (!req.file) throw new HttpError(400, 'Falta el archivo WebM.')
+  if (media.kind !== MediaKind.VIDEO) throw new HttpError(400, 'La versión WebM solo acompaña a un video.')
+  checkWebm(req.file, media.src.endsWith('.webm') ? 'webm' : 'mp4')
+
+  const slug = media.project.slug
+  const written: string[] = []
+  try {
+    const srcWebm = await saveFile(slug, `${fileStem(slug)}.webm`, req.file.buffer, written)
+    const row = await db.media.update({ where: { id: media.id }, data: { srcWebm }, include: withTranslations })
+    await removeMediaFiles([{ src: null, srcWebm: media.srcWebm, poster: null }])
+    res.json(row)
+  }
+  catch (err) {
+    await undoWrites(written)
     throw err
   }
 })
 
 /** Póster nuevo para un video ya subido (multipart: poster). Reemplaza el anterior. */
 mediaRouter.post('/media/:id/poster', upload.single('poster'), async (req, res) => {
-  const mid = paramId(req)
-  if (!req.file) throw new HttpError(400, 'falta la imagen (campo "poster")')
-  const info = sniff(req.file, 'póster')
-  if (info.kind !== MediaKind.IMAGE) throw new HttpError(400, 'póster: se esperaba una imagen')
-  const media = await db.media.findUnique({ where: { id: mid }, select: { kind: true, poster: true, project: { select: { slug: true } } } })
-  if (!media) throw new HttpError(404, 'not found')
-  if (media.kind !== MediaKind.VIDEO) throw new HttpError(400, 'solo un video lleva póster')
+  const media = await currentMedia(paramId(req))
+  if (!req.file) throw new HttpError(400, 'Falta la imagen del póster.')
+  const info = sniffImage(req.file, 'Póster')
+  if (media.kind !== MediaKind.VIDEO) throw new HttpError(400, 'Solo un video lleva póster.')
+  const b = req.body as Body
+  const tint = validate('Media', b, () => optHex(b, 'tint'))
 
-  const written: string[] = []
   const slug = media.project.slug
-  const poster = await saveFile(slug, `${slug}-${Date.now().toString(36)}-poster.${info.ext}`, req.file.buffer, written)
-  const tint = optHex(req.body as Body, 'tint')
-  const row = await db.media.update({ where: { id: mid }, data: { poster, ...(tint ? { tint } : {}) }, include: withTranslations })
-    .catch(async (err: unknown) => {
-      await Promise.all(written.map(f => unlink(f).catch(() => undefined)))
-      throw err
-    })
-  await removeMediaFiles([{ src: null, srcWebm: null, poster: media.poster }])
-  res.json(row)
+  const written: string[] = []
+  try {
+    const poster = await saveFile(slug, `${fileStem(slug)}-poster.${info.ext}`, req.file.buffer, written)
+    const row = await db.media.update({ where: { id: media.id }, data: { poster, ...(tint ? { tint } : {}) }, include: withTranslations })
+    await removeMediaFiles([{ src: null, srcWebm: null, poster: media.poster }])
+    res.json(row)
+  }
+  catch (err) {
+    await undoWrites(written)
+    throw err
+  }
 })
 
 /** Actualiza solo las claves presentes: cambiar el rol no toca el alt ni el orden, ni el inglés. */
 mediaRouter.patch('/media/:id', async (req, res) => {
   const mid = paramId(req)
   const b = (req.body ?? {}) as Body
-  const data: Prisma.MediaUpdateInput = {}
-  if ('alt' in b) data.alt = str(b, 'alt', 300)
-  if ('caption' in b) data.caption = optStr(b, 'caption', 300)
-  if ('role' in b) data.role = enumOf(b, 'role', MEDIA_ROLE)
-  if ('order' in b) data.order = int(b, 'order', 0, 10000)
-  if ('tint' in b) data.tint = optHex(b, 'tint')
-  if ('viewport' in b) data.viewport = enumOf(b, 'viewport', MEDIA_VIEWPORT)
-  if ('poster' in b) data.poster = optMediaPath(b, 'poster')
+  const data: Prisma.MediaUpdateInput = validate('Media', b, () => ({
+    ...('alt' in b ? { alt: str(b, 'alt', 300) } : {}),
+    ...('caption' in b ? { caption: optStr(b, 'caption', 300) } : {}),
+    ...('role' in b ? { role: enumOf(b, 'role', MEDIA_ROLE) } : {}),
+    ...('order' in b ? { order: int(b, 'order', 0, 10000) } : {}),
+    ...('tint' in b ? { tint: optHex(b, 'tint') } : {}),
+    ...('viewport' in b ? { viewport: enumOf(b, 'viewport', MEDIA_VIEWPORT) } : {}),
+    ...('poster' in b ? { poster: optMediaPath(b, 'poster') } : {}),
+  }))
   const en = enPatch(b)
-  if (Object.keys(data).length === 0 && !en) throw new HttpError(400, 'no llegó ningún campo para actualizar')
+  if (Object.keys(data).length === 0 && !en) throw new HttpError(400, 'No llegó ningún cambio para guardar.')
 
   const row = await db.$transaction(async (tx) => {
     const current = await tx.media.findUnique({ where: { id: mid }, select: { projectId: true, kind: true, project: { select: { slug: true } } } })
-    if (!current) throw new HttpError(404, 'not found')
+    if (!current) throw new HttpError(404, NOT_FOUND)
     // El póster es un archivo de la misma obra: así borrar otra pieza nunca deja a esta sin él.
     if (typeof data.poster === 'string' && !data.poster.startsWith(`/media/projects/${current.project.slug}/`)) {
-      throw new HttpError(400, `campo "poster": se esperaba una ruta /media/projects/${current.project.slug}/…`)
+      throw new HttpError(400, 'El póster tiene que ser un archivo de esta misma obra.')
     }
     if (data.role === MediaRole.COVER) await demoteCovers(tx, current.projectId, current.kind, mid)
     if (en) await saveMediaEn(tx, mid, en)
@@ -230,7 +247,8 @@ mediaRouter.patch('/media/:id', async (req, res) => {
 })
 
 mediaRouter.delete('/media/:id', async (req, res) => {
-  const row = await db.media.delete({ where: { id: paramId(req) } })
+  const { id } = await currentMedia(paramId(req))
+  const row = await db.media.delete({ where: { id } })
   await removeMediaFiles([row])
   res.status(204).end()
 })

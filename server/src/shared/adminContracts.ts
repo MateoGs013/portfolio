@@ -3,7 +3,8 @@
  * `import type`): meta, estado, colecciones, impacto de un borrado y la forma de los errores.
  */
 import type { adminSchema, FieldDescriptor, ModelName } from './adminSchema.js'
-import type { EnumName } from './labels.js'
+import type { DocBlock, DocBlockType, DocKey } from './docSchema.js'
+import type { EnumName, Label } from './labels.js'
 
 // ─── Errores ────────────────────────────────────────────────────────────────
 
@@ -88,6 +89,36 @@ export interface AdminOptions {
   articles: ArticleOption[]
 }
 
+/** Una clave del catálogo de métricas (shared/metricKeys.ts), con su rótulo y qué mide. */
+export interface MetricKeyOption {
+  key: string
+  label: Label
+  desc: Label
+  /** Cuántas métricas de la base la usan. */
+  uses: number
+}
+
+/** Una clave que alguna obra usa y el catálogo no conoce: se muestra con su rótulo propio. */
+export interface UnlistedMetricKey {
+  key: string
+  /** El primer rótulo propio cargado con esa clave, si lo hay. */
+  label: string | null
+  uses: number
+}
+
+/**
+ * Un registro con textos en español sin su inglés. `fields` son rutas del body con el que se guarda:
+ * `translations.en.outcome`, `steps[0].translations.en.body`, `translations.en.highlights[1]`,
+ * `metrics[2].translations.en.label`, `media[0].en.alt` (PATCH /media/:id) o `fields.headline.en` (docs).
+ */
+export interface UntranslatedRecord {
+  collection: 'projects' | 'experience' | 'techs' | 'articles' | 'docs'
+  /** El id del registro; en los documentos, su clave (about o contact). */
+  id: number | DocKey
+  title: string
+  fields: string[]
+}
+
 export type AdminSchema = { readonly [M in ModelName]: Readonly<Record<keyof (typeof adminSchema)[M], FieldDescriptor>> }
 
 /**
@@ -100,10 +131,39 @@ export interface AdminMeta {
   schema: AdminSchema
   models: Partial<Record<ModelName, { one: string, another: string }>>
   options: AdminOptions
+  /** El catálogo de claves de métricas y las claves usadas que no están en él. */
+  metricKeys: { catalog: MetricKeyOption[], unlisted: UnlistedMetricKey[] }
+  /** Lo que tiene español sin inglés (translations.ts, viñeta por viñeta). */
+  untranslated: UntranslatedRecord[]
   /** @deprecated hasta S1: conteos totales sin visibilidad. */
   counts: Record<string, number>
   /** @deprecated hasta S1: los valores sin rótulo. */
   enums: Record<EnumName, string[]>
+}
+
+// ─── Documentos ─────────────────────────────────────────────────────────────
+
+/** Un bloque de about o contact tal como lo edita el admin: `en` solo en los que lo admiten. */
+export interface AdminDocField {
+  name: string
+  type: DocBlockType | string
+  value: string | string[]
+  en?: string | string[]
+  wide?: boolean
+}
+
+/**
+ * GET y PUT /api/admin/docs/:key. `schema` son los bloques requeridos en orden; `missing`, los
+ * requeridos que la base todavía no tiene (se crean al guardarlos). Los bloques libres van en `fields`
+ * después de los requeridos.
+ */
+export interface AdminDoc {
+  key: DocKey
+  title: string
+  fields: AdminDocField[]
+  schema: readonly DocBlock[]
+  missing: string[]
+  updatedAt: string | null
 }
 
 // ─── Estado ─────────────────────────────────────────────────────────────────

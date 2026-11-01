@@ -7,12 +7,19 @@
  * o enlace. Sin la clave `translations` (o sin `en`) no se toca nada, y dentro de `en` solo cambian las
  * claves que llegan. Un inglés todo vacío no crea
  * una fila nueva: solo vacía la que ya existía.
+ *
+ * Al final, la regla de «sin traducir» del admin (untranslatedRecords).
  */
-import { Locale, type Prisma } from '../../generated/prisma/client.js'
+import { db } from '../db.js'
+import { docFieldsOf, untranslatedFields } from '../content/docFields.js'
+import { Locale, type Prisma, type PrismaClient } from '../../generated/prisma/client.js'
+import type { UntranslatedRecord } from '../shared/adminContracts.js'
+import { docKeys, docSchemas, isDocKey } from '../shared/docSchema.js'
 import { HttpError, optStr } from './input.js'
 
 type Body = Record<string, unknown>
 type Tx = Prisma.TransactionClient
+type Client = PrismaClient | Tx
 
 /** El único idioma que se edita como traducción: el español vive en el registro. */
 export const EN = Locale.en
@@ -61,6 +68,7 @@ const PROJECT_LIMITS = { title: 4000, role: 4000, summary: 4000, brief: 4000, ou
 const STEP_LIMITS = { title: 200, body: 4000 }
 const LINK_LIMITS = { label: 4000 }
 const MEDIA_LIMITS = { alt: 300, caption: 300 }
+const METRIC_LIMITS = { label: 80 }
 const TECH_LIMITS = { note: 4000 }
 
 export async function saveProjectEn(tx: Tx, projectId: number, en: Body): Promise<void> {
@@ -102,6 +110,19 @@ export async function saveLinkEn(tx: Tx, linkId: number, en: Body): Promise<void
   })
 }
 
+export async function saveMetricEn(tx: Tx, metricId: number, en: Body): Promise<void> {
+  const data = enTexts(en, METRIC_LIMITS)
+  if (isBlank(data)) {
+    await tx.metricTranslation.updateMany({ where: { metricId, locale: EN }, data })
+    return
+  }
+  await tx.metricTranslation.upsert({
+    where: { metricId_locale: { metricId, locale: EN } },
+    create: { metricId, locale: EN, ...data },
+    update: data,
+  })
+}
+
 /** Media se edita por PATCH: solo las claves que llegan (alt o caption) cambian. */
 export async function saveMediaEn(tx: Tx, mediaId: number, en: Body): Promise<void> {
   const keys = (Object.keys(MEDIA_LIMITS) as (keyof typeof MEDIA_LIMITS)[]).filter(k => k in en)
@@ -130,4 +151,100 @@ export async function saveTechEn(tx: Tx, techId: number, en: Body): Promise<void
     create: { techId, locale: EN, ...data },
     update: data,
   })
+}
+
+// ─── Sin traducir ───────────────────────────────────────────────────────────
+
+type Texts = Record<string, unknown>
+
+const filled = (v: unknown): boolean => (typeof v === 'string' ? v.trim() !== '' : Array.isArray(v) && v.length > 0)
+
+/**
+ * Rutas del body (`translations.en.campo`, con `prefix` para lo anidado) de los textos que tienen
+ * español y no inglés: la misma regla con la que la API pública arma `untranslated`.
+ */
+function pendingTexts(es: Texts, en: Texts | undefined, fields: readonly string[], prefix = ''): string[] {
+  return fields.filter(f => filled(es[f]) && !filled(en?.[f])).map(f => `${prefix}translations.en.${f}`)
+}
+
+/** Las viñetas se traducen una por una: `translations.en.highlights[i]` por cada una sin inglés. */
+function pendingItems(field: string, es: readonly string[], en: readonly string[] | undefined): string[] {
+  return es.flatMap((item, i) => (filled(item) && !filled(en?.[i]) ? [`translations.en.${field}[${i}]`] : []))
+}
+
+const english = { where: { locale: EN } } as const
+
+async function projectsPending(client: Client): Promise<UntranslatedRecord[]> {
+  const rows = await client.project.findMany({
+    orderBy: [{ sortOrder: 'asc' }, { year: 'desc' }],
+    select: {
+      id: true, title: true, role: true, summary: true, brief: true, outcome: true, translations: english,
+      steps: { orderBy: { order: 'asc' }, select: { title: true, body: true, translations: english } },
+      links: { orderBy: { id: 'asc' }, select: { label: true, translations: english } },
+      metrics: { orderBy: { order: 'asc' }, select: { label: true, translations: english } },
+      media: { orderBy: [{ role: 'asc' }, { order: 'asc' }], select: { alt: true, caption: true, translations: english } },
+    },
+  })
+  return rows.map(p => ({
+    collection: 'projects' as const,
+    id: p.id,
+    title: p.title,
+    // El título de una obra es un nombre propio: nunca queda pendiente (como en la API pública).
+    fields: [
+      ...pendingTexts(p, p.translations[0], ['role', 'summary', 'brief', 'outcome']),
+      ...p.steps.flatMap((s, i) => pendingTexts(s, s.translations[0], ['title', 'body'], `steps[${i}].`)),
+      ...p.links.flatMap((l, i) => pendingTexts(l, l.translations[0], ['label'], `links[${i}].`)),
+      ...p.metrics.flatMap((m, i) => pendingTexts(m, m.translations[0], ['label'], `metrics[${i}].`)),
+      // La media se edita por PATCH /media/:id con `en: { alt, caption }`.
+      ...p.media.flatMap((m, i) => ['alt', 'caption'].filter(f => filled(m[f as 'alt']) && !filled(m.translations[0]?.[f as 'alt'])).map(f => `media[${i}].en.${f}`)),
+    ],
+  }))
+}
+
+async function experiencePending(client: Client): Promise<UntranslatedRecord[]> {
+  const rows = await client.experience.findMany({
+    orderBy: { startedAt: 'desc' },
+    select: { id: true, role: true, summary: true, story: true, location: true, highlights: true, translations: english },
+  })
+  return rows.map(e => ({
+    collection: 'experience' as const,
+    id: e.id,
+    title: e.role,
+    fields: [
+      ...pendingTexts(e, e.translations[0], ['role', 'summary', 'story', 'location']),
+      ...pendingItems('highlights', e.highlights, e.translations[0]?.highlights),
+    ],
+  }))
+}
+
+async function catalogPending(client: Client): Promise<UntranslatedRecord[]> {
+  const [techs, articles] = await Promise.all([
+    client.tech.findMany({ orderBy: { name: 'asc' }, select: { id: true, name: true, note: true, translations: english } }),
+    client.article.findMany({ orderBy: [{ sortOrder: 'asc' }, { createdAt: 'desc' }], select: { id: true, title: true, summary: true, content: true, translations: english } }),
+  ])
+  return [
+    ...techs.map(t => ({ collection: 'techs' as const, id: t.id, title: t.name, fields: pendingTexts(t, t.translations[0], ['note']) })),
+    ...articles.map(a => ({ collection: 'articles' as const, id: a.id, title: a.title, fields: pendingTexts(a, a.translations[0], ['title', 'summary', 'content']) })),
+  ]
+}
+
+/** Los bloques de prosa de about y contact: `fields.<bloque>.en`. */
+async function docsPending(client: Client): Promise<UntranslatedRecord[]> {
+  const docs = await client.doc.findMany({ where: { key: { in: docKeys } }, orderBy: { key: 'asc' } })
+  return docs.flatMap((d) => {
+    const key = d.key
+    if (!isDocKey(key)) return []
+    const fields = docFieldsOf(d.fields, key)
+    const names = untranslatedFields(fields, fields.map(f => f.name), EN)
+    return [{ collection: 'docs' as const, id: key, title: docSchemas[key].label, fields: names.map(n => `fields.${n}.en`) }]
+  })
+}
+
+/**
+ * Cada registro con algo en español y sin inglés, campo por campo y viñeta por viñeta (solo los que
+ * tienen algo pendiente). Lo usan GET /api/admin/meta (`untranslated`) y la bandeja del Inicio.
+ */
+export async function untranslatedRecords(client: Client = db): Promise<UntranslatedRecord[]> {
+  const groups = await Promise.all([projectsPending(client), experiencePending(client), catalogPending(client), docsPending(client)])
+  return groups.flat().filter(r => r.fields.length > 0)
 }

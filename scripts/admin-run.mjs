@@ -4,7 +4,7 @@
  *
  *   node scripts/admin-run.mjs [--eros-mock] [--demo] [--web] -- <comando…>
  *
- * 1. Copia la base (scripts/admin-db.mjs) a portfolio_admin_<x>.
+ * 1. Copia la base (scripts/admin-db.mjs) a portfolio_admin_<x> y le aplica las migraciones pendientes.
  * 2. Levanta la API en un puerto libre entre 3940 y 3990 con un ADMIN_TOKEN al azar (no se imprime),
  *    HUNTER_API_URL=http://127.0.0.1:9 y EROS_API_KEY=offline: Eros real nunca.
  *    --eros-mock  arranca tests/admin/eros-mock.ts en otro puerto libre y apunta HUNTER_API_URL ahí.
@@ -43,7 +43,8 @@ function tryPort(port) {
   return new Promise((resolve) => {
     const server = createServer()
     server.once('error', () => resolve(false))
-    server.listen(port, () => server.close(() => resolve(true)))
+    // En el mismo host que la API (server/src/index.ts): en Windows, `::` no choca con un 0.0.0.0 ocupado.
+    server.listen(port, '0.0.0.0', () => server.close(() => resolve(true)))
   })
 }
 
@@ -130,6 +131,10 @@ let status
 try {
   database = createCopy(`run_${randomBytes(4).toString('hex')}`)
   const databaseUrl = copyUrl(database)
+  // El origen puede ir atrás de las migraciones de esta rama: la copia queda al día antes de levantar la API.
+  if (await run('pnpm', ['exec', 'prisma', 'migrate', 'deploy'], { DATABASE_URL: databaseUrl }) !== 0) {
+    throw new Error('No pude aplicar las migraciones a la copia.')
+  }
   const token = randomBytes(24).toString('hex')
   const apiPort = await freePort()
   const api = `http://localhost:${apiPort}`

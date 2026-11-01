@@ -7,9 +7,11 @@ import { Router } from 'express'
 import { db } from '../db.js'
 import { visibleArticle, visibleProject } from '../content/visibility.js'
 import { adminSchema, modelNames } from '../shared/adminSchema.js'
-import type { AdminMeta, AdminOptions, AdminSummary, EnumOption } from '../shared/adminContracts.js'
+import type { AdminMeta, AdminOptions, AdminSummary, EnumOption, MetricKeyOption, UnlistedMetricKey } from '../shared/adminContracts.js'
 import { enumLabels, type EnumName } from '../shared/labels.js'
+import { isMetricKey, metricKeys as catalog } from '../shared/metricKeys.js'
 import { readOr503 } from './common.js'
+import { untranslatedRecords } from './translations.js'
 
 /** Cada enum con su valor y su rótulo en español, en el orden en que se declaró. */
 function enumOptions(): Record<EnumName, EnumOption[]> {
@@ -64,18 +66,42 @@ async function options(): Promise<AdminOptions> {
   }
 }
 
+/**
+ * El catálogo de claves con cuántas veces se usa cada una, y las claves que usan las obras sin estar
+ * en el catálogo (con el primer rótulo propio que se les cargó): las sugerencias salen de la base.
+ */
+async function metricKeys(): Promise<AdminMeta['metricKeys']> {
+  const rows = await db.metric.findMany({ select: { key: true, label: true }, orderBy: [{ projectId: 'asc' }, { order: 'asc' }] })
+  const uses = new Map<string, number>()
+  const labels = new Map<string, string | null>()
+  for (const { key, label } of rows) {
+    uses.set(key, (uses.get(key) ?? 0) + 1)
+    if (!labels.get(key)) labels.set(key, label)
+  }
+  const listed: MetricKeyOption[] = Object.entries(catalog).map(([key, text]) => ({ key, label: text.label, desc: text.desc, uses: uses.get(key) ?? 0 }))
+  const unlisted: UnlistedMetricKey[] = [...uses.keys()]
+    .filter(key => !isMetricKey(key))
+    .sort()
+    .map(key => ({ key, label: labels.get(key) ?? null, uses: uses.get(key) ?? 0 }))
+  return { catalog: listed, unlisted }
+}
+
 export const metaRouter = Router()
 
 metaRouter.get('/meta', async (_req, res) => {
-  const loaded = await readOr503(res, () => Promise.all([summary(), options(), db.doc.count(), db.project.count(), db.article.count()]))
+  const loaded = await readOr503(res, () => Promise.all([
+    summary(), options(), metricKeys(), untranslatedRecords(), db.doc.count(), db.project.count(), db.article.count(),
+  ]))
   if (!loaded) return
-  const [counts, choices, docs, projects, articles] = loaded
+  const [counts, choices, keys, untranslated, docs, projects, articles] = loaded
   const meta: AdminMeta = {
     summary: counts,
     enumOptions: enumOptions(),
     schema: adminSchema,
     models: modelNames,
     options: choices,
+    metricKeys: keys,
+    untranslated,
     counts: {
       projects,
       experiences: counts.experience.total,

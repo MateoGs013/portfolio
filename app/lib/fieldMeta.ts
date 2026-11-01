@@ -13,6 +13,9 @@ export type World = 'datos'
 
 export type FieldType =
   | 'string' | 'text' | 'int' | 'decimal' | 'bool' | 'date' | 'datetime' | 'url' | 'email' | 'list' | 'json'
+  // Bloques de documento (server/src/shared/docSchema.ts): una ruta a una imagen, sin inglés, y una
+  // ruta propia por idioma (el PDF del CV: `value` en español y `en` en inglés).
+  | 'image' | 'localizedPath'
   | `enum ${string}`
   | `relation → ${string}`
   | `relation[] → ${string}`
@@ -168,6 +171,7 @@ export const relationMeta: Record<'media' | 'metrics', { label: string, fields: 
       source: { type: 'string', label: 'origen', nullable: true },
       measuredAt: { type: 'date', label: 'medido el', nullable: true },
       order: { type: 'int', label: 'orden' },
+      translations: { type: 'relation[] → MetricTranslation', label: 'traducciones' },
     },
   },
 }

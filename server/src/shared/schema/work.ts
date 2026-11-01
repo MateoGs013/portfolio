@@ -37,12 +37,13 @@ export const Metric = {
   value: field('decimal', 'Valor', 'Un número, con hasta cuatro decimales. Va un número o una lista, no los dos.', { surfaces: ['case'] }),
   items: field('list', 'Lista', 'Elementos de texto (hasta 20). Va una lista o un número, no los dos.', { max: 20, surfaces: ['case'] }),
   unit: field('enum', 'Unidad', 'Vacía: un conteo o un puntaje.', { options: 'MetricUnit', surfaces: ['case'] }),
-  label: field('text', 'Rótulo propio', 'Solo si la clave no tiene rótulo conocido.', { max: 80, surfaces: ['case'] }),
+  label: field('text', 'Rótulo propio', 'Solo si la clave no está en el catálogo: el nombre de la cifra en el caso.', { max: 80, translatable: true, surfaces: ['case'] }),
   source: field('text', 'Fuente', 'Con qué se midió (por ejemplo PageSpeed Insights).', { max: 200, surfaces: ['case'] }),
   measuredAt: field('date', 'Medida el', 'Día de la medición.', { surfaces: ['case'] }),
   order: field('int', 'Orden', 'Lo da la posición en la lista.', { editable: false }),
   project: relation('Project', 'Obra', 'La obra medida.', { editable: false }),
   projectId: foreignKey('Obra'),
+  translations: relation('MetricTranslation', 'Inglés', 'El rótulo propio en inglés.', { editable: false }),
 } satisfies ModelFields
 
 export const ProcessStep = {

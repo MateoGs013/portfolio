@@ -47,7 +47,7 @@ function projectInclude() {
     media: { orderBy: [{ role: 'asc' }, { order: 'asc' }, { id: 'asc' }], ...mediaArgs },
     steps: { orderBy: { order: 'asc' }, include: { translations: true, media: mediaArgs } },
     links: { orderBy: { id: 'asc' }, include: { translations: true } },
-    metrics: { orderBy: [{ order: 'asc' }, { key: 'asc' }] },
+    metrics: { orderBy: [{ order: 'asc' }, { key: 'asc' }], include: { translations: true } },
     experiences: {
       orderBy: { startedAt: 'desc' },
       select: { slug: true, kind: true, role: true, translations: { select: { locale: true, role: true } } },
