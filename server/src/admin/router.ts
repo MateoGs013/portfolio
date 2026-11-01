@@ -16,6 +16,7 @@ import { hunterRouter } from './hunter.js'
 import { mediaRouter } from './media.js'
 import { metaRouter } from './meta.js'
 import { orgsRouter } from './orgs.js'
+import { pendingRouter } from './pending.js'
 import { projectsRouter } from './projects.js'
 import { radarRouter } from './radar.js'
 import { statusRouter } from './status.js'
@@ -59,5 +60,7 @@ adminApi.use('/hunter', hunterRouter)
 adminApi.use('/content', contentRouter)
 adminApi.use('/radar', radarRouter)
 adminApi.use(statusRouter)
+// La bandeja del Inicio solo lee.
+adminApi.use(pendingRouter)
 adminApi.use(contentApi)
 adminApi.use(adminErrors)

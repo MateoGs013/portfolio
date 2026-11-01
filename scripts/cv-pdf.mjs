@@ -9,16 +9,23 @@
  * alto entre 248 y 265 mm y la escala ATS (nombre 19–21 pt, secciones 11–11,5 pt, cuerpo 9,2–9,5 pt).
  * Solo si los dos idiomas pasan escribe los PDF, en la ruta que publica contact.cv de cada idioma
  * (nada de nombres escritos acá). Si algo falla no toca public/ y termina en 1.
+ *
+ * Junto a los PDF escribe server/src/snapshot/cv-stamp.json: el sha256 del JSON estable de
+ * GET /api/cv?lang=es y ?lang=en (lo que dicen los PDF) y la fecha. El Inicio del admin compone el mismo
+ * CV desde la base (server/src/admin/cvStamp.ts) y avisa cuando ya no coincide. Los PDF y el sello se
+ * commitean juntos.
  */
+import { createHash } from 'node:crypto'
 import { mkdir, writeFile } from 'node:fs/promises'
 import { dirname, resolve, sep } from 'node:path'
-import { fileURLToPath } from 'node:url'
+import { fileURLToPath, pathToFileURL } from 'node:url'
 import { chromium } from '@playwright/test'
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const publicDir = resolve(root, 'public')
 const base = (process.env.CV_BASE_URL ?? process.env.PLAYWRIGHT_BASE_URL ?? 'http://localhost:3000').replace(/\/+$/, '')
 const langs = ['es', 'en']
+export const STAMP_FILE = resolve(root, 'server/src/snapshot/cv-stamp.json')
 
 const MM_PER_PX = 25.4 / 96
 const PT_PER_PX = 72 / 96
@@ -39,6 +46,37 @@ async function pdfPath(lang) {
   const file = resolve(publicDir, `.${href}`)
   if (!file.startsWith(publicDir + sep)) throw new Error(`contact.cv sale de public/: ${href}`)
   return { href, file }
+}
+
+/** JSON con las claves en orden: la misma cuenta que stableJson de server/src/admin/cvStamp.ts. */
+export function stableJson(value) {
+  if (Array.isArray(value)) return `[${value.map(stableJson).join(',')}]`
+  if (value !== null && typeof value === 'object') {
+    return `{${Object.keys(value).sort().map(k => `${JSON.stringify(k)}:${stableJson(value[k])}`).join(',')}}`
+  }
+  return JSON.stringify(value)
+}
+
+export const cvHash = data => createHash('sha256').update(stableJson(data)).digest('hex')
+
+/** Los hashes del CV que sirve `origin` en cada idioma: { es, en }. `origin` es el sitio o la API. */
+export async function cvHashes(origin = base) {
+  const entries = await Promise.all(langs.map(async (lang) => {
+    const res = await fetch(`${origin.replace(/\/+$/, '')}/api/cv?lang=${lang}`)
+    if (!res.ok) throw new Error(`GET /api/cv?lang=${lang} respondió ${res.status}`)
+    const { data, meta } = await res.json()
+    // Un CV del respaldo no es el de la base: el sello quedaría contra otra cosa.
+    if (meta?.source !== 'db') throw new Error(`GET /api/cv?lang=${lang} no salió de la base (source ${meta?.source})`)
+    return [lang, cvHash(data)]
+  }))
+  return Object.fromEntries(entries)
+}
+
+/** Escribe el sello con la fecha de ahora. */
+export async function writeStamp(hashes, file = STAMP_FILE) {
+  const stamp = { at: new Date().toISOString(), es: hashes.es, en: hashes.en }
+  await writeFile(file, `${JSON.stringify(stamp, null, 2)}\n`)
+  return stamp
 }
 
 const within = (value, [min, max]) => value >= min - 0.01 && value <= max + 0.01
@@ -99,6 +137,8 @@ async function main() {
     console.error(`cv-pdf: contact.cv apunta al mismo archivo en es y en (${targets.es.href}); no se escribió ningún PDF.`)
     process.exit(1)
   }
+  // El sello es del CV que se va a imprimir: se toma antes y se confirma después de renderizar.
+  const hashes = await cvHashes()
   const browser = await chromium.launch()
   let results
   try {
@@ -118,15 +158,26 @@ async function main() {
     process.exit(1)
   }
 
+  const after = await cvHashes()
+  if (langs.some(lang => after[lang] !== hashes[lang])) {
+    console.error('cv-pdf: el CV cambió en la base mientras se generaban los PDF; no se escribió ningún PDF.')
+    process.exit(1)
+  }
+
   for (const r of results) {
     const { href, file } = targets[r.lang]
     await mkdir(dirname(file), { recursive: true })
     await writeFile(file, r.pdf)
     console.log(`escrito public${href} (${(r.pdf.length / 1024).toFixed(0)} KB)`)
   }
+  const stamp = await writeStamp(hashes)
+  console.log(`sello server/src/snapshot/cv-stamp.json (${stamp.at}): commitealo con los PDF`)
 }
 
-main().catch((err) => {
-  console.error(`cv-pdf: ${err.message}`)
-  process.exit(1)
-})
+// Las pruebas del admin importan cvHashes y writeStamp: main corre solo como script.
+if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href) {
+  main().catch((err) => {
+    console.error(`cv-pdf: ${err.message}`)
+    process.exit(1)
+  })
+}

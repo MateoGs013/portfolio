@@ -182,6 +182,53 @@ export interface AdminStatus {
   eros: { state: ErosState, retryInSec: number }
 }
 
+// ─── Pendientes (Inicio) ────────────────────────────────────────────────────
+
+/**
+ * Qué tipo de pendiente es. La bandeja del Inicio los agrupa por tipo, en este orden:
+ * cv_pdf · hidden, scheduled, draft (publicación) · no_cover, media_english (imágenes) ·
+ * english (campos sin inglés) · metrics (sin fuente o fecha) · cv_bullets, cv_english (CV) · profile.
+ */
+export type PendingKind =
+  | 'cv_pdf' // el PDF del CV del sitio ya no coincide con la base (sello de scripts/cv-pdf.mjs)
+  | 'hidden' // obra sin fecha de publicación, o artículo publicado sin fecha
+  | 'scheduled' // obra o artículo con fecha futura
+  | 'draft' // artículo en borrador
+  | 'no_cover' // obra visible sin portada
+  | 'media_english' // imágenes de una obra visible sin texto alternativo (o pie) en inglés
+  | 'english' // campos con español y sin inglés en lo que el sitio muestra
+  | 'metrics' // métricas de una obra visible sin fuente o sin fecha
+  | 'cv_bullets' // experiencia del CV sin viñetas
+  | 'cv_english' // experiencia del CV con el inglés incompleto (viñeta por viñeta)
+  | 'profile' // bloque requerido de about o contact vacío o faltante
+
+/**
+ * GET /api/admin/pending: una fila de la bandeja, calculada desde la base con las reglas de la API
+ * pública (visibilidad, inglés campo por campo). `headline` y `message` llegan en español, como los
+ * errores. `route` es la ruta del admin (hash, sin #) que lleva al campo: `?campo=` con la ruta del
+ * body, como `/obras/12/relato?campo=translations.en.outcome`.
+ */
+export interface PendingItem {
+  kind: PendingKind
+  record: { collection: AdminCollection | 'cv', id: number | string, title: string }
+  /** Ruta del campo en el body del registro; sin campo, la fila abre el registro o la vista. */
+  field?: string
+  /** La fila en una frase: «Ynara Web no tiene portada». */
+  headline: string
+  /** Lo que falta y qué consecuencia tiene: «La tarjeta y el caso muestran el título sobre una placa lisa.» */
+  message: string
+  route: string
+}
+
+/** server/src/snapshot/cv-stamp.json: lo escribe scripts/cv-pdf.mjs junto a los dos PDF. */
+export interface CvStamp {
+  /** Cuándo se generaron los PDF (ISO). */
+  at: string
+  /** sha256 del JSON estable de GET /api/cv?lang=es y ?lang=en (el `data` de la envoltura). */
+  es: string
+  en: string
+}
+
 // ─── Impacto ────────────────────────────────────────────────────────────────
 
 export interface ImpactItem {
