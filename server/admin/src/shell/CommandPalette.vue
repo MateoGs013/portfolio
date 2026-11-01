@@ -4,7 +4,7 @@
  * tiempo; ↑↓ (o Inicio y Fin) mueven la opción activa (aria-activedescendant), Enter la abre y Esc
  * cierra y devuelve el foco a quien la abrió. Busca secciones, acciones y registros sin acentos.
  */
-import { computed, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { closePalette, paletteOpen, paletteOptionId, usePaletteResults } from '../composables/usePalette'
 import { useId } from '../composables/useId'
@@ -45,6 +45,11 @@ watch(query, (value) => {
     if (!paletteOpen.value) return
     announce(flat.value.length ? shell.palette.count(flat.value.length) : shell.palette.empty(value.trim()))
   }, 450)
+})
+
+onBeforeUnmount(() => clearTimeout(quiet))
+watch(paletteOpen, (isOpen) => {
+  if (!isOpen) clearTimeout(quiet)
 })
 
 function move(to: number): void {

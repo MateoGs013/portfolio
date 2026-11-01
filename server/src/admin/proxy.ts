@@ -51,6 +51,8 @@ export interface ForwardResult<T = unknown> {
 const FAILURE_THRESHOLD = 3
 const PAUSE_MS = 30_000
 const circuit = { failures: 0, open: false, retryAt: 0 }
+/** El último pedido que llegó a Eros volvió con 401/403: anda, pero no con esta clave. */
+let authRejected = false
 
 function paused(): boolean {
   if (!circuit.open) return false
@@ -68,6 +70,7 @@ const retryInSec = () => (circuit.open ? Math.max(1, Math.ceil((circuit.retryAt 
 function recordSuccess(): void {
   circuit.failures = 0
   circuit.open = false
+  authRejected = false
 }
 
 function recordFailure(): void {
@@ -82,7 +85,8 @@ function recordFailure(): void {
 export function erosState(): AdminStatus['eros'] {
   if (!getErosBaseUrl()) return { state: 'unconfigured', retryInSec: 0 }
   if (circuit.open && Date.now() < circuit.retryAt) return { state: 'cooldown', retryInSec: retryInSec() }
-  return { state: circuit.failures > 0 ? 'down' : 'ok', retryInSec: 0 }
+  if (circuit.failures > 0) return { state: 'down', retryInSec: 0 }
+  return { state: authRejected ? 'auth' : 'ok', retryInSec: 0 }
 }
 
 // ─── Pedido ─────────────────────────────────────────────────────────────────
@@ -146,10 +150,15 @@ export async function forwardToEros<T = unknown>(urlPath: string, init?: Request
     recordFailure()
     return failed('server', `Eros respondió con un error (${res.status}).`, res.status)
   }
-  recordSuccess()
   if (res.status === 401 || res.status === 403) {
-    return failed('auth', 'Eros rechazó la clave de la API. Revisá EROS_API_KEY en el entorno.', res.status)
+    // Eros respondió (no es una caída para el corte), pero no es «no responde»: es la clave.
+    circuit.failures = 0
+    circuit.open = false
+    authRejected = true
+    const body: AdminErrorBody & { offline: false } = { error: 'Eros rechazó la clave de la API. Revisá EROS_API_KEY en el entorno de la API.', code: 'eros_auth', errors: [], offline: false }
+    return { ok: false, status: 502, data: body as T, failure: { reason: 'auth', upstream: res.status, message: body.error } }
   }
+  recordSuccess()
   if (!res.ok) {
     return { ok: false, status: res.status, data, failure: { reason: 'rejected', upstream: res.status, message: `Eros respondió ${res.status}.` } }
   }

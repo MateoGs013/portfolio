@@ -15,7 +15,7 @@ export const TECH_EN = ['note']
 /** Tipos de bloque de un Doc que se traducen (la API pública no lista los demás como pendientes). */
 const DOC_PROSE = ['string', 'text', 'list']
 /** Tipos de bloque con input EN en el editor (url también: el enlace puede cambiar por idioma). */
-export const DOC_EN_TYPES = ['string', 'text', 'markdown', 'url', 'list']
+export const DOC_EN_TYPES = ['string', 'text', 'markdown', 'url', 'list', 'localizedPath']
 
 const NL = '\n'
 

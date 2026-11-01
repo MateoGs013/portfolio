@@ -45,10 +45,19 @@ hunterCvRouter.post('/cv/:id/ticket', (req: Request, res: Response) => {
   res.json({ ticket: createCvTicket(id) })
 })
 
+/** La caché tiene pistas de Eros para esta misma vacante (mismo título y descripción). */
+function cachedHints(id: string, job: { title: string, description: string | null }): CvHints | null {
+  const entry = recallCv(id)
+  if (!entry?.hints) return null
+  return entry.job.title === job.title && entry.job.description === job.description ? entry.hints : null
+}
+
 /**
- * POST /api/admin/hunter/cv/:id { job, useSummaryProposal? } → TailoredCv. Sin `job` en el cuerpo
- * solo sirve una vacante de la muestra (EROS_DEMO). Con `useSummaryProposal` el resumen es el que
- * propuso Eros; si ya había pistas en la caché, no se le vuelve a preguntar.
+ * POST /api/admin/hunter/cv/:id { job, useSummaryProposal?, regenerate? } → TailoredCv. Sin `job` en
+ * el cuerpo solo sirve una vacante de la muestra (EROS_DEMO). Con `useSummaryProposal` el resumen es
+ * el que propuso Eros, si `_adaptation.proposal` es 'ok'. Si la caché ya tiene pistas de Eros para la
+ * misma vacante no se le vuelve a preguntar (aceptar y deshacer la propuesta cuestan lo mismo);
+ * `regenerate: true` le pregunta de nuevo.
  */
 hunterCvRouter.post('/cv/:id', async (req: Request, res: Response) => {
   const id = getParamId(req)
@@ -61,7 +70,7 @@ hunterCvRouter.post('/cv/:id', async (req: Request, res: Response) => {
 
   const base = await loadCv(jobLang(job))
   const useProposal = req.body?.useSummaryProposal === true
-  const cached = useProposal ? recallCv(id)?.hints ?? null : null
+  const cached = req.body?.regenerate === true ? null : cachedHints(id, job)
   const eros = cached ?? await erosHintsFor(id, job, base)
   const fromJob = jobHints(base, job)
   // Si Eros no ordenó el stack, el orden lo da la vacante.
@@ -82,7 +91,10 @@ function allowed(req: Request, id: string): boolean {
   return validateCvTicket(req.query['ticket'], id) || isAdminAuthorized(req)
 }
 
-/** GET /api/admin/hunter/cv/:id/html[?ticket=&auto_print=true&download=true] - La hoja A4 del CV en caché. */
+/**
+ * GET /api/admin/hunter/cv/:id/html[?ticket=&auto_print=true&download=true&measure=1] - La hoja A4
+ * del CV en caché. Con measure=1 se mide como /cv-base/html y avisa con postMessage(CvMeasure).
+ */
 hunterCvRouter.get('/cv/:id/html', async (req: Request, res: Response) => {
   const id = getParamId(req)
   if (!allowed(req, id)) return refuse(req, res, 401, unauthorized)
@@ -93,7 +105,11 @@ hunterCvRouter.get('/cv/:id/html', async (req: Request, res: Response) => {
   if (req.query['download'] === 'true') {
     res.setHeader('Content-Disposition', `attachment; filename="${cvFileName(entry.cv.name, 'Harvard_ATS')}.html"`)
   }
-  res.type('html').send(renderCvHtml(entry.cv, { target: sheetTarget(entry.job), autoPrint: req.query['auto_print'] === 'true' }))
+  res.type('html').send(renderCvHtml(entry.cv, {
+    target: sheetTarget(entry.job),
+    autoPrint: req.query['auto_print'] === 'true',
+    measure: req.query['measure'] === '1',
+  }))
 })
 
 /** GET /api/admin/hunter/cv/:id/txt[?ticket=] - El mismo CV en texto plano para un formulario ATS. */

@@ -220,6 +220,41 @@ test.describe('sesión y estado', () => {
     await expect(page.locator('#main h1')).toHaveAttribute('data-montada', 'sí')
   })
 
+  test('«Ahora no» deja la clave como estaba, no reabre solo y ofrece volver a entrar', async ({ page }) => {
+    await signedIn(page, '#/obras')
+    let unauthorized = true
+    let asked = 0
+    await page.route('**/api/admin/status', (route) => {
+      asked++
+      return unauthorized ? route.fulfill({ status: 401, json: { error: 'unauthorized' } }) : route.continue()
+    })
+    await page.evaluate(() => dispatchEvent(new Event('focus')))
+    const dialog = page.getByRole('dialog', { name: 'La sesión venció' })
+    await expect(dialog).toBeVisible()
+    await dialog.getByLabel('Clave de acceso').fill('otra-clave')
+    await dialog.getByRole('button', { name: 'Volver a entrar' }).click()
+    await expect(dialog.getByText('La clave no es correcta')).toBeVisible()
+    expect(await page.evaluate(() => sessionStorage.getItem('adm-token'))).toBe(token)
+
+    await dialog.getByRole('button', { name: 'Ahora no' }).click()
+    await expect(dialog).toBeHidden()
+    const notice = page.locator('[data-status-notice]').filter({ visible: true })
+    await expect(notice).toContainText('La sesión venció.')
+    const before = asked
+    await page.evaluate(() => dispatchEvent(new Event('focus')))
+    await page.waitForTimeout(400)
+    expect(asked, 'con la sesión vencida no se sondea').toBe(before)
+    await expect(dialog).toBeHidden()
+
+    unauthorized = false
+    await notice.getByRole('button', { name: 'Volver a entrar' }).click()
+    await expect(dialog).toBeVisible()
+    await dialog.getByLabel('Clave de acceso').fill(token)
+    await dialog.getByLabel('Clave de acceso').press('Enter')
+    await expect(dialog).toBeHidden()
+    await expect(notice).not.toContainText('La sesión venció.')
+  })
+
   test('/status con la base caída avisa en la cabecera en menos de 31 s, sin borrar la sesión', async ({ page }) => {
     // Eros queda «sin responder» si otra prueba ya lo llamó: acá se fija todo en orden y después cae la base.
     let dbOk = true
@@ -279,6 +314,8 @@ test.describe('accesibilidad y anchos', () => {
     await menu.getByRole('link', { name: /^Trayectoria/ }).click()
     await expect(menu).toBeHidden()
     await expect(page).toHaveURL(/#\/trayectoria$/)
+    // El diálogo devuelve el foco a «Menú» al terminar de salir: igual tiene que quedar en el h1.
+    await expect(page.locator('#main h1')).toBeFocused()
   })
 })
 

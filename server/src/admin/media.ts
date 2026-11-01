@@ -235,9 +235,12 @@ mediaRouter.patch('/media/:id', async (req, res) => {
   const row = await db.$transaction(async (tx) => {
     const current = await tx.media.findUnique({ where: { id: mid }, select: { projectId: true, kind: true, project: { select: { slug: true } } } })
     if (!current) throw new HttpError(404, NOT_FOUND)
-    // El póster es un archivo de la misma obra: así borrar otra pieza nunca deja a esta sin él.
+    // El póster es un archivo de la misma obra: así borrar otra pieza nunca deja a esta sin él. Vale
+    // su carpeta o un archivo que ya usa una pieza suya (después de «Cambiar dirección» los archivos
+    // siguen en la carpeta vieja).
     if (typeof data.poster === 'string' && !data.poster.startsWith(`/media/projects/${current.project.slug}/`)) {
-      throw new HttpError(400, 'El póster tiene que ser un archivo de esta misma obra.')
+      const own = await tx.media.count({ where: { projectId: current.projectId, OR: [{ src: data.poster }, { poster: data.poster }] } })
+      if (!own) throw new HttpError(400, 'El póster tiene que ser un archivo de esta misma obra.')
     }
     if (data.role === MediaRole.COVER) await demoteCovers(tx, current.projectId, current.kind, mid)
     if (en) await saveMediaEn(tx, mid, en)

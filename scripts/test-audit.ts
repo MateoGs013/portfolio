@@ -5,6 +5,7 @@
  *
  *   ADMIN_TOKEN=<aleatorio> pnpm tsx scripts/test-audit.ts
  */
+import { erosUrl } from './eros-offline.js'
 import { randomBytes } from 'node:crypto'
 import type { Server } from 'node:http'
 import { app } from '../server/src/app.js'
@@ -20,7 +21,7 @@ async function run() {
   const addr = server.address()
   if (!addr || typeof addr === 'string') throw new Error('Could not get address')
   const base = `http://127.0.0.1:${addr.port}`
-  console.log('Testing server against', base)
+  console.log('Testing server against', base, '· Eros:', erosUrl)
 
   const jobId = `manual-${randomBytes(4).toString('hex')}`
   const jobBody = JSON.stringify({ job: { title: 'Frontend Engineer', company: 'Example', description: 'React, Next.js and TypeScript.', tags: [], url: '', contact_email: 'jobs@example.com' } })
@@ -146,7 +147,7 @@ async function run() {
         Authorization: `Bearer ${token}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ to_email: 'test@epam.com', subject: 'Application', body: 'Hello' }),
+      body: JSON.stringify({ to_email: 'postulaciones@example.com', subject: 'Application', body: 'Hello' }),
     })
     const data = await res.json()
     if (res.status >= 400) {

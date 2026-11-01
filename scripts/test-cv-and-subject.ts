@@ -5,6 +5,7 @@
  *
  *   ADMIN_TOKEN=<aleatorio> pnpm tsx scripts/test-cv-and-subject.ts
  */
+import { erosUrl } from './eros-offline.js'
 import { randomBytes } from 'node:crypto'
 import type { Server } from 'node:http'
 import { app } from '../server/src/app.js'
@@ -23,7 +24,7 @@ async function run() {
   const base = `http://127.0.0.1:${addr.port}`
   const auth = { Authorization: `Bearer ${token}` }
   const json = { ...auth, 'Content-Type': 'application/json' }
-  console.log('Testing CV and Subject on', base)
+  console.log('Testing CV and Subject on', base, '· Eros:', erosUrl)
 
   const cv = ((await (await fetch(`${base}/api/cv`)).json()) as { data: CvDocument }).data
   const name = cv.header.name

@@ -15,6 +15,7 @@ import { docFieldsOf, untranslatedFields } from '../content/docFields.js'
 import { Locale, type Prisma, type PrismaClient } from '../../generated/prisma/client.js'
 import type { UntranslatedRecord } from '../shared/adminContracts.js'
 import { docKeys, docSchemas, isDocKey } from '../shared/docSchema.js'
+import { isMetricKey } from '../shared/metricKeys.js'
 import { HttpError, optStr } from './input.js'
 
 type Body = Record<string, unknown>
@@ -181,7 +182,7 @@ async function projectsPending(client: Client): Promise<UntranslatedRecord[]> {
       id: true, title: true, role: true, summary: true, brief: true, outcome: true, translations: english,
       steps: { orderBy: { order: 'asc' }, select: { title: true, body: true, translations: english } },
       links: { orderBy: { id: 'asc' }, select: { label: true, translations: english } },
-      metrics: { orderBy: { order: 'asc' }, select: { label: true, translations: english } },
+      metrics: { orderBy: { order: 'asc' }, select: { key: true, label: true, translations: english } },
       media: { orderBy: [{ role: 'asc' }, { order: 'asc' }], select: { alt: true, caption: true, translations: english } },
     },
   })
@@ -194,7 +195,8 @@ async function projectsPending(client: Client): Promise<UntranslatedRecord[]> {
       ...pendingTexts(p, p.translations[0], ['role', 'summary', 'brief', 'outcome']),
       ...p.steps.flatMap((s, i) => pendingTexts(s, s.translations[0], ['title', 'body'], `steps[${i}].`)),
       ...p.links.flatMap((l, i) => pendingTexts(l, l.translations[0], ['label'], `links[${i}].`)),
-      ...p.metrics.flatMap((m, i) => pendingTexts(m, m.translations[0], ['label'], `metrics[${i}].`)),
+      // Con una clave del catálogo el sitio usa el rótulo del catálogo: el propio no se lee.
+      ...p.metrics.flatMap((m, i) => (isMetricKey(m.key) ? [] : pendingTexts(m, m.translations[0], ['label'], `metrics[${i}].`))),
       // La media se edita por PATCH /media/:id con `en: { alt, caption }`.
       ...p.media.flatMap((m, i) => ['alt', 'caption'].filter(f => filled(m[f as 'alt']) && !filled(m.translations[0]?.[f as 'alt'])).map(f => `media[${i}].en.${f}`)),
     ],

@@ -188,11 +188,19 @@ export interface CvDiscard {
 }
 
 /** Qué tomó el CV de las pistas: categorías y entradas en su orden, viñetas emparejadas y lo descartado. */
+/**
+ * Qué se hizo con el resumen que propuso Eros. 'ok': se puede aceptar. El resto no entra al CV
+ * aunque se pida, porque correría la hoja fuera de la cota dual (248-265 mm, una página A4) o
+ * estaría en otro idioma: 'too_long', 'too_short', 'other_lang'. null: Eros no propuso ninguno.
+ */
+export type ProposalVerdict = 'ok' | 'too_long' | 'too_short' | 'other_lang'
+
 export interface CvAdaptation {
   categories: TechCategory[]
   entries: string[]
   bullets: number
   discarded: CvDiscard[]
+  proposal: ProposalVerdict | null
 }
 
 /**

@@ -7,6 +7,8 @@ import { computed, readonly, ref, shallowRef } from 'vue'
 import { api } from '../api/client'
 import { isAbort, NetworkError, ServiceError } from '../api/errors'
 import { shell } from '../shell/dict'
+import { loadMeta, metaError, metaLoading } from './meta'
+import { sessionExpired } from './session'
 
 export const STATUS_INTERVAL_MS = 30_000
 
@@ -20,12 +22,16 @@ let timer: ReturnType<typeof setInterval> | undefined
 export const adminStatus = readonly(current)
 
 export async function refreshStatus(): Promise<void> {
+  // Con la sesión vencida no se insiste: cada pedido sería otro 401 contra el límite del servidor.
+  if (sessionExpired.value) return
   controller?.abort()
   const own = new AbortController()
   controller = own
   try {
     current.value = await api.get<AdminStatus>('/status', { signal: own.signal })
     failure.value = null
+    // El servidor volvió: si /meta había fallado (rótulos, paleta, contadores), se pide otra vez.
+    if (metaError.value && !metaLoading.value && current.value.db.ok) void loadMeta()
   }
   catch (err) {
     if (isAbort(err)) return
@@ -71,5 +77,6 @@ export const statusProblem = computed<string | null>(() => {
   if (eros === 'down') return shell.status.erosDown
   if (eros === 'cooldown') return shell.status.erosCooldown
   if (eros === 'unconfigured') return shell.status.erosUnconfigured
+  if (eros === 'auth') return shell.status.erosAuth
   return null
 })

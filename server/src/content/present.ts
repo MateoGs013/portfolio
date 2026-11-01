@@ -9,6 +9,7 @@ import type { ExperienceRecord } from '../queries/experience.js'
 import type { OrgRecord } from '../queries/orgs.js'
 import type { ProjectRecord } from '../queries/projects.js'
 import type { TechRecord } from '../queries/stack.js'
+import { isMetricKey } from '../shared/metricKeys.js'
 import { docFieldsOf, fieldValueIn, untranslatedFields } from './docFields.js'
 import type { Lang } from './lang.js'
 import { visibleUsage } from './matches.js'
@@ -47,9 +48,14 @@ export function presentLink(l: Project['links'][number], lang: Lang) {
   return { ...values, url: l.url, untranslated }
 }
 
-/** El rótulo propio (`label`) se sirve en inglés si lo tiene; si no, en español y en `untranslated`. */
+/**
+ * El rótulo propio (`label`) se sirve en inglés si lo tiene; si no, en español y en `untranslated`.
+ * Con una clave del catálogo el sitio muestra el rótulo del catálogo: ese label no queda pendiente.
+ */
 export function presentMetric(m: Project['metrics'][number], lang: Lang) {
-  const { values, untranslated } = translate(m, m.translations, ['label'], lang)
+  const translated = translate(m, m.translations, ['label'], lang)
+  const { values } = translated
+  const untranslated = isMetricKey(m.key) ? [] : translated.untranslated
   return {
     key: m.key,
     value: toNumber(m.value),

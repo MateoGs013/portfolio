@@ -31,6 +31,8 @@ const insideCatalogs = computed(() => NAV.some(entry => isGroup(entry) && entry.
 const showCatalogs = computed(() => catalogsOpen.value || insideCatalogs.value)
 
 function toggleCatalogs(): void {
+  // Adentro de un catálogo el grupo queda abierto: plegarlo escondería dónde se está.
+  if (insideCatalogs.value) return
   catalogsOpen.value = !showCatalogs.value
   try {
     localStorage.setItem(CATALOGS_PREF, catalogsOpen.value ? 'open' : 'closed')
@@ -89,6 +91,7 @@ const linkClass = (link: NavLink) => [
             type="button"
             class="flex h-7 w-full items-center gap-1.5 rounded-control border-0 bg-transparent px-2.5 text-meta text-faint transition-colors duration-120 ease-e hover:text-dim"
             :aria-expanded="showCatalogs"
+            :aria-disabled="insideCatalogs || undefined"
             :aria-controls="groupId"
             @click="toggleCatalogs"
           >

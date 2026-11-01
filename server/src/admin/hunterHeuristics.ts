@@ -107,7 +107,9 @@ export function evaluateJobHeuristic(source: HunterJob, profile: HunterProfile):
     match_score: score,
     match_analysis: JSON.stringify(match),
     connection_note: note,
-    status: verdict === 'DESCARTAR' ? 'discarded' : score >= 70 ? 'saved' : 'evaluated',
+    // Una vacante real conserva su estado: sin Eros no se guardó nada y no se finge un cambio.
+    // Solo la muestra (EROS_DEMO) muestra el estado que tendría.
+    status: source.demo ? (verdict === 'DESCARTAR' ? 'discarded' : score >= 70 ? 'saved' : 'evaluated') : source.status,
   }
   return { job, match }
 }

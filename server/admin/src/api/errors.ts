@@ -20,6 +20,7 @@ export type ServiceName = 'db' | 'eros' | 'admin'
 const CODES: Record<string, string> = {
   db_unavailable: 'La base de datos no responde. Lo que escribiste sigue acá; probá de nuevo en un momento.',
   offline: 'Eros no responde ahora. Lo que se arma desde la base sigue funcionando.',
+  eros_auth: 'Eros rechazó la clave de la API: hay que revisar EROS_API_KEY en el servidor. Lo que se arma desde la base sigue funcionando.',
   eros_unreachable: 'Eros no respondió a tiempo. Lo que se arma desde la base sigue funcionando; probá de nuevo en un momento.',
   'not found': 'No encontramos ese registro. Puede que lo hayan borrado.',
   not_found: 'No encontramos ese registro. Puede que lo hayan borrado.',
@@ -156,6 +157,7 @@ export function fromResponse(status: number, body: unknown, eros: boolean): ApiE
     return new ServiceError(service, code)
   }
   // El proxy de Eros explica sus 502/504 con la URL interna y jerga del agente: no se muestra.
+  if (eros && code === 'eros_auth') return new RequestError(status, 'eros_auth')
   if (eros && (status === 502 || status === 504)) return new RequestError(status, 'eros_unreachable')
   const issues = Array.isArray(payload['errors']) ? payload['errors'].filter(isIssue) : []
   if (status === 400 && issues.length) return new FieldErrors(code, issues, text)

@@ -178,10 +178,12 @@ async function withRetry(method: Method, path: string, options: RequestOptions):
 
 /** Un pedido a /api/admin<path>. Devuelve el cuerpo ya leído o lanza un ApiError. */
 export async function request<T>(method: Method, path: string, options: RequestOptions = {}): Promise<WithSource<T>> {
+  const sentWith = getToken()
   let res = await withRetry(method, path, options)
   // La vista no se desmonta: se pide la clave y, si se vuelve a entrar, el mismo pedido sale otra vez.
+  // Si la clave cambió mientras volvía (otra reautenticación ya terminó), se repite sin preguntar.
   if (res.status === 401 && options.reauth !== false && unauthorizedHandler && !options.signal?.aborted) {
-    if (await unauthorizedHandler()) res = await withRetry(method, path, options)
+    if (getToken() !== sentWith || await unauthorizedHandler()) res = await withRetry(method, path, options)
   }
   const body = await readBody(res)
   if (!res.ok) throw fromResponse(res.status, body, isEros(path))

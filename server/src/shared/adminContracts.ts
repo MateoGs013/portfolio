@@ -23,6 +23,7 @@ export type AdminErrorCode =
   | 'unauthorized' // 401
   | 'db_unavailable' // 503: la base no responde
   | 'offline' // 503: Eros no responde
+  | 'eros_auth' // 502: Eros responde pero rechaza EROS_API_KEY
   | 'internal' // 500
 
 /** Todo error del admin: `error` en español para mostrar tal cual, `errors` por campo (puede venir vacío). */
@@ -172,7 +173,8 @@ export interface AdminDoc {
  * ok: responde · cooldown: falló seguido y se espera `retryInSec` antes de volver a probar ·
  * down: el último pedido falló · unconfigured: no hay dirección de Eros en el entorno.
  */
-export type ErosState = 'ok' | 'cooldown' | 'down' | 'unconfigured'
+/** 'auth': Eros responde pero rechaza EROS_API_KEY (hasta la próxima respuesta buena). */
+export type ErosState = 'ok' | 'cooldown' | 'down' | 'unconfigured' | 'auth'
 
 /** GET /api/admin/status. */
 export interface AdminStatus {

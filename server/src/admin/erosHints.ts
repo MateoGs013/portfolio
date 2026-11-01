@@ -93,10 +93,19 @@ export function extractHints(eros: ErosCv, base: CvDocument): CvHints {
     }
   }
 
-  // Rol, después título y después slug: ante un choque gana la clave más precisa.
+  // Título y después slug: ante un choque gana la clave más precisa. El rol entra solo si no lo
+  // comparten dos entradas (dos «Desarrollador Full Stack» no dicen cuál es) y no pisa otra clave.
   const keys = new Map<string, string>()
-  for (const field of ['role', 'title', 'slug'] as const) {
+  for (const field of ['title', 'slug'] as const) {
     for (const e of base.experience) keys.set(normalizeName(e[field]), e.slug)
+  }
+  const roles = new Map<string, string[]>()
+  for (const e of base.experience) {
+    const role = normalizeName(e.role)
+    if (role) roles.set(role, [...(roles.get(role) ?? []), e.slug])
+  }
+  for (const [role, slugs] of roles) {
+    if (slugs.length === 1 && !keys.has(role)) keys.set(role, slugs[0]!)
   }
   const entries: string[] = []
   const bullets: Record<string, number[]> = {}

@@ -93,7 +93,7 @@ export const MODELS = {
       en: enForm(r, PROJECT_EN),
     }),
     blank: () => ({
-      slug: '', title: '', year: new Date().getFullYear(), role: '', status: 'WIP', featured: false, sortOrder: 0,
+      slug: '', title: '', year: new Date().getFullYear(), role: '', status: 'WIP', featured: false, sortOrder: '',
       publishedAt: '', summary: '', brief: '', outcome: '', url: '', repo: '', orgId: null, techIds: [], metrics: [],
       links: [], steps: [], media: [], en: blankEn(PROJECT_EN),
     }),
@@ -101,7 +101,8 @@ export const MODELS = {
     toPayload: f => ({
       ...f,
       year: Number(f.year) || new Date().getFullYear(),
-      sortOrder: Number(f.sortOrder) || 0,
+      // Sin orden, el servidor pone la obra nueva al final (max+1) y conserva el de una existente.
+      sortOrder: f.sortOrder === '' || f.sortOrder == null ? undefined : Number(f.sortOrder) || 0,
       orgId: f.orgId ? Number(f.orgId) : null,
       techIds: (f.techIds || []).map(Number),
       publishedAt: f.publishedAt ? new Date(f.publishedAt).toISOString() : null,

@@ -136,7 +136,10 @@ export function docPayload(key: DocKey, b: Body, stored: readonly DocField[]): D
     }
     seen.add(name)
     const type = blockType(f, block, kept.get(name), where)
-    const value = blockValue(f['value'], type, where, 'value')
+    // La imagen solo cambia por POST /docs/about/portrait: un formulario viejo no la puede devolver
+    // a un archivo que esa subida ya borró. Lo que llega se ignora y queda lo guardado.
+    const stored = kept.get(name)
+    const value = type === 'image' && stored ? stored.value : blockValue(f['value'], type, where, 'value')
     const en = blockEnglish(f, type, kept.get(name), where)
     const worlds = worldsOf(f)
     const wide = block ? block.wide : f['wide'] === true

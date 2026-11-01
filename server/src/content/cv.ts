@@ -113,8 +113,8 @@ function period(startedAt: string, endedAt: string | null): CvPeriod {
 
 export function composeCv(lang: Lang, source: CvSource): CvDocument {
   const docs: Record<DocKey, DocField[]> = {
-    about: docFieldsOf(source.about?.fields),
-    contact: docFieldsOf(source.contact?.fields),
+    about: docFieldsOf(source.about?.fields, 'about'),
+    contact: docFieldsOf(source.contact?.fields, 'contact'),
   }
   const text = ([doc, name]: Origin) => docText(docs[doc], name, lang)
   const pending = (path: string, [doc, name]: Origin) =>

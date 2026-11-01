@@ -5,7 +5,7 @@
     "title": "Senior Frontend Engineer",
     "location": "Buenos Aires",
     "email": "otro@example.com",
-    "summary": "Desarrollador con 3 años de experiencia en Vue y autor del Portafolio Dos Mundos.",
+    "summary": "Desarrollador frontend con 3 años de experiencia en Vue y Nuxt, autor del Portafolio Dos Mundos. Trabajo el producto entero: qué problema resuelve, cómo se ve, cómo se siente y cómo llega a producción. Construyo interfaces accesibles con TypeScript, cuido el rendimiento y documento cada decisión para que el equipo la pueda sostener. Busco un equipo de producto donde el diseño y la ingeniería se piensen juntos.",
     "skills": {
       "Frameworks": ["Vue 3", "Svelte", "React"],
       "Superpoderes": ["Liderazgo de equipos"],

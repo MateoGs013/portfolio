@@ -24,6 +24,8 @@ const guards = new Set<LeaveGuard>()
 function onBeforeUnload(event: BeforeUnloadEvent): void {
   if (![...guards].some(guard => guard.dirty())) return
   event.preventDefault()
+  // Safari y Chromium viejos solo preguntan si además hay returnValue.
+  event.returnValue = ''
 }
 
 /** Registra una guarda mientras dure el componente que la pide. Devuelve cómo quitarla antes. */

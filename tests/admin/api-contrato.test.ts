@@ -79,7 +79,7 @@ describe('meta y estado', () => {
   test('/status dice si la base responde y en qué está Eros', async () => {
     const status = await ok<AdminStatus>('GET', '/status')
     assert.equal(status.db.ok, true)
-    assert.ok(['ok', 'cooldown', 'down', 'unconfigured'].includes(status.eros.state))
+    assert.ok(['ok', 'cooldown', 'down', 'unconfigured', 'auth'].includes(status.eros.state))
   })
 })
 

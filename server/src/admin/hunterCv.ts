@@ -9,6 +9,7 @@ import type { TechCategory } from '../../generated/prisma/enums.js'
 import type { CvDocument, CvPeriod } from '../content/cv.js'
 import type { Lang } from '../content/lang.js'
 import type { AdminCv, CvAdaptation, CvDiscard } from '../shared/hunterContracts.js'
+import { judgeProposal } from './cvProposal.js'
 import { byAffinity, jobText, overlap, techMatches, type JobText } from './hunterMatch.js'
 
 export type { AdminCv, AdminCvEducation, AdminCvEntry, CvAdaptation } from '../shared/hunterContracts.js'
@@ -154,8 +155,10 @@ export function baseCv(cv: CvDocument): AdminCv {
 export function tailorCv(cv: CvDocument, job: JobText, hints: CvHints, useSummaryProposal = false): { cv: AdminCv, adaptation: CvAdaptation, usesProposal: boolean } {
   const matched = techMatches(cv.skills.flatMap(g => g.items), jobText(job))
   const focus = matched.length ? `${cvLabels[cv.lang].focus}: ${matched.slice(0, 6).join(', ')}.` : null
-  const usesProposal = useSummaryProposal && hints.summaryProposal !== null
-  const summary = usesProposal ? hints.summaryProposal : [cv.summary, focus].filter(Boolean).join(' ') || null
+  const ownSummary = [cv.summary, focus].filter(Boolean).join(' ') || null
+  const proposal = hints.summaryProposal ? judgeProposal(hints.summaryProposal, ownSummary, cv.lang) : null
+  const usesProposal = useSummaryProposal && proposal === 'ok'
+  const summary = usesProposal ? hints.summaryProposal : ownSummary
   const titles = new Map(cv.experience.map(e => [e.slug, e.title]))
 
   return {
@@ -166,6 +169,7 @@ export function tailorCv(cv: CvDocument, job: JobText, hints: CvHints, useSummar
       entries: hints.entries.map(slug => titles.get(slug) ?? slug),
       bullets: Object.values(hints.bullets).reduce((sum, order) => sum + order.length, 0),
       discarded: hints.discarded,
+      proposal,
     },
   }
 }

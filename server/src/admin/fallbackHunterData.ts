@@ -6,7 +6,8 @@
  */
 import type { HunterJob, JobInput } from '../shared/hunterContracts.js'
 
-export const erosDemo = () => process.env['EROS_DEMO'] === '1'
+/** Nunca en producción: una variable olvidada en Coolify mostraría vacantes ficticias en el admin real. */
+export const erosDemo = () => process.env['EROS_DEMO'] === '1' && process.env['NODE_ENV'] !== 'production'
 
 interface Sample {
   id: string

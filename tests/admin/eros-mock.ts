@@ -17,6 +17,8 @@ const fixture = (name: string): Obj => JSON.parse(readFileSync(new URL(`./fixtur
 
 const jobs = (fixture('jobs')['data'] as Obj[])
 const cv = fixture('cv')
+/** La vacante en inglés trae su propio CV, con el resumen propuesto en inglés. */
+const cvEn = fixture('cv-en')
 const queue = fixture('queue')
 const apply = fixture('apply')
 
@@ -43,7 +45,7 @@ async function readBody(req: IncomingMessage): Promise<Obj> {
 const perJob: Record<string, (job: Obj, body: Obj) => unknown> = {
   'POST evaluate': job => ({ job: { ...job, match_score: (queue['match'] as Obj)['score'], status: 'evaluated' }, match: queue['match'] }),
   'POST pitch': () => apply['pitch'],
-  'POST cv': () => cv,
+  'POST cv': job => (job['id'] === 'eros-mock-backend' ? cvEn : cv),
   'PATCH status': (job, body) => ({ ok: true, job: { ...job, status: body['status'] } }),
   'DELETE ': () => ({ ok: true }),
   'GET apply-preview': () => apply['preview'],
