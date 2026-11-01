@@ -1,22 +1,21 @@
 <script setup lang="ts">
-/** #/tecnologias[/:id], provisorio hasta U3. */
+/**
+ * #/tecnologias[/:id]: sin id, la lista agrupada por categoría; con id, la ficha de la tecnología.
+ * Se crean desde la lista (TechCreate) o en línea desde una obra, una experiencia o un artículo.
+ */
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
-import { shell } from '../../shell/dict'
-import Placeholder from '../../shell/Placeholder.vue'
-import { useRecordTitle } from '../../shell/title'
-import { options } from '../../stores/meta'
+import StackList from './StackList.vue'
+import TechEditor from './TechEditor.vue'
 
 const route = useRoute()
-const record = computed(() => options.value?.techs.find(t => t.id === Number(route.params['id']))?.name ?? null)
-useRecordTitle(record)
+const id = computed(() => {
+  const n = Number(route.params['id'])
+  return Number.isInteger(n) && n > 0 ? n : null
+})
 </script>
 
 <template>
-  <Placeholder
-    v-if="route.params['id']"
-    :title="record ?? shell.nav.stack"
-    :back="{ label: shell.nav.stack, to: '/tecnologias' }"
-  />
-  <Placeholder v-else :title="shell.nav.stack" :count="options?.techs.length ?? null" />
+  <TechEditor v-if="id !== null" :id="id" />
+  <StackList v-else />
 </template>
