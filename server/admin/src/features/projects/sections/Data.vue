@@ -1,28 +1,27 @@
 <script setup lang="ts">
 /**
- * Datos, provisorio hasta U7 (tecnologías, enlaces, métricas e importación del repositorio): cuenta lo
- * que tiene la obra, que se conserva en cada guardado, y lleva al panel actual. Abajo, en solo
- * lectura, dónde más aparece la obra (Relations, que U7 conserva).
+ * Datos: las tecnologías (con «Importar desde el repositorio»), los enlaces extra del caso y las
+ * métricas tipadas. Todo viaja en el mismo Guardar de la obra. Abajo, en solo lectura, dónde más
+ * aparece la obra.
  */
-import { computed } from 'vue'
-import Button from '../../../ui/Button.vue'
-import EmptyState from '../../../ui/EmptyState.vue'
+import Links from '../data/Links.vue'
+import Metrics from '../data/Metrics.vue'
+import Repo from '../data/Repo.vue'
+import Techs from '../data/Techs.vue'
 import { useProject } from '../context'
-import { projectsText } from '../dict'
 import Relations from '../Relations.vue'
 
-const t = projectsText.placeholder
-const { form, record } = useProject()
-const summary = computed(() => t.summary(form.value.techIds.length, form.value.links.length, record.value?.metrics.length ?? 0))
+const { record } = useProject()
 </script>
 
 <template>
-  <div class="grid gap-12">
-    <EmptyState :title="t.data" :text="`${summary}. ${t.dataText}`">
-      <Button href="/admin/" external data-field="techIds">
-        {{ t.open }}
-      </Button>
-    </EmptyState>
+  <div class="grid gap-14">
+    <div class="grid gap-8">
+      <Techs />
+      <Repo />
+    </div>
+    <Metrics />
+    <Links />
     <Relations v-if="record" :project-id="record.id" />
   </div>
 </template>

@@ -15,7 +15,8 @@ server/generated/
 test-results/
 playwright-report/
 tests/screenshots/
-data/
+# Solo la carpeta de la raíz (respaldo de la API pública): features/projects/data/ del admin es código.
+/data/
 *.db
 
 
