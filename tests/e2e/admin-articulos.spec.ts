@@ -2,6 +2,7 @@ import { spawn, spawnSync, type ChildProcess } from 'node:child_process'
 import { createServer, type AddressInfo } from 'node:net'
 import AxeBuilder from '@axe-core/playwright'
 import { expect, test, type Browser, type Page, type TestInfo } from '@playwright/test'
+import { ADMIN } from './admin-support'
 
 /**
  * Artículos (U6) sobre una copia de la base: la lista con sus filtros, un artículo que nace borrador y
@@ -18,7 +19,6 @@ import { expect, test, type Browser, type Page, type TestInfo } from '@playwrigh
  */
 const token = process.env.PW_ADMIN_TOKEN!
 const api = process.env.ADMIN_API_URL!
-const ADMIN = '/admin-next/'
 const auth = { Authorization: `Bearer ${token}` }
 const mod = process.platform === 'darwin' ? 'Meta' : 'Control'
 const shell = process.platform === 'win32'

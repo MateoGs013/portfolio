@@ -8,7 +8,7 @@ import AxeBuilder from '@axe-core/playwright'
 import { expect, type APIRequestContext, type Page, type TestInfo } from '@playwright/test'
 
 export const token = process.env.PW_ADMIN_TOKEN!
-export const ADMIN = '/admin-next/'
+export const ADMIN = '/admin/'
 export const auth = { Authorization: `Bearer ${token}` }
 export const mod = process.platform === 'darwin' ? 'Meta' : 'Control'
 export const erosUrl = process.env.HUNTER_API_URL ?? ''

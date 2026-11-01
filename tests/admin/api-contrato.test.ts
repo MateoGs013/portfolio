@@ -1,6 +1,7 @@
 /**
  * Contrato de la API del admin (D1): errores por campo en español, /meta con los conteos del sitio,
- * direcciones fijas, inglés de artículos y viñetas, impacto de un borrado y la lista blanca de /admin.
+ * direcciones fijas, inglés de artículos y viñetas, impacto de un borrado y que /admin sirva solo el build
+ * (pnpm build:admin antes; tests/e2e/run.mjs ya lo corre).
  *
  *   node scripts/admin-run.mjs -- pnpm tsx --test tests/admin/api-contrato.test.ts
  */
@@ -64,13 +65,14 @@ describe('meta y estado', () => {
     assert.equal(site.status, 200)
     assert.equal(meta.summary.projects.visible, site.body.meta.count)
     assert.equal(meta.summary.projects.visible, 6)
-    assert.equal(meta.summary.projects.visible + meta.summary.projects.hidden + meta.summary.projects.scheduled, meta.counts['projects'])
+    const all = await ok<unknown[]>('GET', '/projects')
+    assert.equal(meta.summary.projects.visible + meta.summary.projects.hidden + meta.summary.projects.scheduled, all.length)
   })
 
-  test('enums con rótulo, el esquema y las claves viejas', async () => {
+  test('enums con rótulo y el esquema, sin las claves del panel anterior', async () => {
     const meta = await ok<AdminMeta>('GET', '/meta')
     assert.deepEqual(meta.enumOptions.ProjectStatus.find(o => o.value === 'LIVE'), { value: 'LIVE', label: 'En producción' })
-    assert.ok(meta.enums.ProjectStatus.includes('LIVE'))
+    assert.ok(!('counts' in meta) && !('enums' in meta))
     assert.equal(meta.schema.Project.summary.label, 'Resumen')
     assert.ok(meta.options.experiences.length > 0 && meta.options.articles.length > 0)
     assert.ok(meta.options.projects.every(p => typeof p.visible === 'boolean'))
@@ -217,12 +219,11 @@ describe('empresas y tecnologías', () => {
 })
 
 describe('archivos del admin', () => {
-  test('solo se sirve la lista blanca', async () => {
-    assert.equal((await call('GET', '/admin/vite.config.ts')).status, 404)
-    assert.equal((await call('GET', '/admin/tsconfig.json')).status, 404)
-    assert.equal((await call('GET', '/admin/admin.src.css')).status, 404)
-    assert.equal((await call('GET', '/admin/js/app.js')).status, 200)
-    assert.equal((await call('GET', '/admin/admin.css')).status, 200)
+  test('solo se sirve el build: el panel anterior y las fuentes no existen', async () => {
+    for (const file of ['/admin/vite.config.ts', '/admin/tsconfig.json', '/admin/js/app.js', '/admin/admin.css', '/admin/vendor/vue.js', '/admin/src/main.ts', '/admin/assets/no-existe.js']) {
+      assert.equal((await call('GET', file)).status, 404, file)
+    }
     assert.equal((await call('GET', '/admin/')).status, 200)
+    assert.equal((await call('GET', '/admin/obras')).status, 200)
   })
 })

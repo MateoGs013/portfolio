@@ -8,7 +8,6 @@ export const ui = {
     name: 'Mateo Sonzogni',
     area: 'Administración',
     title: 'Admin',
-    openCurrent: 'Abrir el panel actual',
   },
   actions: {
     cancel: 'Cancelar',

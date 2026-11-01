@@ -1,8 +1,8 @@
 /**
  * El tinte de una imagen (Media.tint): el color característico de una captura, que el sitio usa como
- * temperatura de la obra. Es el mismo algoritmo del panel anterior (server/admin/js/tint.js), con el
- * que salieron los tintes de la base: muestra de 32×20, corte de mediana a 8 colores, sin los casi
- * negros ni los casi blancos, gana el de mejor saturación × √peso y se lleva a luminosidad media.
+ * temperatura de la obra. Es el mismo algoritmo del panel anterior, con el que salieron los tintes
+ * de la base: muestra de 32×20, corte de mediana a 8 colores, sin los casi negros ni los casi
+ * blancos, gana el de mejor saturación × √peso y se lleva a luminosidad media.
  */
 const W = 32
 const H = 20

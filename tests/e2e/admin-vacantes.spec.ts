@@ -1,5 +1,6 @@
 import AxeBuilder from '@axe-core/playwright'
 import { expect, test, type APIRequestContext, type Page, type TestInfo } from '@playwright/test'
+import { ADMIN } from './admin-support'
 
 /**
  * Vacantes (H1): la cola, «Pegar una vacante» y las cuatro etapas con el invariante 6 completo
@@ -20,7 +21,6 @@ import { expect, test, type APIRequestContext, type Page, type TestInfo } from '
  * test-results/ de cada prueba.
  */
 const token = process.env.PW_ADMIN_TOKEN!
-const ADMIN = '/admin-next/'
 const mod = process.platform === 'darwin' ? 'Meta' : 'Control'
 const auth = { Authorization: `Bearer ${token}` }
 const erosUrl = process.env.HUNTER_API_URL ?? ''

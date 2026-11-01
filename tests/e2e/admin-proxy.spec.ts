@@ -2,9 +2,9 @@ import { expect, test, type Page, type Response } from '@playwright/test'
 import { ADMIN, auth, idOf, sectionTab, token, watchCsp } from './admin-support'
 
 /**
- * El admin nuevo por el proxy de Nuxt, que es el camino de producción (plan §4 y §9): /admin-next sin
- * barra responde 301 y /admin-next/ carga, los assets no dan 404, el navegador recibe una sola CSP (la
- * del admin, sin la del sitio) y recargar una pantalla profunda conserva la vista.
+ * El admin por el proxy de Nuxt, que es el camino de producción (plan §4 y §9): /admin sin barra
+ * responde 301 y /admin/ carga, los assets no dan 404, el navegador recibe una sola CSP (la del admin,
+ * sin la del sitio), recargar una pantalla profunda conserva la vista y del panel anterior no queda nada.
  *
  * admin-run: --web
  *
@@ -33,13 +33,26 @@ async function cspHeaders(res: Response): Promise<string[]> {
   return (await res.headersArray()).filter(h => h.name.toLowerCase() === 'content-security-policy').map(h => h.value)
 }
 
-test('/admin-next sin barra responde 301 a /admin-next/, con la consulta', async ({ request }) => {
-  const res = await request.get(`${web}/admin-next?x=1`, { maxRedirects: 0 })
+test('/admin sin barra responde 301 a /admin/, con la consulta', async ({ request }) => {
+  const res = await request.get(`${web}/admin?x=1`, { maxRedirects: 0 })
   expect(res.status()).toBe(301)
-  expect(res.headers()['location']).toBe('/admin-next/?x=1')
+  expect(res.headers()['location']).toBe('/admin/?x=1')
 })
 
-for (const entry of ['/admin-next', '/admin-next/']) {
+test('del panel anterior no queda nada y /admin-next ya no existe', async ({ request }) => {
+  for (const path of ['/admin/js/app.js', '/admin/admin.css', '/admin/vendor/vue.js', '/admin/assets/no-existe.js']) {
+    expect((await request.get(`${web}${path}`, { maxRedirects: 0 })).status(), path).toBe(404)
+  }
+  // El sitio le saca la barra final (301) y la dirección sin barra no existe.
+  expect((await request.get(`${web}/admin-next/`)).status(), '/admin-next/').toBe(404)
+  // Una dirección sin extensión llega al index del admin, con su CSP.
+  const deep = await request.get(`${web}/admin/obras`, { maxRedirects: 0 })
+  expect(deep.status()).toBe(200)
+  expect(deep.headers()['content-security-policy']).toContain('script-src \'self\'')
+  expect(await deep.text()).toContain(`${ADMIN}assets/`)
+})
+
+for (const entry of ['/admin', '/admin/']) {
   test(`${entry} carga por Nuxt: assets sin 404 y una sola CSP, la del admin`, async ({ page }) => {
     const violations = await watchCsp(page)
     const seen = track(page)

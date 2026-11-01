@@ -60,7 +60,7 @@ test.beforeAll(async () => {
     stdio: 'ignore',
     env: { ...process.env, ADMIN_DEV_PORT: String(port), ADMIN_API_ORIGIN: api },
   })
-  base = `http://localhost:${port}/admin-next/`
+  base = `http://localhost:${port}/admin/`
   for (let i = 0; i < 240; i++) {
     if (await fetch(base).then(r => r.ok, () => false)) return
     await new Promise(r => setTimeout(r, 250))

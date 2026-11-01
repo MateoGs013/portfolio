@@ -49,12 +49,6 @@ async function saveFields(key: DocKey, fields: DocField[]): Promise<Doc> {
 
 export const docsRouter = Router()
 
-/** La lista que lee el admin actual: las filas con sus bloques normalizados. */
-docsRouter.get('/docs', async (_req, res) => {
-  const rows = await readOr503(res, () => db.doc.findMany({ where: { key: { in: Object.keys(docSchemas) } }, orderBy: { key: 'asc' } }))
-  if (rows) res.json(rows.map(row => ({ ...row, fields: docFieldsOf(row.fields, row.key) })))
-})
-
 docsRouter.get('/docs/:key', async (req, res) => {
   const key = docKey(req.params['key'])
   const row = await readOr503(res, () => db.doc.findUnique({ where: { key } }))

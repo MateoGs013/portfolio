@@ -88,7 +88,8 @@ test('ningún componente escribe HTML crudo', () => {
 
 test('sin emojis en el sitio ni en el admin (invariante 5)', () => {
   const emoji = /\p{Extended_Pictographic}/u
-  const scope = [...files('app'), ...files('server/admin')].filter(file => !file.endsWith('admin.css'))
+  // Las fuentes del admin, no su build (server/admin/dist), que es código de terceros minificado.
+  const scope = [...files('app'), ...files('server/admin')].filter(file => !/^server[\\/]admin[\\/]dist[\\/]/.test(file))
   const found = scope.flatMap(file => read(file).split('\n').flatMap((line, i) => {
     const hit = line.match(emoji)
     return hit ? [`${relative(ROOT, join(ROOT, file))}:${i + 1} ${hit[0]}`] : []

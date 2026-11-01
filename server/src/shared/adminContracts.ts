@@ -123,8 +123,8 @@ export interface UntranslatedRecord {
 export type AdminSchema = { readonly [M in ModelName]: Readonly<Record<keyof (typeof adminSchema)[M], FieldDescriptor>> }
 
 /**
- * GET /api/admin/meta. `counts` y `enums` (valores sueltos) son las claves que lee el admin actual:
- * se conservan hasta que el admin nuevo lo reemplace (S1). El admin nuevo usa `summary` y `enumOptions`.
+ * GET /api/admin/meta: los conteos con visibilidad (`summary`), cada enum con su rótulo
+ * (`enumOptions`), el esquema de los formularios y las opciones de los selectores.
  */
 export interface AdminMeta {
   summary: AdminSummary
@@ -136,10 +136,6 @@ export interface AdminMeta {
   metricKeys: { catalog: MetricKeyOption[], unlisted: UnlistedMetricKey[] }
   /** Lo que tiene español sin inglés (translations.ts, viñeta por viñeta). */
   untranslated: UntranslatedRecord[]
-  /** @deprecated hasta S1: conteos totales sin visibilidad. */
-  counts: Record<string, number>
-  /** @deprecated hasta S1: los valores sin rótulo. */
-  enums: Record<EnumName, string[]>
 }
 
 // ─── Documentos ─────────────────────────────────────────────────────────────
