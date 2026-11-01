@@ -25,6 +25,7 @@ export const adminSchema = {
   Article,
   ProjectTranslation: translationOf(Project, { owner: 'Project', relation: 'project', key: 'projectId' }, ['title', 'role', 'summary', 'brief', 'outcome']),
   ProcessStepTranslation: translationOf(ProcessStep, { owner: 'ProcessStep', relation: 'step', key: 'stepId' }, ['title', 'body']),
+  MetricTranslation: translationOf(Metric, { owner: 'Metric', relation: 'metric', key: 'metricId' }, ['label']),
   MediaTranslation: translationOf(Media, { owner: 'Media', relation: 'media', key: 'mediaId' }, ['alt', 'caption']),
   LinkTranslation: translationOf(Link, { owner: 'Link', relation: 'link', key: 'linkId' }, ['label']),
   ExperienceTranslation: translationOf(Experience, { owner: 'Experience', relation: 'experience', key: 'experienceId' }, ['role', 'summary', 'story', 'highlights', 'location']),

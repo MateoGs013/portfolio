@@ -137,7 +137,7 @@ export function typeLabel(meta: FieldMeta): string {
 
 /** Forma del valor según su tipo. */
 export function cellKind(type: FieldType): CellKind {
-  if (type === 'string' || type === 'url' || type === 'email') return 'string'
+  if (type === 'string' || type === 'url' || type === 'email' || type === 'image' || type === 'localizedPath') return 'string'
   if (type === 'text' || type === 'json') return 'text'
   if (type === 'list') return 'list'
   if (type.startsWith('enum') || type === 'bool') return 'enum'

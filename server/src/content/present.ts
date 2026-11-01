@@ -9,7 +9,7 @@ import type { ExperienceRecord } from '../queries/experience.js'
 import type { OrgRecord } from '../queries/orgs.js'
 import type { ProjectRecord } from '../queries/projects.js'
 import type { TechRecord } from '../queries/stack.js'
-import { docFieldsOf, hasDocValue, untranslatedFields } from './docFields.js'
+import { docFieldsOf, fieldValueIn, untranslatedFields } from './docFields.js'
 import type { Lang } from './lang.js'
 import { visibleUsage } from './matches.js'
 import type { Wire } from './snapshot.js'
@@ -47,16 +47,19 @@ export function presentLink(l: Project['links'][number], lang: Lang) {
   return { ...values, url: l.url, untranslated }
 }
 
-export function presentMetric(m: Project['metrics'][number]) {
+/** El rótulo propio (`label`) se sirve en inglés si lo tiene; si no, en español y en `untranslated`. */
+export function presentMetric(m: Project['metrics'][number], lang: Lang) {
+  const { values, untranslated } = translate(m, m.translations, ['label'], lang)
   return {
     key: m.key,
     value: toNumber(m.value),
     items: m.items,
     unit: m.unit,
-    label: m.label,
+    ...values,
     source: m.source,
     measuredAt: toDay(m.measuredAt),
     order: m.order,
+    untranslated,
   }
 }
 
@@ -78,7 +81,7 @@ function projectBase(p: Project, lang: Lang, fields: readonly ('title' | 'role' 
     publishedAt: toIso(p.publishedAt),
     updatedAt: toIso(p.updatedAt),
     org: p.org,
-    metrics: p.metrics.map(presentMetric),
+    metrics: p.metrics.map(m => presentMetric(m, lang)),
     untranslated,
   }
 }
@@ -171,10 +174,16 @@ export function presentOrg(o: Wire<OrgRecord>, lang: Lang) {
   }
 }
 
-/** Documento con cada `value` ya resuelto en `lang` (el `en` no viaja). */
+/**
+ * Documento con cada `value` ya resuelto en `lang` (el `en` no viaja). Los bloques requeridos salen
+ * con el tipo del esquema (shared/docSchema.ts) y los que no se traducen, siempre en su único valor.
+ */
 export function presentDoc(d: Wire<DocRecord>, lang: Lang) {
-  const all = docFieldsOf(d.fields)
-  const fields = all.map(({ en, ...field }) => (lang !== 'es' && hasDocValue(en) ? { ...field, value: en } : field))
+  const all = docFieldsOf(d.fields, d.key)
+  const fields = all.map((field) => {
+    const { en: _en, ...shown } = field
+    return { ...shown, value: fieldValueIn(field, lang) }
+  })
   const untranslated = untranslatedFields(all, all.map(f => f.name), lang)
   return { key: d.key, title: d.title, fields, updatedAt: toIso(d.updatedAt), untranslated }
 }
