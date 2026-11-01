@@ -113,7 +113,7 @@ const indicatorStyle = computed(() => ({
         :class="tab.id === model ? 'text-ink' : 'text-faint'"
         @click="select(index)"
       >
-        {{ tab.label }}
+        <span>{{ tab.label }}</span>
         <span v-if="tab.count !== undefined" class="text-meta text-faint tabular-nums">{{ tab.count }}</span>
         <span
           v-if="tab.mark"

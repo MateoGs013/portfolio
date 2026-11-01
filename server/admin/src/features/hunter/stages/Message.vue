@@ -43,7 +43,8 @@ async function run(): Promise<void> {
   }
 }
 
-const next = computed(() => `#/busqueda/vacantes/${encodeURIComponent(props.job.id)}/cv`)
+// Si el CV todavía no está armado, la etapa CV lo adapta al entrar (lo que promete el botón).
+const next = computed(() => `#/busqueda/vacantes/${encodeURIComponent(props.job.id)}/cv${work.cv ? '' : '?adaptar=1'}`)
 const lang = computed(() => pitch.value?.lang ?? undefined)
 </script>
 

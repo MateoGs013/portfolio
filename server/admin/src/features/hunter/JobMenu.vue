@@ -27,7 +27,9 @@ const items = computed<MenuItem[]>(() => {
   const status = props.job.status
   const list: MenuItem[] = []
   if (status !== 'saved' && status !== 'applied') list.push({ id: 'saved', label: t.menu.save, disabled: locked })
-  if (status === 'discarded') list.push({ id: 'evaluated', label: t.menu.restore, disabled: locked })
+  // Volver a la cola: «Evaluada» solo si tiene análisis; si nunca se analizó, vuelve como nueva.
+  const restored = props.job.match_score === null && !props.job.match_analysis ? 'new' : 'evaluated'
+  if (status === 'discarded') list.push({ id: restored, label: t.menu.restore, disabled: locked })
   else list.push({ id: 'discarded', label: t.menu.discard, disabled: locked })
   list.push({ id: 'remove', label: t.menu.remove, icon: 'trash', danger: true, disabled: locked })
   return list

@@ -68,6 +68,8 @@ function onMenu(id: string): void {
 }
 
 function onDeleted(result: DeleteResult | null): void {
+  // El registro ya no existe: lo escrito se olvida para que salir no pregunte por él.
+  props.editor.forget()
   emit('deleted', result)
   void router.push(model.value.routes.list)
 }

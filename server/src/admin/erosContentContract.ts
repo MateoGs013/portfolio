@@ -14,6 +14,7 @@ import {
   type CarouselSlide,
   type ContentPost,
   type GenerateRequest,
+  type PostStatus,
   type Trend,
   type TrendScan,
 } from '../shared/contentContracts.js'
@@ -83,6 +84,12 @@ function thread(value: unknown): string[] {
   return flat ? flat.split(/\n\s*\n/).map(t => t.trim()).filter(Boolean) : []
 }
 
+/** El estado de Eros sin importar mayúsculas («APPROVED» es approved); lo desconocido queda en borrador. */
+function postStatusOf(value: unknown): PostStatus {
+  const lowered = typeof value === 'string' ? value.trim().toLowerCase() : value
+  return isPostStatus(lowered) ? lowered : 'draft'
+}
+
 export function normalizePost(raw: unknown): ContentPost | null {
   if (!isObj(raw)) return null
   const id = text(raw['id'])
@@ -104,7 +111,7 @@ export function normalizePost(raw: unknown): ContentPost | null {
     devto_tags: strings(raw['devto_tags']),
     devto_markdown: markdown,
     carousel_slides: arrayOf(raw['carousel_slides']).map(normalizeSlide).filter((s): s is CarouselSlide => s !== null),
-    status: isPostStatus(raw['status']) ? raw['status'] : 'draft',
+    status: postStatusOf(raw['status']),
     dispatched_at: text(raw['n8n_published_at']) ?? text(raw['dispatched_at']),
     created_at: text(raw['created_at']),
     updated_at: text(raw['updated_at']),

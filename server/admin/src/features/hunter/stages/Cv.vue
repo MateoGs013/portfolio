@@ -57,8 +57,31 @@ async function adapt(options: { useSummaryProposal?: boolean, regenerate?: boole
   }
 }
 
+/**
+ * La hoja guardada en memoria lleva un ticket y una caché de una hora que se vacía si la API se
+ * reinicia: al volver a la etapa se pide de nuevo (con el control del 409), sin mostrar la vieja.
+ */
+async function refreshSheet(): Promise<void> {
+  if (!work.cv || pending.value) return
+  pending.value = true
+  work.sheetUrl = null
+  work.measure = null
+  try {
+    work.sheetUrl = await sheetUrl(props.job, request.value, 'measure')
+  }
+  catch (err) {
+    toast(failureText(err, t.cv.failed), { tone: 'error' })
+  }
+  finally {
+    pending.value = false
+  }
+}
+
 onMounted(() => {
-  if (route.query['adaptar'] !== '1') return
+  if (route.query['adaptar'] !== '1') {
+    void refreshSheet()
+    return
+  }
   const { adaptar: _drop, ...rest } = route.query
   void router.replace({ path: route.path, query: rest })
   void adapt()
@@ -116,7 +139,7 @@ const measureLine = computed<{ tone: StatusTone, label: string }>(() => {
             {{ adaptation }}
           </p>
         </div>
-        <CvTools :job="job" :request="request" :url="work.sheetUrl" />
+        <CvTools :job="job" :request="request" />
         <CvSummary :tailored="work.cv" :base-summary="work.baseSummary" :company="job.company" :pending="pending" @use="adapt({ useSummaryProposal: $event })" />
       </aside>
     </div>

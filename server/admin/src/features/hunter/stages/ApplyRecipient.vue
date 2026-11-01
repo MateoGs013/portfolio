@@ -36,6 +36,7 @@ async function find(): Promise<void> {
       to.value = found.email
       note.value = [t.apply.found(found.email), found.confidence === null ? t.apply.foundJob : t.apply.foundEros(Math.round(found.confidence))].join(' ')
     }
+    else note.value = t.apply.notFound
   }
   catch (err) {
     toast(failureText(err, t.apply.findFailed), { tone: 'error' })

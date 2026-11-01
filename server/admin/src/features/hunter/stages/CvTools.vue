@@ -25,7 +25,6 @@ import CvFrame from './CvFrame.vue'
 const props = defineProps<{
   job: HunterJob
   request: CvRequest
-  url: string
 }>()
 
 /* ── Imprimir ──────────────────────────────────────────── */
@@ -94,6 +93,24 @@ async function copyPlain(): Promise<void> {
 /* ── Ampliar ───────────────────────────────────────────── */
 
 const expanded = ref(false)
+const expandUrl = ref<string | null>(null)
+const expanding = ref(false)
+
+/** Un ticket nuevo: el de la etapa puede haber vencido (una hora, o la API se reinició). */
+async function expand(): Promise<void> {
+  if (expanding.value) return
+  expanding.value = true
+  try {
+    expandUrl.value = await sheetUrl(props.job, props.request, 'measure')
+    expanded.value = true
+  }
+  catch (err) {
+    toast(failureText(err, t.cv.failed), { tone: 'error' })
+  }
+  finally {
+    expanding.value = false
+  }
+}
 </script>
 
 <template>
@@ -105,7 +122,7 @@ const expanded = ref(false)
       <Button icon="copy" :loading="copying" :loading-label="t.cv.copyText" @click="copyPlain">
         {{ copied ? t.cv.copiedText : t.cv.copyText }}
       </Button>
-      <Button variant="ghost" @click="expanded = true">
+      <Button variant="ghost" :loading="expanding" :loading-label="t.cv.expand" @click="expand">
         {{ t.cv.expand }}
       </Button>
     </div>
@@ -127,7 +144,7 @@ const expanded = ref(false)
     </div>
 
     <Dialog v-model:open="expanded" :title="t.cv.expandTitle" size="lg">
-      <CvFrame v-if="expanded" :url="url" :title="t.cv.sheet" :max-width="712" />
+      <CvFrame v-if="expanded && expandUrl" :url="expandUrl" :title="t.cv.sheet" :max-width="712" />
     </Dialog>
   </div>
 </template>

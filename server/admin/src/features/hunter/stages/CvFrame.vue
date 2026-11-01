@@ -47,7 +47,12 @@ onMounted(() => {
   observer = new ResizeObserver(([entry]) => {
     if (entry) width.value = entry.contentRect.width
   })
-  if (box.value?.parentElement) observer.observe(box.value.parentElement)
+  const parent = box.value?.parentElement
+  // El ancho real ya al montar: sin esperar al observer, la hoja no asoma a 794 px en un teléfono.
+  if (parent) {
+    width.value = parent.clientWidth || A4_PX
+    observer.observe(parent)
+  }
 })
 onBeforeUnmount(() => {
   removeEventListener('message', onMessage)

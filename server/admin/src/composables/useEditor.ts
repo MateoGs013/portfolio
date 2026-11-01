@@ -14,7 +14,6 @@ import { api, useRequestScope } from '../api/client'
 import { ApiError, FieldErrors, isAbort, messageOf, RequestError, SessionError } from '../api/errors'
 import { editorKey } from '../features/collections/context'
 import { collections } from '../features/collections/dict'
-import { readPath } from '../features/collections/paths'
 import { useSection } from '../features/collections/useSection'
 import { phrases } from '../models/labels'
 import type { AdminRecord, Model } from '../models/types'
@@ -23,6 +22,7 @@ import { toast } from '../stores/toasts'
 import { announce } from '../ui/announce'
 import { rememberRecord } from './useCollection'
 import { useDirtyGuard } from './useDirtyGuard'
+import { useCampoFocus, useChangedSections } from './useEditorParts'
 import { clearDraft, useDraft } from './useDraft'
 import { onShortcut } from './useShortcuts'
 import { useServerErrors } from './useServerErrors'
@@ -60,6 +60,8 @@ export function useEditor<TRecord extends AdminRecord, TForm extends object>(opt
   const savedAt = ref<Date | null>(null)
   /** Lo que devolvió el POST: al pasar a la ruta del registro creado no se vuelve a pedir. */
   let adopted: TRecord | null = null
+  /** El editor ya no está montado: una respuesta tardía no lo toca ni mueve la ruta. */
+  let disposed = false
 
   const routeId = computed(() => toValue(options.id))
   const key = computed(() => (routeId.value === null ? null : `${model.key}:${routeId.value}`))
@@ -75,15 +77,12 @@ export function useEditor<TRecord extends AdminRecord, TForm extends object>(opt
   })
 
   const errors = useServerErrors(model, form, id => section.go(id))
-  const draft = useDraft({ key: loadedKey, form, dirty, paused: busy })
+  // El borrador va bajo `loadedKey`: no se escribe ni se borra mientras ese registro se guarda o
+  // mientras la ruta ya apunta a otro que todavía carga (el PUT del anterior puede fallar).
+  const paused = () => (savingKey.value !== null && savingKey.value === loadedKey.value) || loadedKey.value !== key.value
+  const draft = useDraft({ key: loadedKey, form, dirty, paused })
 
-  /** Las secciones con algo distinto de lo guardado, para la marca de su pestaña. */
-  const changedSections = computed(() => {
-    if (!dirty.value) return new Set<string>()
-    const saved: unknown = JSON.parse(base.value)
-    const differs = (path: string) => JSON.stringify(readPath(form.value, path) ?? null) !== JSON.stringify(readPath(saved, path) ?? null)
-    return new Set(model.sections.filter(s => s.fields.some(differs)).map(s => s.id))
-  })
+  const changedSections = useChangedSections(model, form, base, dirty)
 
   function reset(next: TForm, rec: TRecord | null, forKey: string): void {
     record.value = rec
@@ -124,6 +123,8 @@ export function useEditor<TRecord extends AdminRecord, TForm extends object>(opt
     outcome.value = 'idle'
     savedAt.value = null
     loadError.value = null
+    // Un GET anterior que se cancela no baja `loading` (su clave ya no es la de la ruta).
+    loading.value = false
     if (id === null || forKey === null) return
     const signal = scope.renew()
     const found = adopted
@@ -163,7 +164,7 @@ export function useEditor<TRecord extends AdminRecord, TForm extends object>(opt
     if (previous !== undefined) forgetLeft()
     if (next !== previous) void load()
   }, { immediate: true })
-  if (getCurrentScope()) onScopeDispose(forgetLeft)
+  if (getCurrentScope()) onScopeDispose(() => { disposed = true; forgetLeft() })
 
   async function save(): Promise<void> {
     if (!ready.value || busy.value) return
@@ -183,6 +184,7 @@ export function useEditor<TRecord extends AdminRecord, TForm extends object>(opt
     }
     errors.clear()
     draft.flush()
+    const sentTitle = model.formTitle(form.value).trim() || (rec ? model.title(rec) : '')
     savingKey.value = forKey
     try {
       const saved = creating
@@ -190,8 +192,8 @@ export function useEditor<TRecord extends AdminRecord, TForm extends object>(opt
         : await api.put<TRecord>(`${model.path}/${rec.id}`, payload)
       rememberRecord(model.path, saved)
       clearDraft(forKey)
-      const current = key.value === forKey
-      toast(creating ? say.created : say.saved)
+      const current = !disposed && key.value === forKey
+      toast(creating ? say.created : current ? say.saved : `${say.saved}: ${model.title(saved)}`)
       if (current) {
         applySaved(saved, forKey)
         outcome.value = 'saved'
@@ -205,12 +207,16 @@ export function useEditor<TRecord extends AdminRecord, TForm extends object>(opt
     }
     catch (err) {
       if (isAbort(err)) return
-      const current = key.value === forKey
+      const current = !disposed && key.value === forKey
       if (current) outcome.value = 'error'
       // La sesión vencida la atiende la reautenticación; si se canceló, el pie dice que no se guardó.
       if (err instanceof SessionError) return
       if (err instanceof FieldErrors && current) await errors.show(err.issues)
-      else toast(`${say.saveFailed}. ${messageOf(err)}`, { tone: 'error' })
+      else {
+        // Si ya se está en otro registro, el aviso nombra el que no se guardó.
+        const which = !current && sentTitle ? ` «${sentTitle}»` : ''
+        toast(`${say.saveFailed}${which}. ${messageOf(err)}`, { tone: 'error' })
+      }
     }
     finally {
       if (savingKey.value === forKey) savingKey.value = null
@@ -222,6 +228,15 @@ export function useEditor<TRecord extends AdminRecord, TForm extends object>(opt
     form.value = JSON.parse(base.value) as TForm
     errors.clear()
     draft.clear()
+    outcome.value = 'idle'
+  }
+
+  /** El registro ya no existe (se eliminó): lo escrito no se guarda ni se pregunta al salir. */
+  function forget(): void {
+    if (loadedKey.value) clearDraft(loadedKey.value)
+    draft.dismiss()
+    form.value = JSON.parse(base.value) as TForm
+    errors.clear()
     outcome.value = 'idle'
   }
 
@@ -237,16 +252,7 @@ export function useEditor<TRecord extends AdminRecord, TForm extends object>(opt
     announce(collections.draft.dismissed)
   }
 
-  // ?campo=<ruta>: abre la sección del campo y le lleva el foco, una vez por registro y valor.
-  let lastCampo = ''
-  watch([() => route.query['campo'], ready], ([campo, isReady]) => {
-    const path = typeof campo === 'string' ? campo : ''
-    const mark = `${key.value}|${path}`
-    if (!path) lastCampo = ''
-    if (!path || !isReady || mark === lastCampo) return
-    lastCampo = mark
-    void errors.focusField(path)
-  }, { immediate: true })
+  useCampoFocus(key, ready, errors.focusField)
 
   onShortcut('save', () => void save())
   useDirtyGuard({
@@ -276,6 +282,7 @@ export function useEditor<TRecord extends AdminRecord, TForm extends object>(opt
     load,
     save,
     discard,
+    forget,
     applySaved,
     applyPatch,
     recoverDraft,

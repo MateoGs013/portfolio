@@ -49,6 +49,7 @@ const localError = computed(() => {
 const error = computed(() => localError.value || problem.value || null)
 
 async function change(): Promise<void> {
+  if (sending.value) return
   tried.value = true
   problem.value = ''
   if (localError.value) return

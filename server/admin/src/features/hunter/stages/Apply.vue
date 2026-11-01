@@ -21,7 +21,7 @@ import { failureText, hunterApi, originOf } from '../adapter'
 import { job as t } from '../dictJob'
 import { isManual, isSample } from '../model'
 import OriginNote from '../OriginNote.vue'
-import { changeStatus, offline, replaceJob } from '../store'
+import { canChange, changeStatus, offline, replaceJob } from '../store'
 import { workOf } from '../work'
 import ApplyRecipient from './ApplyRecipient.vue'
 import StageHead from './StageHead.vue'
@@ -99,6 +99,11 @@ async function send(): Promise<void> {
   sending.value = true
   try {
     const result = await hunterApi.applyEmail(props.job, { to_email: m.to.trim(), subject: m.subject, body: m.body })
+    // Eros puede responder 200 sin haber despachado nada: entonces la vacante no se marca postulada.
+    if (!result.ok) {
+      toast(`${t.apply.sendFailed} ${t.apply.notDispatched}`, { tone: 'error' })
+      return
+    }
     replaceJob({ ...props.job, status: 'applied' })
     toast(t.apply.sent(result.dispatched_to ?? m.to.trim()))
   }
@@ -112,7 +117,7 @@ async function send(): Promise<void> {
 
 const marking = ref(false)
 async function markApplied(): Promise<void> {
-  if (marking.value || applied.value) return
+  if (marking.value || applied.value || !canChange(props.job)) return
   marking.value = true
   try {
     await changeStatus(props.job, 'applied')
@@ -156,14 +161,22 @@ async function markApplied(): Promise<void> {
             <Button
               :loading="sending"
               :loading-label="t.apply.send"
-              :aria-disabled="sendBlocked || !validTo ? 'true' : undefined"
+              :aria-disabled="sendBlocked || !validTo || sending ? 'true' : undefined"
               :aria-describedby="sendBlocked ? 'enviar-motivo' : !validTo ? 'postular-motivo' : undefined"
               :class="sendBlocked || !validTo ? 'opacity-45' : ''"
               @click="send"
             >
               {{ t.apply.send }}
             </Button>
-            <Button variant="ghost" :loading="marking" :disabled="applied" @click="markApplied">
+            <Button
+              variant="ghost"
+              :loading="marking"
+              :disabled="applied"
+              :aria-disabled="!applied && !canChange(job) ? 'true' : undefined"
+              :aria-describedby="!applied && !canChange(job) ? 'marcar-motivo' : undefined"
+              :class="!applied && !canChange(job) ? 'opacity-45' : ''"
+              @click="markApplied"
+            >
               {{ t.apply.done }}
             </Button>
           </div>
@@ -172,6 +185,9 @@ async function markApplied(): Promise<void> {
           </p>
           <p v-if="sendBlocked" id="enviar-motivo" class="m-0 text-label text-faint">
             {{ sendBlocked }}
+          </p>
+          <p v-if="!applied && !canChange(job)" id="marcar-motivo" class="m-0 text-label text-faint">
+            {{ t.apply.markLocked }}
           </p>
           <p v-if="applied" class="m-0 text-label text-faint">
             {{ t.apply.applied }}

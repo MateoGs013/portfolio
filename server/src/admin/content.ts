@@ -110,6 +110,12 @@ contentRouter.post('/posts/:id/publish', async (req: Request, res: Response) => 
     sendContentFailure(res, result, 'post', `No se despachó a ${publishChannelLabels[raw]}.`)
     return
   }
+  // Un 200 de Eros que dice que n8n no despachó no es un despacho.
+  const body = result.data as Record<string, unknown> | null
+  if (body && (body['ok'] === false || (typeof body['error'] === 'string' && body['error']))) {
+    res.status(502).json({ error: `Eros no despachó la publicación. No salió por ${publishChannelLabels[raw]}.`, code: 'internal', errors: [] })
+    return
+  }
   const dispatched = normalizeOnePost(result.data)?.dispatched_at ?? text((result.data as Record<string, unknown> | null)?.['n8n_published_at'])
   res.json({ ok: true, channel: raw, dispatched_at: dispatched } satisfies DispatchResult)
 })

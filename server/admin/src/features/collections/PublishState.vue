@@ -5,7 +5,8 @@
  * «Mostrar en el sitio», la fecha opcional desde la que se ve y la checklist que da el modelo.
  * Prender la publicación con faltantes pide confirmación. Cambia el formulario: se guarda con el resto.
  */
-import { computed, nextTick, onBeforeUnmount, ref } from 'vue'
+import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
+import { useRoute } from 'vue-router'
 import { useId } from '../../composables/useId'
 import type { ChecklistItem, RecordStatus } from '../../models/types'
 import { requestConfirm } from '../../stores/dialogs'
@@ -57,8 +58,23 @@ function hide(returnFocus: boolean): void {
 }
 
 function onOutside(event: PointerEvent): void {
-  if (root.value && !root.value.contains(event.target as Node)) hide(false)
+  const target = event.target as Element | null
+  // La confirmación («Publicar igual») es un diálogo aparte: tocarla no cierra el panel.
+  if (target?.closest?.('dialog[open]')) return
+  if (root.value && !root.value.contains(target)) hide(false)
 }
+
+// Un error en la fecha o ?campo=publishedAt abren el panel: el campo vive adentro.
+const route = useRoute()
+watch(
+  () => Boolean(editor?.messageFor(props.path)) || route.query['campo'] === props.path,
+  (wanted) => {
+    if (!wanted || open.value) return
+    open.value = true
+    document.addEventListener('pointerdown', onOutside, true)
+  },
+  { immediate: true },
+)
 
 function onKeydown(event: KeyboardEvent): void {
   if (event.key !== 'Escape') return
