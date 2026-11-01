@@ -15,16 +15,19 @@
  * El SSR reenvía el X-Forwarded-For del visitante (useApi): en producción cada visitante tiene su
  * balde. Acá todo sale de 127.0.0.1, así que la suite sigue necesitando una API nueva por corrida.
  *
- * El admin nuevo va aparte, sin tocar la base de trabajo: cada tests/e2e/admin-*.spec.ts (salvo
- * admin-audit, que sigue en la config del sitio) corre con `node scripts/admin-run.mjs <flags> --
- * pnpm exec playwright test -c playwright.admin.config.ts <spec>`, y cada tests/admin/*.test.ts con
- * `node scripts/admin-run.mjs <flags> -- pnpm tsx --test <archivo>`. Los flags (--demo, --eros-mock,
- * --web) los declara el archivo en una línea `admin-run: …` de su cabecera. Los filtros de archivo
- * eligen también entre estos.
+ * El admin nuevo va aparte, sin tocar la base de trabajo: cada tests/e2e/admin-*.spec.ts corre con
+ * `node scripts/admin-run.mjs <flags> -- pnpm exec playwright test -c playwright.admin.config.ts <spec>`,
+ * y cada tests/admin/*.test.ts con `node scripts/admin-run.mjs <flags> -- pnpm tsx --test <archivo>`.
+ * Los flags (--demo, --eros-mock, --web) los declara el archivo en líneas `admin-run: …` de su
+ * cabecera, una por corrida: `admin-run: sin Eros` (sin flags) más `admin-run: --eros-mock` lo corren
+ * dos veces. Sin ninguna línea corre una vez, sin flags. Los filtros de archivo eligen también entre
+ * estos. Antes se compila el admin (pnpm build:admin, salvo con PW_SKIP_BUILD) y al final se comprueba
+ * que no quedó ninguna copia de la base ni nada escuchando en los puertos de admin-run.
  */
 import { spawnSync } from 'node:child_process'
 import { readdirSync, readFileSync } from 'node:fs'
-import { createConnection } from 'node:net'
+import { createConnection, createServer } from 'node:net'
+import { listCopies } from '../../scripts/admin-db.mjs'
 
 const args = process.argv.slice(2)
 const webPort = process.env.PW_WEB_PORT || '3000'
@@ -59,18 +62,24 @@ const matches = (file, filters) => !filters.length || filters.some((f) => {
   }
 })
 
-/** Flags de admin-run que un archivo declara en su cabecera: `admin-run: --demo --web`. */
-function declaredFlags(file) {
-  const head = readFileSync(file, 'utf8').split(/\r?\n/).slice(0, 30).join('\n')
-  const line = head.match(/admin-run:\s*((?:--[a-z-]+\s*)+)/)
-  return line ? line[1].trim().split(/\s+/) : []
+/**
+ * Las corridas que un archivo declara en su cabecera, una por línea `admin-run: …` con sus flags
+ * (`admin-run: --demo --web`; `admin-run: sin Eros` es una corrida sin flags). Sin líneas, una sin flags.
+ */
+function declaredRuns(file) {
+  const head = readFileSync(file, 'utf8').split(/\r?\n/).slice(0, 40)
+  const runs = head
+    .map(line => line.match(/^\s*\*?\s*admin-run:(.*)$/))
+    .filter(Boolean)
+    .map(match => match[1].match(/--[a-z-]+/g) ?? [])
+  return runs.length ? runs : [[]]
 }
 
 /** Corridas del admin nuevo: specs con su config y pruebas de API con node --test. */
 function adminRuns() {
   const filters = fileFilters()
   const specs = readdirSync('tests/e2e')
-    .filter(f => /^admin-.+\.spec\.ts$/.test(f) && f !== 'admin-audit.spec.ts')
+    .filter(f => /^admin-.+\.spec\.ts$/.test(f))
     .map(f => `tests/e2e/${f}`)
   let units = []
   try {
@@ -79,19 +88,52 @@ function adminRuns() {
   catch {
     // Todavía no hay pruebas de API del admin.
   }
+  const perFile = (file, command) => declaredRuns(file).map(flags => ({ file, flags, command }))
   return [
-    ...specs.filter(f => matches(f, filters)).map(file => ({ file, command: ['pnpm', 'exec', 'playwright', 'test', '-c', 'playwright.admin.config.ts', file, ...perRunOptions()] })),
-    ...units.filter(f => matches(f, filters)).map(file => ({ file, command: ['pnpm', 'tsx', '--test', file] })),
+    ...specs.filter(f => matches(f, filters)).flatMap(file => perFile(file, ['pnpm', 'exec', 'playwright', 'test', '-c', 'playwright.admin.config.ts', file, ...perRunOptions()])),
+    ...units.filter(f => matches(f, filters)).flatMap(file => perFile(file, ['pnpm', 'tsx', '--test', file])),
   ]
 }
 
-function runAdmin(runs) {
-  const failed = []
-  for (const { file, command } of runs) {
-    console.log(`\n· admin · ${file}`)
-    const status = run('node', ['scripts/admin-run.mjs', ...declaredFlags(file), '--', ...command])
-    if (status !== 0) failed.push(`admin · ${file}`)
+/** Los puertos que usa scripts/admin-run.mjs para la API, el Eros simulado y el sitio. */
+const ADMIN_PORTS = [3940, 3990]
+
+function portBindable(port) {
+  return new Promise((resolve) => {
+    const server = createServer()
+    server.once('error', () => resolve(false))
+    server.listen(port, '0.0.0.0', () => server.close(() => resolve(true)))
+  })
+}
+
+/** Lo que admin-run tiene que dejar limpio: ninguna copia de la base y ningún puerto suyo ocupado. */
+async function adminLeftovers() {
+  const left = []
+  try {
+    left.push(...listCopies().map(name => `la base ${name}`))
   }
+  catch (err) {
+    left.push(`no se pudieron listar las copias de la base (${err instanceof Error ? err.message : err})`)
+  }
+  for (let port = ADMIN_PORTS[0]; port <= ADMIN_PORTS[1]; port++) {
+    if (!await portBindable(port)) left.push(`el puerto ${port} ocupado`)
+  }
+  return left
+}
+
+async function runAdmin(runs) {
+  if (!runs.length) return []
+  if (!process.env.PW_SKIP_BUILD && run('pnpm', ['build:admin']) !== 0) return ['admin · pnpm build:admin']
+  const failed = []
+  for (const { file, flags, command } of runs) {
+    const label = `admin${flags.length ? ` ${flags.join(' ')}` : ''} · ${file}`
+    console.log(`\n· ${label}`)
+    const status = run('node', ['scripts/admin-run.mjs', ...flags, '--', ...command])
+    if (status !== 0) failed.push(label)
+  }
+  const left = await adminLeftovers()
+  if (left.length) failed.push(`admin-run dejó ${left.join(', ')}`)
+  else console.log('\nadmin-run no dejó copias de la base ni puertos ocupados entre 3940 y 3990.')
   return failed
 }
 
@@ -159,7 +201,7 @@ const admin = adminRuns()
 
 if (process.env.PLAYWRIGHT_BASE_URL) {
   const status = run('pnpm', ['exec', 'playwright', 'test', ...args])
-  const failed = runAdmin(admin)
+  const failed = await runAdmin(admin)
   process.exit(status || (failed.length ? 1 : 0))
 }
 
@@ -184,7 +226,7 @@ for (const { project, file } of runs) {
   if (status !== 0) failed.push(`${project} · ${file}`)
 }
 
-failed.push(...runAdmin(admin))
+failed.push(...await runAdmin(admin))
 
 const total = runs.length + admin.length
 console.log(`\n${total - failed.length} de ${total} corridas en verde.`)

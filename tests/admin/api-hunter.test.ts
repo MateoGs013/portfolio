@@ -1,6 +1,9 @@
 /**
  * Job Hunter en el servidor (H0): contrato con Eros, una sola fuente del CV, la caché por vacante y la
- * política sin Eros. Corre en los dos modos; cada bloque dice en cuál:
+ * política sin Eros. Corre en los dos modos; cada bloque dice en cuál. `pnpm test:e2e` corre los dos:
+ *
+ * admin-run: sin Eros
+ * admin-run: --eros-mock
  *
  *   node scripts/admin-run.mjs -- pnpm tsx --test tests/admin/api-hunter.test.ts              (sin Eros)
  *   node scripts/admin-run.mjs --eros-mock -- pnpm tsx --test tests/admin/api-hunter.test.ts  (Eros simulado)

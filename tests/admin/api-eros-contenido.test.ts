@@ -1,6 +1,11 @@
 /**
  * Publicaciones y Tendencias en el servidor (R0): contrato normalizado, «Publicar en el blog» que crea
- * un borrador y estados honestos sin Eros. Corre en los tres modos; cada bloque dice en cuál:
+ * un borrador y estados honestos sin Eros. Corre en los tres modos; cada bloque dice en cuál.
+ * `pnpm test:e2e` corre los tres:
+ *
+ * admin-run: sin Eros
+ * admin-run: --demo
+ * admin-run: --eros-mock
  *
  *   node scripts/admin-run.mjs -- pnpm tsx --test tests/admin/api-eros-contenido.test.ts              (sin Eros)
  *   node scripts/admin-run.mjs --demo -- pnpm tsx --test tests/admin/api-eros-contenido.test.ts       (muestra)

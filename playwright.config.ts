@@ -47,10 +47,10 @@ const widths: Record<number, Use> = {
 }
 
 /**
- * Las specs del admin nuevo (admin-*.spec.ts) corren con playwright.admin.config.ts contra una API
- * propia (scripts/admin-run.mjs). admin-audit.spec.ts sigue acá mientras viva el admin actual.
+ * Las specs del admin (admin-*.spec.ts, admin-audit incluida) corren con playwright.admin.config.ts
+ * contra una API propia (scripts/admin-run.mjs): ningún proyecto del sitio las toma.
  */
-const ADMIN_SPECS = /admin-(?!audit\.spec\.ts$)[^/\\]*\.spec\.ts$/
+const ADMIN_SPECS = /admin-[^/\\]*\.spec\.ts$/
 
 /** Lo que cambia con el ancho o con el tema: accesibilidad, estabilidad del layout y capturas de referencia. */
 const LAYOUT = ['**/a11y.spec.ts', '**/cls.spec.ts', '**/visual.spec.ts']
