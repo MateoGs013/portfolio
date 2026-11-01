@@ -52,10 +52,11 @@ adminApi.use((req, _res, next) => {
   next()
 })
 adminApi.use(requireAdmin)
-// Eros: /hunter y /radar son proxys que no tocan el contenido del sitio. /content sí escribe en la
-// base (publica artículos que redacta Eros), así que también olvida los respaldos al salir bien.
+// Eros: /hunter, /content y /radar son proxys que no tocan lo que muestra el sitio. Lo único que
+// /content escribe en la base es un artículo en borrador («Publicar en el blog»), que la API pública
+// no lista: no hace falta olvidar sus respaldos.
 adminApi.use('/hunter', hunterRouter)
-adminApi.use('/content', forgetsLastGood, contentRouter)
+adminApi.use('/content', contentRouter)
 adminApi.use('/radar', radarRouter)
 adminApi.use(statusRouter)
 adminApi.use(contentApi)

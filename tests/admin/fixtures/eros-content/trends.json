@@ -1,0 +1,34 @@
+{
+  "trends": [
+    {
+      "id": "eros-mock-trend-postgres",
+      "title": "PostgreSQL como base relacional y de vectores",
+      "url": "https://example.com/notas/postgres-vectores",
+      "source": "hacker news",
+      "summary": "Debate sobre usar pgvector en lugar de una base vectorial aparte.",
+      "relevance_score": 0.87,
+      "engineering_angle": "Una sola base para relaciones y vectores.",
+      "tags": "postgresql, pgvector",
+      "detected_at": "2026-10-30T08:00:00.000Z",
+      "status": "DISCOVERED",
+      "post_id": null
+    },
+    {
+      "id": "eros-mock-trend-nuxt",
+      "title": "Renderizado híbrido con Nuxt",
+      "url": "javascript:alert(1)",
+      "source": "GITHUB",
+      "summary": null,
+      "relevance_score": null,
+      "tags": [
+        "nuxt"
+      ],
+      "status": "GENERATED",
+      "post_id": "eros-mock-post-arquitectura"
+    },
+    {
+      "id": "eros-mock-trend-sin-titulo",
+      "source": "DEVTO"
+    }
+  ]
+}

@@ -1,7 +1,8 @@
 /**
  * Recorrido de integración del admin contra la app en un puerto libre, con el token del entorno
  * (dev-token no vale con ADMIN_TOKEN definido). Sin ids fijos: la vacante es una pegada
- * (manual-<azar>) y la tendencia, la primera que lista el radar. El CV se compara contra /api/cv.
+ * (manual-<azar>) y la publicación y la tendencia son las primeras que lista Eros (sin Eros no hay
+ * ninguna: esas rutas responden 503). El CV se compara contra /api/cv.
  *
  *   ADMIN_TOKEN=<aleatorio> pnpm tsx scripts/test-audit.ts
  */
@@ -160,25 +161,31 @@ async function run() {
     if (!data.ok) throw new Error('Apply not ok')
   })
 
-  // 5. Content endpoints. Sin Eros, los posts son ejemplos generados desde los artículos de la base
-  // y publicar, despachar o cambiar el estado responde error (nunca un éxito en memoria).
+  // 5. Content endpoints. Sin Eros no hay publicaciones: la lista responde 503 { offline } y
+  // publicar, despachar o cambiar el estado responden error (nunca un éxito en memoria).
   let postId = ''
   let erosOffline = false
-  await test('GET /api/admin/content/posts -> 200', async () => {
+  const offlineBody = (data: { offline?: unknown, error?: unknown }) => data.offline === true && typeof data.error === 'string' && /^Eros no/.test(data.error)
+  await test('GET /api/admin/content/posts -> 200 con Eros, 503 { offline } sin Eros', async () => {
     const res = await fetch(`${base}/api/admin/content/posts`, {
       headers: { Authorization: `Bearer ${token}` },
     })
-    if (res.status !== 200) throw new Error(`Status ${res.status}`)
     const posts = await res.json()
+    if (res.status === 503) {
+      if (!offlineBody(posts)) throw new Error('503 sin offline o sin mensaje en español')
+      erosOffline = true
+      console.log('   sin Eros:', posts.error)
+      return
+    }
+    if (res.status !== 200) throw new Error(`Status ${res.status}`)
     if (!Array.isArray(posts)) throw new Error('Expected array')
-    erosOffline = res.headers.get('X-Eros-Source') === 'fallback'
     postId = posts[0]?.id ?? ''
-    if (!postId) throw new Error('No posts to test with')
-    console.log('   content posts length:', posts.length, erosOffline ? '(ejemplos desde la base)' : '(Eros)')
+    console.log('   content posts length:', posts.length)
   })
 
-  await test('POST /api/admin/content/carousel/:id/ticket -> 200 and HTML', async () => {
-    const res = await fetch(`${base}/api/admin/content/carousel/${encodeURIComponent(postId)}/ticket`, {
+  await test('POST /api/admin/content/carousel/:id/ticket -> 200 and HTML (503 sin Eros)', async () => {
+    const id = postId || 'eros_real_1'
+    const res = await fetch(`${base}/api/admin/content/carousel/${encodeURIComponent(id)}/ticket`, {
       method: 'POST',
       headers: { Authorization: `Bearer ${token}` },
     })
@@ -186,22 +193,28 @@ async function run() {
     const data = await res.json()
     if (!data.ticket) throw new Error('No carousel ticket')
 
-    const htmlRes = await fetch(`${base}/api/admin/content/carousel/${encodeURIComponent(postId)}/html?ticket=${data.ticket}`)
-    if (htmlRes.status !== 200) throw new Error(`Carousel HTML Status ${htmlRes.status}`)
+    const htmlRes = await fetch(`${base}/api/admin/content/carousel/${encodeURIComponent(id)}/html?ticket=${data.ticket}`)
     const html = await htmlRes.text()
+    if (erosOffline) {
+      if (htmlRes.status !== 503 || !html.includes('Eros no responde')) throw new Error(`Carousel sin Eros: ${htmlRes.status}`)
+      return
+    }
+    if (!postId) return
+    if (htmlRes.status !== 200) throw new Error(`Carousel HTML Status ${htmlRes.status}`)
     if (!html.includes('carousel-stage')) throw new Error('Invalid Carousel HTML')
   })
 
-  await test('POST /api/admin/content/posts/:id/publish-to-blog -> 201 with Eros, error without it', async () => {
+  await test('POST /api/admin/content/posts/:id/publish-to-blog -> 201 borrador con Eros, error sin él', async () => {
     const before = await fetch(`${base}/api/admin/articles`, { headers: { Authorization: `Bearer ${token}` } }).then(r => r.json())
-    const res = await fetch(`${base}/api/admin/content/posts/${encodeURIComponent(postId)}/publish-to-blog`, {
+    const res = await fetch(`${base}/api/admin/content/posts/${encodeURIComponent(postId || 'eros_real_1')}/publish-to-blog`, {
       method: 'POST',
       headers: { Authorization: `Bearer ${token}` },
     })
     const data = await res.json()
     if (!erosOffline) {
-      if (res.status !== 201 || !data.article) throw new Error(`Status ${res.status}`)
-      console.log('   published article slug:', data.article.slug)
+      if (!postId) return
+      if (res.status !== 201 || !data.article?.slug) throw new Error(`Status ${res.status}`)
+      console.log('   borrador creado:', data.article.slug)
       return
     }
     if (res.status < 400 || !data.error) throw new Error(`Expected an error without Eros, got ${res.status}`)
@@ -210,35 +223,38 @@ async function run() {
     console.log(`   sin Eros: ${res.status} ${data.error}`)
   })
 
-  for (const [method, path] of [['POST', 'publish'], ['PATCH', 'status']] as const) {
+  for (const [method, path, body] of [['POST', 'publish', { channel: 'linkedin' }], ['PATCH', 'status', { status: 'published' }]] as const) {
     await test(`${method} /api/admin/content/posts/:id/${path} without Eros -> error`, async () => {
       if (!erosOffline) return
-      const res = await fetch(`${base}/api/admin/content/posts/${encodeURIComponent(postId)}/${path}`, {
+      const res = await fetch(`${base}/api/admin/content/posts/eros_real_1/${path}`, {
         method,
         headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: 'published' }),
+        body: JSON.stringify(body),
       })
       const data = await res.json()
-      if (res.status < 400 || !data.error) throw new Error(`Expected an error, got ${res.status}`)
+      if (res.status !== 503 || !offlineBody(data)) throw new Error(`Expected 503 offline, got ${res.status}`)
     })
   }
 
-  // 6. Radar endpoints
-  await test('GET /api/admin/radar/trends -> 200', async () => {
+  // 6. Radar endpoints. Sin Eros no hay tendencias: nada de URLs ni relevancias inventadas.
+  let trendId = ''
+  await test('GET /api/admin/radar/trends -> 200 con Eros, 503 { offline } sin Eros', async () => {
     const res = await fetch(`${base}/api/admin/radar/trends`, {
       headers: { Authorization: `Bearer ${token}` },
     })
-    if (res.status !== 200) throw new Error(`Status ${res.status}`)
     const trends = await res.json()
+    if (res.status === 503) {
+      if (!offlineBody(trends)) throw new Error('503 sin offline o sin mensaje en español')
+      return
+    }
+    if (res.status !== 200) throw new Error(`Status ${res.status}`)
     if (!Array.isArray(trends)) throw new Error('Expected array')
+    trendId = trends[0]?.id ?? ''
     console.log('   radar trends length:', trends.length)
   })
 
-  await test('POST /api/admin/radar/trends/:id/generate -> 200', async () => {
-    const trends = await (await fetch(`${base}/api/admin/radar/trends`, { headers: { Authorization: `Bearer ${token}` } })).json() as { id: string }[]
-    const trendId = trends[0]?.id
-    if (!trendId) throw new Error('El radar no lista tendencias')
-    const res = await fetch(`${base}/api/admin/radar/trends/${encodeURIComponent(trendId)}/generate`, {
+  await test('POST /api/admin/radar/trends/:id/generate -> 200 con Eros, 503 sin Eros', async () => {
+    const res = await fetch(`${base}/api/admin/radar/trends/${encodeURIComponent(trendId || 'eros_real_1')}/generate`, {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${token}`,
@@ -246,8 +262,13 @@ async function run() {
       },
       body: JSON.stringify({ pillar: 'TECHNICAL_BREAKDOWN' }),
     })
-    if (res.status !== 200) throw new Error(`Status ${res.status}`)
     const data = await res.json()
+    if (erosOffline) {
+      if (res.status !== 503 || !offlineBody(data)) throw new Error(`Expected 503 offline, got ${res.status}`)
+      return
+    }
+    if (!trendId) return
+    if (res.status !== 200) throw new Error(`Status ${res.status}`)
     if (!data.post) throw new Error('No post generated')
     console.log('   generated post id:', data.post.id)
   })

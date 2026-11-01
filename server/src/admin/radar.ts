@@ -1,160 +1,108 @@
+/**
+ * /api/admin/radar/*: las tendencias que detecta el radar de Eros (notas de terceros), con el
+ * contrato de erosContentContract.ts. Sin Eros, la lista responde 503 { offline: true } y buscar,
+ * cambiar el estado o crear una publicación fallan diciendo qué no pasó. Con EROS_DEMO=1 la lista
+ * sale de la muestra, sin dirección, fecha ni afinidad, y nunca se modifica.
+ */
 import { Router, type Request, type Response } from 'express'
+import { isTrendStatus, trendStatusLabels, type TrendChange, type TrendPost } from '../shared/contentContracts.js'
+import {
+  generateRequest,
+  invalid,
+  isErrorBody,
+  normalizeOnePost,
+  normalizeOneTrend,
+  normalizeTrends,
+  normalizeTrendScan,
+  sendContentFailure,
+  sendUnreadable,
+} from './erosContentContract.js'
+import { demoTrends, erosDemo, findDemoTrend, isDemoId, refuseDemo, sendDemo } from './fallbackContentData.js'
 import { forwardToEros, getParamId } from './proxy.js'
-import { generateContentPostHeuristic } from './fallbackContentData.js'
 
 export const radarRouter = Router()
 
-/**
- * Tendencias de ejemplo de Eros (notas de terceros tal como las detecta el radar) para operar el
- * admin sin el agente. No describen al candidato ni traen métricas suyas.
- */
-export const fallbackTrends = [
-  {
-    id: 'trend_pgvector_hn',
-    title: 'PostgreSQL 17 as a Universal Vector and Relational Database in Production',
-    url: 'https://news.ycombinator.com/item?id=41829011',
-    source: 'HACKER_NEWS',
-    summary: 'Debate de ingeniería sobre la consolidación de pgvector frente a Pinecone y Milvus para reducir la sobrecarga de sincronización de datos relacionales.',
-    relevance_score: 96,
-    engineering_angle: 'Persistencia relacional y vectores densos en PostgreSQL 17: análisis de trade-offs frente a bases vectoriales aisladas y control de latencia en un solo nodo.',
-    tags: ['postgresql', 'pgvector', 'database', 'rag', 'architecture'],
-    detected_at: new Date().toISOString(),
-    status: 'DISCOVERED',
-    post_id: null as string | null,
-  },
-  {
-    id: 'trend_fastapi_agents_devto',
-    title: 'Building Production-Ready AI Agents with FastAPI, Streaming and Deterministic Pipelines',
-    url: 'https://dev.to/engineering/fastapi-production-agents',
-    source: 'DEVTO',
-    summary: 'Patrones de arquitectura para agentes satélites desacoplados utilizando SSE (Server-Sent Events) y contratos estrictos con Pydantic.',
-    relevance_score: 92,
-    engineering_angle: 'Arquitectura de agentes autónomos satélites con FastAPI y streaming: determinismo en extracción estructurada y mitigación de fallos en producción.',
-    tags: ['fastapi', 'python', 'agents', 'architecture', 'api'],
-    detected_at: new Date(Date.now() - 3600000).toISOString(),
-    status: 'DISCOVERED',
-    post_id: null as string | null,
-  },
-  {
-    id: 'trend_nuxt4_perf_gh',
-    title: 'Nuxt 4 Nitro Engine Benchmarks: Sub-100ms Latency on Low-Cost Hardware',
-    url: 'https://github.com/nuxt/nuxt/discussions/2026',
-    source: 'GITHUB',
-    summary: 'Discusión y benchmarks de rendimiento en renderizado híbrido y bundle footprint mínimo para aplicaciones de ingeniería.',
-    relevance_score: 88,
-    engineering_angle: 'Frontend de alta precisión y densidad de datos: cómo medir Core Web Vitals propios, renderizado híbrido y ergonomía sin bloating ornamental.',
-    tags: ['nuxt', 'vue', 'performance', 'typescript', 'frontend'],
-    detected_at: new Date(Date.now() - 7200000).toISOString(),
-    status: 'DISCOVERED',
-    post_id: null as string | null,
-  },
-]
+const json = (method: string, body: unknown): RequestInit => ({ method, body: JSON.stringify(body ?? {}) })
+const trendPath = (id: string, rest = '') => `api/radar/trends/${encodeURIComponent(id)}${rest}`
 
-/** GET /api/admin/radar/trends - Lista de tendencias detectadas */
+const statusHint = `Elegí un estado: ${Object.values(trendStatusLabels).map(l => l.toLowerCase()).join(', ')}.`
+
+/** GET /api/admin/radar/trends[?status=&min_score=] → Trend[]. */
 radarRouter.get('/trends', async (req: Request, res: Response) => {
-  const query = new URLSearchParams(req.query as Record<string, string>).toString()
-  const result = await forwardToEros(`api/radar/trends${query ? `?${query}` : ''}`)
-  if (result.ok && Array.isArray(result.data)) {
-    return res.status(result.status).json(result.data)
+  const status = isTrendStatus(req.query['status']) ? req.query['status'] : null
+  const minScore = Number(req.query['min_score'])
+  const query = new URLSearchParams()
+  if (status) query.set('status', status)
+  if (Number.isFinite(minScore) && minScore > 0) query.set('min_score', String(minScore))
+  const result = await forwardToEros(`api/radar/trends${query.size ? `?${query}` : ''}`)
+  if (result.ok) {
+    res.json(normalizeTrends(result.data).filter(t => !status || t.status === status))
+    return
   }
-  // Fallback si Eros está desconectado o en inicialización
-  res.setHeader('X-Eros-Source', 'fallback')
-  res.json(fallbackTrends.map(t => ({ ...t, _source: 'fallback' })))
+  // La muestra no tiene afinidad: con un mínimo pedido no hay ninguna que lo cumpla.
+  if (erosDemo()) sendDemo(res, query.has('min_score') ? [] : demoTrends().filter(t => !status || t.status === status))
+  else sendContentFailure(res, result, 'trend')
 })
 
-/** POST /api/admin/radar/scan - Dispara un escaneo de fuentes tecnológicas */
+/** POST /api/admin/radar/scan[?limit=] → TrendScan (solo Eros). */
 radarRouter.post('/scan', async (req: Request, res: Response) => {
   const rawLimit = Number.parseInt(String(req.query['limit'] ?? '15'), 10)
   const limit = Number.isFinite(rawLimit) && rawLimit > 0 ? Math.min(rawLimit, 100) : 15
-  const result = await forwardToEros(`api/radar/scan?limit=${encodeURIComponent(String(limit))}`, { method: 'POST' })
-  if (result.ok) {
-    return res.status(result.status).json(result.data)
-  }
-  res.setHeader('X-Eros-Source', 'fallback')
-  res.json({
-    _source: 'fallback',
-    total_found: fallbackTrends.length,
-    new_trends: fallbackTrends.length,
-    trends: fallbackTrends.map(t => ({ ...t, _source: 'fallback' })),
-  })
+  const result = await forwardToEros(`api/radar/scan?limit=${limit}`, { method: 'POST' }, 60000)
+  if (result.ok) res.json(normalizeTrendScan(result.data))
+  else sendContentFailure(res, result, 'trend', 'No se buscaron tendencias nuevas.')
 })
 
-/** GET /api/admin/radar/trends/:id - Detalle de una tendencia */
+/** GET /api/admin/radar/trends/:id → Trend. */
 radarRouter.get('/trends/:id', async (req: Request, res: Response) => {
   const id = getParamId(req)
-  const result = await forwardToEros(`api/radar/trends/${encodeURIComponent(id)}`)
-  if (result.ok) {
-    return res.status(result.status).json(result.data)
+  if (isDemoId(id)) {
+    const trend = erosDemo() ? findDemoTrend(id) : null
+    if (trend) sendDemo(res, trend)
+    else res.status(404).json({ error: 'Esa tendencia de muestra no existe.', code: 'not_found', errors: [] })
+    return
   }
-  const found = fallbackTrends.find(t => t.id === id)
-  if (found) {
-    res.setHeader('X-Eros-Source', 'fallback')
-    return res.json({ ...found, _source: 'fallback' })
-  }
-  res.status(404).json({ error: 'Tendencia no encontrada' })
+  const result = await forwardToEros(trendPath(id))
+  const trend = result.ok ? normalizeOneTrend(result.data) : null
+  if (trend) res.json(trend)
+  else if (result.ok) sendUnreadable(res, 'Recargá la lista.')
+  else sendContentFailure(res, result, 'trend')
 })
 
-/** PATCH /api/admin/radar/trends/:id/status - Actualiza estado de tendencia */
+/** PATCH /api/admin/radar/trends/:id/status { status } → TrendChange (solo Eros). */
 radarRouter.patch('/trends/:id/status', async (req: Request, res: Response) => {
   const id = getParamId(req)
-  if (!id) {
-    res.status(400).json({ error: 'ID de tendencia requerido' })
+  const status: unknown = req.body?.status
+  if (!isTrendStatus(status)) {
+    res.status(400).json(invalid('status', statusHint, 'Ese estado no existe.'))
     return
   }
-  const result = await forwardToEros(`api/radar/trends/${encodeURIComponent(id)}/status`, {
-    method: 'PATCH',
-    body: JSON.stringify(req.body),
-  })
-  if (result.ok) {
-    return res.status(result.status).json(result.data)
-  }
-  const trend = fallbackTrends.find(t => t.id === id)
-  if (trend && req.body?.status) {
-    trend.status = req.body.status
-    return res.json({ ok: true, id, status: req.body.status })
-  }
-  res.status(result.status).json(result.data)
+  if (refuseDemo(res, id)) return
+  const result = await forwardToEros(trendPath(id, '/status'), json('PATCH', { status }))
+  if (result.ok) res.json({ ok: true, trend: normalizeOneTrend(result.data) } satisfies TrendChange)
+  else sendContentFailure(res, result, 'trend', 'El estado no cambió.')
 })
 
-/** POST /api/admin/radar/trends/:id/generate - Genera post omnicanal a partir de una tendencia */
+/**
+ * POST /api/admin/radar/trends/:id/generate { pillar?, custom_angle?, project_slug? } → TrendPost:
+ * Eros escribe una publicación a partir de la tendencia (solo Eros).
+ */
 radarRouter.post('/trends/:id/generate', async (req: Request, res: Response) => {
   const id = getParamId(req)
-  if (!id) {
-    res.status(400).json({ error: 'ID de tendencia requerido' })
+  // El tema es la tendencia: lo que valida generateRequest es el resto (enfoque, obra, puntos).
+  const request = generateRequest({ ...(req.body as Record<string, unknown> | undefined), topic: id })
+  if (isErrorBody(request)) {
+    res.status(400).json(request)
     return
   }
-  const result = await forwardToEros(`api/radar/trends/${encodeURIComponent(id)}/generate`, {
-    method: 'POST',
-    body: JSON.stringify(req.body),
-  })
-  if (result.ok) {
-    return res.status(result.status).json(result.data)
-  }
-
-  // Fallback heurístico
-  const trend = fallbackTrends.find(t => t.id === id)
-  if (!trend) {
-    res.status(404).json({ error: 'Tendencia no encontrada' })
+  if (refuseDemo(res, id)) return
+  const options = { pillar: request.pillar, custom_angle: request.custom_angle, project_slug: request.project_slug, key_points: request.key_points }
+  const result = await forwardToEros(trendPath(id, '/generate'), json('POST', options), 60000)
+  if (!result.ok) {
+    sendContentFailure(res, result, 'trend', 'No se creó la publicación.')
     return
   }
-  const angle = req.body?.custom_angle || trend.engineering_angle
-  const post = await generateContentPostHeuristic({
-    topic: trend.title,
-    pillar: req.body?.pillar || 'TECHNICAL_BREAKDOWN',
-    project_slug: req.body?.project_slug,
-    custom_angle: angle,
-    key_points: [
-      `Referencia original: ${trend.url}`,
-      `Síntesis: ${trend.summary}`,
-      `Ángulo de ingeniería: ${angle}`,
-    ],
-  })
-  trend.status = 'GENERATED'
-  trend.post_id = post.id
-
-  res.json({
-    ok: true,
-    trend_id: id,
-    post,
-  })
+  const post = normalizeOnePost(result.data)
+  if (post) res.json({ ok: true, trend_id: id, post } satisfies TrendPost)
+  else sendUnreadable(res, 'Recargá Publicaciones: puede que se haya creado igual.')
 })
