@@ -1,6 +1,7 @@
 /**
- * Lectura de una vacante para los respaldos del Job Hunter: en qué idioma está escrita y qué
- * tecnologías de la base menciona. No sabe nada del candidato: compara texto contra nombres.
+ * Lectura de una vacante: en qué idioma está escrita y qué tecnologías de la base menciona. No sabe
+ * nada del candidato: compara texto contra nombres. El idioma del CV y del pitch lo decide jobLang,
+ * con Eros o sin él, y viaja en la respuesta (`cv.lang`, `pitch.lang`): el admin no lo adivina.
  */
 import type { Lang } from '../content/lang.js'
 

@@ -1,5 +1,18 @@
-import { app } from '../server/src/app.js'
+/**
+ * Recorrido corto del CV y del asunto del Job Hunter contra la app en un puerto libre, con el token
+ * del entorno (nunca dev-token) y una vacante pegada (manual-<azar>): no depende de ids de Eros ni de
+ * la muestra. El nombre y las viñetas se comparan contra GET /api/cv.
+ *
+ *   ADMIN_TOKEN=<aleatorio> pnpm tsx scripts/test-cv-and-subject.ts
+ */
+import { randomBytes } from 'node:crypto'
 import type { Server } from 'node:http'
+import { app } from '../server/src/app.js'
+import type { CvDocument } from '../server/src/content/cv.js'
+import type { ApplyPreview, TailoredCv } from '../server/src/shared/hunterContracts.js'
+
+const token = process.env['ADMIN_TOKEN']
+if (!token) throw new Error('Falta ADMIN_TOKEN en el entorno: ADMIN_TOKEN=<aleatorio> pnpm tsx scripts/test-cv-and-subject.ts')
 
 async function run() {
   const server: Server = await new Promise((resolve) => {
@@ -8,73 +21,58 @@ async function run() {
   const addr = server.address()
   if (!addr || typeof addr === 'string') throw new Error('Could not get address')
   const base = `http://127.0.0.1:${addr.port}`
-  const token = 'dev-token'
-
+  const auth = { Authorization: `Bearer ${token}` }
+  const json = { ...auth, 'Content-Type': 'application/json' }
   console.log('Testing CV and Subject on', base)
 
-  // 1. Solicitar ticket de CV
-  const ticketRes = await fetch(`${base}/api/admin/hunter/cv/0cf33b331de5caf9/ticket`, {
-    method: 'POST',
-    headers: { Authorization: `Bearer ${token}` },
-  })
+  const cv = ((await (await fetch(`${base}/api/cv`)).json()) as { data: CvDocument }).data
+  const name = cv.header.name
+  if (!name) throw new Error('GET /api/cv no trae nombre')
+
+  const id = `manual-${randomBytes(4).toString('hex')}`
+  const job = { job: { title: 'Desarrollador Frontend', company: 'Ejemplo', description: 'Buscamos experiencia en Vue 3 y Nuxt.', tags: ['Vue 3'], url: '', contact_email: '' } }
+
+  // 1. Generar el CV: sale de la base, en el idioma de la vacante.
+  const built = await fetch(`${base}/api/admin/hunter/cv/${id}`, { method: 'POST', headers: json, body: JSON.stringify(job) })
+  if (built.status !== 200) throw new Error(`POST /cv failed: ${built.status}`)
+  const tailored = await built.json() as TailoredCv
+  if (tailored.data.name !== name || tailored.data.lang !== 'es') throw new Error('El CV no es el de /api/cv en español')
+  const highlights = cv.experience.flatMap(e => e.highlights)
+  if (!tailored.data.experience.flatMap(e => e.bullets).every(b => highlights.includes(b))) throw new Error('Hay viñetas que no están en la base')
+  console.log('[PASS] CV generado desde la base para', id)
+
+  // 2. Ticket y hoja HTML: la misma hoja con recargas.
+  const ticketRes = await fetch(`${base}/api/admin/hunter/cv/${id}/ticket`, { method: 'POST', headers: auth })
   if (ticketRes.status !== 200) throw new Error(`Ticket failed: ${ticketRes.status}`)
-  const { ticket } = await ticketRes.json()
-  console.log('[PASS] Ticket generado:', ticket)
-
-  // 2. Abrir CV HTML con ticket
-  const cvRes1 = await fetch(`${base}/api/admin/hunter/cv/0cf33b331de5caf9/html?ticket=${encodeURIComponent(ticket)}`)
-  if (cvRes1.status !== 200) throw new Error(`CV HTML failed with status: ${cvRes1.status}`)
-  const html1 = await cvRes1.text()
-  if (html1.includes('Acceso no autorizado al CV')) throw new Error('Returned unauthorized error!')
-  if (!html1.includes('Mateo Gabriel Sonzogni')) throw new Error('Missing candidate name in CV')
-  if (cvRes1.headers.get('X-Eros-Source') === 'fallback') {
-    // Respaldo: el CV sale de la base (composeCv), no de un candidato escrito a mano.
-    if (!html1.includes('Río Negro, Argentina')) throw new Error('Fallback CV must take its location from the contact doc')
-    if (/Paran[aá]|\+54 343|UTN/.test(html1)) throw new Error('Fallback CV still carries the hand-written candidate')
-    if (!html1.includes('@page { size: A4; margin: 10.5mm 12mm; }')) throw new Error('Fallback CV lost its A4 @page')
+  const { ticket } = await ticketRes.json() as { ticket: string }
+  for (const attempt of ['primera', 'recarga']) {
+    const sheet = await fetch(`${base}/api/admin/hunter/cv/${id}/html?ticket=${encodeURIComponent(ticket)}`)
+    if (sheet.status !== 200) throw new Error(`CV HTML (${attempt}) failed: ${sheet.status}`)
+    const html = await sheet.text()
+    if (!html.includes(name)) throw new Error('La hoja no trae el nombre de /api/cv')
+    if (!html.includes('@page { size: A4; margin: 10.5mm 12mm; }')) throw new Error('La hoja perdió su @page A4')
   }
-  console.log('[PASS] CV HTML cargado exitosamente sin error de autorizacion')
+  console.log('[PASS] Hoja HTML con ticket, también al recargar')
 
-  // 3. Re-visitar el CV HTML con el mismo ticket (simulando recarga o navegacion)
-  const cvRes2 = await fetch(`${base}/api/admin/hunter/cv/0cf33b331de5caf9/html?ticket=${encodeURIComponent(ticket)}`)
-  if (cvRes2.status !== 200) throw new Error(`CV reload failed: ${cvRes2.status}`)
-  const html2 = await cvRes2.text()
-  if (html2.includes('Acceso no autorizado al CV')) throw new Error('CV expired on reload!')
-  console.log('[PASS] Ticket HMAC sobrevive a multiples accesos y recargas sin expirar')
+  // 3. Texto plano del mismo CV.
+  const text = await (await fetch(`${base}/api/admin/hunter/cv/${id}/txt?ticket=${encodeURIComponent(ticket)}`)).text()
+  if (!text.startsWith(`${name}\n`) || /<[a-z][^>]*>/i.test(text)) throw new Error('Texto plano inválido')
+  console.log('[PASS] Texto plano sin marcado')
 
-  // 4. Probar apply-preview con ID conocido
-  const prevRes1 = await fetch(`${base}/api/admin/hunter/jobs/0cf33b331de5caf9/apply-preview`, {
-    headers: { Authorization: `Bearer ${token}` },
-  })
-  if (prevRes1.status !== 200) throw new Error(`apply-preview failed: ${prevRes1.status}`)
-  const prevData1 = await prevRes1.json()
-  if (!prevData1.subject || !prevData1.subject.trim()) throw new Error('Subject is empty!')
-  console.log('[PASS] Asunto generado para vacante conocida:', prevData1.subject)
+  // 4. Ticket de otra vacante y CV que no existe.
+  if ((await fetch(`${base}/api/admin/hunter/cv/otra-${id}/html?ticket=${encodeURIComponent(ticket)}`)).status !== 401) throw new Error('El ticket abre otra vacante')
+  if ((await fetch(`${base}/api/admin/hunter/cv/otra-${id}/html`, { headers: auth })).status !== 409) throw new Error('Sin CV no responde 409')
+  console.log('[PASS] 401 con el ticket de otra vacante y 409 sin CV')
 
-  // 5. Probar apply-preview con ID no registrado o sintetico
-  const prevRes2 = await fetch(`${base}/api/admin/hunter/jobs/custom_random_id_999/apply-preview?title=Senior+DevOps+Engineer&company=CloudCorp`, {
-    headers: { Authorization: `Bearer ${token}` },
-  })
-  if (prevRes2.status !== 200) throw new Error(`synthetic apply-preview failed: ${prevRes2.status}`)
-  const prevData2 = await prevRes2.json()
-  if (!prevData2.subject || !prevData2.subject.trim()) throw new Error('Synthetic subject is empty!')
-  console.log('[PASS] Asunto generado para vacante dinamica/sintetica:', prevData2.subject)
-
-  // 6. Probar render de CV para vacante dinamica/sintetica con ticket HMAC
-  const ticketResSynth = await fetch(`${base}/api/admin/hunter/cv/custom_random_id_999/ticket`, {
-    method: 'POST',
-    headers: { Authorization: `Bearer ${token}` },
-  })
-  const { ticket: synthTicket } = await ticketResSynth.json()
-  const cvSynthRes = await fetch(`${base}/api/admin/hunter/cv/custom_random_id_999/html?ticket=${encodeURIComponent(synthTicket)}&title=Senior+DevOps+Engineer&company=CloudCorp`)
-  if (cvSynthRes.status !== 200) throw new Error(`synthetic CV HTML failed: ${cvSynthRes.status}`)
-  const synthHtml = await cvSynthRes.text()
-  if (synthHtml.includes('Acceso no autorizado al CV')) throw new Error('Synthetic CV unauthorized!')
-  if (!synthHtml.includes('Mateo Gabriel Sonzogni')) throw new Error('Missing candidate in synthetic CV')
-  console.log('[PASS] CV dinamico renderizado exitosamente para vacante sintetica')
+  // 5. Asunto de la vista previa, con la vacante en el cuerpo.
+  const preview = await fetch(`${base}/api/admin/hunter/jobs/${id}/apply-preview`, { method: 'POST', headers: json, body: JSON.stringify(job) })
+  if (preview.status !== 200) throw new Error(`apply-preview failed: ${preview.status}`)
+  const { subject } = await preview.json() as ApplyPreview
+  if (!subject.trim() || !subject.includes(name)) throw new Error(`Asunto inválido: ${subject}`)
+  console.log('[PASS] Asunto:', subject)
 
   server.close()
-  console.log('\nTODAS LAS PRUEBAS DE CV Y ASUNTO PASARON EXITOSAMENTE!')
+  console.log('\nTODAS LAS PRUEBAS DE CV Y ASUNTO PASARON')
 }
 
 run().catch((e) => {

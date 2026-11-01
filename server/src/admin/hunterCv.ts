@@ -1,50 +1,19 @@
 /**
- * CV Harvard ATS de respaldo del Job Hunter. Es el mismo CvDocument que el sitio público
- * (`composeCv`, server/src/content/cv.ts) mapeado al contrato que lee AdmJobHunter.js y que
- * también devuelve Eros. La adaptación a la vacante solo toca el orden y el resumen: el contenido
- * es el de la base.
+ * CV Harvard ATS del Job Hunter. Es siempre el mismo CvDocument que el sitio público (`composeCv`,
+ * server/src/content/cv.ts) pasado al contrato del admin (AdminCv). La adaptación a una vacante solo
+ * cambia el orden (categorías, tecnologías, entradas y viñetas) y suma al resumen las tecnologías
+ * que la vacante nombra: el contenido es el de la base. Las pistas vienen de Eros (erosHints.ts) o,
+ * sin Eros, de la propia vacante (jobHints).
  */
+import type { TechCategory } from '../../generated/prisma/enums.js'
 import type { CvDocument, CvPeriod } from '../content/cv.js'
 import type { Lang } from '../content/lang.js'
-import { byAffinity, jobLang, jobText, overlap, techMatches, type JobText } from './hunterMatch.js'
-import { loadCv } from './profile.js'
+import type { AdminCv, CvAdaptation, CvDiscard } from '../shared/hunterContracts.js'
+import { byAffinity, jobText, overlap, techMatches, type JobText } from './hunterMatch.js'
 
-export interface AdminCvEntry {
-  title: string
-  role: string
-  period: string
-  location: string
-  bullets: string[]
-}
+export type { AdminCv, AdminCvEducation, AdminCvEntry, CvAdaptation } from '../shared/hunterContracts.js'
 
-export interface AdminCvEducation {
-  degree: string
-  institution: string | null
-  period: string
-  location: string | null
-  details: string | null
-}
-
-/** Contrato del CV adaptado (el mismo que responde Eros en POST /api/cv/:id). */
-export interface AdminCv {
-  lang: Lang
-  name: string | null
-  title: string | null
-  location: string | null
-  email: string | null
-  portfolio: string | null
-  github: string | null
-  linkedin: string | null
-  summary: string | null
-  /** Rótulo de categoría → tecnologías, las que nombra la vacante primero. */
-  skills: Record<string, string[]>
-  experience: AdminCvEntry[]
-  education: AdminCvEducation[]
-  languages: string[]
-  methodologies: string | null
-}
-
-/** Rótulos de interfaz del CV de respaldo, en el idioma de la vacante. */
+/** Rótulos de interfaz del CV, en el idioma de la vacante. */
 export const cvLabels = {
   es: {
     summary: 'Perfil profesional',
@@ -97,21 +66,47 @@ export function formatPeriod(period: CvPeriod, lang: Lang, withMonth = true): st
   return start === end ? start : `${start} – ${end}`
 }
 
-/** Mapea el CvDocument al contrato del admin, ordenado por afinidad con la vacante. */
-export function tailorCv(cv: CvDocument, job: JobText): AdminCv {
+/**
+ * Pistas de adaptación, ya llevadas a la base: cada valor existe en el CvDocument. Dan el orden; lo
+ * que no nombran queda después, en el orden de la base. Nunca suman contenido.
+ */
+export interface CvHints {
+  categories: TechCategory[]
+  /** Nombres de Tech de la base, los prioritarios primero. */
+  techs: string[]
+  /** Slugs de las entradas de experiencia del CV base. */
+  entries: string[]
+  /** Slug de la entrada → índices de sus highlights, en orden. */
+  bullets: Record<string, number[]>
+  summaryProposal: string | null
+  discarded: CvDiscard[]
+}
+
+export const noHints: CvHints = { categories: [], techs: [], entries: [], bullets: {}, summaryProposal: null, discarded: [] }
+
+/** Los que tienen lugar en `rank` primero (en ese orden), después el resto como estaba. */
+function ranked<T>(items: readonly T[], rank: (item: T) => number): T[] {
+  return items
+    .map((item, index) => ({ item, index, rank: rank(item) }))
+    .sort((a, b) => (a.rank < 0 ? Infinity : a.rank) - (b.rank < 0 ? Infinity : b.rank) || a.index - b.index)
+    .map(entry => entry.item)
+}
+
+/** Sin Eros: las categorías con más tecnologías de la vacante primero y esas tecnologías adelante. */
+export function jobHints(cv: CvDocument, job: JobText): CvHints {
+  const matched = techMatches(cv.skills.flatMap(g => g.items), jobText(job))
+  const categories = byAffinity(cv.skills, g => overlap(g.items, matched))
+    .filter(g => overlap(g.items, matched) > 0)
+    .map(g => g.category)
+  return { ...noHints, categories, techs: matched }
+}
+
+/** El CV de la base en el contrato del admin, con el orden de `hints` y el resumen que corresponda. */
+function toAdminCv(cv: CvDocument, hints: CvHints, summary: string | null): AdminCv {
   const lang = cv.lang
   const labels = cvLabels[lang]
-  const allTechs = cv.skills.flatMap(group => group.items)
-  const matched = techMatches(allTechs, jobText(job))
-
-  const skills = byAffinity(cv.skills, group => overlap(group.items, matched))
-    .map(group => [
-      labels.categories[group.category],
-      byAffinity(group.items, item => (matched.includes(item) ? 1 : 0)),
-    ] as const)
-
-  const focus = matched.length ? `${labels.focus}: ${matched.slice(0, 6).join(', ')}.` : null
-  const summary = [cv.summary, focus].filter(Boolean).join(' ') || null
+  const groups = ranked(cv.skills, g => hints.categories.indexOf(g.category))
+  const entries = ranked(cv.experience, e => hints.entries.indexOf(e.slug))
 
   return {
     lang,
@@ -123,16 +118,18 @@ export function tailorCv(cv: CvDocument, job: JobText): AdminCv {
     github: cv.header.github,
     linkedin: cv.header.linkedin,
     summary,
-    skills: Object.fromEntries(skills.map(([label, items]) => [label, items])),
-    // Las entradas quedan en el orden curado (cvOrder, cronología inversa): un CV ATS con la cronología
-    // rota se lee como error. La adaptación toca habilidades y resumen, no el orden de la trayectoria.
-    experience: cv.experience.map(e => ({
-      title: e.title,
-      role: e.role,
-      period: formatPeriod(e.period, lang),
-      location: e.location ?? labels.remote,
-      bullets: e.highlights,
-    })),
+    skills: Object.fromEntries(groups.map(g => [labels.categories[g.category], ranked(g.items, i => hints.techs.indexOf(i))])),
+    experience: entries.map((e) => {
+      const order = hints.bullets[e.slug] ?? []
+      const bullets = ranked(e.highlights.map((text, index) => ({ text, index })), b => order.indexOf(b.index))
+      return {
+        title: e.title,
+        role: e.role,
+        period: formatPeriod(e.period, lang),
+        location: e.location ?? labels.remote,
+        bullets: bullets.map(b => b.text),
+      }
+    }),
     education: cv.education.map(e => ({
       degree: e.degree,
       institution: e.org,
@@ -145,7 +142,30 @@ export function tailorCv(cv: CvDocument, job: JobText): AdminCv {
   }
 }
 
-/** POST /cv/:id de respaldo: el CV de la base, en el idioma de la vacante. */
-export async function generateCvHeuristic(job: JobText): Promise<{ data: AdminCv }> {
-  return { data: tailorCv(await loadCv(jobLang(job)), job) }
+/** El CV base, sin adaptar: lo que muestra Trayectoria (/cv-base/html). */
+export function baseCv(cv: CvDocument): AdminCv {
+  return toAdminCv(cv, noHints, cv.summary)
+}
+
+/**
+ * El CV para una vacante. El resumen es el de la base más las tecnologías que la vacante nombra;
+ * con `useSummaryProposal`, el que propone Eros (si lo hay).
+ */
+export function tailorCv(cv: CvDocument, job: JobText, hints: CvHints, useSummaryProposal = false): { cv: AdminCv, adaptation: CvAdaptation, usesProposal: boolean } {
+  const matched = techMatches(cv.skills.flatMap(g => g.items), jobText(job))
+  const focus = matched.length ? `${cvLabels[cv.lang].focus}: ${matched.slice(0, 6).join(', ')}.` : null
+  const usesProposal = useSummaryProposal && hints.summaryProposal !== null
+  const summary = usesProposal ? hints.summaryProposal : [cv.summary, focus].filter(Boolean).join(' ') || null
+  const titles = new Map(cv.experience.map(e => [e.slug, e.title]))
+
+  return {
+    cv: toAdminCv(cv, hints, summary),
+    usesProposal,
+    adaptation: {
+      categories: hints.categories,
+      entries: hints.entries.map(slug => titles.get(slug) ?? slug),
+      bullets: Object.values(hints.bullets).reduce((sum, order) => sum + order.length, 0),
+      discarded: hints.discarded,
+    },
+  }
 }

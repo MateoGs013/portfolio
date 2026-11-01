@@ -1,5 +1,10 @@
-import type { Request } from 'express'
-import { env } from '../env.js'
+/**
+ * Pedidos a Eros. La dirección sale de HUNTER_API_URL (sin valor por defecto: sin ella, Eros queda
+ * «no configurado»). Un corte cuenta solo los fallos de Eros (red, tiempo agotado y 5xx): después de
+ * tres seguidos se deja de preguntar 30 s. Un 4xx es una respuesta de Eros y no lo castiga.
+ */
+import type { Request, Response } from 'express'
+import type { AdminErrorBody, AdminStatus } from '../shared/adminContracts.js'
 
 export function escapeHtml(s: string): string {
   return s
@@ -13,186 +18,170 @@ export function escapeHtml(s: string): string {
 export function getParamId(req: Request, paramName = 'id'): string {
   const val = req.params[paramName]
   if (Array.isArray(val)) return val[0] || ''
-  return typeof val === 'string' ? val : ''
+  return typeof val === 'string' ? val.trim() : ''
 }
 
+/** La dirección de Eros, o '' si no está configurada. Se lee en cada pedido. */
 export function getErosBaseUrl(): string {
-  return (process.env['HUNTER_API_URL'] || env.hunterApiUrl || 'https://eros.mateogs.tech').replace(/\/+$/, '')
+  return (process.env['HUNTER_API_URL'] ?? '').trim().replace(/\/+$/, '')
+}
+
+const erosKey = () => process.env['EROS_API_KEY'] ?? ''
+
+/** Por qué un pedido no salió bien. `rejected` es un 4xx de Eros: respondió, pero dijo que no. */
+export type ErosFailureReason = 'unconfigured' | 'paused' | 'network' | 'timeout' | 'server' | 'auth' | 'rejected'
+
+export interface ErosFailure {
+  reason: ErosFailureReason
+  /** El código de Eros en un 4xx o 5xx; 0 si no hubo respuesta. */
+  upstream: number
+  message: string
 }
 
 export interface ForwardResult<T = unknown> {
   ok: boolean
   status: number
+  /** La respuesta de Eros; en un fallo sin respuesta, el cuerpo de error del admin. */
   data: T
+  failure: ErosFailure | null
 }
 
-// ─── Circuit Breaker para peticiones upstream a Eros ───────────────────────────
-interface CircuitBreakerState {
-  failures: number
-  state: 'CLOSED' | 'OPEN' | 'HALF_OPEN'
-  nextAttemptTime: number
-}
-
-const circuitBreaker: CircuitBreakerState = {
-  failures: 0,
-  state: 'CLOSED',
-  nextAttemptTime: 0,
-}
+// ─── Corte por fallos seguidos ──────────────────────────────────────────────
 
 const FAILURE_THRESHOLD = 3
-const COOLDOWN_MS = 30_000
+const PAUSE_MS = 30_000
+const circuit = { failures: 0, open: false, retryAt: 0 }
 
-export function isCircuitOpen(): boolean {
-  if (circuitBreaker.state === 'OPEN') {
-    if (Date.now() >= circuitBreaker.nextAttemptTime) {
-      circuitBreaker.state = 'HALF_OPEN'
-      return false
-    }
-    return true
+function paused(): boolean {
+  if (!circuit.open) return false
+  if (Date.now() >= circuit.retryAt) {
+    // Se deja pasar un pedido de prueba: si falla, vuelve a cortar.
+    circuit.open = false
+    circuit.failures = FAILURE_THRESHOLD - 1
+    return false
   }
-  return false
+  return true
 }
 
-export function recordErosSuccess(): void {
-  circuitBreaker.failures = 0
-  circuitBreaker.state = 'CLOSED'
+const retryInSec = () => (circuit.open ? Math.max(1, Math.ceil((circuit.retryAt - Date.now()) / 1000)) : 0)
+
+function recordSuccess(): void {
+  circuit.failures = 0
+  circuit.open = false
 }
 
-export function recordErosFailure(): void {
-  circuitBreaker.failures += 1
-  if (circuitBreaker.failures >= FAILURE_THRESHOLD || circuitBreaker.state === 'HALF_OPEN') {
-    circuitBreaker.state = 'OPEN'
-    circuitBreaker.nextAttemptTime = Date.now() + COOLDOWN_MS
-  }
-}
-
-export function getCircuitBreakerStatus() {
-  const remainingMs = Math.max(0, circuitBreaker.nextAttemptTime - Date.now())
-  return {
-    state: circuitBreaker.state,
-    failures: circuitBreaker.failures,
-    cooldownRemainingSeconds: circuitBreaker.state === 'OPEN' ? Math.ceil(remainingMs / 1000) : 0,
+function recordFailure(): void {
+  circuit.failures += 1
+  if (circuit.failures >= FAILURE_THRESHOLD) {
+    circuit.open = true
+    circuit.retryAt = Date.now() + PAUSE_MS
   }
 }
 
-export async function forwardToEros<T = unknown>(
-  urlPath: string,
-  init?: RequestInit,
-  timeoutMs = 60000
-): Promise<ForwardResult<T>> {
-  if (isCircuitOpen()) {
-    const remainingSec = Math.ceil((circuitBreaker.nextAttemptTime - Date.now()) / 1000)
-    return {
-      ok: false,
-      status: 503,
-      data: {
-        error: `Eros Agent en cooldown (Circuit Breaker OPEN por fallos consecutivos). Reintentando en ${remainingSec}s`,
-      } as T,
-    }
+/** El estado de Eros para /status, sin contactarlo: lo arman los pedidos que ya se hicieron. */
+export function erosState(): AdminStatus['eros'] {
+  if (!getErosBaseUrl()) return { state: 'unconfigured', retryInSec: 0 }
+  if (circuit.open && Date.now() < circuit.retryAt) return { state: 'cooldown', retryInSec: retryInSec() }
+  return { state: circuit.failures > 0 ? 'down' : 'ok', retryInSec: 0 }
+}
+
+// ─── Pedido ─────────────────────────────────────────────────────────────────
+
+function notResponding(): string {
+  return circuit.open ? `Eros no responde. Reintento en ${retryInSec()} s.` : 'Eros no responde.'
+}
+
+function failed<T>(reason: ErosFailureReason, message: string, upstream = 0): ForwardResult<T> {
+  const status = reason === 'timeout' ? 504 : 503
+  const body: AdminErrorBody & { offline: true, retryInSec: number } = { error: message, code: 'offline', errors: [], offline: true, retryInSec: retryInSec() }
+  return { ok: false, status, data: body as T, failure: { reason, upstream, message } }
+}
+
+const isTimeout = (err: unknown) => err instanceof Error && (err.name === 'TimeoutError' || err.name === 'AbortError')
+
+async function request(url: string, init: RequestInit | undefined, timeoutMs: number): Promise<globalThis.Response> {
+  const key = erosKey()
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    ...(key ? { Authorization: `Bearer ${key}`, 'X-Eros-Key': key } : {}),
+    ...((init?.headers as Record<string, string>) || {}),
   }
+  return fetch(url, { ...init, headers, signal: AbortSignal.timeout(timeoutMs) })
+}
 
-  const baseUrl = getErosBaseUrl()
-  if (!baseUrl) {
-    return {
-      ok: false,
-      status: 503,
-      data: { error: 'Eros Agent no configurado: falta HUNTER_API_URL en el entorno' } as T,
-    }
-  }
-
-  const fullUrl = `${baseUrl}/${urlPath.replace(/^\//, '')}`
-
+/**
+ * Reenvía a Eros. Con HUNTER_LOCAL_FALLBACK=1 y fuera de producción, si la dirección configurada no
+ * responde, prueba con un Eros levantado en 127.0.0.1:8000.
+ */
+async function reach(urlPath: string, init: RequestInit | undefined, timeoutMs: number): Promise<globalThis.Response> {
+  const path = urlPath.replace(/^\//, '')
   try {
-    const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
-      ...(env.erosApiKey ? {
-        Authorization: `Bearer ${env.erosApiKey}`,
-        'X-Eros-Key': env.erosApiKey,
-      } : {}),
-      ...((init?.headers as Record<string, string>) || {}),
-    }
-
-    let res: Response
-    try {
-      res = await fetch(fullUrl, {
-        ...init,
-        headers,
-        signal: AbortSignal.timeout(timeoutMs),
-      })
-    } catch (fetchErr) {
-      // En desarrollo, si la URL remota no responde, intentar con el agente local si está levantado en 8000
-      if (process.env.NODE_ENV !== 'production' && !baseUrl.includes('127.0.0.1') && !baseUrl.includes('localhost')) {
-        try {
-          const localUrl = `http://127.0.0.1:8000/${urlPath.replace(/^\//, '')}`
-          res = await fetch(localUrl, {
-            ...init,
-            headers,
-            signal: AbortSignal.timeout(4000),
-          })
-        } catch {
-          throw fetchErr
-        }
-      } else {
-        throw fetchErr
-      }
-    }
-
-    // Si la URL remota da 401/403 en desarrollo, intentar también fallback hacia local en 8000
-    if ((res.status === 401 || res.status === 403) && process.env.NODE_ENV !== 'production' && !baseUrl.includes('127.0.0.1') && !baseUrl.includes('localhost')) {
-      try {
-        const localUrl = `http://127.0.0.1:8000/${urlPath.replace(/^\//, '')}`
-        const localRes = await fetch(localUrl, {
-          ...init,
-          headers,
-          signal: AbortSignal.timeout(3000),
-        })
-        if (localRes.ok) {
-          res = localRes
-        }
-      } catch {
-        // Silencioso, continúa con res original
-      }
-    }
-
-    const isJson = res.headers.get('content-type')?.includes('application/json')
-    const data = (isJson ? await res.json().catch(() => null) : await res.text()) as T
-
-    if (res.status === 401 || res.status === 403) {
-      recordErosFailure()
-      return {
-        ok: false,
-        status: 502,
-        data: { error: 'Fallo de autenticacion con Eros Agent (verificar EROS_API_KEY en variables de entorno)' } as T,
-      }
-    }
-
-    if (res.status >= 500) {
-      recordErosFailure()
-      return { ok: false, status: res.status, data }
-    }
-
-    // Éxito o respuesta válida de Eros (< 500)
-    recordErosSuccess()
-    return { ok: res.ok, status: res.status, data }
-  } catch (err: unknown) {
-    recordErosFailure()
-    const isTimeout =
-      err instanceof Error &&
-      (err.name === 'TimeoutError' || err.name === 'AbortError' || err.message.toLowerCase().includes('timeout'))
-
-    if (isTimeout) {
-      return {
-        ok: false,
-        status: 504,
-        data: { error: `Tiempo de espera agotado al conectar con Eros Agent (${timeoutMs}ms)` } as T,
-      }
-    }
-
-    const msg = err instanceof Error ? err.message : String(err)
-    return {
-      ok: false,
-      status: 502,
-      data: { error: `Eros Agent no responde (${baseUrl}): ${msg}` } as T,
-    }
+    return await request(`${getErosBaseUrl()}/${path}`, init, timeoutMs)
   }
+  catch (err) {
+    const local = process.env['HUNTER_LOCAL_FALLBACK'] === '1' && process.env['NODE_ENV'] !== 'production'
+    if (!local || isTimeout(err)) throw err
+    return request(`http://127.0.0.1:8000/${path}`, init, Math.min(timeoutMs, 4000))
+  }
+}
+
+export async function forwardToEros<T = unknown>(urlPath: string, init?: RequestInit, timeoutMs = 60000): Promise<ForwardResult<T>> {
+  if (!getErosBaseUrl()) return failed('unconfigured', 'Eros no está configurado: falta HUNTER_API_URL en el entorno de la API.')
+  if (paused()) return failed('paused', notResponding())
+
+  let res: globalThis.Response
+  try {
+    res = await reach(urlPath, init, timeoutMs)
+  }
+  catch (err) {
+    recordFailure()
+    if (isTimeout(err)) return failed('timeout', `Eros tardó más de ${Math.round(timeoutMs / 1000)} s en responder.`)
+    return failed('network', notResponding())
+  }
+
+  const isJson = res.headers.get('content-type')?.includes('application/json')
+  const data = (isJson ? await res.json().catch(() => null) : await res.text().catch(() => '')) as T
+
+  if (res.status >= 500) {
+    recordFailure()
+    return failed('server', `Eros respondió con un error (${res.status}).`, res.status)
+  }
+  recordSuccess()
+  if (res.status === 401 || res.status === 403) {
+    return failed('auth', 'Eros rechazó la clave de la API. Revisá EROS_API_KEY en el entorno.', res.status)
+  }
+  if (!res.ok) {
+    return { ok: false, status: res.status, data, failure: { reason: 'rejected', upstream: res.status, message: `Eros respondió ${res.status}.` } }
+  }
+  return { ok: true, status: res.status, data, failure: null }
+}
+
+/**
+ * Si un pedido que tiene respaldo desde la base (analizar, mensaje, CV) va al respaldo: sí cuando
+ * Eros no respondió, respondió algo que no se pudo leer o no conoce la vacante (404); no cuando la
+ * rechazó por otro motivo, que se informa tal cual.
+ */
+export function useLocalFallback(result: ForwardResult): boolean {
+  return result.failure?.reason !== 'rejected' || result.failure.upstream === 404
+}
+
+/** Un 4xx de Eros en español claro. */
+function rejection(upstream: number): { status: number, body: AdminErrorBody } {
+  if (upstream === 404) return { status: 404, body: { error: 'Eros no tiene esa vacante: puede que se haya borrado.', code: 'not_found', errors: [] } }
+  if (upstream === 409) return { status: 409, body: { error: 'Eros no pudo hacerlo: la vacante cambió mientras tanto. Recargá la lista.', code: 'conflict', errors: [] } }
+  return { status: 400, body: { error: 'Eros no aceptó el pedido. Revisá los datos de la vacante.', code: 'invalid', errors: [] } }
+}
+
+/**
+ * Responde un fallo de Eros con la forma de error del admin (503 { offline: true } si no respondió).
+ * `consequence` dice qué no pasó, para que una escritura nunca parezca hecha: «El estado no cambió.»
+ */
+export function sendErosFailure(res: Response, result: ForwardResult, consequence?: string): void {
+  if (result.failure?.reason === 'rejected') {
+    const { status, body } = rejection(result.failure.upstream)
+    res.status(status).json(consequence ? { ...body, error: `${body.error} ${consequence}` } : body)
+    return
+  }
+  const data = result.data as AdminErrorBody
+  res.status(result.status).json(consequence ? { ...data, error: `${data.error} ${consequence}` } : data)
 }
