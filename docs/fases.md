@@ -183,3 +183,27 @@ Tres verificadores independientes (corrección, datos escritos a mano, UX contra
 - **Campos cargados que el diseño no muestra:** `Experience.story`, `contact.preferred_contact` y el pie del video de portada de Eros. El registro (`R`) de Sobre mí ya lista todos los campos del documento about; falta decidir si la trayectoria muestra `story` y dónde va `preferred_contact`.
 - **Duplicación a decidir:** `Project.url` y `Project.repo` repiten las URL de los Link «sitio en vivo» y «código fuente», y los 382 commits de Ynara siguen en textos narrativos (outcome y la experiencia) además de su Metric (del rol ya salieron). Cambiar cualquiera de las dos cosas es una decisión de esquema o de redacción.
 - **Article.coverImage:** la API no manda sus medidas, así que todavía no puede ser og:image; el canonical propio (`canonicalUrl`) ya se usa.
+
+---
+
+## Rediseño del admin (A0–DOC) · integrado en `rediseno/admin`, producción pendiente
+
+Plan en `docs/rediseno-admin/plan.md` (mandan sus secciones finales: las respuestas de Mateo y la dirección elegida en la demo), paquetes en `docs/rediseno-admin/paquetes.json`, ocho olas integradas en la rama `rediseno/admin`. El admin se describe en `docs/admin.md`. Todo se verificó en local; producción espera el OK de Mateo y el orden de `DEPLOY.md` → «Desplegar el rediseño del admin».
+
+- [x] **Ola 1 · Base** — A0 (Vite, tokens, fuentes, componentes base y guardarraíles en `pnpm lint`), D1 (contrato `adminSchema`, errores en español por campo, `/meta` real, slugs fijos, `admin-run`) y L0 (arreglos urgentes en el panel anterior).
+- [x] **Ola 2 · Shell y servidor** — A1 (navegación, rutas por hash, sesión, estado real, paleta y atajos), D2 (documentos con esquema, retrato, métricas por id, media completa) y H0 (contrato con Eros, extracción de pistas, política sin Eros, una sola fuente del CV).
+- [x] **Ola 3 · Marco y búsqueda** — C0 (marco de colecciones), H1 (Vacantes por etapas con paridad completa y «Buscar vacantes nuevas») y R0 (Publicaciones y Tendencias en el servidor, sin datos inventados).
+- [x] **Ola 4 · Áreas** — U1 (Obras: esencial, relato, publicación), U2 (Trayectoria y Vista CV), U3 (Catálogos), U4 (Perfil), U6 (Artículos) y H2 (Publicaciones y Tendencias).
+- [x] **Ola 5 · Cierre de Obras e Inicio** — U7 (imágenes y datos) y U5 (bandeja de pendientes, sello del PDF del CV).
+- [x] **Ola 6 · Pruebas** — E1: specs del admin por área y modo (sin Eros, `--demo`, `--eros-mock`, `--web`), proxy de Nuxt, axe, CSP y la medición de los cinco minutos (`admin-flujo-obra`: 17 pasos con tope en 17).
+- [x] **Ola 7 · Cambio de `/admin`** — S1: el admin nuevo pasa a `/admin/`, se retiran `/admin-next`, el panel anterior con su build de Tailwind por CLI y `GET /docs`.
+- [x] **Ola 8 · Documentación** — DOC: `docs/admin.md`, `.claude/rules/admin.md` y `backend.md`, `docs/decisiones.md`, `CLAUDE.md`, `AGENTS.md`, `DEPLOY.md` y `scripts/check-admin-endpoints.mjs` (inventario de endpoints contra lo montado y lo usado, en `pnpm lint`).
+
+**Queda pendiente, con motivo:**
+
+- **Volumen de media en Coolify.** La API no tiene volumen persistente: lo que se sube desde el admin (imágenes de obras y el retrato en `_perfil/`) se pierde en cada deploy. Hay que crear el volumen en `/app/public/media/projects` copiando antes las capturas versionadas (`DEPLOY.md`, paso 6).
+- **Producción.** `pg_dump`, `HUNTER_API_URL` verificada, deploy, el parche `2026-11-05-admin-datos.ts` (`--dry`, aplicar, `--dry`) y la auditoría de solo lectura de `/admin/`. Lo corre Mateo.
+- **La sesión cronometrada con una persona que no programa** (plan §9): la prueba automática mide el recorrido con las constantes de la auditoría; la sesión humana no quedó registrada.
+- **Dos rutas montadas sin uso en la UI** (`GET /media` y `GET /hunter/jobs/:id/apply-preview`): quedaron del panel anterior y figuran con su motivo en `docs/admin.md` §9; se pueden retirar.
+- **Falso positivo aceptado del sello del CV:** el hash cubre los slugs, así que «Cambiar dirección» en una experiencia marca el PDF como desactualizado aunque el texto no cambie.
+- **Skills de `.agents/skills/`** (`admin-console-2026`, `fullstack-schema-sync`): todavía describen el panel anterior; ganan `.claude/rules/` y `docs/admin.md` hasta corregirlas.
