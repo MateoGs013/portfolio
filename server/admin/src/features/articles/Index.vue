@@ -1,25 +1,32 @@
 <script setup lang="ts">
-/** #/articulos[/:id] y #/articulos/nuevo, provisorio hasta U6. */
+/**
+ * #/articulos, #/articulos/nuevo y #/articulos/:id: la lista como pantalla (filas grandes, filtros
+ * Publicados, Borradores y Falta inglés) o el editor de uno, solo en la pantalla.
+ */
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
-import { shell } from '../../shell/dict'
-import Placeholder from '../../shell/Placeholder.vue'
-import { useRecordTitle } from '../../shell/title'
-import { options } from '../../stores/meta'
+import { summary } from '../../stores/meta'
+import Explorer from '../collections/Explorer.vue'
+import ArticleEditor from './ArticleEditor.vue'
+import { articles } from './dict'
+import { articleModel } from './model'
 
 const route = useRoute()
-const record = computed(() => {
-  if (route.name === 'articulo-nuevo') return shell.palette.newArticle
-  return options.value?.articles.find(a => a.id === Number(route.params['id']))?.title ?? null
+
+const id = computed<number | 'nueva' | null>(() => {
+  if (route.name === 'articulo-nuevo') return 'nueva'
+  if (route.name !== 'articulo') return null
+  const n = Number(route.params['id'])
+  return Number.isInteger(n) && n > 0 ? n : null
 })
-useRecordTitle(record)
+
+const lead = computed(() => {
+  const counts = summary.value?.articles
+  return counts ? articles.lead(counts.published, counts.draft) : undefined
+})
 </script>
 
 <template>
-  <Placeholder
-    v-if="route.name !== 'articulos'"
-    :title="record ?? shell.nav.articles"
-    :back="{ label: shell.nav.articles, to: '/articulos' }"
-  />
-  <Placeholder v-else :title="shell.nav.articles" :count="options?.articles.length ?? null" />
+  <ArticleEditor v-if="id !== null" :id="id" />
+  <Explorer v-else :model="articleModel" :lead="lead" />
 </template>
