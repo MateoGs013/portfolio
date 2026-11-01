@@ -8,7 +8,7 @@
  * - mientras guarda, el formulario es de solo lectura (aria-busy) y salir no pregunta;
  * - borrador en sessionStorage, errores por campo, ?campo= y Ctrl/⌘S.
  */
-import { computed, getCurrentScope, onScopeDispose, provide, ref, shallowRef, toValue, watch, type MaybeRefOrGetter, type Ref } from 'vue'
+import { computed, getCurrentScope, onScopeDispose, provide, ref, shallowRef, toValue, watch, type Ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { api, useRequestScope } from '../api/client'
 import { ApiError, FieldErrors, isAbort, messageOf, RequestError, SessionError } from '../api/errors'
@@ -16,26 +16,18 @@ import { editorKey } from '../features/collections/context'
 import { collections } from '../features/collections/dict'
 import { useSection } from '../features/collections/useSection'
 import { phrases } from '../models/labels'
-import type { AdminRecord, Model } from '../models/types'
+import type { AdminRecord } from '../models/types'
 import { validatePayload } from '../models/validate'
 import { toast } from '../stores/toasts'
 import { announce } from '../ui/announce'
 import { rememberRecord } from './useCollection'
 import { useDirtyGuard } from './useDirtyGuard'
-import { useCampoFocus, useChangedSections } from './useEditorParts'
+import { useCampoFocus, useChangedSections, type EditorOptions } from './useEditorParts'
 import { clearDraft, useDraft } from './useDraft'
 import { onShortcut } from './useShortcuts'
 import { useServerErrors } from './useServerErrors'
 
 export type SaveStatus = 'clean' | 'dirty' | 'saving' | 'saved' | 'error'
-
-export interface EditorOptions<TRecord extends AdminRecord, TForm extends object> {
-  model: Model<TRecord, TForm>
-  /** El registro de la ruta: su id, 'nueva' para uno nuevo, o null si no hay ninguno abierto. */
-  id: MaybeRefOrGetter<number | 'nueva' | null>
-  /** Después de cada guardado bueno (también si ya se estaba en otro registro: `current` false). */
-  onAfterSave?: (record: TRecord, info: { created: boolean, current: boolean }) => void
-}
 
 const clone = <T>(value: T): T => JSON.parse(JSON.stringify(value)) as T
 const toApiError = (err: unknown) => (err instanceof ApiError ? err : new ApiError(0, null, messageOf(err)))
@@ -69,8 +61,9 @@ export function useEditor<TRecord extends AdminRecord, TForm extends object>(opt
   const ready = computed(() => key.value !== null && loadedKey.value === key.value && !loading.value && !loadError.value)
   const dirty = computed(() => ready.value && JSON.stringify(form.value) !== base.value)
   const busy = computed(() => savingKey.value !== null && savingKey.value === key.value)
+  const following = computed(() => toValue(options.following ?? false))
   const status = computed<SaveStatus>(() => {
-    if (busy.value) return 'saving'
+    if (busy.value || following.value) return 'saving'
     if (outcome.value === 'error') return 'error'
     if (dirty.value) return 'dirty'
     return outcome.value === 'saved' ? 'saved' : 'clean'
@@ -79,7 +72,7 @@ export function useEditor<TRecord extends AdminRecord, TForm extends object>(opt
   const errors = useServerErrors(model, form, id => section.go(id))
   // El borrador va bajo `loadedKey`: no se escribe ni se borra mientras ese registro se guarda o
   // mientras la ruta ya apunta a otro que todavía carga (el PUT del anterior puede fallar).
-  const paused = () => (savingKey.value !== null && savingKey.value === loadedKey.value) || loadedKey.value !== key.value
+  const paused = () => (savingKey.value !== null && savingKey.value === loadedKey.value) || loadedKey.value !== key.value || following.value
   const draft = useDraft({ key: loadedKey, form, dirty, paused })
 
   const changedSections = useChangedSections(model, form, base, dirty)
@@ -106,14 +99,17 @@ export function useEditor<TRecord extends AdminRecord, TForm extends object>(opt
   function applyPatch(rec: TRecord, fields: readonly (keyof TForm & string)[]): void {
     if (rec.id !== routeId.value) return
     const next = model.toForm(rec)
-    const saved = JSON.parse(base.value) as TForm
-    for (const name of fields) {
-      form.value[name] = clone(next[name])
-      saved[name] = clone(next[name])
-    }
+    for (const name of fields) form.value[name] = clone(next[name])
+    adoptFields(fields)
     record.value = rec
-    base.value = JSON.stringify(saved)
     rememberRecord(model.path, rec)
+  }
+
+  /** `fields` del formulario cuentan como guardados: lo que se guarda aparte del PUT y ya va en camino. */
+  function adoptFields(fields: readonly (keyof TForm & string)[]): void {
+    const saved = JSON.parse(base.value) as TForm
+    for (const name of fields) saved[name] = clone(form.value[name])
+    base.value = JSON.stringify(saved)
   }
 
   async function load(): Promise<void> {
@@ -201,7 +197,7 @@ export function useEditor<TRecord extends AdminRecord, TForm extends object>(opt
       }
       if (creating && current) {
         adopted = saved
-        await router.replace(model.routes.record(saved.id))
+        await router.replace(options.createdRoute?.(saved) ?? model.routes.record(saved.id))
       }
       options.onAfterSave?.(saved, { created: creating, current })
     }
@@ -285,10 +281,11 @@ export function useEditor<TRecord extends AdminRecord, TForm extends object>(opt
     forget,
     applySaved,
     applyPatch,
+    adoptFields,
     recoverDraft,
     dismissDraft,
   }
 }
 
 /** Un editor cualquiera, sin lo que depende del tipo del registro: lo que usa EditorFrame. */
-export type EditorView = Omit<ReturnType<typeof useEditor<AdminRecord, object>>, 'applySaved' | 'applyPatch'>
+export type EditorView = Omit<ReturnType<typeof useEditor<AdminRecord, object>>, 'applySaved' | 'applyPatch' | 'adoptFields'>

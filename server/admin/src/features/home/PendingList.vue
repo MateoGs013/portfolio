@@ -32,7 +32,7 @@ const offsets = computed(() => props.groups.reduce<number[]>((acc, g, i) => [...
       <ul class="group/list m-0 mt-2 list-none border-t border-rule p-0">
         <PendingRow
           v-for="(item, i) in group.items"
-          :key="`${item.kind}:${item.record.collection}:${item.record.id}`"
+          :key="`${item.kind}:${item.route}`"
           :to="item.route"
           :headline="item.headline"
           :message="item.message"

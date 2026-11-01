@@ -167,6 +167,7 @@ test.describe('Obras: imágenes y datos', () => {
     await page.goto(`${ADMIN}#/obras/${rucula.id}/datos`)
     await expect(page.getByRole('heading', { name: 'Métricas' })).toBeVisible()
     await noHorizontalScroll(page)
+    await noSeriousAxe(page)
     await shot(page, info, 'datos-390')
   })
 
@@ -218,9 +219,22 @@ test.describe('Obras: imágenes y datos', () => {
     await page.getByLabel('Texto alternativo · Inglés').first().fill('Home page with the menu of the day')
     await shot(page, info, 'obra-nueva-imagenes-1440')
     const find = async () => ((await (await request.get('/api/admin/projects', { headers: auth })).json()) as Project[]).find(p => p.title === name)
+    // Las altas esperan una señal: así se ve el estado mientras suben.
+    let release!: () => void
+    const gate = new Promise<void>((resolve) => { release = resolve })
+    await page.route('**/api/admin/media', async (route) => {
+      if (route.request().method() === 'POST') await gate
+      await route.continue()
+    })
     try {
       await page.keyboard.press(`${mod}+s`)
       await expect(page.getByText('Obra creada').first()).toBeVisible()
+      // Mientras suben: sigue en Imágenes con las tarjetas a la vista, y el pie dice que se está guardando.
+      await expect(page).toHaveURL(/#\/obras\/\d+\/imagenes$/)
+      await expect(page.locator('[data-media-key]')).toHaveCount(3)
+      await expect(bar(page)).toContainText('Subiendo')
+      await expect(bar(page)).not.toContainText('sin guardar')
+      release()
       await toastsClearOfBar(page)
       await expect.poll(async () => (await find())?.media.length ?? 0, { timeout: 15000 }).toBe(3)
       const created = (await find())!
@@ -237,6 +251,7 @@ test.describe('Obras: imágenes y datos', () => {
       await shot(page, info, 'obra-nueva-guardada-1440')
     }
     finally {
+      release()
       const created = await find()
       if (created) expect((await request.delete(`/api/admin/projects/${created.id}`, { headers: auth })).status()).toBe(204)
     }

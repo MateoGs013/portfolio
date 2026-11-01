@@ -89,6 +89,7 @@ export const mediaText = {
     finished: (n: number) => `${plural(n, 'pieza guardada', 'piezas guardadas')} en la obra.`,
     partial: (failed: number) => `${plural(failed, 'pieza no se guardó', 'piezas no se guardaron')}: siguen en la lista, revisalas y volvé a guardar.`,
     otherProject: (title: string) => `Las imágenes de «${title}» terminaron de guardarse.`,
+    otherProjectFailed: (title: string, n: number) => (n === 1 ? `Una pieza de «${title}» no se guardó: abrí la obra y volvé a guardar.` : `${n} piezas de «${title}» no se guardaron: abrí la obra y volvé a guardar.`),
     draftLost: 'Las imágenes sin subir no viajan en el borrador: elegilas de nuevo.',
     busy: 'Esperá a que terminen de subirse las imágenes.',
   },

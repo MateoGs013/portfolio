@@ -2,8 +2,8 @@
  * Ata la media al guardado de la obra (un solo Guardar):
  * - `prepare()` va antes del PUT: arma el plan con el formulario de ese momento y deja sin imagen los
  *   pasos que mostraban una pieza quitada (el PUT ya los manda así);
- * - `afterSave()` va en onAfterSave: vuelve a mostrar las piezas mientras suben, corre el plan y al
- *   final lee la obra fresca. Lo que no se guardó queda en el formulario como cambio sin guardar, con
+ * - `afterSave()` va en onAfterSave: vuelve a mostrar las piezas mientras suben (y las cuenta como
+ *   guardadas: lo que sube es parte del mismo Guardar), corre el plan y al final lee la obra fresca. Lo que no se guardó queda en el formulario como cambio sin guardar, con
  *   su motivo en la tarjeta, para reintentar con Guardar.
  * La obra nueva pasa por acá igual: primero se crea y en seguida suben sus imágenes.
  */
@@ -22,6 +22,8 @@ interface Options {
   record: ShallowRef<AdminProject | null>
   queue: MediaQueue
   applyPatch: (project: AdminProject, fields: ['media']) => void
+  /** La media del formulario pasa a contar como guardada mientras sube (useEditor.adoptFields). */
+  adoptFields: (fields: ['media']) => void
   /** Cuando la obra y su media quedaron guardadas (o lo que se pudo). */
   onSettled: (project: AdminProject, info: { created: boolean, current: boolean }) => void
 }
@@ -29,7 +31,7 @@ interface Options {
 const t = mediaText.queue
 const clone = <T>(value: T): T => JSON.parse(JSON.stringify(value)) as T
 
-export function useMediaSave({ form, record, queue, applyPatch, onSettled }: Options) {
+export function useMediaSave({ form, record, queue, applyPatch, adoptFields, onSettled }: Options) {
   let pending: { plan: MediaPlan, saved: AdminProject['media'] } | null = null
 
   // Lo que el formulario ya no nombra se suelta de la cola; un borrador sin sus archivos se limpia.
@@ -64,22 +66,28 @@ export function useMediaSave({ form, record, queue, applyPatch, onSettled }: Opt
       return
     }
     // La respuesta del PUT dejó la media como estaba: se vuelven a mostrar las piezas mientras suben.
-    if (info.current) form.value.media = clone(job.plan.items)
+    if (info.current) {
+      form.value.media = clone(job.plan.items)
+      adoptFields(['media'])
+    }
     void run(job.plan, job.saved, saved, info)
   }
 
   async function run(plan: MediaPlan, before: AdminProject['media'], saved: AdminProject, info: { created: boolean, current: boolean }): Promise<void> {
     const result = await runMedia(plan, saved.id, before, queue)
     let fresh: AdminProject | null = null
-    try {
-      fresh = await api.get<AdminProject>(`/projects/${saved.id}`)
-    }
-    catch {
-      // Sin la lectura fresca se queda lo que había: el próximo Guardar vuelve a comparar.
+    for (let attempt = 0; attempt < 2 && !fresh; attempt++) {
+      try {
+        fresh = await api.get<AdminProject>(`/projects/${saved.id}`)
+      }
+      catch {
+        // Un segundo intento; si tampoco llega, se anotan en el formulario las altas que salieron.
+      }
     }
     queue.end()
     const current = info.current && record.value?.id === saved.id
     if (current && fresh) settleForm(plan, result, fresh)
+    else if (current) settleCreated(result)
     report(result, plan, current, saved)
     onSettled(fresh ?? saved, { created: info.created, current })
   }
@@ -105,10 +113,25 @@ export function useMediaSave({ form, record, queue, applyPatch, onSettled }: Opt
     coversFirst(list)
   }
 
+  /**
+   * Sin la lectura fresca: las altas que llegaron a la base dejan de ser piezas nuevas (su id y sin
+   * archivos por subir), así el próximo Guardar no las vuelve a crear.
+   */
+  function settleCreated(result: MediaRunResult): void {
+    for (const item of form.value.media) {
+      const id = result.created.get(item.key)
+      if (id === undefined || result.failed.has(item.key)) continue
+      item.id = id
+      item.key = keyOfId(id)
+      item.upload = { file: null, webm: null, poster: null }
+    }
+    if (!result.failed.size) adoptFields(['media'])
+  }
+
   function report(result: MediaRunResult, plan: MediaPlan, current: boolean, saved: AdminProject): void {
     const failed = result.failed.size
     const done = plan.touched.length - failed + result.deleted
-    if (!current) toast(t.otherProject(saved.title), { tone: failed ? 'error' : 'ok' })
+    if (!current) toast(failed ? t.otherProjectFailed(saved.title, failed) : t.otherProject(saved.title), { tone: failed ? 'error' : 'ok' })
     else if (failed) toast(t.partial(failed), { tone: 'error' })
     else announce(t.finished(done))
   }

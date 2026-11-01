@@ -139,6 +139,51 @@ test.describe('Inicio', () => {
     }
   })
 
+  test('el inglés del texto alternativo en NULL da una fila que abre Imágenes con el foco en ese campo', async ({ page }) => {
+    const { rows } = await sql(`SELECT p.id, p.title, m.id AS "mediaId", t.alt FROM "Project" p
+      JOIN "Media" m ON m."projectId" = p.id AND m.role = 'COVER' AND coalesce(m.alt, '') <> ''
+      JOIN "MediaTranslation" t ON t."mediaId" = m.id AND t.locale = 'en' AND coalesce(t.alt, '') <> ''
+      WHERE p."publishedAt" <= now() ORDER BY p."sortOrder", m."order", m.id`)
+    const target = rows[0] as { id: number, title: string, mediaId: number, alt: string } | undefined
+    expect(target, 'La copia no tiene una portada visible con su inglés.').toBeTruthy()
+    const { id, title, mediaId, alt } = target!
+    // El índice es el de la lista de la obra: portadas primero, por orden (servidor y formulario).
+    const { rows: list } = await sql(`SELECT id FROM "Media" WHERE "projectId" = $1 ORDER BY role, "order", id`, [id])
+    const index = (list as { id: number }[]).findIndex(m => m.id === mediaId)
+    await sql(`UPDATE "MediaTranslation" SET alt = NULL WHERE "mediaId" = $1 AND locale = 'en'`, [mediaId])
+    try {
+      await signedIn(page)
+      await inbox(page)
+      const row = page.locator('#main [data-group="imagenes"] a').filter({ hasText: `Imágenes de ${title} sin inglés` })
+      await expect(row).toHaveCount(1)
+      await expect(row).toHaveAttribute('href', new RegExp(`#/obras/${id}/imagenes\\?campo=media\\[\\d+\\]\\.translations\\.en\\.alt$`))
+      await expect(row).toHaveAttribute('href', new RegExp(`campo=media\\[${index}\\]`))
+      await row.click()
+      await expect(page.locator(`[data-field="media[${index}].translations.en.alt"] :is(input, textarea)`).first()).toBeFocused()
+    }
+    finally {
+      await sql(`UPDATE "MediaTranslation" SET alt = $2 WHERE "mediaId" = $1 AND locale = 'en'`, [mediaId, alt])
+    }
+  })
+
+  test('un artículo archivado no queda pendiente', async ({ page }) => {
+    const { rows } = await sql(`SELECT id, title, status, "publishedAt" FROM "Article" ORDER BY id LIMIT 1`)
+    const article = rows[0] as { id: number, title: string, status: string, publishedAt: Date | null } | undefined
+    expect(article, 'La copia no tiene artículos.').toBeTruthy()
+    const { id, title, status, publishedAt } = article!
+    try {
+      for (const at of [null, '2020-01-01T00:00:00Z']) {
+        await sql(`UPDATE "Article" SET status = 'ARCHIVED', "publishedAt" = $2::timestamp WHERE id = $1`, [id, at])
+        await signedIn(page)
+        await inbox(page)
+        await expect(page.locator('#main [data-group] a').filter({ hasText: title })).toHaveCount(0)
+      }
+    }
+    finally {
+      await sql(`UPDATE "Article" SET status = $2::"ArticleStatus", "publishedAt" = $3 WHERE id = $1`, [id, status, publishedAt])
+    }
+  })
+
   test('cada fila es un enlace que Tab alcanza y lleva a su campo', async ({ page }) => {
     await signedIn(page)
     await inbox(page)

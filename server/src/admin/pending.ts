@@ -107,6 +107,8 @@ async function articleItems(untranslated: Untranslated): Promise<PendingItem[]> 
   return rows.flatMap((a): PendingItem[] => {
     const record = { collection: 'articles' as const, id: a.id, title: a.title }
     const route = (field: string) => campo(`/articulos/${a.id}`, field)
+    // Archivar es deliberado: un artículo archivado no queda pendiente.
+    if (a.status === 'ARCHIVED') return []
     if (a.status === 'DRAFT') {
       return [{ kind: 'draft', record, field: 'publishedAt', headline: `${a.title} es un borrador`, message: 'No se lista en Artículos hasta que lo publiques.', route: route('publishedAt') }]
     }

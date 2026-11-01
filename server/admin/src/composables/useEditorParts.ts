@@ -1,12 +1,25 @@
 /**
  * Piezas del editor que no dependen del guardado (useEditor las arma):
  * - las secciones con algo distinto de lo guardado, para la marca de su pestaña;
- * - ?campo=<ruta>: abre la sección del campo y le lleva el foco, una vez por registro y valor.
+ * - ?campo=<ruta>: abre la sección del campo y le lleva el foco, una vez por registro y valor;
+ * - las opciones de useEditor.
  */
-import { computed, watch, type Ref } from 'vue'
-import { useRoute } from 'vue-router'
+import { computed, watch, type MaybeRefOrGetter, type Ref } from 'vue'
+import { useRoute, type RouteLocationRaw } from 'vue-router'
 import { readPath } from '../features/collections/paths'
-import type { AnyModel } from '../models/types'
+import type { AdminRecord, AnyModel, Model } from '../models/types'
+
+export interface EditorOptions<TRecord extends AdminRecord, TForm extends object> {
+  model: Model<TRecord, TForm>
+  /** El registro de la ruta: su id, 'nueva' para uno nuevo, o null si no hay ninguno abierto. */
+  id: MaybeRefOrGetter<number | 'nueva' | null>
+  /** Después de cada guardado bueno (también si ya se estaba en otro registro: `current` false). */
+  onAfterSave?: (record: TRecord, info: { created: boolean, current: boolean }) => void
+  /** Lo que sigue del guardado después del PUT (las imágenes de una obra): «Guardando», sin borrador. */
+  following?: MaybeRefOrGetter<boolean>
+  /** A dónde pasa la ruta al crear el registro (por defecto, model.routes.record). */
+  createdRoute?: (record: TRecord) => RouteLocationRaw
+}
 
 export function useChangedSections(model: AnyModel, form: Ref<object>, base: Ref<string>, dirty: Ref<boolean>) {
   return computed(() => {

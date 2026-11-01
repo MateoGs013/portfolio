@@ -10,7 +10,7 @@
  *   cola de archivos vive acá, así una obra nueva sube sus imágenes apenas se crea. Mientras suben, el
  *   pie dice cuántas van y Guardar espera.
  */
-import { computed, nextTick, provide, watch } from 'vue'
+import { computed, nextTick, provide, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useEditor } from '../../composables/useEditor'
 import { onShortcut } from '../../composables/useShortcuts'
@@ -49,23 +49,32 @@ function nextSection(project: AdminProject): string | null {
   return null
 }
 
+/** La sección desde la que se guardó. */
+let savedFrom: string | null = null
+/** Las imágenes siguen subiendo después del PUT: para el editor, el guardado no terminó. */
+const uploading = ref(false)
+
 const editor = useEditor({
   model: projectModel,
   id: () => props.id,
+  following: uploading,
+  // Una obra nueva se queda en la sección desde la que se guardó mientras suben sus imágenes, así se
+  // ve el progreso de cada tarjeta; al terminar pasa a la primera que le falta (onSettled).
+  createdRoute: saved => ({ name: 'obra', params: { id: String(saved.id), ...(savedFrom ? { seccion: savedFrom } : {}) } }),
   onAfterSave: (saved, info) => media.afterSave(saved, info),
 })
 const { form, record } = editor
 provide(projectKey, { form, record })
 
-/** La sección desde la que se guardó. */
-let savedFrom: string | null = null
 const queue = createMediaQueue(() => form.value.media)
 provide(mediaQueueKey, queue)
+watch(queue.running, (on) => { uploading.value = on }, { flush: 'sync' })
 const media = useMediaSave({
   form,
   record,
   queue,
   applyPatch: (project, fields) => editor.applyPatch(project, fields),
+  adoptFields: fields => editor.adoptFields(fields),
   onSettled: (project, { created, current }) => {
     const section = created && current ? (nextSection(project) ?? savedFrom) : null
     if (section && section !== editor.section.current.value) void router.replace({ name: 'obra', params: { id: String(project.id), seccion: section } })

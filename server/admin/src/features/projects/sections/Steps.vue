@@ -24,11 +24,13 @@ const editor = useEditorContext()
 const locked = computed(() => editor?.busy.value ?? false)
 const keyOf = keyer<StepForm>('paso')
 
-/** Las imágenes guardadas de la obra, rotuladas por su uso y su texto alternativo. */
-const mediaOptions = computed<SelectOption<number>[]>(() => (record.value?.media ?? []).map((m, i) => ({
-  value: m.id,
-  label: `${enumLabel('MediaRole', m.role)} · ${m.alt.trim() || projectsText.media.untitled(i + 1)}`,
-})))
+/**
+ * Las imágenes ya guardadas que siguen en el formulario (Imágenes): una quitada sin guardar no se
+ * ofrece y una por subir todavía no tiene id. Rotuladas por su uso y su texto alternativo.
+ */
+const mediaOptions = computed<SelectOption<number>[]>(() => form.value.media.flatMap((m, i) => (m.id === null
+  ? []
+  : [{ value: m.id, label: `${enumLabel('MediaRole', m.role)} · ${m.alt.trim() || projectsText.media.untitled(i + 1)}` }])))
 
 async function focusIn(step: StepForm, selector: string): Promise<void> {
   await nextTick()

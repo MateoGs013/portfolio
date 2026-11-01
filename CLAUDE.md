@@ -51,7 +51,7 @@ pnpm lint                  # Verificación de linter (ESLint)
 pnpm build                 # Compilar frontend para producción
 pnpm start                 # Servir el build (pnpm start:api para la API sin watch)
 pnpm build:api             # Compilar admin CSS, generar Prisma y ejecutar migraciones
-pnpm cv:pdf                # Regenerar los dos PDF ATS desde el sitio local (CV_BASE_URL), con la cota dual
+pnpm cv:pdf                # Regenerar los dos PDF ATS desde el sitio local (CV_BASE_URL), con la cota dual, y el sello server/src/snapshot/cv-stamp.json (se commitea con ellos; Inicio del admin avisa si no coincide con la base)
 pnpm test:e2e              # Playwright contra el build (tests/e2e/run.mjs): 3 anchos x 2 temas, reduced motion y sin JS
 ```
 

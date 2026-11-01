@@ -197,8 +197,8 @@ async function projectsPending(client: Client): Promise<UntranslatedRecord[]> {
       ...p.links.flatMap((l, i) => pendingTexts(l, l.translations[0], ['label'], `links[${i}].`)),
       // Con una clave del catálogo el sitio usa el rótulo del catálogo: el propio no se lee.
       ...p.metrics.flatMap((m, i) => (isMetricKey(m.key) ? [] : pendingTexts(m, m.translations[0], ['label'], `metrics[${i}].`))),
-      // La media se edita por PATCH /media/:id con `en: { alt, caption }`.
-      ...p.media.flatMap((m, i) => ['alt', 'caption'].filter(f => filled(m[f as 'alt']) && !filled(m.translations[0]?.[f as 'alt'])).map(f => `media[${i}].en.${f}`)),
+      // La media se edita por PATCH /media/:id con `en: { alt, caption }`; la ruta es la del formulario del admin.
+      ...p.media.flatMap((m, i) => ['alt', 'caption'].filter(f => filled(m[f as 'alt']) && !filled(m.translations[0]?.[f as 'alt'])).map(f => `media[${i}].translations.en.${f}`)),
     ],
   }))
 }

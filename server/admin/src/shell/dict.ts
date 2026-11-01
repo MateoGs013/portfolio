@@ -100,15 +100,6 @@ export const shell = {
     hidden: 'Oculta',
     inCv: 'En el CV',
   },
-  placeholder: {
-    title: 'Esta pantalla todavía se edita en el panel actual',
-    text: 'El panel nuevo la suma pronto. Mientras tanto, los cambios se hacen desde el actual y se ven acá.',
-    summary: {
-      projects: (n: number) => (n === 1 ? '1 obra publicada' : `${n} obras publicadas`),
-      experience: (n: number) => (n === 1 ? '1 entrada de trayectoria' : `${n} entradas de trayectoria`),
-      articles: (n: number) => (n === 1 ? '1 artículo publicado' : `${n} artículos publicados`),
-    },
-  },
   notFound: {
     title: 'Esa pantalla no existe',
     text: 'Puede que la dirección esté mal escrita o que la pantalla haya cambiado de lugar.',

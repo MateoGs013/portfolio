@@ -21,7 +21,7 @@ defineProps<{
 
 <template>
   <li
-    class="animate-rise stagger transition-opacity duration-500 ease-e group-hover/list:not-hover:not-focus-within:opacity-28"
+    class="animate-rise stagger transition-opacity duration-500 ease-e group-hover/list:not-hover:not-focus-within:opacity-28 group-has-[a:focus-visible]/list:not-has-[a:focus-visible]:opacity-28"
     :style="{ '--i': Math.min(index, 14) }"
   >
     <RouterLink

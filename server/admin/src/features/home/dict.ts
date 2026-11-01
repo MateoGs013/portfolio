@@ -42,7 +42,6 @@ export const home = {
     emptyTitle: 'Nada pendiente',
     emptyText: 'Lo que el sitio muestra está completo: publicado, con portada, con fuente y en los dos idiomas. El PDF del CV coincide con la base.',
     loadError: 'No se pudieron calcular los pendientes.',
-    updating: 'Actualizando los pendientes…',
   },
   jobs: {
     title: 'Vacantes nuevas compatibles',
@@ -51,7 +50,8 @@ export const home = {
     manual: 'Pegada a mano',
     more: (n: number) => (n === 1 ? 'Ver la otra en Vacantes' : `Ver las ${n} restantes en Vacantes`),
     sample: 'Son vacantes de muestra para probar el panel sin Eros: no se guarda ningún cambio.',
-    erosTitle: 'Eros',
+    erosTitle: 'Vacantes: sin respuesta de Eros',
+    stale: (at: string | null) => (at ? `De la última lectura, del ${at}: puede haber cambiado.` : 'De la última lectura: puede haber cambiado.'),
     erosDown: 'No se pueden ver las vacantes nuevas ahora.',
     retry: 'Probar de nuevo',
   },
