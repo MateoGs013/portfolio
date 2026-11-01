@@ -1,7 +1,7 @@
 /**
- * La obra abierta para sus secciones: el formulario que se edita y lo último guardado (las imágenes
- * se leen de ahí). ProjectEditor lo provee; Lo esencial, Relato, Pasos y los provisorios lo toman sin
- * recibirlo de mano en mano ni mutar props.
+ * La obra abierta para sus secciones: el formulario que se edita y lo último guardado (los archivos y
+ * el peso de cada imagen se leen de ahí). ProjectEditor lo provee; cada sección, sus partes de media/ y
+ * de data/ lo toman sin recibirlo de mano en mano ni mutar props.
  */
 import { inject, type InjectionKey, type Ref, type ShallowRef } from 'vue'
 import type { AdminProject, ProjectForm } from './types'

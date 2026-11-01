@@ -9,7 +9,7 @@
  * Mientras carga, la forma de lo que viene; si no carga, el motivo y Reintentar, sin nada que guardar.
  */
 import type { DeleteResult } from '@shared/adminContracts'
-import { computed, ref } from 'vue'
+import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { RouterLink, useRouter } from 'vue-router'
 import type { EditorView } from '../../composables/useEditor'
 import { phrases } from '../../models/labels'
@@ -35,7 +35,9 @@ const props = withDefaults(defineProps<{
   removable?: boolean
   /** Cifras al lado de cada sección («Relato 4»). */
   counts?: Readonly<Record<string, number>>
-}>(), { actions: () => [], removable: true })
+  /** Lo que el área suma al estado del guardado («3 imágenes por subir»). */
+  saveNote?: string | null
+}>(), { actions: () => [], removable: true, saveNote: null })
 
 const emit = defineEmits<{ action: [id: string], deleted: [result: DeleteResult | null] }>()
 
@@ -75,6 +77,29 @@ function onDeleted(result: DeleteResult | null): void {
 }
 
 const pad = 'px-4 md:px-10 xl:px-16'
+
+/*
+ * El alto de la barra de acciones en --bar-h: los avisos (Toaster) se apilan encima y nunca tapan
+ * Guardar. Va por CSSOM, como todo estilo dinámico bajo la CSP.
+ */
+const bar = ref<HTMLElement | null>(null)
+let barObserver: ResizeObserver | null = null
+const root = document.documentElement
+watch(bar, (el) => {
+  barObserver?.disconnect()
+  barObserver = null
+  if (!el) return root.style.removeProperty('--bar-h')
+  const set = () => root.style.setProperty('--bar-h', `${Math.ceil(el.getBoundingClientRect().height)}px`)
+  set()
+  if (typeof ResizeObserver !== 'undefined') {
+    barObserver = new ResizeObserver(set)
+    barObserver.observe(el)
+  }
+})
+onBeforeUnmount(() => {
+  barObserver?.disconnect()
+  root.style.removeProperty('--bar-h')
+})
 </script>
 
 <template>
@@ -155,10 +180,11 @@ const pad = 'px-4 md:px-10 xl:px-16'
 
     <footer
       v-if="editor.ready.value"
+      ref="bar"
       :class="pad"
       class="sticky bottom-0 z-10 flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-rule bg-bg py-3.5"
     >
-      <SaveState :status="editor.status.value" :saved-at="editor.savedAt.value" />
+      <SaveState :status="editor.status.value" :saved-at="editor.savedAt.value" :note="saveNote" />
       <div class="ml-auto flex items-center gap-2">
         <Button variant="ghost" :disabled="!editor.dirty.value || editor.busy.value" @click="editor.discard()">
           {{ ui.actions.discard }}

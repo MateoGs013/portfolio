@@ -25,22 +25,39 @@ export interface AdminLink {
   translations: En<{ label: string | null }>[]
 }
 
+export type MediaKind = 'IMAGE' | 'VIDEO'
+export type MediaRole = 'COVER' | 'GALLERY'
+export type MediaViewport = 'DESKTOP' | 'MOBILE'
+
 export interface AdminMedia {
   id: number
-  kind: 'IMAGE' | 'VIDEO'
-  role: 'COVER' | 'GALLERY'
+  kind: MediaKind
+  role: MediaRole
   src: string
+  srcWebm: string | null
   poster: string | null
   alt: string
   caption: string | null
+  tint: string | null
+  viewport: MediaViewport
+  width: number
+  height: number
+  bytes: number | null
   order: number
   translations: En<{ alt: string | null, caption: string | null }>[]
 }
 
+/** Una métrica tal como sale de Prisma: el Decimal llega como texto y la fecha en ISO. */
 export interface AdminMetric {
   id: number
   key: string
+  value: string | number | null
+  items: string[]
+  unit: string | null
   label: string | null
+  source: string | null
+  measuredAt: string | null
+  order: number
   translations: En<{ label: string | null }>[]
 }
 
@@ -92,9 +109,46 @@ export interface LinkForm {
 }
 
 /**
+ * Una imagen o un video en el formulario. `id` null es una pieza nueva: su archivo espera en la cola
+ * (media/mediaQueue.ts) y `upload` nombra lo que se sube al guardar (también un reemplazo, un WebM o
+ * un póster de una pieza ya cargada). La media no viaja en el PUT de la obra: se guarda pieza por
+ * pieza en /media después, en el mismo Guardar; las rutas de error son `media[i].alt`.
+ */
+export interface MediaForm {
+  key: string
+  id: number | null
+  kind: MediaKind
+  role: MediaRole
+  viewport: MediaViewport
+  alt: string
+  caption: string
+  tint: string
+  upload: { file: string | null, webm: string | null, poster: string | null }
+  translations: { en: { alt: string, caption: string } }
+}
+
+/**
+ * Una métrica con la forma del body: un número con unidad (`value` y `unit`) o una lista (`items`,
+ * un elemento por renglón), según `kind`, que no viaja. El rótulo propio solo cuenta fuera del
+ * catálogo de claves.
+ */
+export interface MetricForm {
+  id: number | null
+  key: string
+  kind: 'value' | 'items'
+  value: string
+  unit: string | null
+  items: string
+  label: string
+  source: string
+  measuredAt: string
+  translations: { en: { label: string } }
+}
+
+/**
  * El formulario: los textos como texto (el año también, para escribirlo), `publishedAt` en ISO o null
- * (oculta). Tecnologías y enlaces viajan tal cual en cada guardado: el PUT reemplaza lo que no llega.
- * Las métricas no viajan: sin la clave el servidor las conserva.
+ * (oculta). Tecnologías, enlaces y métricas viajan tal cual en cada guardado: el PUT reemplaza lo que
+ * no llega. La media va aparte (MediaForm).
  */
 export interface ProjectForm {
   title: string
@@ -113,5 +167,7 @@ export interface ProjectForm {
   techIds: number[]
   links: LinkForm[]
   steps: StepForm[]
+  metrics: MetricForm[]
+  media: MediaForm[]
   translations: { en: ProjectEnForm }
 }

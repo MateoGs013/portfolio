@@ -2,14 +2,19 @@
  * Las obras para el marco de colecciones (/api/admin/projects). El formulario tiene la forma del
  * body del PUT: el inglés en `translations.en` (de la obra y de cada paso), los pasos y los enlaces
  * por id (así conservan su inglés), y la publicación en `publishedAt`. La dirección viaja solo al
- * crear: después se cambia con «Cambiar dirección» (PATCH /projects/:id/slug).
+ * crear: después se cambia con «Cambiar dirección» (PATCH /projects/:id/slug). Las métricas viajan
+ * en el PUT (data/metricForm.ts); la media está en el formulario pero se guarda aparte, pieza por
+ * pieza (media/useMediaSave.ts), en el mismo Guardar.
  */
 import type { FieldIssue } from '@shared/adminContracts'
 import { enumLabel } from '../../models/labels'
 import type { Model } from '../../models/types'
 import { meta } from '../../stores/meta'
 import { projectChecklist } from './checklist'
+import { linkIssues } from './data/links'
+import { metricFormOf, metricIssues, metricPayload } from './data/metricForm'
 import { projectsText } from './dict'
+import { mediaIssues, mediaListOf } from './media/mediaForm'
 import { publicationOf, publicationStatus } from './publication'
 import type { AdminProject, ProjectForm, StepForm } from './types'
 
@@ -55,7 +60,7 @@ function stepIssues(form: ProjectForm): FieldIssue[] {
 
 /** Lo que el esquema no sabe de una obra. El rol vacío lo nombra el editor con su propia frase. */
 export function projectIssues(form: ProjectForm): FieldIssue[] {
-  const issues = stepIssues(form)
+  const issues = [...stepIssues(form), ...linkIssues(form.links), ...metricIssues(form.metrics), ...mediaIssues(form.media)]
   const year = yearValue(form.year)
   if (typeof year === 'number' && (year < FIRST_YEAR || year > lastYear())) {
     issues.push({ path: 'year', message: `El año va entre ${FIRST_YEAR} y ${lastYear()}.` })
@@ -98,6 +103,8 @@ export const projectModel: Model<AdminProject, ProjectForm> = {
     techIds: [],
     links: [],
     steps: [],
+    metrics: [],
+    media: [],
     translations: { en: { title: '', role: '', summary: '', brief: '', outcome: '' } },
   }),
   toForm: (p) => {
@@ -119,6 +126,8 @@ export const projectModel: Model<AdminProject, ProjectForm> = {
       techIds: p.techs.map(x => x.id),
       links: p.links.map(l => ({ id: l.id, label: l.label, url: l.url, translations: { en: { label: text(l.translations[0]?.label) } } })),
       steps: p.steps.map(stepForm),
+      metrics: p.metrics.map(metricFormOf),
+      media: mediaListOf(p.media),
       translations: {
         en: { title: text(en?.title), role: text(en?.role), summary: text(en?.summary), brief: text(en?.brief), outcome: text(en?.outcome) },
       },
@@ -141,7 +150,7 @@ export const projectModel: Model<AdminProject, ProjectForm> = {
     orgId: form.orgId,
     techIds: form.techIds,
     links: form.links.map(l => ({ id: l.id, label: l.label, url: l.url, translations: { en: { ...l.translations.en } } })),
-    // Una obra nueva no tiene imágenes: sus pasos nacen sin imagen.
+    // Una obra nueva todavía no tiene imágenes guardadas: sus pasos nacen sin imagen.
     steps: form.steps.map(s => ({
       id: s.id,
       title: s.title,
@@ -149,6 +158,7 @@ export const projectModel: Model<AdminProject, ProjectForm> = {
       mediaId: record ? s.mediaId : null,
       translations: { en: { ...s.translations.en } },
     })),
+    metrics: form.metrics.map(metricPayload),
     translations: { en: { ...form.translations.en } },
   }),
   validate: form => projectIssues(form),
@@ -175,5 +185,5 @@ export const projectModel: Model<AdminProject, ProjectForm> = {
   keywords: p => [p.slug, p.role, p.org?.name ?? ''].join(' '),
   slugEndpoint: id => `/projects/${id}/slug`,
   slugPreview: slug => `/projects/${slug}`,
-  checklist: (form, record) => projectChecklist(form, record),
+  checklist: form => projectChecklist(form),
 }

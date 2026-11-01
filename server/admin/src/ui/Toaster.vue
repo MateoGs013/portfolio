@@ -2,6 +2,7 @@
 /**
  * Los avisos al pie, centrados. Entran con 200 ms de opacidad y 6 px. El texto ya se anunció por la
  * región viva; acá se ve, se puede accionar y se cierra. Un error queda hasta que se cierra.
+ * Con un editor abierto van encima de su barra de acciones: EditorFrame deja su alto en --bar-h.
  */
 import { dismissToast, holdToast, toasts, type ToastTone } from '../stores/toasts'
 import { ui } from './dict'
@@ -16,7 +17,7 @@ const tones: Record<ToastTone, StatusTone> = { ok: 'ok', info: 'neutral', error:
 <template>
   <!-- Con un diálogo modal abierto, los avisos se muestran adentro para poder tocarlos. -->
   <Teleport :to="layerTarget">
-    <section :aria-label="ui.toasts.region" class="pointer-events-none fixed inset-x-0 bottom-6 z-50 flex justify-center px-4">
+    <section :aria-label="ui.toasts.region" class="pointer-events-none fixed inset-x-0 bottom-[calc(var(--bar-h,0px)+1.5rem)] z-50 flex justify-center px-4">
       <TransitionGroup
         tag="ol"
         class="m-0 grid w-full max-w-[520px] list-none justify-items-center gap-2 p-0"

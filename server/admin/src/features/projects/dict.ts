@@ -96,20 +96,6 @@ export const projectsText = {
     english: (label: string) => `${label} en inglés`,
     stepEnglish: (n: number) => `Paso ${n} en inglés`,
   },
-  placeholder: {
-    images: 'Imágenes de la obra',
-    imagesText: (n: number) => (n
-      ? `La obra tiene ${plural(n, 'imagen', 'imágenes')}. La carga y la edición de imágenes llegan a esta pantalla en la próxima entrega; mientras tanto se hacen en el panel actual.`
-      : 'La obra todavía no tiene imágenes. La carga llega a esta pantalla en la próxima entrega; mientras tanto se hace en el panel actual.'),
-    data: 'Tecnologías, enlaces y métricas',
-    dataText: 'Se editan en el panel actual hasta la próxima entrega. Lo que ya tiene la obra se conserva al guardar acá.',
-    open: 'Abrir el panel actual',
-    summary: (techs: number, links: number, metrics: number) => [
-      plural(techs, 'tecnología', 'tecnologías'),
-      plural(links, 'enlace', 'enlaces'),
-      plural(metrics, 'métrica', 'métricas'),
-    ].join(' · '),
-  },
   relations: {
     title: 'Dónde más aparece',
     text: 'Se eligen desde cada entrada de la trayectoria y desde cada artículo.',
