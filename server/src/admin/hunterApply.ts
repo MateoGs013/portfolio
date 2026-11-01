@@ -42,14 +42,7 @@ async function sendPreview(res: Response, result: ForwardResult | null, job: Hun
 
 const previewPath = (id: string) => `api/jobs/${encodeURIComponent(id)}/apply-preview`
 
-/** GET /api/admin/hunter/jobs/:id/apply-preview - Vista previa del correo (sin Eros, solo la muestra). */
-hunterApplyRouter.get('/jobs/:id/apply-preview', async (req: Request, res: Response) => {
-  const id = getParamId(req)
-  const result = isManualJob(id) ? null : await forwardToEros(previewPath(id), { method: 'GET' }, 20000)
-  await sendPreview(res, result, findDemoJob(id) ?? null)
-})
-
-/** POST /api/admin/hunter/jobs/:id/apply-preview { job } - La misma vista previa, con la vacante en el cuerpo. */
+/** POST /api/admin/hunter/jobs/:id/apply-preview { job } - Vista previa del correo, con la vacante en el cuerpo. */
 hunterApplyRouter.post('/jobs/:id/apply-preview', async (req: Request, res: Response) => {
   const id = getParamId(req)
   const input = jobFromBody(req.body)

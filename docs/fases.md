@@ -195,7 +195,7 @@ Plan en `docs/rediseno-admin/plan.md` (mandan sus secciones finales: las respues
 - [x] **Ola 3 · Marco y búsqueda** — C0 (marco de colecciones), H1 (Vacantes por etapas con paridad completa y «Buscar vacantes nuevas») y R0 (Publicaciones y Tendencias en el servidor, sin datos inventados).
 - [x] **Ola 4 · Áreas** — U1 (Obras: esencial, relato, publicación), U2 (Trayectoria y Vista CV), U3 (Catálogos), U4 (Perfil), U6 (Artículos) y H2 (Publicaciones y Tendencias).
 - [x] **Ola 5 · Cierre de Obras e Inicio** — U7 (imágenes y datos) y U5 (bandeja de pendientes, sello del PDF del CV).
-- [x] **Ola 6 · Pruebas** — E1: specs del admin por área y modo (sin Eros, `--demo`, `--eros-mock`, `--web`), proxy de Nuxt, axe, CSP y la medición de los cinco minutos (`admin-flujo-obra`: 17 pasos con tope en 17).
+- [x] **Ola 6 · Pruebas** — E1: specs del admin por área y modo (sin Eros, `--demo`, `--eros-mock`, `--web`), proxy de Nuxt, axe, CSP y la medición de los cinco minutos (`admin-flujo-obra`: topes de 16 clics, 15 campos, 2 guardados y 300 s; cuenta estricta de 17 con techo en 17).
 - [x] **Ola 7 · Cambio de `/admin`** — S1: el admin nuevo pasa a `/admin/`, se retiran `/admin-next`, el panel anterior con su build de Tailwind por CLI y `GET /docs`.
 - [x] **Ola 8 · Documentación** — DOC: `docs/admin.md`, `.claude/rules/admin.md` y `backend.md`, `docs/decisiones.md`, `CLAUDE.md`, `AGENTS.md`, `DEPLOY.md` y `scripts/check-admin-endpoints.mjs` (inventario de endpoints contra lo montado y lo usado, en `pnpm lint`).
 

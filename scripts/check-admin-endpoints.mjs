@@ -27,29 +27,70 @@ const METHODS = ['get', 'post', 'put', 'patch', 'delete']
 const rel = file => path.relative(root, file).replaceAll('\\', '/')
 /** Rutas montadas cuya dirección no se pudo leer (una variable, una regex). */
 const unreadable = []
+/** Llamadas de la UI cuya dirección no se pudo resolver (una variable sin valor fijo). */
+const unresolved = []
+/**
+ * Las llamadas de la UI que reciben la dirección por parámetro y ya se cuentan por otro lado:
+ * «archivo|expresión» → por qué. Una llamada nueva que no se pueda leer falla hasta sumarse acá.
+ */
+const INDIRECT_CALLS = new Map([
+  ['composables/useCollection.ts|path', 'la lista de cada colección: se cuenta por <x>Model.path'],
+  ['features/collections/SlugDialog.vue|props.endpoint', 'Cambiar dirección: se cuenta por slugEndpoint'],
+])
 
 // ── Lo montado ──────────────────────────────────────────────────────────────────────────────
 
+/** Middlewares conocidos que se montan con `.use()` y no son routers: cualquier otro identificador falla. */
+const MIDDLEWARES = new Set(['requireAdmin', 'forgetsLastGood', 'adminErrors'])
+/** Una función escrita en el lugar: `(req, res, next) => …`, `async (…) => …` o `function (…) {…}`. */
+const INLINE_FN = /^(?:async\s+)?(?:\(|function\b|\w+\s*=>)/
+const lineOf = (code, index) => code.slice(0, index).split('\n').length
+
 function mounted() {
   const routers = new Map()
-  for (const name of readdirSync(API_DIR).filter(f => f.endsWith('.ts'))) {
-    const { code, literals } = mask(readFileSync(path.join(API_DIR, name), 'utf8'))
-    for (const [, id] of code.matchAll(/\b(?:export\s+)?const\s+(\w+)\s*=\s*Router\(\)/g)) {
-      routers.set(id, { file: name, routes: [], children: [], unreadable: [] })
+  const files = readdirSync(API_DIR).filter(f => f.endsWith('.ts')).map((name) => {
+    const masked = mask(readFileSync(path.join(API_DIR, name), 'utf8'))
+    return { name, ...masked }
+  })
+  // Cada router, se cree como se cree: `Router()`, `Router({ mergeParams: true })` o `express.Router()`.
+  // Un `Router(` que no sea `const x = …Router(…)` (uno anónimo dentro de un `.use()`) no se puede seguir.
+  for (const { name, code } of files) {
+    const created = new Set()
+    for (const m of code.matchAll(/\b(?:export\s+)?(?:const|let|var)\s+(\w+)\s*(?::\s*[\w.<>]+\s*)?=\s*(?:new\s+)?(?:express\s*\.\s*)?Router\s*\(/g)) {
+      created.add(m.index + m[0].length)
+      const where = `${name}:${lineOf(code, m.index)}`
+      if (routers.has(m[1])) unreadable.push(`${where}: el router ${m[1]} ya existe en ${routers.get(m[1]).file}; usá otro nombre`)
+      else routers.set(m[1], { file: name, routes: [], children: [], unreadable: [] })
     }
+    for (const m of code.matchAll(/\bRouter\s*\(/g)) {
+      if (!created.has(m.index + m[0].length)) unreadable.push(`${name}:${lineOf(code, m.index)}: un Router() sin nombre; asignalo a una constante para que se pueda seguir`)
+    }
+  }
+  for (const { name, code, literals } of files) {
+    // Las llamadas sobre los routers de este archivo y sobre los que importa de otro.
+    const imported = new Set([...code.matchAll(/\bimport\s*\{([^}]*)\}/g)]
+      .flatMap(m => m[1].split(',').map(s => s.trim().split(/\s+as\s+/).at(-1))))
     for (const [id, router] of routers) {
-      if (router.file !== name) continue
-      for (const call of code.matchAll(new RegExp(`\\b${id}\\.(${METHODS.join('|')}|use)\\(`, 'g'))) {
-        const args = splitArgs(untilClose(code, call.index + call[0].length))
+      if (router.file !== name && !imported.has(id)) continue
+      for (const call of code.matchAll(new RegExp(`\\b${id}\\s*\\.\\s*(${METHODS.join('|')}|use|all|route)\\s*\\(`, 'g'))) {
+        const start = call.index + call[0].length
+        const inner = untilClose(code, start)
+        const args = splitArgs(inner)
         const first = literals[literalAt(args[0] ?? '')]
-        if (call[1] === 'use') {
+        const where = `${name}:${lineOf(code, call.index)}`
+        if (/^\s*\.\s*\w+\s*\(/.test(code.slice(start + inner.length + 1))) {
+          router.unreadable.push(`${where}: ${id}.${call[1]}() encadenada; escribí cada ruta en su propia llamada`)
+        }
+        if (call[1] === 'all' || call[1] === 'route') {
+          router.unreadable.push(`${where}: ${id}.${call[1]}() no se puede inventariar; usá ${METHODS.map(m => `.${m}()`).join(', ')}`)
+        }
+        else if (call[1] === 'use') {
           const prefix = first?.kind === 'string' ? first.value : ''
-          for (const arg of first ? args.slice(1) : args) router.children.push({ prefix, id: arg })
+          for (const arg of first ? args.slice(1) : args) router.children.push({ prefix, id: arg, where })
         }
         else {
           // Un string o una lista de strings (Express acepta las dos); cualquier otra cosa no se
           // puede leer y se informa, para que una ruta no se escape del chequeo.
-          const where = `${name}:${code.slice(0, call.index).split('\n').length}`
           const paths = first?.kind === 'string'
             ? [first.value]
             : /^\[[\s\0\d,]*\]$/.test(args[0] ?? '')
@@ -64,12 +105,22 @@ function mounted() {
   const out = []
   const walk = (id, prefix, seen) => {
     const router = routers.get(id)
-    if (!router || seen.has(id)) return
     unreadable.push(...router.unreadable)
     for (const r of router.routes) out.push({ ...r, path: `${prefix}${r.path}`.replace(/\/$/, '') || '/' })
-    for (const child of router.children) walk(child.id, `${prefix}${child.prefix}`, new Set([...seen, id]))
+    for (const child of router.children) {
+      if (routers.has(child.id)) {
+        if (seen.has(child.id)) unreadable.push(`${child.where}: ${child.id} se monta dentro de sí mismo`)
+        else walk(child.id, `${prefix}${child.prefix}`, new Set([...seen, id]))
+      }
+      else if (!MIDDLEWARES.has(child.id) && !INLINE_FN.test(child.id)) {
+        // Un router que no se encontró (creado fuera de server/src/admin, o de una forma que no se
+        // lee) o un middleware nuevo: las dos cosas se anotan acá para que nada pase sin verse.
+        unreadable.push(`${child.where}: ${id}.use() monta «${child.id.replace(/\0\d+\0/g, '…').slice(0, 60)}», que no es un router conocido ni un middleware de la lista (MIDDLEWARES en scripts/check-admin-endpoints.mjs)`)
+      }
+    }
   }
-  walk('adminApi', '', new Set())
+  if (!routers.has('adminApi')) throw new Error('no se encontró adminApi en server/src/admin/router.ts')
+  walk('adminApi', '', new Set(['adminApi']))
   if (!out.length) throw new Error('no se encontró ninguna ruta debajo de adminApi en server/src/admin/router.ts')
   return out
 }
@@ -173,7 +224,10 @@ function used(apiSegments) {
     }
     for (const call of code.matchAll(new RegExp(`\\bapi\\.(${METHODS.join('|')})\\s*(?:<[^()]*?>)?\\(`, 'g'))) {
       const [first] = splitArgs(untilClose(code, call.index + call[0].length))
-      if (first) push(call[1].toUpperCase(), resolve(first))
+      const paths = first && resolve(first)
+      const indirect = INDIRECT_CALLS.has(`${path.relative(UI_DIR, file).replaceAll('\\', '/')}|${first?.trim()}`)
+      if (!paths && !indirect) unresolved.push(`${rel(file)}:${lineOf(code, call.index)}: api.${call[1]}() con una dirección que no se puede leer`)
+      push(call[1].toUpperCase(), paths)
     }
     for (const s of code.matchAll(/slugEndpoint:\s*\(?\s*(\w+)\s*\)?\s*=>\s*\0(\d+)\0/g)) {
       push('PATCH', expand(literals[s[2]], new Map([[s[1], ':p']])))
@@ -208,7 +262,7 @@ if (process.argv.includes('--list')) {
   for (const u of usages) console.log(`  ${u.method.padEnd(6)} ${u.path}  ${u.file}`)
 }
 const docs = documented()
-const problems = [...unreadable]
+const problems = [...unreadable, ...unresolved]
 
 const docByKey = new Map()
 for (const d of docs) {

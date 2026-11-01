@@ -77,15 +77,6 @@ function checkWebm(webm: Express.Multer.File, mainExt: string): void {
 
 export const mediaRouter = Router()
 
-mediaRouter.get('/media', async (req, res) => {
-  const projectId = optInt(req.query as Body, 'projectId')
-  res.json(await db.media.findMany({
-    where: projectId === null ? {} : { projectId },
-    orderBy: [{ projectId: 'asc' }, { role: 'asc' }, { order: 'asc' }],
-    include: withTranslations,
-  }))
-})
-
 /** multipart: file (imagen o video) + webm? + poster? · projectId, alt, caption?, role, order?, viewport?, tint? */
 mediaRouter.post('/media', upload.fields([{ name: 'file', maxCount: 1 }, { name: 'webm', maxCount: 1 }, { name: 'poster', maxCount: 1 }]), async (req, res) => {
   const files = (req.files ?? {}) as Files

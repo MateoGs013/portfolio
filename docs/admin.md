@@ -19,7 +19,7 @@ El sitio público sale entero de un solo modelo relacional en PostgreSQL 17. El 
 
 **Mateo (autor).** Publica obras y artículos, mantiene la trayectoria y el CV, revisa vacantes y postula. Quiere teclado (`Ctrl/⌘K`, `Ctrl/⌘S`, `j`/`k`, `/`, `N`), direcciones que se puedan compartir (`#/obras/12/relato?campo=outcome`) y saber al instante qué falta.
 
-**Un asistente sin saber programar.** Carga una obra completa (texto, tecnologías, imágenes) en menos de cinco minutos sin SQL ni JSON (invariante 4 de `.claude/rules/admin.md`). Cada campo dice para qué sirve y dónde aparece, las métricas se cargan por tipo, la dirección (slug) se deriva sola y no cambia sin aviso, y ningún valor de enum se ve crudo. La prueba `tests/e2e/admin-flujo-obra.spec.ts` mide el recorrido con las constantes de la auditoría (2 s por clic, 12 s por campo): hoy son 17 pasos con el tope en 17.
+**Un asistente sin saber programar.** Carga una obra completa (texto, tecnologías, imágenes) en menos de cinco minutos sin SQL ni JSON (invariante 6 de `.claude/rules/admin.md`). Cada campo dice para qué sirve y dónde aparece, las métricas se cargan por tipo, la dirección (slug) se deriva sola y no cambia sin aviso, y ningún valor de enum se ve crudo. La prueba `tests/e2e/admin-flujo-obra.spec.ts` mide el recorrido con las constantes de la auditoría (2 s por clic, 12 s por campo): los topes son 16 clics, 15 campos, 2 guardados y 300 s, y la cuenta estricta (cada Enter que elige una tecnología cuenta como clic) da hoy 17 con el techo en 17.
 
 ---
 
@@ -157,7 +157,7 @@ La respuesta trae `_adaptation { categories, entries, bullets, discarded, propos
 
 **Caché y 409.** El CV adaptado queda en memoria por vacante una hora (`hunterCvCache.ts`). De ahí salen `/cv/:id/html` (la hoja, con `?measure=1` para medirla en un iframe `sandbox="allow-scripts"` que responde `postMessage({ type: 'cv-measure', heightMm, pages })`) y `/cv/:id/txt`. Si no está en caché (reinicio o más de una hora) responden 409 `cv_expired` y el cliente vuelve a hacer `POST /cv/:id` con la misma vacante y repite una vez. Las hojas que se abren en otra pestaña o en un iframe usan un ticket HMAC de una hora (`auth.ts`, alcances `cv`, `cv-base` y `carousel`), nunca la clave. El CV se imprime o se guarda como PDF desde esa hoja; Eros ya no arma PDF.
 
-**Muestra para pruebas.** `EROS_DEMO=1` (y nunca con `NODE_ENV=production`) sirve una cola y publicaciones ficticias (ids `demo-*`, empresas Ejemplo/Example, `X-Eros-Source: demo`) para pruebas y capturas. Las escrituras sobre ids `demo-*` responden 400 y no se guardan. Las pruebas que necesitan un Eros que responda usan el simulado de `tests/admin/eros-mock.ts`; el Eros real nunca se contacta desde una prueba.
+**Muestra para pruebas.** `EROS_DEMO=1` (y nunca con `NODE_ENV=production`) sirve una cola y publicaciones ficticias (ids `demo-*`, empresas Ejemplo/Example, `X-Eros-Source: demo`) para pruebas y capturas. En Publicaciones y Tendencias las escrituras sobre ids `demo-*` responden 400 y no se guardan. En Vacantes solo se frenan los ids `manual-*`: cambiar la etapa o borrar una vacante `demo-*` va a Eros y, sin Eros, falla como sin conexión. Las pruebas que necesitan un Eros que responda usan el simulado de `tests/admin/eros-mock.ts`; el Eros real nunca se contacta desde una prueba.
 
 ---
 
@@ -270,10 +270,10 @@ Todas las rutas van debajo de `/api/admin`, detrás del Bearer `ADMIN_TOKEN` (la
 
 Montadas a propósito aunque la UI no las llama. Cada una dice por qué sigue.
 
+Hoy no hay ninguna. Una ruta que se monte sin uso va en una tabla como esta, con el motivo:
+
 | Método | Ruta | Por qué sigue |
 |---|---|---|
-| GET | `/media` | Lista la media (`?projectId=`). La obra ya trae su media en `GET /projects/:id`; quedó del panel anterior y nadie la llama. Se puede retirar con un cambio en `server/src/admin/media.ts`. |
-| GET | `/hunter/jobs/:id/apply-preview` | La vista previa sin la vacante en el cuerpo: solo anda con Eros arriba o con la muestra. La UI usa el POST; quedó del panel anterior y se puede retirar en `server/src/admin/hunterApply.ts`. |
 
 ### Retirados
 
@@ -281,6 +281,8 @@ Ya no existen. Si alguno vuelve a montarse, el chequeo falla.
 
 | Método | Ruta | Por qué se retiró |
 |---|---|---|
+| GET | `/media` | La lista de media (`?projectId=`): solo la leía el panel anterior; la obra trae su media en `GET /projects/:id` |
+| GET | `/hunter/jobs/:id/apply-preview` | La vista previa sin la vacante en el cuerpo: la UI usa el POST, que también anda sin Eros |
 | DELETE | `/hunter/jobs` | «Borrar todas las vacantes»: Mateo decidió retirarlo (pregunta 3); «Limpiar la cola» cubre lo útil |
 | GET | `/hunter/cv/:id/pdf` | El PDF que armaba Eros: el CV se imprime o se guarda como PDF desde la hoja armada con la base |
 | GET | `/hunter/jobs/:id/cv/pdf` | Alias del anterior |
@@ -326,7 +328,7 @@ El Inicio del admin compone el mismo CV desde la base (`server/src/admin/cvStamp
 
 eslint, para `server/admin/src/**`: máximo 300 líneas y prohibidos `confirm`, `alert` y `prompt` (las confirmaciones van por `requestConfirm`). `pnpm typecheck` corre `vue-tsc` sobre el admin.
 
-**En el servidor.** CSP estricta para `/admin` y `/api/admin` (`server/src/admin/ui.ts`): script, style y font `'self'`, `script-src-attr 'none'`, sin `unsafe-eval` ni `unsafe-inline`; por eso no hay `style` estático en las plantillas (los `:style` dinámicos van por CSSOM). Errores siempre como `AdminErrorBody` (`server/src/admin/errors.ts`): `invalid` con todos los campos juntos y rutas anidadas (`links[0].url`, `translations.en.title`), `not_found`, `conflict` (409 de una restricción única, en su campo), `in_use` (409 de una relación), `too_large`, `offline`, `db_unavailable` (503), `eros_unreachable`, `eros_auth` e `internal`. Cada escritura de contenido pasa por `forgetsLastGood`, que olvida los respaldos de la API pública.
+**En el servidor.** CSP estricta para `/admin` y `/api/admin` (`server/src/admin/ui.ts`): script, style y font `'self'`, `script-src-attr 'none'`, sin `unsafe-eval` ni `unsafe-inline`; por eso no hay `style` estático en las plantillas (los `:style` dinámicos van por CSSOM). Errores como `AdminErrorBody` (`server/src/admin/errors.ts`): `invalid` con todos los campos juntos y rutas anidadas (`links[0].url`, `translations.en.title`), `unauthorized`, `not_found`, `conflict` (409 de una restricción única, en su campo), `in_use` (409 de una relación), `cv_expired` (409 del CV adaptado que ya no está en caché), `too_large`, `offline`, `db_unavailable` (503), `eros_auth` e `internal`. La excepción es `requireAdmin` (`auth.ts`): responde 401 `{ error: 'unauthorized' }` y 503 `{ error: 'admin deshabilitado: …' }` sin `code` ni `errors`. `eros_unreachable` no lo manda el servidor: lo arma el cliente (`server/admin/src/api/errors.ts`) ante un 502 o 504 de una ruta de Eros. Cada escritura de contenido pasa por `forgetsLastGood`, que olvida los respaldos de la API pública.
 
 **En las pruebas.** Toda prueba del admin corre con `node scripts/admin-run.mjs [--demo] [--eros-mock] [--web] -- <comando>`: copia la base a `portfolio_admin_*`, la migra, levanta la API en un puerto libre entre 3940 y 3990 con una clave al azar y Eros apagado (`HUNTER_API_URL=http://127.0.0.1:9`), y limpia todo al terminar. Cada spec declara sus modos en una línea `admin-run:` de su cabecera y `pnpm test:e2e` (`tests/e2e/run.mjs`) la corre una vez por línea. Nunca se escribe sobre la base de trabajo ni se contacta al Eros real.
 
