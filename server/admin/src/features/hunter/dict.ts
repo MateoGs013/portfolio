@@ -1,0 +1,121 @@
+/**
+ * Textos de Vacantes (Búsqueda laboral). Español claro, minúscula de oración; Eros aparece como
+ * fuente, nunca como marca. Los estados y veredictos se nombran con palabras, nunca con su valor.
+ */
+const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`
+
+export const hunter = {
+  title: 'Vacantes',
+  lead: 'Las evalúa Eros; el CV se arma siempre desde la base.',
+  listLabel: 'Vacantes de la cola',
+  status: {
+    new: 'Nueva',
+    evaluated: 'Evaluada',
+    saved: 'Guardada',
+    applied: 'Postulada',
+    discarded: 'Descartada',
+  },
+  verdict: {
+    great: 'Muy compatible',
+    good: 'Compatible',
+    doubtful: 'Dudosa',
+    discard: 'Descartar',
+  },
+  filters: {
+    label: 'Filtrar vacantes',
+    review: 'Por revisar',
+    compatible: 'Compatibles',
+    applied: 'Postuladas',
+    discarded: 'Descartadas',
+    all: 'Todas',
+  },
+  summary: (s: { total: number, high: number, pending: number, applied: number }) => [
+    plural(s.total, 'vacante', 'vacantes'),
+    plural(s.high, 'compatible', 'compatibles'),
+    `${s.pending} por evaluar`,
+    plural(s.applied, 'postulada', 'postuladas'),
+  ].join(' · '),
+  manualTag: 'Pegada a mano',
+  sampleTag: 'Muestra',
+  remote: 'Remoto',
+  affinity: (n: number) => `afinidad ${n} %`,
+  percent: (n: number) => `${n} %`,
+  sample: 'Muestra de prueba: estas vacantes son ficticias y no se pueden cambiar.',
+  offline: {
+    title: 'Eros no responde',
+    withCache: (time: string) => `Esta es la lista de la última sincronización, a las ${time}. Queda en solo lectura hasta que Eros vuelva; pegar una vacante y adaptar el CV siguen andando.`,
+    noCache: 'No hay una lista guardada de esta sesión. Pegar una vacante y adaptar el CV siguen andando sin Eros.',
+    synced: (time: string) => `Última sincronización ${time}`,
+    readOnly: 'Sin Eros la cola queda en solo lectura.',
+  },
+  empty: {
+    title: 'No hay vacantes en la cola',
+    none: 'Nada para mostrar',
+    text: 'Buscá vacantes nuevas en los portales o pegá una que encontraste por tu cuenta.',
+    filtered: 'Ninguna vacante coincide con este filtro.',
+    search: (q: string) => `Ninguna vacante coincide con «${q}».`,
+  },
+  search: {
+    label: 'Buscar en la cola',
+    placeholder: 'Título, empresa o tecnología',
+    affinity: 'Buscar por afinidad',
+    affinityHint: 'Eros compara el sentido de lo que escribís con cada aviso. Enter para buscar.',
+    affinityOff: 'La búsqueda por afinidad necesita a Eros.',
+    run: 'Buscar',
+    clear: 'Volver a la cola',
+    results: (n: number, q: string) => `${plural(n, 'vacante afín', 'vacantes afines')} a «${q}»`,
+    failed: 'La búsqueda por afinidad no se hizo.',
+  },
+  actions: {
+    scan: 'Buscar vacantes nuevas',
+    scanning: 'Eros está recorriendo los portales…',
+    paste: 'Pegar una vacante',
+    evaluatePending: 'Evaluar las pendientes',
+    purge: 'Limpiar la cola',
+    more: 'Más acciones',
+    generateCv: 'Generar CV para esta vacante',
+  },
+  scan: {
+    started: 'Eros está recorriendo los portales. Puede tardar un minuto.',
+    done: (scanned: number, found: number) => found
+      ? `Eros revisó ${plural(scanned, 'aviso', 'avisos')} y sumó ${plural(found, 'vacante nueva', 'vacantes nuevas')}.`
+      : `Eros revisó ${plural(scanned, 'aviso', 'avisos')}; no hay vacantes nuevas.`,
+    indexed: (n: number) => ` ${plural(n, 'quedó lista', 'quedaron listas')} para la búsqueda por afinidad.`,
+    indexLater: 'Las vacantes nuevas se están indexando para la búsqueda por afinidad.',
+    indexDone: (n: number) => `${plural(n, 'vacante indexada', 'vacantes indexadas')} para la búsqueda por afinidad.`,
+    indexFailed: 'Las vacantes nuevas no se indexaron: la búsqueda por afinidad todavía no las encuentra.',
+    failed: 'No se buscaron vacantes nuevas.',
+  },
+  batch: {
+    done: (n: number) => n ? `Eros evaluó ${plural(n, 'vacante pendiente', 'vacantes pendientes')}.` : 'No había vacantes pendientes de evaluar.',
+    failed: 'No se evaluaron las vacantes pendientes.',
+  },
+  purge: {
+    title: 'Limpiar la cola',
+    message: 'Eros quita de la cola las vacantes descartadas y las que evaluó como incompatibles. Las guardadas y las postuladas quedan.',
+    impact: ['Las vacantes descartadas', 'Las vacantes que Eros evaluó como incompatibles'],
+    confirm: 'Limpiar la cola',
+    done: (n: number) => n ? `Se quitaron ${plural(n, 'vacante', 'vacantes')} de la cola.` : 'No había vacantes para quitar.',
+    failed: 'La cola no se limpió.',
+  },
+  manual: {
+    title: 'Pegar una vacante',
+    description: 'La analizás, adaptás el CV y armás el mensaje como con las de Eros. Queda en esta pestaña hasta que la cierres.',
+    jobTitle: 'Puesto',
+    company: 'Empresa',
+    text: 'Descripción del aviso',
+    textHint: 'Pegá el aviso completo: con eso se analiza y se ordena el CV.',
+    email: 'Correo de contacto',
+    url: 'Dirección del aviso',
+    optional: 'Opcional',
+    create: 'Agregar a la cola',
+    cancel: 'Cancelar',
+    missing: 'Pegá la descripción del aviso, o al menos el puesto.',
+    badEmail: 'Escribí un correo válido, como nombre@empresa.com.',
+    badUrl: 'La dirección tiene que empezar con https://.',
+    added: 'Vacante agregada a la cola.',
+  },
+  loadFailed: 'No se pudo cargar la cola de vacantes',
+} as const
+
+export type HunterDict = typeof hunter
