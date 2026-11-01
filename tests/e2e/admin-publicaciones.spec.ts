@@ -11,6 +11,10 @@ import { expect, test, type APIRequestContext, type Page, type TestInfo } from '
  *   node scripts/admin-run.mjs --demo -- …            (la muestra de EROS_DEMO: un post por artículo publicado)
  *   node scripts/admin-run.mjs --eros-mock -- …       (Eros simulado: tests/admin/eros-mock.ts)
  *
+ * admin-run: sin Eros
+ * admin-run: --demo
+ * admin-run: --eros-mock
+ *
  * Inventario de endpoints → control (el último test lo comprueba con --eros-mock):
  *   GET    /content/posts                 lista de Publicaciones
  *   GET    /content/posts/:id             registro de la publicación
@@ -70,9 +74,19 @@ async function settle(page: Page): Promise<void> {
     .map(a => a.finished.catch(() => null))))
 }
 
+/**
+ * Los avisos se van solos a los pocos segundos: si uno empieza a fundirse mientras axe mide, el
+ * contraste sale bajo. Se retienen como cuando el puntero está encima y se sueltan después.
+ */
+async function holdToasts(page: Page, hold: boolean): Promise<void> {
+  await page.evaluate(h => document.querySelectorAll('section[aria-label="Avisos"] li').forEach(li => li.dispatchEvent(new PointerEvent(h ? 'pointerenter' : 'pointerleave'))), hold)
+}
+
 async function noSeriousAxe(page: Page): Promise<void> {
+  await holdToasts(page, true)
   await settle(page)
   const { violations } = await new AxeBuilder({ page }).analyze()
+  await holdToasts(page, false)
   const serious = violations.filter(v => v.impact === 'serious' || v.impact === 'critical')
   expect(serious.map(v => `${v.id}: ${v.nodes.map(n => n.target.join(' ')).join(', ')}`)).toEqual([])
 }

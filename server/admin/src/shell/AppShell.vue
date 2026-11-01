@@ -26,9 +26,12 @@ const router = useRouter()
 const main = ref<HTMLElement | null>(null)
 const menuOpen = ref(false)
 
-/** La paleta no se abre encima de otro diálogo (una confirmación, la reautenticación). */
+/**
+ * La paleta no se abre encima de otro diálogo (una confirmación, la reautenticación). El <dialog> de
+ * la propia paleta no cuenta: Esc y Ctrl/⌘K en seguida lo encuentran todavía abierto mientras sale.
+ */
 function palette(): void {
-  if (!paletteOpen.value && document.querySelector('dialog[open]')) return
+  if (!paletteOpen.value && document.querySelector('dialog[open]:not([data-palette])')) return
   menuOpen.value = false
   togglePalette()
 }

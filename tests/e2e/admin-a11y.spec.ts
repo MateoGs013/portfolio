@@ -125,7 +125,10 @@ test.describe('con movimiento reducido', () => {
         })
         .slice(0, 5)
         .map(el => `${el.tagName.toLowerCase()}.${String(el.className).slice(0, 40)}`)
-      return { animations, transitions, viewTransitions: (window as unknown as { __viewTransitions: number }).__viewTransitions }
+      // Lo que arrancó desde la última medida, aunque ya haya terminado (las entradas de las filas).
+      const w = window as unknown as { __viewTransitions: number, __started: string[] }
+      animations.push(...w.__started.splice(0))
+      return { animations, transitions, viewTransitions: w.__viewTransitions }
     })
   }
 
@@ -133,6 +136,21 @@ test.describe('con movimiento reducido', () => {
     test.setTimeout(240_000)
     await page.addInitScript(() => {
       Object.defineProperty(window, '__viewTransitions', { value: 0, writable: true })
+      // Cada animación que arranca, CSS o WAAPI, con su duración: una que dure más de 1 ms es movimiento.
+      const started: string[] = []
+      Object.defineProperty(window, '__started', { value: started })
+      const ms = (value: string) => Math.max(...value.split(',').map(v => v.trim().endsWith('ms') ? Number.parseFloat(v) : Number.parseFloat(v) * 1000))
+      document.addEventListener('animationstart', (event) => {
+        const style = getComputedStyle(event.target as Element)
+        if (ms(style.animationDuration) > 1 || ms(style.animationDelay) > 1) started.push(`${event.animationName} ${style.animationDuration} (al arrancar)`)
+      }, true)
+      const animate = Element.prototype.animate
+      Element.prototype.animate = function (this: Element, ...args: Parameters<Element['animate']>) {
+        const animation = animate.apply(this, args)
+        const timing = animation.effect?.getComputedTiming()
+        if (Number(timing?.duration ?? 0) > 1 || Number(timing?.delay ?? 0) > 1) started.push(`animate() ${String(timing?.duration)}ms (al arrancar)`)
+        return animation
+      }
       const original = document.startViewTransition?.bind(document)
       if (original) {
         document.startViewTransition = ((cb: () => Promise<void>) => {

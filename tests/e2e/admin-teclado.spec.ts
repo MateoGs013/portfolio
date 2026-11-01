@@ -184,9 +184,19 @@ test('la paleta encuentra obras, trayectoria, catálogos y vacantes, y Enter las
     await combobox.fill(query)
     await expect(palette(page).getByRole('group', { name: group }).getByRole('option', { name }).first(), `${query} en ${group}`).toBeVisible()
     await page.keyboard.press('Escape')
-    // Como una persona: la paleta termina de cerrarse antes del Ctrl/⌘K siguiente.
     await expect(palette(page)).toBeHidden()
   }
+  // Esc y Ctrl/⌘K en el mismo instante: la paleta que estaba saliendo se vuelve a abrir.
+  await page.keyboard.press(`${mod}+k`)
+  await expect(palette(page)).toBeVisible()
+  await page.evaluate((meta) => {
+    const key = (init: KeyboardEventInit) => (document.activeElement ?? document.body).dispatchEvent(new KeyboardEvent('keydown', { bubbles: true, cancelable: true, ...init }))
+    key({ key: 'Escape' })
+    key({ key: 'k', code: 'KeyK', ctrlKey: !meta, metaKey: meta })
+  }, mod === 'Meta')
+  await expect(palette(page)).toBeVisible()
+  await page.keyboard.press('Escape')
+  await expect(palette(page)).toBeHidden()
   await page.keyboard.press(`${mod}+k`)
   await combobox.fill(job.company)
   const option = palette(page).getByRole('group', { name: 'Vacantes' }).getByRole('option', { name: new RegExp(job.title.replace(/[()]/g, '\\$&')) })

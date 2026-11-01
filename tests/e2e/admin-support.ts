@@ -50,11 +50,21 @@ export async function settle(page: Page): Promise<void> {
     .map(a => a.finished.catch(() => null))))
 }
 
+/**
+ * Los avisos se van solos a los pocos segundos: si uno empieza a fundirse mientras axe mide, el
+ * contraste sale bajo. Se retienen como cuando el puntero está encima y se sueltan después.
+ */
+async function holdToasts(page: Page, hold: boolean): Promise<void> {
+  await page.evaluate(h => document.querySelectorAll('section[aria-label="Avisos"] li').forEach(li => li.dispatchEvent(new PointerEvent(h ? 'pointerenter' : 'pointerleave'))), hold)
+}
+
 /** axe sin violaciones serias ni críticas, con el puntero fuera de las filas (atenúa a las hermanas). */
 export async function noSeriousAxe(page: Page, where = ''): Promise<void> {
   await page.mouse.move(0, 0)
+  await holdToasts(page, true)
   await settle(page)
   const { violations } = await new AxeBuilder({ page }).analyze()
+  await holdToasts(page, false)
   const serious = violations.filter(v => v.impact === 'serious' || v.impact === 'critical')
   expect(serious.map(v => `${v.id}: ${v.nodes.map(n => n.target.join(' ')).join(', ')}`), where).toEqual([])
 }

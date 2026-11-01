@@ -104,6 +104,7 @@ const activeId = computed(() => (flat.value[active.value] ? paletteOptionId(list
     :title="shell.palette.title"
     :close-button="false"
     initial-focus="[role='combobox']"
+    data-palette
     class="mt-[14vh] [&]:w-[min(620px,calc(100vw-32px))] [&>div>header]:sr-only [&_[data-dialog-body]]:p-0"
     @close="onClosed"
   >

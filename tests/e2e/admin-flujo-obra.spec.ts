@@ -17,6 +17,11 @@ import { auth, bar, sectionTab, signedIn, solidPng } from './admin-support'
  */
 const SECONDS = { click: 2, field: 12 }
 const LIMIT = { clicks: 16, fields: 15, saves: 2, seconds: 300 }
+/**
+ * La cuenta estricta (cada Enter que elige una tecnología como un clic más) hoy da 17: se fija ese
+ * techo para que un cambio que sume pasos no pase sin que se note.
+ */
+const STRICT_CLICKS = 17
 const SYSTEM_DIALOG_CLICKS = 4
 
 const files = [
@@ -192,6 +197,7 @@ test.describe('cargar una obra completa', () => {
     console.log(line)
     await info.attach('estimacion.txt', { body: line, contentType: 'text/plain' })
     expect(tally.clicks, 'clics').toBeLessThanOrEqual(LIMIT.clicks)
+    expect(tally.clicks + tally.keys, 'clics contando cada Enter de tecnología').toBeLessThanOrEqual(STRICT_CLICKS)
     expect(tally.fields, 'campos').toBeLessThanOrEqual(LIMIT.fields)
     expect(tally.saves, 'guardados').toBeLessThanOrEqual(LIMIT.saves)
     expect(tally.seconds, 'estimación en segundos').toBeLessThanOrEqual(LIMIT.seconds)

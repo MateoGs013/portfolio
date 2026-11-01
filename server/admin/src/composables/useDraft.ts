@@ -1,6 +1,7 @@
 /**
  * Borrador de lo escrito y no guardado, en sessionStorage, por registro (`adm-draft:orgs:12`): se
- * escribe 500 ms después de la última tecla mientras hay cambios y se borra al guardar o al descartar.
+ * escribe 500 ms después de la última tecla mientras hay cambios (y al irse de la página, para que una
+ * recarga inmediata no pierda lo último) y se borra al guardar o al descartar.
  * Si la pestaña se recarga o la sesión vence y se vuelve a entrar, el editor ofrece «Recuperar
  * cambios del 05/11 14:02». Mientras la oferta está a la vista no se pisa el borrador guardado.
  * Sin sessionStorage (modo privado estricto) no hay borrador y el editor funciona igual.
@@ -93,6 +94,7 @@ export function useDraft<TForm>(options: DraftOptions<TForm>) {
 
   function flush(): void {
     clearTimeout(timer)
+    timer = undefined
     const key = toValue(options.key)
     if (!key || offer.value || toValue(options.paused)) return
     if (toValue(options.dirty)) write(key, options.form.value)
@@ -104,7 +106,18 @@ export function useDraft<TForm>(options: DraftOptions<TForm>) {
     timer = setTimeout(flush, DEBOUNCE_MS)
   }, { deep: true })
 
-  if (getCurrentScope()) onScopeDispose(() => clearTimeout(timer))
+  // Recargar o cerrar antes de los 500 ms: pagehide llega después de que el usuario aceptó irse.
+  const onPageHide = () => {
+    if (timer !== undefined) flush()
+  }
+  if (typeof window !== 'undefined') window.addEventListener('pagehide', onPageHide)
+
+  if (getCurrentScope()) {
+    onScopeDispose(() => {
+      clearTimeout(timer)
+      if (typeof window !== 'undefined') window.removeEventListener('pagehide', onPageHide)
+    })
+  }
 
   return {
     offer: computed<DraftOffer | null>(() => (offer.value ? { savedAt: offer.value.savedAt } : null)),

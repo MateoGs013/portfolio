@@ -14,7 +14,9 @@ import { ADMIN, auth, erosUrl, jobStage, PASTED_EN, PASTED_ES, pasteJob, signedI
  *   node scripts/admin-run.mjs --eros-mock -- pnpm exec playwright test -c playwright.admin.config.ts tests/e2e/admin-audit.spec.ts
  *
  * Sin Eros ni muestra la cola está vacía y todo sale de la base. Con el Eros simulado, la vacante pegada
- * (manual-…) tampoco le llega: se comprueba en su registro de pedidos.
+ * (manual-…) tampoco le llega: se comprueba en su registro de pedidos. Además, con el Eros simulado,
+ * las vacantes de la cola (una en español y otra en inglés): escanear, vectorizar, afinidad, aceptar
+ * el resumen propuesto y el invariante 6 entero sobre ellas.
  */
 const BOUNDS = { min: 248, max: 265 }
 /** Una página de PDF (no el nodo /Pages que las agrupa). */
@@ -179,6 +181,80 @@ test.describe('invariante 6 con una vacante pegada', () => {
     expect(end).toBe(length)
     expect(length).toBeGreaterThan(200)
   })
+})
+
+/**
+ * Solo con el Eros simulado: las vacantes que llegan de la cola. «Buscar vacantes nuevas» escanea y
+ * vectoriza al terminar, la búsqueda por afinidad las ordena, y cada una (una en español y otra en
+ * inglés) se abre desde la lista, se analiza, se adapta, acepta el resumen que propuso Eros con un
+ * clic (decisión 4) y vuelve a cumplir el invariante 6: una A4 dentro de la cota y el /txt copiado.
+ */
+const QUEUE: { lang: 'es' | 'en', id: string, title: RegExp, proposal: string }[] = [
+  { lang: 'es', id: 'eros-mock-frontend', title: /Desarrollador Frontend \(Vue 3 y Nuxt\)/, proposal: 'Busco un equipo de producto donde el diseño y la ingeniería se piensen juntos.' },
+  { lang: 'en', id: 'eros-mock-backend', title: /Backend Developer \(Node\.js and PostgreSQL\)/, proposal: 'document every decision so the team can maintain it over time.' },
+]
+
+test.describe('invariante 6 con vacantes de la cola de Eros', () => {
+  test.skip(!withErosMock, 'Solo con --eros-mock: sin Eros la cola está vacía.')
+
+  test('«Buscar vacantes nuevas» escanea, vectoriza y deja la búsqueda por afinidad lista', async ({ page, request }) => {
+    await request.delete(`${erosUrl}/__requests`)
+    await signedIn(page, '#/busqueda/vacantes')
+    await page.getByRole('button', { name: 'Buscar vacantes nuevas' }).click()
+    await expect(page.getByText('Eros revisó 42 avisos y sumó 2 vacantes nuevas. 2 quedaron listas para la búsqueda por afinidad.').first()).toBeVisible()
+    const received = await (await request.get(`${erosUrl}/__requests`)).json() as { method: string, path: string }[]
+    const calls = received.map(r => `${r.method} ${r.path}`)
+    expect(calls, 'escanea y después vectoriza').toEqual(expect.arrayContaining(['POST /api/scan', 'POST /api/vectorize']))
+    expect(calls.indexOf('POST /api/vectorize')).toBeGreaterThan(calls.indexOf('POST /api/scan'))
+    await page.getByRole('switch', { name: /Buscar por afinidad/ }).click()
+    await page.getByRole('searchbox', { name: 'Buscar en la cola' }).fill('frontend con Vue')
+    await page.keyboard.press('Enter')
+    await expect(page.getByText(/2 vacantes afines a «frontend con Vue»/)).toBeVisible()
+  })
+
+  for (const { lang, id, title, proposal } of QUEUE) {
+    test(`${lang}: desde la cola, con el resumen de Eros aceptado, imprime una A4 en la cota y copia el /txt`, async ({ page, context, request }) => {
+      await context.grantPermissions(['clipboard-read', 'clipboard-write'])
+      await signedIn(page, '#/busqueda/vacantes')
+      await page.getByRole('option', { name: title }).first().click()
+      await expect(page).toHaveURL(new RegExp(`vacantes/${id}/`))
+      await expect(page.locator('#main h1')).toHaveText(title)
+
+      // Una vacante que Eros ya evaluó ofrece «Volver a analizar»; una nueva, «Analizar la vacante».
+      await jobStage(page, 'Análisis').click()
+      await page.getByRole('button', { name: /^(Analizar la vacante|Volver a analizar)$/ }).click()
+      await expect(page.getByText(/Muy compatible|Compatible|Dudosa|Descartar/).first()).toBeVisible()
+
+      await adapt(page)
+      await expect(page.getByText('Generado por Eros').first()).toBeVisible()
+      const summary = page.getByRole('region', { name: 'Resumen del CV' })
+      // Por defecto, el resumen de la base; el de Eros entra solo con el clic.
+      await expect(sheet(page).locator('body')).not.toContainText(proposal)
+      await summary.getByRole('button', { name: 'Usar este resumen' }).click()
+      await expect(page.getByText('El CV usa el resumen que propuso Eros.').first()).toBeVisible()
+      await expect(summary.getByRole('button', { name: 'Volver al de la base' })).toBeVisible()
+      await expect(sheet(page).locator('body')).toContainText(proposal, { timeout: 20000 })
+      await expect(sheet(page).locator('html')).toHaveAttribute('lang', lang)
+      await expect(page.locator('[data-cv-measure][data-height-mm]')).toBeVisible({ timeout: 20000 })
+      const height = await withinBounds(page, `CV ${lang} de ${id} con el resumen de Eros`)
+      console.log(`CV ${lang} de ${id} con el resumen de Eros: ${height.toFixed(1)} mm en una página`)
+
+      await page.getByRole('button', { name: 'Copiar texto plano' }).click()
+      await expect(page.getByRole('button', { name: 'Texto copiado' })).toBeVisible()
+      const copied = (await page.evaluate(() => navigator.clipboard.readText())).replace(/\r\n/g, '\n')
+      const txt = await (await request.get(`/api/admin/hunter/cv/${encodeURIComponent(id)}/txt`, { headers: auth })).text()
+      expect(copied).toBe(txt)
+      expect(copied.replace(/\s+/g, ' ')).toContain(proposal)
+      expect(copied).not.toMatch(/<[a-z/][^>]*>|\*\*|^#+\s/m)
+
+      const popup = page.waitForEvent('popup')
+      await page.getByRole('button', { name: 'Imprimir o guardar como PDF' }).click()
+      const win = await popup
+      await win.waitForURL(/\/hunter\/cv\/.+\/html\?.*auto_print=true/)
+      await win.close()
+      await printsOnePage(page, `CV ${lang} de ${id}`)
+    })
+  }
 })
 
 test.describe('el CV base de Trayectoria', () => {

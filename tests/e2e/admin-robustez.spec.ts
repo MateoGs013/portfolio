@@ -137,8 +137,7 @@ test('recargar con cambios pregunta y, al volver, ofrece recuperarlos', async ({
   const typed = `${original.name} (recargar)`
   await nameField(page).fill(typed)
   await expect(saveState(page)).toContainText('Cambios sin guardar')
-  // El borrador se escribe 500 ms después de la última tecla (useDraft).
-  await expect.poll(() => page.evaluate(key => sessionStorage.getItem(key), `adm-draft:empresas:${original.id}`)).toContain(typed)
+  // Sin esperar los 500 ms del borrador: useDraft lo escribe también en pagehide, al recargar.
   const asked: string[] = []
   page.on('dialog', (dialog) => {
     asked.push(dialog.type())
