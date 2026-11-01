@@ -1,5 +1,6 @@
 import AxeBuilder from '@axe-core/playwright'
 import { expect, test, type Page } from '@playwright/test'
+import { ADMIN } from './admin-support'
 
 /**
  * Shell del admin nuevo (A1): rutas por hash, ingreso y reautenticación, estado real, paleta Ctrl/⌘K,
@@ -11,7 +12,6 @@ import { expect, test, type Page } from '@playwright/test'
  * Las capturas (shell y paleta a 1440 y 390 px) quedan en test-results/ de cada prueba.
  */
 const token = process.env.PW_ADMIN_TOKEN!
-const ADMIN = '/admin-next/'
 const mod = process.platform === 'darwin' ? 'Meta' : 'Control'
 
 interface Meta { options: { projects: { id: number, title: string }[] } }

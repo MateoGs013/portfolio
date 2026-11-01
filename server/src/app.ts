@@ -5,9 +5,9 @@ import rateLimit from 'express-rate-limit'
 import helmet from 'helmet'
 import { db } from './db.js'
 import { env } from './env.js'
-import { adminApi, adminUi } from './admin/router.js'
+import { adminApi } from './admin/router.js'
 import { isAdminAuthorized } from './admin/auth.js'
-import { adminNextCsp, adminUiNext } from './admin/uiNext.js'
+import { adminCsp, adminUi } from './admin/ui.js'
 import { envelope } from './envelope.js'
 import { docs } from './routes/docs.js'
 import { experience } from './routes/experience.js'
@@ -31,23 +31,8 @@ app.use(helmet({
   crossOriginResourcePolicy: { policy: 'cross-origin' }, // Permite consumir API y /media cross-origin
 }))
 
-// M1: CSP específica y ajustada para la consola de administración (permite tipografías web y Vue runtime)
-app.use(['/admin', '/api/admin'], helmet.contentSecurityPolicy({
-  directives: {
-    defaultSrc: ["'self'"],
-    scriptSrc: ["'self'", "'unsafe-eval'", "'unsafe-inline'"],
-    scriptSrcAttr: ["'unsafe-inline'"],
-    styleSrc: ["'self'", "'unsafe-inline'", 'https://api.fontshare.com', 'https://fonts.googleapis.com'],
-    fontSrc: ["'self'", 'https://fonts.gstatic.com', 'https://cdn.fontshare.com', 'data:'],
-    imgSrc: ["'self'", 'data:', 'https:', 'blob:'],
-    connectSrc: ["'self'", 'blob:', 'https://api.github.com'],
-    // Vista previa de un video antes de subirlo (URL.createObjectURL).
-    mediaSrc: ["'self'", 'blob:'],
-    frameAncestors: ["'none'"],
-    baseUri: ["'self'"],
-    formAction: ["'self'"],
-  },
-}))
+// M1: la CSP del admin (ui.ts), para su UI y su API: mismo origen, sin eval ni nada en línea.
+app.use(['/admin', '/api/admin'], adminCsp)
 
 // M2: Rate limiting general para la API pública (desacoplado de /api/admin)
 const publicApiLimiter = rateLimit({
@@ -155,8 +140,6 @@ app.use('/uploads', express.static(path.resolve('public/media'), {
 // Rutas de administración: parser de 2mb y rate limiter de auth desacoplado
 app.use('/api/admin', express.json({ limit: '2mb' }), adminAuthFailuresLimiter, adminApi)
 app.use('/admin', adminUi)
-// El admin nuevo (Vite) convive en /admin-next con su propia CSP, sin eval ni estilos en línea.
-app.use('/admin-next', adminNextCsp, adminUiNext)
 
 // Rutas de API pública: parser de 100kb y publicApiLimiter desacoplado del admin
 app.use('/api', express.json({ limit: '100kb' }), publicApiLimiter, schema, projects, experience, stack, orgs, docs, articles, cv)

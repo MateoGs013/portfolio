@@ -1,5 +1,6 @@
 import AxeBuilder from '@axe-core/playwright'
 import { expect, test, type Page, type TestInfo } from '@playwright/test'
+import { ADMIN } from './admin-support'
 import { removeEmptyFolder, removeFiles, sql } from '../admin/datos'
 
 /**
@@ -18,7 +19,6 @@ import { removeEmptyFolder, removeFiles, sql } from '../admin/datos'
  */
 const token = process.env.PW_ADMIN_TOKEN!
 const web = process.env.ADMIN_WEB_URL ?? ''
-const ADMIN = '/admin-next/'
 const mod = process.platform === 'darwin' ? 'Meta' : 'Control'
 
 interface PublicField { name: string, value: string | string[] }

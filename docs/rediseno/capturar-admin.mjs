@@ -1,4 +1,4 @@
-// Capturas del admin nuevo (/admin-next) para revisar la ola: cada vista a 1440 y 390 px y un video del
+// Capturas del admin nuevo (/admin) para revisar la ola: cada vista a 1440 y 390 px y un video del
 // recorrido (una obra completa, de «Nueva obra» a publicada, y el CV de una vacante pegada). Corre sobre
 // una copia de la base con la muestra de vacantes, sin tocar nada real:
 //
@@ -24,7 +24,7 @@ if (!BASE || !TOKEN) {
   console.error('Correr con: node scripts/admin-run.mjs --demo -- node docs/rediseno/capturar-admin.mjs')
   process.exit(2)
 }
-const ADMIN = `${BASE}/admin-next/`
+const ADMIN = `${BASE}/admin/`
 const DIR = 'docs/rediseno/capturas/admin-nuevo'
 const FFMPEG = process.env.FFMPEG || 'ffmpeg'
 const WIDTHS = [{ width: 1440, height: 900, scale: 1 }, { width: 390, height: 844, scale: 2 }]

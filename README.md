@@ -21,7 +21,7 @@ El diseño completo (tokens, anclas del DOM, política de movimiento, teclas y r
 
 - **Frontend:** Nuxt 4, Vue 3, TypeScript, Tailwind CSS v4, GSAP 3 (ScrollTrigger, SplitText, Flip), Lenis y View Transitions. General Sans y Martian Mono servidas en local.
 - **Backend:** Express 5, Prisma 7, PostgreSQL 17 y Multer.
-- **Admin:** Vue 3 sin build y Tailwind CSS v4 (`@tailwindcss/cli`).
+- **Admin:** Vue 3, TypeScript y Tailwind CSS v4 compilados con Vite (`@tailwindcss/vite`), servidos por la API en `/admin`.
 - **Infraestructura:** Hostinger VPS con Coolify, Dockerfiles multi-stage y Traefik. Ver [`DEPLOY.md`](DEPLOY.md).
 
 ## Puesta en marcha
@@ -44,7 +44,7 @@ pnpm dev                # sitio en :3000
 pnpm typecheck          # Nuxt, server y la suite e2e
 pnpm lint               # ESLint
 pnpm build && pnpm start    # build de producción del sitio (pnpm start:api para la API)
-pnpm build:admin-css    # Tailwind del admin
+pnpm build:admin        # compilar el admin (server/admin/dist; pnpm dev:admin para desarrollarlo)
 pnpm db:snapshot        # regenerar el respaldo versionado desde la base
 pnpm db:snapshot:check  # comparar respaldo y base
 pnpm cv:pdf             # regenerar los dos PDF ATS desde el sitio local

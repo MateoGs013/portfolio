@@ -1,6 +1,7 @@
 import { existsSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import AxeBuilder from '@axe-core/playwright'
 import { expect, test, type Page, type TestInfo } from '@playwright/test'
+import { ADMIN } from './admin-support'
 import type { HunterJob } from '../../server/src/shared/hunterContracts'
 import { cvHashes, STAMP_FILE, writeStamp } from '../../scripts/cv-pdf.mjs'
 import { sql } from '../admin/datos'
@@ -22,7 +23,6 @@ import { sql } from '../admin/datos'
  */
 const token = process.env.PW_ADMIN_TOKEN!
 const api = process.env.ADMIN_API_URL!
-const ADMIN = '/admin-next/'
 const auth = { Authorization: `Bearer ${token}` }
 const STALE = 'El PDF del CV no coincide con la base'
 

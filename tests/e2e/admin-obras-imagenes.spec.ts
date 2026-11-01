@@ -1,5 +1,6 @@
 import AxeBuilder from '@axe-core/playwright'
 import { expect, test, type APIRequestContext, type Page, type TestInfo } from '@playwright/test'
+import { ADMIN } from './admin-support'
 import { readFile, unlink, writeFile } from 'node:fs/promises'
 import path from 'node:path'
 import { deflateSync } from 'node:zlib'
@@ -19,7 +20,6 @@ import { deflateSync } from 'node:zlib'
  * borra con los suyos y el archivo de La Rúcula se restaura al terminar.
  */
 const token = process.env.PW_ADMIN_TOKEN!
-const ADMIN = '/admin-next/'
 const mod = process.platform === 'darwin' ? 'Meta' : 'Control'
 const auth = { Authorization: `Bearer ${token}` }
 const PUBLIC = path.resolve('public')

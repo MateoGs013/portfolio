@@ -88,11 +88,8 @@ export default defineNuxtConfig({
   nitro: {
     typescript: { tsConfig: { exclude: ['../../server/**/*'] } },
     routeRules: {
-      '/admin': { proxy: `${apiOrigin}/admin/` },
-      '/admin/**': { proxy: `${apiOrigin}/admin/**` },
-      // El admin nuevo (Vite) convive en /admin-next. Su entrada (301 sin barra final e index) la
-      // resuelve app/nitro/routes/admin-next.ts; acá solo pasan sus assets.
-      '/admin-next/assets/**': { proxy: `${apiOrigin}/admin-next/assets/**` },
+      // El admin (Vite) lo sirve la API y pasa por app/nitro/routes/admin.ts (301 sin barra final e
+      // index) y admin/[...].ts (lo demás). Sin routeRule: la de `/admin/**` también tomaría `/admin`.
       '/api/admin/**': { proxy: `${apiOrigin}/api/admin/**` },
       '/api/**': { proxy: `${apiOrigin}/api/**` },
       // Lo subido por el admin vive en el volumen del API; lo versionado también está en public/.

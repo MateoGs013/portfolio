@@ -21,11 +21,6 @@ function enumOptions(): Record<EnumName, EnumOption[]> {
   })) as Record<EnumName, EnumOption[]>
 }
 
-/** Los valores sueltos que lee el admin actual. */
-function legacyEnums(): Record<EnumName, string[]> {
-  return Object.fromEntries(Object.entries(enumOptions()).map(([name, options]) => [name, options.map(o => o.value)])) as Record<EnumName, string[]>
-}
-
 async function summary(): Promise<AdminSummary> {
   const now = new Date()
   const [visible, scheduled, hidden, published, draft, experience, cv, stack, orgs] = await Promise.all([
@@ -89,11 +84,9 @@ async function metricKeys(): Promise<AdminMeta['metricKeys']> {
 export const metaRouter = Router()
 
 metaRouter.get('/meta', async (_req, res) => {
-  const loaded = await readOr503(res, () => Promise.all([
-    summary(), options(), metricKeys(), untranslatedRecords(), db.doc.count(), db.project.count(), db.article.count(),
-  ]))
+  const loaded = await readOr503(res, () => Promise.all([summary(), options(), metricKeys(), untranslatedRecords()]))
   if (!loaded) return
-  const [counts, choices, keys, untranslated, docs, projects, articles] = loaded
+  const [counts, choices, keys, untranslated] = loaded
   const meta: AdminMeta = {
     summary: counts,
     enumOptions: enumOptions(),
@@ -102,20 +95,6 @@ metaRouter.get('/meta', async (_req, res) => {
     options: choices,
     metricKeys: keys,
     untranslated,
-    counts: {
-      projects,
-      experiences: counts.experience.total,
-      experience: counts.experience.total,
-      stack: counts.stack,
-      orgs: counts.orgs,
-      education: 0,
-      certs: 0,
-      labs: 0,
-      articles,
-      docs,
-      inbox: 0,
-    },
-    enums: legacyEnums(),
   }
   res.json(meta)
 })

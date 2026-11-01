@@ -1,5 +1,6 @@
 import AxeBuilder from '@axe-core/playwright'
 import { expect, test, type APIRequestContext, type Page, type TestInfo } from '@playwright/test'
+import { ADMIN } from './admin-support'
 
 /**
  * Publicaciones y Tendencias (H2), pestañas de Búsqueda laboral: listas honestas según Eros (sin
@@ -34,7 +35,6 @@ import { expect, test, type APIRequestContext, type Page, type TestInfo } from '
  * en test-results/ de cada prueba.
  */
 const token = process.env.PW_ADMIN_TOKEN!
-const ADMIN = '/admin-next/'
 const auth = { Authorization: `Bearer ${token}` }
 const erosUrl = process.env.HUNTER_API_URL ?? ''
 

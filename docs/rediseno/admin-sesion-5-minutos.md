@@ -1,6 +1,6 @@
 # Sesión de 5 minutos: cargar una obra sin saber programar
 
-Gate humano de la ola 5 del rediseño del admin (paquete U7). El invariante 4 de `.claude/rules/admin.md` pide que un asistente sin conocimientos de programación cargue un proyecto, redacte el caso, asigne tecnologías y suba imágenes en menos de cinco minutos, sin errores de formato. Con Imágenes y Datos editables en `/admin-next`, la carga entera se hace en el editor de la obra y se guarda con un solo Guardar.
+Gate humano de la ola 5 del rediseño del admin (paquete U7). El invariante 4 de `.claude/rules/admin.md` pide que un asistente sin conocimientos de programación cargue un proyecto, redacte el caso, asigne tecnologías y suba imágenes en menos de cinco minutos, sin errores de formato. Con Imágenes y Datos editables en `/admin`, la carga entera se hace en el editor de la obra y se guarda con un solo Guardar.
 
 Si la sesión no baja de 5 minutos o la persona comete un error de formato, la ola no cierra: se corrige lo que trabó y se repite antes de E1.
 
@@ -81,7 +81,7 @@ pnpm start:api
 
 Después:
 
-1. Abrir `http://localhost:3016/admin-next/` y entrar con esa clave.
+1. Abrir `http://localhost:3016/admin/` y entrar con esa clave.
 2. Dejar la pantalla en **Obras**.
 3. Copiar tres capturas a una carpeta del escritorio, por ejemplo tres de `public/media/projects/argpiscinas/`.
 4. Tener a mano el contenido de abajo, en un documento aparte.
