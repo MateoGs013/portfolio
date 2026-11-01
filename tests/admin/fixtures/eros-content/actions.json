@@ -1,0 +1,21 @@
+{
+  "scan": {
+    "total_found": 12,
+    "new_trends_count": 1
+  },
+  "generated": {
+    "ok": true,
+    "post": {
+      "id": "eros-mock-post-desde-tendencia",
+      "title": "PostgreSQL como base relacional y de vectores",
+      "pillar": "TECHNICAL_BREAKDOWN",
+      "linkedin_text": "Una sola base para relaciones y vectores.",
+      "devto_markdown": "## Una sola base\n\nRelaciones y vectores en PostgreSQL.",
+      "status": "draft"
+    }
+  },
+  "dispatch": {
+    "ok": true,
+    "n8n_published_at": "2026-10-31T12:00:00.000Z"
+  }
+}
