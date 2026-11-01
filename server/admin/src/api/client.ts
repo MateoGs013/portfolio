@@ -20,6 +20,20 @@ export interface RequestOptions {
   signal?: AbortSignal
   /** Por defecto 15 s, y 90 s en las rutas que pasan por Eros. */
   timeoutMs?: number
+  /**
+   * Un 401 abre la reautenticación (stores/session.ts) y, con la clave de nuevo, el pedido se repite
+   * una vez. Apagalo en el pedido que verifica una clave: ahí el 401 es la respuesta.
+   */
+  reauth?: boolean
+}
+
+/** Quién atiende un 401: pide la clave de nuevo y responde si vale la pena reintentar. */
+export type UnauthorizedHandler = () => Promise<boolean>
+
+let unauthorizedHandler: UnauthorizedHandler | null = null
+
+export function setUnauthorizedHandler(handler: UnauthorizedHandler | null): void {
+  unauthorizedHandler = handler
 }
 
 export interface WriteEventDetail {
@@ -164,7 +178,11 @@ async function withRetry(method: Method, path: string, options: RequestOptions):
 
 /** Un pedido a /api/admin<path>. Devuelve el cuerpo ya leído o lanza un ApiError. */
 export async function request<T>(method: Method, path: string, options: RequestOptions = {}): Promise<WithSource<T>> {
-  const res = await withRetry(method, path, options)
+  let res = await withRetry(method, path, options)
+  // La vista no se desmonta: se pide la clave y, si se vuelve a entrar, el mismo pedido sale otra vez.
+  if (res.status === 401 && options.reauth !== false && unauthorizedHandler && !options.signal?.aborted) {
+    if (await unauthorizedHandler()) res = await withRetry(method, path, options)
+  }
   const body = await readBody(res)
   if (!res.ok) throw fromResponse(res.status, body, isEros(path))
 
