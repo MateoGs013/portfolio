@@ -70,7 +70,7 @@ const original = computed(() => (job.value?.url && /^https?:\/\//i.test(job.valu
           </h1>
           <div class="flex flex-wrap items-center gap-x-5 gap-y-3 pt-1">
             <StatusDot :tone="statusOf(job).tone" :label="statusOf(job).label" strong />
-            <span v-if="score !== null" class="text-body text-dim tabular-nums">{{ hunter.percent(score) }}</span>
+            <span v-if="score !== null" class="text-body text-dim tabular-nums">{{ job.estimated ? hunter.estimated(score) : hunter.percent(score) }}</span>
             <Button v-if="original" variant="ghost" :href="original" external>
               {{ t.original }}
             </Button>
