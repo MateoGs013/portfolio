@@ -7,6 +7,7 @@
 import { Router, type Request, type Response } from 'express'
 import { isTrendStatus, trendStatusLabels, type TrendChange, type TrendPost } from '../shared/contentContracts.js'
 import {
+  erosTrendBody,
   generateRequest,
   invalid,
   isErrorBody,
@@ -87,8 +88,10 @@ radarRouter.patch('/trends/:id/status', async (req: Request, res: Response) => {
 })
 
 /**
- * POST /api/admin/radar/trends/:id/generate { pillar?, custom_angle?, project_slug? } → TrendPost:
- * Eros escribe una publicación a partir de la tendencia (solo Eros).
+ * POST /api/admin/radar/trends/:id/generate { pillar?, custom_angle?, project_slug?, key_points? } →
+ * TrendPost: Eros escribe una publicación a partir de la tendencia (solo Eros). A Eros le llega
+ * `{ pillar, project_slug?, custom_angle? }` (erosTrendBody): el enfoque siempre, el de arquitectura si
+ * no se eligió ninguno.
  */
 radarRouter.post('/trends/:id/generate', async (req: Request, res: Response) => {
   const id = getParamId(req)
@@ -99,8 +102,7 @@ radarRouter.post('/trends/:id/generate', async (req: Request, res: Response) => 
     return
   }
   if (refuseDemo(res, id)) return
-  const options = { pillar: request.pillar, custom_angle: request.custom_angle, project_slug: request.project_slug, key_points: request.key_points }
-  const result = await forwardToEros(trendPath(id, '/generate'), json('POST', options), 60000)
+  const result = await forwardToEros(trendPath(id, '/generate'), json('POST', erosTrendBody(request)), 60000)
   if (!result.ok) {
     sendContentFailure(res, result, 'trend', 'No se creó la publicación.')
     return

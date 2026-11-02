@@ -22,6 +22,7 @@ import {
 import { SLUG_MAX, slugify } from '../shared/slug.js'
 import { contentCarouselRouter } from './contentCarousel.js'
 import {
+  erosGenerateBody,
   generateRequest,
   invalid,
   isErrorBody,
@@ -88,7 +89,7 @@ contentRouter.post('/generate', async (req: Request, res: Response) => {
     res.status(400).json(request)
     return
   }
-  const result = await forwardToEros('api/content/generate', json('POST', request), 60000)
+  const result = await forwardToEros('api/content/generate', json('POST', erosGenerateBody(request)), 60000)
   if (!result.ok) {
     sendContentFailure(res, result, 'post', 'No se generó la publicación.')
     return
@@ -98,7 +99,11 @@ contentRouter.post('/generate', async (req: Request, res: Response) => {
   else sendUnreadable(res, 'Recargá la lista: puede que la publicación se haya creado igual.')
 })
 
-/** POST /api/admin/content/posts/:id/publish { channel } - Despachar por n8n (solo Eros). */
+/**
+ * POST /api/admin/content/posts/:id/publish { channel } → DispatchResult (solo Eros). Lo que pasó lo
+ * dice el `status` de Eros: 'published' si n8n la recibió, 'approved_local' si Eros no tiene n8n y
+ * solo la aprobó. Eros hoy no respeta el canal, así que la respuesta no dice por dónde salió.
+ */
 contentRouter.post('/posts/:id/publish', async (req: Request, res: Response) => {
   const id = getParamId(req)
   const raw: unknown = req.body?.channel ?? 'all'
@@ -110,17 +115,18 @@ contentRouter.post('/posts/:id/publish', async (req: Request, res: Response) => 
   if (refuseDemo(res, id)) return
   const result = await forwardToEros(postPath(id, '/publish'), json('POST', { channel: raw }), 45000)
   if (!result.ok) {
-    sendContentFailure(res, result, 'post', `No se despachó a ${publishChannelLabels[raw]}.`)
+    sendContentFailure(res, result, 'post', 'La publicación no salió.')
     return
   }
-  // Un 200 de Eros que dice que n8n no despachó no es un despacho.
-  const body = result.data as Record<string, unknown> | null
-  if (body && (body['ok'] === false || (typeof body['error'] === 'string' && body['error']))) {
-    res.status(502).json({ error: `Eros no despachó la publicación. No salió por ${publishChannelLabels[raw]}.`, code: 'internal', errors: [] })
+  // Un 200 de Eros que no dice «published» ni «approved_local» no es un despacho.
+  const body = (result.data ?? {}) as Record<string, unknown>
+  const status = text(body['status'])
+  if (body['ok'] === false || (status !== 'published' && status !== 'approved_local')) {
+    res.status(502).json({ error: 'Eros no confirmó la publicación. La publicación no salió.', code: 'eros_error', errors: [] })
     return
   }
-  const dispatched = normalizeOnePost(result.data)?.dispatched_at ?? text((result.data as Record<string, unknown> | null)?.['n8n_published_at'])
-  res.json({ ok: true, channel: raw, dispatched_at: dispatched } satisfies DispatchResult)
+  const dispatched = status === 'published' ? normalizeOnePost(result.data)?.dispatched_at ?? text(body['n8n_published_at']) : null
+  res.json({ ok: true, channel: raw, status, dispatched_at: dispatched } satisfies DispatchResult)
 })
 
 /** PATCH /api/admin/content/posts/:id/status { status } → PostResult (solo Eros). */

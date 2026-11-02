@@ -20,16 +20,24 @@ export const postStatusLabels: Readonly<Record<PostStatus, string>> = {
   rejected: 'Descartada',
 }
 
-/** El enfoque editorial con el que Eros escribe la publicación. */
-export const postPillars = ['TECHNICAL_BREAKDOWN', 'METRICS_DRIVEN', 'CONTROVERSIAL_TAKE', 'LEARNING_FAIL'] as const
+/**
+ * El enfoque editorial con el que Eros escribe la publicación: los valores de `ContentPillar` de Eros
+ * (eros-agent/src/eros/content/models.py), tal cual, con su rótulo en español. Sin enfoque, Eros
+ * escribe con el de arquitectura (`DEFAULT_PILLAR`).
+ */
+export const postPillars = ['architecture', 'production_lessons', 'performance_optimization', 'ai_agent_ops', 'fullstack_engineering'] as const
 export type PostPillar = (typeof postPillars)[number]
 
 export const postPillarLabels: Readonly<Record<PostPillar, string>> = {
-  TECHNICAL_BREAKDOWN: 'Cómo está hecho',
-  METRICS_DRIVEN: 'Resultados medidos',
-  CONTROVERSIAL_TAKE: 'Una opinión discutible',
-  LEARNING_FAIL: 'Lo que salió mal y se aprendió',
+  architecture: 'Arquitectura',
+  production_lessons: 'Lecciones de producción',
+  performance_optimization: 'Rendimiento',
+  ai_agent_ops: 'Agentes de IA en producción',
+  fullstack_engineering: 'Ingeniería full stack',
 }
+
+/** El enfoque que usa Eros cuando no se elige ninguno (y el que se manda desde una tendencia sin elegir). */
+export const DEFAULT_PILLAR: PostPillar = 'architecture'
 
 /** Por dónde despacha n8n una publicación aprobada. */
 export const publishChannels = ['all', 'linkedin', 'twitter', 'devto'] as const
@@ -87,7 +95,11 @@ export interface ContentPost {
   demo?: true
 }
 
-/** POST /content/generate { topic, custom_angle?, pillar?, project_slug?, key_points? }. */
+/**
+ * POST /content/generate { topic, custom_angle?, pillar?, project_slug?, key_points? }: lo que manda el
+ * admin. El servidor se lo pasa a Eros como `{ topic, pillar?, project_slug?, custom_instructions? }`
+ * (los puntos y el ángulo van dentro de `custom_instructions`; sin enfoque, `pillar` no va).
+ */
 export interface GenerateRequest {
   topic: string
   custom_angle: string | null
@@ -101,10 +113,20 @@ export interface PostResult {
   post: ContentPost | null
 }
 
-/** POST /content/posts/:id/publish { channel } (n8n). */
+/**
+ * Qué hizo Eros al publicar: 'published' si se la pasó a n8n y n8n la aceptó; 'approved_local' si
+ * n8n no está configurado en Eros y solo la marcó como aprobada (no salió a ninguna red).
+ */
+export type DispatchStatus = 'published' | 'approved_local'
+
+/**
+ * POST /content/posts/:id/publish { channel } (n8n). `channel` es lo que se pidió: hoy Eros no lo
+ * respeta (el workflow de n8n decide), así que no dice por dónde salió.
+ */
 export interface DispatchResult {
   ok: true
   channel: PublishChannel
+  status: DispatchStatus
   dispatched_at: string | null
 }
 
