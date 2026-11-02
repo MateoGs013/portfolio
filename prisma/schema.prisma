@@ -62,8 +62,9 @@ enum ProjectStatus {
 }
 
 // Una métrica medible de una obra: un número con unidad (`value` + `unit`) o una lista (`items`).
-// La etiqueta y qué mide salen del diccionario de interfaz por `key`. `label` solo se usa
-// cuando el diccionario no conoce la clave. `source` y `measuredAt` quedan en NULL si no se documentaron.
+// La etiqueta y qué mide salen del catálogo de claves (server/src/shared/metricKeys.ts) por `key`.
+// `label` solo se usa cuando el catálogo no conoce la clave; su inglés va en MetricTranslation.
+// `source` y `measuredAt` quedan en NULL si no se documentaron.
 model Metric {
   id         Int       @id @default(autoincrement())
   key        String // "lcp", "bundleSizeKb", "languages"…
@@ -76,6 +77,8 @@ model Metric {
   order      Int       @default(0)
   project    Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
   projectId  Int
+
+  translations MetricTranslation[]
 
   @@unique([projectId, key])
   @@index([projectId, order])
@@ -308,6 +311,15 @@ model MediaTranslation {
   caption String?
 
   @@id([mediaId, locale])
+}
+
+model MetricTranslation {
+  metric   Metric  @relation(fields: [metricId], references: [id], onDelete: Cascade)
+  metricId Int
+  locale   Locale
+  label    String?
+
+  @@id([metricId, locale])
 }
 
 model LinkTranslation {

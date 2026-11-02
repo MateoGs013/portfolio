@@ -1,133 +1,191 @@
-// Capturas de la consola /admin del portafolio (CMS y Job Hunter de Eros), sin tocar nada real.
-// Uso, desde la raíz del repo:  node docs/rediseno/capturar-admin.mjs
-// Levanta la API en un puerto propio con: una clave de prueba generada en el momento (nunca se imprime),
-// una base inexistente y Eros desconectado. Así la consola usa sus datos de ejemplo internos y no lee
-// ni escribe la base real ni el agente real. Al terminar apaga el servidor.
-// Salida: docs/rediseno/capturas/eros/admin-*.{png,webp} y admin-recorrido.{mp4,webm}
-import { chromium } from '@playwright/test'
-import { spawn, spawnSync } from 'node:child_process'
-import { randomBytes } from 'node:crypto'
-import { mkdir, writeFile, rm } from 'node:fs/promises'
+// Capturas del admin nuevo (/admin) para revisar la ola: cada vista a 1440 y 390 px y un video del
+// recorrido (una obra completa, de «Nueva obra» a publicada, y el CV de una vacante pegada). Corre sobre
+// una copia de la base con la muestra de vacantes, sin tocar nada real:
+//
+//   pnpm build:admin
+//   node scripts/admin-run.mjs --demo -- node docs/rediseno/capturar-admin.mjs
+//
+// admin-run deja ADMIN_API_URL y PW_ADMIN_TOKEN (la clave de la corrida, que nunca se imprime) y borra la
+// copia al terminar. La obra del recorrido se elimina con sus archivos. En las capturas los correos que no
+// son de ejemplo se reemplazan por uno ficticio; la hoja del CV (un iframe aislado) queda tal cual, porque
+// es el CV público del sitio. Las vacantes son la muestra ficticia (Ejemplo…) y una pegada de example.com.
+//
+// Salida: docs/rediseno/capturas/admin-nuevo/<vista>-1440.png, <vista>-390.png, recorrido.webm y, si hay
+// ffmpeg (FFMPEG lo cambia), recorrido.mp4. Esa carpeta no se versiona (.gitignore: docs/rediseno/capturas/).
+import { spawnSync } from 'node:child_process'
+import { mkdir, readFile, rename, rm } from 'node:fs/promises'
 import { join } from 'node:path'
+import { chromium, request as http } from '@playwright/test'
+import { allViews, PASTED_ES } from '../../tests/e2e/admin-support.ts'
 
-const PORT = 3901
-const BASE = `http://localhost:${PORT}`
-const DIR = 'docs/rediseno/capturas/eros'
+const BASE = process.env.ADMIN_API_URL
+const TOKEN = process.env.PW_ADMIN_TOKEN
+if (!BASE || !TOKEN) {
+  console.error('Correr con: node scripts/admin-run.mjs --demo -- node docs/rediseno/capturar-admin.mjs')
+  process.exit(2)
+}
+const ADMIN = `${BASE}/admin/`
+const DIR = 'docs/rediseno/capturas/admin-nuevo'
 const FFMPEG = process.env.FFMPEG || 'ffmpeg'
-const TOKEN = randomBytes(24).toString('hex')
-const ffmpeg = args => spawnSync(FFMPEG, ['-y', '-loglevel', 'error', ...args], { stdio: 'inherit' })
+const WIDTHS = [{ width: 1440, height: 900, scale: 1 }, { width: 390, height: 844, scale: 2 }]
+const IMAGES = ['hero.webp', 'proyecto.webp', 'movil-hero.webp'].map(f => join('public/media/projects/argpiscinas', f))
 
-// Las variables de entorno ganan sobre el .env: nada de lo real llega a este servidor
-const server = spawn(process.execPath, ['--import', 'tsx', 'server/src/index.ts'], {
-  env: {
-    ...process.env, NODE_ENV: 'development', PORT: String(PORT), ADMIN_TOKEN: TOKEN,
-    DATABASE_URL: 'postgresql://offline:offline@127.0.0.1:1/offline',
-    HUNTER_API_URL: 'http://127.0.0.1:9', EROS_API_KEY: 'offline',
-  },
-  stdio: 'ignore',
-})
-const stop = () => {
-  try { server.kill() }
-  catch { /* ya estaba apagado */ }
-}
-process.on('exit', stop)
+const slug = name => name.normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
 
-async function waitUp() {
-  for (let i = 0; i < 60; i++) {
-    try { if ((await fetch(`${BASE}/admin/`)).ok) return }
-    catch { /* todavía arrancando */ }
-    await new Promise(r => setTimeout(r, 500))
-  }
-  throw new Error('la API no arrancó en 30 s')
-}
-
-const SECTIONS = [
-  ['dashboard', 'Panel Principal'],
-  ['hunter', 'Job Hunter (Eros)'],
-  ['contenido', 'Contenido Omnicanal'],
-  ['radar', 'TrendRadar (Eros)'],
-  ['proyectos', 'Proyectos'],
-]
-
-try {
-  await waitUp()
-  await mkdir(DIR, { recursive: true })
-  const browser = await chromium.launch()
-  const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 }, deviceScaleFactor: 2 })
-  // Los datos de ejemplo de Job Hunter nombran empresas, personas y correos reales o verosímiles: en la
-  // captura se reemplazan por ficticios y se oculta el aviso de modo local. El código no se toca.
-  await ctx.addInitScript(() => {
-    const swaps = [
-      ['Confidential Startup SaaS Company', 'Halcyon SaaS'], ['Bjak Financial Technologies', 'Lumen Fintech'],
-      ['Kruger NearShore LLC', 'Andes Nearshore'], ['Vortice Labs', 'Prism Studio'], ['EPAM Systems', 'Meridian Digital'],
-      ['EPAM', 'Meridian'], ['Jobgether', 'Northwind Labs'],
-      ['Sarah Chen', 'Ana Ruiz'], ['Carlos Mendoza', 'Lucía Prieto'], ['Valeria Rossi', 'Tomás Vidal'],
-    ]
-    const mail = /\b[\w.+-]+@(?!gmail\.com)[\w-]+(\.[\w-]+)+\b/g
-    setInterval(() => {
-      const walk = document.createTreeWalker(document.body ?? document.documentElement, NodeFilter.SHOW_TEXT)
-      for (let n = walk.nextNode(); n; n = walk.nextNode()) {
-        let t = n.nodeValue
-        for (const [a, b] of swaps) if (t.includes(a)) t = t.split(a).join(b)
-        t = t.replace(mail, 'talento@empresa.example')
-        if (t !== n.nodeValue) n.nodeValue = t
-      }
-      // La barra entera del aviso: el contenedor más bajo que lo contiene (los de afuera miden más)
-      for (const el of document.querySelectorAll('body *')) {
-        if (el.style.display === 'none' || !/SNAPSHOT LOCAL|datos locales de contingencia/.test(el.textContent)) continue
-        if (el.textContent.length < 300 && el.getBoundingClientRect().height < 80) el.style.display = 'none'
-      }
-    }, 150)
+/** Correos reales fuera de las capturas: en el texto y en los campos (sin tocar el formulario). */
+function anonymize(page) {
+  return page.evaluate(() => {
+    const mail = /\b[\w.+-]+@(?!example\.com\b)[\w-]+(\.[\w-]+)+\b/g
+    const walk = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT)
+    const swap = text => text.replace(mail, 'contacto@ejemplo.com')
+    for (let n = walk.nextNode(); n; n = walk.nextNode()) {
+      if (swap(n.nodeValue) !== n.nodeValue) n.nodeValue = swap(n.nodeValue)
+    }
+    for (const input of document.querySelectorAll('input, textarea')) {
+      if (swap(input.value) !== input.value) input.value = swap(input.value)
+    }
   })
-  const page = await ctx.newPage()
-  await page.goto(`${BASE}/admin/`, { waitUntil: 'load' })
-  await page.getByPlaceholder('Ingresá la clave de acceso...').fill(TOKEN)
-  await page.keyboard.press('Enter')
-  await page.getByText('Panel Principal').first().waitFor({ timeout: 15000 })
-  await page.waitForTimeout(2500)
+}
 
-  const shot = async name => {
-    const png = join(DIR, `admin-${name}.png`)
-    await page.screenshot({ path: png })
-    ffmpeg(['-i', png, '-c:v', 'libwebp', '-quality', '84', png.replace('.png', '.webp')])
-    console.log('  ✓', name)
-  }
-  const go = async label => { await page.getByRole('button', { name: label }).first().click(); await page.waitForTimeout(2800) }
+async function settle(page) {
+  await page.waitForLoadState('networkidle')
+  await page.evaluate(() => Promise.all(document.getAnimations()
+    .filter(a => a.effect?.getComputedTiming().endTime !== Infinity)
+    .map(a => a.finished.catch(() => null))))
+  await page.mouse.move(0, 0)
+}
 
-  for (const [name, label] of SECTIONS) { await go(label); await shot(name) }
-  // El editor de un proyecto abierto, con sus pestañas
-  const first = page.locator('main button, main [role=button], main li').filter({ hasText: /Rúcula|Piscinas|Ynara|Barberpole/ }).first()
-  if (await first.count()) { await first.click(); await page.waitForTimeout(2000); await shot('editor') }
-  // La paleta de comandos
-  await page.keyboard.press('Control+k'); await page.waitForTimeout(1200); await shot('paleta'); await page.keyboard.press('Escape')
+async function signedIn(context) {
+  await context.addInitScript(key => sessionStorage.setItem('adm-token', key), TOKEN)
+  const page = await context.newPage()
+  await page.goto(`${ADMIN}#/inicio`)
+  await page.locator('#main h1').waitFor()
+  return page
+}
 
-  // Recorrido en video: las secciones de Eros una tras otra
-  await go('Panel Principal')
-  const cdp = await ctx.newCDPSession(page)
-  const frames = []
-  cdp.on('Page.screencastFrame', async ({ data, metadata, sessionId }) => { frames.push({ data, t: metadata.timestamp }); await cdp.send('Page.screencastFrameAck', { sessionId }).catch(() => {}) })
-  await cdp.send('Page.startScreencast', { format: 'jpeg', quality: 90, maxWidth: 1920, maxHeight: 1200 })
-  for (const label of ['Job Hunter (Eros)', 'Contenido Omnicanal', 'TrendRadar (Eros)', 'Panel Principal']) {
-    await page.getByRole('button', { name: label }).first().hover(); await page.waitForTimeout(400)
-    await page.getByRole('button', { name: label }).first().click(); await page.waitForTimeout(2200)
+async function screens(browser, views) {
+  for (const { width, height, scale } of WIDTHS) {
+    const context = await browser.newContext({ viewport: { width, height }, deviceScaleFactor: scale })
+    const page = await signedIn(context)
+    for (const view of views) {
+      // Una carga nueva por vista: con solo el hash, la anterior sigue a la vista durante la transición.
+      await page.goto('about:blank')
+      await page.goto(`${ADMIN}${view.hash}`)
+      await page.locator('#main h1').waitFor()
+      await settle(page)
+      await anonymize(page)
+      await page.screenshot({ path: join(DIR, `${slug(view.name)}-${width}.png`) })
+    }
+    console.log(`  ${views.length} vistas a ${width} px`)
+    await context.close()
   }
-  await cdp.send('Page.stopScreencast')
-  const tmp = join(DIR, '.frames-admin'); await mkdir(tmp, { recursive: true })
-  let list = ''
-  for (let i = 0; i < frames.length; i++) {
-    const f = `f${String(i).padStart(5, '0')}.jpg`
-    await writeFile(join(tmp, f), Buffer.from(frames[i].data, 'base64'))
-    list += `file '${f}'\nduration ${(i < frames.length - 1 ? Math.max(0.001, frames[i + 1].t - frames[i].t) : 1 / 30).toFixed(4)}\n`
+}
+
+const pause = (page, ms = 700) => page.waitForTimeout(ms)
+const type = async (locator, text) => {
+  await locator.click()
+  await locator.pressSequentially(text, { delay: 18 })
+}
+
+/** La obra del invariante 4, como la cargaría una persona, con pausas para que se lea. */
+async function projectTour(page, title) {
+  const field = label => page.getByLabel(label, { exact: true })
+  const tab = name => page.getByRole('tablist', { name: 'Secciones del registro' }).getByRole('tab', { name })
+  await page.goto(`${ADMIN}#/obras`)
+  await settle(page)
+  await pause(page)
+  await page.locator('#main').getByRole('button', { name: 'Nueva obra' }).click()
+  await type(field('Título'), title)
+  await type(field('Rol · Español'), 'Diseño y desarrollo')
+  await tab(/^Relato/).click()
+  await type(field('Síntesis · Español'), 'Un sitio para una casa de comidas, de la carta a las reservas.')
+  await type(field('Reto · Español'), 'La carta vivía en un PDF que nadie actualizaba.')
+  await type(field('Resultado · Español'), 'La carta se actualiza desde un panel y las reservas llegan ordenadas.')
+  await page.getByRole('button', { name: 'Agregar paso' }).click()
+  await type(field('Título del paso · Español'), 'La carta primero')
+  await type(field('Qué hiciste · Español'), 'Se armó la carta como datos y no como imagen.')
+  await tab(/^Datos/).click()
+  const techs = page.getByRole('combobox', { name: 'Tecnologías de la obra' })
+  for (const tech of ['Vue', 'GSAP', 'Vite']) {
+    await type(techs, tech)
+    await pause(page, 250)
+    await page.keyboard.press('Enter')
   }
-  list += `file 'f${String(frames.length - 1).padStart(5, '0')}.jpg'\n`
-  await writeFile(join(tmp, 'list.txt'), list)
-  const input = ['-f', 'concat', '-safe', '0', '-i', join(tmp, 'list.txt')], vf = 'fps=30,scale=1920:1200:flags=lanczos,format=yuv420p'
-  ffmpeg([...input, '-vf', vf, '-c:v', 'libx264', '-crf', '24', '-maxrate', '3M', '-bufsize', '6M', '-preset', 'slow', '-movflags', '+faststart', '-an', join(DIR, 'admin-recorrido.mp4')])
-  ffmpeg([...input, '-vf', vf, '-c:v', 'libvpx-vp9', '-crf', '34', '-b:v', '0', '-row-mt', '1', '-an', join(DIR, 'admin-recorrido.webm')])
-  ffmpeg(['-i', join(tmp, 'f00000.jpg'), '-vf', 'scale=1920:1200', '-c:v', 'libwebp', '-quality', '82', join(DIR, 'admin-recorrido-poster.webp')])
-  await rm(tmp, { recursive: true, force: true })
-  console.log(`  ✓ recorrido (${frames.length} cuadros)`)
+  await tab(/^Imágenes/).click()
+  const chooser = page.waitForEvent('filechooser')
+  await page.getByRole('button', { name: 'Elegir archivos' }).click()
+  await (await chooser).setFiles(await Promise.all(IMAGES.map(async f => ({ name: f.split(/[\\/]/).pop(), mimeType: 'image/webp', buffer: await readFile(f) }))))
+  const alts = ['Inicio del sitio con su titular', 'Página de una obra', 'El inicio en un teléfono']
+  for (const [i, alt] of alts.entries()) await type(field('Texto alternativo · Español').nth(i), alt)
+  await page.locator('#main').getByRole('button', { name: /^Oculta/ }).click()
+  await pause(page)
+  await page.getByRole('switch', { name: /Mostrar en el sitio/ }).click()
+  await pause(page)
+  await page.getByRole('button', { name: 'Publicar igual' }).click()
+  await pause(page)
+  await page.locator('#main').getByRole('button', { name: /^Guardar/ }).click()
+  await page.locator('#main footer').getByText(/^Guardado/).first().waitFor({ timeout: 20000 })
+  await pause(page, 1500)
+}
+
+/** Pegar una vacante, analizarla y adaptar el CV hasta ver la hoja medida. */
+async function jobTour(page) {
+  await page.goto(`${ADMIN}#/busqueda/vacantes`)
+  await settle(page)
+  await pause(page)
+  await page.getByRole('button', { name: /^Pegar una vacante/ }).click()
+  const dialog = page.getByRole('dialog', { name: 'Pegar una vacante' })
+  await type(dialog.getByLabel('Puesto'), PASTED_ES.title)
+  await type(dialog.getByLabel('Empresa'), PASTED_ES.company)
+  await dialog.getByLabel('Descripción del aviso').fill(PASTED_ES.description)
+  await type(dialog.getByLabel('Correo de contacto'), PASTED_ES.email)
+  await dialog.getByRole('button', { name: 'Agregar a la cola' }).click()
+  await page.getByRole('button', { name: 'Analizar la vacante' }).click()
+  await pause(page, 1500)
+  await page.getByRole('navigation', { name: 'Etapas de la vacante' }).getByRole('link', { name: 'CV' }).click()
+  await page.getByRole('button', { name: 'Adaptar CV' }).click()
+  await page.locator('[data-cv-measure][data-height-mm]').waitFor({ timeout: 20000 })
+  await pause(page, 2500)
+}
+
+async function tour(browser) {
+  const videos = join(DIR, '.video')
+  const context = await browser.newContext({ viewport: { width: 1440, height: 900 }, recordVideo: { dir: videos, size: { width: 1440, height: 900 } } })
+  const page = await signedIn(context)
+  const title = `Casa Nómade ${Date.now().toString(36)}`
+  try {
+    await projectTour(page, title)
+    await jobTour(page)
+  }
+  finally {
+    const video = page.video()
+    await context.close()
+    if (video) await rename(await video.path(), join(DIR, 'recorrido.webm'))
+    await rm(videos, { recursive: true, force: true })
+    await removeProject(title)
+  }
+  const mp4 = spawnSync(FFMPEG, ['-y', '-loglevel', 'error', '-i', join(DIR, 'recorrido.webm'), '-c:v', 'libx264', '-crf', '23', '-preset', 'slow', '-pix_fmt', 'yuv420p', '-movflags', '+faststart', '-an', join(DIR, 'recorrido.mp4')], { stdio: 'inherit' })
+  console.log(`  recorrido.webm${mp4.status === 0 ? ' y recorrido.mp4' : ' (sin ffmpeg: solo webm)'}`)
+}
+
+const api = await http.newContext({ baseURL: BASE, extraHTTPHeaders: { Authorization: `Bearer ${TOKEN}` } })
+
+async function removeProject(title) {
+  const rows = await (await api.get('/api/admin/projects')).json()
+  const found = rows.find(p => p.title === title)
+  if (found) await api.delete(`/api/admin/projects/${found.id}`)
+}
+
+await rm(DIR, { recursive: true, force: true })
+await mkdir(DIR, { recursive: true })
+const browser = await chromium.launch()
+try {
+  const views = await allViews(api)
+  await screens(browser, views)
+  await tour(browser)
+  console.log(`Listo: ${DIR}`)
+}
+finally {
   await browser.close()
-} finally {
-  stop()
+  await api.dispose()
 }

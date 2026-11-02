@@ -1,0 +1,41 @@
+{
+  "data": {
+    "lang": "es",
+    "name": "Mateo Sonzogni",
+    "title": "Senior Frontend Engineer",
+    "location": "Buenos Aires",
+    "email": "otro@example.com",
+    "summary": "Desarrollador frontend con 3 años de experiencia en Vue y Nuxt, autor del Portafolio Dos Mundos. Trabajo el producto entero: qué problema resuelve, cómo se ve, cómo se siente y cómo llega a producción. Construyo interfaces accesibles con TypeScript, cuido el rendimiento y documento cada decisión para que el equipo la pueda sostener. Busco un equipo de producto donde el diseño y la ingeniería se piensen juntos.",
+    "skills": {
+      "Frameworks": ["Vue 3", "Svelte", "React"],
+      "Superpoderes": ["Liderazgo de equipos"],
+      "Languages": ["TypeScript", "JavaScript"],
+      "Datos": ["PostgreSQL", "CockroachDB"]
+    },
+    "experience": [
+      {
+        "title": "Portafolio Dos Mundos",
+        "role": "Proyecto propio",
+        "period": "2025",
+        "bullets": ["Diseñé un portafolio con dos mundos paralelos y transiciones WebGL."]
+      },
+      {
+        "title": "ARG Piscinas",
+        "role": "Freelance · front y back a medida",
+        "bullets": [
+          "El cliente carga su obra desde el panel sin tocar código ni esperar un deploy.",
+          "Lideré un equipo de cinco personas durante 3 años de experiencia en la empresa.",
+          "Desarrollé una web corporativa en español, inglés y alemán, con panel de gestión y blog a medida."
+        ]
+      },
+      {
+        "slug": "la-rucula",
+        "title": "La Rucula Gastrobar",
+        "bullets": ["Revision visual con Playwright en tres anchos y auditoria de accesibilidad con axe antes de cada deploy."]
+      }
+    ],
+    "education": [{ "degree": "Ingeniería en Sistemas", "institution": "Universidad Inventada", "period": "2010 – 2015" }],
+    "languages": ["Inglés nativo"],
+    "methodologies": "Scrum certificado"
+  }
+}

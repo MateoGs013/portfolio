@@ -46,12 +46,18 @@ const widths: Record<number, Use> = {
   1440: { ...devices['Desktop Chrome'], viewport: { width: 1440, height: 900 } },
 }
 
+/**
+ * Las specs del admin (admin-*.spec.ts, admin-audit incluida) corren con playwright.admin.config.ts
+ * contra una API propia (scripts/admin-run.mjs): ningún proyecto del sitio las toma.
+ */
+const ADMIN_SPECS = /admin-[^/\\]*\.spec\.ts$/
+
 /** Lo que cambia con el ancho o con el tema: accesibilidad, estabilidad del layout y capturas de referencia. */
 const LAYOUT = ['**/a11y.spec.ts', '**/cls.spec.ts', '**/visual.spec.ts']
 /** Teclado: no depende del tema, sí del ancho (menú angosto, galería en columna). */
 const KEYS = [...LAYOUT, '**/keyboard.spec.ts']
 
-const matrix = (width: number, t: Theme) => ({ name: `${width}-${t}`, use: { ...widths[width], ...theme(t) } })
+const matrix = (width: number, t: Theme) => ({ name: `${width}-${t}`, use: { ...widths[width], ...theme(t) }, testIgnore: ADMIN_SPECS })
 
 export default defineConfig({
   testDir: './tests/e2e',
@@ -74,8 +80,8 @@ export default defineConfig({
           url: `${apiBase}/schema`,
           reuseExistingServer: !process.env.PW_FRESH_SERVERS,
           timeout: 60000,
-          // Eros real nunca: el Job Hunter corre con su respaldo desde la base.
-          env: { API_PORT: apiPort, PORT: apiPort, ADMIN_TOKEN: process.env.PW_ADMIN_TOKEN, HUNTER_API_URL: 'http://127.0.0.1:9', EROS_API_KEY: 'offline' },
+          // Eros real nunca: el Job Hunter corre con su respaldo desde la base y la muestra de vacantes (EROS_DEMO).
+          env: { API_PORT: apiPort, PORT: apiPort, ADMIN_TOKEN: process.env.PW_ADMIN_TOKEN, HUNTER_API_URL: 'http://127.0.0.1:9', EROS_API_KEY: 'offline', EROS_DEMO: '1' },
         },
         {
           command: process.env.PW_SKIP_BUILD ? 'node .output/server/index.mjs' : 'pnpm build && node .output/server/index.mjs',
@@ -87,7 +93,7 @@ export default defineConfig({
       ],
   projects: [
     // Todo lo que no depende del ancho ni del tema corre acá una sola vez.
-    { ...matrix(1440, 'dark'), testIgnore: ['**/nojs.spec.ts', '**/motion.spec.ts'] },
+    { ...matrix(1440, 'dark'), testIgnore: ['**/nojs.spec.ts', '**/motion.spec.ts', ADMIN_SPECS] },
     { ...matrix(1440, 'light'), testMatch: LAYOUT },
     { ...matrix(768, 'dark'), testMatch: KEYS },
     { ...matrix(768, 'light'), testMatch: LAYOUT },
@@ -96,11 +102,13 @@ export default defineConfig({
     {
       name: 'reduced-motion',
       testMatch: ['**/motion.spec.ts', '**/keyboard.spec.ts', '**/cls.spec.ts'],
+      testIgnore: ADMIN_SPECS,
       use: { ...widths[1440], ...theme('dark'), reducedMotion: 'reduce' },
     },
     {
       name: 'no-js',
       testMatch: '**/nojs.spec.ts',
+      testIgnore: ADMIN_SPECS,
       use: { ...widths[1440], ...theme('dark'), javaScriptEnabled: false },
     },
   ],

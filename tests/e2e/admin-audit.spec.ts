@@ -1,94 +1,282 @@
 import { expect, test, type APIRequestContext, type Page } from '@playwright/test'
-import { api } from './support'
+import { ADMIN, auth, erosUrl, jobStage, PASTED_EN, PASTED_ES, pasteJob, signedIn, visit, withErosMock, type PastedJob } from './admin-support'
 
 /**
- * Consola /admin (invariante 6): el generador del Job Hunter analiza una vacante, adapta el CV Harvard
- * ATS, lo previsualiza, lo imprime en una página A4 y lo copia en texto plano. Corre sin Eros (la API
- * de la prueba apunta HUNTER_API_URL a un puerto cerrado): todo sale del respaldo desde la base. El
- * token es el de esta corrida (playwright.config.ts) y nunca se imprime.
+ * Invariante 6 sobre el admin nuevo: una vacante pegada se analiza, el CV Harvard ATS se adapta, se
+ * previsualiza, se imprime en una sola hoja A4 dentro de la cota dual (248–265 mm) en español y en
+ * inglés, y se copia en texto plano igual al /txt del servidor. Además: el ticket de otra vacante da
+ * 401, un 409 se recupera solo y el portapapeles denegado deja el texto a mano. Corre dos veces:
+ *
+ * admin-run: sin Eros
+ * admin-run: --eros-mock
+ *
+ *   node scripts/admin-run.mjs -- pnpm exec playwright test -c playwright.admin.config.ts tests/e2e/admin-audit.spec.ts
+ *   node scripts/admin-run.mjs --eros-mock -- pnpm exec playwright test -c playwright.admin.config.ts tests/e2e/admin-audit.spec.ts
+ *
+ * Sin Eros ni muestra la cola está vacía y todo sale de la base. Con el Eros simulado, la vacante pegada
+ * (manual-…) tampoco le llega: se comprueba en su registro de pedidos. Además, con el Eros simulado,
+ * las vacantes de la cola (una en español y otra en inglés): escanear, vectorizar, afinidad, aceptar
+ * el resumen propuesto y el invariante 6 entero sobre ellas.
  */
-const token = process.env.PW_ADMIN_TOKEN!
-const auth = { Authorization: `Bearer ${token}` }
+const BOUNDS = { min: 248, max: 265 }
+/** Una página de PDF (no el nodo /Pages que las agrupa). */
+const PAGE = /\/Type\s*\/Page(?!s)/g
+/** Una hoja A4 en puntos de PDF: 210 × 297 mm. */
+const A4_PT = { width: 210 / 25.4 * 72, height: 297 / 25.4 * 72 }
 
-interface Job { id: string, title: string, company: string, match_score: number | null }
-interface Evaluation { ok: boolean, job: Job, match: { score: number, verdict: string } }
-const VERDICTS = ['EXCELENTE_MATCH', 'BUEN_MATCH', 'REGULAR', 'DESCARTAR']
-
-async function firstJob(request: APIRequestContext) {
-  const res = await request.get('/api/admin/hunter/jobs', { headers: auth })
-  expect(res.status()).toBe(200)
-  const jobs = await res.json() as Job[]
-  expect(jobs.length).toBeGreaterThan(0)
-  return jobs[0]!
+/** El tamaño de cada página del PDF, de sus MediaBox. */
+function pageSizes(pdf: string): { width: number, height: number }[] {
+  return [...pdf.matchAll(/\/MediaBox\s*\[\s*([\d.]+)\s+([\d.]+)\s+([\d.]+)\s+([\d.]+)\s*\]/g)]
+    .map(([, x0, y0, x1, y1]) => ({ width: Number(x1) - Number(x0), height: Number(y1) - Number(y0) }))
 }
 
-async function login(page: Page) {
-  await page.goto('/admin', { waitUntil: 'networkidle' })
-  await page.locator('form input[type="password"]').fill(token)
-  await page.locator('form button[type="submit"]').click()
-  await expect(page.locator('aside button', { hasText: 'Job Hunter' })).toBeVisible({ timeout: 15000 })
+interface Cv { data: { header: { name: string } } }
+
+const cvName = async (request: APIRequestContext, lang: 'es' | 'en') => (await (await request.get(`/api/cv?lang=${lang}`)).json() as Cv).data.header.name
+const sheet = (page: Page) => page.frameLocator('[data-cv-sheet]')
+const measure = (page: Page) => page.locator('[data-cv-measure]')
+
+async function adapt(page: Page): Promise<void> {
+  await jobStage(page, 'CV').click()
+  await page.getByRole('button', { name: 'Adaptar CV' }).click()
+  await expect(page.locator('[data-cv-measure][data-height-mm]')).toBeVisible({ timeout: 20000 })
 }
 
-test.describe('sin token', () => {
-  test('la API del admin responde 401 y la consola pide la clave', async ({ page, request }) => {
-    expect((await request.get('/api/admin/projects')).status()).toBe(401)
-    expect((await request.get('/api/admin/hunter/jobs', { headers: { Authorization: 'Bearer otra-cosa' } })).status()).toBe(401)
-    await page.goto('/admin', { waitUntil: 'networkidle' })
-    await expect(page.locator('form input[type="password"]')).toBeVisible()
+/** La medida que la hoja le manda al admin: una página y el alto dentro de la cota dual. */
+async function withinBounds(page: Page, what: string): Promise<number> {
+  await expect(measure(page), what).toHaveAttribute('data-pages', '1')
+  const height = Number(await measure(page).getAttribute('data-height-mm'))
+  expect(height, `${what}: alto en mm`).toBeGreaterThanOrEqual(BOUNDS.min)
+  expect(height, `${what}: alto en mm`).toBeLessThanOrEqual(BOUNDS.max)
+  return height
+}
+
+/** Imprime la hoja del iframe como la imprime el navegador: una sola página A4. */
+async function printsOnePage(page: Page, what: string): Promise<void> {
+  const src = await page.locator('[data-cv-sheet]').getAttribute('src')
+  expect(src, what).toBeTruthy()
+  const print = await page.context().newPage()
+  await print.goto(src!.replace('measure=1', 'vista=1'), { waitUntil: 'networkidle' })
+  await print.emulateMedia({ media: 'print' })
+  const pdf = (await print.pdf({ preferCSSPageSize: true, printBackground: true })).toString('latin1')
+  await print.close()
+  expect(pdf.match(PAGE)?.length, `${what}: páginas`).toBe(1)
+  const sizes = pageSizes(pdf)
+  expect(sizes.length, `${what}: MediaBox`).toBeGreaterThan(0)
+  for (const size of sizes) {
+    // Chromium redondea la hoja a píxeles enteros: hasta 2 pt (0,7 mm) de diferencia.
+    expect(Math.abs(size.width - A4_PT.width), `${what}: ancho ${size.width} pt`).toBeLessThan(2)
+    expect(Math.abs(size.height - A4_PT.height), `${what}: alto ${size.height} pt`).toBeLessThan(2)
+  }
+}
+
+async function erosRequestsFor(request: APIRequestContext, id: string): Promise<string[]> {
+  const received = await (await request.get(`${erosUrl}/__requests`)).json() as { method: string, path: string, body: unknown }[]
+  return received.filter(r => r.path.includes(id) || JSON.stringify(r.body).includes(id)).map(r => `${r.method} ${r.path}`)
+}
+
+const CASES: { lang: 'es' | 'en', job: PastedJob }[] = [{ lang: 'es', job: PASTED_ES }, { lang: 'en', job: PASTED_EN }]
+
+test.describe('invariante 6 con una vacante pegada', () => {
+  for (const { lang, job } of CASES) {
+    test(`${lang}: analiza, adapta, previsualiza, imprime una A4 de ${BOUNDS.min} a ${BOUNDS.max} mm y copia el /txt`, async ({ page, context, request }) => {
+      if (withErosMock) await request.delete(`${erosUrl}/__requests`)
+      await context.grantPermissions(['clipboard-read', 'clipboard-write'])
+      await signedIn(page, '#/busqueda/vacantes')
+      const id = await pasteJob(page, job)
+
+      // Analizar: el veredicto en palabras, armado desde la base.
+      await page.getByRole('button', { name: 'Analizar la vacante' }).click()
+      await expect(page.getByText(/Muy compatible|Compatible|Dudosa|Descartar/).first()).toBeVisible()
+      await expect(page.getByText('Armado desde la base, sin Eros').first()).toBeVisible()
+
+      // Adaptar y previsualizar: la hoja en el idioma del aviso, con el nombre de /api/cv.
+      await adapt(page)
+      await expect(page.getByRole('heading', { name: 'CV adaptado', level: 2 })).toBeFocused()
+      await expect(sheet(page).locator('html')).toHaveAttribute('lang', lang)
+      await expect(sheet(page).locator('h1')).toContainText(await cvName(request, lang))
+      const height = await withinBounds(page, `CV ${lang}`)
+      console.log(`CV ${lang} de ${id}: ${height.toFixed(1)} mm en una página`)
+
+      // Copiar texto plano: lo copiado es el /txt del servidor, sin marcado.
+      await page.getByRole('button', { name: 'Copiar texto plano' }).click()
+      await expect(page.getByRole('button', { name: 'Texto copiado' })).toBeVisible()
+      const copied = (await page.evaluate(() => navigator.clipboard.readText())).replace(/\r\n/g, '\n')
+      const txt = await (await request.get(`/api/admin/hunter/cv/${encodeURIComponent(id)}/txt`, { headers: auth })).text()
+      expect(copied).toBe(txt)
+      expect(copied).toContain(await cvName(request, lang))
+      expect(copied).not.toMatch(/<[a-z/][^>]*>|\*\*|^#+\s/m)
+
+      // Imprimir: la ventana se abre en el gesto con auto_print, y la hoja impresa es una sola A4.
+      const popup = page.waitForEvent('popup')
+      await page.getByRole('button', { name: 'Imprimir o guardar como PDF' }).click()
+      const win = await popup
+      await win.waitForURL(/\/hunter\/cv\/.+\/html\?.*auto_print=true/)
+      await win.close()
+      await printsOnePage(page, `CV ${lang}`)
+
+      if (withErosMock) expect(await erosRequestsFor(request, id), 'la vacante pegada no le llega a Eros').toEqual([])
+    })
+  }
+
+  test('el ticket de una vacante no abre la hoja de otra: 401', async ({ page, request }) => {
+    await signedIn(page, '#/busqueda/vacantes')
+    const id = await pasteJob(page, PASTED_ES)
+    await adapt(page)
+    const src = (await page.locator('[data-cv-sheet]').getAttribute('src'))!
+    expect((await request.get(src)).status(), 'con su propio ticket abre').toBe(200)
+    const other = src.replace(`/cv/${encodeURIComponent(id)}/`, '/cv/manual-otra-vacante/')
+    expect((await request.get(other)).status()).toBe(401)
+    expect((await request.get(src.replace(/ticket=[^&]+/, 'ticket=no-es-un-ticket'))).status()).toBe(401)
+    expect((await request.get(src.replace(/[?&]ticket=[^&]+/, ''))).status(), 'sin ticket ni sesión').toBe(401)
+  })
+
+  test('un 409 en la hoja y en el texto se recupera solo, con un POST /cv más cada vez', async ({ page, context }) => {
+    await context.grantPermissions(['clipboard-read', 'clipboard-write'])
+    await signedIn(page, '#/busqueda/vacantes')
+    const id = await pasteJob(page, PASTED_ES)
+    const path = `/api/admin/hunter/cv/${encodeURIComponent(id)}`
+    let posts = 0
+    page.on('request', (req) => {
+      if (req.method() === 'POST' && new URL(req.url()).pathname === path) posts++
+    })
+    // La API se reinició: la caché ya no tiene el CV y el primer pedido de cada salida responde 409.
+    const refused = new Set<string>()
+    await page.route(/\/api\/admin\/hunter\/cv\/[^/]+\/(html|txt)/, async (route) => {
+      const url = new URL(route.request().url())
+      const kind = url.pathname.endsWith('/txt') ? 'txt' : 'html'
+      if (!refused.has(kind) && !url.searchParams.has('ticket')) {
+        refused.add(kind)
+        await route.fulfill({ status: 409, json: { error: 'El CV ya no está en la caché.', code: 'cv_expired', errors: [] } })
+        return
+      }
+      await route.continue()
+    })
+    await adapt(page)
+    await expect(sheet(page).locator('h1')).toBeVisible()
+    expect(refused.has('html')).toBe(true)
+    expect(posts, 'adaptar y volver a armar tras el 409 de la hoja').toBe(2)
+
+    await page.getByRole('button', { name: 'Copiar texto plano' }).click()
+    await expect(page.getByRole('button', { name: 'Texto copiado' })).toBeVisible()
+    expect(refused.has('txt')).toBe(true)
+    expect(posts, 'y una vez más tras el 409 del texto').toBe(3)
+    expect(await page.evaluate(() => navigator.clipboard.readText())).toContain('Mateo')
+  })
+
+  test('con el portapapeles denegado avisa y deja el texto seleccionado para copiarlo a mano', async ({ page }) => {
+    await page.addInitScript(() => {
+      Object.defineProperty(navigator, 'clipboard', { value: { writeText: () => Promise.reject(new DOMException('denegado', 'NotAllowedError')) } })
+      document.execCommand = () => false
+    })
+    await signedIn(page, '#/busqueda/vacantes')
+    await pasteJob(page, PASTED_EN)
+    await adapt(page)
+    await page.getByRole('button', { name: 'Copiar texto plano' }).click()
+    await expect(page.getByRole('alert').filter({ hasText: 'No se pudo copiar al portapapeles' })).toBeVisible()
+    const area = page.locator('textarea[data-cv-text]')
+    await expect(area).toBeFocused()
+    const [start, end, length] = await area.evaluate((el: HTMLTextAreaElement) => [el.selectionStart, el.selectionEnd, el.value.length])
+    expect(start).toBe(0)
+    expect(end).toBe(length)
+    expect(length).toBeGreaterThan(200)
   })
 })
 
-test.describe('Job Hunter', () => {
-  test.use({ viewport: { width: 1440, height: 900 } })
+/**
+ * Solo con el Eros simulado: las vacantes que llegan de la cola. «Buscar vacantes nuevas» escanea y
+ * vectoriza al terminar, la búsqueda por afinidad las ordena, y cada una (una en español y otra en
+ * inglés) se abre desde la lista, se analiza, se adapta, acepta el resumen que propuso Eros con un
+ * clic (decisión 4) y vuelve a cumplir el invariante 6: una A4 dentro de la cota y el /txt copiado.
+ */
+const QUEUE: { lang: 'es' | 'en', id: string, title: RegExp, proposal: string }[] = [
+  { lang: 'es', id: 'eros-mock-frontend', title: /Desarrollador Frontend \(Vue 3 y Nuxt\)/, proposal: 'Busco un equipo de producto donde el diseño y la ingeniería se piensen juntos.' },
+  { lang: 'en', id: 'eros-mock-backend', title: /Backend Developer \(Node\.js and PostgreSQL\)/, proposal: 'document every decision so the team can maintain it over time.' },
+]
 
-  test('analiza, adapta, previsualiza, imprime en A4 y copia el CV en texto plano', async ({ page, context, request }) => {
-    const job = await firstJob(request)
+test.describe('invariante 6 con vacantes de la cola de Eros', () => {
+  test.skip(!withErosMock, 'Solo con --eros-mock: sin Eros la cola está vacía.')
 
-    // Analizar: la evaluación de la vacante (respaldo heurístico contra la base, sin Eros).
-    const evaluated = await request.post(`/api/admin/hunter/jobs/${job.id}/evaluate`, { headers: auth })
-    expect(evaluated.status()).toBe(200)
-    const { match } = await evaluated.json() as Evaluation
-    expect(match.score).toBeGreaterThanOrEqual(0)
-    expect(match.score).toBeLessThanOrEqual(100)
-    expect(VERDICTS).toContain(match.verdict)
-    const listed = (await (await request.get('/api/admin/hunter/jobs', { headers: auth })).json() as Job[]).find(j => j.id === job.id)
-    expect(listed?.match_score).toBe(match.score)
-
-    const cv = await api<{ header: { name: string }, experience: { title: string }[] }>(request, '/cv')
-    await context.grantPermissions(['clipboard-read', 'clipboard-write'])
-    await login(page)
-
-    await page.locator('aside button', { hasText: 'Job Hunter' }).click()
-    await page.getByText(job.title, { exact: true }).first().click()
-
-    // La consola muestra el análisis: puntaje y veredicto de la vacante.
-    await expect(page.getByText(`${match.score}% Match IA`)).toBeVisible()
-    await expect(page.getByText(match.verdict, { exact: true }).first()).toBeVisible()
-
-    // Adaptar y previsualizar.
-    await page.getByRole('button', { name: 'Generar CV Harvard ATS' }).first().click()
-    await expect(page.getByText('CV Harvard ATS Adaptado · Formato A4')).toBeVisible({ timeout: 15000 })
-    await expect(page.getByText(cv.header.name).first()).toBeVisible()
-
-    // Copiar en texto plano: el nombre y la experiencia de la base, sin marcado.
-    await page.getByRole('button', { name: 'Copiar ATS' }).click()
-    await expect.poll(() => page.evaluate(() => navigator.clipboard.readText()), { timeout: 5000 }).toContain(cv.header.name)
-    const text = await page.evaluate(() => navigator.clipboard.readText())
-    expect(text).toContain(cv.experience[0]!.title)
-    expect(text).not.toMatch(/<[a-z][^>]*>/i)
-
-    // Imprimir en A4: abre la hoja con un ticket firmado y entra en una página.
-    const [sheet] = await Promise.all([
-      page.waitForEvent('popup'),
-      page.getByRole('button', { name: 'Imprimir en A4' }).click(),
-    ])
-    await sheet.waitForLoadState('networkidle')
-    expect(sheet.url()).toMatch(new RegExp(`/api/admin/hunter/cv/${job.id}/html\\?ticket=[^&]+&auto_print=true$`))
-    await expect(sheet.getByText(cv.header.name).first()).toBeVisible()
-    await sheet.emulateMedia({ media: 'print' })
-    const pdf = await sheet.pdf({ preferCSSPageSize: true, printBackground: true })
-    expect(pdf.toString('latin1').match(/\/Type\s*\/Page\b/g)?.length ?? 0).toBe(1)
-    // El ticket vale solo para esa vacante: con otro id no abre nada.
-    expect((await request.get(sheet.url().replace(`/cv/${job.id}/`, '/cv/otra-vacante/'))).status()).toBe(401)
+  test('«Buscar vacantes nuevas» escanea, vectoriza y deja la búsqueda por afinidad lista', async ({ page, request }) => {
+    await request.delete(`${erosUrl}/__requests`)
+    await signedIn(page, '#/busqueda/vacantes')
+    await page.getByRole('button', { name: 'Buscar vacantes nuevas' }).click()
+    await expect(page.getByText('Eros revisó 42 avisos y sumó 2 vacantes nuevas. 2 quedaron listas para la búsqueda por afinidad.').first()).toBeVisible()
+    const received = await (await request.get(`${erosUrl}/__requests`)).json() as { method: string, path: string }[]
+    const calls = received.map(r => `${r.method} ${r.path}`)
+    expect(calls, 'escanea y después vectoriza').toEqual(expect.arrayContaining(['POST /api/scan', 'POST /api/vectorize']))
+    expect(calls.indexOf('POST /api/vectorize')).toBeGreaterThan(calls.indexOf('POST /api/scan'))
+    await page.getByRole('switch', { name: /Buscar por afinidad/ }).click()
+    await page.getByRole('searchbox', { name: 'Buscar en la cola' }).fill('frontend con Vue')
+    await page.keyboard.press('Enter')
+    await expect(page.getByText(/2 vacantes afines a «frontend con Vue»/)).toBeVisible()
   })
+
+  for (const { lang, id, title, proposal } of QUEUE) {
+    test(`${lang}: desde la cola, con el resumen de Eros aceptado, imprime una A4 en la cota y copia el /txt`, async ({ page, context, request }) => {
+      await context.grantPermissions(['clipboard-read', 'clipboard-write'])
+      await signedIn(page, '#/busqueda/vacantes')
+      await page.getByRole('option', { name: title }).first().click()
+      await expect(page).toHaveURL(new RegExp(`vacantes/${id}/`))
+      await expect(page.locator('#main h1')).toHaveText(title)
+
+      // Una vacante que Eros ya evaluó ofrece «Volver a analizar»; una nueva, «Analizar la vacante».
+      await jobStage(page, 'Análisis').click()
+      await page.getByRole('button', { name: /^(Analizar la vacante|Volver a analizar)$/ }).click()
+      await expect(page.getByText(/Muy compatible|Compatible|Dudosa|Descartar/).first()).toBeVisible()
+
+      await adapt(page)
+      await expect(page.getByText('Generado por Eros').first()).toBeVisible()
+      const summary = page.getByRole('region', { name: 'Resumen del CV' })
+      // Por defecto, el resumen de la base; el de Eros entra solo con el clic.
+      await expect(sheet(page).locator('body')).not.toContainText(proposal)
+      await summary.getByRole('button', { name: 'Usar este resumen' }).click()
+      await expect(page.getByText('El CV usa el resumen que propuso Eros.').first()).toBeVisible()
+      await expect(summary.getByRole('button', { name: 'Volver al de la base' })).toBeVisible()
+      await expect(sheet(page).locator('body')).toContainText(proposal, { timeout: 20000 })
+      await expect(sheet(page).locator('html')).toHaveAttribute('lang', lang)
+      await expect(page.locator('[data-cv-measure][data-height-mm]')).toBeVisible({ timeout: 20000 })
+      const height = await withinBounds(page, `CV ${lang} de ${id} con el resumen de Eros`)
+      console.log(`CV ${lang} de ${id} con el resumen de Eros: ${height.toFixed(1)} mm en una página`)
+
+      await page.getByRole('button', { name: 'Copiar texto plano' }).click()
+      await expect(page.getByRole('button', { name: 'Texto copiado' })).toBeVisible()
+      const copied = (await page.evaluate(() => navigator.clipboard.readText())).replace(/\r\n/g, '\n')
+      const txt = await (await request.get(`/api/admin/hunter/cv/${encodeURIComponent(id)}/txt`, { headers: auth })).text()
+      expect(copied).toBe(txt)
+      expect(copied.replace(/\s+/g, ' ')).toContain(proposal)
+      expect(copied).not.toMatch(/<[a-z/][^>]*>|\*\*|^#+\s/m)
+
+      const popup = page.waitForEvent('popup')
+      await page.getByRole('button', { name: 'Imprimir o guardar como PDF' }).click()
+      const win = await popup
+      await win.waitForURL(/\/hunter\/cv\/.+\/html\?.*auto_print=true/)
+      await win.close()
+      await printsOnePage(page, `CV ${lang} de ${id}`)
+    })
+  }
+})
+
+test.describe('el CV base de Trayectoria', () => {
+  for (const lang of ['es', 'en'] as const) {
+    test(`${lang}: una página A4 de ${BOUNDS.min} a ${BOUNDS.max} mm`, async ({ page, request }) => {
+      await signedIn(page, '#/inicio')
+      await visit(page, `#/trayectoria/cv${lang === 'en' ? '?idioma=en' : ''}`)
+      await expect(page.locator('[data-cv-measure][data-height-mm]')).toBeVisible({ timeout: 20000 })
+      await expect(sheet(page).locator('html')).toHaveAttribute('lang', lang)
+      await expect(sheet(page).locator('h1')).toContainText(await cvName(request, lang))
+      const height = await withinBounds(page, `CV base ${lang}`)
+      console.log(`CV base ${lang}: ${height.toFixed(1)} mm en una página`)
+      await printsOnePage(page, `CV base ${lang}`)
+    })
+  }
+})
+
+test('sin sesión la API del admin responde 401 y el admin pide la clave', async ({ page, request }) => {
+  expect((await request.get('/api/admin/projects')).status()).toBe(401)
+  expect((await request.get('/api/admin/hunter/jobs', { headers: { Authorization: 'Bearer otra-cosa' } })).status()).toBe(401)
+  expect((await request.get('/api/admin/meta', { headers: { Authorization: 'Bearer dev-token' } })).status()).toBe(401)
+  await page.goto(`${ADMIN}#/busqueda/vacantes`)
+  await expect(page).toHaveURL(/#\/ingresar\?volver=/)
+  await expect(page.getByRole('main').getByLabel('Clave de acceso')).toBeFocused()
 })

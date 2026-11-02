@@ -1,5 +1,12 @@
-/** Lectura tipada de `Doc.fields` (Json): la lista de DocField de app/lib/fieldMeta.ts. */
+/**
+ * Lectura tipada de `Doc.fields` (Json): la lista de DocField de app/lib/fieldMeta.ts, normalizada con
+ * el esquema fijo de server/src/shared/docSchema.ts. Un bloque requerido se publica con el tipo y el
+ * ancho del esquema aunque esté guardado con otro (las bases anteriores al esquema guardaban el retrato
+ * y el PDF del CV como texto), y el `en` de un bloque que no se traduce (email, url, imagen) nunca se
+ * sirve: así un inglés viejo no tapa un valor nuevo.
+ */
 import type { DocField, DocFieldValue } from '../../../app/lib/fieldMeta.js'
+import { docBlock, englishOf, isDocKey, isTranslatableType } from '../shared/docSchema.js'
 import type { Lang } from './lang.js'
 
 function isFieldValue(value: unknown): value is DocFieldValue {
@@ -15,14 +22,29 @@ function isDocField(value: unknown): value is DocField {
     && (f['en'] === undefined || isFieldValue(f['en']))
 }
 
-/** Los campos bien formados del documento; lo malformado no se publica. */
-export function docFieldsOf(json: unknown): DocField[] {
-  return Array.isArray(json) ? json.filter(isDocField) : []
+/** El bloque con el tipo y el ancho del esquema (si es requerido) y sin el `en` que su tipo no admite. */
+function normalize(field: DocField, key: string | undefined): DocField {
+  const fixed = key && isDocKey(key) ? docBlock(key, field.name) : null
+  const { en, wide, ...rest } = field
+  const type = fixed?.type ?? field.type
+  // Un bloque libre conserva su ancho tal como se guardó; uno requerido lleva el del esquema.
+  const width = fixed ? (fixed.wide ? { wide: true } : {}) : (wide === undefined ? {} : { wide })
+  return {
+    ...rest,
+    type,
+    ...(en !== undefined && englishOf(type) !== 'none' ? { en } : {}),
+    ...width,
+  }
 }
 
-/** Campos de prosa que tienen versión en inglés. Email, url, fechas y números no se traducen. */
+/** Los campos bien formados del documento `key`; lo malformado no se publica. */
+export function docFieldsOf(json: unknown, key?: string): DocField[] {
+  return Array.isArray(json) ? json.filter(isDocField).map(f => normalize(f, key)) : []
+}
+
+/** Campos de prosa que tienen versión en inglés. Email, url, imagen, fechas y números no se traducen. */
 export function isTranslatableField(field: Pick<DocField, 'type'>): boolean {
-  return field.type === 'string' || field.type === 'text' || field.type === 'list'
+  return isTranslatableType(field.type)
 }
 
 function hasValue(value: DocFieldValue | undefined): value is DocFieldValue {
@@ -30,11 +52,15 @@ function hasValue(value: DocFieldValue | undefined): value is DocFieldValue {
   return typeof value === 'string' ? value.trim() !== '' : value.length > 0
 }
 
+/** El valor de `field` en `lang`: su `en` si lo tiene y su tipo lo admite; si no, el español. */
+export function fieldValueIn(field: DocField, lang: Lang): DocFieldValue {
+  return lang !== 'es' && englishOf(field.type) !== 'none' && hasValue(field.en) ? field.en : field.value
+}
+
 /** Valor resuelto de un campo: `en` si existe y se pidió inglés; si no, el español. */
 export function docValue(fields: readonly DocField[], name: string, lang: Lang): DocFieldValue | null {
   const field = fields.find(f => f.name === name)
-  if (!field) return null
-  return lang !== 'es' && hasValue(field.en) ? field.en : field.value
+  return field ? fieldValueIn(field, lang) : null
 }
 
 /** Igual que docValue, para campos de texto (una lista se une por renglón). */

@@ -1,19 +1,18 @@
 import { createHash, createHmac, timingSafeEqual } from 'node:crypto'
 import type { NextFunction, Request, Response } from 'express'
 
-function getAdminTokenConfig(): { token: string; hash: Buffer | null; valid: boolean; reason?: string } {
+const DEV_TOKEN = 'dev-token'
+
+/**
+ * El token del admin: ADMIN_TOKEN. Solo si no está definido y no se está en producción vale
+ * `dev-token`; con ADMIN_TOKEN definido, `dev-token` es una clave más y da 401.
+ */
+function getAdminTokenConfig(): { token: string, hash: Buffer | null, valid: boolean, reason?: string } {
   const token = process.env['ADMIN_TOKEN'] ?? ''
   const isProd = process.env['NODE_ENV'] === 'production'
 
   if (!token) {
-    if (!isProd) {
-      const devToken = 'dev-token'
-      return {
-        token: devToken,
-        hash: createHash('sha256').update(devToken).digest(),
-        valid: true,
-      }
-    }
+    if (!isProd) return { token: DEV_TOKEN, hash: createHash('sha256').update(DEV_TOKEN).digest(), valid: true }
     return { token: '', hash: null, valid: false, reason: 'ADMIN_TOKEN no configurado en variables de entorno' }
   }
 
@@ -21,11 +20,7 @@ function getAdminTokenConfig(): { token: string; hash: Buffer | null; valid: boo
     return { token: '', hash: null, valid: false, reason: 'ADMIN_TOKEN debe tener al menos 12 caracteres en producción' }
   }
 
-  return {
-    token,
-    hash: createHash('sha256').update(token).digest(),
-    valid: true,
-  }
+  return { token, hash: createHash('sha256').update(token).digest(), valid: true }
 }
 
 // Verificación y log en producción si falta o es insuficiente
@@ -36,113 +31,44 @@ if (process.env['NODE_ENV'] === 'production') {
   }
 }
 
-interface TicketEntry {
-  id: string
-  expiresAt: number
-}
+/**
+ * Qué abre un ticket: la hoja del CV de una vacante (`cv`), la hoja del CV base (`cv-base`) o un
+ * carrusel. El alcance va dentro de la firma: un ticket de la vacante «base» no abre el CV base.
+ */
+export type TicketScope = 'cv' | 'cv-base' | 'carousel'
 
-const cvTickets = new Map<string, TicketEntry>()
-const carouselTickets = new Map<string, TicketEntry>()
-
-/** Limpieza periódica de tickets en memoria */
-setInterval(() => {
-  const now = Date.now()
-  for (const [t, data] of cvTickets.entries()) {
-    if (data.expiresAt < now) cvTickets.delete(t)
-  }
-  for (const [t, data] of carouselTickets.entries()) {
-    if (data.expiresAt < now) carouselTickets.delete(t)
-  }
-}, 60_000).unref()
+const TICKET_TTL_MS = 3600_000
 
 function getTicketSecret(): string {
-  const cfg = getAdminTokenConfig()
-  return cfg.token || process.env['ADMIN_TOKEN'] || 'portfolio-secure-ticket-secret'
+  return getAdminTokenConfig().token || 'portfolio-secure-ticket-secret'
 }
 
-/** Genera un ticket criptográfico firmado para CV con vida útil de 1 hora (resistente a clustering y recargas) */
-export function createCvTicket(id: string): string {
-  const normalizedId = String(id).trim().toLowerCase()
-  const expiresAt = Date.now() + 3600_000 // 1 hora de validez
-  const payload = `cv:${normalizedId}:${expiresAt}`
-  const signature = createHmac('sha256', getTicketSecret()).update(payload).digest('hex').slice(0, 32)
-  const ticket = `${expiresAt}.${signature}`
-  cvTickets.set(ticket, { id: normalizedId, expiresAt })
-  return ticket
+function sign(scope: TicketScope, id: string, expiresAt: number): string {
+  return createHmac('sha256', getTicketSecret()).update(`${scope}:${id}:${expiresAt}`).digest('hex').slice(0, 32)
 }
 
-/** Consume y valida un ticket de CV para un targetId específico */
-export function validateCvTicket(ticket: string, targetId: string): boolean {
-  if (!ticket || typeof ticket !== 'string') return false
-  const normalizedTarget = String(targetId).trim().toLowerCase()
+const normalized = (id: string) => String(id).trim().toLowerCase()
 
-  // 1. Verificación criptográfica HMAC sin estado
-  const parts = ticket.split('.')
-  if (parts.length === 2 && parts[0] && parts[1]) {
-    const expStr = parts[0]
-    const sig = parts[1]
-    const expiresAt = Number(expStr)
-    if (expiresAt && !isNaN(expiresAt) && expiresAt >= Date.now()) {
-      const payload = `cv:${normalizedTarget}:${expiresAt}`
-      const expectedSig = createHmac('sha256', getTicketSecret()).update(payload).digest('hex').slice(0, 32)
-      try {
-        if (sig.length === expectedSig.length && timingSafeEqual(Buffer.from(sig, 'hex'), Buffer.from(expectedSig, 'hex'))) {
-          return true
-        }
-      } catch {
-        // En caso de discrepancia en formato, probar fallback de memoria
-      }
-    }
-  }
-
-  // 2. Fallback de caché en memoria
-  const entry = cvTickets.get(ticket)
-  if (!entry) return false
-  if (entry.expiresAt < Date.now() || entry.id.toLowerCase() !== normalizedTarget) return false
-  return true
+/** Ticket firmado, sin estado: vale 1 hora y solo para ese alcance y ese id (se puede recargar la hoja). */
+export function createTicket(scope: TicketScope, id: string): string {
+  const expiresAt = Date.now() + TICKET_TTL_MS
+  return `${expiresAt}.${sign(scope, normalized(id), expiresAt)}`
 }
 
-/** Genera un ticket criptográfico firmado para Carrusel con vida útil de 1 hora */
-export function createCarouselTicket(id: string): string {
-  const normalizedId = String(id).trim().toLowerCase()
-  const expiresAt = Date.now() + 3600_000 // 1 hora de validez
-  const payload = `carousel:${normalizedId}:${expiresAt}`
-  const signature = createHmac('sha256', getTicketSecret()).update(payload).digest('hex').slice(0, 32)
-  const ticket = `${expiresAt}.${signature}`
-  carouselTickets.set(ticket, { id: normalizedId, expiresAt })
-  return ticket
+export function validateTicket(ticket: unknown, scope: TicketScope, id: string): boolean {
+  if (typeof ticket !== 'string') return false
+  const [expStr, sig, ...rest] = ticket.split('.')
+  const expiresAt = Number(expStr)
+  if (rest.length || !sig || !Number.isFinite(expiresAt) || expiresAt < Date.now()) return false
+  const expected = sign(scope, normalized(id), expiresAt)
+  if (sig.length !== expected.length || !/^[0-9a-f]+$/.test(sig)) return false
+  return timingSafeEqual(Buffer.from(sig, 'hex'), Buffer.from(expected, 'hex'))
 }
 
-/** Consume y valida un ticket de Carrusel para un targetId específico */
-export function validateCarouselTicket(ticket: string, targetId: string): boolean {
-  if (!ticket || typeof ticket !== 'string') return false
-  const normalizedTarget = String(targetId).trim().toLowerCase()
-
-  // 1. Verificación criptográfica HMAC sin estado
-  const parts = ticket.split('.')
-  if (parts.length === 2 && parts[0] && parts[1]) {
-    const expStr = parts[0]
-    const sig = parts[1]
-    const expiresAt = Number(expStr)
-    if (expiresAt && !isNaN(expiresAt) && expiresAt >= Date.now()) {
-      const payload = `carousel:${normalizedTarget}:${expiresAt}`
-      const expectedSig = createHmac('sha256', getTicketSecret()).update(payload).digest('hex').slice(0, 32)
-      try {
-        if (sig.length === expectedSig.length && timingSafeEqual(Buffer.from(sig, 'hex'), Buffer.from(expectedSig, 'hex'))) {
-          return true
-        }
-      } catch {
-        // Fallback a memoria
-      }
-    }
-  }
-
-  // 2. Fallback de caché en memoria
-  const entry = carouselTickets.get(ticket)
-  if (!entry) return false
-  if (entry.expiresAt < Date.now() || entry.id.toLowerCase() !== normalizedTarget) return false
-  return true
-}
+export const createCvTicket = (id: string) => createTicket('cv', id)
+export const validateCvTicket = (ticket: unknown, id: string) => validateTicket(ticket, 'cv', id)
+export const createCarouselTicket = (id: string) => createTicket('carousel', id)
+export const validateCarouselTicket = (ticket: unknown, id: string) => validateTicket(ticket, 'carousel', id)
 
 /** Verifica si una petición cuenta con autorización Bearer válida */
 export function isAdminAuthorized(req: Request): boolean {
@@ -153,14 +79,15 @@ export function isAdminAuthorized(req: Request): boolean {
   const given = header.startsWith('Bearer ') ? header.slice(7) : ''
   if (!given) return false
 
-  const isProd = process.env['NODE_ENV'] === 'production'
-  if (!isProd && given === 'dev-token') {
-    return true
-  }
-
   const givenHash = createHash('sha256').update(given).digest()
   return timingSafeEqual(givenHash, cfg.hash)
 }
+
+/**
+ * Las hojas que se abren en otra pestaña o en un iframe (sin el header Authorization): con ticket
+ * pasan y su ruta valida el ticket para ese id.
+ */
+const TICKET_ROUTES = [/^\/hunter\/cv\/[^/]+\/(html|txt)$/, /^\/hunter\/cv-base\/html$/, /^\/content\/carousel\/[^/]+\/html$/]
 
 /** Bearer token fijo desde .env. Sin ADMIN_TOKEN válido el admin queda apagado.
  * No se acepta ADMIN_TOKEN por query string (?token=). */
@@ -172,11 +99,7 @@ export function requireAdmin(req: Request, res: Response, next: NextFunction): v
     return
   }
 
-  // Si la petición es a rutas de vista previa (HTML o PDF de CV o Carrusel) con ticket,
-  // permitimos que continúe para que el handler específico valide la autenticidad del ticket para ese ID
-  const isCvRoute = req.path.includes('/cv/') && (req.path.endsWith('/html') || req.path.endsWith('/pdf'))
-  const isCarouselRoute = req.path.includes('/carousel/') && (req.path.endsWith('/html') || req.path.endsWith('/pdf'))
-  if ((isCvRoute || isCarouselRoute) && typeof req.query['ticket'] === 'string') {
+  if (typeof req.query['ticket'] === 'string' && TICKET_ROUTES.some(route => route.test(req.path))) {
     return next()
   }
 

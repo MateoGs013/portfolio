@@ -5,8 +5,9 @@ import rateLimit from 'express-rate-limit'
 import helmet from 'helmet'
 import { db } from './db.js'
 import { env } from './env.js'
-import { adminApi, adminUi } from './admin/router.js'
+import { adminApi } from './admin/router.js'
 import { isAdminAuthorized } from './admin/auth.js'
+import { adminCsp, adminUi } from './admin/ui.js'
 import { envelope } from './envelope.js'
 import { docs } from './routes/docs.js'
 import { experience } from './routes/experience.js'
@@ -30,23 +31,8 @@ app.use(helmet({
   crossOriginResourcePolicy: { policy: 'cross-origin' }, // Permite consumir API y /media cross-origin
 }))
 
-// M1: CSP específica y ajustada para la consola de administración (permite tipografías web y Vue runtime)
-app.use(['/admin', '/api/admin'], helmet.contentSecurityPolicy({
-  directives: {
-    defaultSrc: ["'self'"],
-    scriptSrc: ["'self'", "'unsafe-eval'", "'unsafe-inline'"],
-    scriptSrcAttr: ["'unsafe-inline'"],
-    styleSrc: ["'self'", "'unsafe-inline'", 'https://api.fontshare.com', 'https://fonts.googleapis.com'],
-    fontSrc: ["'self'", 'https://fonts.gstatic.com', 'https://cdn.fontshare.com', 'data:'],
-    imgSrc: ["'self'", 'data:', 'https:', 'blob:'],
-    connectSrc: ["'self'", 'blob:', 'https://api.github.com'],
-    // Vista previa de un video antes de subirlo (URL.createObjectURL).
-    mediaSrc: ["'self'", 'blob:'],
-    frameAncestors: ["'none'"],
-    baseUri: ["'self'"],
-    formAction: ["'self'"],
-  },
-}))
+// M1: la CSP del admin (ui.ts), para su UI y su API: mismo origen, sin eval ni nada en línea.
+app.use(['/admin', '/api/admin'], adminCsp)
 
 // M2: Rate limiting general para la API pública (desacoplado de /api/admin)
 const publicApiLimiter = rateLimit({
@@ -77,7 +63,10 @@ const adminAuthFailuresLimiter = rateLimit({
 
     return false
   },
+  // Solo cuentan los 401: sin esto, cada hoja con ticket (iframe del CV, imprimir, carrusel) sumaba
+  // aunque saliera bien y a los 30 pedidos la hoja respondía 429.
   requestWasSuccessful: (_req, res) => res.statusCode !== 401,
+  skipSuccessfulRequests: true,
   standardHeaders: 'draft-8',
   legacyHeaders: false,
   message: { error: 'demasiados intentos fallidos de autenticación en admin, reintente en 15 minutos' },

@@ -1,0 +1,13 @@
+{
+  "pitch": {
+    "data": {
+      "subject": "Postulación simulada",
+      "elevator_pitch": "Texto del pitch que escribe el Eros simulado.",
+      "cover_letter": "Carta que escribe el Eros simulado.",
+      "connection_note": "Nota corta del Eros simulado."
+    }
+  },
+  "preview": { "to_email": "empleos@example.com", "subject": "Postulación simulada", "body": "Cuerpo del correo simulado.", "channel": "email" },
+  "findEmail": { "email": "empleos@example.com", "confidence": 74, "sources": ["mock"] },
+  "applyEmail": { "ok": true, "dispatched_to": "empleos@example.com", "provider": "mock", "applied_at": "2026-10-31T12:00:00.000Z" }
+}

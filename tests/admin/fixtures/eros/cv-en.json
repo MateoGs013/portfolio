@@ -1,0 +1,29 @@
+{
+  "data": {
+    "lang": "en",
+    "name": "Mateo Sonzogni",
+    "title": "Frontend Engineer",
+    "summary": "Frontend developer focused on the whole product: what problem it solves, how it looks, how it feels and how it reaches production. I build accessible interfaces with Vue, Nuxt and TypeScript, care about performance and document every decision so the team can maintain it over time.",
+    "skills": {
+      "Frameworks": [
+        "Vue 3",
+        "Nuxt"
+      ],
+      "Languages": [
+        "TypeScript"
+      ]
+    },
+    "experience": [
+      {
+        "slug": "arg-piscinas",
+        "title": "ARG Piscinas",
+        "bullets": []
+      },
+      {
+        "slug": "la-rucula",
+        "title": "La Rucula Gastrobar",
+        "bullets": []
+      }
+    ]
+  }
+}

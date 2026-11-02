@@ -2,6 +2,8 @@ node_modules/
 .nuxt/
 .output/
 dist/
+# El build del admin nuevo (pnpm build:admin) se arma en la imagen del API.
+server/admin/dist/
 .env
 .env.*
 !.env.example
@@ -13,7 +15,8 @@ server/generated/
 test-results/
 playwright-report/
 tests/screenshots/
-data/
+# Solo la carpeta de la raíz (respaldo de la API pública): features/projects/data/ del admin es código.
+/data/
 *.db
 
 

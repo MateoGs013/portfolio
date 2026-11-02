@@ -1,92 +1,100 @@
 /**
- * Documentos `about` y `contact` en el admin. Cada campo es un DocField (app/lib/fieldMeta.ts):
- * `value` y `en` son texto o lista según su tipo, y guardar el español nunca borra el inglés.
+ * Documentos `about` y `contact` en el admin, con el esquema fijo de shared/docSchema.ts. Cada bloque
+ * es un DocField (app/lib/fieldMeta.ts): `value` y `en` son texto o lista según su tipo, y guardar el
+ * español nunca borra el inglés. La validación vive en docInput.ts.
+ *
+ * Los documentos no se crean ni se borran: son dos y fijos. Doc.title no se pide en el formulario y el
+ * servidor conserva el guardado. El retrato se sube con POST /docs/about/portrait a
+ * `public/media/projects/_perfil/`. Esa carpeta todavía no tiene volumen en producción (DEPLOY.md,
+ * paso 6): hasta que lo tenga, el retrato subido dura hasta el próximo deploy.
  */
 import { Router } from 'express'
 import { db } from '../db.js'
-import type { Prisma } from '../../generated/prisma/client.js'
-import { DB_UNAVAILABLE } from './common.js'
-import { HttpError, bool, list, optUrl, slug, str } from './input.js'
+import { docFieldsOf } from '../content/docFields.js'
+import type { DocField } from '../../../app/lib/fieldMeta.js'
+import type { Doc, Prisma } from '../../generated/prisma/client.js'
+import type { AdminDoc } from '../shared/adminContracts.js'
+import { docBlock, docSchemas, isDocKey, type DocKey } from '../shared/docSchema.js'
+import { readOr503 } from './common.js'
+import { docPayload } from './docInput.js'
+import { HttpError, validate } from './input.js'
+import { PROFILE_FOLDER, fileStem, removeFile, saveFile, sniffImage, undoWrites, upload } from './mediaFiles.js'
 
-const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+type Body = Record<string, unknown>
 
-/**
- * Valor de un campo de Doc según su tipo (DocFieldValue en app/lib/fieldMeta.ts).
- * - list: array de textos; si llega un texto (el textarea del admin), se parte por renglón.
- * - url / email: se validan; vacío queda vacío.
- * Devuelve undefined cuando no vino nada (sirve para `en`, que es opcional).
- */
-function docValue(raw: unknown, type: string, where: string): string | string[] | undefined {
-  if (raw === undefined || raw === null) return undefined
-  if (type === 'list') {
-    const items = Array.isArray(raw)
-      ? raw.filter((x): x is string => typeof x === 'string')
-      : typeof raw === 'string' ? raw.split(/\r?\n/) : []
-    return items.map(x => x.trim()).filter(Boolean)
+function docKey(raw: unknown): DocKey {
+  if (typeof raw === 'string' && isDocKey(raw)) return raw
+  throw new HttpError(404, 'Ese documento no existe: el perfil tiene Sobre mí (about) y Contacto (contact).')
+}
+
+/** El documento como lo edita el admin: sus bloques normalizados, el esquema y lo que falta. */
+function adminDoc(key: DocKey, row: Doc | null): AdminDoc {
+  const schema = docSchemas[key]
+  const fields = docFieldsOf(row?.fields, key)
+  const names = new Set(fields.map(f => f.name))
+  return {
+    key,
+    title: row?.title ?? schema.title,
+    fields,
+    schema: schema.blocks,
+    missing: schema.blocks.filter(b => !names.has(b.name)).map(b => b.name),
+    updatedAt: row?.updatedAt.toISOString() ?? null,
   }
-  if (typeof raw !== 'string') throw new HttpError(400, `${where}: se esperaba texto`)
-  const val = raw.trim()
-  if (val === '') return ''
-  if (type === 'url') return optUrl({ val }, 'val') ?? ''
-  if (type === 'email' && !EMAIL.test(val)) throw new HttpError(400, `${where}: email inválido`)
-  return type === 'email' ? val : raw
 }
 
-type StoredEn = Map<string, unknown>
-
-/** `en` de cada campo tal como está guardado, para conservarlo si el cliente no lo manda. */
-function storedEn(fields: unknown): StoredEn {
-  const entries = Array.isArray(fields) ? fields : []
-  return new Map(entries.flatMap((f: unknown) => {
-    if (!f || typeof f !== 'object') return []
-    const { name, en } = f as { name?: unknown, en?: unknown }
-    return typeof name === 'string' && en !== undefined ? [[name, en] as const] : []
-  }))
-}
-
-/**
- * Sin la clave `en` se conserva el inglés guardado; `en: ''` (o una lista vacía) lo borra a propósito.
- */
-function docFields(b: Record<string, unknown>, previous: StoredEn): Prisma.InputJsonValue {
-  return list(b, 'fields').map((f) => {
-    const name = str(f, 'name')
-    const type = str(f, 'type')
-    const value = docValue(f['value'], type, name) ?? (type === 'list' ? [] : '')
-    const kept = previous.get(name)
-    const fallback = Array.isArray(kept) && type !== 'list' ? kept.join('\n') : kept
-    const en = docValue('en' in f ? f['en'] : fallback, type, `${name} (en)`)
-    const worlds = Array.isArray(f['worlds'])
-      ? f['worlds'].filter((w): w is string => typeof w === 'string')
-      : []
-    return {
-      name,
-      type,
-      value,
-      ...(en !== undefined && en !== '' && !(Array.isArray(en) && !en.length) ? { en } : {}),
-      ...(bool(f, 'wide') ? { wide: true } : {}),
-      ...(worlds.length ? { worlds } : {}),
-    }
-  })
+/** Guarda los bloques; el título queda el que estaba (o el del esquema si el documento no existía). */
+async function saveFields(key: DocKey, fields: DocField[]): Promise<Doc> {
+  const json = fields as unknown as Prisma.InputJsonValue
+  return db.doc.upsert({ where: { key }, create: { key, title: docSchemas[key].title, fields: json }, update: { fields: json } })
 }
 
 export const docsRouter = Router()
 
-docsRouter.get('/docs', async (_req, res) => {
-  try {
-    res.json(await db.doc.findMany({ orderBy: { key: 'asc' } }))
-  }
-  catch {
-    res.status(503).json(DB_UNAVAILABLE)
-  }
+docsRouter.get('/docs/:key', async (req, res) => {
+  const key = docKey(req.params['key'])
+  const row = await readOr503(res, () => db.doc.findUnique({ where: { key } }))
+  if (row !== undefined) res.json(adminDoc(key, row))
 })
+
 docsRouter.put('/docs/:key', async (req, res) => {
-  const key = slug({ key: req.params['key'] }, 'key')
-  const current = await db.doc.findUnique({ where: { key }, select: { fields: true } })
-  const data = { title: str(req.body, 'title'), fields: docFields(req.body, storedEn(current?.fields)) }
-  res.json(await db.doc.upsert({ where: { key }, create: { key, ...data }, update: data }))
+  const key = docKey(req.params['key'])
+  const b = req.body as Body
+  const current = await db.doc.findUnique({ where: { key } })
+  const fields = validate('Doc', b, () => docPayload(key, b, docFieldsOf(current?.fields)))
+  res.json(adminDoc(key, await saveFields(key, fields)))
 })
-docsRouter.delete('/docs/:key', async (req, res) => {
-  const key = slug({ key: req.params['key'] }, 'key')
-  await db.doc.delete({ where: { key } })
-  res.status(204).end()
+
+/**
+ * Retrato nuevo (multipart: file, PNG, JPG o WebP de hasta 10 MB). Queda en /media/projects/_perfil/
+ * y pasa a ser el valor de `portrait`, que no tiene inglés: el sitio lo muestra en los dos idiomas.
+ * El retrato anterior se borra si estaba en esa carpeta.
+ */
+docsRouter.post('/docs/about/portrait', upload.single('file'), async (req, res) => {
+  if (!req.file) throw new HttpError(400, 'Falta la imagen: elegí la foto del retrato.')
+  const info = sniffImage(req.file, 'Retrato')
+  const block = docBlock('about', 'portrait')
+  if (!block) throw new HttpError(500, 'El esquema de Sobre mí no tiene retrato.')
+
+  const written: string[] = []
+  try {
+    const src = await saveFile(PROFILE_FOLDER, `${fileStem('retrato')}.${info.ext}`, req.file.buffer, written)
+    const current = await db.doc.findUnique({ where: { key: 'about' } })
+    const fields = docFieldsOf(current?.fields, 'about')
+    const previous = fields.find(f => f.name === block.name)
+    const portrait: DocField = { name: block.name, type: 'image', value: src }
+    // Sin retrato guardado, el bloque nuevo va en su lugar del esquema (antes del primero que lo sigue).
+    const order = docSchemas.about.blocks.map(b => b.name)
+    const after = fields.findIndex(f => order.indexOf(f.name) > order.indexOf(block.name) || !order.includes(f.name))
+    const next = previous
+      ? fields.map(f => (f.name === block.name ? portrait : f))
+      : after === -1 ? [...fields, portrait] : [...fields.slice(0, after), portrait, ...fields.slice(after)]
+    const row = await saveFields('about', next)
+    const old = typeof previous?.value === 'string' ? previous.value : null
+    if (old && old !== src && old.startsWith(`/media/projects/${PROFILE_FOLDER}/`)) await removeFile(old)
+    res.status(201).json(adminDoc('about', row))
+  }
+  catch (err) {
+    await undoWrites(written)
+    throw err
+  }
 })

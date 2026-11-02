@@ -6,7 +6,7 @@ El portafolio se estructura en torno a:
 - **Sitio público:** inicio (`/`), obra (`/projects`), caso (`/projects/:slug`), sobre mí (`/about`) y artículos (`/articles`), en ES y EN (`?lang=en`), con el contenido entero desde la base. Cada página se puede ver como registro tipado de la base con `R` (`?vista=registro`).
 - **Modo Focus / Hiperfoco (`useHyperfocus.ts`):** una tecla (`H`) que deja una columna de lectura en monocromo, sin ornamentos ni movimiento ambiental y con la navegación intacta. El estado vive en una cookie que lee el SSR, así no parpadea.
 - **CV Harvard ATS (`app/components/cv/`):** en `/about?cv=ats`, imprimible en una sola página A4. Un PDF ATS por idioma (`public/cv/CV-{ES,EN}-Mateo-Sonzogni-ATS.pdf`); las URL sin `-ATS` redirigen a ellos.
-- **Consola de Administración (`/admin`):** CMS interno y centro de operaciones del agente autónomo de empleo (**Job Hunter** / Eros), con generación de propuestas y CV Harvard ATS adaptado a cada vacante.
+- **Consola de Administración (`/admin`):** la mesa de trabajo del contenido y de la búsqueda laboral con Eros (vacantes, publicaciones y tendencias), con el CV Harvard ATS adaptado a cada vacante y armado siempre desde la base. Una cosa por pantalla, con los tokens del sitio (`docs/admin.md`).
 
 ---
 
@@ -27,10 +27,10 @@ Si se violan, es otro proyecto. Si una tarea los contradice, parar y preguntar.
 ## Stack Tecnológico
 
 - **Frontend:** Nuxt 4 · Vue 3 · TypeScript · Tailwind CSS v4 (`@tailwindcss/vite`) · CSS nativo con variables · GSAP 3 (ScrollTrigger, SplitText, Flip) · Lenis · View Transitions.
-- **Admin CMS:** Vue 3 · Tailwind CSS v4 (`@tailwindcss/cli`) · Command Palette (`⌘K`) · Job Hunter con Gemini.
+- **Admin:** Vite · Vue 3 (`.vue`) · TypeScript estricto (`vue-tsc`) · vue-router por hash · Tailwind CSS v4 (`@tailwindcss/vite`) con los tokens del sitio · paleta `Ctrl/⌘K`. Se compila en la imagen del API y se sirve en `/admin/`.
 - **Backend:** Express 5 · TypeScript (`tsx`) · Prisma ORM · PostgreSQL 17 · Multer.
-- **IA / Agente de Empleo:** Integración con modelos Gemini para evaluación de compatibilidad de empleo, redacción de cartas/pitch y generación adaptada de CV Harvard ATS.
-- **Tipografía:** General Sans Variable (todo lo que se lee) y Martian Mono (identificadores) en el sitio, locales; Plus Jakarta Sans en el admin.
+- **Eros (agente de empleo y contenido):** servicio aparte en la red interna (`HUNTER_API_URL`). Escanea portales, evalúa vacantes, redacta el mensaje y da pistas para adaptar el CV; el servidor compone el CV desde la base. Sin Eros el admin sigue andando y lo dice.
+- **Tipografía:** General Sans Variable (todo lo que se lee) y Martian Mono (identificadores), locales, en el sitio y en el admin.
 - **Infraestructura:** Hostinger VPS gestionado con Coolify (Dockerfiles multi-stage, Traefik reverse proxy con SSL Let's Encrypt).
 
 ---
@@ -45,14 +45,18 @@ pnpm db:snapshot           # Regenerar el respaldo versionado (server/src/snapsh
 pnpm db:snapshot:check     # Comparar el respaldo con la base (después de un seed solo difieren las fechas)
 pnpm dev                   # Servidor de desarrollo Frontend (Nuxt) en :3000
 pnpm dev:api               # Servidor de desarrollo Backend (Express) en :3001
-pnpm build:admin-css       # Compilar el Tailwind del admin (solo lee server/admin: source(none))
-pnpm typecheck             # Verificación estricta de tipos TypeScript (Nuxt + Express)
-pnpm lint                  # Verificación de linter (ESLint)
+pnpm dev:admin             # Admin con Vite en :3002 (ADMIN_DEV_PORT), con /api hacia la API local (ADMIN_API_ORIGIN, :3001); abrir /admin/
+pnpm build:admin           # Compilar el admin (Vite) a server/admin/dist/; sin build, /admin/ responde 503
+pnpm typecheck             # Verificación estricta de tipos TypeScript (Nuxt, Express, e2e y vue-tsc del admin)
+pnpm lint                  # ESLint y los chequeos del admin (scripts/check-admin-*.mjs: estilo, contraste, schema y endpoints)
 pnpm build                 # Compilar frontend para producción
 pnpm start                 # Servir el build (pnpm start:api para la API sin watch)
-pnpm build:api             # Compilar admin CSS, generar Prisma y ejecutar migraciones
-pnpm cv:pdf                # Regenerar los dos PDF ATS desde el sitio local (CV_BASE_URL), con la cota dual
-pnpm test:e2e              # Playwright contra el build (tests/e2e/run.mjs): 3 anchos x 2 temas, reduced motion y sin JS
+pnpm build:api             # Compilar el admin, generar Prisma y ejecutar migraciones
+pnpm cv:pdf                # Regenerar los dos PDF ATS desde el sitio local (CV_BASE_URL), con la cota dual, y el sello server/src/snapshot/cv-stamp.json (se commitea con ellos; Inicio del admin avisa si no coincide con la base)
+pnpm test:e2e              # Playwright contra el build (tests/e2e/run.mjs): el sitio en 3 anchos x 2 temas, reduced motion y sin JS, y cada spec del admin en sus modos
+node scripts/admin-run.mjs [--demo] [--eros-mock] [--web] -- <comando>
+                           # Admin contra una copia descartable de la base, API en 3940-3990 y Eros apagado;
+                           # --demo la muestra (EROS_DEMO=1), --eros-mock el Eros simulado, --web compila Nuxt contra esa API
 ```
 
 ---
@@ -79,15 +83,18 @@ app/lib/                 Tipos de la API, formato, markdown, registro (record.ts
 app/assets/css/          Tokens (tokens.css), base, movimiento, impresión e Hiperfoco
 app/nitro/routes/        sitemap.xml y robots.txt desde la API; el resto se proxía a Express
 server/src/             Express 5: rutas públicas (routes/, queries/, content/), admin/, seed/, patches/ y snapshot/
-server/admin/           Consola de administración propia (HTML/CSS/JS sin build) en /admin
+server/admin/src/       Admin (Vite + .vue + TS): api/, stores/, composables/, ui/ (componentes base), shell/, features/<área>/ y styles/
+server/src/shared/      Contrato que comparten la API y el admin: adminSchema, labels, adminContracts, hunterContracts, docSchema…
 prisma/                 Esquema de base de datos relacional y migraciones SQL
 public/cv/              PDFs del CV: uno ATS de 1 página por idioma (pnpm cv:pdf)
 public/media/projects/  Capturas y videos de cada obra, versionados en git
 public/og/              Imagen OG por defecto de 1200x630 (scripts/og-default.mjs)
-scripts/                cv-pdf.mjs, og-default.mjs y check-contrast.mjs (contraste de la cabecera con mezcla)
-tests/e2e/              Suite Playwright (support.ts, run.mjs) y capturas de referencia (visual.spec.ts-snapshots/)
+scripts/                cv-pdf.mjs, og-default.mjs, check-contrast.mjs, admin-run.mjs y los chequeos del admin (check-admin-*.mjs)
+tests/e2e/              Suite Playwright del sitio (support.ts, run.mjs, visual.spec.ts-snapshots/) y del admin (admin-*.spec.ts, admin-support.ts)
+tests/admin/            Pruebas de la API del admin (*.test.ts) y el Eros simulado (eros-mock.ts)
 docs/diseno.md          Fuente única del diseño del sitio público
 docs/rediseno/          Prototipos aprobados (movimiento.html, demo.html), plan y paquetes del rediseño
+docs/rediseno-admin/    Plan, auditorías, paquetes y la demo aprobada del rediseño del admin
 docs/archive/           Histórico: prototipos y conceptos descartados ("Dos Mundos", explorador, /lab y el visor IDE)
 ```
 
@@ -100,9 +107,9 @@ Este archivo resume las directrices transversales. La documentación detallada s
 - `docs/diseno.md` — **Fuente única del diseño del sitio público:** vocabulario de movimiento, tokens, anclas del DOM, Hiperfoco, política de movimiento, teclas y rutas
 - `.claude/rules/explorer.md` — Reglas estructurales al tocar `app/components/**`, `app/pages/**` o `app/lib/**` (DOM accesible, una cosa por pantalla, cota dual del CV)
 - `.claude/rules/backend.md` — Reglas al tocar `server/**` o `prisma/**`
-- `.claude/rules/admin.md` — Reglas de interfaz y UX al tocar `server/admin/**`
+- `.claude/rules/admin.md` — Reglas de interfaz y UX al tocar `server/admin/**` o `server/src/admin/**`
 - `DEPLOY.md` — Guía completa de despliegue en Hostinger VPS con Coolify
-- `docs/admin.md` — Arquitectura y especificaciones de la consola de administración 2026
+- `docs/admin.md` — El admin: rutas, dirección visual, componentes, teclado, matriz de datos, contrato con Eros, inventario de endpoints y el PDF del CV
 - `docs/decisiones.md` — Registro de decisiones arquitectónicas y motivos de descarte
 - `docs/fases.md` — Estado de las fases de desarrollo del proyecto
 - `AGENTS.md` — Puerta de entrada para otros agentes (Gemini): apunta a estas mismas fuentes

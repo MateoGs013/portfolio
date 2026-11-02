@@ -51,8 +51,9 @@ El repositorio cuenta con Dockerfiles optimizados para producción:
 2. **`Dockerfile.api`**:
    - Multi-stage build con Node 24 Alpine y pnpm 10.
    - Ejecuta como usuario sin privilegios `USER node`.
-   - Genera el cliente de Prisma (`pnpm prisma generate`).
-   - Sirve la API Express y la UI estática del panel de administración (`/admin`).
+   - Compila el admin con Vite (`pnpm build:admin`, de `server/admin/src/` a `server/admin/dist/`) y genera el cliente de Prisma (`pnpm prisma generate`), en el mismo `RUN`. Si el build del admin falla, falla la imagen: nunca sale una API sin admin. Sin `server/admin/dist/`, `/admin/` responde 503.
+   - Sirve la API Express y el admin compilado en `/admin/` (`server/src/admin/ui.ts`, con su CSP estricta).
+   - Corre `npx prisma migrate deploy` en cada arranque (`CMD`), antes de `pnpm start:api`.
    - Expone el puerto `3001`.
    - Levanta con `pnpm start:api` (`tsx server/src/index.ts`).
 
@@ -89,8 +90,8 @@ El repositorio cuenta con Dockerfiles optimizados para producción:
    - **Dockerfile location**: `/Dockerfile.api`
 4. En **"Ports Exposes"**, indicá `3001`.
 5. En **"Domains"**, podés dejarlo sin dominio público (si Nuxt actuará como proxy inverso completo) o asignarle un subdominio como `https://api.mateogs.tech`.
-6. En la pestaña **"Persistent Storage" / "Storages"**:
-   - Montar volumen persistente: destino `/app/public/media/projects` (o `/app/public/media`). Esto garantiza que las imágenes subidas desde el CMS no se eliminen al redeployar. **Ojo:** el volumen tapa lo que la imagen trae en esa ruta (las capturas versionadas en `public/media/projects/<slug>/`). Antes del parche 11-01 y de `import-captures.ts --db-only`, copiar `public/media/projects/{la-rucula,argpiscinas,barberpole,eros}/` al volumen (`docker cp`) o montar el volumen en una ruta que no cubra esas carpetas; ver la cabecera de `server/src/scripts/import-captures.ts`.
+6. En la pestaña **"Persistent Storage" / "Storages"**, un volumen nombrado con destino `/app/public/media/projects`. Todo lo que se sube desde el admin va ahí: las imágenes y videos de las obras (`<slug>/`) y el retrato del perfil (`_perfil/retrato-*.webp|jpg|png`). **Hoy la API no tiene volumen en Coolify**: lo subido desde el admin vive en la capa del contenedor y se pierde en cada deploy (la base sigue apuntando a archivos que ya no están). Configurarlo antes de subir imágenes o el retrato desde el admin de producción; hasta entonces, solo sobrevive lo versionado en `public/media/projects/`.
+   **Ojo:** el volumen tapa lo que la imagen trae en esa ruta (las capturas versionadas en `public/media/projects/<slug>/`). Al crearlo, copiar primero esas carpetas al volumen (`docker cp` desde el contenedor actual, o `public/media/projects/{la-rucula,argpiscinas,barberpole,eros}/` desde el repo) o el sitio queda sin capturas; ver la cabecera de `server/src/scripts/import-captures.ts`. Después de cada deploy, comprobar que `/media/projects/_perfil/` y una captura subida desde el admin siguen respondiendo 200.
 7. En la pestaña **"Environment Variables"**, definí:
    ```env
    NODE_ENV=production
@@ -102,6 +103,9 @@ El repositorio cuenta con Dockerfiles optimizados para producción:
    EROS_API_KEY=tu-clave-secreta-compartida-con-eros
    GEMINI_API_KEY=tu-api-key-de-gemini
    ```
+   - `HUNTER_API_URL` es **obligatoria** para que Eros ande: no tiene valor por defecto. Sin ella el admin muestra Eros como «no configurado», Vacantes, Publicaciones y Tendencias no traen nada y el CV se sigue armando desde la base. Verificarla en Coolify antes de cada deploy (`http://eros:8000`, la red interna).
+   - Nunca `EROS_DEMO=1` en producción (la muestra de pruebas igual se apaga con `NODE_ENV=production`), ni `HUNTER_LOCAL_FALLBACK`.
+   - `ADMIN_TOKEN` es la clave del admin: sin un valor válido el admin responde 503. No hay `dev-token` en producción.
 8. Hacé clic en **"Deploy"**.
 9. **Ejecutar migraciones y seed inicial:**
    - Una vez finalizado el build, ingresá a la pestaña **"Terminal"** del contenedor del backend en Coolify y ejecutá:
@@ -118,6 +122,16 @@ El repositorio cuenta con Dockerfiles optimizados para producción:
 > 3. Apenas arranca el contenedor nuevo, en su terminal: `pnpm tsx server/src/patches/2026-10-30-eros-barberpole.ts`, `2026-11-01-rediseno-datos.ts --dry`, sin `--dry`, `--dry` otra vez («sin cambios»), y lo mismo con `2026-11-02-traducciones-en.ts`. Hasta entonces el sitio sirve los datos con la forma de main (Eros sin portada, el inicio sin `display_name` ni `headline`).
 > 4. Reiniciar la API: los parches borran `data/content-last-good.json`, pero el proceso guarda en memoria respuestas de antes de los parches.
 > Para volver atrás: `pg_restore --clean --if-exists --dbname="$DATABASE_URL" antes-rediseno.dump` y desplegar el código anterior.
+
+> [!WARNING] Desplegar el rediseño del admin (noviembre de 2026)
+> El admin nuevo reemplaza al anterior en `/admin` y trae una migración aditiva (`20261105000000_metric_translation`, que se aplica sola al arrancar) y un parche de datos para los documentos `about` y `contact`. Todo con el OK de Mateo:
+> 1. **Antes** del merge a `main`: `pg_dump --format=custom --file=antes-admin.dump "$DATABASE_URL"`, verificar `HUNTER_API_URL=http://eros:8000` en las variables de la API y el volumen de `/app/public/media/projects` (paso 6; hoy no existe).
+> 2. Desplegar la API. La imagen compila el admin y el arranque corre las migraciones.
+> 3. En la terminal del contenedor: `pnpm tsx server/src/patches/2026-11-05-admin-datos.ts --dry` (muestra lo que cambiaría), sin `--dry` (aplica en una transacción) y `--dry` otra vez hasta que diga «sin cambios». Borra el `en` de email, direcciones web y retrato (era una copia vieja del español), no toca `cv` y lista los bloques requeridos que faltan: se completan desde Perfil.
+> 4. Reiniciar la API (el parche borra `data/content-last-good.json`, pero el proceso tiene respuestas en memoria).
+> 5. Si cambió algo público, `pnpm db:snapshot` en local con una copia de la base y commit. Si cambió el CV, `pnpm cv:pdf` en local y commit de los PDF con su sello (`server/src/snapshot/cv-stamp.json`): el Inicio del admin avisa cuando no coinciden.
+> 6. Auditoría de solo lectura en `https://mateogs.tech/admin/`: ingreso, Inicio, una obra, la Vista CV y Vacantes (con Eros arriba y su estado).
+> Para volver atrás: `pg_restore --clean --if-exists --dbname="$DATABASE_URL" antes-admin.dump` y desplegar el código anterior.
 
 > [!NOTE] Seguridad de Eros Agent
 > Eros no debe publicarse con un dominio en Internet. Debe correr en la misma red de Coolify bajo `http://eros:8000` y con `EROS_API_KEY` compartida requerida en todas sus peticiones.
@@ -152,10 +166,8 @@ El repositorio cuenta con Dockerfiles optimizados para producción:
 
 ## 4. Enrutamiento Unificado (Proxy de Nitro)
 
-Gracias a las directivas de `nitro.routeRules` en `nuxt.config.ts`:
-
-- Cualquier petición a `https://mateogs.tech/admin` o `https://mateogs.tech/admin/**` es enviada de forma transparente al backend Express (`:3001/admin`).
-- Cualquier petición a `https://mateogs.tech/api/**` es proxiada directamente a la API Express.
+- `https://mateogs.tech/admin` (exacto) responde 301 a `/admin/` conservando la consulta, y `/admin/` y todo lo de abajo se pasan a la API: lo resuelven `app/nitro/routes/admin.ts` y `app/nitro/routes/admin/[...].ts`. No hay routeRule del admin a propósito: una regla `/admin/**` también atrapa `/admin` y rompe el 301. En la API, `/admin/assets/*` se sirve inmutable por un año y una ruta sin extensión devuelve el `index.html` sin caché.
+- Cualquier petición a `https://mateogs.tech/api/**` (y `/api/admin/**`) es proxiada directamente a la API Express por `nitro.routeRules` en `nuxt.config.ts`, igual que `/media/**`, que la API sirve desde `public/media` (lo versionado y lo del volumen).
 - No es necesario lidiar con problemas de CORS en producción, ya que tanto el portafolio público como el panel de administración operan bajo el mismo origen (`https://mateogs.tech`).
 
 ---

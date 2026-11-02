@@ -99,7 +99,31 @@ Nombrar una columna o propiedad es una decisión visible en el modo registro del
 
 ## Admin
 
-Propio y mínimo: `server/src/admin/` (API en `/api/admin/*`) y `server/admin/` (UI en `/admin`, Vue global sin build). Bearer `ADMIN_TOKEN` desde `.env`; sin token el admin responde 503. El descriptor de cada modelo vive en `server/admin/js/config.js` y en los formularios de `server/admin/js/components/forms/*.js`: al agregar un campo al schema, agregarlo ahí también. La media se sube por multipart a `public/media/projects/` y el tamaño se lee del archivo, no se pide.
+Propio: la API en `server/src/admin/` (`/api/admin/*`) y la UI en `server/admin/src/` (Vite, `.vue` y TypeScript, compilada a `server/admin/dist/` y servida en `/admin/` por `server/src/admin/ui.ts`). Bearer `ADMIN_TOKEN` desde `.env`; sin token válido el admin responde 503 y la UI sin build también. Las reglas de la UI están en `.claude/rules/admin.md` y el inventario de endpoints en `docs/admin.md` §9.
+
+**El contrato es `server/src/shared/adminSchema.ts`.** Un descriptor por campo de la base (rótulo, ayuda, obligatorio, tope, tipo de control, si tiene inglés, dónde se lee, si el formulario lo pide), armado en `shared/schema/{work,catalog,field}.ts`. El servidor saca de ahí los mensajes de error y la UI arma sus campos con lo mismo, que llega entero en `GET /api/admin/meta`. Los rótulos de los enums viven en `shared/labels.ts` y llegan a la UI por `/meta` (`enumOptions`); los tipos del cable en `shared/adminContracts.ts` (y `hunterContracts.ts`, `contentContracts.ts` para Eros). La UI importa de `server/src/shared/` por el alias `@shared`: tipos siempre, valores solo de módulos que no importan nada del servidor (`slug`, `docSchema`, `markdown`, `contentContracts`).
+
+**Errores.** Todo error del admin (salvo el 401 y el 503 de `requireAdmin` en `auth.ts`, que responden solo `{ error }`) sale por `server/src/admin/errors.ts` como `AdminErrorBody`: `{ error, code, errors: [{ path, message }] }`, en español. Un 400 (`code: 'invalid'`) junta todos los campos que fallaron con su ruta en el payload, anidada (`links[0].url`, `translations.en.title`, `metrics[2].source`, `fields.headline.en`), para que la UI marque cada campo. Los demás códigos: `unauthorized`, `not_found`, `conflict` (409 por una restricción única, en su campo), `in_use` (409 por una relación), `cv_expired` (409, `hunterCvCache.ts`), `too_large`, `offline` y `db_unavailable` (503), `eros_auth` e `internal`. `eros_unreachable` lo arma el cliente ante un 502 o 504 de Eros, no el servidor. La validación va por `validate('<Modelo>', body, …)` y los helpers de `input.ts`, que toman rótulo y tope del descriptor.
+
+**Direcciones fijas.** El slug se deriva al crear (`newSlug`, `shared/slug.ts`: ñ→n, acentos a ASCII) y después no cambia al guardar: el PUT llama a `guardSlugChange(actual, entrante)`, que responde 400 en `slug` si llega otra. Se cambia solo con `PATCH /<colección>/:id/slug`, que la UI ofrece como «Cambiar dirección» con el aviso de que los enlaces viejos dejan de andar. No hay tabla de alias.
+
+**Escrituras.** Cada router que escribe en Prisma se monta detrás de `forgetsLastGood` (`router.ts`), que olvida los respaldos de la API pública después de cada escritura buena. Lo anidado (pasos, enlaces, métricas, traducciones) se sincroniza por id y conserva lo que no llega. La media se sube por multipart a `public/media/projects/<slug>/` (el retrato a `_perfil/`); el formato se lee de los bytes y el tamaño del archivo, no se piden.
+
+### Sumar un campo
+
+En el mismo commit, en este orden:
+
+1. `prisma/schema.prisma` y `pnpm prisma migrate dev --name <qué-cambia>`.
+2. `app/lib/fieldMeta.ts`: su tipo visible para el modo registro (si el sitio lo muestra).
+3. `server/src/shared/schema/*.ts`: el descriptor en el modelo que corresponde (rótulo y ayuda en español claro, tope, `translatable`, `surfaces`). Si es un enum nuevo, sus rótulos en `shared/labels.ts`.
+4. El router del admin (`server/src/admin/<colección>.ts`): leerlo y validarlo en el POST y el PUT, y devolverlo en el GET.
+5. La UI: el campo en `features/<área>/model.ts` (en `blank`, `toForm`, `toPayload` y la sección que lo muestra, con la misma ruta que el payload) y su control en la sección, con `data-field`.
+6. Si se publica: `present` en `server/src/content/`, `pnpm db:snapshot` y commit del snapshot.
+7. `pnpm lint`: `check-admin-schema` falla si el campo no tiene descriptor (o si sobra uno) y `check-admin-endpoints` si cambió una ruta sin tocar `docs/admin.md` §9.
+
+### Pruebas del admin
+
+Nunca contra la base de trabajo ni contra el Eros real. Siempre con `node scripts/admin-run.mjs [--demo] [--eros-mock] [--web] -- <comando>`: copia la base a `portfolio_admin_*` y la migra, levanta la API en un puerto libre entre 3940 y 3990 con una clave al azar y `HUNTER_API_URL=http://127.0.0.1:9`, y borra todo al terminar. `--demo` suma la muestra (`EROS_DEMO=1`), `--eros-mock` apunta a `tests/admin/eros-mock.ts` y `--web` compila Nuxt contra esa API para probar el proxy. Cada spec `tests/e2e/admin-*.spec.ts` y cada `tests/admin/*.test.ts` declara sus modos en líneas `admin-run:` de la cabecera; `pnpm test:e2e` (`tests/e2e/run.mjs`) corre cada archivo una vez por línea. El `.env` local apunta `HUNTER_API_URL` al Eros real: un script que importe `server/src/app.ts` directamente importa antes `scripts/eros-offline.ts`. Después de `--web`, `pnpm build` otra vez antes de `pnpm start`.
 
 ## Nullables
 

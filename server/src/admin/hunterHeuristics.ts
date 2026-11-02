@@ -1,11 +1,11 @@
 /**
- * Heurísticas de respaldo del Job Hunter cuando Eros no responde: evaluación, pitch y
- * estadísticas. El perfil del candidato (stack, obras, nombre, resumen, sitio) sale de la base
- * (profile.ts); acá solo vive cómo se compara una vacante contra ese perfil.
+ * Respaldo del Job Hunter cuando Eros no responde: evaluación, pitch y estadísticas de la muestra. El
+ * perfil del candidato (stack, obras, nombre, resumen, sitio) sale de la base (profile.ts); acá solo
+ * vive cómo se compara una vacante contra ese perfil. Nada se guarda: cada llamada devuelve copias.
  */
+import type { HunterJob, HunterStats, MatchAnalysis, MatchVerdict, Pitch } from '../shared/hunterContracts.js'
 import { cvLabels } from './hunterCv.js'
 import { byAffinity, jobLang, jobText, overlap, techMatches } from './hunterMatch.js'
-import { fallbackHunterJobs, type HunterJob, type MatchAnalysis } from './fallbackHunterData.js'
 import type { HunterProfile } from './profile.js'
 
 interface Penalty {
@@ -22,7 +22,7 @@ const penalties: Penalty[] = [
   { pattern: /\b(senior|lead|principal)\b/, points: 4, con: 'La vacante pide seniority formal (Senior/Lead)' },
 ]
 
-function verdictOf(score: number): MatchAnalysis['verdict'] {
+function verdictOf(score: number): MatchVerdict {
   if (score >= 82) return 'EXCELENTE_MATCH'
   if (score >= 65) return 'BUEN_MATCH'
   if (score >= 45) return 'REGULAR'
@@ -61,12 +61,12 @@ function recruiterNote(job: HunterJob, matched: string[], site: string | null): 
   ].filter(Boolean).join(' ')
 }
 
-/** Compara la vacante contra el stack y las obras de la base y deja el análisis en el job. */
-export function evaluateJobHeuristic(job: HunterJob, profile: HunterProfile): { job: HunterJob, match: MatchAnalysis } {
-  const text = jobText(job)
+/** Compara la vacante contra el stack y las obras de la base. Devuelve una copia evaluada. */
+export function evaluateJobHeuristic(source: HunterJob, profile: HunterProfile): { job: HunterJob, match: MatchAnalysis } {
+  const text = jobText(source)
   const { cv } = profile
   const matched = techMatches(cv.skills.flatMap(g => g.items), text)
-  const remote = Boolean(job.is_remote) || /\bremot[eo]\b/.test(text)
+  const remote = source.is_remote || /\bremot[eo]\b/.test(text)
   const hits = penalties.filter(p => p.pattern.test(text))
 
   const pros = cv.skills
@@ -84,60 +84,38 @@ export function evaluateJobHeuristic(job: HunterJob, profile: HunterProfile): { 
     .slice(0, 3)
     .map(w => w.title)
 
-  const note = recruiterNote(job, matched, siteOf(profile))
-  const analysis: MatchAnalysis = {
+  const note = recruiterNote(source, matched, siteOf(profile))
+  const match: MatchAnalysis = {
     score,
     verdict,
     summary: matched.length
-      ? `${job.title} en ${job.company}: ${matched.length} tecnologías del stack cargado coinciden con la vacante (${matched.join(', ')}).`
-      : `${job.title} en ${job.company}: ninguna tecnología del stack cargado aparece en la vacante.`,
+      ? `${source.title} en ${source.company}: ${matched.length} tecnologías del stack cargado coinciden con la vacante (${matched.join(', ')}).`
+      : `${source.title} en ${source.company}: ninguna tecnología del stack cargado aparece en la vacante.`,
     pros,
     cons: hits.length ? hits.map(p => p.con) : ['Validar requisitos secundarios con la descripción completa'],
     missing_skills: hits.flatMap(p => (p.missing ? [p.missing] : [])),
     matching_projects: projects,
-    salary_estimate: job.salary,
+    salary_estimate: source.salary,
     recruiter_note: note,
-    hiring_manager_name: job.hiring_manager_name,
-    hiring_manager_title: job.hiring_manager_title,
+    hiring_manager_name: source.hiring_manager_name,
+    hiring_manager_title: source.hiring_manager_title,
     hiring_manager_url: null,
   }
 
-  job.match_score = score
-  job.match_analysis = JSON.stringify(analysis)
-  job.connection_note = note
-  job.status = verdict === 'DESCARTAR' ? 'discarded' : score >= 70 ? 'saved' : 'evaluated'
-  return { job, match: analysis }
-}
-
-let sampleEvaluated = false
-
-/**
- * La primera vez que el admin lee la cola de ejemplo, evalúa los avisos contra la base: así la
- * vista «Match ≥ 70%» tiene con qué trabajar sin que el ejemplo traiga puntajes escritos a mano.
- */
-export async function evaluateSampleOnce(load: () => Promise<HunterProfile>): Promise<void> {
-  if (sampleEvaluated) return
-  const profile = await load()
-  sampleEvaluated = true
-  for (const job of fallbackHunterJobs) {
-    if (job.match_score === null) evaluateJobHeuristic(job, profile)
+  const job: HunterJob = {
+    ...source,
+    match_score: score,
+    match_analysis: JSON.stringify(match),
+    connection_note: note,
+    // Una vacante real conserva su estado: sin Eros no se guardó nada y no se finge un cambio.
+    // Solo la muestra (EROS_DEMO) muestra el estado que tendría.
+    status: source.demo ? (verdict === 'DESCARTAR' ? 'discarded' : score >= 70 ? 'saved' : 'evaluated') : source.status,
   }
+  return { job, match }
 }
 
-/** Evalúa en lote las vacantes pendientes; si no hay, reevalúa las primeras `limit`. */
-export function evaluateMultipleJobsHeuristic(limit: number, profile: HunterProfile) {
-  const pending = fallbackHunterJobs.filter(j => j.status === 'new' || j.match_score === null)
-  const batch = (pending.length ? pending : fallbackHunterJobs).slice(0, limit)
-  const evaluated = batch.map((j) => {
-    const { job, match } = evaluateJobHeuristic(j, profile)
-    return { id: job.id, title: job.title, score: match.score, verdict: match.verdict }
-  })
-  return { ok: true, evaluated_count: evaluated.length, evaluated }
-}
-
-/** Estadísticas globales de la cola de ejemplo. */
-export function computeHunterStats() {
-  const jobs = fallbackHunterJobs
+/** Estadísticas de una cola ya evaluada. */
+export function computeHunterStats(jobs: readonly HunterJob[]): HunterStats {
   const live = jobs.filter(j => j.status !== 'discarded')
   return {
     total: jobs.length,
@@ -149,7 +127,7 @@ export function computeHunterStats() {
 }
 
 /** Pitch, carta y nota de conexión desde el perfil de la base, en el idioma de la vacante. */
-export function generatePitchHeuristic(job: HunterJob, profile: HunterProfile) {
+export function generatePitchHeuristic(job: HunterJob, profile: HunterProfile): Pitch {
   const lang = jobLang(job)
   const { header, summary } = profile.cv
   const matched = techMatches(profile.cv.skills.flatMap(g => g.items), jobText(job)).slice(0, 4)
@@ -177,11 +155,10 @@ export function generatePitchHeuristic(job: HunterJob, profile: HunterProfile) {
   ].filter(Boolean).join('\n\n')
 
   return {
-    data: {
-      subject,
-      elevator_pitch: elevator,
-      cover_letter: letter,
-      connection_note: job.connection_note || recruiterNote(job, matched, site),
-    },
+    lang,
+    subject,
+    elevator_pitch: elevator,
+    cover_letter: letter,
+    connection_note: job.connection_note || recruiterNote(job, matched, site),
   }
 }

@@ -1,103 +1,349 @@
-# Documento de Arquitectura y Estándares: Panel de Administración 2026
+# El admin (`/admin`)
 
-Este documento establece la visión técnica, el diseño de interacción (UX/UI) y las directrices operativas del panel de administración propio (`/admin`) del portafolio. Sirve como referencia estructural obligatoria para Mateo y cualquier colaborador o agente de IA que trabaje sobre este módulo.
-
----
-
-## 1. La Tesis del Admin
-
-El portafolio se fundamenta en un modelo de contenido único y relacional: **un solo modelo relacional servido sobre PostgreSQL 17 que alimenta el sitio público (inicio, obra, caso, sobre mí y artículos, cada uno con su vista de registro), el modo Focus/Hiperfoco y las representaciones de perfil profesional**. Cero duplicación.
-
-El panel de administración es el **taller de trastienda** donde ese modelo se gestiona y enriquece:
-1. **Fuente de verdad unificada:** Cada proyecto, experiencia laboral, tecnología o documento se redacta una sola vez. No existen silos fragmentados.
-2. **Coherencia con las vistas del sitio:**
-   - Campos como `summary`, `year`, `role`, `status` y `metrics` alimentan las fichas técnicas y tablas de datos estructurados.
-   - Campos como `brief`, `outcome`, `steps` y la galería multimedia detallan la narrativa en profundidad y los casos de estudio.
-   - En el **Modo Focus / Hiperfoco**, la interfaz pública filtra los elementos ornamentales para permitir una lectura fluida, veloz y directa del contenido aquí administrado.
-3. **Herramienta operativa, no juguete decorativo:** El panel no compite con la estética pública del portafolio. Su virtud radica en la **claridad ergonómica, la velocidad de carga y la tolerancia a errores de usuario**.
+La mesa de trabajo del portafolio: acá se carga y se cuida el contenido que publica mateogs.tech y se opera la búsqueda laboral con Eros. Este documento describe lo que quedó después del rediseño (noviembre de 2026, olas A0 a S1). El plan con sus motivos está en `docs/rediseno-admin/plan.md`, la dirección visual aprobada en `docs/rediseno-admin/demo.html` (capa «Dirección 2») y las decisiones con lo descartado en `docs/decisiones.md` → «Rediseño del admin (nov-2026)». Las reglas para tocar el código están en `.claude/rules/admin.md` (UI) y `.claude/rules/backend.md` (API).
 
 ---
 
-## 2. Perfiles de Usuario (User Personas)
+## 1. Tesis
 
-El diseño del panel debe satisfacer a dos usuarios muy distintos con la misma interfaz:
+El sitio público sale entero de un solo modelo relacional en PostgreSQL 17. El admin es la única puerta de escritura a ese modelo y tiene que ser tan confiable como el sitio es cuidado:
 
-### Perfil A: Mateo Sonzogni (Autor & Ingeniero)
-- **Objetivos:** Publicar casos de estudio, mantener al día el stack tecnológico, validar métricas reales de performance (LCP, bundles) y auditar ofertas de trabajo del agente Eros.
-- **Necesidades:** Atajos de teclado rápidos (`Ctrl + S`, `Esc`), acceso directo a URLs y repositorios, opción de inspección de JSON en modo avanzado y feedback técnico inmediato.
-
-### Perfil B: Asistente Operativo / Curador de Contenido
-- **Objetivos:** Cargar nuevos proyectos asignados, redactar notas breves, subir imágenes de capturas, enlazar tecnologías y generar propuestas para vacantes de empleo.
-- **Fricciones a eliminar:** Desconocimiento de SQL, Prisma, tipos TypeScript o sintaxis JSON. No debe verse forzado a adivinar qué es un `slug` ni a lidiar con tablas rígidas sin previsualización de imágenes.
-- **Garantías requeridas:** Textos de ayuda explicativos en cada campo, sugerencia automática de slugs a partir del título, editor de métricas tipadas (valor y unidad o lista) y mensajes de confirmación comprensibles.
+1. **Lo que se guarda es lo que se publica.** Los conteos, los estados y los pendientes usan las mismas reglas de visibilidad que la API pública (`server/src/content/visibility.ts`). Nada en pantalla está escrito a mano: las cifras salen de `/api/admin/meta` y la bandeja de `/api/admin/pending`.
+2. **Una cosa por pantalla.** Cada colección es su propia pantalla con filas grandes; el editor ocupa la pantalla solo. Es la misma mesa del sitio, con densidad de herramienta.
+3. **No se pierde trabajo.** Borrador por registro en la sesión, guarda de cambios sin guardar en cada navegación, reingreso sin perder el formulario ante un 401 y errores por campo, todos juntos y en español.
+4. **Eros es una fuente, no una dependencia.** Sin Eros el contenido se edita igual y el CV Harvard ATS se arma desde la base (invariante 6 del proyecto). Lo que necesita a Eros lo dice y no inventa datos.
 
 ---
 
-## 3. Principios de Diseño UX/UI (Estándares 2026)
+## 2. Perfiles
 
-Inspirado en los mejores patrones de **Linear, Vercel Dashboard, Supabase Studio y Sanity Studio**:
+**Mateo (autor).** Publica obras y artículos, mantiene la trayectoria y el CV, revisa vacantes y postula. Quiere teclado (`Ctrl/⌘K`, `Ctrl/⌘S`, `j`/`k`, `/`, `N`), direcciones que se puedan compartir (`#/obras/12/relato?campo=outcome`) y saber al instante qué falta.
 
-### 3.1. Cero Emojis y Minimalismo Tipográfico
-- Los emojis (`🚀`, `💼`, `⭐`, `🔥`, `💡`, `🟢`, etc.) degradan la percepción de una herramienta profesional y generan inconsistencias visuales según el sistema operativo.
-- La jerarquía se construye con tipografía moderna (**Plus Jakarta Sans** para interfaz y **JetBrains Mono** para código e identificadores), pesos equilibrados (400, 500, 600, 700) y micro-indicadores geométricos (`dots` de estado de 6px).
-
-### 3.2. Iconografía Estrictamente Utilitaria
-- Se prohíbe la iconografía ornamental.
-- Solo se emplean iconos SVG de trazo fino cuando cumplen una función operativa inequívoca:
-  - Lupa: campo de búsqueda interactivo.
-  - Más (+): añadir fila, métrica o registro.
-  - Basura / Cruz: eliminar o cancelar.
-  - Flecha diagonal exterior: abrir enlace en nueva pestaña.
-  - Ojo: revelar / ocultar clave de acceso en el login.
-
-### 3.3. Ergonomía Desktop y Layout Elástico
-- **Arquitectura de dos estados de rejilla:**
-  - **Estado Dashboard:** La rejilla adopta `240px 1fr`, permitiendo que el lienzo principal ocupe todo el ancho disponible con un contenedor central de hasta `1200px`. Esto elimina el error histórico donde el Dashboard se aplastaba a 320px.
-  - **Estado Explorador / Colecciones:** La rejilla adopta `240px 340px 1fr`, distribuyendo armónicamente la navegación lateral, el listado de registros y el editor detallado.
-- **Editor en contenedor Flex nativo:**
-  - El editor (`.editor-wrap`) funciona como una columna flex con `height: 100%`.
-  - La cabecera permanece fija arriba.
-  - El cuerpo del formulario scrolle verticalmente de forma independiente.
-  - La barra de acciones (`.actions-footer`) está anclada al pie del editor dentro del flujo flex natural, erradicando posicionamientos `fixed` con cálculos de píxeles mágicos que desbordan pantallas panorámicas.
-
-### 3.4. Revelación Progresiva (Progressive Disclosure)
-- En lugar de presentar un formulario infinito de 25 campos verticales, el editor divide el trabajo en pestañas lógicas:
-  1. **Datos Básicos:** Identidad, título, slug, estado, rol, empresa y tecnologías.
-  2. **Historia y Textos:** Síntesis ejecutiva, reto y resultado con pautas editoriales breves.
-  3. **Galería Multimedia:** Carga de imagen o video con póster, roles `COVER` y `GALLERY` (una portada por tipo), alt y caption, viewport, orden y tinte. Edición parcial con `PATCH /api/admin/media/:id`.
-  4. **Enlaces y Pasos:** Enlaces a demostraciones y pasos numerados del caso de estudio.
-  5. **Métricas de Impacto:** Filas `Metric` tipadas (valor Decimal con unidad o lista, fuente, fecha de medición, rótulo opcional) y una vista "Ver JSON" de solo lectura.
+**Un asistente sin saber programar.** Carga una obra completa (texto, tecnologías, imágenes) en menos de cinco minutos sin SQL ni JSON (invariante 6 de `.claude/rules/admin.md`). Cada campo dice para qué sirve y dónde aparece, las métricas se cargan por tipo, la dirección (slug) se deriva sola y no cambia sin aviso, y ningún valor de enum se ve crudo. La prueba `tests/e2e/admin-flujo-obra.spec.ts` mide el recorrido con las constantes de la auditoría (2 s por clic, 12 s por campo): los topes son 16 clics, 15 campos, 2 guardados y 300 s, y la cuenta estricta (cada Enter que elige una tecnología cuenta como clic) da hoy 17 con el techo en 17.
 
 ---
 
-## 4. Módulos del Sistema
+## 3. Arquitectura de información y rutas
 
-### 4.1. Panel Principal (Dashboard)
-- Ofrece una lectura ejecutiva en menos de tres segundos: cantidad de proyectos en vivo, puestos de experiencia, herramientas en el stack y ofertas laborales destacadas detectadas por IA.
-- Accesos directos de un clic para crear nuevos registros o revisar el sitio público.
-- Modal de **Guía para Asistentes** accesible desde la cabecera en todo momento.
+El router va por hash (`server/admin/src/router.ts`). La ruta es el estado: `?filtro=` en las listas, `?seccion=` o `:seccion` en los editores, `?campo=` para llevar el foco a un campo exacto (lo usan la checklist y la bandeja de Inicio).
 
-### 4.2. Gestor de Casos de Estudio (Proyectos)
-- **Generador de Slugs:** Convierte títulos en identificadores limpios para URL en minúsculas y sin acentos.
-- **Selector de Tecnologías:** Buscador reactivo y chips interactivos con contraste accesible.
-- **Galería Multimedia:** Vista previa de capturas en cuadrícula, identificación clara de portada (`COVER`) y edición de texto alternativo (`Alt`) para accesibilidad y SEO.
+| Pantalla | Ruta | Qué hay |
+|---|---|---|
+| Inicio | `#/inicio` | Línea de resumen con cifras reales, bandeja de pendientes que lleva al campo exacto, vacantes nuevas compatibles, Eros caído y el aviso del PDF del CV |
+| Obras | `#/obras`, `#/obras/nueva`, `#/obras/:id/:seccion` | Lista (con `?vista=orden` para el orden del sitio) y editor en cuatro secciones: `esencial`, `relato`, `imagenes`, `datos` |
+| Trayectoria | `#/trayectoria`, `#/trayectoria/nueva`, `#/trayectoria/:id`, `#/trayectoria/cv` | Entradas de trabajo y formación; la Vista CV ordena las entradas del CV y muestra la hoja A4 real medida (`?idioma=en`) |
+| Artículos | `#/articulos`, `#/articulos/nuevo`, `#/articulos/:id` | Texto en markdown con la vista previa del sitio e inglés; `?origen=eros` cuando llega desde Publicaciones |
+| Perfil | `#/perfil/sobre-mi`, `#/perfil/contacto` | Los documentos `about` y `contact` como formularios fijos desde `server/src/shared/docSchema.ts`, retrato y bloques libres |
+| Catálogos | `#/tecnologias[/:id]`, `#/empresas[/:id]` | Plegados en la navegación. El alta es un diálogo (`?nueva=1`), con «Dónde se usa» y reasignación al borrar |
+| Búsqueda laboral | `#/busqueda/vacantes/:id?/:etapa?`, `#/busqueda/publicaciones/:id?`, `#/busqueda/tendencias/:id?` | Tres pestañas. Vacantes recorre las etapas `analisis`, `mensaje`, `cv` y `postular` |
+| Ingreso | `#/ingresar?volver=` | La clave (`ADMIN_TOKEN`) queda en `sessionStorage` (`adm-token`) |
 
-### 4.3. Agente de Búsqueda Laboral (Job Hunter AI)
-- Panel de reclutamiento inteligente que rastrea vacantes de tecnología (Get on Board, RemoteOK, Hacker News).
-- Evaluación automática con Gemini: veredicto, cálculo de coincidencia porcentual, análisis de fortalezas y detección de requisitos faltantes.
-- Redacción automatizada de cartas de presentación y pitch adaptados a la vacante con copia instantánea.
-- **Generador de CV Adaptado (Estándar Harvard ATS):** Adaptación y priorización inteligente del currículum con respecto a la vacante seleccionada, renderizado en formato estructurado estándar ATS, previsualización en el panel, descarga/impresión A4 en documento limpio de una sola página y exportación a texto plano.
-- Seguimiento de estados (`guardado` → `postulado` → `descartado`).
+Cada área tiene una sola entrada, `features/<área>/Index.vue`, que elige lista o registro según la ruta. Consultas que abren algo y se limpian solas: `#/busqueda/vacantes?pegar=1` (pegar una vacante), `#/busqueda/publicaciones?generar=1`, `#/empresas?nueva=1`, `#/tecnologias?nueva=1` y `#/busqueda/vacantes/:id/cv?adaptar=1`. `#/muestrario` (los componentes base) existe solo en desarrollo.
+
+La navegación (`shell/nav.ts`) no lleva iconos ni numeración; el contador aparece solo cuando hay pendientes (obras ocultas, borradores, vacantes nuevas compatibles).
 
 ---
 
-## 5. Criterios de Aceptación (Checklist de Calidad)
+## 4. Dirección visual
 
-Antes de dar por finalizada cualquier modificación en el módulo del admin:
+La de la demo aprobada: el mismo frío, las mismas familias y el mismo acento que el sitio. Los valores viven en `server/admin/src/styles/tokens.css` y llegan a Tailwind por `@theme`; la paleta de Tailwind por defecto está apagada (`--color-*: initial`), así que solo existen estos colores.
 
-- [ ] **Sin emojis:** Ninguna pantalla, botón, texto de ayuda o notificación contiene emojis.
-- [ ] **Iconografía mínima:** No hay iconos meramente decorativos.
-- [ ] **Layout desktop comprobado:** El Dashboard ocupa el ancho completo y el editor tiene barra de acciones anclada limpiamente sin desbordes.
-- [ ] **Responsive validado:** El panel es utilizable en laptops (1366x768), monitores estándar (1080p) y pantallas anchas (1440p+).
-- [ ] **Accesibilidad:** Contraste de texto conforme a WCAG AA, soporte de atajos de teclado (`Ctrl + S`, `Esc`) y foco visible en todos los campos.
-- [ ] **Verificación de código:** `pnpm lint` y `pnpm typecheck` pasan con cero errores.
+**Color (tema oscuro).**
+
+| Token | Valor | Uso |
+|---|---|---|
+| `bg` | #0b0b0c | lienzo, igual que el sitio |
+| `panel` · `surface` · `surface-2` | #111113 · #161618 · #1c1c1f | navegación, hover de fila, popovers, paleta y diálogos |
+| `rule` · `rule-strong` · `rule-hover` | blanco al 8 · 14 · 22 % | divisores, línea de los campos, línea apuntada |
+| `ink` · `dim` · `faint` | #ededee · #a1a1a9 · #83838c | texto, rótulos, ayudas y metadatos |
+| `sig` · `sig-text` · `on-sig` | #ff3e00 · #ff3e00 · #0b0b0c | relleno del primario, indicador activo y anillo de foco; texto sobre el primario |
+| `ok` · `wip` | #3ecf6e · #e5a00d | solo el punto de estado, siempre con una palabra al lado |
+| `danger` | #f0524f | errores y acciones destructivas |
+
+El acento ocupa menos del 5 % de la pantalla. El tema claro está declarado con los valores del sitio y no se activa. `scripts/check-admin-contrast.mjs` mide cada par texto/fondo (AA) y compara `bg`, `ink`, `dim`, `faint`, `sig`, `ok` y `wip` con `app/assets/css/tokens.css`.
+
+**Tipografía.** General Sans Variable para todo lo que se lee y Martian Mono solo para identificadores (slug, clave de métrica, URL, id, teclas), ambas servidas por el propio admin desde `server/admin/src/assets/fonts/` (copia del sitio, comparada por hash). Tamaños como tokens, nunca `text-[Npx]`:
+
+| Token | Tamaño | Uso |
+|---|---|---|
+| `meta` · `label` | 12 · 13 | metadatos y teclas · rótulos en minúscula de oración |
+| `body` · `row` | 14/1,45 · 15 | texto de herramienta · títulos de fila chica |
+| `title` · `figure` | 20 · 28 | títulos de bloque · cifras con `tabular-nums` |
+| `field` · `lead` · `prose` | 16 · 16 · 17/1,6 | campos, bajadas y textos largos (68ch) |
+| `list` | clamp(24–34 px) | filas de las listas |
+| `heading` · `display` | clamp(38–60 px) · clamp(44–72 px), −0,045em | título de pantalla · título del registro |
+
+Sin mayúsculas forzadas ni espaciadas: las únicas mayúsculas son las del documento del CV.
+
+**Composición.** Rejilla `220px 1fr` desde 768 px (navegación y pantalla); debajo, cabecera con menú y paleta. Las listas son pantallas de filas grandes sobre líneas de 1 px; el editor es una columna con el título en display, las secciones como pestañas y la barra de acciones anclada abajo (publica su alto en `--bar-h` para que los avisos no la tapen). Los campos no tienen caja: texto sobre una línea de 1 px que pasa a 2 px en `ink` con el foco, con 34 px entre campos. Esa línea es el indicador de foco de los campos de texto (la excepción deliberada al anillo de 2 px en `sig-text`, como en la demo aprobada); botones, enlaces, pestañas y filas llevan el anillo. Los textos con inglés van en una sola columna: el español arriba y el inglés debajo, nunca dos columnas angostas. Imágenes es una grilla de miniaturas que se abren pieza por pieza y Métricas una tabla compacta que se abre fila por fila; las nuevas y las que tienen un error quedan abiertas. Radios: 6 px en controles, 10 en diálogos, 3 en imágenes; solo los diálogos llevan sombra. Sin tarjetas dentro de tarjetas, sin rejillas de fondo, sin colores por módulo.
+
+**Movimiento.** Curva `--e` (cubic-bezier(.16,1,.3,1)). Las filas entran escalonadas (`stagger`, 45 ms por fila, `animate-rise`); al apuntar una, las hermanas bajan a .28 y la apuntada se corre 14 px. El título viaja de la fila al encabezado del editor con una View Transition (`record-title`, 0,7 s). Paneles, diálogos y avisos: 200 ms de opacidad y 6 px. Solo se animan opacity, transform, color y background-color, y `prefers-reduced-motion` apaga todo desde un bloque global de `styles/admin.css`.
+
+**Lenguaje.** Un solo diccionario por capa: `ui/dict.ts` (componentes base), `shell/dict.ts` (marco) y `features/<área>/dict.ts`; los rótulos de los enums salen de `server/src/shared/labels.ts` (Publicada, Programada, Oculta, Borrador; En línea, En desarrollo, Archivada; Portada, Galería). Los veredictos de vacantes salen del puntaje con los cortes de `hunterHeuristics.ts` (82, 65, 45): Muy compatible, Compatible, Dudosa, Descartar. Eros aparece como fuente («Generado por Eros», «Armado desde la base, sin Eros»), nunca como marca.
+
+---
+
+## 5. Componentes base
+
+En `server/admin/src/ui/`, todos accesibles y probados en el Muestrario (`#/muestrario`, solo en desarrollo):
+
+- **Acciones:** `Button` (variantes en `button.ts`, estado de carga, atajo con `Kbd`), `IconButton` (siempre con nombre accesible), `Menu`.
+- **Campos:** `Field` (liga rótulo, ayuda y error; pasa `data-field` a su raíz), `TextInput`, `TextArea` (se re-mide solo), `Select`, `RadioGroup`, `Switch` (`role=switch`). La línea y su estado salen de `field.ts` (`lineControl`, `lineState`).
+- **Listas y navegación:** `Listbox` (roving tabindex, `j`/`k`), `Tabs` (WAI-ARIA con activación manual).
+- **Estado:** `StatusDot` (punto más palabra), `Spinner`, `Skeleton`, `EmptyState`, `ErrorState`.
+- **Capas:** `Dialog` (todo `<dialog>` pasa por acá: atrapa y devuelve el foco, prop `locked` para acciones largas; `topLayer.ts` mueve los avisos adentro del diálogo abierto), `ConfirmHost` y `ConfirmDialog` (por `requestConfirm`, con el foco en Cancelar en las destructivas), `Toaster`, `Announcer` (dos regiones `aria-live` montadas desde el arranque; `announce()`).
+- **Identificadores:** `Mono` (y `monoClass`) y `Kbd`, los únicos lugares donde aparece Martian Mono. `Icon` dibuja solo los trazos utilitarios de `icons.ts`.
+
+El marco de colecciones (`features/collections/`) arma las pantallas de datos: `Explorer` (lista con filtros y búsqueda en la URL), `EditorFrame` (título, secciones, barra de acciones, eliminar), `SectionTabs`, `SchemaField` (un campo desde `adminSchema`), `BilingualField`, `SlugField` y `SlugDialog` («Cambiar dirección»), `PublishState` y `Checklist`, `InlineCreate` (empresa o tecnología sin salir del formulario), `DeleteDialog` (con el impacto), `SaveState`, `DraftNotice` y `ErrorSummary`. Cada área declara su `model.ts` (`models/types.ts`: ruta del API, forma del formulario igual a la del payload, secciones, filtros, checklist) y `useEditor` hace el resto: carga, guardado con `Ctrl/⌘S`, borrador en `sessionStorage` (`adm-draft:<modelo>:<id|nueva>`), guarda de salida y errores por campo.
+
+---
+
+## 6. Teclado
+
+| Tecla | Hace |
+|---|---|
+| `Ctrl/⌘K` | Abre la paleta: un combobox que indexa secciones, acciones y registros (vacantes incluidas) y busca sin acentos |
+| `Ctrl/⌘S` | Guarda, también desde adentro de un campo |
+| `Esc` | Cierra la capa de arriba (paleta, diálogo, menú) |
+| `↑` `↓` o `j` `k`, `Enter` | Recorren y abren las filas de una lista |
+| `/` | Busca en la lista (si la vista no tiene búsqueda, abre la paleta) |
+| `N` | Registro nuevo en las listas que lo permiten |
+
+No se usan `Ctrl+N` ni `Ctrl+D` (los toma el navegador). Las teclas de un carácter se apagan desde la paleta y la preferencia queda en `localStorage` (`adm-single-keys`). El primer `Tab` es «Saltar al editor», y después de cada navegación el foco va al `h1` de la vista y cambia `document.title` («Registro · Sección · Admin»).
+
+---
+
+## 7. Matriz de datos
+
+Qué se edita de cada modelo, dónde y por qué endpoint. El descriptor de cada campo (rótulo, ayuda, tope, si tiene inglés, dónde se lee) está en `server/src/shared/adminSchema.ts` y llega entero en `GET /meta`.
+
+| Modelo | Se edita | Inglés | Pantalla | Endpoint |
+|---|---|---|---|---|
+| Project | título, dirección, año, rol, situación, destacada, resumen, pedido, resultado, sitio, repositorio, orden, publicación, empresa, tecnologías, enlaces, pasos, métricas | título, rol, resumen, pedido, resultado | Obras | `PUT /projects/:id`, `PATCH /projects/:id/slug`, `PATCH /projects/:id` (orden) |
+| Metric | clave del catálogo o propia, valor con unidad o lista, rótulo, fuente, fecha de medición, orden | rótulo (MetricTranslation) | Obras → Datos | anidada en el PUT, sincronizada por id |
+| ProcessStep · Link | título, texto, imagen del paso · rótulo y dirección (completa `https://`) | título y texto · rótulo | Obras → Relato y Datos | anidados en el PUT, sincronizados por id |
+| Media | archivo, versión WebM, póster, rol, alt, pie, tinte, viewport, orden | alt y pie | Obras → Imágenes | `/media`, `/media/:id/file`, `/webm`, `/poster` |
+| Experience | dirección, tipo, cargo, fechas, resumen, relato, viñetas, lugar, orden del CV, empresa, tecnologías, obras | cargo, resumen, relato, viñetas (alineadas por posición), lugar | Trayectoria | `PUT /experience/:id`, `PATCH /experience/:id/slug`, `PATCH /experience/order` |
+| Tech · Org | nombre, dirección, categoría, desde, nota, color · nombre, dirección, sitio, ciudad | nota · nada | Catálogos | `/techs`, `/orgs`, con impacto y reasignación al borrar |
+| Article | título, dirección, resumen, texto, minutos de lectura, estado, destacado, canónica, orden, publicación, tecnologías, obra | título, resumen, texto | Artículos | `/articles`, `PATCH /articles/:id/slug`; nace en borrador |
+| Doc `about` · `contact` | bloques fijos del esquema más bloques libres; el retrato es una imagen sin inglés; `cv` es una ruta por idioma; email y direcciones sin inglés | solo los bloques de texto y lista | Perfil | `GET/PUT /docs/:key`, `POST /docs/about/portrait` |
+| PDF del CV | derivado, no se edita | ES y EN | Inicio avisa | `pnpm cv:pdf` (§10) |
+
+`Doc.title` y `Project.legacyMetrics` no se editan. Las direcciones (slugs) son fijas: un PUT con otra da 400 en `slug`; se cambian solo con «Cambiar dirección», que avisa que los enlaces viejos dejan de andar. No hay tabla de alias.
+
+---
+
+## 8. Contrato con Eros
+
+Eros es el agente de Job Hunter y de contenido. Corre aparte, en la red interna de Coolify (`HUNTER_API_URL=http://eros:8000`, con `EROS_API_KEY`), y el admin le habla solo a través de `/api/admin/hunter`, `/content` y `/radar` (`server/src/admin/proxy.ts`). Los tipos del cable están en `server/src/shared/hunterContracts.ts` y `contentContracts.ts`; lo que Eros manda se normaliza en `erosContract.ts` y `erosContentContract.ts`.
+
+**Estado.** `GET /status` informa `eros.state`: `ok`, `cooldown` (el corte abierto después de errores de red, timeouts o 5xx, con `retryInSec`), `down`, `auth` (Eros responde pero rechaza la clave) o `unconfigured` (falta `HUNTER_API_URL`). El reintento a `127.0.0.1:8000` existe solo con `HUNTER_LOCAL_FALLBACK=1` fuera de producción.
+
+**Sin Eros, honesto.** Las lecturas responden 503 `{ code: 'offline', offline: true, retryInSec }` (504 si se agotó el tiempo); las escrituras fallan diciendo qué no pasó («El estado no cambió.»). Un 401/403 de Eros llega como 502 `eros_auth`. Analizar, el mensaje, la vista previa del correo y el CV reciben la vacante entera en el cuerpo (`{ job }`) y caen al respaldo local (`_source: 'fallback'`, cabecera `X-Eros-Source`). Los tiempos: el servidor espera a Eros 60 s (80 s el escaneo con su vectorización) y el cliente 90 s.
+
+**Vacantes pegadas.** «Pegar una vacante» crea un id `manual-<hash>` que nunca va a Eros: estado, eliminar, correo de contacto y envío responden 400 para esos ids, y todo el invariante 6 (analizar, adaptar, previsualizar, imprimir, copiar) anda con Eros arriba o caído. Las pegadas viven en `sessionStorage` (`adm-hunter-manual`); la última cola buena de Eros en `adm-hunter-queue`, nunca filas de muestra ni de respaldo.
+
+**Escaneo.** «Buscar vacantes nuevas» (`POST /hunter/scan`) recorre los portales y vectoriza solo al terminar (`vectorized` en la respuesta). «Buscar por afinidad» es un interruptor de la búsqueda de la cola (`POST /hunter/search/semantic`).
+
+**Una sola fuente del CV.** El servidor arma el CV siempre desde la base (`tailorCv(loadCv(lang))`, `hunterCv.ts`) y de Eros toma solo pistas, extraídas campo por campo en `erosHints.ts`:
+- categorías: las claves de `skills` pasan a TechCategory por su rótulo, en los dos idiomas, respetando el orden; las desconocidas se descartan;
+- tecnologías: se emparejan con `Tech.name` normalizado (minúsculas, sin acentos ni puntuación); las que no están en la base se descartan;
+- entradas: se emparejan con las obras y experiencias visibles del CV base por título normalizado o por slug; dan el orden y nunca suman entradas;
+- viñetas: por texto exacto normalizado contra los `highlights` de la entrada; una que no existe se descarta;
+- resumen: es `summaryProposal`. Entra al CV solo si `_adaptation.proposal` es `ok` y se acepta con un clic («Usar este resumen»); por defecto queda el de la base;
+- el resto (nombre, contacto, educación, idiomas, metodología) sale siempre de la base.
+
+La respuesta trae `_adaptation { categories, entries, bullets, discarded, proposal }`.
+
+**Caché y 409.** El CV adaptado queda en memoria por vacante una hora (`hunterCvCache.ts`). De ahí salen `/cv/:id/html` (la hoja, con `?measure=1` para medirla en un iframe `sandbox="allow-scripts"` que responde `postMessage({ type: 'cv-measure', heightMm, pages })`) y `/cv/:id/txt`. Si no está en caché (reinicio o más de una hora) responden 409 `cv_expired` y el cliente vuelve a hacer `POST /cv/:id` con la misma vacante y repite una vez. Las hojas que se abren en otra pestaña o en un iframe usan un ticket HMAC de una hora (`auth.ts`, alcances `cv`, `cv-base` y `carousel`), nunca la clave. El CV se imprime o se guarda como PDF desde esa hoja; Eros ya no arma PDF.
+
+**Muestra para pruebas.** `EROS_DEMO=1` (y nunca con `NODE_ENV=production`) sirve una cola y publicaciones ficticias (ids `demo-*`, empresas Ejemplo/Example, `X-Eros-Source: demo`) para pruebas y capturas. En Publicaciones y Tendencias las escrituras sobre ids `demo-*` responden 400 y no se guardan. En Vacantes solo se frenan los ids `manual-*`: cambiar la etapa o borrar una vacante `demo-*` va a Eros y, sin Eros, falla como sin conexión. Las pruebas que necesitan un Eros que responda usan el simulado de `tests/admin/eros-mock.ts`; el Eros real nunca se contacta desde una prueba.
+
+---
+
+## 9. Inventario de endpoints
+
+Todas las rutas van debajo de `/api/admin`, detrás del Bearer `ADMIN_TOKEN` (las tres hojas con ticket también aceptan `?ticket=`). Los errores tienen la forma `{ error, code, errors: [{ path, message }] }` (§11). La columna de la derecha dice dónde las llama la UI, con rutas dentro de `server/admin/src`.
+
+`scripts/check-admin-endpoints.mjs` (lo corre `pnpm lint`) compara esta tabla con las rutas montadas en `server/src/admin/router.ts` y con las llamadas de la UI: falla si una ruta montada no está acá, si una de acá no está montada, si una retirada sigue montada o si una montada no tiene uso en la UI ni figura en «Sin uso en la UI». `node scripts/check-admin-endpoints.mjs --list` imprime lo que encontró.
+
+### Estado, resumen y pendientes
+
+| Método | Ruta | Qué hace | Dónde está en la UI |
+|---|---|---|---|
+| GET | `/status` | Base y Eros (`AdminStatus`); también comprueba la clave al ingresar | `stores/status.ts`, `stores/session.ts` |
+| GET | `/meta` | Resumen con cifras reales, opciones de los enums, `adminSchema`, catálogo de claves de métrica e inglés faltante | `stores/meta.ts` |
+| GET | `/pending` | La bandeja de Inicio (`PendingItem[]`), con la ruta al campo exacto | `features/home/usePending.ts` |
+
+### Contenido
+
+| Método | Ruta | Qué hace | Dónde está en la UI |
+|---|---|---|---|
+| GET | `/projects` | Lista de obras | `features/projects/model.ts`, `composables/useEditor.ts` |
+| GET | `/projects/:id` | Una obra con métricas, media, pasos y enlaces | `composables/useEditor.ts`, `features/projects/media/useMediaSave.ts` |
+| POST | `/projects` | Obra nueva (dirección derivada del título, última en el orden) | `composables/useEditor.ts` |
+| PUT | `/projects/:id` | Guarda la obra entera | `composables/useEditor.ts` |
+| PATCH | `/projects/:id` | Cambia solo el orden en el sitio | `features/projects/ProjectOrder.vue` |
+| PATCH | `/projects/:id/slug` | «Cambiar dirección» | `features/projects/model.ts`, `features/collections/SlugDialog.vue` |
+| DELETE | `/projects/:id` | Elimina la obra y sus archivos sin uso | `features/collections/DeleteDialog.vue` |
+| POST | `/media` | Sube una imagen o video (multipart) | `features/projects/media/mediaRun.ts` |
+| POST | `/media/:id/file` | Reemplaza el archivo conservando id, inglés y pasos | `features/projects/media/mediaRun.ts` |
+| POST | `/media/:id/webm` | Suma o cambia la versión WebM de un MP4 | `features/projects/media/mediaRun.ts` |
+| POST | `/media/:id/poster` | Suma o cambia el póster de un video | `features/projects/media/mediaRun.ts` |
+| PATCH | `/media/:id` | Rol, alt, pie, tinte, viewport, orden e inglés | `features/projects/media/mediaRun.ts` |
+| DELETE | `/media/:id` | Quita una imagen | `features/projects/media/mediaRun.ts` |
+| GET | `/experience` | Lista de la trayectoria (no hay detalle: el registro sale de la lista) | `features/experience/model.ts`, `features/experience/cvOrder.ts`, `features/projects/Relations.vue` |
+| POST | `/experience` | Entrada nueva | `composables/useEditor.ts` |
+| PUT | `/experience/:id` | Guarda la entrada | `composables/useEditor.ts` |
+| PATCH | `/experience/order` | Orden del CV (1..n; lo que no se lista sale del CV) | `features/experience/cvOrder.ts` |
+| PATCH | `/experience/:id/slug` | «Cambiar dirección» | `features/experience/model.ts` |
+| DELETE | `/experience/:id` | Elimina la entrada | `features/collections/DeleteDialog.vue` |
+| GET | `/techs` | Lista de tecnologías | `features/stack/model.ts` |
+| POST | `/techs` | Tecnología nueva (también desde el formulario de una obra) | `features/orgs/CatalogCreate.vue`, `features/collections/inlineCreate.ts` |
+| PUT | `/techs/:id` | Guarda la tecnología | `composables/useEditor.ts` |
+| PATCH | `/techs/:id/slug` | «Cambiar dirección» | `features/stack/model.ts` |
+| GET | `/techs/:id/impact` | Dónde se usa, antes de borrar | `features/orgs/CatalogUsage.vue`, `features/collections/DeleteDialog.vue` |
+| DELETE | `/techs/:id` | Elimina, con `?reassignTo=` para pasar sus usos a otra | `features/collections/DeleteDialog.vue` |
+| GET | `/orgs` | Lista de empresas | `features/orgs/model.ts` |
+| GET | `/orgs/:id` | Una empresa | `composables/useEditor.ts` |
+| POST | `/orgs` | Empresa nueva (también desde un formulario) | `features/orgs/CatalogCreate.vue`, `features/collections/inlineCreate.ts` |
+| PUT | `/orgs/:id` | Guarda la empresa | `composables/useEditor.ts` |
+| PATCH | `/orgs/:id/slug` | «Cambiar dirección» | `features/orgs/model.ts` |
+| GET | `/orgs/:id/impact` | Dónde se usa, antes de borrar | `features/orgs/CatalogUsage.vue`, `features/collections/DeleteDialog.vue` |
+| DELETE | `/orgs/:id` | Elimina, con `?reassignTo=` | `features/collections/DeleteDialog.vue` |
+| GET | `/articles` | Lista de artículos | `features/articles/model.ts`, `features/projects/Relations.vue` |
+| GET | `/articles/:id` | Un artículo con su inglés | `composables/useEditor.ts` |
+| POST | `/articles` | Artículo nuevo, siempre en borrador | `composables/useEditor.ts` |
+| PUT | `/articles/:id` | Guarda el artículo | `composables/useEditor.ts` |
+| PATCH | `/articles/:id/slug` | «Cambiar dirección» | `features/articles/model.ts` |
+| DELETE | `/articles/:id` | Elimina el artículo | `features/collections/DeleteDialog.vue` |
+| GET | `/docs/:key` | `about` o `contact` como `AdminDoc` (bloques, esquema, faltantes) | `features/profile/useDocEditor.ts` |
+| PUT | `/docs/:key` | Guarda el documento; errores por bloque (`fields.<nombre>`) | `features/profile/useDocEditor.ts` |
+| POST | `/docs/about/portrait` | Sube el retrato (PNG, JPG o WebP hasta 10 MB) | `features/profile/PortraitField.vue` |
+
+### Vacantes (Job Hunter)
+
+| Método | Ruta | Qué hace | Dónde está en la UI |
+|---|---|---|---|
+| GET | `/hunter/jobs` | La cola de Eros | `features/hunter/adapter.ts`, `shell/paletteSources.ts` |
+| GET | `/hunter/stats` | Resumen de la cola | `features/hunter/adapter.ts` |
+| POST | `/hunter/scan` | «Buscar vacantes nuevas», con la vectorización al final | `features/hunter/adapter.ts` |
+| POST | `/hunter/vectorize` | Prepara para la búsqueda por afinidad lo que quedó sin vectorizar | `features/hunter/adapter.ts` |
+| POST | `/hunter/evaluate` | «Evaluar las pendientes» (lote) | `features/hunter/adapter.ts` |
+| POST | `/hunter/purge` | «Limpiar la cola», con confirmación | `features/hunter/adapter.ts` |
+| POST | `/hunter/search/semantic` | «Buscar por afinidad» | `features/hunter/adapter.ts` |
+| POST | `/hunter/jobs/:id/evaluate` | Etapa Análisis | `features/hunter/adapter.ts` |
+| POST | `/hunter/jobs/:id/pitch` | Etapa Mensaje | `features/hunter/adapter.ts` |
+| PATCH | `/hunter/jobs/:id/status` | Estado de la vacante y «Ya la envié» | `features/hunter/adapter.ts` |
+| DELETE | `/hunter/jobs/:id` | Elimina una vacante | `features/hunter/adapter.ts` |
+| POST | `/hunter/jobs/:id/apply-preview` | Etapa Postular: vista previa del correo | `features/hunter/adapter.ts` |
+| POST | `/hunter/jobs/:id/find-email` | «Buscar correo» | `features/hunter/adapter.ts` |
+| PATCH | `/hunter/jobs/:id/contact-email` | El destinatario | `features/hunter/adapter.ts` |
+| POST | `/hunter/jobs/:id/apply-email` | «Enviar desde Eros», con confirmación de destinatario y asunto | `features/hunter/adapter.ts` |
+| POST | `/hunter/cv/:id` | Adapta el CV a la vacante (`TailoredCv`) | `features/hunter/cvClient.ts` |
+| POST | `/hunter/cv/:id/ticket` | Ticket de la hoja | `features/hunter/cvClient.ts` |
+| GET | `/hunter/cv/:id/html` | La hoja A4 (medir, ampliar, imprimir) | `features/hunter/cvClient.ts` |
+| GET | `/hunter/cv/:id/txt` | El CV en texto plano para formularios ATS | `features/hunter/cvClient.ts` |
+| POST | `/hunter/cv-base/ticket` | Ticket de la hoja del CV base | `features/experience/CvSheet.vue`, `features/experience/CvView.vue` |
+| GET | `/hunter/cv-base/html` | La hoja del CV base de Trayectoria (`?lang=`, `?measure=1`) | `features/experience/CvSheet.vue`, `features/experience/CvView.vue` |
+
+### Publicaciones y Tendencias
+
+| Método | Ruta | Qué hace | Dónde está en la UI |
+|---|---|---|---|
+| GET | `/content/posts` | Publicaciones de Eros | `features/content/api.ts` |
+| GET | `/content/posts/:id` | Una publicación | `features/content/api.ts` |
+| POST | `/content/generate` | «Generar una publicación» | `features/content/api.ts` |
+| PATCH | `/content/posts/:id/status` | Aprobar, descartar, volver a borrador | `features/content/api.ts` |
+| DELETE | `/content/posts/:id` | Elimina en Eros | `features/content/api.ts` |
+| POST | `/content/posts/:id/publish` | «Publicar por n8n», con confirmación | `features/content/api.ts` |
+| POST | `/content/posts/:id/publish-to-blog` | Crea un artículo en borrador y lleva a su editor | `features/content/api.ts` |
+| POST | `/content/carousel/:id/ticket` | Ticket del carrusel | `features/content/api.ts` |
+| GET | `/content/carousel/:id/html` | El carrusel para ver o imprimir | `features/content/api.ts` |
+| GET | `/radar/trends` | Tendencias detectadas | `features/radar/api.ts` |
+| GET | `/radar/trends/:id` | Una tendencia | `features/radar/api.ts` |
+| POST | `/radar/scan` | Buscar tendencias nuevas | `features/radar/api.ts` |
+| PATCH | `/radar/trends/:id/status` | Estado de la tendencia | `features/radar/api.ts` |
+| POST | `/radar/trends/:id/generate` | Crea una publicación desde la tendencia | `features/radar/api.ts` |
+
+### Sin uso en la UI
+
+Montadas a propósito aunque la UI no las llama. Cada una dice por qué sigue.
+
+Hoy no hay ninguna. Una ruta que se monte sin uso va en una tabla como esta, con el motivo:
+
+| Método | Ruta | Por qué sigue |
+|---|---|---|
+
+### Retirados
+
+Ya no existen. Si alguno vuelve a montarse, el chequeo falla.
+
+| Método | Ruta | Por qué se retiró |
+|---|---|---|
+| GET | `/media` | La lista de media (`?projectId=`): solo la leía el panel anterior; la obra trae su media en `GET /projects/:id` |
+| GET | `/hunter/jobs/:id/apply-preview` | La vista previa sin la vacante en el cuerpo: la UI usa el POST, que también anda sin Eros |
+| DELETE | `/hunter/jobs` | «Borrar todas las vacantes»: Mateo decidió retirarlo (pregunta 3); «Limpiar la cola» cubre lo útil |
+| GET | `/hunter/cv/:id/pdf` | El PDF que armaba Eros: el CV se imprime o se guarda como PDF desde la hoja armada con la base |
+| GET | `/hunter/jobs/:id/cv/pdf` | Alias del anterior |
+| POST | `/hunter/jobs/:id/cv` | Alias de `POST /hunter/cv/:id` |
+| POST | `/hunter/jobs/:id/cv/ticket` | Alias de `POST /hunter/cv/:id/ticket` |
+| GET | `/hunter/jobs/:id/cv/html` | Alias de `GET /hunter/cv/:id/html` |
+| DELETE | `/hunter/:id` | Alias de `DELETE /hunter/jobs/:id` |
+| PATCH | `/hunter/status/:id` | Alias de `PATCH /hunter/jobs/:id/status` |
+| POST | `/hunter/evaluate/:id` | Alias de `POST /hunter/jobs/:id/evaluate` |
+| POST | `/hunter/pitch/:id` | Alias de `POST /hunter/jobs/:id/pitch` |
+| POST | `/hunter/semantic-search` | Alias de `POST /hunter/search/semantic` |
+| GET | `/hunter/apply-preview/:id` | Alias de la vista previa |
+| POST | `/hunter/find-email/:id` | Alias de `POST /hunter/jobs/:id/find-email` |
+| POST | `/hunter/apply-email/:id` | Alias de `POST /hunter/jobs/:id/apply-email` |
+| PATCH | `/hunter/contact-email/:id` | Alias de `PATCH /hunter/jobs/:id/contact-email` |
+| GET | `/docs` | La lista de documentos: solo la leía el panel anterior |
+| DELETE | `/docs/:key` | Borrar `about` o `contact` dejaba al sitio sin bloques que el código lee por nombre |
+
+Fuera de la API también se retiraron `/admin-next` (la convivencia durante el rediseño), los archivos estáticos del panel anterior (`server/admin/index.html`, `js/`, `vendor/`, `admin.css`) y el botón «dev-token» del ingreso.
+
+---
+
+## 10. El PDF del CV del sitio
+
+Los PDF de `public/cv/` (`CV-ES-Mateo-Sonzogni-ATS.pdf` y `CV-EN-…`) son un artefacto derivado de la base y se regeneran a mano (pregunta 6):
+
+1. Con la base y la API arriba, compilar y servir el sitio: `pnpm build && pnpm start`.
+2. `pnpm cv:pdf` (o `CV_BASE_URL=http://localhost:<puerto> node scripts/cv-pdf.mjs`). Abre `/about?cv=ats` en cada idioma, mide la hoja con la cota dual (una página A4, alto entre 248 y 265 mm, escala ATS) y solo si los dos idiomas pasan escribe los PDF en la ruta que publica `contact.cv`. Se niega si `/api/cv` no viene de la base o si el CV cambia durante el render.
+3. Junto a los PDF escribe `server/src/snapshot/cv-stamp.json`: la fecha y el sha256 del JSON estable de `/api/cv?lang=es` y `?lang=en`.
+4. Commitear los dos PDF y el sello juntos.
+
+El Inicio del admin compone el mismo CV desde la base (`server/src/admin/cvStamp.ts`) y muestra «El PDF del CV no coincide con la base» cuando el hash difiere. El hash cubre el CvDocument entero, incluidos los slugs: un «Cambiar dirección» en una experiencia también lo dispara.
+
+---
+
+## 11. Guardarraíles
+
+**En `pnpm lint`.** `scripts/admin-checks.mjs` corre cada `scripts/check-admin-*.mjs` presente; un chequeo nuevo se suma creando el archivo:
+- `check-admin-style.mjs`: hex sueltos, `text-[N…]`, paletas de Tailwind, « // » en plantillas, mayúsculas forzadas o espaciadas, `font-mono` fuera de `Mono` y `Kbd`, `transition-all`, `style` estático, `!important`, emojis y archivos de más de 300 líneas.
+- `check-admin-contrast.mjs`: contraste AA de los tokens, tokens compartidos con el sitio y el hash de las fuentes.
+- `check-admin-schema.mjs`: cada campo de `prisma/schema.prisma` tiene descriptor en `adminSchema` y cada valor de enum su rótulo en `labels.ts`.
+- `check-admin-endpoints.mjs`: el inventario del §9 contra lo montado y lo usado.
+
+eslint, para `server/admin/src/**`: máximo 300 líneas y prohibidos `confirm`, `alert` y `prompt` (las confirmaciones van por `requestConfirm`). `pnpm typecheck` corre `vue-tsc` sobre el admin.
+
+**En el servidor.** CSP estricta para `/admin` y `/api/admin` (`server/src/admin/ui.ts`): script, style y font `'self'`, `script-src-attr 'none'`, sin `unsafe-eval` ni `unsafe-inline`; por eso no hay `style` estático en las plantillas (los `:style` dinámicos van por CSSOM). Errores como `AdminErrorBody` (`server/src/admin/errors.ts`): `invalid` con todos los campos juntos y rutas anidadas (`links[0].url`, `translations.en.title`), `unauthorized`, `not_found`, `conflict` (409 de una restricción única, en su campo), `in_use` (409 de una relación), `cv_expired` (409 del CV adaptado que ya no está en caché), `too_large`, `offline`, `db_unavailable` (503), `eros_auth` e `internal`. La excepción es `requireAdmin` (`auth.ts`): responde 401 `{ error: 'unauthorized' }` y 503 `{ error: 'admin deshabilitado: …' }` sin `code` ni `errors`. `eros_unreachable` no lo manda el servidor: lo arma el cliente (`server/admin/src/api/errors.ts`) ante un 502 o 504 de una ruta de Eros. Cada escritura de contenido pasa por `forgetsLastGood`, que olvida los respaldos de la API pública.
+
+**En las pruebas.** Toda prueba del admin corre con `node scripts/admin-run.mjs [--demo] [--eros-mock] [--web] -- <comando>`: copia la base a `portfolio_admin_*`, la migra, levanta la API en un puerto libre entre 3940 y 3990 con una clave al azar y Eros apagado (`HUNTER_API_URL=http://127.0.0.1:9`), y limpia todo al terminar. Cada spec declara sus modos en una línea `admin-run:` de su cabecera y `pnpm test:e2e` (`tests/e2e/run.mjs`) la corre una vez por línea. Nunca se escribe sobre la base de trabajo ni se contacta al Eros real.
+
+---
+
+## 12. Checklist de aceptación
+
+Antes de dar por terminado un cambio en el admin:
+
+- [ ] `pnpm typecheck`, `pnpm lint` (con los cuatro chequeos del admin) y `pnpm build:admin` en 0.
+- [ ] Las specs del área con `admin-run` en sus modos (`pnpm test:e2e admin-<área>` o el comando de su cabecera), y `admin-audit` si se tocó Vacantes o el CV.
+- [ ] Sin emojis, iconos solo utilitarios, ningún valor de enum visible y ningún texto fuera de los diccionarios.
+- [ ] Cada vista con su carga, vacío, error y respaldo; el foco en el `h1` al entrar y el teclado del §6 andando.
+- [ ] axe sin violaciones serias ni críticas, contraste AA y sin scroll horizontal entre 390 y 1920 px.
+- [ ] `prefers-reduced-motion` respetado y ninguna violación de CSP en la consola.
+- [ ] El invariante 6 intacto: analizar una vacante, adaptar el CV Harvard ATS, previsualizarlo, imprimirlo en A4 dentro de 248–265 mm y copiarlo en texto plano, con Eros arriba y caído.
+- [ ] Si cambió un endpoint: el §9 actualizado (lo exige `check-admin-endpoints`). Si cambió un campo: el recorrido de `.claude/rules/backend.md` → «Sumar un campo».
+- [ ] Revisado en el navegador local a 1440 y 390 px antes de cualquier push, que hace solo Mateo.

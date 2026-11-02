@@ -1,12 +1,24 @@
 /**
- * Hoja HTML imprimible del CV de respaldo (GET /api/admin/hunter/cv/:id/html sin Eros). Recibe el
- * mismo objeto que muestra la vista previa del admin. Una página A4 con la escala ATS de
- * .claude/rules/explorer.md (nombre 20 pt, títulos 11 pt, cuerpo 9,3 pt con interlineado 1,33) y
- * su propio @page de 10,5 × 12 mm. Todo valor interpolado pasa por escapeHtml.
+ * Hoja HTML imprimible del CV (GET /api/admin/hunter/cv/:id/html y /cv-base/html): una página A4 con
+ * la escala ATS de .claude/rules/explorer.md (nombre 20 pt, títulos 11 pt, cuerpo 9,3 pt con
+ * interlineado 1,33) y su propio @page de 10,5 × 12 mm. Recibe el mismo AdminCv que el texto plano.
+ * Todo valor interpolado pasa por escapeHtml.
  */
-import { cvLabels, type AdminCv } from './hunterCv.js'
-import type { JobText } from './hunterMatch.js'
+import type { AdminCv, CvMeasure } from '../shared/hunterContracts.js'
+import { cvLabels } from './hunterCv.js'
 import { escapeHtml } from './proxy.js'
+
+/** Lo imprimible de la hoja en alto: A4 menos los 10,5 mm de arriba y de abajo. */
+const PRINTABLE_MM = 297 - 21
+
+export interface SheetOptions {
+  /** Lo que nombra el documento después del nombre: «Frontend Engineer — Example Labs». */
+  target?: string
+  /** Abre el diálogo de impresión al cargar. */
+  autoPrint?: boolean
+  /** Ancho fijo de A4 y, al cargar, postMessage(CvMeasure) a la ventana que la contiene. */
+  measure?: boolean
+}
 
 const styles = `
   @page { size: A4; margin: 10.5mm 12mm; }
@@ -41,6 +53,7 @@ const styles = `
   li { margin-bottom: 1.6pt; text-align: justify; }
   .lines p { text-align: left; margin-bottom: 1.6pt; }
   .lines p:last-child { margin-bottom: 0; }
+  body.measure { width: 210mm; max-width: none; margin: 0; }
   @media print {
     html { background: #fff; }
     body { max-width: none; min-height: 0; margin: 0; padding: 0; }
@@ -103,11 +116,22 @@ function lines(rows: readonly (readonly [string, string])[]): string {
   return body.length ? `<div class="lines">${body.join('')}</div>` : ''
 }
 
-/** La hoja completa. `job` solo nombra el documento (título de la pestaña y del PDF impreso). */
-export function renderCvHtmlHeuristic(cv: AdminCv, job: JobText): string {
+/** Mide el contenido al ancho imprimible y se lo cuenta a la ventana que contiene la hoja. */
+const measureScript = `<script>
+addEventListener('load', async () => {
+  await document.fonts.ready
+  const heightMm = document.querySelector('main').getBoundingClientRect().height * 25.4 / 96
+  const message = ${JSON.stringify({ type: 'cv-measure' } satisfies Pick<CvMeasure, 'type'>)}
+  parent.postMessage({ ...message, heightMm: Math.round(heightMm * 10) / 10, pages: Math.max(1, Math.ceil(heightMm / ${PRINTABLE_MM})) }, '*')
+})
+</script>`
+
+const printScript = '<script>addEventListener("load", () => setTimeout(() => print(), 350))</script>'
+
+/** La hoja completa. */
+export function renderCvHtml(cv: AdminCv, options: SheetOptions = {}): string {
   const labels = cvLabels[cv.lang]
-  const target = [job.title, job.company].map(s => s.trim()).filter(Boolean).join(' — ')
-  const docTitle = ['CV', cv.name, 'Harvard ATS', target].filter(Boolean).join(' · ')
+  const docTitle = ['CV', cv.name, 'Harvard ATS', options.target].filter(Boolean).join(' · ')
   const skills = Object.entries(cv.skills).map(([label, items]) => [label, items.join(', ')] as const)
 
   return `<!DOCTYPE html>
@@ -118,7 +142,8 @@ export function renderCvHtmlHeuristic(cv: AdminCv, job: JobText): string {
   <title>${e(docTitle)}</title>
   <style>${styles}</style>
 </head>
-<body>
+<body${options.measure ? ' class="measure"' : ''}>
+<main aria-label="${e(docTitle)}">
   ${header(cv)}
   ${section(labels.summary, cv.summary ? `<p>${e(cv.summary)}</p>` : '')}
   ${section(labels.skills, lines(skills))}
@@ -128,6 +153,23 @@ export function renderCvHtmlHeuristic(cv: AdminCv, job: JobText): string {
     [labels.languages, cv.languages.join(' · ')],
     [labels.methodologies, cv.methodologies ?? ''],
   ]))}
+</main>
+${options.measure ? measureScript : ''}${options.autoPrint ? printScript : ''}
 </body>
 </html>`
+}
+
+/** «Frontend Engineer — Example Labs»: nombra la pestaña y el PDF impreso. */
+export function sheetTarget(job: { title: string, company: string }): string {
+  return [job.title, job.company].map(s => s.trim()).filter(Boolean).join(' — ')
+}
+
+/**
+ * Encabezados de toda hoja del CV: origen opaco (sin allow-same-origin) y sin red. Que solo la
+ * incruste el admin lo resuelve el X-Frame-Options: SAMEORIGIN de helmet (app.ts).
+ */
+export const sheetHeaders = {
+  'Content-Security-Policy': "sandbox allow-scripts allow-modals; default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data:",
+  'X-Content-Type-Options': 'nosniff',
+  'Cache-Control': 'no-store',
 }

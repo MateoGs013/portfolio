@@ -6,6 +6,61 @@ Formato: decisión · alternativa descartada · por qué.
 
 ---
 
+## Rediseño del admin (nov-2026)
+
+El plan está en `docs/rediseno-admin/plan.md` y la dirección aprobada en `docs/rediseno-admin/demo.html` (la capa «Dirección 2»).
+
+**El admin como la mesa de trabajo del sitio: una cosa por pantalla.**
+*Descartado:* las tres columnas fijas (navegación, explorador y editor a la vez) y el panel «CMS 2026» con bento, glow, numeración 00–09, rótulos «NN // …», mono en mayúsculas, colores por módulo y botón azul.
+*Por qué:* Mateo eligió en la demo la segunda dirección. Cada colección es su propia pantalla con filas grandes, como el inicio del sitio: entran escalonadas (45 ms) y al apuntar una las hermanas bajan a .28 y la apuntada se corre 14 px. El editor ocupa la pantalla solo, con el título en display que viaja desde la fila. Los campos no tienen caja: texto de 16–17 px sobre una línea de 1 px que se enciende con el foco, con 34 px entre campos. La rejilla es `220px 1fr`.
+
+**Los tokens del sitio, con densidad de herramienta.**
+Tema oscuro en `:root[data-theme=dark]`: `--bg` #0b0b0c, `--panel` #111113, `--surface` #161618, `--surface-2` #1c1c1f, `--rule` 8 % y `--rule-strong` 14 % de blanco, `--ink` #ededee, `--dim` #a1a1a9, `--faint` #83838c, `--sig` y `--sig-text` #ff3e00 (texto #0b0b0c sobre el primario), `--ok` #3ecf6e y `--wip` #e5a00d solo en el punto de estado, `--danger` #f0524f. Curva `--e` cubic-bezier(.16,1,.3,1). Seis tamaños de herramienta (meta 12, label 13, body 14/1,45 peso 420, row 15, title 20, figure 28) más los de la dirección elegida (field 16, prose 17/1,6, list 24–34, heading 38–60 y display 44–72). Radios de 6 px en controles, 10 en diálogos y 3 en imágenes. El tema claro queda declarado con los valores del sitio, sin activar. `scripts/check-admin-contrast.mjs` mide cada par y compara los compartidos con `app/assets/css/tokens.css`.
+
+**Vite + componentes .vue + TypeScript, compilado en la imagen del API (pregunta 1).**
+*Descartado:* seguir sin build (Vue global desde `vendor/`, `@tailwindcss/cli` y JSDoc), que era el plan B.
+*Por qué:* Mateo respondió que sí al build. Con SFC y tipos estrictos el admin se lee como el resto del repo y la CSP del admin queda sin `unsafe-eval` ni `unsafe-inline` (las plantillas en string del panel anterior se compilaban en el navegador y obligaban a `unsafe-eval`). La base de Vite es absoluta (`/admin/`): con `./`, `/admin` sin barra final pediría los assets al sitio y daría 404. Las routeRules de Nitro no distinguen `/admin` de `/admin/` (el matcher ignora la barra final) y una regla `/admin/**` también atrapa `/admin` y rompe el 301, así que no hay routeRules del admin: la entrada la resuelven `app/nitro/routes/admin.ts` (301 e index) y `app/nitro/routes/admin/[...].ts` (proxy de todo lo de abajo). Mientras convivieron, el admin nuevo creció en `/admin-next` con el mismo esquema; S1 lo pasó a `/admin` y retiró el panel anterior.
+
+**Respuestas de Mateo a las seis preguntas del plan (31-oct-2026).**
+1. Build: Vite + `.vue` + TypeScript, compilado en la imagen del API (`Dockerfile.api` corre `pnpm build:admin`). *Descartado:* el plan B sin build.
+2. Publicaciones y Tendencias se conservan como pestañas de Búsqueda laboral, sin datos inventados: sin Eros dicen que no hay datos; la muestra existe solo con `EROS_DEMO=1` en pruebas.
+3. Job Hunter conserva todo menos «Borrar todas las vacantes» (`DELETE /hunter/jobs`), que se retira: un clic borraba la cola entera de Eros y «Limpiar la cola» ya cubre lo útil, con confirmación. Escanear desde el admin («Buscar vacantes nuevas») es requisito; la búsqueda por afinidad es un interruptor y la vectorización corre sola después de cada escaneo.
+4. El resumen que propone Eros entra al CV solo como propuesta al lado, aceptable con un clic; por defecto queda el de la base. *Descartado:* usar el CV de Eros con su resumen tal como llegaba, que metía en la hoja texto que nadie había revisado.
+5. Slugs fijos, con «Cambiar dirección» explícito y su aviso. *Descartado:* el slug que seguía al título (cambiaba la URL pública al corregir una palabra) y una tabla de alias, que pedía un endpoint público nuevo y una regla de redirección más para mantener.
+6. El PDF del CV del sitio se regenera a mano (`pnpm cv:pdf` y commit). Para saber cuándo hace falta, `cv:pdf` escribe un sello (`server/src/snapshot/cv-stamp.json`, el hash del CV de cada idioma) y el Inicio avisa cuando la base ya no coincide; el paso completo está en `docs/admin.md` §10.
+
+**Una sola fuente del CV: se retira el PDF de Eros.**
+*Descartado:* «Descargar PDF» pidiéndole el PDF a Eros (`/hunter/cv/:id/pdf` y sus alias) y la maqueta Vue del CV del panel anterior.
+*Por qué:* había tres renderizadores del CV (la vista previa en Vue, la hoja HTML y el texto plano) y no coincidían, y lo que armaba Eros podía traer texto que la base no tiene, como proyectos sugeridos sin validar contra los visibles. Ahora el servidor compone siempre el CV desde la base y de Eros toma solo pistas de orden, categorías y viñetas, emparejadas campo por campo con lo que ya existe; lo que no está en la base se descarta. La hoja (`hunterCvHtml.ts`) es la que se ve, se mide, se imprime y se guarda como PDF desde el navegador.
+
+**Fuera la Guía de Asistencia.**
+*Descartado:* el modal de ayuda abierto desde la cabecera.
+*Por qué:* desinformaba al asistente: hablaba de presets de métricas y de «capas interactivas» que no existían, y no decía lo que sí hacía falta saber (guardar antes de subir imágenes, cómo se carga el inglés, qué hace «Mostrar en el sitio»). Un texto aparte se desactualiza con cada formulario. La ayuda vive en cada campo (sale de `adminSchema`: para qué sirve y dónde aparece) y en la checklist de publicación, que lleva al campo exacto. El invariante de los cinco minutos se mide con el formulario, no con un manual.
+
+**Fuera AdmAiTrace y la telemetría de «Infraestructura».**
+*Descartado:* la traza de llamadas a la IA en pantalla y el bloque de infraestructura con estados escritos a mano («PG-17 ACID», «ONLINE», «VPS Coolify · Conectado»).
+*Por qué:* AdmAiTrace era una traza falsa, animada con temporizadores, que decía «Gemini 2.5» aunque hubiera respondido la heurística local; los estados de infraestructura estaban escritos a mano. Ninguno venía de un dato real y eran justo los tics que Mateo rechaza. El estado real de la base y de Eros sale de `GET /status` y aparece solo cuando algo no anda, con lo que hay que hacer.
+
+**El inventario de endpoints es un chequeo, no una lista.**
+*Descartado:* retirar endpoints a ojo o dejar rutas sin uso montadas sin saberlo.
+*Por qué:* la paridad con el panel anterior se decidió ruta por ruta (pregunta 3). `docs/admin.md` §9 lista cada ruta con el archivo de la UI que la llama, las montadas sin uso con su motivo y las retiradas; `scripts/check-admin-endpoints.mjs` lo compara en `pnpm lint` con lo montado y con lo que llama la UI.
+
+**General Sans y Martian Mono servidas por el propio admin.**
+*Descartado:* Plus Jakarta Sans, JetBrains Mono y las fuentes desde Fontshare o Google.
+*Por qué:* son las familias del sitio y la CSP solo admite `font-src 'self'`. General Sans es una copia de `app/assets/fonts` con su licencia y un hash la compara con el original.
+
+**Guardarraíles en `pnpm lint`.**
+`scripts/admin-checks.mjs` corre cada `scripts/check-admin-*.mjs`. `check-admin-style` falla con hex sueltos, `text-[N…]`, paletas de Tailwind, « // » en plantillas, mayúsculas forzadas o espaciadas, `font-mono` fuera de `ui/Mono.vue` y `ui/Kbd.vue`, `transition-all`, `style` estático (la CSP no lo admite), `!important`, emojis y archivos de más de 300 líneas. eslint prohíbe `confirm`, `alert` y `prompt`: las confirmaciones van por `requestConfirm`.
+
+**Foco y línea de los campos.**
+*Descartado:* el anillo global de 2 px en los campos de texto (el plan §7 lo pedía en todo `:focus-visible`).
+*Por qué:* los campos de texto siempre cuentan como `:focus-visible`, también con el mouse, y en la demo aprobada no llevan anillo: el foco se marca con la línea, que pasa a 2 px en `--ink` (más de 15:1 sobre `--bg`). Botones, filas, pestañas y enlaces siguen con el anillo. La línea en reposo (`--rule-strong`, alrededor de 1,4:1) es decorativa: lo que identifica al campo es su rótulo visible, siempre presente, así que no es el límite que pide WCAG 1.4.11.
+
+**Regiones vivas y avisos adentro del diálogo abierto.**
+Con un `<dialog>` modal todo lo de afuera queda inerte: el lector no lee las regiones `aria-live` y los avisos no se pueden tocar. Cada `Dialog` abierto apila un punto de montaje propio (`ui/topLayer.ts`) y `Announcer` y `Toaster` se teletransportan al de arriba; el textarea de respaldo de copiar va al mismo lugar.
+
+---
+
 ## Rediseño «movimiento» (30-oct-2026)
 
 Las reglas que salen de estas decisiones viven en `docs/diseno.md`.
@@ -261,7 +316,7 @@ Toda la experiencia es freelance o propia: "freelance desde 2023" y el título t
 
 **Admin propio, no Payload ni Directus.**
 Descartado: Payload (trae su propio schema y duplicaría el modelo, contra el invariante 1) y Directus (se parece tanto al mundo DATOS que parecería el panel embebido).
-Cuatro proyectos que se editan cada tanto no justifican un CMS. Es un router de Express con token fijo y una página Vue sin build, generada desde un descriptor por modelo. Cuesta unas 600 líneas y no agrega dependencias de peso.
+Cuatro proyectos que se editan cada tanto no justifican un CMS. Es un router de Express con token fijo y una página Vue sin build, generada desde un descriptor por modelo. Cuesta unas 600 líneas y no agrega dependencias de peso. (Desde noviembre de 2026 sigue siendo propio, pero la UI se compila con Vite: ver «Rediseño del admin».)
 
 **PostgreSQL, no MySQL.**
 Descartado: MySQL (el stack inicial).
