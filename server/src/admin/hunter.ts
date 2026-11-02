@@ -23,6 +23,7 @@ import { hunterCvRouter } from './hunterCvRoutes.js'
 import { computeHunterStats, evaluateJobHeuristic, generatePitchHeuristic } from './hunterHeuristics.js'
 import { jobLang } from './hunterMatch.js'
 import { loadProfile } from './profile.js'
+import { awaitErosTask } from './erosTask.js'
 import { erosIdParam, forwardToEros, getParamId, sendErosFailure, useLocalFallback, type ForwardResult } from './proxy.js'
 
 /**
@@ -91,9 +92,11 @@ hunterRouter.get('/jobs', async (req: Request, res: Response) => {
 // ─── Tareas largas ──────────────────────────────────────────────────────────
 
 /**
- * Escanear y evaluar en lote son sincrónicos en Eros y pueden tardar minutos: el servidor espera 180 s
- * (el cliente, 210 s), su corte no cuenta como caída y responde `eros_busy` diciendo que puede estar
- * terminando. Corre una de cada por vez: un segundo pedido mientras la primera sigue responde 409.
+ * Escanear y evaluar en lote pueden tardar minutos. El Eros de antes las corría dentro del pedido; el
+ * de ahora responde 202 con una tarea y el servidor la consulta (erosTask.ts). En los dos casos el
+ * servidor espera 180 s (el cliente, 210 s), su corte no cuenta como caída y responde `eros_busy`
+ * diciendo que puede estar terminando. Corre una de cada por vez: un segundo pedido mientras la
+ * primera sigue responde 409, y también si Eros ya tiene una en curso (Telegram o el escaneo periódico).
  */
 export const LONG_TASK_MS = 180_000
 const SCAN_BUDGET_MS = 195_000
@@ -101,14 +104,16 @@ const SCAN_BUDGET_MS = 195_000
 type LongTask = 'scan' | 'evaluate'
 const running = new Set<LongTask>()
 
-const longTaskText: Record<LongTask, { running: string, busy: string, failed: string }> = {
+const longTaskText: Record<LongTask, { running: string, erosRunning: string, busy: string, failed: string }> = {
   scan: {
     running: 'Ya hay una búsqueda de vacantes en curso: esperá a que termine.',
+    erosRunning: 'Eros ya está buscando vacantes (lo empezó Telegram o el escaneo periódico): esperá a que termine y recargá la cola.',
     busy: 'Puede que el escaneo siga terminando en Eros: recargá la cola en un momento.',
     failed: 'No se buscaron vacantes nuevas.',
   },
   evaluate: {
     running: 'Ya hay una evaluación de las pendientes en curso: esperá a que termine.',
+    erosRunning: 'Eros ya está evaluando las pendientes: esperá a que termine y recargá la cola.',
     busy: 'Puede que la evaluación siga terminando en Eros: recargá la cola en un momento.',
     failed: 'No se evaluaron las vacantes pendientes.',
   },
@@ -131,6 +136,10 @@ async function once(task: LongTask, res: Response, run: () => Promise<void>): Pr
 
 function sendLongTaskFailure(res: Response, result: ForwardResult, task: LongTask): void {
   const text = longTaskText[task]
+  if (result.failure?.reason === 'rejected' && result.failure.upstream === 409) {
+    res.status(409).json({ error: text.erosRunning, code: 'conflict', errors: [] })
+    return
+  }
   sendErosFailure(res, result, result.failure?.reason === 'busy' ? text.busy : text.failed)
 }
 
@@ -141,7 +150,8 @@ function sendLongTaskFailure(res: Response, result: ForwardResult, task: LongTas
  */
 hunterRouter.post('/scan', (_req: Request, res: Response) => once('scan', res, async () => {
   const started = Date.now()
-  const result = await forwardToEros('api/scan?evaluate=false', post({}), LONG_TASK_MS, { longTask: true })
+  const reply = await forwardToEros('api/scan?evaluate=false', post({}), LONG_TASK_MS, { longTask: true })
+  const result = await awaitErosTask(reply, started, LONG_TASK_MS)
   if (!result.ok) {
     sendLongTaskFailure(res, result, 'scan')
     return
@@ -155,7 +165,9 @@ hunterRouter.post('/scan', (_req: Request, res: Response) => once('scan', res, a
 hunterRouter.post('/evaluate', (req: Request, res: Response) => once('evaluate', res, async () => {
   const asked = Math.trunc(Number(req.query['limit'] ?? req.body?.limit))
   const limit = Number.isFinite(asked) && asked > 0 ? Math.min(asked, 50) : 15
-  const result = await forwardToEros(`api/evaluate?limit=${limit}`, post({ limit }), LONG_TASK_MS, { longTask: true })
+  const started = Date.now()
+  const reply = await forwardToEros(`api/evaluate?limit=${limit}`, post({ limit }), LONG_TASK_MS, { longTask: true })
+  const result = await awaitErosTask(reply, started, LONG_TASK_MS)
   if (result.ok) res.json(normalizeBatchEvaluation(result.data))
   else sendLongTaskFailure(res, result, 'evaluate')
 }))

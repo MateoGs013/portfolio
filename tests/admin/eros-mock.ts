@@ -6,9 +6,19 @@
  *
  *   PORT=4000 pnpm exec tsx tests/admin/eros-mock.ts
  *
- * Lo que imita del real, para que las pruebas cubran lo que pasa de verdad:
- * - el pitch trae el asunto en `subject_or_hook`; la vista previa, `contact_email` e `is_email_extracted`;
- *   «Buscar correo», `{ ok, job_id, contact_email, source, found }` (adivinado para la vacante en inglés);
+ * Imita el Eros de después de la auditoría (eros-agent#1). Con PUT /__antes responde como el de antes
+ * (DELETE /__antes vuelve al de ahora), para probar que el admin entiende a los dos mientras conviven:
+ * - escanear y evaluar en lote responden 202 `{ task_id }` y el resultado sale de GET /api/tasks/:id (el
+ *   escaneo dice `running` en la primera consulta); antes, 200 con el resultado;
+ * - limpiar la cola responde `discarded_count`; antes, `purged_count`;
+ * - «Buscar correo» manda `contact_email_source` (del aviso para la vacante en español, de Hunter.io
+ *   para la de inglés) y la vista previa, `contact_email_source`; antes, `source` con un correo
+ *   adivinado para la vacante en inglés e `is_email_extracted`;
+ * - publicar responde `status: 'dispatched'` con `dispatched_channels`, 409 `already_published` para
+ *   una publicada y 422 `invalid_channel` para Dev.to; antes, `status: 'published'`.
+ *
+ * Lo demás que imita del real, para que las pruebas cubran lo que pasa de verdad:
+ * - el pitch trae el asunto en `subject_or_hook`;
  * - los cambios de estado y de contacto responden `{ ok, job_id, new_status }` y `{ ok, job_id,
  *   contact_email }`, sin la vacante; un contacto que no es texto da 422 con su `detail`;
  * - las publicaciones traen Dev.to anidado (`devto: { title, tags, markdown_body }`) y los enfoques de
@@ -21,6 +31,7 @@
  *
  * Un id que no está en las fixtures da 404. GET /__requests devuelve los pedidos recibidos (método,
  * ruta y cuerpo) y DELETE /__requests los olvida: así una prueba comprueba qué le llegó y qué no.
+ * Ninguna de las dos rutas de control (/__requests, /__antes) queda registrada.
  */
 import { readFileSync } from 'node:fs'
 import { createServer, type IncomingMessage, type ServerResponse } from 'node:http'
@@ -45,6 +56,31 @@ const PILLARS = ['architecture', 'production_lessons', 'performance_optimization
 const pillarMessage = "Input should be 'architecture', 'production_lessons', 'performance_optimization', 'ai_agent_ops' or 'fullstack_engineering'"
 
 const requests: { method: string, path: string, body: Obj }[] = []
+
+/** true mientras responde como el Eros de antes de la auditoría (PUT /__antes). */
+let before = false
+
+/** Las tareas largas en curso: id → cuántas consultas faltan para que diga `done`, y su resultado. */
+const tasks = new Map<string, { pending: number, result: unknown }>()
+let taskCount = 0
+
+/** El 202 del Eros de ahora: la tarea arranca y el resultado sale de GET /api/tasks/:id. */
+function accepted(kind: string, result: unknown, pending = 0): Reply {
+  const task_id = `${kind}_mock${++taskCount}`
+  tasks.set(task_id, { pending, result })
+  return { status: 202, body: { ok: true, task_id, kind, status: 'running', started_at: '2026-11-02T12:00:00+00:00', already_running: false, status_url: `/api/tasks/${task_id}` } }
+}
+
+function taskStatus(id: string): Reply {
+  const task = tasks.get(id)
+  if (!task) return { status: 404, body: { detail: 'Tarea no encontrada (puede que Eros se haya reiniciado).' } }
+  const running = task.pending > 0
+  if (running) task.pending -= 1
+  return ok({ task_id: id, status: running ? 'running' : 'done', result: running ? null : task.result, error: null })
+}
+
+/** Un error del Eros de ahora: `{ detail, error_code }` con su código. */
+const refused = (status: number, error_code: string, detail: string): Reply => ({ status, body: { detail, error_code } })
 
 /** Una respuesta del simulado: código y cuerpo (texto plano si es un string, como el 500 de FastAPI). */
 interface Reply { status: number, body: unknown, headers?: Record<string, string> }
@@ -76,16 +112,27 @@ async function readBody(req: IncomingMessage): Promise<Obj> {
 function preview(job: Obj): Obj {
   const contact = typeof job['contact_email'] === 'string' ? job['contact_email'] : ''
   const extracted = !!contact && String(job['description'] ?? '').toLowerCase().includes(contact.toLowerCase())
-  return {
+  const common = {
     ...(apply['preview'] as Obj),
     job_id: job['id'],
     job_title: job['title'],
     company: job['company'],
     contact_email: contact,
-    cv_html_url: `https://eros.example.com/api/jobs/${String(job['id'])}/cv/html`,
     status: job['status'],
-    contact_email_verified: !extracted,
     is_email_extracted: extracted,
+  }
+  // El de antes daba «verificado» justo a los que no salen del aviso.
+  if (before) return { ...common, cv_html_url: `https://eros.example.com/api/jobs/${String(job['id'])}/cv/html`, contact_email_verified: !extracted }
+  const source = contact ? (extracted ? 'posting' : 'unknown') : null
+  return {
+    ...common,
+    cv_html_url: null,
+    contact_email_source: source,
+    contact_email_verified: source === 'posting',
+    requires_manual_email: !contact || source === 'unknown',
+    pitch_source: 'stored',
+    send_state: null,
+    idempotency_key: `apply-${String(job['id'])}`,
   }
 }
 
@@ -101,7 +148,7 @@ const perJob: Record<string, (job: Obj, body: Obj) => Reply> = {
   'DELETE ': job => ok({ ok: true, deleted_id: job['id'] }),
   'GET apply-preview': job => ok(preview(job)),
   'POST find-email': (job) => {
-    const found = (apply['findEmail'] as Record<string, Obj>)[String(job['id'])]
+    const found = (apply[before ? 'findEmailBefore' : 'findEmail'] as Record<string, Obj>)[String(job['id'])]
     return ok({ ok: true, job_id: job['id'], ...(found ?? { contact_email: job['contact_email'] ?? null, source: null, found: false }) })
   },
   'POST apply-email': job => ok({ ...(apply['applyEmail'] as Obj), job_id: job['id'] }),
@@ -114,10 +161,10 @@ const perJob: Record<string, (job: Obj, body: Obj) => Reply> = {
 const fixed: Record<string, (body: Obj) => Reply | Promise<Reply>> = {
   'GET /api/stats': () => ok(queue['stats']),
   'GET /api/jobs': () => ok({ data: jobs, count: jobs.length }),
-  'POST /api/scan': () => ok(queue['scan']),
+  'POST /api/scan': () => (before ? ok(queue['scan']) : accepted('scan', queue['scan'], 1)),
   'POST /api/vectorize': () => ok(queue['vectorize']),
-  'POST /api/purge': () => ok(queue['purge']),
-  'POST /api/evaluate': () => ok(queue['evaluate']),
+  'POST /api/purge': () => ok(queue[before ? 'purgeBefore' : 'purge']),
+  'POST /api/evaluate': () => (before ? ok(queue['evaluate']) : accepted('evaluate', queue['evaluate'])),
   'POST /api/jobs/semantic-search': body => ok({ data: jobs.map(job => ({ ...job, semantic_score: queue['semanticScore'] })), count: jobs.length, query: body['query'] }),
   'GET /api/lento': () => new Promise(resolve => setTimeout(() => resolve(ok({ ok: true })), 1500)),
 }
@@ -143,9 +190,13 @@ const perPost: Record<string, (post: Obj, body: Obj) => Reply> = {
   'GET ': post => ok({ data: post }),
   'DELETE ': post => ok({ ok: true, deleted: post['id'] }),
   'PATCH status': (post, body) => ok({ ok: true, post_id: post['id'], new_status: body['status'] }),
-  'POST publish': (post) => {
+  'POST publish': (post, body) => {
     const local = (contentActions['publishedLocally'] as string[]).includes(String(post['id']))
-    return ok(local ? { ...(contentActions['approvedLocal'] as Obj), post } : contentActions['published'])
+    if (local) return ok({ ...(contentActions['approvedLocal'] as Obj), post })
+    if (before) return ok(contentActions['published'])
+    if (body['channel'] === 'devto') return refused(422, 'invalid_channel', 'Dev.to no tiene publicación automática.')
+    if (post['status'] === 'published') return refused(409, 'already_published', 'La publicación ya fue publicada; no se republica.')
+    return ok(contentActions['dispatched'])
   },
 }
 const perTrend: Record<string, (trend: Obj, body: Obj) => Reply> = {
@@ -188,6 +239,8 @@ async function route(method: string, path: string, body: Obj): Promise<Reply> {
   if (content) return content
   const own = fixed[`${method} ${path}`]
   if (own) return own(body)
+  const task = method === 'GET' ? path.match(/^\/api\/tasks\/([^/]+)$/) : null
+  if (task) return taskStatus(decodeURIComponent(task[1]!))
   const target = jobRoute(path)
   if (target?.id === 'eros-mock-falla') return crash
   if (target?.id === 'eros-mock-redirige') return { status: 307, body: { detail: 'moved' }, headers: { Location: 'http://127.0.0.1:9/api/jobs' } }
@@ -204,6 +257,12 @@ const server = createServer(async (req, res) => {
   if (path === '/__requests') {
     if (method === 'DELETE') requests.length = 0
     send(res, ok(requests))
+    return
+  }
+  if (path === '/__antes') {
+    if (method === 'PUT') before = true
+    if (method === 'DELETE') before = false
+    send(res, ok({ before }))
     return
   }
   if (path === '/') {

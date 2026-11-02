@@ -8,6 +8,7 @@
 import { Router, type Request, type Response } from 'express'
 import { ArticleStatus } from '../../generated/prisma/client.js'
 import { db } from '../db.js'
+import type { AdminErrorBody } from '../shared/adminContracts.js'
 import { adminSchema } from '../shared/adminSchema.js'
 import {
   isPostStatus,
@@ -99,10 +100,20 @@ contentRouter.post('/generate', async (req: Request, res: Response) => {
   else sendUnreadable(res, 'Recargá la lista: puede que la publicación se haya creado igual.')
 })
 
+/** Los `error_code` de publicar en Eros, en español: qué pasó y qué hacer. */
+const publishRefusals: Record<string, { status: number, body: AdminErrorBody }> = {
+  already_published: { status: 409, body: { error: 'Ya está publicada por ese canal: no se vuelve a publicar.', code: 'conflict', errors: [] } },
+  rejected: { status: 409, body: { error: 'Está rechazada: no se publica. Pasala a borrador o aprobada si querés publicarla.', code: 'conflict', errors: [] } },
+  already_dispatched: { status: 409, body: { error: 'Ya se despachó por ese canal y n8n todavía no confirmó: no se manda dos veces. Revisá en la red antes de reintentar.', code: 'conflict', errors: [] } },
+  invalid_channel: { status: 400, body: { error: 'Eros no publica por ese canal.', code: 'invalid', errors: [{ path: 'channel', message: 'Elegí LinkedIn, X o los dos.' }] } },
+  dispatch_failed: { status: 502, body: { error: 'n8n no aceptó la publicación: no salió.', code: 'eros_error', errors: [] } },
+  dispatch_unknown: { status: 502, body: { error: 'n8n no respondió a tiempo: puede que haya salido. Revisá en la red antes de reintentar.', code: 'eros_error', errors: [] } },
+}
+
 /**
  * POST /api/admin/content/posts/:id/publish { channel } → DispatchResult (solo Eros). Lo que pasó lo
- * dice el `status` de Eros: 'published' si n8n la recibió, 'approved_local' si Eros no tiene n8n y
- * solo la aprobó. Eros hoy no respeta el canal, así que la respuesta no dice por dónde salió.
+ * dice el `status` de Eros: 'dispatched' si n8n la recibió (el Eros de antes decía 'published'),
+ * 'approved_local' si Eros no tiene n8n y solo la aprobó. Un rechazo con `error_code` sale con su texto.
  */
 contentRouter.post('/posts/:id/publish', async (req: Request, res: Response) => {
   const id = getParamId(req)
@@ -115,18 +126,24 @@ contentRouter.post('/posts/:id/publish', async (req: Request, res: Response) => 
   if (refuseDemo(res, id)) return
   const result = await forwardToEros(postPath(id, '/publish'), json('POST', { channel: raw }), 45000)
   if (!result.ok) {
-    sendContentFailure(res, result, 'post', 'La publicación no salió.')
+    const refusal = publishRefusals[result.failure?.code ?? '']
+    if (refusal) res.status(refusal.status).json(refusal.body)
+    else sendContentFailure(res, result, 'post', 'La publicación no salió.')
     return
   }
-  // Un 200 de Eros que no dice «published» ni «approved_local» no es un despacho.
+  // Un 200 de Eros que no dice «dispatched» (o «published») ni «approved_local» no es un despacho.
   const body = (result.data ?? {}) as Record<string, unknown>
-  const status = text(body['status'])
-  if (body['ok'] === false || (status !== 'published' && status !== 'approved_local')) {
+  const said = text(body['status'])
+  const status = said === 'dispatched' || said === 'published' ? 'dispatched' : said === 'approved_local' ? said : null
+  if (body['ok'] === false || !status) {
     res.status(502).json({ error: 'Eros no confirmó la publicación. La publicación no salió.', code: 'eros_error', errors: [] })
     return
   }
-  const dispatched = status === 'published' ? normalizeOnePost(result.data)?.dispatched_at ?? text(body['n8n_published_at']) : null
-  res.json({ ok: true, channel: raw, status, dispatched_at: dispatched } satisfies DispatchResult)
+  const dispatched = status === 'dispatched'
+    ? text(body['dispatched_at']) ?? normalizeOnePost(result.data)?.dispatched_at ?? text(body['n8n_published_at'])
+    : null
+  const channels = Array.isArray(body['dispatched_channels']) ? body['dispatched_channels'].map(text).filter((c): c is string => c !== null) : []
+  res.json({ ok: true, channel: raw, channels, status, dispatched_at: dispatched } satisfies DispatchResult)
 })
 
 /** PATCH /api/admin/content/posts/:id/status { status } → PostResult (solo Eros). */

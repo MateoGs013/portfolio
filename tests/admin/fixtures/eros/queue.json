@@ -2,11 +2,12 @@
   "stats": { "total": 2, "high_match_count": 1, "pending_eval_count": 1, "applied_count": 0, "discarded_count": 0 },
   "scan": { "ok": true, "scanned": 42, "new_jobs": 2, "evaluated_count": 0, "evaluating_in_background": false },
   "vectorize": { "ok": true, "vectorized_count": 2 },
-  "purge": { "ok": true, "purged_count": 1 },
+  "purge": { "ok": true, "discarded_count": 1, "purged_count": 1 },
+  "purgeBefore": { "ok": true, "purged_count": 1 },
   "evaluate": {
     "ok": true,
     "evaluated_count": 1,
-    "evaluated": [{ "id": "eros-mock-backend", "title": "Backend Developer (Node.js and PostgreSQL)", "score": 71, "verdict": "BUEN_MATCH" }]
+    "evaluated": [{ "id": "eros-mock-backend", "title": "Backend Developer (Node.js and PostgreSQL)", "score": 71, "verdict": "BUEN_MATCH", "scored_by": "gemini", "status": "evaluated" }]
   },
   "match": {
     "score": 77,

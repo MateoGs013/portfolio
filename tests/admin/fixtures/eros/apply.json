@@ -17,6 +17,10 @@
     "body": "Cuerpo del correo simulado."
   },
   "findEmail": {
+    "eros-mock-frontend": { "contact_email": "empleos@example.com", "contact_email_source": "posting", "source": "posting", "found": true },
+    "eros-mock-backend": { "contact_email": "seleccion@example.com", "contact_email_source": "hunter", "source": "hunter", "found": true }
+  },
+  "findEmailBefore": {
     "eros-mock-frontend": { "contact_email": "empleos@example.com", "source": "description", "found": true },
     "eros-mock-backend": { "contact_email": "jobs@example.com", "source": "domain_guessing", "found": true }
   },

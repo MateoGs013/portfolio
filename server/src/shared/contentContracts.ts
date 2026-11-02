@@ -39,15 +39,17 @@ export const postPillarLabels: Readonly<Record<PostPillar, string>> = {
 /** El enfoque que usa Eros cuando no se elige ninguno (y el que se manda desde una tendencia sin elegir). */
 export const DEFAULT_PILLAR: PostPillar = 'architecture'
 
-/** Por dónde despacha n8n una publicación aprobada. */
-export const publishChannels = ['all', 'linkedin', 'twitter', 'devto'] as const
+/**
+ * Por dónde despacha n8n una publicación aprobada: LinkedIn, el hilo de X o los dos. Dev.to no tiene
+ * publicación automática (el workflow de n8n nunca la tuvo y Eros responde 422): se copia a mano.
+ */
+export const publishChannels = ['all', 'linkedin', 'twitter'] as const
 export type PublishChannel = (typeof publishChannels)[number]
 
 export const publishChannelLabels: Readonly<Record<PublishChannel, string>> = {
-  all: 'todos los canales',
+  all: 'LinkedIn y X',
   linkedin: 'LinkedIn',
   twitter: 'X (hilo)',
-  devto: 'Dev.to',
 }
 
 const isOneOf = <T extends string>(options: readonly T[]) => (value: unknown): value is T =>
@@ -114,18 +116,20 @@ export interface PostResult {
 }
 
 /**
- * Qué hizo Eros al publicar: 'published' si se la pasó a n8n y n8n la aceptó; 'approved_local' si
- * n8n no está configurado en Eros y solo la marcó como aprobada (no salió a ninguna red).
+ * Qué hizo Eros al publicar: 'dispatched' si se la pasó a n8n y n8n la recibió (queda publicada
+ * cuando n8n confirma cada red; el Eros de antes respondía 'published' y la marcaba en el acto);
+ * 'approved_local' si n8n no está configurado en Eros y solo la aprobó (no salió a ninguna red).
  */
-export type DispatchStatus = 'published' | 'approved_local'
+export type DispatchStatus = 'dispatched' | 'approved_local'
 
 /**
- * POST /content/posts/:id/publish { channel } (n8n). `channel` es lo que se pidió: hoy Eros no lo
- * respeta (el workflow de n8n decide), así que no dice por dónde salió.
+ * POST /content/posts/:id/publish { channel } (n8n). `channel` es lo que se pidió y `channels`, por
+ * dónde la despachó Eros (`linkedin`, `twitter`); vacío si Eros no lo dice (el de antes no lo decía).
  */
 export interface DispatchResult {
   ok: true
   channel: PublishChannel
+  channels: string[]
   status: DispatchStatus
   dispatched_at: string | null
 }

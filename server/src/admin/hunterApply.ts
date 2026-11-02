@@ -1,4 +1,5 @@
 import { Router, type Request, type Response } from 'express'
+import type { AdminErrorBody } from '../shared/adminContracts.js'
 import { EROS_SEND_ENABLED, type ApplyPreview, type FoundEmail, type HunterJob } from '../shared/hunterContracts.js'
 import { normalizeApplyEmail, normalizeApplyPreview, normalizeFoundEmail } from './erosApplyContract.js'
 import { isManualJob, jobFromBody, manualJobRefusal, missingJob, normalizeJobChange } from './erosContract.js'
@@ -103,6 +104,27 @@ const sendDisabled = {
   errors: [],
 }
 
+const conflict = (error: string): { status: number, body: AdminErrorBody } => ({ status: 409, body: { error, code: 'conflict', errors: [] } })
+const badRecipient = (error: string): { status: number, body: AdminErrorBody } => ({ status: 400, body: { error, code: 'invalid', errors: [{ path: 'to_email', message: error }] } })
+const notSent = (error: string): { status: number, body: AdminErrorBody } => ({ status: 502, body: { error, code: 'eros_error', errors: [] } })
+
+/**
+ * Los `error_code` de postular en el Eros de ahora, en español. Los que dicen que no se sabe si salió
+ * piden revisar el correo enviado antes de reintentar: Eros no reintenta solo.
+ */
+const applyRefusals: Record<string, { status: number, body: AdminErrorBody }> = {
+  already_applied: conflict('Eros ya la tiene como postulada: no se envía de nuevo.'),
+  send_in_progress: conflict('Eros ya está enviando esta postulación: esperá y recargá la vacante.'),
+  send_outcome_unknown: conflict('Un envío anterior se cortó y no se sabe si salió. Revisá en tu correo enviado antes de reintentar.'),
+  missing_email: badRecipient('Falta el destinatario: escribí el correo de quien recibe las postulaciones.'),
+  invalid_email: badRecipient('Ese correo no tiene un formato válido.'),
+  unverified_email: badRecipient('Eros no sabe de dónde salió ese correo: escribilo a mano para confirmarlo.'),
+  requires_confirmation: badRecipient('Eros pide confirmar el destinatario antes de enviar.'),
+  invalid_channel: { status: 400, body: { error: 'Eros no envía por ese canal.', code: 'invalid', errors: [] } },
+  no_provider: notSent('Eros no tiene cómo enviar correos (ni n8n ni SMTP). La postulación no se envió.'),
+  provider_rejected: notSent('El proveedor de correo rechazó el envío. La postulación no se envió.'),
+}
+
 /** POST /api/admin/hunter/jobs/:id/apply-email - Despacho de la postulación por Eros (apagado). */
 hunterApplyRouter.post('/jobs/:id/apply-email', async (req: Request, res: Response) => {
   const id = getParamId(req)
@@ -116,7 +138,16 @@ hunterApplyRouter.post('/jobs/:id/apply-email', async (req: Request, res: Respon
   }
   const result = await forwardToEros(`api/jobs/${encodeURIComponent(id)}/apply-email`, { method: 'POST', body: JSON.stringify(req.body) }, 35000)
   // Sin Eros no hay envío: el error llega al admin para que no marque la vacante como postulada.
-  if (result.ok) res.json(normalizeApplyEmail(result.data))
+  if (result.ok) {
+    res.json(normalizeApplyEmail(result.data))
+    return
+  }
+  const code = result.failure?.code ?? ''
+  // Un 504 de Eros con send_outcome_unknown es este intento, que se cortó: puede haber salido.
+  const refusal = code === 'send_outcome_unknown' && result.failure?.upstream === 504
+    ? notSent('El envío se cortó a mitad de camino: puede que haya salido. Revisá en tu correo enviado antes de reintentar.')
+    : applyRefusals[code]
+  if (refusal) res.status(refusal.status).json(refusal.body)
   else sendErosFailure(res, result, 'La postulación no se envió.')
 })
 

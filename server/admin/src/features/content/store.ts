@@ -30,14 +30,15 @@ export async function removePost(post: ContentPost): Promise<void> {
 }
 
 /**
- * Eros la publicó (o, sin n8n, solo la aprobó: `status` lo dice): se vuelve a leer de Eros para
- * mostrar su estado real. Si esa lectura falla, queda la hora que dio el despacho (sin inventar una).
+ * Eros la despachó a n8n (o, sin n8n, solo la aprobó: `status` lo dice): se vuelve a leer de Eros
+ * para mostrar su estado real, que pasa a publicada cuando n8n confirma. Si esa lectura falla, queda
+ * aprobada con la hora que dio el despacho (sin inventar una).
  */
 export async function dispatchPost(post: ContentPost, channel: PublishChannel): Promise<{ post: ContentPost, status: DispatchStatus }> {
   const result = await contentApi.publish(post.id, channel)
   const fresh = await contentApi.post(post.id).catch(() => null)
-  const fallback: ContentPost = result.status === 'published'
-    ? { ...post, status: 'published', dispatched_at: result.dispatched_at ?? post.dispatched_at }
+  const fallback: ContentPost = result.status === 'dispatched'
+    ? { ...post, status: post.status === 'published' ? 'published' : 'approved', dispatched_at: result.dispatched_at ?? post.dispatched_at }
     : { ...post, status: 'approved' }
   const next = fresh ?? fallback
   posts.upsert(next)

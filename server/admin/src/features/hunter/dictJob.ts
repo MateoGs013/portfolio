@@ -123,16 +123,20 @@ export const job = {
     finding: 'Buscando…',
     found: (email: string) => `Encontrado: ${email}.`,
     foundKept: (email: string) => `No apareció otro: queda ${email}, el que ya tenía la vacante.`,
-    /** De dónde salió la dirección escrita. Ninguna está verificada. */
+    /** De dónde salió la dirección escrita. */
     origin: {
       posting: 'Sale del texto del aviso.',
-      company_site: 'Eros la encontró publicada en la web de la empresa. No está verificada.',
+      company_site: 'Eros la encontró publicada en la web de la empresa.',
+      hunter: 'Eros la encontró con Hunter.io, entre los correos públicos de la empresa. No está verificada.',
+      manual: 'La escribiste a mano en esta vacante.',
       guessed: 'Eros la armó con el dominio de la empresa y puede no existir. Buscá el correo real o escribilo a mano antes de enviar.',
       unknown: 'No figura en el aviso y no se sabe de dónde salió: puede ser adivinada. Verificala antes de enviar.',
     },
     originMark: {
       posting: 'Del aviso',
       company_site: 'De la web de la empresa',
+      hunter: 'De Hunter.io',
+      manual: 'Escrito a mano',
       guessed: 'Adivinado',
       unknown: 'Sin verificar',
     },

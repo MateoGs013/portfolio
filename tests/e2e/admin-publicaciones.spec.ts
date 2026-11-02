@@ -230,16 +230,17 @@ test.describe('publicaciones', () => {
     await expect(toast(page, 'Publicación marcada como aprobada.')).toBeVisible()
     await expect(page.locator('#main header').getByText('Aprobada', { exact: true })).toBeVisible()
 
-    // Despachar por n8n: el diálogo nombra el canal elegido, avisa que Eros no lo respeta y el aviso
-    // dice lo que contestó Eros (publicada), sin nombrar una red.
+    // Despachar por n8n: el diálogo nombra el canal elegido, no ofrece Dev.to (se copia a mano) y el
+    // aviso dice lo que contestó Eros: despachada, publicada cuando n8n confirme.
     await page.getByRole('button', { name: 'Publicar por n8n' }).click()
     const dialog = page.getByRole('dialog', { name: 'Publicar por n8n' })
     await expect(dialog.getByRole('button', { name: 'Cancelar' })).toBeFocused()
-    await expect(dialog.getByText(/Eros no respeta el canal/)).toBeVisible()
+    await expect(dialog.getByText(/Dev\.to no se publica solo/)).toBeVisible()
+    await expect(dialog.getByRole('radio')).toHaveCount(3)
     await dialog.getByText('X (hilo)', { exact: true }).click()
     await noSeriousAxe(page)
     await dialog.getByRole('button', { name: 'Publicar en X (hilo)' }).click()
-    await expect(toast(page, 'Eros la dio por publicada: se la pasó a n8n. Revisá en cada red por dónde salió.')).toBeVisible()
+    await expect(toast(page, 'Eros se la pasó a n8n. Queda publicada cuando n8n confirme cada red.')).toBeVisible()
     const sent = (await erosRequests()).find(r => r.method === 'POST' && r.path.endsWith('/publish'))
     expect(sent?.body).toEqual({ channel: 'twitter' })
 

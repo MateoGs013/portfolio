@@ -62,8 +62,10 @@ export interface ErosFailure {
   /** El código de Eros en un 3xx, 4xx o 5xx; 0 si no hubo respuesta. */
   upstream: number
   message: string
-  /** El `detail` de Eros en un 4xx, ya saneado; null si no mandó uno legible. */
+  /** El `detail` de Eros en un 4xx o un 5xx, ya saneado; null si no mandó uno legible. */
   detail?: string | null
+  /** El `error_code` de Eros (`send_outcome_unknown`, `already_dispatched`…); null si no mandó uno. */
+  code?: string | null
 }
 
 export interface ForwardResult<T = unknown> {
@@ -139,14 +141,18 @@ function failed<T>(reason: ErosFailureReason, message: string, upstream = 0): Fo
   return { ok: false, status, data: body as T, failure: { reason, upstream, message } }
 }
 
-/** Eros respondió con un error (5xx o una redirección): no es una caída y no se muestra como tal. */
-function answeredWithError<T>(upstream: number): ForwardResult<T> {
+/**
+ * Eros respondió con un error (5xx o una redirección): no es una caída y no se muestra como tal. Si
+ * Eros dijo por qué («IA no disponible»), el mensaje lo repite.
+ */
+function answeredWithError<T>(upstream: number, data: unknown = null): ForwardResult<T> {
   recordAnswer()
+  const detail = upstream < 400 ? null : erosDetail(data)
   const message = upstream < 400
     ? 'Eros respondió con una redirección, y el admin no la sigue.'
-    : `Eros respondió con un error (${upstream}).`
+    : refusedText(`Eros respondió con un error (${upstream}).`, detail)
   const body: AdminErrorBody & { offline: false } = { error: message, code: 'eros_error', errors: [], offline: false }
-  return { ok: false, status: 502, data: body as T, failure: { reason: 'server', upstream, message } }
+  return { ok: false, status: 502, data: body as T, failure: { reason: 'server', upstream, message, detail, code: erosCode(data) } }
 }
 
 /** El corte de una tarea larga: Eros puede seguir con ella, así que no cuenta para el corte. */
@@ -204,7 +210,7 @@ export async function forwardToEros<T = unknown>(urlPath: string, init?: Request
   const isJson = res.headers.get('content-type')?.includes('application/json')
   const data = (isJson ? await res.json().catch(() => null) : await res.text().catch(() => '')) as T
 
-  if (res.status >= 500) return answeredWithError(res.status)
+  if (res.status >= 500) return answeredWithError(res.status, data)
   if (res.status === 401 || res.status === 403) {
     // Eros respondió (no es una caída para el corte), pero no es «no responde»: es la clave.
     recordAnswer()
@@ -214,7 +220,7 @@ export async function forwardToEros<T = unknown>(urlPath: string, init?: Request
   }
   recordSuccess()
   if (!res.ok) {
-    return { ok: false, status: res.status, data, failure: { reason: 'rejected', upstream: res.status, message: `Eros respondió ${res.status}.`, detail: erosDetail(data) } }
+    return { ok: false, status: res.status, data, failure: { reason: 'rejected', upstream: res.status, message: `Eros respondió ${res.status}.`, detail: erosDetail(data), code: erosCode(data) } }
   }
   return { ok: true, status: res.status, data, failure: null }
 }
@@ -246,6 +252,12 @@ export function erosDetail(data: unknown): string | null {
     .trim()
   if (!clean) return null
   return clean.length > 200 ? `${clean.slice(0, 199).trimEnd()}…` : clean
+}
+
+/** El `error_code` que Eros manda junto al `detail` (postular, publicar); null si no hay uno. */
+export function erosCode(data: unknown): string | null {
+  const raw = data && typeof data === 'object' ? (data as Record<string, unknown>)['error_code'] : null
+  return typeof raw === 'string' && /^[a-z_]{1,40}$/.test(raw) ? raw : null
 }
 
 /** «Eros no aceptó el pedido. Eros dijo: «…».», con lo que dijo Eros si lo mandó. */
