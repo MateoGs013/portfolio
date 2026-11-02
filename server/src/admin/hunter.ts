@@ -64,10 +64,16 @@ hunterRouter.get('/stats', async (_req: Request, res: Response) => {
   else sendErosFailure(res, result)
 })
 
-/** GET /api/admin/hunter/jobs[?status=&min_score=] */
+/** GET /api/admin/hunter/jobs[?status=&min_score=&limit=]: solo esos filtros llegan a Eros. */
 hunterRouter.get('/jobs', async (req: Request, res: Response) => {
-  const query = new URLSearchParams(req.query as Record<string, string>).toString()
-  const result = await forwardToEros(`api/jobs${query ? `?${query}` : ''}`)
+  const query = new URLSearchParams()
+  const status = isHunterJobStatus(req.query['status']) ? req.query['status'] : null
+  const minScore = Number(req.query['min_score'])
+  const limit = Number(req.query['limit'])
+  if (status) query.set('status', status)
+  if (Number.isInteger(minScore) && minScore >= 0 && minScore <= 100) query.set('min_score', String(minScore))
+  if (Number.isInteger(limit) && limit > 0) query.set('limit', String(Math.min(limit, 500)))
+  const result = await forwardToEros(`api/jobs${query.size ? `?${query}` : ''}`)
   if (result.ok) {
     res.json(normalizeJobs(result.data))
     return
@@ -76,40 +82,83 @@ hunterRouter.get('/jobs', async (req: Request, res: Response) => {
     sendErosFailure(res, result)
     return
   }
-  const status = typeof req.query['status'] === 'string' ? req.query['status'] : 'all'
-  const minScore = Number(req.query['min_score'])
   const jobs = (await demoQueue())
-    .filter(j => status === 'all' || j.status === status)
-    .filter(j => !Number.isFinite(minScore) || (j.match_score ?? 0) >= minScore)
+    .filter(j => !status || j.status === status)
+    .filter(j => !query.has('min_score') || (j.match_score ?? 0) >= minScore)
   sendDemo(res, jobs)
 })
 
+// ─── Tareas largas ──────────────────────────────────────────────────────────
+
 /**
- * POST /api/admin/hunter/scan → ScanResult. Al terminar el escaneo vectoriza las vacantes nuevas
- * (para la búsqueda por afinidad) con lo que queda de tiempo: todo cabe en 80 s, debajo de los 90 s
- * que espera el admin.
+ * Escanear y evaluar en lote son sincrónicos en Eros y pueden tardar minutos: el servidor espera 180 s
+ * (el cliente, 210 s), su corte no cuenta como caída y responde `eros_busy` diciendo que puede estar
+ * terminando. Corre una de cada por vez: un segundo pedido mientras la primera sigue responde 409.
  */
-hunterRouter.post('/scan', async (req: Request, res: Response) => {
-  const started = Date.now()
-  const params = new URLSearchParams(req.query as Record<string, string>)
-  if (!params.has('evaluate')) params.set('evaluate', 'false')
-  const result = await forwardToEros(`api/scan?${params.toString()}`, post(req.body), 60000)
-  if (!result.ok) {
-    sendErosFailure(res, result, 'No se buscaron vacantes nuevas.')
+export const LONG_TASK_MS = 180_000
+const SCAN_BUDGET_MS = 195_000
+
+type LongTask = 'scan' | 'evaluate'
+const running = new Set<LongTask>()
+
+const longTaskText: Record<LongTask, { running: string, busy: string, failed: string }> = {
+  scan: {
+    running: 'Ya hay una búsqueda de vacantes en curso: esperá a que termine.',
+    busy: 'Puede que el escaneo siga terminando en Eros: recargá la cola en un momento.',
+    failed: 'No se buscaron vacantes nuevas.',
+  },
+  evaluate: {
+    running: 'Ya hay una evaluación de las pendientes en curso: esperá a que termine.',
+    busy: 'Puede que la evaluación siga terminando en Eros: recargá la cola en un momento.',
+    failed: 'No se evaluaron las vacantes pendientes.',
+  },
+}
+
+/** Corre la tarea si no hay otra igual en curso; si la hay, responde 409. */
+async function once(task: LongTask, res: Response, run: () => Promise<void>): Promise<void> {
+  if (running.has(task)) {
+    res.status(409).json({ error: longTaskText[task].running, code: 'conflict', errors: [] })
     return
   }
-  const budget = 80000 - (Date.now() - started)
-  const vectorize = budget >= 5000 ? await forwardToEros('api/vectorize', post({}), Math.min(25000, budget)) : null
-  res.json(normalizeScan(result.data, vectorize?.ok ? normalizeVectorize(vectorize.data).vectorized_count : null))
-})
+  running.add(task)
+  try {
+    await run()
+  }
+  finally {
+    running.delete(task)
+  }
+}
 
-/** POST /api/admin/hunter/evaluate[?limit=] - Evaluar en lote las pendientes (solo Eros). */
-hunterRouter.post('/evaluate', async (req: Request, res: Response) => {
-  const limit = Number(req.query['limit'] ?? req.body?.limit) || 15
-  const result = await forwardToEros(`api/evaluate?limit=${limit}`, post({ limit }), 60000)
+function sendLongTaskFailure(res: Response, result: ForwardResult, task: LongTask): void {
+  const text = longTaskText[task]
+  sendErosFailure(res, result, result.failure?.reason === 'busy' ? text.busy : text.failed)
+}
+
+/**
+ * POST /api/admin/hunter/scan → ScanResult. Al terminar el escaneo vectoriza las vacantes nuevas
+ * (para la búsqueda por afinidad) con lo que queda de tiempo: todo cabe en 195 s, debajo de los 210 s
+ * que espera el admin.
+ */
+hunterRouter.post('/scan', (_req: Request, res: Response) => once('scan', res, async () => {
+  const started = Date.now()
+  const result = await forwardToEros('api/scan?evaluate=false', post({}), LONG_TASK_MS, { longTask: true })
+  if (!result.ok) {
+    sendLongTaskFailure(res, result, 'scan')
+    return
+  }
+  const budget = SCAN_BUDGET_MS - (Date.now() - started)
+  const vectorize = budget >= 5000 ? await forwardToEros('api/vectorize', post({}), Math.min(25000, budget), { longTask: true }) : null
+  res.json(normalizeScan(result.data, vectorize?.ok ? normalizeVectorize(vectorize.data).vectorized_count : null))
+}))
+
+/** POST /api/admin/hunter/evaluate[?limit=] - Evaluar en lote las pendientes (solo Eros), de 1 a 50. */
+hunterRouter.post('/evaluate', (req: Request, res: Response) => once('evaluate', res, async () => {
+  const asked = Math.trunc(Number(req.query['limit'] ?? req.body?.limit))
+  const limit = Number.isFinite(asked) && asked > 0 ? Math.min(asked, 50) : 15
+  const result = await forwardToEros(`api/evaluate?limit=${limit}`, post({ limit }), LONG_TASK_MS, { longTask: true })
   if (result.ok) res.json(normalizeBatchEvaluation(result.data))
-  else sendErosFailure(res, result, 'No se evaluaron las vacantes pendientes.')
-})
+  else sendLongTaskFailure(res, result, 'evaluate')
+}))
 
 /** POST /api/admin/hunter/jobs/:id/evaluate { job } - Analizar una vacante, con respaldo desde la base. */
 hunterRouter.post('/jobs/:id/evaluate', async (req: Request, res: Response) => {

@@ -161,6 +161,12 @@ export async function deleteJob(job: HunterJob): Promise<void> {
   if (phase.value === 'ready') writeQueue(remote.value)
 }
 
+/**
+ * Escanear y evaluar en lote, a nivel de módulo: salir de Vacantes y volver mientras Eros trabaja no
+ * deja pedir otra vez lo que ya está en curso.
+ */
+export const longTask = ref<'scan' | 'evaluate' | null>(null)
+
 /** Las nuevas y compatibles suman al contador de Búsqueda laboral en la navegación. */
 watch(allJobs, (jobs) => {
   setNavPending('busqueda', jobs.filter(job => job.status === 'new' && (scoreOf(job) ?? 0) >= COMPATIBLE_SCORE).length)

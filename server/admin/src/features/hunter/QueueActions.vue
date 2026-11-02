@@ -7,6 +7,8 @@
  * - «Pegar una vacante», el primario: anda con Eros o sin él.
  * - Más acciones: «Evaluar las pendientes» y «Limpiar la cola» (con confirmación).
  * Sin Eros o con la muestra de prueba, todo menos pegar queda apagado y se dice por qué.
+ * Escanear y evaluar tardan minutos y corren de a uno (`longTask` del store, que sobrevive a salir de
+ * la pantalla). Si se cortan por tiempo no se dice «no se hizo»: Eros puede estar terminando.
  */
 import { computed, ref } from 'vue'
 import { announce } from '../../ui/announce'
@@ -15,9 +17,9 @@ import Menu, { type MenuItem } from '../../ui/Menu.vue'
 import Spinner from '../../ui/Spinner.vue'
 import { requestConfirm } from '../../stores/dialogs'
 import { toast } from '../../stores/toasts'
-import { failureText, hunterApi } from './adapter'
+import { failureText, hunterApi, isStillWorking } from './adapter'
 import { hunter } from './dict'
-import { loadQueue } from './store'
+import { loadQueue, longTask } from './store'
 
 const props = defineProps<{
   /** Por qué no se puede tocar la cola (sin Eros, muestra), o null. */
@@ -26,7 +28,7 @@ const props = defineProps<{
 
 defineEmits<{ paste: [] }>()
 
-const scanning = ref(false)
+const scanning = computed(() => longTask.value === 'scan')
 const busy = ref(false)
 
 async function indexLater(): Promise<void> {
@@ -40,8 +42,12 @@ async function indexLater(): Promise<void> {
 }
 
 async function scan(): Promise<void> {
-  if (scanning.value || props.locked) return
-  scanning.value = true
+  if (props.locked) return
+  if (longTask.value) {
+    announce(hunter.scan.running)
+    return
+  }
+  longTask.value = 'scan'
   announce(hunter.scan.started)
   try {
     const result = await hunterApi.scan()
@@ -54,25 +60,29 @@ async function scan(): Promise<void> {
     }
   }
   catch (err) {
-    toast(failureText(err, hunter.scan.failed), { tone: 'error' })
+    if (isStillWorking(err)) toast(hunter.scan.stillWorking, { tone: 'info' })
+    else toast(failureText(err, hunter.scan.failed), { tone: 'error' })
   }
   finally {
-    scanning.value = false
+    longTask.value = null
   }
 }
 
 async function evaluatePending(): Promise<void> {
-  busy.value = true
+  if (longTask.value) return
+  longTask.value = 'evaluate'
+  announce(hunter.actions.evaluating)
   try {
     const result = await hunterApi.evaluatePending()
     toast(hunter.batch.done(result.evaluated_count))
     await loadQueue()
   }
   catch (err) {
-    toast(failureText(err, hunter.batch.failed), { tone: 'error' })
+    if (isStillWorking(err)) toast(hunter.batch.stillWorking, { tone: 'info' })
+    else toast(failureText(err, hunter.batch.failed), { tone: 'error' })
   }
   finally {
-    busy.value = false
+    longTask.value = null
   }
 }
 
@@ -100,7 +110,7 @@ async function purge(): Promise<void> {
 }
 
 const items = computed<MenuItem[]>(() => [
-  { id: 'evaluate', label: hunter.actions.evaluatePending, disabled: !!props.locked || busy.value },
+  { id: 'evaluate', label: hunter.actions.evaluatePending, disabled: !!props.locked || busy.value || !!longTask.value },
   { id: 'purge', label: hunter.actions.purge, danger: true, disabled: !!props.locked || busy.value },
 ])
 
@@ -114,7 +124,7 @@ function onSelect(id: string): void {
   <div class="flex flex-wrap items-center gap-2">
     <Button
       :aria-busy="scanning || undefined"
-      :aria-disabled="locked || scanning ? 'true' : undefined"
+      :aria-disabled="locked || longTask ? 'true' : undefined"
       :aria-describedby="locked ? 'cola-bloqueada' : undefined"
       :class="locked ? 'aria-disabled:opacity-45' : ''"
       @click="scan"
