@@ -9,6 +9,9 @@
  * única excepción a «el texto nunca nace invisible»: el nombre llega pintado en el SSR (es el LCP) y
  * la animación arranca después. Al llegar por navegación, o al volver a armar la escena (registro,
  * Hiperfoco), no se anima. En la primera visita lo trae el cargador (IntroLoader) con FLIP.
+ *
+ * Las máscaras solo recortan mientras dura ese revelado (`data-reveal`): quieto, el nombre se pinta
+ * entero, con el sobrante de cada letra y el descendente de la g.
  */
 import gsap from 'gsap'
 import type { SiteDoc } from '~/composables/useSiteContent'
@@ -33,8 +36,10 @@ useMotion(root, ({ el, ambient }) => {
   played = true
   if (!first || !loaded || !ambient || isRecord.value) return
   if (document.documentElement.hasAttribute('data-intro')) return
-  gsap.from(el.querySelectorAll('.ch'), { yPercent: 110, duration: 1.1, ease: 'expo.out', stagger: 0.025 })
-  return undefined
+  el.setAttribute('data-reveal', '')
+  const open = () => el.removeAttribute('data-reveal')
+  gsap.from(el.querySelectorAll('.ch'), { yPercent: 110, duration: 1.1, ease: 'expo.out', stagger: 0.025, onComplete: open })
+  return open
 })
 </script>
 
@@ -44,7 +49,7 @@ useMotion(root, ({ el, ambient }) => {
       ref="root"
       tabindex="-1"
       :class="fv"
-      class="-ml-[.045em] text-display-name text-ink focus-mode:text-display-row record:ml-0"
+      class="-ml-[.045em] text-display-name text-ink focus-mode:text-display-row record:ml-0 [&:not([data-reveal])_.chm]:overflow-visible"
     >
       <span class="sr-only">{{ name }}</span>
       <span aria-hidden="true">

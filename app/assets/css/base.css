@@ -135,13 +135,15 @@
   }
 }
 
-/* Máscara de una letra del nombre (la g de Sonzogni necesita más aire). */
+/* Máscara de una letra del nombre (la g de Sonzogni necesita más aire). Con el tracking negativo de
+   los display, el borde derecho de la o, la e, la S o la i queda ~0,05em afuera de su caja: el aire a
+   los costados lo deja dentro de la máscara y el margen negativo lo descuenta, así el renglón no cambia. */
 @utility chm {
   display: inline-block;
   overflow: hidden;
   vertical-align: top;
-  padding-bottom: 0.2em;
-  margin-bottom: -0.2em;
+  padding: 0 0.08em 0.2em;
+  margin: 0 -0.08em -0.2em;
 }
 
 /* Texto que rueda: <span class="roll"><span data-t="Obra">Obra</span></span>.
