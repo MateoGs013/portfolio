@@ -129,7 +129,7 @@ export const publicProjects: SeedProject[] = [
       { title: '01 · concepto', body: 'Traducir la inteligencia artificial adaptativa a una entidad lumínica tridimensional.' },
       { title: '02 · shaders', body: 'Vertex y fragment shaders personalizados en GLSL sobre Three.js orquestados con GSAP ScrollTrigger.' },
     ],
-    cover: null,
+    cover: { src: '/media/projects/ynara-web/hero.webp', alt: 'Portada de Ynara Web: la cinta de luz azul del campo WebGL cruzando el carbón, con el titular «Una sola app para organizar tu vida, recordar todo y acompañarte cada día» y el wordmark Ynara colosal junto a su isotipo', tint: '#426dbd' },
   },
   {
     slug: 'eros',
