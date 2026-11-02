@@ -1,9 +1,10 @@
 {
-  "stats": { "data": { "total": 2, "high_match": 1, "pending": 1, "applied_count": 0, "discarded_count": 0 } },
-  "scan": { "scanned_count": 42, "new_jobs_count": 2, "evaluated_count": 0 },
-  "vectorize": { "vectorized": 2 },
-  "purge": { "data": { "purged_count": 1 } },
+  "stats": { "total": 2, "high_match_count": 1, "pending_eval_count": 1, "applied_count": 0, "discarded_count": 0 },
+  "scan": { "ok": true, "scanned": 42, "new_jobs": 2, "evaluated_count": 0, "evaluating_in_background": false },
+  "vectorize": { "ok": true, "vectorized_count": 2 },
+  "purge": { "ok": true, "purged_count": 1 },
   "evaluate": {
+    "ok": true,
     "evaluated_count": 1,
     "evaluated": [{ "id": "eros-mock-backend", "title": "Backend Developer (Node.js and PostgreSQL)", "score": 71, "verdict": "BUEN_MATCH" }]
   },
@@ -15,11 +16,12 @@
     "cons": ["Pide más años de los que figuran"],
     "missing_skills": [],
     "matching_projects": [],
-    "salary_estimate": null,
+    "salary_estimate": "No especificado en la vacante",
     "recruiter_note": "Hola, vi la búsqueda.",
     "hiring_manager_name": null,
     "hiring_manager_title": null,
-    "hiring_manager_url": null
+    "hiring_manager_url": null,
+    "scored_by": "heuristic"
   },
   "semanticScore": 0.82
 }
