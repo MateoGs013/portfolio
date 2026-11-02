@@ -13,7 +13,7 @@ import { readFileSync } from 'node:fs'
 import { describe, test } from 'node:test'
 import type { AdminStatus } from '../../server/src/shared/adminContracts.js'
 import type { CvDocument } from '../../server/src/content/cv.js'
-import type { HunterJob, HunterStats, Pitch, ScanResult, TailoredCv } from '../../server/src/shared/hunterContracts.js'
+import type { HunterJob, HunterStats, JobChange, Pitch, ScanResult, TailoredCv } from '../../server/src/shared/hunterContracts.js'
 import { extractHints, normalizeErosCv } from '../../server/src/admin/erosHints.js'
 import { erosState, forwardToEros } from '../../server/src/admin/proxy.js'
 import { admin, call, JARGON, ok } from './api.js'
@@ -282,8 +282,10 @@ if (online) {
       assert.equal(pitch.data.subject, 'Postulación simulada')
       const evaluation = await ok<{ match: { score: number, verdict: string } }>('POST', '/hunter/jobs/eros-mock-backend/evaluate', {})
       assert.deepEqual([evaluation.match.score, evaluation.match.verdict], [77, 'BUEN_MATCH'])
-      const changed = await ok<{ job: HunterJob }>('PATCH', '/hunter/jobs/eros-mock-backend/status', { status: 'saved' })
-      assert.equal(changed.job.status, 'saved')
+      // Eros responde { ok, job_id, new_status }, sin la vacante: el cambio va en status.
+      const changed = await ok<JobChange>('PATCH', '/hunter/jobs/eros-mock-backend/status', { status: 'saved' })
+      assert.equal(changed.status, 'saved')
+      assert.equal(changed.job, null)
     })
   })
 }

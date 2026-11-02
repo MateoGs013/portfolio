@@ -1,13 +1,31 @@
 {
   "pitch": {
     "data": {
-      "subject": "Postulación simulada",
+      "subject_or_hook": "Postulación simulada",
       "elevator_pitch": "Texto del pitch que escribe el Eros simulado.",
       "cover_letter": "Carta que escribe el Eros simulado.",
-      "connection_note": "Nota corta del Eros simulado."
+      "suggested_projects": ["La Rúcula"]
     }
   },
-  "preview": { "to_email": "empleos@example.com", "subject": "Postulación simulada", "body": "Cuerpo del correo simulado.", "channel": "email" },
-  "findEmail": { "email": "empleos@example.com", "confidence": 74, "sources": ["mock"] },
-  "applyEmail": { "ok": true, "dispatched_to": "empleos@example.com", "provider": "mock", "applied_at": "2026-10-31T12:00:00.000Z" }
+  "preview": {
+    "ok": true,
+    "cv_filename": "CV_Mateo_Sonzogni.pdf",
+    "has_pdf_attachment": true,
+    "is_english": false,
+    "applied_at": null,
+    "subject": "Postulación simulada",
+    "body": "Cuerpo del correo simulado."
+  },
+  "findEmail": {
+    "eros-mock-frontend": { "contact_email": "empleos@example.com", "source": "description", "found": true },
+    "eros-mock-backend": { "contact_email": "jobs@example.com", "source": "domain_guessing", "found": true }
+  },
+  "applyEmail": {
+    "ok": true,
+    "dispatched_to": "empleos@example.com",
+    "provider": "local_registered",
+    "status": "applied",
+    "applied_at": "2026-10-31T12:00:00.000Z",
+    "message": "Postulación registrada en base de datos para empleos@example.com."
+  }
 }

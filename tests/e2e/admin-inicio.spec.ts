@@ -245,7 +245,7 @@ test.describe('Inicio', () => {
       id: `eros-inicio-${n}`, source: 'linkedin', external_id: String(n), title: `Puesto ${n}`, company: `Empresa ${n}`, url: 'https://example.com',
       description: 'Vacante de prueba.', tags: [], salary: null, country: null, is_remote: true, published_at: null, found_at: null, status,
       match_score: score, match_analysis: null, connection_note: null, hiring_manager_name: null, hiring_manager_title: null,
-      contact_email: null, pitch_draft: null, semantic_score: null,
+      contact_email: null, pitch_draft: null, semantic_score: null, estimated: false,
     })
     const queue = [job(1, 90), job(2, 84), job(3, 78), job(4, 70), job(5, 66), job(6, 65), job(7, 40), job(8, 95, 'applied')]
     const stats = { total: queue.length, high_match_count: 3, pending_eval_count: 0, applied_count: 1, discarded_count: 0 }

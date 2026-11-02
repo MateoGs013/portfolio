@@ -1,8 +1,9 @@
 <script setup lang="ts">
 /**
  * «Publicar por n8n» con su confirmación: se elige el canal y el botón lo nombra («Publicar en
- * LinkedIn»), así nunca sale por un canal que no se leyó. El foco empieza en Cancelar (no se puede
- * deshacer desde acá) y el diálogo queda trabado mientras n8n despacha.
+ * LinkedIn»). Eros todavía no respeta el canal (lo decide el workflow de n8n), así que el diálogo lo
+ * avisa y el resultado no nombra una red: dice lo que contestó Eros (publicada, o solo aprobada si
+ * Eros no tiene n8n). El foco empieza en Cancelar y el diálogo queda trabado mientras Eros responde.
  */
 import { publishChannelLabels, publishChannels, type ContentPost, type PublishChannel } from '@shared/contentContracts'
 import { computed, ref, watch } from 'vue'
@@ -41,13 +42,14 @@ async function publish(): Promise<void> {
   const target = channel.value
   pending.value = true
   try {
-    const next = await dispatchPost(props.post, target)
+    const { post: next, status } = await dispatchPost(props.post, target)
     open.value = false
-    toast(t.publish.done(publishChannelLabels[target]))
+    if (status === 'published') toast(t.publish.done)
+    else toast(t.publish.approvedOnly, { tone: 'info' })
     emit('published', next)
   }
   catch (err) {
-    toast(failureText(err, t.publish.failed(publishChannelLabels[target])), { tone: 'error' })
+    toast(failureText(err, t.publish.failed), { tone: 'error' })
   }
   finally {
     pending.value = false
@@ -72,7 +74,7 @@ async function publish(): Promise<void> {
         <RadioGroup v-model="channel" :options="options" :label="t.publish.channel" variant="list" :disabled="pending" />
       </Field>
       <p class="m-0 text-label text-faint">
-        {{ t.publish.warning }}
+        {{ t.publish.channelNote }} {{ t.publish.warning }}
       </p>
     </div>
     <template #footer>

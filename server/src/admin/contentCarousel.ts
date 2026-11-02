@@ -11,7 +11,7 @@ import { createCarouselTicket, isAdminAuthorized, validateCarouselTicket } from 
 import { normalizeOnePost } from './erosContentContract.js'
 import { erosDemo, findDemoPost, isDemoId, signatureLine } from './fallbackContentData.js'
 import { loadSignature, type Signature } from './profile.js'
-import { escapeHtml, forwardToEros, getParamId } from './proxy.js'
+import { erosIdParam, escapeHtml, forwardToEros, getParamId } from './proxy.js'
 
 const e = (value: string) => escapeHtml(value)
 const pad = (n: number) => String(n).padStart(2, '0')
@@ -196,6 +196,9 @@ export function renderCarouselHtml(post: ContentPost, sig: Signature, autoPrint 
 // ─── Rutas ──────────────────────────────────────────────────────────────────
 
 export const contentCarouselRouter = Router()
+
+/** Un id que no es de Eros (`%2F`, `..`) responde 400 y nunca se reenvía. */
+contentCarouselRouter.param('id', erosIdParam)
 
 const CAROUSEL_CSP = "sandbox allow-scripts allow-modals; default-src 'none'; script-src 'unsafe-inline' 'unsafe-eval'; style-src 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src data: https:;"
 

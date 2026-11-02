@@ -23,8 +23,11 @@ import { api, type RequestOptions } from '../../api/client'
 import { ApiError, NetworkError, RequestError, ServiceError } from '../../api/errors'
 import { jobInput } from './model'
 
-/** De dónde salió lo que se muestra: Eros, el respaldo desde la base o la muestra de pruebas. */
-export type Origin = 'eros' | 'fallback' | 'demo'
+/**
+ * De dónde salió lo que se muestra: Eros, el respaldo desde la base, la muestra de pruebas o una
+ * estimación de Eros sin Gemini (`estimated`), que nunca se rotula como «de Eros».
+ */
+export type Origin = 'eros' | 'fallback' | 'demo' | 'estimate'
 
 export function originOf(body: { _source?: string } | null | undefined): Origin {
   return body?._source === 'fallback' ? 'fallback' : body?._source === 'demo' ? 'demo' : 'eros'
@@ -32,12 +35,18 @@ export function originOf(body: { _source?: string } | null | undefined): Origin 
 
 const path = (id: string, rest = '') => `/hunter/jobs/${encodeURIComponent(id)}${rest}`
 
+/**
+ * Escanear y evaluar en lote: el servidor espera a Eros 180 s (195 s con la vectorización del escaneo)
+ * y el cliente un poco más, para leer su respuesta honesta en lugar de cortar primero.
+ */
+const LONG_TASK_TIMEOUT_MS = 210_000
+
 export const hunterApi = {
   jobs: (options?: RequestOptions) => api.get<HunterJob[]>('/hunter/jobs', options),
   stats: (options?: RequestOptions) => api.get<HunterStats>('/hunter/stats', options),
-  scan: () => api.post<ScanResult>('/hunter/scan'),
+  scan: () => api.post<ScanResult>('/hunter/scan', undefined, { timeoutMs: LONG_TASK_TIMEOUT_MS }),
   vectorize: () => api.post<VectorizeResult>('/hunter/vectorize', {}),
-  evaluatePending: () => api.post<BatchEvaluation>('/hunter/evaluate', {}),
+  evaluatePending: () => api.post<BatchEvaluation>('/hunter/evaluate', {}, { timeoutMs: LONG_TASK_TIMEOUT_MS }),
   purge: () => api.post<PurgeResult>('/hunter/purge'),
   semantic: (query: string) => api.post<SemanticResults>('/hunter/search/semantic', { query, limit: 30 }),
 
@@ -58,6 +67,15 @@ export function isErosDown(err: unknown): boolean {
   if (err instanceof ServiceError) return err.service === 'eros'
   if (err instanceof NetworkError) return true
   return err instanceof RequestError && (err.code === 'eros_unreachable' || err.code === 'eros_auth' || err.code === 'offline')
+}
+
+/**
+ * Una tarea larga (escanear, evaluar en lote) se cortó por tiempo, pero puede seguir en Eros: no es
+ * una caída y no se dice «no se hizo».
+ */
+export function isStillWorking(err: unknown): boolean {
+  if (err instanceof RequestError) return err.code === 'eros_busy'
+  return err instanceof NetworkError && err.timedOut
 }
 
 /** El motivo y lo que no pasó: «Eros no responde ahora… No se buscaron vacantes nuevas.» */

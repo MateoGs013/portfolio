@@ -156,8 +156,10 @@ export function fromResponse(status: number, body: unknown, eros: boolean): ApiE
     const service: ServiceName = code === 'db_unavailable' ? 'db' : eros ? 'eros' : 'admin'
     return new ServiceError(service, code)
   }
-  // El proxy de Eros explica sus 502/504 con la URL interna y jerga del agente: no se muestra.
   if (eros && code === 'eros_auth') return new RequestError(status, 'eros_auth')
+  // Eros respondió con un error (5xx) o una tarea larga sigue en Eros: el texto del servidor lo dice.
+  if (eros && (code === 'eros_error' || code === 'eros_busy')) return new RequestError(status, code, text)
+  // El resto de los 502/504 del proxy traen la URL interna o jerga del agente: no se muestran.
   if (eros && (status === 502 || status === 504)) return new RequestError(status, 'eros_unreachable')
   const issues = Array.isArray(payload['errors']) ? payload['errors'].filter(isIssue) : []
   if (status === 400 && issues.length) return new FieldErrors(code, issues, text)

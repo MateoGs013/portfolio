@@ -213,11 +213,10 @@ test.describe('vacante pegada', () => {
     expect(pdf.match(/\/Type\s*\/Page(?!s)/g)?.length).toBe(1)
     await sheet.close()
 
-    // Postular: el destinatario pegado, sin envío por Eros para una pegada, y «Ya la envié».
+    // Postular: el destinatario pegado, sin «Enviar desde Eros» (apagado: Eros adjunta otro CV), y «Ya la envié».
     await stage(page, 'Postular').click()
     await expect(page.getByRole('textbox', { name: 'Destinatario' })).toHaveValue(PASTED.email)
-    await expect(page.getByRole('button', { name: 'Enviar desde Eros' })).toHaveAttribute('aria-disabled', 'true')
-    await expect(page.getByText('Eros no conoce las vacantes pegadas a mano')).toBeVisible()
+    await expect(page.getByRole('button', { name: 'Enviar desde Eros' })).toHaveCount(0)
     await expect(page.getByRole('link', { name: /Abrir en Gmail/ })).toHaveAttribute('href', /mail\.google\.com.*postulaciones%40example\.com/)
     await noSeriousAxe(page)
     await shot(page, info, 'etapa-postular-1440')
@@ -361,6 +360,51 @@ test.describe('con Eros', () => {
   })
 })
 
+test('un error de Eros no es «Eros no responde» ni pasa la cola a solo lectura (con --eros-mock)', async ({ page, request }) => {
+  const mode = await modeOf(request)
+  if (mode !== 'mock') return
+  await page.route('**/api/admin/hunter/jobs/*/status', route => route.fulfill({ status: 502, json: { error: 'Eros respondió con un error (500). El estado no cambió.', code: 'eros_error', offline: false, errors: [] } }))
+  await signedIn(page, '#/busqueda/vacantes/eros-mock-frontend/analisis')
+  await page.locator('#main').getByRole('button', { name: 'Más acciones' }).click()
+  await page.getByRole('menuitem', { name: 'Guardar para después' }).click()
+  await expect(page.getByRole('region', { name: 'Avisos' }).getByText('Eros respondió con un error (500). El estado no cambió.')).toBeVisible()
+  await expect(page.getByText(/Eros no responde/)).toHaveCount(0)
+  await expect(page.getByText('Sin Eros, o en la muestra de prueba, la vacante no se puede cambiar.')).toHaveCount(0)
+})
+
+test('de dónde sale el correo y un puntaje sin Gemini se dicen en palabras (con --eros-mock)', async ({ page, request }) => {
+  const mode = await modeOf(request)
+  if (mode !== 'mock') return
+  await signedIn(page, '#/busqueda/vacantes/eros-mock-frontend/postular')
+  // El correo figura en el aviso (is_email_extracted): se dice, sin «verificado».
+  await expect(page.getByRole('textbox', { name: 'Destinatario' })).toHaveValue('empleos@example.com')
+  await expect(page.locator('[data-email-origin]')).toHaveText('Sale del texto del aviso.')
+  await expect(page.getByRole('button', { name: 'Enviar desde Eros' })).toHaveCount(0)
+  await expect(page.getByRole('link', { name: /Abrir en Gmail/ })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Ya la envié' })).toBeVisible()
+
+  // La vacante en inglés no trae correo: Eros lo adivina con el dominio y queda marcado como adivinado.
+  await page.goto(`${ADMIN}#/busqueda/vacantes/eros-mock-backend/postular`)
+  await expect(page.locator('#main h1')).toHaveText(/Backend Developer/)
+  await page.getByRole('button', { name: 'Buscar correo' }).click()
+  await expect(page.getByRole('textbox', { name: 'Destinatario' })).toHaveValue('jobs@example.com')
+  const origin = page.locator('[data-email-origin]')
+  await expect(origin).toContainText('Adivinado')
+  await expect(origin).toContainText('puede no existir')
+  await expect(origin).not.toContainText(/verificad[oa]/i)
+  await noSeriousAxe(page)
+  // Escrito a mano, la nota se va.
+  await page.getByRole('textbox', { name: 'Destinatario' }).fill('rrhh@example.com')
+  await expect(origin).toHaveCount(0)
+
+  // Eros la puntuó sin Gemini: el análisis lo dice y no figura como «Generado por Eros».
+  await stage(page, 'Análisis').click()
+  await page.getByRole('button', { name: 'Analizar la vacante' }).click()
+  await expect(page.locator('[data-origin]')).toContainText('Estimación sin Gemini')
+  await expect(page.locator('#main header').first()).toContainText('77 % estimado')
+  await expect(page.getByText('Generado por Eros')).toHaveCount(0)
+})
+
 /** Cada endpoint de H1 (plan §6) y el control de teclado que lo usa. */
 const CONTROLS: { endpoint: string, where: 'cola' | 'analisis' | 'mensaje' | 'cv' | 'postular', role: 'button' | 'menuitem' | 'switch' | 'link', name: RegExp }[] = [
   { endpoint: 'GET /hunter/jobs y /stats', where: 'cola', role: 'link', name: /^Vacantes$/ },
@@ -375,7 +419,6 @@ const CONTROLS: { endpoint: string, where: 'cola' | 'analisis' | 'mensaje' | 'cv
   { endpoint: 'POST /hunter/cv/:id, /ticket y /html', where: 'cv', role: 'button', name: /^Adaptar CV$/ },
   { endpoint: 'POST /hunter/jobs/:id/apply-preview', where: 'postular', role: 'link', name: /^Postular$/ },
   { endpoint: 'POST /hunter/jobs/:id/find-email', where: 'postular', role: 'button', name: /^Buscar correo$/ },
-  { endpoint: 'POST /hunter/jobs/:id/apply-email', where: 'postular', role: 'button', name: /^Enviar desde Eros$/ },
   { endpoint: 'PATCH /hunter/jobs/:id/status (applied)', where: 'postular', role: 'button', name: /^Ya la envié$/ },
 ]
 

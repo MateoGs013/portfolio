@@ -7,6 +7,7 @@
 import type { Response } from 'express'
 import type { AdminErrorBody } from '../shared/adminContracts.js'
 import {
+  DEFAULT_PILLAR,
   isPostPillar,
   isPostStatus,
   isTrendStatus,
@@ -19,7 +20,7 @@ import {
   type TrendScan,
 } from '../shared/contentContracts.js'
 import { count, list, text, unwrap } from './erosContract.js'
-import { sendErosFailure, type ForwardResult } from './proxy.js'
+import { refusedText, sendErosFailure, type ErosFailure, type ForwardResult } from './proxy.js'
 
 export type * from '../shared/contentContracts.js'
 
@@ -90,25 +91,38 @@ function postStatusOf(value: unknown): PostStatus {
   return isPostStatus(lowered) ? lowered : 'draft'
 }
 
+/** El enfoque de Eros sin importar mayúsculas; uno que el admin no conoce queda en null. */
+function pillarOf(value: unknown): ContentPost['pillar'] {
+  const lowered = typeof value === 'string' ? value.trim().toLowerCase() : value
+  return isPostPillar(lowered) ? lowered : null
+}
+
+/**
+ * Eros manda el artículo de Dev.to anidado: `devto: { title, tags, markdown_body }`. Los campos sueltos
+ * (`devto_title`, `devto_tags`, `devto_markdown`) quedan como respaldo.
+ */
 export function normalizePost(raw: unknown): ContentPost | null {
   if (!isObj(raw)) return null
   const id = text(raw['id'])
   if (!id) return null
+  const devto = isObj(raw['devto']) ? raw['devto'] : {}
   const linkedin = text(raw['linkedin_text']) ?? text(raw['body']) ?? ''
-  const markdown = text(raw['devto_markdown']) ?? ''
-  const title = text(raw['title']) ?? text(raw['devto_title']) ?? text(raw['topic']) ?? ''
+  const markdown = text(devto['markdown_body']) ?? text(raw['devto_markdown']) ?? ''
+  const devtoTitle = text(devto['title']) ?? text(raw['devto_title'])
+  const devtoTags = strings(devto['tags'])
+  const title = text(raw['title']) ?? devtoTitle ?? text(raw['topic']) ?? ''
   return {
     id,
     title,
     topic: text(raw['topic']),
-    pillar: isPostPillar(raw['pillar']) ? raw['pillar'] : null,
+    pillar: pillarOf(raw['pillar']),
     project_slug: text(raw['project_slug']),
     hook: text(raw['hook']),
     linkedin_text: linkedin,
     first_comment: text(raw['first_comment']),
     twitter_thread: thread(raw['twitter_thread']),
-    devto_title: text(raw['devto_title']),
-    devto_tags: strings(raw['devto_tags']),
+    devto_title: devtoTitle,
+    devto_tags: devtoTags.length ? devtoTags : strings(raw['devto_tags']),
     devto_markdown: markdown,
     carousel_slides: arrayOf(raw['carousel_slides']).map(normalizeSlide).filter((s): s is CarouselSlide => s !== null),
     status: postStatusOf(raw['status']),
@@ -201,6 +215,41 @@ export function generateRequest(body: unknown): GenerateRequest | AdminErrorBody
 
 export const isErrorBody = (value: unknown): value is AdminErrorBody => isObj(value) && value['code'] === 'invalid'
 
+/** Los puntos y el ángulo, como los lee Eros en `custom_instructions`; null si no hay ninguno. */
+function instructions(request: GenerateRequest): string | null {
+  const parts: string[] = []
+  if (request.key_points.length) parts.push(`Puntos clave:\n${request.key_points.map(p => `- ${p}`).join('\n')}`)
+  if (request.custom_angle && request.custom_angle !== request.topic) parts.push(`Ángulo propio: ${request.custom_angle}`)
+  return parts.length ? parts.join('\n\n') : null
+}
+
+/**
+ * El cuerpo de POST /api/content/generate de Eros (`ContentGenerateRequest`): tema, enfoque y obra si
+ * los hay (un `pillar: null` no se manda) y los puntos y el ángulo en `custom_instructions`.
+ */
+export function erosGenerateBody(request: GenerateRequest): Record<string, string> {
+  const body: Record<string, string> = { topic: request.topic }
+  if (request.pillar) body['pillar'] = request.pillar
+  if (request.project_slug) body['project_slug'] = request.project_slug
+  const extra = instructions(request)
+  if (extra) body['custom_instructions'] = extra
+  return body
+}
+
+/**
+ * El cuerpo de POST /api/radar/trends/:id/generate de Eros (`TrendGenerateRequest`). Ahí el enfoque
+ * siempre va: sin él, Eros usa un valor por defecto que no existe y falla. Los puntos clave viajan
+ * con el ángulo en `custom_angle`, que es lo único libre que acepta.
+ */
+export function erosTrendBody(request: GenerateRequest): Record<string, string> {
+  const body: Record<string, string> = { pillar: request.pillar ?? DEFAULT_PILLAR }
+  if (request.project_slug) body['project_slug'] = request.project_slug
+  const points = request.key_points.length ? `Puntos clave: ${request.key_points.join('; ')}` : null
+  const angle = [request.custom_angle, points].filter(Boolean).join('\n\n')
+  if (angle) body['custom_angle'] = angle
+  return body
+}
+
 // ─── Errores ────────────────────────────────────────────────────────────────
 
 /** Qué es lo que Eros dijo que no tiene: la publicación o la tendencia. */
@@ -212,11 +261,13 @@ const nouns: Record<ContentThing, { one: string, it: string }> = {
 }
 
 /** Un 4xx de Eros en español, nombrando lo que se pidió (no una vacante). */
-function rejection(upstream: number, thing: ContentThing): { status: number, body: AdminErrorBody } {
+function rejection(failure: ErosFailure, thing: ContentThing): { status: number, body: AdminErrorBody } {
   const noun = nouns[thing]
+  const upstream = failure.upstream
   if (upstream === 404) return { status: 404, body: { error: `Eros no tiene ${noun.one}: puede que se haya borrado.`, code: 'not_found', errors: [] } }
   if (upstream === 409) return { status: 409, body: { error: `Eros no pudo hacerlo: ${noun.it} cambió mientras tanto. Recargá la lista.`, code: 'conflict', errors: [] } }
-  return { status: 400, body: { error: 'Eros no aceptó el pedido. Revisá los datos y probá de nuevo.', code: 'invalid', errors: [] } }
+  const error = failure.detail ? refusedText('Eros no aceptó el pedido.', failure.detail) : 'Eros no aceptó el pedido. Revisá los datos y probá de nuevo.'
+  return { status: 400, body: { error, code: 'invalid', errors: [] } }
 }
 
 /**
@@ -228,7 +279,7 @@ export function sendContentFailure(res: Response, result: ForwardResult, thing: 
     sendErosFailure(res, result, consequence)
     return
   }
-  const { status, body } = rejection(result.failure.upstream, thing)
+  const { status, body } = rejection(result.failure, thing)
   res.status(status).json(consequence ? { ...body, error: `${body.error} ${consequence}` } : body)
 }
 

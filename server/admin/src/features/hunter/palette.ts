@@ -15,7 +15,7 @@ function jobItems(): PaletteItem[] {
     return {
       id: job.id,
       label: job.company ? `${job.title} · ${job.company}` : job.title,
-      hint: score === null ? hunter.status[job.status] : hunter.percent(score),
+      hint: score === null ? hunter.status[job.status] : job.estimated ? hunter.estimated(score) : hunter.percent(score),
       keywords: [placeOf(job), ...job.tags].join(' '),
       to: `/busqueda/vacantes/${encodeURIComponent(job.id)}/analisis`,
     }

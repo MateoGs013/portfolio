@@ -4,19 +4,20 @@
       "id": "eros-mock-post-arquitectura",
       "title": "Diseño de una API con señales claras",
       "topic": "Diseño de una API con señales claras",
-      "pillar": "TECHNICAL_BREAKDOWN",
+      "pillar": "architecture",
       "project_slug": "la-rucula",
       "hook": "Cómo se arma una API de contenido que dice de dónde salió cada respuesta.",
       "linkedin_text": "Cómo se arma una API de contenido que dice de dónde salió cada respuesta.\n\n- Una sola forma de error\n- Respaldos generados, nunca escritos a mano",
       "first_comment": "https://example.com/articulos/api-senales",
       "twitter_thread": ["1/3 Diseño de una API con señales claras", "2/3 Una sola forma de error", "3/3 Respaldos generados"],
-      "devto_title": "Diseño de una API con señales claras",
-      "devto_tags": ["vue", "Node", "postgresql", "inventada"],
-      "devto_markdown": "## Una sola forma de error\n\nCada error del admin trae un texto en español y un código.\n\n## Respaldos generados\n\nSi la base no responde, la ruta sirve la última respuesta buena.",
+      "devto": {
+        "title": "Diseño de una API con señales claras",
+        "tags": ["vue", "Node", "postgresql", "inventada"],
+        "markdown_body": "## Una sola forma de error\n\nCada error del admin trae un texto en español y un código.\n\n## Respaldos generados\n\nSi la base no responde, la ruta sirve la última respuesta buena."
+      },
       "carousel_slides": [
         { "index": 1, "title": "Diseño de una API con señales claras", "subtitle": "De dónde sale cada respuesta", "bullets": ["Errores en español", "Respaldos generados"], "metric_badge": null, "code_snippet": null, "footer": null },
-        { "index": 2, "title": "Una sola forma de error", "subtitle": "", "bullets": "texto, código, campos", "metric_badge": null, "code_snippet": "{ error, code, errors }", "footer": null },
-        { "index": 3, "subtitle": "Una lámina sin título se descarta" }
+        { "index": 2, "title": "Una sola forma de error", "subtitle": "", "bullets": ["texto", "código", "campos"], "metric_badge": null, "code_snippet": "{ error, code, errors }", "footer": null }
       ],
       "status": "draft",
       "n8n_published_at": null,
@@ -28,19 +29,26 @@
       "id": "eros-mock-post-aprendizaje",
       "title": "",
       "topic": "Lo que aprendí al migrar a Prisma 7",
-      "pillar": "UN_ENFOQUE_DESCONOCIDO",
+      "pillar": "production_lessons",
       "project_slug": "una-obra-que-no-existe",
-      "hook": null,
-      "body": "Migrar a Prisma 7 cambió cómo se genera el cliente.",
-      "twitter_thread": "1/2 Lo que aprendí al migrar a Prisma 7\n\n2/2 El cliente se genera en otra carpeta",
-      "devto_title": null,
-      "devto_tags": "[\"prisma\", \"typescript\"]",
-      "devto_markdown": "",
-      "carousel_slides": "[{\"index\": 1, \"title\": \"Prisma 7\", \"bullets\": [\"El cliente cambia de lugar\"]}]",
+      "hook": "",
+      "linkedin_text": "Migrar a Prisma 7 cambió cómo se genera el cliente.",
+      "first_comment": "",
+      "twitter_thread": ["1/2 Lo que aprendí al migrar a Prisma 7", "2/2 El cliente se genera en otra carpeta"],
+      "devto": {
+        "title": "",
+        "tags": ["prisma", "typescript"],
+        "markdown_body": ""
+      },
+      "carousel_slides": [
+        { "index": 1, "title": "Prisma 7", "subtitle": "", "bullets": ["El cliente cambia de lugar"], "metric_badge": null, "code_snippet": null, "footer": null }
+      ],
       "status": "approved",
       "n8n_published_at": null,
+      "n8n_response": "Local approval: No N8N webhook configured",
       "created_at": "2026-10-29T09:00:00.000Z",
       "updated_at": "2026-10-29T09:00:00.000Z"
     }
-  ]
+  ],
+  "count": 2
 }

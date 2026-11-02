@@ -10,7 +10,7 @@ import { renderCvHtml, sheetHeaders, sheetTarget } from './hunterCvHtml.js'
 import { renderCvText } from './hunterCvText.js'
 import { jobLang } from './hunterMatch.js'
 import { cvFileName, loadCv } from './profile.js'
-import { forwardToEros, getParamId } from './proxy.js'
+import { erosIdParam, forwardToEros, getParamId } from './proxy.js'
 
 /**
  * CV Harvard ATS de una vacante: se compone siempre desde la base (GET /api/cv) y de Eros solo se
@@ -18,6 +18,9 @@ import { forwardToEros, getParamId } from './proxy.js'
  * salen la hoja, la impresión y el texto plano: una sola fuente. El PDF que armaba Eros no existe más.
  */
 export const hunterCvRouter = Router()
+
+/** Un id que no es de Eros (`%2F`, `..`) responde 400 y nunca se reenvía. */
+hunterCvRouter.param('id', erosIdParam)
 
 /** Respuesta de error para una hoja: una página legible si la abrió el navegador, JSON si fue un pedido. */
 export function refuse(req: Request, res: Response, status: number, body: { error: string, code: string }): void {

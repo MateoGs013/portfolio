@@ -24,6 +24,9 @@ export type AdminErrorCode =
   | 'db_unavailable' // 503: la base no responde
   | 'offline' // 503: Eros no responde
   | 'eros_auth' // 502: Eros responde pero rechaza EROS_API_KEY
+  | 'eros_error' // 502: Eros respondió con un 5xx o una redirección (no es una caída)
+  | 'eros_busy' // 504: una tarea larga (escanear, evaluar en lote) no terminó a tiempo y puede seguir en Eros
+  | 'send_disabled' // 409: «Enviar desde Eros» está apagado (EROS_SEND_ENABLED)
   | 'internal' // 500
 
 /** Todo error del admin: `error` en español para mostrar tal cual, `errors` por campo (puede venir vacío). */

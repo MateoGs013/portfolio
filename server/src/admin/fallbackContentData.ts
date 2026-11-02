@@ -121,7 +121,7 @@ export function postFromArticle(a: ArticleSource, sig: Signature): ContentPost {
     id: `${DEMO_PREFIX}${a.slug}`,
     title: a.title,
     topic: a.title,
-    pillar: 'TECHNICAL_BREAKDOWN',
+    pillar: 'architecture',
     project_slug: null,
     hook,
     linkedin_text: [hook ?? a.title, parts.map(s => `- ${s.heading}`).join('\n'), tags.map(t => `#${t}`).join(' ')].filter(Boolean).join('\n\n'),

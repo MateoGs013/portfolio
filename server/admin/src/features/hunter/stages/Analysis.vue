@@ -35,10 +35,10 @@ async function run(): Promise<void> {
     const result = await hunterApi.evaluate(props.job)
     const match = result.match ?? analysisOf(result.job)
     work.analysis = match
-    work.analysisOrigin = isSample(props.job) ? 'demo' : originOf(result)
+    work.analysisOrigin = isSample(props.job) ? 'demo' : match?.estimated ? 'estimate' : originOf(result)
     // Una pegada a mano pasa a «Evaluada»; las de Eros quedan como Eros diga.
     const status = isManual(props.job) && props.job.status === 'new' ? 'evaluated' : result.job.status
-    replaceJob({ ...props.job, match_score: match?.score ?? result.job.match_score, match_analysis: result.job.match_analysis, status })
+    replaceJob({ ...props.job, match_score: match?.score ?? result.job.match_score, match_analysis: result.job.match_analysis, estimated: result.job.estimated, status })
     toast(t.analysis.done)
     head.value?.focus()
   }

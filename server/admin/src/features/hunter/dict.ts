@@ -57,6 +57,9 @@ export const hunter = {
   remote: 'Remoto',
   affinity: (n: number) => `afinidad ${n} %`,
   percent: (n: number) => `${n} %`,
+  /** El puntaje que Eros calculó sin Gemini, por palabras clave. */
+  estimated: (n: number) => `${n} % estimado`,
+  estimatedHint: 'Estimado sin Gemini: Eros lo calculó por palabras clave.',
   sample: 'Muestra de prueba: estas vacantes son ficticias y no se pueden cambiar.',
   offline: {
     title: 'Eros no responde',
@@ -86,6 +89,7 @@ export const hunter = {
   actions: {
     scan: 'Buscar vacantes nuevas',
     scanning: 'Eros está recorriendo los portales…',
+    evaluating: 'Eros está evaluando las pendientes…',
     paste: 'Pegar una vacante',
     evaluatePending: 'Evaluar las pendientes',
     purge: 'Limpiar la cola',
@@ -93,7 +97,9 @@ export const hunter = {
     generateCv: 'Generar CV para esta vacante',
   },
   scan: {
-    started: 'Eros está recorriendo los portales. Puede tardar un minuto.',
+    started: 'Eros está recorriendo los portales. Puede tardar unos minutos.',
+    running: 'Eros ya está buscando o evaluando la cola: esperá a que termine.',
+    stillWorking: 'Eros sigue buscando: el escaneo puede estar terminando. Recargá la cola en un momento.',
     done: (scanned: number, found: number) => found
       ? `Eros revisó ${plural(scanned, 'aviso', 'avisos')} y sumó ${plural(found, 'vacante nueva', 'vacantes nuevas')}.`
       : `Eros revisó ${plural(scanned, 'aviso', 'avisos')}; no hay vacantes nuevas.`,
@@ -104,6 +110,7 @@ export const hunter = {
     failed: 'No se buscaron vacantes nuevas.',
   },
   batch: {
+    stillWorking: 'Eros sigue evaluando: puede estar terminando. Recargá la cola en un momento.',
     done: (n: number) => n ? `Eros evaluó ${plural(n, 'vacante pendiente', 'vacantes pendientes')}.` : 'No había vacantes pendientes de evaluar.',
     failed: 'No se evaluaron las vacantes pendientes.',
   },

@@ -180,7 +180,13 @@ test.describe('publicaciones', () => {
     await expect(page).toHaveURL(/formato=hilo/)
     await expect(page.getByRole('tabpanel', { name: /^Hilo/ }).getByText(/^Parte 1 de \d+$/)).toBeVisible()
     await page.getByRole('tab', { name: 'Dev.to' }).click()
-    await expect(page.getByRole('tabpanel', { name: 'Dev.to' }).getByRole('heading', { name: 'Artículo en Markdown' })).toBeVisible()
+    const devto = page.getByRole('tabpanel', { name: 'Dev.to' })
+    await expect(devto.getByRole('heading', { name: 'Artículo en Markdown' })).toBeVisible()
+    // Eros manda Dev.to anidado (devto.markdown_body): el artículo se ve, no el aviso de vacío.
+    if (first.id === 'eros-mock-post-arquitectura') {
+      await expect(devto).toContainText('Una sola forma de error')
+      await expect(page.locator('#main header').first()).toContainText('Arquitectura')
+    }
     await page.getByRole('tab', { name: /^Carrusel/ }).click()
     const frame = page.locator('iframe[data-carousel]')
     await expect(frame).toHaveAttribute('src', /\/api\/admin\/content\/carousel\/[^/]+\/html\?ticket=/)
@@ -224,14 +230,16 @@ test.describe('publicaciones', () => {
     await expect(toast(page, 'Publicación marcada como aprobada.')).toBeVisible()
     await expect(page.locator('#main header').getByText('Aprobada', { exact: true })).toBeVisible()
 
-    // Despachar por n8n: el diálogo nombra el canal elegido.
+    // Despachar por n8n: el diálogo nombra el canal elegido, avisa que Eros no lo respeta y el aviso
+    // dice lo que contestó Eros (publicada), sin nombrar una red.
     await page.getByRole('button', { name: 'Publicar por n8n' }).click()
     const dialog = page.getByRole('dialog', { name: 'Publicar por n8n' })
     await expect(dialog.getByRole('button', { name: 'Cancelar' })).toBeFocused()
+    await expect(dialog.getByText(/Eros no respeta el canal/)).toBeVisible()
     await dialog.getByText('X (hilo)', { exact: true }).click()
     await noSeriousAxe(page)
     await dialog.getByRole('button', { name: 'Publicar en X (hilo)' }).click()
-    await expect(toast(page, 'n8n despachó la publicación a X (hilo).')).toBeVisible()
+    await expect(toast(page, 'Eros la dio por publicada: se la pasó a n8n. Revisá en cada red por dónde salió.')).toBeVisible()
     const sent = (await erosRequests()).find(r => r.method === 'POST' && r.path.endsWith('/publish'))
     expect(sent?.body).toEqual({ channel: 'twitter' })
 
@@ -274,7 +282,7 @@ test.describe('publicaciones', () => {
     await dialog.getByRole('button', { name: 'Generar', exact: true }).click()
     await expect(dialog.getByText('Escribí el tema o el ángulo propio.')).toBeVisible()
     await dialog.getByLabel('Tema').fill('Una sola base para relaciones y vectores')
-    await dialog.getByLabel('Enfoque').selectOption({ label: 'Resultados medidos' })
+    await dialog.getByLabel('Enfoque').selectOption({ label: 'Rendimiento' })
     await dialog.getByLabel('Obra de la base').selectOption('la-rucula')
     await dialog.getByLabel('Puntos clave').fill('pgvector\n- índices HNSW')
     await noSeriousAxe(page)
@@ -282,7 +290,8 @@ test.describe('publicaciones', () => {
     await expect(toast(page, 'Eros escribió la publicación. Queda en borrador.')).toBeVisible()
     await expect(page).toHaveURL(/#\/busqueda\/publicaciones\/eros-mock-post-desde-tendencia$/)
     const body = (await erosRequests()).find(r => r.method === 'POST' && r.path === '/api/content/generate')?.body
-    expect(body).toMatchObject({ topic: 'Una sola base para relaciones y vectores', pillar: 'METRICS_DRIVEN', project_slug: 'la-rucula', key_points: ['pgvector', 'índices HNSW'] })
+    // A Eros le llegan sus enfoques y los puntos dentro de custom_instructions (key_points no existe en Eros).
+    expect(body).toEqual({ topic: 'Una sola base para relaciones y vectores', pillar: 'performance_optimization', project_slug: 'la-rucula', custom_instructions: 'Puntos clave:\n- pgvector\n- índices HNSW' })
   })
 })
 
@@ -361,7 +370,8 @@ test.describe('tendencias', () => {
     await expect(toast(page, 'Eros escribió la publicación desde la tendencia.')).toBeVisible()
     await expect(page).toHaveURL(/#\/busqueda\/publicaciones\/eros-mock-post-desde-tendencia$/)
     const body = (await erosRequests()).find(r => r.method === 'POST' && r.path.endsWith('/generate') && r.path.startsWith('/api/radar/'))?.body
-    expect(body).toMatchObject({ custom_angle: 'Lo que ahorra no tener dos bases' })
+    // Desde una tendencia el enfoque va siempre: sin elegir, el de arquitectura (sin él Eros da 500).
+    expect(body).toEqual({ pillar: 'architecture', custom_angle: 'Lo que ahorra no tener dos bases' })
   })
 })
 

@@ -3,7 +3,7 @@
  * (estado, borrar, despachar) va a Eros y la lista se actualiza con lo que respondió; nada cambia
  * acá si Eros no lo hizo.
  */
-import type { ContentPost, PostStatus, PublishChannel } from '@shared/contentContracts'
+import type { ContentPost, DispatchStatus, PostStatus, PublishChannel } from '@shared/contentContracts'
 import { contentApi } from './api'
 import { erosList, isSampleRow, newestFirst } from './erosList'
 
@@ -30,15 +30,18 @@ export async function removePost(post: ContentPost): Promise<void> {
 }
 
 /**
- * n8n la despachó: se vuelve a leer de Eros para mostrar su estado real. Si esa lectura falla, queda
- * la hora que dio el despacho (sin inventar una si no la dio).
+ * Eros la publicó (o, sin n8n, solo la aprobó: `status` lo dice): se vuelve a leer de Eros para
+ * mostrar su estado real. Si esa lectura falla, queda la hora que dio el despacho (sin inventar una).
  */
-export async function dispatchPost(post: ContentPost, channel: PublishChannel): Promise<ContentPost> {
+export async function dispatchPost(post: ContentPost, channel: PublishChannel): Promise<{ post: ContentPost, status: DispatchStatus }> {
   const result = await contentApi.publish(post.id, channel)
   const fresh = await contentApi.post(post.id).catch(() => null)
-  const next: ContentPost = fresh ?? { ...post, dispatched_at: result.dispatched_at ?? post.dispatched_at }
+  const fallback: ContentPost = result.status === 'published'
+    ? { ...post, status: 'published', dispatched_at: result.dispatched_at ?? post.dispatched_at }
+    : { ...post, status: 'approved' }
+  const next = fresh ?? fallback
   posts.upsert(next)
-  return next
+  return { post: next, status: result.status }
 }
 
 /** Lee la publicación de Eros (GET /content/posts/:id) y la deja al día en la lista. */

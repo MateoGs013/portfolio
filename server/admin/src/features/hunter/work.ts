@@ -3,7 +3,7 @@
  * previa del correo, con de dónde salió cada uno. Vive en memoria por vacante: cambiar de etapa o
  * volver a la lista no lo pierde; recargar sí (el CV se vuelve a armar desde la base en un clic).
  */
-import type { ApplyPreview, CvMeasure, HunterJob, MatchAnalysis, Pitch, TailoredCv } from '@shared/hunterContracts'
+import type { ApplyPreview, CvMeasure, EmailOrigin, HunterJob, MatchAnalysis, Pitch, TailoredCv } from '@shared/hunterContracts'
 import { reactive } from 'vue'
 import { originOf, type Origin } from './adapter'
 import { analysisOf, pitchDraftOf } from './model'
@@ -25,15 +25,18 @@ export interface JobWork {
   previewOrigin: Origin | null
   /** Destinatario, asunto y cuerpo como quedaron en Postular. */
   mail: { to: string, subject: string, body: string } | null
+  /** La última dirección de la que se sabe el origen (en minúscula), para decirlo debajo del destinatario. */
+  recipient: { email: string, origin: EmailOrigin } | null
 }
 
 const works = reactive(new Map<string, JobWork>())
 
 function blank(job: HunterJob): JobWork {
   const draft = pitchDraftOf(job)
+  const analysis = analysisOf(job)
   return {
-    analysis: analysisOf(job),
-    analysisOrigin: job.match_analysis ? originOf(job) : null,
+    analysis,
+    analysisOrigin: job.match_analysis ? (analysis?.estimated ? 'estimate' : originOf(job)) : null,
     pitch: draft ? { ...draft, lang: null } : null,
     pitchOrigin: draft ? originOf(job) : null,
     cv: null,
@@ -43,6 +46,7 @@ function blank(job: HunterJob): JobWork {
     preview: null,
     previewOrigin: null,
     mail: null,
+    recipient: null,
   }
 }
 

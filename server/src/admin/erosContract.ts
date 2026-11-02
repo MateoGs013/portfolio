@@ -6,10 +6,7 @@
 import type { Locale } from '../../generated/prisma/enums.js'
 import {
   isHunterJobStatus,
-  type ApplyEmailResult,
-  type ApplyPreview,
   type BatchEvaluation,
-  type FoundEmail,
   type HunterJob,
   type HunterStats,
   type JobChange,
@@ -64,6 +61,11 @@ function first(obj: Obj, ...keys: string[]): number | null {
 
 // ─── Vacantes ───────────────────────────────────────────────────────────────
 
+/** Eros puntuó sin Gemini, por palabras clave: `scored_by: 'heuristic'` en la vacante o en el análisis. */
+function heuristic(...sources: unknown[]): boolean {
+  return sources.some(src => isObj(src) && text(src['scored_by'])?.toLowerCase() === 'heuristic')
+}
+
 /** La afinidad llega como similitud (0–1) o como porcentaje: sale siempre en 0–100. */
 function percent(score: number | null): number | null {
   if (score === null) return null
@@ -75,6 +77,7 @@ export function normalizeJob(raw: unknown): HunterJob | null {
   const id = text(raw['id']) ?? text(raw['external_id'])
   if (!id) return null
   const analysis = raw['match_analysis']
+  const parsed = isObj(analysis) ? analysis : typeof analysis === 'string' ? safeJson(analysis) : null
   return {
     id,
     source: text(raw['source']) ?? 'eros',
@@ -98,6 +101,7 @@ export function normalizeJob(raw: unknown): HunterJob | null {
     contact_email: text(raw['contact_email']),
     pitch_draft: text(raw['pitch_draft']),
     semantic_score: percent(count(raw['semantic_score'])),
+    estimated: heuristic(raw, parsed),
     _source: 'eros',
   }
 }
@@ -165,6 +169,7 @@ export function normalizeMatch(raw: unknown): MatchAnalysis | null {
     hiring_manager_name: text(o['hiring_manager_name']),
     hiring_manager_title: text(o['hiring_manager_title']),
     hiring_manager_url: text(o['hiring_manager_url']),
+    estimated: heuristic(o),
   }
 }
 
@@ -175,44 +180,6 @@ function safeJson(raw: string): Obj | null {
   }
   catch {
     return null
-  }
-}
-
-// ─── Postulación ────────────────────────────────────────────────────────────
-
-/** El texto de una vista previa de Eros, o null si vino vacía (entonces se arma el respaldo). */
-export function normalizeApplyPreview(payload: unknown): ApplyPreview | null {
-  const o = unwrap(payload)
-  const subject = text(o['subject'])
-  const body = text(o['body'])
-  if (!subject && !body) return null
-  return {
-    to_email: text(o['to_email']),
-    contact_email: text(o['contact_email']),
-    subject: subject ?? '',
-    body: body ?? '',
-    channel: text(o['channel']) ?? 'email',
-  }
-}
-
-export function normalizeFoundEmail(payload: unknown): FoundEmail {
-  const o = unwrap(payload)
-  const email = text(o['email'])
-  return {
-    email,
-    domain: text(o['domain']) ?? (email ? email.split('@')[1] ?? null : null),
-    confidence: count(o['confidence']),
-    sources: list(o['sources']),
-  }
-}
-
-export function normalizeApplyEmail(payload: unknown): ApplyEmailResult {
-  const o = unwrap(payload)
-  return {
-    ok: o['ok'] !== false,
-    dispatched_to: text(o['dispatched_to']),
-    provider: text(o['provider']),
-    applied_at: text(o['applied_at']),
   }
 }
 
@@ -258,7 +225,11 @@ export const manualJobRefusal = {
 export function normalizeEvaluation(payload: unknown): JobEvaluation | null {
   const o = unwrap(payload)
   const job = normalizeJob(o['job']) ?? normalizeJob(o)
-  return job ? { ok: true, job, match: normalizeMatch(o['match']) ?? normalizeMatch(job.match_analysis) } : null
+  if (!job) return null
+  const match = normalizeMatch(o['match']) ?? normalizeMatch(job.match_analysis)
+  // Eros marca la estimación en la vacante o en el análisis: las dos dicen lo mismo.
+  const estimated = job.estimated || !!match?.estimated
+  return { ok: true, job: { ...job, estimated }, match: match ? { ...match, estimated } : null }
 }
 
 /** El pitch de Eros en el idioma que decidió el servidor; null si no trae texto. */
@@ -266,7 +237,7 @@ export function normalizePitch(payload: unknown, lang: Locale): Pitch | null {
   const o = unwrap(isObj(payload) && isObj(payload['pitch']) ? payload['pitch'] : payload)
   const pitch: Pitch = {
     lang,
-    subject: text(o['subject']) ?? '',
+    subject: text(o['subject_or_hook']) ?? text(o['subject']) ?? '',
     elevator_pitch: text(o['elevator_pitch']) ?? '',
     cover_letter: text(o['cover_letter']) ?? '',
     connection_note: text(o['connection_note']) ?? '',
@@ -274,8 +245,17 @@ export function normalizePitch(payload: unknown, lang: Locale): Pitch | null {
   return pitch.subject || pitch.elevator_pitch || pitch.cover_letter ? pitch : null
 }
 
+/** Eros responde `{ ok, job_id, new_status }` (estado) o `{ ok, job_id, contact_email }` (contacto). */
 export function normalizeJobChange(payload: unknown): JobChange {
-  return { ok: true, job: normalizeJob(unwrap(payload)['job']) }
+  const o = unwrap(payload)
+  const job = normalizeJob(o['job'])
+  const status = o['new_status'] ?? o['status']
+  return {
+    ok: true,
+    job,
+    status: isHunterJobStatus(status) ? status : job?.status ?? null,
+    contact_email: text(o['contact_email']) ?? job?.contact_email ?? null,
+  }
 }
 
 export const normalizeSemantic = (payload: unknown): SemanticResults => ({ results: normalizeJobs(payload) })
