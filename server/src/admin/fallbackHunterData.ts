@@ -100,6 +100,7 @@ function toJob(s: Sample): HunterJob {
     contact_email: 'empleos@example.com',
     pitch_draft: null,
     semantic_score: null,
+    estimated: false,
     _source: 'demo',
     demo: true,
   }
@@ -140,6 +141,7 @@ export function jobFromInput(id: string, input: JobInput): HunterJob {
     contact_email: input.contact_email,
     pitch_draft: null,
     semantic_score: null,
+    estimated: false,
   }
 }
 

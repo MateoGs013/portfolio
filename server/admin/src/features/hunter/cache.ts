@@ -108,5 +108,6 @@ export function manualJob(input: ManualInput, now = new Date()): HunterJob {
     contact_email: input.contactEmail.trim() || null,
     pitch_draft: null,
     semantic_score: null,
+    estimated: false,
   }
 }

@@ -1,13 +1,14 @@
 <script setup lang="ts">
 /**
- * Etapa Postular: destinatario, la vista previa del correo (POST /jobs/:id/apply-preview con la
- * vacante; si ya escribiste el mensaje, ese es el cuerpo) y tres salidas:
+ * Etapa Postular: destinatario (con de dónde salió), la vista previa del correo (POST
+ * /jobs/:id/apply-preview con la vacante; si ya escribiste el mensaje, ese es el cuerpo) y las salidas:
  * - «Abrir en Gmail», el primario: abre el borrador y no marca nada.
- * - «Enviar desde Eros» (POST /jobs/:id/apply-email), con confirmación que muestra destinatario y
- *   asunto. Sin Eros, con una vacante pegada o con la muestra queda apagado y dice por qué.
+ * - «Enviar desde Eros» (POST /jobs/:id/apply-email), apagado mientras EROS_SEND_ENABLED sea false:
+ *   Eros adjunta su propio CV, no el de la base. Con el interruptor encendido vuelve con su
+ *   confirmación de destinatario y asunto (y se apaga sin Eros, con una pegada o con la muestra).
  * - «Ya la envié» (PATCH status applied): la única forma de marcarla como postulada a mano.
  */
-import type { HunterJob } from '@shared/hunterContracts'
+import { EROS_SEND_ENABLED, type HunterJob } from '@shared/hunterContracts'
 import { computed, onMounted, ref } from 'vue'
 import { requestConfirm } from '../../../stores/dialogs'
 import { adminStatus } from '../../../stores/status'
@@ -46,11 +47,13 @@ async function loadPreview(): Promise<void> {
     const preview = await hunterApi.applyPreview(props.job)
     work.preview = preview
     work.previewOrigin = isSample(props.job) ? 'demo' : originOf(preview)
+    const to = props.job.contact_email ?? preview.to_email ?? preview.contact_email ?? ''
     work.mail = {
-      to: props.job.contact_email ?? preview.to_email ?? preview.contact_email ?? '',
+      to,
       subject: work.pitch?.subject || preview.subject,
       body: bodyFrom(preview.body),
     }
+    if (to && preview.email_origin) work.recipient = { email: to.toLowerCase(), origin: preview.email_origin }
   }
   catch (err) {
     loadFailed.value = failureText(err, t.apply.previewFailed)
@@ -88,7 +91,7 @@ const sendBlocked = computed<string | null>(() => {
 const sending = ref(false)
 async function send(): Promise<void> {
   const m = mail.value
-  if (sending.value || sendBlocked.value || !validTo.value || !m) return
+  if (!EROS_SEND_ENABLED || sending.value || sendBlocked.value || !validTo.value || !m) return
   const ok = await requestConfirm({
     title: t.apply.sendTitle,
     message: t.apply.sendMessage,
@@ -159,6 +162,7 @@ async function markApplied(): Promise<void> {
               {{ t.apply.gmail }}
             </Button>
             <Button
+              v-if="EROS_SEND_ENABLED"
               :loading="sending"
               :loading-label="t.apply.send"
               :aria-disabled="sendBlocked || !validTo || sending ? 'true' : undefined"
@@ -183,7 +187,7 @@ async function markApplied(): Promise<void> {
           <p v-if="!gmailUrl" id="postular-motivo" class="m-0 text-label text-faint">
             {{ t.apply.toMissing }}
           </p>
-          <p v-if="sendBlocked" id="enviar-motivo" class="m-0 text-label text-faint">
+          <p v-if="EROS_SEND_ENABLED && sendBlocked" id="enviar-motivo" class="m-0 text-label text-faint">
             {{ sendBlocked }}
           </p>
           <p v-if="!applied && !canChange(job)" id="marcar-motivo" class="m-0 text-label text-faint">

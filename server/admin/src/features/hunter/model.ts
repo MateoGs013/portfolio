@@ -81,6 +81,7 @@ export function analysisOf(job: HunterJob): MatchAnalysis | null {
     hiring_manager_name: text(raw['hiring_manager_name']),
     hiring_manager_title: text(raw['hiring_manager_title']),
     hiring_manager_url: text(raw['hiring_manager_url']),
+    estimated: job.estimated || raw['scored_by'] === 'heuristic',
   }
 }
 

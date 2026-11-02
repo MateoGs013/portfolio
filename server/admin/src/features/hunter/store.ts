@@ -134,7 +134,7 @@ export async function changeStatus(job: HunterJob, status: HunterJobStatus): Pro
     return next
   }
   const result = await hunterApi.setStatus(job, status)
-  const next = { ...job, ...(result.job ?? {}), status: result.job?.status ?? status }
+  const next = { ...job, ...(result.job ?? {}), status: result.status ?? result.job?.status ?? status }
   replaceJob(next)
   return next
 }
@@ -146,7 +146,7 @@ export async function changeContact(job: HunterJob, email: string | null): Promi
     return next
   }
   const result = await hunterApi.setContact(job, email)
-  const next = { ...job, ...(result.job ?? {}), contact_email: result.job?.contact_email ?? email }
+  const next = { ...job, ...(result.job ?? {}), contact_email: result.contact_email ?? result.job?.contact_email ?? email }
   replaceJob(next)
   return next
 }

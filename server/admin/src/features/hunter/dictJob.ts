@@ -13,6 +13,7 @@ export const job = {
     eros: 'Generado por Eros',
     fallback: 'Armado desde la base, sin Eros',
     demo: 'Muestra de prueba, armada desde la base',
+    estimate: 'Estimación sin Gemini: Eros no pudo usar el modelo y lo calculó por palabras clave. Tomalo como orientativo.',
   },
   menu: {
     label: 'Más acciones',
@@ -121,8 +122,20 @@ export const job = {
     find: 'Buscar correo',
     finding: 'Buscando…',
     found: (email: string) => `Encontrado: ${email}.`,
-    foundEros: (n: number) => `Lo encontró Eros, con ${n} % de confianza.`,
-    foundJob: 'Es el correo que trae el aviso.',
+    foundKept: (email: string) => `No apareció otro: queda ${email}, el que ya tenía la vacante.`,
+    /** De dónde salió la dirección escrita. Ninguna está verificada. */
+    origin: {
+      posting: 'Sale del texto del aviso.',
+      company_site: 'Eros la encontró publicada en la web de la empresa. No está verificada.',
+      guessed: 'Eros la armó con el dominio de la empresa y puede no existir. Buscá el correo real o escribilo a mano antes de enviar.',
+      unknown: 'No figura en el aviso y no se sabe de dónde salió: puede ser adivinada. Verificala antes de enviar.',
+    },
+    originMark: {
+      posting: 'Del aviso',
+      company_site: 'De la web de la empresa',
+      guessed: 'Adivinado',
+      unknown: 'Sin verificar',
+    },
     markLocked: 'Esta vacante no se puede marcar ahora: es una muestra o Eros no responde.',
     notFound: 'No encontramos un correo para esta vacante; escribilo a mano.',
     findFailed: 'No se buscó el correo de contacto.',

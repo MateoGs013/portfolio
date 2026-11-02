@@ -57,6 +57,9 @@ export const hunter = {
   remote: 'Remoto',
   affinity: (n: number) => `afinidad ${n} %`,
   percent: (n: number) => `${n} %`,
+  /** El puntaje que Eros calculó sin Gemini, por palabras clave. */
+  estimated: (n: number) => `${n} % estimado`,
+  estimatedHint: 'Estimado sin Gemini: Eros lo calculó por palabras clave.',
   sample: 'Muestra de prueba: estas vacantes son ficticias y no se pueden cambiar.',
   offline: {
     title: 'Eros no responde',

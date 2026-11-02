@@ -100,6 +100,8 @@ export function evaluateJobHeuristic(source: HunterJob, profile: HunterProfile):
     hiring_manager_name: source.hiring_manager_name,
     hiring_manager_title: source.hiring_manager_title,
     hiring_manager_url: null,
+    // La estimación de la base se rotula por su origen (sin Eros), no como la de Eros sin Gemini.
+    estimated: false,
   }
 
   const job: HunterJob = {

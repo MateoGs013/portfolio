@@ -60,7 +60,11 @@ const affinity = (job: HunterJob) => (typeof job.semantic_score === 'number' ? h
           <StatusDot :tone="verdict(item.job).tone" :label="verdict(item.job).label" />
           <span v-if="workflow(item.job)" class="text-faint">{{ workflow(item.job) }}</span>
           <span v-if="semantic && affinity(item.job)" class="text-dim">{{ affinity(item.job) }}</span>
-          <span v-if="scoreOf(item.job) !== null" class="shrink-0 text-faint tabular-nums">{{ hunter.percent(scoreOf(item.job)!) }}</span>
+          <span
+            v-if="scoreOf(item.job) !== null"
+            class="shrink-0 text-faint tabular-nums"
+            :title="item.job.estimated ? hunter.estimatedHint : undefined"
+          >{{ item.job.estimated ? hunter.estimated(scoreOf(item.job)!) : hunter.percent(scoreOf(item.job)!) }}</span>
         </span>
       </template>
     </Listbox>

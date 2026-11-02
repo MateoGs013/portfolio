@@ -23,8 +23,11 @@ import { api, type RequestOptions } from '../../api/client'
 import { ApiError, NetworkError, RequestError, ServiceError } from '../../api/errors'
 import { jobInput } from './model'
 
-/** De dónde salió lo que se muestra: Eros, el respaldo desde la base o la muestra de pruebas. */
-export type Origin = 'eros' | 'fallback' | 'demo'
+/**
+ * De dónde salió lo que se muestra: Eros, el respaldo desde la base, la muestra de pruebas o una
+ * estimación de Eros sin Gemini (`estimated`), que nunca se rotula como «de Eros».
+ */
+export type Origin = 'eros' | 'fallback' | 'demo' | 'estimate'
 
 export function originOf(body: { _source?: string } | null | undefined): Origin {
   return body?._source === 'fallback' ? 'fallback' : body?._source === 'demo' ? 'demo' : 'eros'
