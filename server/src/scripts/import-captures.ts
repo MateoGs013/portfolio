@@ -14,12 +14,9 @@
  *
  * Uso local:  CAPTURAS_DIR=<checkout>/docs/rediseno/capturas pnpm tsx server/src/scripts/import-captures.ts
  * Producción (los archivos llegan versionados con la imagen; solo la base), después de un pg_dump:
- *   ANTES: el volumen persistente de Coolify montado en /app/public/media/projects (o /app/public/media)
- *   tapa lo que la imagen copia en esa ruta. Hay que copiar public/media/projects/{la-rucula,argpiscinas,
- *   barberpole,eros}/ al volumen (docker cp desde el checkout, o una copia única de la imagen al volumen) o
- *   confirmar que el volumen no cubre esas carpetas. Sin eso, /media/projects/<slug>/*.webp da 404 y este
- *   script falla al cargar seed/media.ts. Lo mismo vale para el parche 11-01: desde D4 pide que exista
- *   public/media/projects/<slug>/hero.webp en el servidor.
+ *   el volumen persistente va en /app/uploads (MEDIA_UPLOAD_DIR, mediaDirs.ts) y no tapa
+ *   public/media/projects/, así que lo versionado está siempre en la imagen. El parche 11-01 también pide
+ *   que exista public/media/projects/<slug>/hero.webp en el servidor.
  *   pnpm tsx server/src/scripts/import-captures.ts --db-only --dry     (imprime el diff, no escribe)
  *   pnpm tsx server/src/scripts/import-captures.ts --db-only           (aplica todo en una transacción)
  *   pnpm tsx server/src/scripts/import-captures.ts --db-only --dry     (tiene que decir "sin cambios")

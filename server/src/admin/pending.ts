@@ -7,14 +7,15 @@
  * - experiencias del CV sin viñetas o con el inglés incompleto, y el resto del inglés de la trayectoria;
  * - bloques requeridos de about y contact vacíos o faltantes;
  * - el PDF del CV del sitio cuando ya no coincide con la base (cvStamp.ts);
- * - media y retrato que apuntan a un archivo que ya no está en el servidor (sin volumen persistente,
- *   lo subido desde el admin se pierde en cada deploy: DEPLOY.md, paso 6).
+ * - media y retrato que apuntan a un archivo que ya no está en el servidor (lo versionado o lo subido,
+ *   mediaDirs.ts).
  * Lo que el sitio no muestra (una obra oculta, un borrador) solo pide publicarse: su inglés no se lista.
  */
 import { access } from 'node:fs/promises'
 import path from 'node:path'
 import { Router } from 'express'
 import { db } from '../db.js'
+import { mediaFileExists } from '../mediaDirs.js'
 import { hasDocValue, docFieldsOf } from '../content/docFields.js'
 import { isVisible, isVisibleArticle } from '../content/visibility.js'
 import type { PendingItem, PendingKind, UntranslatedRecord } from '../shared/adminContracts.js'
@@ -71,6 +72,8 @@ async function fileMissing(src: string | null | undefined): Promise<boolean> {
     return false
   }
   if (!file.startsWith(`${MEDIA_ROOT}${path.sep}`)) return false
+  // Lo de /media/projects/ puede estar en lo versionado o en lo subido desde el admin (mediaDirs.ts).
+  if (src.startsWith('/media/projects/')) return !(await mediaFileExists(decodeURI(src.split(/[?#]/)[0]!)))
   try {
     await access(file)
     return false
@@ -114,7 +117,7 @@ async function projectItems(untranslated: Untranslated): Promise<PendingItem[]> 
       items.push({
         kind: 'media_missing', record, field,
         headline: `${lost.length === 1 ? 'Una imagen' : `${lost.length} imágenes`} de ${p.title} ya no ${lost.length === 1 ? 'está' : 'están'} en el servidor`,
-        message: 'El sitio muestra la imagen rota. Volvé a subir el archivo: hoy el servidor pierde lo subido cada vez que se publica una versión nueva del sitio.',
+        message: 'El sitio muestra la imagen rota. Volvé a subir el archivo.',
         route: projectRoute(p.id, field),
       })
     }
@@ -241,7 +244,7 @@ async function profileItems(records: readonly UntranslatedRecord[]): Promise<Pen
       const value = stored.find(f => f.name === block.name)?.value
       if (typeof value !== 'string' || !missingFiles.has(value)) continue
       const path = `fields.${block.name}`
-      blocks.unshift({ kind: 'media_missing', record, field: path, headline: `«${block.label}» de ${schema.label} ya no está en el servidor`, message: 'El sitio muestra la imagen rota. Volvé a subirla: hoy el servidor pierde lo subido cada vez que se publica una versión nueva del sitio.', route: campo(DOC_ROUTE[key], path) })
+      blocks.unshift({ kind: 'media_missing', record, field: path, headline: `«${block.label}» de ${schema.label} ya no está en el servidor`, message: 'El sitio muestra la imagen rota. Volvé a subirla.', route: campo(DOC_ROUTE[key], path) })
     }
     const english = records.find(r => r.collection === 'docs' && r.id === key)?.fields ?? []
     if (english.length) {

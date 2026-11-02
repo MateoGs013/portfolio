@@ -1,8 +1,8 @@
 /**
- * Archivos de media en el disco: lectura del formato real (magic bytes), escritura dentro de
- * `public/media/projects/` y limpieza de lo que ya nadie usa. En producción esa carpeta todavía no
- * tiene volumen (DEPLOY.md, paso 6): lo subido dura hasta el próximo deploy, y la bandeja del Inicio
- * (pending.ts, `media_missing`) avisa cuando la base apunta a un archivo que ya no está.
+ * Archivos de media en el disco: lectura del formato real (magic bytes), escritura en la carpeta de
+ * subidas (UPLOAD_DIR, mediaDirs.ts; en producción sobre el volumen persistente) y limpieza de lo que
+ * ya nadie usa. Solo se borra dentro de UPLOAD_DIR: lo versionado en git nunca se toca desde el admin.
+ * La bandeja del Inicio (pending.ts, `media_missing`) avisa cuando la base apunta a un archivo que no está.
  *
  * Cada obra tiene su carpeta `<slug>/`. Las carpetas que empiezan con `_` no son de una obra
  * (`_perfil/` guarda el retrato de Sobre mí): la limpieza de carpetas vacías nunca las toca.
@@ -11,12 +11,12 @@ import { readdir, rmdir, unlink, writeFile, mkdir } from 'node:fs/promises'
 import path from 'node:path'
 import multer from 'multer'
 import { db } from '../db.js'
+import { UPLOAD_DIR, inDir } from '../mediaDirs.js'
 import { MediaKind } from '../../generated/prisma/client.js'
 import { IMAGE_MIME, imageDims } from './image.js'
 import { HttpError } from './input.js'
 import { VIDEO_MIME, videoDims } from './video.js'
 
-export const MEDIA_DIR = path.resolve('public/media/projects')
 export const IMAGE_MAX_BYTES = 10 * 1024 * 1024
 export const MEDIA_MAX_BYTES = 20 * 1024 * 1024
 
@@ -51,9 +51,9 @@ export function sniffImage(file: Express.Multer.File, what: string): Sniffed {
 
 /** Escribe el archivo en `<folder>/` y lo anota en `written` para poder deshacerlo si algo falla después. */
 export async function saveFile(folder: string, name: string, buffer: Buffer, written: string[]): Promise<string> {
-  const dir = path.resolve(MEDIA_DIR, folder)
+  const dir = path.resolve(UPLOAD_DIR, folder)
   const target = path.resolve(dir, path.basename(name))
-  if (!dir.startsWith(MEDIA_DIR + path.sep) || !target.startsWith(dir + path.sep)) throw new HttpError(400, 'El nombre del archivo no es válido.')
+  if (!dir.startsWith(UPLOAD_DIR + path.sep) || !target.startsWith(dir + path.sep)) throw new HttpError(400, 'El nombre del archivo no es válido.')
   await mkdir(dir, { recursive: true })
   await writeFile(target, buffer)
   written.push(target)
@@ -70,11 +70,11 @@ export function fileStem(stem: string): string {
   return `${stem}-${Date.now().toString(36)}`
 }
 
-/** Borra el archivo de una ruta pública `/media/projects/…`; cualquier otra ruta se deja. */
+/** Borra el archivo subido de una ruta pública `/media/projects/…`; cualquier otra ruta se deja. */
 export async function removeFile(src: string | null): Promise<void> {
   if (!src) return
-  const abs = path.resolve('public', '.' + src)
-  if (!abs.startsWith(MEDIA_DIR + path.sep)) return
+  const abs = inDir(UPLOAD_DIR, src)
+  if (!abs) return
   await unlink(abs).catch(() => undefined)
 }
 
@@ -112,8 +112,8 @@ export function folderOf(src: string): string | null {
 export async function pruneFolders(folders: string[]): Promise<void> {
   for (const folder of new Set(folders)) {
     if (folder.startsWith('_') || folder.includes('..')) continue
-    const dir = path.resolve(MEDIA_DIR, folder)
-    if (!dir.startsWith(MEDIA_DIR + path.sep)) continue
+    const dir = path.resolve(UPLOAD_DIR, folder)
+    if (!dir.startsWith(UPLOAD_DIR + path.sep)) continue
     const entries = await readdir(dir).catch(() => null)
     if (entries && entries.length === 0) await rmdir(dir).catch(() => undefined)
   }

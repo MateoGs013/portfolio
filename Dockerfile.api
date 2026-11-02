@@ -9,6 +9,8 @@ RUN pnpm install --frozen-lockfile
 
 FROM base AS runner
 ENV NODE_ENV=production
+# Lo subido desde el admin, aparte de lo versionado: el volumen persistente va en /app/uploads (DEPLOY.md, paso 6).
+ENV MEDIA_UPLOAD_DIR=/app/uploads/projects
 COPY --from=deps /app/node_modules ./node_modules
 COPY package.json pnpm-lock.yaml ./
 COPY prisma.config.ts ./
@@ -17,7 +19,7 @@ COPY prisma ./prisma
 COPY server ./server
 COPY public/media ./public/media
 RUN pnpm build:admin && pnpm prisma generate
-RUN mkdir -p /app/public/media/projects /app/uploads && chown -R node:node /app
+RUN mkdir -p /app/public/media/projects /app/uploads/projects && chown -R node:node /app
 
 USER node
 EXPOSE 3001

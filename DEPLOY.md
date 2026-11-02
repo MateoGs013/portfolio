@@ -90,8 +90,7 @@ El repositorio cuenta con Dockerfiles optimizados para producción:
    - **Dockerfile location**: `/Dockerfile.api`
 4. En **"Ports Exposes"**, indicá `3001`.
 5. En **"Domains"**, podés dejarlo sin dominio público (si Nuxt actuará como proxy inverso completo) o asignarle un subdominio como `https://api.mateogs.tech`.
-6. En la pestaña **"Persistent Storage" / "Storages"**, un volumen nombrado con destino `/app/public/media/projects`. Todo lo que se sube desde el admin va ahí: las imágenes y videos de las obras (`<slug>/`) y el retrato del perfil (`_perfil/retrato-*.webp|jpg|png`). **Hoy la API no tiene volumen en Coolify**: lo subido desde el admin vive en la capa del contenedor y se pierde en cada deploy (la base sigue apuntando a archivos que ya no están). Configurarlo antes de subir imágenes o el retrato desde el admin de producción; hasta entonces, solo sobrevive lo versionado en `public/media/projects/`.
-   **Ojo:** el volumen tapa lo que la imagen trae en esa ruta (las capturas versionadas en `public/media/projects/<slug>/`). Al crearlo, copiar primero esas carpetas al volumen (`docker cp` desde el contenedor actual, o `public/media/projects/{la-rucula,argpiscinas,barberpole,eros}/` desde el repo) o el sitio queda sin capturas; ver la cabecera de `server/src/scripts/import-captures.ts`. Después de cada deploy, comprobar que `/media/projects/_perfil/` y una captura subida desde el admin siguen respondiendo 200.
+6. En la pestaña **"Persistent Storage" / "Storages"**, un volumen con destino `/app/uploads`. Todo lo que se sube desde el admin va ahí (`MEDIA_UPLOAD_DIR=/app/uploads/projects`, fijado en `Dockerfile.api`): las imágenes y videos de las obras (`<slug>/`) y el retrato del perfil (`_perfil/retrato-*.webp|jpg|png`). La API lo sirve en la misma dirección que lo versionado (`/media/projects/…`), y el volumen no tapa `public/media/projects/`: lo versionado en git llega siempre con la imagen. Después de crearlo, comprobar que una captura versionada y una subida desde el admin responden 200 después de un deploy.
 7. En la pestaña **"Environment Variables"**, definí:
    ```env
    NODE_ENV=production
@@ -125,7 +124,7 @@ El repositorio cuenta con Dockerfiles optimizados para producción:
 
 > [!WARNING] Desplegar el rediseño del admin (noviembre de 2026)
 > El admin nuevo reemplaza al anterior en `/admin` y trae una migración aditiva (`20261105000000_metric_translation`, que se aplica sola al arrancar) y un parche de datos para los documentos `about` y `contact`. Todo con el OK de Mateo:
-> 1. **Antes** del merge a `main`: `pg_dump --format=custom --file=antes-admin.dump "$DATABASE_URL"`, verificar `HUNTER_API_URL=http://eros:8000` en las variables de la API y el volumen de `/app/public/media/projects` (paso 6; hoy no existe).
+> 1. **Antes** del merge a `main`: `pg_dump --format=custom --file=antes-admin.dump "$DATABASE_URL"`, verificar `HUNTER_API_URL=http://eros:8000` en las variables de la API y el volumen de `/app/uploads` (paso 6).
 > 2. Desplegar la API. La imagen compila el admin y el arranque corre las migraciones.
 > 3. En la terminal del contenedor: `pnpm tsx server/src/patches/2026-11-05-admin-datos.ts --dry` (muestra lo que cambiaría), sin `--dry` (aplica en una transacción) y `--dry` otra vez hasta que diga «sin cambios». Borra el `en` de email, direcciones web y retrato (era una copia vieja del español), no toca `cv` y lista los bloques requeridos que faltan: se completan desde Perfil.
 > 4. Reiniciar la API (el parche borra `data/content-last-good.json`, pero el proceso tiene respuestas en memoria).

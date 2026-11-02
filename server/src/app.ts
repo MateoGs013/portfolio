@@ -9,6 +9,7 @@ import { adminApi } from './admin/router.js'
 import { isAdminAuthorized } from './admin/auth.js'
 import { adminCsp, adminUi } from './admin/ui.js'
 import { envelope } from './envelope.js'
+import { MEDIA_DIR, UPLOAD_DIR } from './mediaDirs.js'
 import { docs } from './routes/docs.js'
 import { experience } from './routes/experience.js'
 import { orgs } from './routes/orgs.js'
@@ -123,13 +124,10 @@ app.get('/api/health', async (_req, res) => {
 })
 
 // Archivos estáticos de media con protección contra MIME-sniffing y caché de 7 días
-app.use('/media', express.static(path.resolve('public/media'), {
-  maxAge: '7d',
-  immutable: false,
-  setHeaders: (res) => {
-    res.setHeader('X-Content-Type-Options', 'nosniff')
-  },
-}))
+const mediaStatic = { maxAge: '7d', immutable: false, setHeaders: (res: Response) => { res.setHeader('X-Content-Type-Options', 'nosniff') } }
+app.use('/media', express.static(path.resolve('public/media'), mediaStatic))
+// Lo subido desde el admin, si vive aparte de lo versionado (MEDIA_UPLOAD_DIR, mediaDirs.ts), en la misma dirección.
+if (UPLOAD_DIR !== MEDIA_DIR) app.use('/media/projects', express.static(UPLOAD_DIR, mediaStatic))
 
 // Archivos estáticos de uploads con protección contra MIME-sniffing y caché de 7 días
 app.use('/uploads', express.static(path.resolve('public/media'), {
