@@ -52,7 +52,7 @@ onShortcut('new', () => void router.push('/obras/nueva'))
         {{ home.title }}
       </h1>
 
-      <ul v-if="figures.length" :aria-label="s.label" class="m-0 mt-7 flex list-none flex-wrap gap-x-9 gap-y-4 p-0">
+      <ul v-if="figures.length" :aria-label="s.label" class="m-0 mt-5 flex list-none flex-wrap gap-x-6 gap-y-2 p-0">
         <li
           v-for="(f, i) in figures"
           :key="f.id"
@@ -60,8 +60,8 @@ onShortcut('new', () => void router.push('/obras/nueva'))
           :style="{ '--i': i + 1 }"
           :data-figure="f.id"
         >
-          <span class="text-figure text-ink tabular-nums">{{ f.value }}</span>
-          <span class="text-body text-dim">{{ f.label }}</span>
+          <span class="text-lead font-[560] text-ink tabular-nums">{{ f.value }}</span>
+          <span class="text-lead text-dim">{{ f.label }}</span>
         </li>
       </ul>
 

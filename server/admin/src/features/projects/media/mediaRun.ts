@@ -7,8 +7,8 @@
  *    con su inglés. Una pieza que falla no frena a las demás.
  */
 import { api } from '../../../api/client'
-import { messageOf } from '../../../api/errors'
-import type { AdminMedia, MediaForm } from '../types'
+import { messageOf, NetworkError } from '../../../api/errors'
+import type { AdminMedia, AdminProject, MediaForm } from '../types'
 import type { MediaQueue } from './mediaQueue'
 
 type Body = Record<string, unknown>
@@ -143,7 +143,33 @@ export async function runMedia(plan: MediaPlan, projectId: number, saved: readon
   async function createPiece(item: MediaForm): Promise<void> {
     const file = queue.get(item.key, 'file')
     if (!file) return
-    const created = await api.post<AdminMedia>('/media', form({
+    const order = plan.orders[item.key]!
+    let created: AdminMedia
+    try {
+      created = await postPiece(item, file, order)
+    }
+    catch (err) {
+      // Si el corte llegó con el archivo ya recibido, la fila existe: se adopta en vez de ofrecer un
+      // reintento que la duplicaría.
+      if (!(err instanceof NetworkError) || !err.timedOut) throw err
+      const landed = await findLanded(item, order).catch(() => null)
+      if (!landed) throw err
+      created = landed
+    }
+    result.created.set(item.key, created.id)
+    const en = { alt: orNull(item.translations.en.alt), caption: orNull(item.translations.en.caption) }
+    if (en.alt || en.caption) await api.patch(`/media/${created.id}`, { en })
+  }
+
+  /** La pieza que llegó a la base aunque la respuesta no: nueva, del mismo rol, lugar y texto. */
+  async function findLanded(item: MediaForm, order: number): Promise<AdminMedia | null> {
+    const fresh = await api.get<AdminProject>(`/projects/${projectId}`)
+    const known = new Set([...byId.keys(), ...result.created.values()])
+    return fresh.media.find(m => !known.has(m.id) && m.role === item.role && m.order === order && m.alt === item.alt.trim()) ?? null
+  }
+
+  function postPiece(item: MediaForm, file: Blob, order: number): Promise<AdminMedia> {
+    return api.post<AdminMedia>('/media', form({
       file,
       webm: item.upload.webm ? queue.get(item.key, 'webm') : null,
       poster: item.upload.poster ? queue.get(item.key, 'poster') : null,
@@ -151,12 +177,9 @@ export async function runMedia(plan: MediaPlan, projectId: number, saved: readon
       alt: item.alt.trim(),
       caption: orNull(item.caption),
       role: item.role,
-      order: String(plan.orders[item.key]!),
+      order: String(order),
       viewport: item.viewport,
       tint: orNull(item.tint),
     }))
-    result.created.set(item.key, created.id)
-    const en = { alt: orNull(item.translations.en.alt), caption: orNull(item.translations.en.caption) }
-    if (en.alt || en.caption) await api.patch(`/media/${created.id}`, { en })
   }
 }

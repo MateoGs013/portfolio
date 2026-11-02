@@ -45,7 +45,7 @@ function errorOf(id: 'value' | 'en', text: string, lang: string, example: string
     <p class="m-0 max-w-[68ch] text-label text-faint">
       {{ block.help }}
     </p>
-    <div class="grid items-start gap-x-10 gap-y-7 xl:grid-cols-2">
+    <div class="grid gap-3.5">
       <Field
         v-for="side in sides"
         :key="side.id"

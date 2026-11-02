@@ -23,6 +23,7 @@ import Apply from './stages/Apply.vue'
 import Cv from './stages/Cv.vue'
 import Message from './stages/Message.vue'
 import { canChange, findJob, lastFilter, lastOpened, queuePhase } from './store'
+import { headingClass } from '../../ui/heading'
 
 const props = defineProps<{
   id: string
@@ -58,14 +59,16 @@ const original = computed(() => (job.value?.url && /^https?:\/\//i.test(job.valu
         <p class="m-0 animate-rise text-body text-dim">
           {{ [job.company, placeOf(job)].filter(Boolean).join(' · ') }}
         </p>
-        <div class="flex flex-wrap items-end gap-x-8 gap-y-5">
+        <div class="flex flex-wrap items-start gap-x-8 gap-y-5">
           <h1
-            class="m-0 min-w-0 flex-1 basis-[min(100%,560px)] animate-rise text-heading text-balance wrap-break-word"
+            class="m-0 min-w-0 flex-1 basis-[min(100%,560px)] animate-rise text-balance wrap-break-word"
+            :class="headingClass(job.title)"
+            :title="job.title.length > 40 ? job.title : undefined"
             :style="{ viewTransitionName: TRAVEL_NAME }"
           >
             {{ job.title }}
           </h1>
-          <div class="flex flex-wrap items-center gap-x-5 gap-y-3 pb-1">
+          <div class="flex flex-wrap items-center gap-x-5 gap-y-3 pt-1">
             <StatusDot :tone="statusOf(job).tone" :label="statusOf(job).label" strong />
             <span v-if="score !== null" class="text-body text-dim tabular-nums">{{ hunter.percent(score) }}</span>
             <Button v-if="original" variant="ghost" :href="original" external>

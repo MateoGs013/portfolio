@@ -39,13 +39,24 @@ for (const flag of flags) {
 
 const taken = new Set()
 
-function tryPort(port) {
+function tryHost(port, host) {
   return new Promise((resolve) => {
     const server = createServer()
-    server.once('error', () => resolve(false))
-    // En el mismo host que la API (server/src/index.ts): en Windows, `::` no choca con un 0.0.0.0 ocupado.
-    server.listen(port, '0.0.0.0', () => server.close(() => resolve(true)))
+    server.once('error', err => resolve(err.code === 'EAFNOSUPPORT' || err.code === 'EADDRNOTAVAIL'))
+    server.listen({ port, host, exclusive: true }, () => server.close(() => resolve(true)))
   })
+}
+
+/**
+ * Libre en los tres: la API escucha en 0.0.0.0 (server/src/index.ts), pero `localhost` puede resolver
+ * a ::1 y caer en otro proceso que tenga el mismo puerto en `::` (en Windows no chocan). Sin IPv6, `::`
+ * no cuenta.
+ */
+async function tryPort(port) {
+  for (const host of ['0.0.0.0', '::', '127.0.0.1']) {
+    if (!await tryHost(port, host)) return false
+  }
+  return true
 }
 
 async function freePort() {

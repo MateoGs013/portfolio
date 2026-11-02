@@ -39,7 +39,7 @@ export const experience = {
   },
   status: {
     inCv: 'En el CV',
-    education: 'En el CV, en Formación',
+    education: 'En el CV',
     outside: 'Fuera del CV',
   },
   missingEn: 'Falta inglés',

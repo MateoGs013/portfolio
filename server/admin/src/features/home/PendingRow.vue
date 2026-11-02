@@ -30,7 +30,7 @@ defineProps<{
     >
       <span class="size-1.5 -translate-y-1 self-baseline rounded-full" :class="dotClass[tone]" aria-hidden="true" />
       <span class="min-w-0 transition-transform duration-700 ease-e group-hover/row:translate-x-3.5 group-focus-visible/row:translate-x-3.5">
-        <span class="block text-title font-[520] tracking-[-0.015em] text-balance wrap-break-word">{{ headline }}</span>
+        <span class="block text-title font-[460] tracking-[-0.015em] text-balance wrap-break-word">{{ headline }}</span>
         <span class="mt-1 block max-w-[72ch] text-body text-faint">{{ message }}</span>
       </span>
       <span class="inline-flex items-center gap-1.5 text-label text-faint transition-colors duration-120 ease-e group-hover/row:text-ink max-sm:hidden" aria-hidden="true">

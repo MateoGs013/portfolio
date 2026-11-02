@@ -5,7 +5,8 @@
  *
  * Los documentos no se crean ni se borran: son dos y fijos. Doc.title no se pide en el formulario y el
  * servidor conserva el guardado. El retrato se sube con POST /docs/about/portrait a
- * `public/media/projects/_perfil/`, dentro del volumen persistente de DEPLOY.md.
+ * `public/media/projects/_perfil/`. Esa carpeta todavía no tiene volumen en producción (DEPLOY.md,
+ * paso 6): hasta que lo tenga, el retrato subido dura hasta el próximo deploy.
  */
 import { Router } from 'express'
 import { db } from '../db.js'

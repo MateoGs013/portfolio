@@ -63,7 +63,10 @@ const adminAuthFailuresLimiter = rateLimit({
 
     return false
   },
+  // Solo cuentan los 401: sin esto, cada hoja con ticket (iframe del CV, imprimir, carrusel) sumaba
+  // aunque saliera bien y a los 30 pedidos la hoja respondía 429.
   requestWasSuccessful: (_req, res) => res.statusCode !== 401,
+  skipSuccessfulRequests: true,
   standardHeaders: 'draft-8',
   legacyHeaders: false,
   message: { error: 'demasiados intentos fallidos de autenticación en admin, reintente en 15 minutos' },

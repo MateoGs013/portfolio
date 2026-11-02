@@ -78,7 +78,7 @@ const context = (item: FreshJob) => [t.score(verdictOf(item.score).label, item.s
           :to="`/busqueda/vacantes/${encodeURIComponent(item.job.id)}/analisis`"
           :headline="t.row(item.job.title, item.job.company)"
           :message="context(item)"
-          tone="sig"
+          tone="ok"
           :index="props.offset + i + 1"
           data-kind="job"
         />

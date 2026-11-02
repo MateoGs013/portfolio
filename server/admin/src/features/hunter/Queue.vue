@@ -125,33 +125,33 @@ onShortcut('search', () => void nextTick(() => search.value?.focus()))
       <span v-if="queuePhase !== 'loading'" class="animate-rise text-title font-[420] text-faint tabular-nums stagger [--i:1]">{{ allJobs.length }}</span>
       <QueueActions class="animate-rise stagger [--i:2] md:ml-auto" :locked="locked" @paste="pasteOpen = true" />
     </header>
-    <p class="mt-3.5 mb-0 max-w-[60ch] animate-rise text-lead text-dim stagger [--i:2]">
+    <p class="mt-3.5 mb-0 max-w-[72ch] animate-rise text-lead text-dim stagger [--i:2]">
       {{ hunter.lead }}
-    </p>
-    <p v-if="stats" class="mt-2 mb-0 animate-rise text-body text-faint tabular-nums stagger [--i:3]">
-      {{ stats }}
+      <span v-if="stats" class="text-body text-faint tabular-nums">{{ stats }}</span>
     </p>
 
-    <QueueNotice class="mt-8 max-w-[1080px]" :locked="locked" @retry="loadQueue()" />
+    <QueueNotice class="mt-4 max-w-[1080px]" :locked="locked" @retry="loadQueue()" />
 
-    <div class="mt-9 grid max-w-[1080px] gap-6">
-      <QueueFilters :jobs="semantic ? semantic.results : allJobs" :active="filter" />
-      <QueueSearch
-        ref="search"
-        v-model:query="query"
-        v-model:affinity="affinity"
-        :offline="offline || isSampleQueue"
-        :pending="searching"
-        :showing-results="!!semantic"
-        @search="runSemantic"
-        @clear="affinity = false"
-      />
+    <div class="mt-7 grid max-w-[1080px] gap-4">
+      <div class="flex flex-wrap items-end justify-between gap-x-8 gap-y-4">
+        <QueueFilters :jobs="semantic ? semantic.results : allJobs" :active="filter" />
+        <QueueSearch
+          ref="search"
+          v-model:query="query"
+          v-model:affinity="affinity"
+          :offline="offline || isSampleQueue"
+          :pending="searching"
+          :showing-results="!!semantic"
+          @search="runSemantic"
+          @clear="affinity = false"
+        />
+      </div>
       <p v-if="semantic" class="m-0 text-body text-dim" role="status">
         {{ hunter.search.results(semantic.results.length, semantic.query) }}
       </p>
     </div>
 
-    <div class="mt-8 max-w-[1080px]">
+    <div class="mt-6 max-w-[1080px]">
       <Skeleton v-if="queuePhase === 'loading' || queuePhase === 'idle'" :count="5" />
       <ErrorState
         v-else-if="queuePhase === 'error'"

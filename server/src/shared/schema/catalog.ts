@@ -60,7 +60,8 @@ export const Article = {
   readingTimeMin: field('int', 'Minutos de lectura', 'Se muestra junto a la fecha.', { surfaces: ['articles'] }),
   status: field('enum', 'Estado', 'Nace en borrador: solo los publicados con fecha cumplida se ven.', { required: true, options: 'ArticleStatus', surfaces: ['articles'] }),
   featured: field('bool', 'Destacado', 'Los destacados encabezan Artículos.', { surfaces: ['articles'] }),
-  coverImage: field('path', 'Portada', 'Ruta o dirección de la imagen de portada.', { max: 2048, surfaces: ['articles'] }),
+  // El sitio no muestra la portada del artículo (plan §5): el admin no la ofrece y la conserva como está.
+  coverImage: field('path', 'Portada', 'El sitio no la usa todavía: el admin no la edita y conserva la guardada.', { max: 2048, surfaces: [], editable: false }),
   canonicalUrl: field('url', 'Publicación original', 'Si salió primero en otro sitio: los buscadores la toman como original.', { max: 2048, surfaces: ['seo'] }),
   sortOrder: field('int', 'Orden', 'Posición en Artículos.', { surfaces: ['articles'] }),
   publishedAt: field('datetime', 'Publicado el', 'Fecha que se muestra; con fecha futura, el artículo espera.', { surfaces: ['articles'] }),

@@ -14,7 +14,6 @@ import Button from '../../ui/Button.vue'
 import { ui } from '../../ui/dict'
 import ErrorState from '../../ui/ErrorState.vue'
 import Icon from '../../ui/Icon.vue'
-import Mono from '../../ui/Mono.vue'
 import Skeleton from '../../ui/Skeleton.vue'
 import StatusDot from '../../ui/StatusDot.vue'
 import GenerateDialog from '../content/GenerateDialog.vue'
@@ -140,7 +139,7 @@ function onCreated(post: ContentPost | null): void {
             </h2>
             <ul class="m-0 flex list-none flex-wrap gap-x-4 gap-y-1.5 p-0 text-dim">
               <li v-for="tag in record.tags" :key="tag">
-                <Mono size="label">{{ tag }}</Mono>
+                <span class="text-label">{{ tag }}</span>
               </li>
             </ul>
           </section>

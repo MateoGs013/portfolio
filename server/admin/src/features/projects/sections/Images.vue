@@ -1,11 +1,14 @@
 <script setup lang="ts">
 /**
- * Imágenes: la zona de subida y las piezas de la obra en el orden del sitio (portadas y después la
- * galería). Se ordenan arrastrando el asa o con Subir y Bajar, dentro de su grupo. Eliminar pregunta
+ * Imágenes: la zona de subida y las piezas de la obra en una grilla de miniaturas, en el orden del
+ * sitio (portadas y después la galería), para ver la obra entera de un vistazo. Abrir una pieza
+ * despliega su formulario a todo el ancho; quedan abiertas solas las nuevas, las que tienen un error
+ * y la que pide ?campo=. Se ordenan arrastrando el asa o con Subir y Bajar, dentro de su grupo. Eliminar pregunta
  * y deja la pieza fuera hasta Guardar; Descartar la recupera. Todo se guarda con el mismo Guardar de
  * la obra, también en una obra nueva.
  */
-import { computed, nextTick } from 'vue'
+import { computed, nextTick, reactive, watch } from 'vue'
+import { useRoute } from 'vue-router'
 import { requestConfirm } from '../../../stores/dialogs'
 import { toast } from '../../../stores/toasts'
 import { announce } from '../../../ui/announce'
@@ -14,6 +17,7 @@ import { useProject } from '../context'
 import { mediaText } from '../media/dict'
 import MediaCard from '../media/MediaCard.vue'
 import MediaDrop from '../media/MediaDrop.vue'
+import MediaTile from '../media/MediaTile.vue'
 import { coversFirst, pieceName } from '../media/mediaForm'
 import { useMediaQueue } from '../media/mediaQueue'
 import { moveItem, useDragSort } from '../reorder'
@@ -24,6 +28,41 @@ const queue = useMediaQueue()
 const editor = useEditorContext()
 const locked = computed(() => queue.running.value || (editor?.busy.value ?? false))
 
+/** Las piezas que se abrieron a mano. */
+const opened = reactive(new Set<string>())
+const PIECE_FIELDS = ['alt', 'caption', 'tint', 'role', 'viewport', 'translations.en.alt', 'translations.en.caption']
+const hasIssue = (index: number) => !!editor && PIECE_FIELDS.some(f => editor.messageFor(`media[${index}].${f}`))
+
+function isOpen(index: number): boolean {
+  const piece = form.value.media[index]
+  if (!piece) return false
+  return piece.id === null || opened.has(piece.key) || hasIssue(index) || queue.states.value[piece.key]?.phase === 'error'
+}
+/** Se puede cerrar la que está abierta a mano; las que piden atención quedan a la vista. */
+const closable = (index: number) => isOpen(index) && !(form.value.media[index]?.id === null || hasIssue(index) || queue.states.value[form.value.media[index]!.key]?.phase === 'error')
+
+function open(index: number): void {
+  const piece = form.value.media[index]
+  if (!piece) return
+  opened.add(piece.key)
+  void focusIn(piece.key, '[data-move="close"]')
+}
+
+function close(index: number): void {
+  const piece = form.value.media[index]
+  if (!piece) return
+  opened.delete(piece.key)
+  void focusIn(piece.key, '[data-move="open"]')
+}
+
+// ?campo=media[3].alt abre esa pieza antes de que el editor busque el campo.
+const route = useRoute()
+watch(() => [route.query['campo'], form.value.media.length] as const, ([campo]) => {
+  const at = typeof campo === 'string' ? /^media\[(\d+)\]/.exec(campo) : null
+  const piece = at ? form.value.media[Number(at[1])] : undefined
+  if (piece) opened.add(piece.key)
+}, { immediate: true })
+
 const sameGroup = (a: number, b: number) => form.value.media[a]?.role === form.value.media[b]?.role
 
 async function focusIn(key: string, selector: string): Promise<void> {
@@ -31,7 +70,7 @@ async function focusIn(key: string, selector: string): Promise<void> {
   const root = document.querySelector<HTMLElement>(`[data-media-key="${key}"]`)
   const target = root?.querySelector<HTMLButtonElement>(selector)
   if (target && !target.disabled) target.focus()
-  else root?.querySelector<HTMLElement>('[data-move]:not(:disabled)')?.focus()
+  else root?.querySelector<HTMLElement>('[data-move]:not(:disabled), button')?.focus()
 }
 
 function move(from: number, to: number, focus?: 'up' | 'down'): void {
@@ -102,12 +141,17 @@ const drag = useDragSort((from, to) => move(from, to), () => !locked.value)
 
     <MediaDrop />
 
-    <ol v-if="form.media.length" class="m-0 grid list-none border-t border-rule p-0" :aria-label="t.list">
+    <ol
+      v-if="form.media.length"
+      class="m-0 grid list-none grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-x-3.5 gap-y-7 p-0"
+      :aria-label="t.list"
+    >
       <li
         v-for="(piece, index) in form.media"
         :key="piece.key"
-        class="animate-rise stagger border-b border-rule transition-[background-color,opacity] duration-200 ease-e"
+        class="animate-rise stagger transition-[background-color,opacity] duration-200 ease-e"
         :class="[
+          isOpen(index) ? 'col-span-full border-y border-rule' : 'rounded-media',
           drag.over.value === index && drag.dragging.value !== index && sameGroup(index, drag.dragging.value ?? -1) ? 'bg-surface' : '',
           drag.dragging.value === index ? 'opacity-45' : '',
         ]"
@@ -115,15 +159,19 @@ const drag = useDragSort((from, to) => move(from, to), () => !locked.value)
         v-bind="drag.row(index)"
       >
         <MediaCard
+          v-if="isOpen(index)"
           :index="index"
           :can-up="index > 0 && sameGroup(index, index - 1)"
           :can-down="index < form.media.length - 1 && sameGroup(index, index + 1)"
           :locked="locked"
           :handle="drag.handle(index)"
+          :closable="closable(index)"
           @up="move(index, index - 1, 'up')"
           @down="move(index, index + 1, 'down')"
           @remove="remove(index)"
+          @close="close(index)"
         />
+        <MediaTile v-else :index="index" :handle="drag.handle(index)" @open="open(index)" />
       </li>
     </ol>
   </section>

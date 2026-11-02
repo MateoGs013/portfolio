@@ -13,7 +13,7 @@ export type PendingGroupId = 'cv-pdf' | 'publicacion' | 'imagenes' | 'ingles' | 
 export const PENDING_GROUPS: readonly { id: PendingGroupId, label: string, tone: StatusTone, kinds: readonly PendingKind[] }[] = [
   { id: 'cv-pdf', label: 'PDF del CV', tone: 'sig', kinds: ['cv_pdf'] },
   { id: 'publicacion', label: 'Sin publicar', tone: 'neutral', kinds: ['hidden', 'scheduled', 'draft'] },
-  { id: 'imagenes', label: 'Imágenes', tone: 'wip', kinds: ['no_cover', 'media_english'] },
+  { id: 'imagenes', label: 'Imágenes', tone: 'wip', kinds: ['media_missing', 'no_cover', 'media_english'] },
   { id: 'ingles', label: 'Falta el inglés', tone: 'wip', kinds: ['english'] },
   { id: 'metricas', label: 'Métricas sin respaldo', tone: 'wip', kinds: ['metrics'] },
   { id: 'cv', label: 'CV', tone: 'wip', kinds: ['cv_bullets', 'cv_english'] },

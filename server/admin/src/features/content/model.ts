@@ -9,7 +9,7 @@ import { content } from './dict'
 
 const STATUS_TONE: Record<PostStatus, StatusTone> = {
   draft: 'wip',
-  approved: 'sig',
+  approved: 'neutral',
   published: 'ok',
   rejected: 'neutral',
 }

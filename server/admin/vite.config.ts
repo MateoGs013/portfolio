@@ -37,7 +37,8 @@ export default defineConfig({
   server: {
     port: devPort,
     strictPort: true,
-    proxy: { '/api': { target: apiOrigin, changeOrigin: true } },
+    // /media también: las miniaturas y el retrato se piden al mismo origen.
+    proxy: { '/api': { target: apiOrigin, changeOrigin: true }, '/media': { target: apiOrigin, changeOrigin: true } },
   },
   preview: { port: devPort, strictPort: true },
 })

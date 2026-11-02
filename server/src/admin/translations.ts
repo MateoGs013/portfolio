@@ -15,6 +15,7 @@ import { docFieldsOf, untranslatedFields } from '../content/docFields.js'
 import { Locale, type Prisma, type PrismaClient } from '../../generated/prisma/client.js'
 import type { UntranslatedRecord } from '../shared/adminContracts.js'
 import { docKeys, docSchemas, isDocKey } from '../shared/docSchema.js'
+import { describe, type ModelName } from '../shared/adminSchema.js'
 import { isMetricKey } from '../shared/metricKeys.js'
 import { HttpError, optStr } from './input.js'
 
@@ -65,12 +66,24 @@ export function isBlank(data: Record<string, string | string[] | null | undefine
   return Object.values(data).every(v => v === null || (Array.isArray(v) && v.length === 0))
 }
 
-const PROJECT_LIMITS = { title: 4000, role: 4000, summary: 4000, brief: 4000, outcome: 4000 }
-const STEP_LIMITS = { title: 200, body: 4000 }
-const LINK_LIMITS = { label: 4000 }
-const MEDIA_LIMITS = { alt: 300, caption: 300 }
-const METRIC_LIMITS = { label: 80 }
-const TECH_LIMITS = { note: 4000 }
+/**
+ * Los topes del inglés salen del descriptor de la tabla *Translation (adminSchema), que copia el del
+ * español: nada de números escritos acá que se desfasen del contrato.
+ */
+function limitsOf<K extends string>(model: ModelName, keys: readonly K[]): Record<K, number> {
+  return Object.fromEntries(keys.map((k) => {
+    const max = describe(model, k)?.max
+    if (max === undefined) throw new Error(`${model}.${k} no tiene tope en adminSchema`)
+    return [k, max]
+  })) as Record<K, number>
+}
+
+const PROJECT_LIMITS = limitsOf('ProjectTranslation', ['title', 'role', 'summary', 'brief', 'outcome'])
+const STEP_LIMITS = limitsOf('ProcessStepTranslation', ['title', 'body'])
+const LINK_LIMITS = limitsOf('LinkTranslation', ['label'])
+const MEDIA_LIMITS = limitsOf('MediaTranslation', ['alt', 'caption'])
+const METRIC_LIMITS = limitsOf('MetricTranslation', ['label'])
+const TECH_LIMITS = limitsOf('TechTranslation', ['note'])
 
 export async function saveProjectEn(tx: Tx, projectId: number, en: Body): Promise<void> {
   const data = enTexts(en, PROJECT_LIMITS)

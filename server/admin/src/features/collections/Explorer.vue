@@ -5,7 +5,7 @@
  * y filas grandes que entran escalonadas. Un Tab entra a la lista, ↑↓ o j/k recorren y Enter abre:
  * el título de la fila viaja al encabezado del editor. N crea uno nuevo si la colección se crea acá.
  */
-import { computed, ref, watch } from 'vue'
+import { computed, nextTick, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useCollection } from '../../composables/useCollection'
 import { onShortcut } from '../../composables/useShortcuts'
@@ -100,6 +100,21 @@ function create(): void {
 }
 
 onShortcut('search', () => searchInput.value?.focus())
+
+/**
+ * Esc en la búsqueda deja el foco en la lista (la fila activa), no en el cuerpo de la página: así no
+ * se pierde el lugar. El filtro escrito queda: para eso se buscó.
+ */
+function leaveSearch(event: KeyboardEvent): void {
+  // Sin esto Chrome vacía el campo de búsqueda con Esc.
+  event.preventDefault()
+  event.stopPropagation()
+  void nextTick(() => {
+    const option = list.value?.querySelector<HTMLElement>('[role="option"][tabindex="0"]') ?? list.value?.querySelector<HTMLElement>('[role="option"]')
+    if (option) option.focus()
+    else document.querySelector<HTMLElement>('#main h1')?.focus()
+  })
+}
 // N solo si la colección se crea desde su lista: si no, la tecla queda libre.
 if (props.model.routes.create) onShortcut('new', create)
 </script>
@@ -141,7 +156,16 @@ if (props.model.routes.create) onShortcut('new', create)
         <span class="pointer-events-none absolute top-1/2 left-0 -translate-y-1/2 text-faint">
           <Icon name="search" :size="16" />
         </span>
-        <TextInput :id="searchId" ref="searchInput" v-model="search" type="search" :placeholder="say.search" aria-keyshortcuts="/" class="pl-6.5" />
+        <TextInput
+          :id="searchId"
+          ref="searchInput"
+          v-model="search"
+          type="search"
+          :placeholder="say.search"
+          aria-keyshortcuts="/"
+          class="pl-6.5"
+          @keydown.esc="leaveSearch"
+        />
       </div>
     </div>
     <p class="sr-only" role="status">

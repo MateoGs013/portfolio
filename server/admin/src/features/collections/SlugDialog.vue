@@ -20,7 +20,7 @@ import { collections } from './dict'
 const props = defineProps<{
   current: string
   endpoint: string
-  preview: (slug: string) => string
+  preview: (slug: string) => string | null
 }>()
 
 const emit = defineEmits<{ changed: [record: unknown] }>()
@@ -90,13 +90,13 @@ function tidy(): void {
           {{ t.current }}
         </p>
         <Mono size="label" class="text-dim">
-          {{ preview(current) }}
+          {{ preview(current) ?? current }}
         </Mono>
       </div>
       <Field data-slug-next :label="t.next" :hint="t.nextHint" :error="error">
         <TextInput v-model="next" mono autocomplete="off" :readonly="sending" @blur="tidy" @keydown.enter.prevent="change" />
       </Field>
-      <p class="m-0 flex flex-wrap items-baseline gap-x-2 text-label text-faint">
+      <p v-if="preview(cleaned || '…') !== null" class="m-0 flex flex-wrap items-baseline gap-x-2 text-label text-faint">
         {{ collections.slug.preview }}
         <Mono>{{ preview(cleaned || '…') }}</Mono>
       </p>

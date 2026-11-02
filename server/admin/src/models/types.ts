@@ -99,7 +99,8 @@ export interface Model<TRecord extends AdminRecord, TForm extends object> {
   /** PATCH de la dirección («Cambiar dirección»): `/orgs/12/slug`. */
   slugEndpoint?(id: number): string
   /** Cómo se lee la dirección en el sitio: `/projects/la-rucula`, `/projects?org=acme`. */
-  slugPreview?(slug: string): string
+  /** Cómo se lee la dirección en el sitio; null si el registro no tiene página propia. */
+  slugPreview?(slug: string): string | null
   /** Tiene GET /:id/impact y DELETE ?reassignTo= (empresas y tecnologías). */
   impact?: boolean
   /** La checklist de publicación, si la colección se publica (obras, artículos). */

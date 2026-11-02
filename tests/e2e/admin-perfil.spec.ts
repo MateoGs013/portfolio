@@ -221,6 +221,40 @@ test.describe('retrato y bloques libres', () => {
     }
   })
 
+  test('con la red lenta, un retrato de varios MB se sube entero: la subida no se corta a los 15 s', async ({ page }) => {
+    test.setTimeout(180_000)
+    await signedIn(page, '#/perfil/sobre-mi')
+    // Ruido: un PNG que no se comprime (unos 3,5 MB) para que tarde más de 15 s a 200 KB/s.
+    const data = await page.evaluate(() => {
+      const canvas = document.createElement('canvas')
+      canvas.width = 1100
+      canvas.height = 1100
+      const ctx = canvas.getContext('2d')!
+      const pixels = ctx.createImageData(1100, 1100)
+      for (let i = 0; i < pixels.data.length; i++) pixels.data[i] = i % 4 === 3 ? 255 : Math.floor(Math.random() * 256)
+      ctx.putImageData(pixels, 0, 0)
+      return canvas.toDataURL('image/png').split(',')[1]!
+    })
+    const buffer = Buffer.from(data, 'base64')
+    expect(buffer.length).toBeGreaterThan(3_000_000)
+    const cdp = await page.context().newCDPSession(page)
+    await cdp.send('Network.enable')
+    await cdp.send('Network.emulateNetworkConditions', { offline: false, latency: 20, downloadThroughput: -1, uploadThroughput: 200 * 1024 })
+    const started = Date.now()
+    try {
+      await page.locator('input[type="file"]').setInputFiles({ name: 'retrato-pesado.png', mimeType: 'image/png', buffer })
+      await expect(page.getByRole('listitem').filter({ hasText: 'Retrato cambiado' })).toBeVisible({ timeout: 150_000 })
+    }
+    finally {
+      await cdp.send('Network.emulateNetworkConditions', { offline: false, latency: 0, downloadThroughput: -1, uploadThroughput: -1 })
+    }
+    expect(Date.now() - started, 'la subida tardó más que el tope viejo de 15 s').toBeGreaterThan(15_000)
+    await expect(page.getByText('El servidor tardó demasiado')).toHaveCount(0)
+    const src = String(await publicValue(page, 'about', 'es', 'portrait'))
+    uploaded.add(src)
+    expect(src).toMatch(/^\/media\/projects\/_perfil\/retrato-[a-z0-9]+\.png$/)
+  })
+
   test('un bloque libre se agrega con su nombre, se guarda y se quita', async ({ page }, info) => {
     await signedIn(page, '#/perfil/sobre-mi')
     await page.getByRole('button', { name: 'Agregar bloque' }).click()

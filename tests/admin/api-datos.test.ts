@@ -129,6 +129,32 @@ describe('obras, métricas y media', () => {
     return row.id
   }
 
+  test('Inicio avisa cuando la portada o el retrato apuntan a un archivo que ya no está', async () => {
+    // Sin volumen en producción, lo subido se pierde en el deploy y la base queda apuntando al vacío.
+    const id = await projectId('la-rucula')
+    const cover = ((await ok<Row>('GET', `/projects/${id}`))['media'] as Row[]).find(m => m['role'] === 'COVER')!
+    const portrait = valueOf(await ok<AdminDoc>('GET', '/docs/about'), 'portrait')
+    const portraitSql = `UPDATE "Doc" SET fields = (SELECT jsonb_agg(CASE WHEN f->>'name' = 'portrait' THEN jsonb_set(f, '{value}', to_jsonb($1::text)) ELSE f END) FROM jsonb_array_elements(fields::jsonb) f) WHERE key = 'about'`
+    await sql(`UPDATE "Media" SET src = $1 WHERE id = $2`, ['/media/projects/la-rucula/perdido-tras-deploy.webp', cover.id])
+    await sql(portraitSql, ['/media/projects/_perfil/retrato-perdido.webp'])
+    try {
+      const items = await ok<{ kind: string, field?: string, route: string, record: { id: number | string } }[]>('GET', '/pending')
+      const lost = items.filter(i => i.kind === 'media_missing')
+      const media = lost.find(i => i.record.id === id)
+      assert.ok(media, JSON.stringify(lost))
+      assert.ok(media.route.startsWith(`/obras/${id}/imagenes?campo=media[`), media.route)
+      const doc = lost.find(i => i.record.id === 'about')
+      assert.equal(doc?.route, '/perfil/sobre-mi?campo=fields.portrait')
+      // Una fila por obra: las otras piezas de La Rúcula, que sí están, no suman avisos.
+      assert.equal(lost.filter(i => i.record.id === id).length, 1, JSON.stringify(lost))
+      assert.match(media.field ?? '', /^media\[\d+\]$/)
+    }
+    finally {
+      await sql(`UPDATE "Media" SET src = $1 WHERE id = $2`, [cover['src'], cover.id])
+      await sql(portraitSql, [String(portrait ?? '')])
+    }
+  })
+
   test('guardar la-rucula sin cambios conserva los ids de sus métricas', async () => {
     const id = await projectId('la-rucula')
     const before = await ok<Row>('GET', `/projects/${id}`)

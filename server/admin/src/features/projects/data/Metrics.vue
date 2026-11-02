@@ -1,10 +1,12 @@
 <script setup lang="ts">
 /**
- * Las métricas de la obra, en el orden del caso: cada una tipada (MetricItem), sin JSON a mano. Se
+ * Las métricas de la obra, en el orden del caso, como una tabla compacta (qué se mide, valor, fuente y
+ * fecha) que se abre fila por fila para editar: cada una tipada (MetricItem), sin JSON a mano. Se
  * ordenan arrastrando o con Subir y Bajar; quitar una se puede deshacer desde el aviso. «Ver JSON»
  * muestra, de solo lectura, lo que viaja al guardar.
  */
-import { computed, nextTick } from 'vue'
+import { computed, nextTick, reactive, watch } from 'vue'
+import { useRoute } from 'vue-router'
 import { toast } from '../../../stores/toasts'
 import { announce } from '../../../ui/announce'
 import Button from '../../../ui/Button.vue'
@@ -23,6 +25,38 @@ const { form, record } = useProject()
 const editor = useEditorContext()
 const locked = computed(() => editor?.busy.value ?? false)
 const keyOf = keyer<MetricForm>('metrica')
+
+/** Las que se abrieron a mano; las nuevas y las que tienen un error se abren solas. */
+const opened = reactive(new Set<string>())
+const METRIC_FIELDS = ['key', 'label', 'value', 'unit', 'items', 'source', 'measuredAt', 'translations.en.label']
+const hasIssue = (index: number) => !!editor && METRIC_FIELDS.some(f => editor.messageFor(`metrics[${index}].${f}`))
+const pinned = (index: number) => form.value.metrics[index]?.id === null || hasIssue(index)
+function isOpen(index: number): boolean {
+  const metric = form.value.metrics[index]
+  return !!metric && (pinned(index) || opened.has(keyOf(metric)))
+}
+
+function open(index: number): void {
+  const metric = form.value.metrics[index]
+  if (!metric) return
+  opened.add(keyOf(metric))
+  void focusIn(metric, 'select')
+}
+
+function close(index: number): void {
+  const metric = form.value.metrics[index]
+  if (!metric) return
+  opened.delete(keyOf(metric))
+  void focusIn(metric, '[data-move="open"]')
+}
+
+// ?campo=metrics[2].source abre esa fila antes de que el editor busque el campo.
+const route = useRoute()
+watch(() => [route.query['campo'], form.value.metrics.length] as const, ([campo]) => {
+  const at = typeof campo === 'string' ? /^metrics\[(\d+)\]/.exec(campo) : null
+  const metric = at ? form.value.metrics[Number(at[1])] : undefined
+  if (metric) opened.add(keyOf(metric))
+}, { immediate: true })
 
 const json = computed(() => JSON.stringify(form.value.metrics.map(metricPayload), null, 2))
 
@@ -81,35 +115,50 @@ const drag = useDragSort((from, to) => move(from, to), () => !locked.value)
       </p>
     </div>
 
-    <ol v-if="form.metrics.length" class="m-0 grid list-none border-t border-rule p-0">
-      <li
-        v-for="(metric, index) in form.metrics"
-        :key="keyOf(metric)"
-        :data-metric-key="keyOf(metric)"
-        class="grid grid-cols-[auto_minmax(0,1fr)] gap-3 border-b border-rule transition-[background-color,opacity] duration-200 ease-e"
-        :class="[
-          drag.over.value === index && drag.dragging.value !== index ? 'bg-surface' : '',
-          drag.dragging.value === index ? 'opacity-45' : '',
-        ]"
-        v-bind="drag.row(index)"
-      >
-        <span
-          v-bind="drag.handle(index)"
-          class="mt-5 grid size-7 cursor-grab place-items-center rounded-control text-faint transition-colors duration-120 ease-e hover:bg-surface hover:text-ink active:cursor-grabbing"
-          aria-hidden="true"
-        >
-          <Icon name="drag" :size="16" />
+    <div v-if="form.metrics.length" class="grid">
+      <div class="hidden grid-cols-[auto_minmax(0,1fr)] gap-3 border-b border-rule pb-2 sm:grid" aria-hidden="true">
+        <span class="w-7" />
+        <span class="grid grid-cols-[minmax(0,1.4fr)_minmax(0,0.9fr)_minmax(0,1fr)_minmax(0,0.7fr)] gap-x-4 pr-26 pl-1 text-label text-faint">
+          <span>{{ t.columns.key }}</span>
+          <span>{{ t.columns.value }}</span>
+          <span>{{ t.columns.source }}</span>
+          <span>{{ t.columns.measuredAt }}</span>
         </span>
-        <MetricItem
-          :index="index"
-          :total="form.metrics.length"
-          :locked="locked"
-          @up="move(index, index - 1, 'up')"
-          @down="move(index, index + 1, 'down')"
-          @remove="remove(index)"
-        />
-      </li>
-    </ol>
+      </div>
+      <ol class="m-0 grid list-none border-t border-rule p-0 sm:border-t-0">
+        <li
+          v-for="(metric, index) in form.metrics"
+          :key="keyOf(metric)"
+          :data-metric-key="keyOf(metric)"
+          class="grid grid-cols-[auto_minmax(0,1fr)] items-start gap-3 border-b border-rule transition-[background-color,opacity] duration-200 ease-e"
+          :class="[
+            drag.over.value === index && drag.dragging.value !== index ? 'bg-surface' : '',
+            drag.dragging.value === index ? 'opacity-45' : '',
+          ]"
+          v-bind="drag.row(index)"
+        >
+          <span
+            v-bind="drag.handle(index)"
+            class="mt-2.5 grid size-7 cursor-grab place-items-center rounded-control text-faint transition-colors duration-120 ease-e hover:bg-surface hover:text-ink active:cursor-grabbing"
+            aria-hidden="true"
+          >
+            <Icon name="drag" :size="16" />
+          </span>
+          <MetricItem
+            :index="index"
+            :total="form.metrics.length"
+            :locked="locked"
+            :open="isOpen(index)"
+            :closable="isOpen(index) && !pinned(index)"
+            @open="open(index)"
+            @close="close(index)"
+            @up="move(index, index - 1, 'up')"
+            @down="move(index, index + 1, 'down')"
+            @remove="remove(index)"
+          />
+        </li>
+      </ol>
+    </div>
     <p v-else class="m-0 text-label text-faint">
       {{ t.empty }}
     </p>

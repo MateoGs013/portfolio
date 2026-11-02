@@ -19,7 +19,7 @@ export const isManual = (job: Pick<HunterJob, 'id'>) => job.id.startsWith('manua
 export const isSample = (job: Pick<HunterJob, 'demo' | '_source'>) => job.demo === true || job._source === 'demo'
 
 const STATUS_TONE: Record<HunterJobStatus, StatusTone> = {
-  new: 'sig',
+  new: 'neutral',
   evaluated: 'neutral',
   saved: 'wip',
   applied: 'ok',
@@ -111,9 +111,22 @@ export function jobInput(job: HunterJob): { job: JobInput } {
   }
 }
 
+/**
+ * El portal con su nombre (Get on Board, LinkedIn), no el identificador que manda Eros. Uno que no
+ * está en la lista se muestra con la primera letra en mayúscula y los guiones como espacios.
+ */
+export function portalName(source: string | null | undefined): string | null {
+  const raw = source?.trim()
+  if (!raw) return null
+  const known = hunter.portals[raw.toLowerCase().replace(/[\s_-]+/g, '') as keyof typeof hunter.portals]
+  if (known) return known
+  const words = raw.replace(/[_-]+/g, ' ')
+  return words.charAt(0).toLocaleUpperCase('es') + words.slice(1)
+}
+
 /** «Remoto · Argentina · Get on Board». */
 export function placeOf(job: HunterJob): string {
-  const portal = isManual(job) ? hunter.manualTag : isSample(job) ? hunter.sampleTag : job.source
+  const portal = isManual(job) ? hunter.manualTag : isSample(job) ? hunter.sampleTag : portalName(job.source)
   return [job.is_remote ? hunter.remote : null, job.country, portal].filter(Boolean).join(' · ')
 }
 

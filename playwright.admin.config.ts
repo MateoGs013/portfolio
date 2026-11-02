@@ -19,8 +19,12 @@ if (!baseURL && !listing) {
   throw new Error('Falta ADMIN_API_URL: correr con node scripts/admin-run.mjs -- pnpm exec playwright test -c playwright.admin.config.ts …')
 }
 
+/** Una carpeta por corrida (por el puerto de su API): dos corridas a la vez no se borran las trazas. */
+const port = baseURL ? new URL(baseURL).port : 'list'
+
 export default defineConfig({
   testDir: './tests/e2e',
+  outputDir: `test-results/admin-${port}`,
   testMatch: /admin-[^/\\]*\.spec\.ts$/,
   fullyParallel: false,
   forbidOnly: !!process.env.CI,

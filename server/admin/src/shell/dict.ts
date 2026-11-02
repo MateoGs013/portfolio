@@ -5,6 +5,7 @@
 export const shell = {
   nav: {
     label: 'Secciones',
+    panel: 'Panel de administración',
     home: 'Inicio',
     projects: 'Obras',
     experience: 'Trayectoria',

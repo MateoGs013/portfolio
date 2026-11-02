@@ -272,6 +272,9 @@ test.describe('Obras: imágenes y datos', () => {
       await signedIn(page, `#/obras/${before.id}/imagenes`)
       const card = page.locator(`[data-media-key="m${cover.id}"]`)
       await expect(card).toBeVisible()
+      // La grilla muestra las piezas cerradas: se abre la portada para editarla.
+      await card.getByRole('button', { name: /^Editar / }).click()
+      await expect(card.getByRole('button', { name: /^Listo, cerrar/ })).toBeFocused()
       const chooser = page.waitForEvent('filechooser')
       await card.getByRole('button', { name: 'Reemplazar archivo' }).click()
       await (await chooser).setFiles(files[0]!)
@@ -300,14 +303,17 @@ test.describe('Obras: imágenes y datos', () => {
   test('métricas: solo claves con rótulo; una cifra nueva pide rótulo en los dos idiomas y el sitio en inglés lo muestra', async ({ page, request }, info) => {
     const before = await bySlug(request, 'la-rucula')
     await signedIn(page, `#/obras/${before.id}/datos`)
+    // Las métricas guardadas son filas cerradas de la tabla: se abre la primera para ver sus opciones.
+    await page.locator('[data-metric-key]').first().getByRole('button', { name: /^Editar / }).click()
     const first = page.locator('[data-field="metrics[0].key"] select')
+    await expect(first).toBeFocused()
     const labels = await first.locator('option').allTextContents()
     expect(labels.length).toBeGreaterThan(10)
     for (const label of labels.filter(l => l.trim() && !/^Elegí/.test(l))) {
       expect(label, 'una clave sin rótulo').not.toMatch(/^\s*[a-z]+[A-Z]\w*\s*$/)
-      if (!/^Otra cifra/.test(label)) expect(label).toMatch(/^\S.* \(\w+\)$/)
+      expect(label, 'la clave técnica no se muestra').not.toMatch(/\([a-z]+[A-Z]\w*\)$/)
     }
-    expect(labels.some(l => /^Bundle · Peso del JavaScript inicial.*\(bundleSizeKb\)$/.test(l))).toBe(true)
+    expect(labels.some(l => /^Bundle · Peso del JavaScript inicial/.test(l))).toBe(true)
 
     await page.getByRole('button', { name: 'Agregar métrica' }).click()
     const n = before.metrics.length

@@ -45,7 +45,7 @@ const current = computed({
 
 const source = computed(() => experienceModel.formTitle(form.value))
 const endpoint = computed(() => (props.record ? experienceModel.slugEndpoint?.(props.record.id) ?? null : null))
-const preview = (slug: string) => experienceModel.slugPreview?.(slug) ?? slug
+const preview = (slug: string) => experienceModel.slugPreview?.(slug) ?? null
 const max = (name: string) => fieldOf('Experience', name)?.max ?? null
 </script>
 

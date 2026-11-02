@@ -54,6 +54,14 @@ function bulletIssues(form: ExperienceForm): FieldIssue[] {
   return issues
 }
 
+/**
+ * La tesis y la formación suelen ser de la misma institución: en la lista y el editor se nombran por
+ * su tipo y la institución («Tesis · Escuela Da Vinci»), así dos filas no se llaman igual.
+ */
+const KIND_FIRST = new Set(['THESIS', EDUCATION])
+const byKind = (e: Experience) => KIND_FIRST.has(e.kind) && !!e.org?.name
+const listTitle = (e: Experience) => (byKind(e) ? `${enumLabel('ExperienceKind', e.kind)} · ${e.org!.name}` : titleOf(e))
+
 export const experienceModel: Model<Experience, ExperienceForm> = {
   key: 'experiencia',
   path: '/experience',
@@ -140,13 +148,13 @@ export const experienceModel: Model<Experience, ExperienceForm> = {
     if (form.startedAt && form.endedAt && form.endedAt < form.startedAt) issues.push({ path: 'endedAt', message: t.validate.endBeforeStart })
     return issues
   },
-  title: titleOf,
-  formTitle: form => entryTitle({
-    org: options.value?.orgs.find(o => o.id === form.orgId)?.name,
-    project: options.value?.projects.find(p => p.id === form.projectIds[0])?.title,
-    role: form.role,
-  }),
-  metaLine: e => [enumLabel('ExperienceKind', e.kind), periodText(e.startedAt, e.endedAt)].filter(Boolean).join(' · '),
+  title: listTitle,
+  formTitle: (form) => {
+    const org = options.value?.orgs.find(o => o.id === form.orgId)?.name
+    if (org && KIND_FIRST.has(form.kind)) return `${enumLabel('ExperienceKind', form.kind)} · ${org}`
+    return entryTitle({ org, project: options.value?.projects.find(p => p.id === form.projectIds[0])?.title, role: form.role })
+  },
+  metaLine: e => [byKind(e) ? '' : enumLabel('ExperienceKind', e.kind), periodText(e.startedAt, e.endedAt)].filter(Boolean).join(' · '),
   aside: e => (missingEnglish(e).length ? t.missingEn : ''),
   status: e => (entersCv(e)
     ? { tone: 'ok', label: isEducation(e) ? t.status.education : t.status.inCv }
@@ -166,5 +174,6 @@ export const experienceModel: Model<Experience, ExperienceForm> = {
   ],
   keywords: e => [e.slug, e.role, englishOf(e).role ?? '', e.location ?? ''].join(' '),
   slugEndpoint: id => `/experience/${id}/slug`,
-  slugPreview: slug => `/api/experience/${slug}`,
+  // La experiencia no tiene página propia (se lee en /about): no se muestra una dirección del sitio.
+  slugPreview: () => null,
 }

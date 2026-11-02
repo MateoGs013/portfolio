@@ -19,6 +19,7 @@ import { content, post as t } from './dict'
 import { longDay, pillarOf, postStatusOf, postTitle, projectOf } from './model'
 import PostMenu from './PostMenu.vue'
 import PublishDialog from './PublishDialog.vue'
+import { headingClass } from '../../ui/heading'
 
 const props = defineProps<{
   post: ContentPost
@@ -75,14 +76,15 @@ const lockAttrs = computed(() => (props.locked
     <p v-if="context" class="m-0 animate-rise text-body text-dim">
       {{ context }}
     </p>
-    <div class="flex flex-wrap items-end gap-x-8 gap-y-5">
+    <div class="flex flex-wrap items-start gap-x-8 gap-y-5">
       <h1
-        class="m-0 min-w-0 flex-1 basis-[min(100%,560px)] animate-rise text-heading text-balance wrap-break-word"
+        class="m-0 min-w-0 flex-1 basis-[min(100%,560px)] animate-rise text-balance wrap-break-word"
+        :class="headingClass(postTitle(post))"
         :style="{ viewTransitionName: TRAVEL_NAME }"
       >
         {{ postTitle(post) }}
       </h1>
-      <div class="flex flex-wrap items-center gap-x-5 gap-y-3 pb-1">
+      <div class="flex flex-wrap items-center gap-x-5 gap-y-3 pt-1">
         <StatusDot :tone="postStatusOf(post).tone" :label="postStatusOf(post).label" strong />
         <span v-if="dispatched" class="text-body text-dim">{{ dispatched }}</span>
         <div class="flex flex-wrap items-center gap-2">

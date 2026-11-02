@@ -50,7 +50,7 @@ const preview = (slug: string) => `/projects/${slug}`
 
 <template>
   <div class="grid gap-8.5">
-    <div class="grid items-start gap-x-10 gap-y-7 xl:grid-cols-2">
+    <div class="grid gap-3.5">
       <SchemaField v-model="form.title" model="Project" name="title" />
       <SchemaField
         v-model="form.translations.en.title"
@@ -110,7 +110,7 @@ const preview = (slug: string) => `/projects/${slug}`
           {{ t.linksText }}
         </p>
       </div>
-      <div class="grid items-start gap-x-10 gap-y-7 xl:grid-cols-2">
+      <div class="grid gap-7">
         <SchemaField v-model="form.url" model="Project" name="url" kind="url" />
         <SchemaField v-model="form.repo" model="Project" name="repo" kind="url" />
       </div>

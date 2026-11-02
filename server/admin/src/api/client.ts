@@ -18,7 +18,10 @@ export interface RequestOptions {
   query?: Record<string, string | number | boolean | null | undefined>
   /** La señal de la vista (useRequestScope): al salir de la vista se cancela lo pendiente. */
   signal?: AbortSignal
-  /** Por defecto 15 s, y 90 s en las rutas que pasan por Eros. */
+  /**
+   * Por defecto 15 s, 90 s en las rutas que pasan por Eros y, en una subida (FormData), 15 s más lo
+   * que tarda el archivo a 50 KB/s: un video de 20 MB tiene casi siete minutos.
+   */
   timeoutMs?: number
   /**
    * Un 401 abre la reautenticación (stores/session.ts) y, con la clave de nuevo, el pedido se repite
@@ -52,6 +55,8 @@ const TIMEOUT_MS = 15_000
  */
 const EROS_TIMEOUT_MS = 90_000
 const RETRY_DELAY_MS = 400
+/** El peor caso que se espera de una subida (unos 400 kbps): con menos, el corte avisa que no llegó. */
+const UPLOAD_BYTES_PER_SECOND = 50_000
 /** Rutas que esperan a Eros: el agente puede tardar en recorrer portales o redactar. */
 const EROS_PREFIXES = ['/hunter', '/content', '/radar']
 
@@ -128,10 +133,22 @@ async function readBody(res: Response): Promise<unknown> {
   }
 }
 
+/** Los bytes de los archivos de un FormData: el tope de una subida crece con lo que se manda. */
+function formBytes(body: FormData): number {
+  let bytes = 0
+  for (const [, value] of body.entries()) bytes += typeof value === 'string' ? value.length : value.size
+  return bytes
+}
+
+function timeoutFor(path: string, options: RequestOptions): number {
+  if (options.timeoutMs !== undefined) return options.timeoutMs
+  if (options.body instanceof FormData) return TIMEOUT_MS + Math.ceil(formBytes(options.body) / UPLOAD_BYTES_PER_SECOND) * 1000
+  return isEros(path) ? EROS_TIMEOUT_MS : TIMEOUT_MS
+}
+
 async function once(method: Method, path: string, options: RequestOptions): Promise<Response> {
-  const eros = isEros(path)
   const timeout = new AbortController()
-  const timer = setTimeout(() => timeout.abort(), options.timeoutMs ?? (eros ? EROS_TIMEOUT_MS : TIMEOUT_MS))
+  const timer = setTimeout(() => timeout.abort(), timeoutFor(path, options))
   const signal = options.signal ? AbortSignal.any([options.signal, timeout.signal]) : timeout.signal
   const headers: Record<string, string> = { Accept: 'application/json' }
   const token = getToken()

@@ -9,7 +9,7 @@ const pieces = (n: number) => plural(n, 'imagen', 'imágenes')
 
 export const mediaText = {
   title: 'Imágenes y videos',
-  lead: 'La portada abre la tarjeta y el caso, una por tipo (imagen y video); la galería sigue en este orden. Arrastrá las piezas o usá Subir y Bajar.',
+  lead: 'La portada abre la tarjeta y el caso, una por tipo (imagen y video); la galería sigue en este orden. Abrí una pieza para editarla; arrastralas para ordenarlas.',
   empty: 'Esta obra todavía no tiene imágenes. La primera que sumes queda como portada.',
   list: 'Piezas de la obra',
   piece: (kind: MediaKind, n: number) => `${kind === 'VIDEO' ? 'Video' : 'Imagen'} ${n}`,
@@ -29,7 +29,15 @@ export const mediaText = {
     notWebm: (name: string) => `«${name}» no es un video WebM.`,
     tooBig: (name: string, mb: number) => `«${name}» pesa más de ${mb} MB.`,
   },
+  /** El título de una pieza por lo que es, no por su número: «Portada · Escritorio». */
+  heading: (role: string, viewport: string) => `${role} · ${viewport}`,
+  tile: {
+    edit: 'Editar',
+    noAlt: 'Falta el texto alternativo',
+  },
   card: {
+    close: 'Listo',
+    closeFor: (name: string) => `Listo, cerrar ${name}`,
     role: 'Uso',
     viewport: 'Pantalla',
     alt: 'Texto alternativo',

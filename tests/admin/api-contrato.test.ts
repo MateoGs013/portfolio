@@ -73,7 +73,7 @@ describe('meta y estado', () => {
     const meta = await ok<AdminMeta>('GET', '/meta')
     assert.deepEqual(meta.enumOptions.ProjectStatus.find(o => o.value === 'LIVE'), { value: 'LIVE', label: 'En producción' })
     assert.ok(!('counts' in meta) && !('enums' in meta))
-    assert.equal(meta.schema.Project.summary.label, 'Resumen')
+    assert.equal(meta.schema.Project.summary.label, 'Síntesis')
     assert.ok(meta.options.experiences.length > 0 && meta.options.articles.length > 0)
     assert.ok(meta.options.projects.every(p => typeof p.visible === 'boolean'))
   })

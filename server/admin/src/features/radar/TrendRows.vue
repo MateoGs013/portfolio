@@ -54,7 +54,7 @@ function onActivate(row: Row): void {
           class="w-fit max-w-full min-w-0 text-list text-ink transition-transform duration-700 ease-e wrap-break-word group-hover/row:translate-x-3.5"
           :data-title="item.key"
         >{{ item.title }}</span>
-        <span class="flex flex-wrap items-baseline justify-end gap-x-4.5 gap-y-1 text-right text-body text-dim max-sm:justify-start max-sm:text-left">
+        <span class="flex flex-wrap items-baseline justify-start gap-x-4.5 gap-y-1 text-left text-body text-dim lg:justify-end lg:text-right">
           <span v-if="item.meta">{{ item.meta }}</span>
           <Mono v-if="item.host" size="label" class="text-faint">{{ item.host }}</Mono>
           <StatusDot :tone="trendStatusOf(item.trend).tone" :label="trendStatusOf(item.trend).label" />

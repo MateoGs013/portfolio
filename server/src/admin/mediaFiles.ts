@@ -1,6 +1,8 @@
 /**
  * Archivos de media en el disco: lectura del formato real (magic bytes), escritura dentro de
- * `public/media/projects/` (el volumen persistente de DEPLOY.md) y limpieza de lo que ya nadie usa.
+ * `public/media/projects/` y limpieza de lo que ya nadie usa. En producción esa carpeta todavía no
+ * tiene volumen (DEPLOY.md, paso 6): lo subido dura hasta el próximo deploy, y la bandeja del Inicio
+ * (pending.ts, `media_missing`) avisa cuando la base apunta a un archivo que ya no está.
  *
  * Cada obra tiene su carpeta `<slug>/`. Las carpetas que empiezan con `_` no son de una obra
  * (`_perfil/` guarda el retrato de Sobre mí): la limpieza de carpetas vacías nunca las toca.

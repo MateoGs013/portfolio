@@ -4,7 +4,8 @@ export type ButtonSize = 'md' | 'lg'
 
 /** Compartido con IconButton: mismo relleno, borde y hover por variante. */
 export const variantClass: Record<ButtonVariant, string> = {
-  primary: 'border-sig bg-sig font-[560] text-on-sig hover:border-sig-hover hover:bg-sig-hover',
+  // Apagado no queda naranja turbio: pasa a neutro (superficie y texto tenue), así se lee como no disponible.
+  primary: 'border-sig bg-sig font-[560] text-on-sig hover:border-sig-hover hover:bg-sig-hover disabled:border-rule-strong disabled:bg-surface disabled:text-faint aria-disabled:border-rule-strong aria-disabled:bg-surface aria-disabled:text-faint',
   secondary: 'border-rule-strong bg-surface text-ink hover:border-rule-hover hover:bg-surface-2',
   ghost: 'border-transparent bg-transparent text-dim hover:bg-surface hover:text-ink',
   danger: 'border-transparent bg-transparent text-danger hover:bg-danger/10',

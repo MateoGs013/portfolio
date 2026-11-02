@@ -5,6 +5,7 @@
  */
 import { Router } from 'express'
 import { db } from '../db.js'
+import { docFieldsOf } from '../content/docFields.js'
 import { visibleArticle, visibleProject } from '../content/visibility.js'
 import { adminSchema, modelNames } from '../shared/adminSchema.js'
 import type { AdminMeta, AdminOptions, AdminSummary, EnumOption, MetricKeyOption, UnlistedMetricKey } from '../shared/adminContracts.js'
@@ -81,13 +82,22 @@ async function metricKeys(): Promise<AdminMeta['metricKeys']> {
   return { catalog: listed, unlisted }
 }
 
+/** El nombre visible de Sobre mí, para la cabecera del admin: nada escrito a mano en la UI. */
+async function owner(): Promise<string | null> {
+  const about = await db.doc.findUnique({ where: { key: 'about' }, select: { fields: true } })
+  const fields = docFieldsOf(about?.fields, 'about')
+  const value = fields.find(f => f.name === 'display_name')?.value ?? fields.find(f => f.name === 'name')?.value
+  return typeof value === 'string' && value.trim() ? value.trim() : null
+}
+
 export const metaRouter = Router()
 
 metaRouter.get('/meta', async (_req, res) => {
-  const loaded = await readOr503(res, () => Promise.all([summary(), options(), metricKeys(), untranslatedRecords()]))
+  const loaded = await readOr503(res, () => Promise.all([summary(), options(), metricKeys(), untranslatedRecords(), owner()]))
   if (!loaded) return
-  const [counts, choices, keys, untranslated] = loaded
+  const [counts, choices, keys, untranslated, name] = loaded
   const meta: AdminMeta = {
+    owner: name,
     summary: counts,
     enumOptions: enumOptions(),
     schema: adminSchema,

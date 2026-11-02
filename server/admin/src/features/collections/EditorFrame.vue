@@ -17,6 +17,7 @@ import { TRAVEL_NAME } from '../../shell/transition'
 import { useRecordTitle } from '../../shell/title'
 import Button from '../../ui/Button.vue'
 import { ui } from '../../ui/dict'
+import { headingClass } from '../../ui/heading'
 import ErrorState from '../../ui/ErrorState.vue'
 import Icon from '../../ui/Icon.vue'
 import Menu, { type MenuItem } from '../../ui/Menu.vue'
@@ -112,14 +113,16 @@ onBeforeUnmount(() => {
         <Icon name="arrow-left" :size="14" />
         {{ back }}
       </RouterLink>
-      <div class="mt-3.5 flex max-w-[1080px] flex-wrap items-end gap-x-6 gap-y-4">
+      <div class="mt-3.5 flex max-w-[1080px] flex-wrap items-start gap-x-6 gap-y-4">
         <h1
-          class="m-0 min-w-0 flex-[1_1_28rem] animate-rise text-heading text-balance wrap-break-word"
+          class="m-0 min-w-0 flex-[1_1_28rem] animate-rise text-balance wrap-break-word"
+          :class="headingClass(title)"
+          :title="title && title.length > 40 ? title : undefined"
           :style="{ viewTransitionName: TRAVEL_NAME }"
         >
           {{ title || ui.states.loading }}
         </h1>
-        <div v-if="editor.ready.value" class="flex flex-wrap items-center gap-2 pb-1">
+        <div v-if="editor.ready.value" class="flex flex-wrap items-center gap-2 pt-1">
           <slot name="publish" />
           <Button v-if="publicUrl" variant="ghost" :href="publicUrl" external>
             {{ collections.editor.viewSite }}

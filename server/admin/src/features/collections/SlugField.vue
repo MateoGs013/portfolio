@@ -16,8 +16,8 @@ import SlugDialog from './SlugDialog.vue'
 const props = withDefaults(defineProps<{
   /** El texto del que sale mientras es nueva (el título o el nombre). */
   source: string
-  /** Cómo se lee en el sitio: `/projects?org=acme`. */
-  preview: (slug: string) => string
+  /** Cómo se lee en el sitio: `/projects?org=acme`. Null si el registro no tiene dirección propia. */
+  preview: (slug: string) => string | null
   /** PATCH de la dirección del registro guardado (`/orgs/12/slug`); sin esto no se puede cambiar. */
   endpoint?: string | null
   path?: string
@@ -81,7 +81,7 @@ const changing = ref(false)
       </template>
       <TextInput v-model="slug" mono :readonly="!fresh || auto || locked" autocomplete="off" />
     </Field>
-    <p class="m-0 flex flex-wrap items-baseline gap-x-2 text-label text-faint">
+    <p v-if="shown !== null" class="m-0 flex flex-wrap items-baseline gap-x-2 text-label text-faint">
       {{ t.preview }}
       <Mono data-slug-preview>{{ shown }}</Mono>
     </p>

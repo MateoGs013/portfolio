@@ -7,6 +7,7 @@
 import { computed, ref } from 'vue'
 import { enumOptions } from '../../../stores/meta'
 import { announce } from '../../../ui/announce'
+import Button from '../../../ui/Button.vue'
 import Field from '../../../ui/Field.vue'
 import type { SelectOption } from '../../../ui/field'
 import Icon from '../../../ui/Icon.vue'
@@ -19,7 +20,7 @@ import type { MediaRole, MediaViewport } from '../types'
 import { mediaText } from './dict'
 import { sizeLabel } from './files'
 import MediaFiles from './MediaFiles.vue'
-import { makeCover, makeGallery, pieceName } from './mediaForm'
+import { makeCover, makeGallery, pieceHeading, pieceName } from './mediaForm'
 import { useMediaQueue } from './mediaQueue'
 import MediaThumb from './MediaThumb.vue'
 import MediaTint from './MediaTint.vue'
@@ -31,9 +32,11 @@ const props = defineProps<{
   locked: boolean
   /** Lo que hace arrastrable al asa (useDragSort.handle). */
   handle: Record<string, unknown>
+  /** Si se puede volver a cerrar (una pieza nueva o con un error queda abierta). */
+  closable?: boolean
 }>()
 
-defineEmits<{ up: [], down: [], remove: [] }>()
+defineEmits<{ up: [], down: [], remove: [], close: [] }>()
 
 const t = mediaText.card
 const { form, record } = useProject()
@@ -41,6 +44,7 @@ const queue = useMediaQueue()
 const item = computed(() => form.value.media[props.index]!)
 const base = computed(() => `media[${props.index}]`)
 const name = computed(() => pieceName(form.value.media, item.value))
+const heading = computed(() => pieceHeading(item.value))
 const saved = computed(() => (item.value.id === null ? null : record.value?.media.find(m => m.id === item.value.id) ?? null))
 const state = computed(() => queue.states.value[item.value.key] ?? null)
 
@@ -77,7 +81,7 @@ const facts = computed(() => {
 </script>
 
 <template>
-  <article class="grid gap-6 pt-6 pb-9" :data-media-key="item.key" :aria-labelledby="`${item.key}-title`">
+  <article class="grid gap-6 pt-6 pb-9" :data-media-key="item.key" :aria-label="name">
     <div class="flex items-center gap-3">
       <span
         v-bind="handle"
@@ -87,8 +91,8 @@ const facts = computed(() => {
       >
         <Icon name="drag" :size="16" />
       </span>
-      <h3 :id="`${item.key}-title`" class="m-0 text-row text-ink">
-        {{ name }}
+      <h3 class="m-0 text-row text-ink">
+        {{ heading }}
       </h3>
       <StatusDot v-if="state?.phase === 'error'" tone="danger" :label="mediaText.queue.failed" />
       <StatusDot v-else-if="item.id === null" tone="wip" :label="t.newPiece" />
@@ -96,6 +100,9 @@ const facts = computed(() => {
         <IconButton icon="arrow-up" size="sm" :label="t.up(name)" data-move="up" :disabled="locked || !canUp" @click="$emit('up')" />
         <IconButton icon="arrow-down" size="sm" :label="t.down(name)" data-move="down" :disabled="locked || !canDown" @click="$emit('down')" />
         <IconButton icon="trash" size="sm" :label="t.removeFor(name)" data-move="remove" :disabled="locked" @click="$emit('remove')" />
+        <Button v-if="closable" variant="ghost" class="ml-2" :aria-label="t.closeFor(name)" aria-expanded="true" data-move="close" @click="$emit('close')">
+          {{ t.close }}
+        </Button>
       </div>
     </div>
 

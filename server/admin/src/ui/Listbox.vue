@@ -112,7 +112,7 @@ const rows = computed(() => props.variant === 'rows')
       :data-key="item.key"
       :style="rows ? { '--i': Math.min(index, 12) } : undefined"
       :class="rows
-        ? 'group/row grid animate-rise grid-cols-[minmax(0,1fr)_auto] items-baseline gap-6 border-b border-rule pt-5 pb-5.5 stagger transition-opacity duration-500 ease-e group-hover/rows:not-hover:opacity-28 group-hover/rows:focus-visible:opacity-100 focus-visible:outline-offset-[-2px] max-sm:grid-cols-1 max-sm:gap-2'
+        ? 'group/row grid animate-rise grid-cols-1 items-baseline gap-2 border-b border-rule pt-5 pb-5.5 stagger transition-opacity duration-500 ease-e group-hover/rows:not-hover:opacity-28 group-hover/rows:focus-visible:opacity-100 focus-visible:outline-offset-[-2px] lg:grid-cols-[minmax(18ch,1fr)_auto] lg:gap-6'
         : 'grid gap-1 border-b border-rule px-4 pt-2.75 pb-3 transition-colors duration-120 ease-e hover:bg-surface aria-selected:bg-surface-2 focus-visible:-outline-offset-2'"
       @click="onClick(item, index)"
     >
@@ -127,7 +127,7 @@ const rows = computed(() => props.variant === 'rows')
         <span
           class="flex items-baseline gap-x-4.5 gap-y-1"
           :class="rows
-            ? 'flex-wrap justify-end text-right text-body text-dim max-sm:justify-start max-sm:text-left'
+            ? 'flex-wrap justify-start text-left text-body text-dim lg:justify-end lg:text-right'
             : 'min-w-0 text-label text-faint [&>span:not(:last-child)]:truncate'"
         >
           <StatusDot v-if="item.status" :tone="item.status.tone" :label="item.status.label" />

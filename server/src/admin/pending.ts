@@ -6,9 +6,13 @@
  * - artículos en borrador, programados o publicados sin fecha, y el inglés de los visibles;
  * - experiencias del CV sin viñetas o con el inglés incompleto, y el resto del inglés de la trayectoria;
  * - bloques requeridos de about y contact vacíos o faltantes;
- * - el PDF del CV del sitio cuando ya no coincide con la base (cvStamp.ts).
+ * - el PDF del CV del sitio cuando ya no coincide con la base (cvStamp.ts);
+ * - media y retrato que apuntan a un archivo que ya no está en el servidor (sin volumen persistente,
+ *   lo subido desde el admin se pierde en cada deploy: DEPLOY.md, paso 6).
  * Lo que el sitio no muestra (una obra oculta, un borrador) solo pide publicarse: su inglés no se lista.
  */
+import { access } from 'node:fs/promises'
+import path from 'node:path'
 import { Router } from 'express'
 import { db } from '../db.js'
 import { hasDocValue, docFieldsOf } from '../content/docFields.js'
@@ -20,7 +24,7 @@ import { cvDrift } from './cvStamp.js'
 import { capitalize, describeFields, joinEs, longDay, plural } from './pendingText.js'
 import { untranslatedRecords } from './translations.js'
 
-const ORDER: readonly PendingKind[] = ['cv_pdf', 'hidden', 'scheduled', 'draft', 'no_cover', 'media_english', 'english', 'metrics', 'cv_bullets', 'cv_english', 'profile']
+const ORDER: readonly PendingKind[] = ['cv_pdf', 'media_missing', 'hidden', 'scheduled', 'draft', 'no_cover', 'media_english', 'english', 'metrics', 'cv_bullets', 'cv_english', 'profile']
 
 const SHOWN_IN_ENGLISH = 'el sitio en inglés muestra el español en su lugar.'
 /** La ruta con ?campo=; los corchetes de las rutas del body quedan legibles (`metrics[0].source`). */
@@ -48,17 +52,53 @@ function metricGaps(total: number, noSource: number, noDate: number): string {
   return `De ${plural(total, 'métrica', 'métricas')}, ${joinEs(parts)}`
 }
 
+// ─── Archivos ───────────────────────────────────────────────────────────────
+
+const PUBLIC_DIR = path.resolve('public')
+const MEDIA_ROOT = path.join(PUBLIC_DIR, 'media')
+
+/**
+ * Si una ruta del sitio (`/media/projects/…`) tiene su archivo en el disco. Lo que no es una ruta
+ * local de /media (una dirección externa, un valor vacío) no se revisa.
+ */
+async function fileMissing(src: string | null | undefined): Promise<boolean> {
+  if (!src || !src.startsWith('/media/')) return false
+  let file: string
+  try {
+    file = path.resolve(PUBLIC_DIR, `.${decodeURI(src.split(/[?#]/)[0]!)}`)
+  }
+  catch {
+    return false
+  }
+  if (!file.startsWith(`${MEDIA_ROOT}${path.sep}`)) return false
+  try {
+    await access(file)
+    return false
+  }
+  catch {
+    return true
+  }
+}
+
 // ─── Obras ──────────────────────────────────────────────────────────────────
+
+/** Los índices (en el orden del formulario) de las piezas con algún archivo que falta. */
+async function missingMedia(media: readonly { src: string, srcWebm: string | null, poster: string | null }[]): Promise<number[]> {
+  const flags = await Promise.all(media.map(async m => (await Promise.all([m.src, m.srcWebm, m.poster].map(fileMissing))).some(Boolean)))
+  return flags.flatMap((lost, i) => (lost ? [i] : []))
+}
 
 async function projectItems(untranslated: Untranslated): Promise<PendingItem[]> {
   const rows = await db.project.findMany({
     orderBy: [{ sortOrder: 'asc' }, { year: 'desc' }],
     select: {
       id: true, title: true, publishedAt: true,
-      media: { select: { role: true } },
+      media: { orderBy: [{ role: 'asc' }, { order: 'asc' }], select: { role: true, src: true, srcWebm: true, poster: true } },
       metrics: { orderBy: { order: 'asc' }, select: { source: true, measuredAt: true } },
     },
   })
+  // El índice es el del formulario del admin (portadas primero, después por orden), como en translations.ts.
+  const missing = new Map(await Promise.all(rows.map(async p => [p.id, await missingMedia(p.media)] as const)))
   return rows.flatMap((p): PendingItem[] => {
     const record = { collection: 'projects' as const, id: p.id, title: p.title }
     if (!p.publishedAt) {
@@ -68,6 +108,16 @@ async function projectItems(untranslated: Untranslated): Promise<PendingItem[]> 
       return [{ kind: 'scheduled', record, field: 'publishedAt', headline: `${p.title} está programada`, message: `Se publica sola el ${longDay(p.publishedAt)}; hasta entonces no se ve en el sitio.`, route: projectRoute(p.id, 'publishedAt') }]
     }
     const items: PendingItem[] = []
+    const lost = missing.get(p.id) ?? []
+    if (lost.length) {
+      const field = `media[${lost[0]}]`
+      items.push({
+        kind: 'media_missing', record, field,
+        headline: `${lost.length === 1 ? 'Una imagen' : `${lost.length} imágenes`} de ${p.title} ya no ${lost.length === 1 ? 'está' : 'están'} en el servidor`,
+        message: 'El sitio muestra la imagen rota. Volvé a subir el archivo: hoy el servidor pierde lo subido cada vez que se publica una versión nueva del sitio.',
+        route: projectRoute(p.id, field),
+      })
+    }
     if (!p.media.some(m => m.role === 'COVER')) {
       items.push({ kind: 'no_cover', record, field: 'media', headline: `${p.title} no tiene portada`, message: 'La tarjeta y el caso muestran el título sobre una placa lisa.', route: projectRoute(p.id, 'media') })
     }
@@ -76,7 +126,7 @@ async function projectItems(untranslated: Untranslated): Promise<PendingItem[]> 
     if (media.length) {
       const alt = new Set(media.filter(f => f.endsWith('.alt')).map(f => f.split(']')[0]))
       const caption = new Set(media.filter(f => f.endsWith('.caption')).map(f => f.split(']')[0]))
-      const parts = [alt.size && `${plural(alt.size, 'imagen', 'imágenes')} sin texto alternativo`, caption.size && `${plural(caption.size, 'pie', 'pies')} de foto`].filter(Boolean) as string[]
+      const parts = [alt.size && plural(alt.size, 'texto alternativo', 'textos alternativos'), caption.size && plural(caption.size, 'pie de foto', 'pies de foto')].filter(Boolean) as string[]
       const field = media.find(f => f.endsWith('.alt')) ?? media[0]!
       items.push({ kind: 'media_english', record, field, headline: `Imágenes de ${p.title} sin inglés`, message: `${capitalize(joinEs(parts))} sin inglés: en el caso en inglés se lee el español.`, route: projectRoute(p.id, field) })
     }
@@ -172,6 +222,9 @@ function techItems(records: readonly UntranslatedRecord[]): PendingItem[] {
 
 async function profileItems(records: readonly UntranslatedRecord[]): Promise<PendingItem[]> {
   const rows = await db.doc.findMany({ where: { key: { in: docKeys } } })
+  const images = docKeys.flatMap(key => docSchemas[key].blocks.filter(b => b.type === 'image').map(b => docFieldsOf(rows.find(r => r.key === key)?.fields, key).find(f => f.name === b.name)?.value))
+  const missingFiles = new Set<string>()
+  for (const value of images) if (typeof value === 'string' && await fileMissing(value)) missingFiles.add(value)
   return docKeys.flatMap((key) => {
     const schema = docSchemas[key]
     const stored = docFieldsOf(rows.find(r => r.key === key)?.fields, key)
@@ -184,6 +237,12 @@ async function profileItems(records: readonly UntranslatedRecord[]): Promise<Pen
       const path = empty ? `fields.${block.name}` : `fields.${block.name}.en`
       return [{ kind: 'profile', record, field: path, headline: `Falta «${block.label}»${noEnglish ? ' en inglés' : ''} en ${schema.label}`, message: block.help, route: campo(DOC_ROUTE[key], path) }]
     })
+    for (const block of schema.blocks.filter(b => b.type === 'image')) {
+      const value = stored.find(f => f.name === block.name)?.value
+      if (typeof value !== 'string' || !missingFiles.has(value)) continue
+      const path = `fields.${block.name}`
+      blocks.unshift({ kind: 'media_missing', record, field: path, headline: `«${block.label}» de ${schema.label} ya no está en el servidor`, message: 'El sitio muestra la imagen rota. Volvé a subirla: hoy el servidor pierde lo subido cada vez que se publica una versión nueva del sitio.', route: campo(DOC_ROUTE[key], path) })
+    }
     const english = records.find(r => r.collection === 'docs' && r.id === key)?.fields ?? []
     if (english.length) {
       blocks.push({ kind: 'english', record, field: english[0]!, headline: `Falta el inglés en ${schema.label}`, message: `${describeFields({ doc: key }, english)}: ${SHOWN_IN_ENGLISH}`, route: campo(DOC_ROUTE[key], english[0]!) })

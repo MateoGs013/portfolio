@@ -35,7 +35,8 @@ const t = collections.publish
 const editor = useEditorContext()
 const locked = computed(() => editor?.busy.value ?? false)
 const missing = computed(() => props.items.filter(i => !i.done))
-const summary = computed(() => (missing.value.length ? t.missing(missing.value.length) : t.ready))
+// Publicada dice si está completa («Publicada · Completa»), no que está lista para publicar.
+const summary = computed(() => (missing.value.length ? t.missing(missing.value.length) : published.value ? t.whole : t.ready))
 
 const open = ref(false)
 const root = ref<HTMLElement | null>(null)

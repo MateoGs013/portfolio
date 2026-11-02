@@ -1,7 +1,8 @@
 /**
  * Las opciones de «Qué se mide», siempre con un rótulo humano: el catálogo de /meta (las que más usan
  * las otras obras primero), las claves sin catálogo que ya tienen un rótulo cargado y, al final, «Otra
- * cifra, con rótulo propio». Una clave sin rótulo nunca aparece suelta en la lista.
+ * cifra, con rótulo propio». Una clave sin rótulo nunca aparece suelta en la lista, y la clave en sí
+ * no se muestra: es un dato técnico que se ve en «Ver JSON».
  */
 import { computed } from 'vue'
 import { meta } from '../../../stores/meta'
@@ -17,10 +18,10 @@ export const keyOptions = computed<SelectOption<string>[]>(() => {
   if (!keys) return [{ value: OTHER, label: dataText.metrics.other }]
   const catalog = [...keys.catalog]
     .sort((a, b) => b.uses - a.uses || a.label.es.localeCompare(b.label.es, 'es'))
-    .map(k => ({ value: k.key, label: `${k.label.es} · ${sentence(k.desc.es)} (${k.key})` }))
+    .map(k => ({ value: k.key, label: `${k.label.es} · ${sentence(k.desc.es)}` }))
   const unlisted = keys.unlisted
     .filter((k): k is typeof k & { label: string } => !!k.label?.trim())
-    .map(k => ({ value: k.key, label: `${k.label} (${k.key})` }))
+    .map(k => ({ value: k.key, label: k.label }))
   return [...catalog, ...unlisted, { value: OTHER, label: dataText.metrics.other }]
 })
 
@@ -41,4 +42,9 @@ export function unitFor(key: string): string | null {
   if (key === 'lcp') return 's'
   if (/^fps|Fps$/.test(key)) return 'fps'
   return null
+}
+
+/** El nombre de una métrica en su fila: el rótulo del catálogo, el propio o el que ya tiene en otra obra. */
+export function metricTitle(key: string, label: string): string {
+  return meta.value?.metricKeys.catalog.find(k => k.key === key)?.label.es ?? (label.trim() || knownLabel(key) || '')
 }

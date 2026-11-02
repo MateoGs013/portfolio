@@ -15,6 +15,23 @@ export const hunter = {
     applied: 'Postulada',
     discarded: 'Descartada',
   },
+  unscored: 'Sin evaluar',
+  /** Los portales que recorre Eros, por su identificador sin espacios ni guiones. */
+  portals: {
+    getonboard: 'Get on Board',
+    getonbrd: 'Get on Board',
+    linkedin: 'LinkedIn',
+    remoteok: 'RemoteOK',
+    weworkremotely: 'We Work Remotely',
+    computrabajo: 'Computrabajo',
+    bumeran: 'Bumeran',
+    zonajobs: 'ZonaJobs',
+    indeed: 'Indeed',
+    workana: 'Workana',
+    himalayas: 'Himalayas',
+    remotive: 'Remotive',
+    wellfound: 'Wellfound',
+  },
   verdict: {
     great: 'Muy compatible',
     good: 'Compatible',

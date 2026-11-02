@@ -67,14 +67,10 @@ const nextStage = computed(() => `#/busqueda/vacantes/${encodeURIComponent(props
 <template>
   <div class="grid gap-11">
     <StageHead ref="head" :heading="t.analysis.heading" :intro="t.analysis.intro">
-      <template v-if="analysis">
-        <Button variant="primary" :href="nextStage">
-          {{ t.analysis.next }}
-        </Button>
-        <Button variant="ghost" :loading="pending" :loading-label="t.analysis.running" @click="run">
-          {{ t.analysis.again }}
-        </Button>
-      </template>
+      <!-- Con el análisis hecho, el siguiente paso va después de leerlo (al pie del análisis). -->
+      <Button v-if="analysis" variant="ghost" :loading="pending" :loading-label="t.analysis.running" @click="run">
+        {{ t.analysis.again }}
+      </Button>
       <Button v-else variant="primary" :loading="pending" :loading-label="t.analysis.running" @click="run">
         {{ t.analysis.run }}
       </Button>
@@ -137,6 +133,12 @@ const nextStage = computed(() => `#/busqueda/vacantes/${encodeURIComponent(props
       <p v-if="analysis.salary_estimate" class="m-0 text-body text-dim">
         {{ t.analysis.salary }}: <span class="text-ink">{{ analysis.salary_estimate }}</span>
       </p>
+
+      <div class="border-t border-rule pt-7">
+        <Button variant="primary" :href="nextStage">
+          {{ t.analysis.next }}
+        </Button>
+      </div>
     </div>
 
     <details v-if="job.description" class="group max-w-[68ch] border-t border-rule pt-6">

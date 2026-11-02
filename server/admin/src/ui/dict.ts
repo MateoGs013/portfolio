@@ -5,7 +5,8 @@
  */
 export const ui = {
   app: {
-    name: 'Mateo Sonzogni',
+    /** Sin /meta todavía (el ingreso): el nombre real llega de Sobre mí. */
+    name: 'Portafolio',
     area: 'Administración',
     title: 'Admin',
   },

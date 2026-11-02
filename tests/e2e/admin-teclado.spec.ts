@@ -33,10 +33,10 @@ test('explorador: / busca, j entra a la lista, las flechas recorren, Enter abre 
   await page.keyboard.type('ynara')
   const list = page.getByRole('listbox', { name: 'Obras' })
   await expect(list.getByRole('option')).toHaveCount(2)
+  // Esc deja la búsqueda (con su filtro) y el foco cae en la lista, no en el cuerpo de la página.
   await page.keyboard.press('Escape')
   await expect(search).not.toBeFocused()
-
-  await page.keyboard.press('j')
+  await expect(search).toHaveValue('ynara')
   const first = list.getByRole('option').first()
   await expect(first).toBeFocused()
   await page.keyboard.press('ArrowDown')

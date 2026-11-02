@@ -127,6 +127,8 @@ export type AdminSchema = { readonly [M in ModelName]: Readonly<Record<keyof (ty
  * (`enumOptions`), el esquema de los formularios y las opciones de los selectores.
  */
 export interface AdminMeta {
+  /** El nombre visible de Sobre mí (`display_name`, si no `name`): la cabecera del admin. */
+  owner: string | null
   summary: AdminSummary
   enumOptions: Record<EnumName, EnumOption[]>
   schema: AdminSchema
@@ -182,11 +184,12 @@ export interface AdminStatus {
 
 /**
  * Qué tipo de pendiente es. La bandeja del Inicio los agrupa por tipo, en este orden:
- * cv_pdf · hidden, scheduled, draft (publicación) · no_cover, media_english (imágenes) ·
+ * cv_pdf · media_missing (archivos) · hidden, scheduled, draft (publicación) · no_cover, media_english (imágenes) ·
  * english (campos sin inglés) · metrics (sin fuente o fecha) · cv_bullets, cv_english (CV) · profile.
  */
 export type PendingKind =
   | 'cv_pdf' // el PDF del CV del sitio ya no coincide con la base (sello de scripts/cv-pdf.mjs)
+  | 'media_missing' // media de una obra visible o el retrato apuntan a un archivo que no está en el disco
   | 'hidden' // obra sin fecha de publicación, o artículo publicado sin fecha
   | 'scheduled' // obra o artículo con fecha futura
   | 'draft' // artículo en borrador

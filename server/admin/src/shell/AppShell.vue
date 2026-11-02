@@ -20,6 +20,7 @@ import MobileMenu from './MobileMenu.vue'
 import Nav from './Nav.vue'
 import { registerShellSources } from './paletteSources'
 import SessionLinks from './SessionLinks.vue'
+import StatusNotice from './StatusNotice.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -72,13 +73,16 @@ function skipToMain(): void {
       @click.prevent="skipToMain"
     >{{ shell.header.skip }}</a>
 
-    <div class="hidden min-h-0 flex-col overflow-y-auto border-r border-rule bg-bg px-2.5 pt-4 pb-3 md:flex">
+    <!-- Un landmark para toda la columna: la marca, la navegación y el pie quedan dentro (axe: region). -->
+    <aside :aria-label="shell.nav.panel" class="hidden min-h-0 flex-col overflow-y-auto border-r border-rule bg-bg px-2.5 pt-4 pb-3 md:flex">
       <Header variant="side" @palette="palette" />
       <Nav class="mt-3.5" />
-      <div class="mt-auto border-t border-rule px-2.5 pt-3">
+      <!-- El estado va en el pie: si Eros cambia de aviso, la navegación de arriba no se mueve. -->
+      <div class="mt-auto grid gap-3 border-t border-rule px-2.5 pt-3">
+        <StatusNotice />
         <SessionLinks />
       </div>
-    </div>
+    </aside>
 
     <Header variant="bar" class="md:hidden" @palette="palette" @menu="menuOpen = true" />
 

@@ -72,6 +72,8 @@ export const collections = {
     schedule: 'Publicar desde',
     scheduleHint: 'Vacío: se ve apenas guardás. Con una fecha futura, espera hasta ese día.',
     ready: 'Lista para publicar',
+    /** Ya publicada: no se ofrece publicar, se dice si está completa. */
+    whole: 'Completa',
     missing: (n: number) => (n === 1 ? 'Falta 1' : `Faltan ${n}`),
     checklist: 'Antes de publicar',
     complete: 'Completar',

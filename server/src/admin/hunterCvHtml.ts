@@ -143,7 +143,7 @@ export function renderCvHtml(cv: AdminCv, options: SheetOptions = {}): string {
   <style>${styles}</style>
 </head>
 <body${options.measure ? ' class="measure"' : ''}>
-<main>
+<main aria-label="${e(docTitle)}">
   ${header(cv)}
   ${section(labels.summary, cv.summary ? `<p>${e(cv.summary)}</p>` : '')}
   ${section(labels.skills, lines(skills))}

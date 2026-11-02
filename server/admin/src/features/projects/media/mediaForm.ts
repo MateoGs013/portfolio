@@ -8,6 +8,7 @@
  */
 import type { FieldIssue } from '@shared/adminContracts'
 import type { AdminMedia, MediaForm, MediaKind } from '../types'
+import { label } from '../../../stores/meta'
 import { mediaText } from './dict'
 
 export const ALT_MAX = 300
@@ -87,7 +88,12 @@ export function mediaIssues(list: readonly MediaForm[]): FieldIssue[] {
   })
 }
 
-/** «Imagen 2», «Video 1»: el nombre de una pieza en los avisos. */
+/** «Portada · Escritorio»: el título visible de una pieza, con los rótulos de /meta. */
+export function pieceHeading(item: MediaForm): string {
+  return mediaText.heading(label('MediaRole', item.role), label('MediaViewport', item.viewport))
+}
+
+/** «Imagen 2», «Video 1»: el nombre único de una pieza en los avisos y los nombres accesibles. */
 export function pieceName(list: readonly MediaForm[], item: MediaForm): string {
   return mediaText.piece(item.kind, list.indexOf(item) + 1)
 }

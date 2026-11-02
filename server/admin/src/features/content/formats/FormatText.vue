@@ -10,7 +10,6 @@ import { useClipboard } from '../../../composables/useClipboard'
 import { toast } from '../../../stores/toasts'
 import Button from '../../../ui/Button.vue'
 import { ui } from '../../../ui/dict'
-import Mono from '../../../ui/Mono.vue'
 import CopyBlock from '../CopyBlock.vue'
 import { post as t } from '../dict'
 
@@ -72,7 +71,7 @@ async function copyThread(): Promise<void> {
           </h3>
           <ul class="m-0 flex list-none flex-wrap gap-x-4 gap-y-1.5 p-0">
             <li v-for="tag in post.devto_tags" :key="tag" class="text-dim">
-              <Mono size="label">#{{ tag }}</Mono>
+              <span class="text-label">#{{ tag }}</span>
             </li>
           </ul>
         </div>

@@ -128,6 +128,11 @@
   --text-heading--line-height: 0.98;
   --text-heading--font-weight: 560;
   --text-heading--letter-spacing: -0.045em;
+  /* El título de un registro largo (más de 40 caracteres): un escalón abajo, hasta dos líneas. */
+  --text-heading-long: clamp(30px, 3vw, 44px);
+  --text-heading-long--line-height: 1.04;
+  --text-heading-long--font-weight: 560;
+  --text-heading-long--letter-spacing: -0.035em;
   --text-display: clamp(44px, 5vw, 72px);
   --text-display--line-height: 0.95;
   --text-display--font-weight: 560;

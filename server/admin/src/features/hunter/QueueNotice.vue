@@ -34,7 +34,7 @@ const time = computed(() => (lastSync.value
       </Button>
     </div>
   </div>
-  <p v-else-if="isSampleQueue && locked" id="cola-bloqueada" class="m-0 flex max-w-[68ch] items-center gap-2.5 border-t border-rule pt-5 text-body text-dim">
+  <p v-else-if="isSampleQueue && locked" id="cola-bloqueada" class="m-0 flex max-w-[68ch] items-center gap-2.5 text-body text-dim">
     <span class="size-1.5 shrink-0 rounded-full bg-faint" aria-hidden="true" />
     {{ locked }}
   </p>

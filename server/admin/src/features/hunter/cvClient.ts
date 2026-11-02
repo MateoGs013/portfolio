@@ -4,12 +4,14 @@
  *
  * Si la caché ya no lo tiene (la API se reinició o pasó la hora), la hoja y el texto responden 409
  * cv_expired: acá se vuelve a hacer POST /cv con la misma vacante y se repite el pedido una vez, sin
- * pedirle nada a quien está usando el panel.
+ * pedirle nada a quien está usando el panel. El CV rearmado reemplaza al de la etapa (work.cv): si
+ * Eros cambió entre tanto, el resumen y la nota de adaptación dicen lo que la hoja nueva usa.
  */
 import type { HunterJob, TailoredCv } from '@shared/hunterContracts'
 import { api } from '../../api/client'
 import { RequestError } from '../../api/errors'
 import { jobInput } from './model'
+import { workOf } from './work'
 
 const CV_EXPIRED = 'cv_expired'
 
@@ -34,14 +36,21 @@ export function isCvExpired(err: unknown): boolean {
   return err instanceof RequestError && err.status === 409 && (err.code === CV_EXPIRED || err.code === null)
 }
 
-/** Corre `read`; ante un 409 rearma el CV con la misma vacante y lo corre una vez más. */
+/** Lo que la etapa muestra del CV pasa a ser el rearmado: la hoja y su resumen no se contradicen. */
+function adopt(job: HunterJob, tailored: TailoredCv): void {
+  const work = workOf(job)
+  if (!tailored.usesSummaryProposal) work.baseSummary = tailored.data.summary
+  work.cv = tailored
+}
+
+/** Corre `read`; ante un 409 rearma el CV con la misma vacante, lo adopta y lo corre una vez más. */
 async function withCv<T>(job: HunterJob, request: CvRequest, read: () => Promise<T>): Promise<T> {
   try {
     return await read()
   }
   catch (err) {
     if (!isCvExpired(err)) throw err
-    await generateCv(job, { useSummaryProposal: request.useSummaryProposal })
+    adopt(job, await generateCv(job, { useSummaryProposal: request.useSummaryProposal }))
     return read()
   }
 }

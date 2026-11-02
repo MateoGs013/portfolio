@@ -22,6 +22,7 @@ export const meta = readonly(data)
 export const metaLoading = readonly(loading)
 export const metaError = readonly(error)
 
+export const owner = computed<string | null>(() => data.value?.owner ?? null)
 export const summary = computed<AdminSummary | null>(() => data.value?.summary ?? null)
 export const options = computed<AdminOptions | null>(() => data.value?.options ?? null)
 export const schema = computed<AdminSchema | null>(() => data.value?.schema ?? null)

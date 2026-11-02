@@ -82,7 +82,7 @@ const meta = (e: Experience) => [enumLabel('ExperienceKind', e.kind), periodText
         :key="entry.id"
         :draggable="!disabled"
         :data-entry="entry.slug"
-        class="grid grid-cols-[auto_1.25rem_minmax(0,1fr)_auto] items-center gap-x-2.5 border-b border-rule py-2.5 transition-opacity duration-200 ease-e"
+        class="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-2.5 border-b border-rule py-2.5 transition-opacity duration-200 ease-e"
         :class="dragging === entry.id ? 'opacity-40' : ''"
         @dragstart="onDragStart($event, entry.id)"
         @dragenter.prevent="onDragEnter(index)"
@@ -102,7 +102,6 @@ const meta = (e: Experience) => [enumLabel('ExperienceKind', e.kind), periodText
         >
           <Icon name="drag" :size="16" />
         </button>
-        <span class="text-label text-faint tabular-nums" aria-hidden="true">{{ index + 1 }}</span>
         <span class="grid min-w-0 gap-0.5">
           <RouterLink
             :to="experienceModel.routes.record(entry.id)"

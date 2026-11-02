@@ -1,8 +1,9 @@
 <script setup lang="ts">
 /**
- * Un texto con su inglés: español e inglés lado a lado desde 1280 px y apilados debajo. El inglés
- * ofrece «Copiar del español» y avisa «Falta el inglés» solo cuando ya hay español escrito (sin
- * español no falta nada). Cada lado es un Field con su ruta (`data-field`), así los errores del
+ * Un texto con su inglés, en una sola columna a todo el ancho del editor: el español arriba y el
+ * inglés debajo, pegado a su par (nunca dos columnas angostas que corten la línea). El inglés ofrece
+ * «Copiar del español» y avisa «Falta el inglés» cuando hay español escrito y el registro ya se
+ * guardó una vez: en uno nuevo no se marca mientras se llena el español. Cada lado es un Field con su ruta (`data-field`), así los errores del
  * servidor (`summary`, `translations.en.summary`) y ?campo= caen en el lado que corresponde.
  */
 import { computed } from 'vue'
@@ -33,7 +34,7 @@ const t = collections.bilingual
 const editor = useEditorContext()
 const locked = computed(() => props.readonly || (editor?.busy.value ?? false))
 const englishPath = computed(() => props.enPath ?? `translations.en.${props.path}`)
-const missing = computed(() => !!es.value.trim() && !en.value.trim())
+const missing = computed(() => !(editor?.isNew.value ?? false) && !!es.value.trim() && !en.value.trim())
 const counter = (text: string) => (props.max ? { count: text.length, max: props.max } : {})
 
 function copy(): void {
@@ -43,7 +44,7 @@ function copy(): void {
 </script>
 
 <template>
-  <div class="grid items-start gap-x-10 gap-y-7 xl:grid-cols-2">
+  <div class="grid gap-3.5">
     <Field
       :data-field="path"
       :label="`${label} · ${t.es}`"

@@ -8,7 +8,7 @@ import type { ListFilter } from '../content/model'
 import { radar } from './dict'
 
 const STATUS_TONE: Record<TrendStatus, StatusTone> = {
-  DISCOVERED: 'sig',
+  DISCOVERED: 'neutral',
   GENERATED: 'ok',
   DISCARDED: 'neutral',
 }
