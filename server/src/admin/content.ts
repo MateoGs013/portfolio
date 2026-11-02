@@ -32,9 +32,12 @@ import {
 } from './erosContentContract.js'
 import { text } from './erosContract.js'
 import { demoPosts, erosDemo, findDemoPost, isDemoId, refuseDemo, sendDemo } from './fallbackContentData.js'
-import { forwardToEros, getParamId } from './proxy.js'
+import { erosIdParam, forwardToEros, getParamId } from './proxy.js'
 
 export const contentRouter = Router()
+
+/** Un id que no es de Eros (`%2F`, `..`) responde 400 y nunca se reenvía. */
+contentRouter.param('id', erosIdParam)
 
 contentRouter.use(contentCarouselRouter)
 

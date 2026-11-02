@@ -23,7 +23,7 @@ import { hunterCvRouter } from './hunterCvRoutes.js'
 import { computeHunterStats, evaluateJobHeuristic, generatePitchHeuristic } from './hunterHeuristics.js'
 import { jobLang } from './hunterMatch.js'
 import { loadProfile } from './profile.js'
-import { forwardToEros, getParamId, sendErosFailure, useLocalFallback } from './proxy.js'
+import { erosIdParam, forwardToEros, getParamId, sendErosFailure, useLocalFallback, type ForwardResult } from './proxy.js'
 
 /**
  * /api/admin/hunter/*: Eros con su contrato normalizado (erosContract.ts). Sin Eros, las lecturas
@@ -32,6 +32,9 @@ import { forwardToEros, getParamId, sendErosFailure, useLocalFallback } from './
  * nunca van a Eros. Con EROS_DEMO=1 la cola y sus números salen de la muestra ficticia.
  */
 export const hunterRouter = Router()
+
+/** Un id que no es de Eros (`%2F`, `..`) responde 400 y nunca se reenvía. */
+hunterRouter.param('id', erosIdParam)
 
 hunterRouter.use(hunterCvBaseRouter, hunterCvRouter, hunterApplyRouter)
 

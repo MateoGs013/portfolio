@@ -18,9 +18,12 @@ import {
   sendUnreadable,
 } from './erosContentContract.js'
 import { demoTrends, erosDemo, findDemoTrend, isDemoId, refuseDemo, sendDemo } from './fallbackContentData.js'
-import { forwardToEros, getParamId } from './proxy.js'
+import { erosIdParam, forwardToEros, getParamId } from './proxy.js'
 
 export const radarRouter = Router()
+
+/** Un id que no es de Eros (`%2F`, `..`) responde 400 y nunca se reenvía. */
+radarRouter.param('id', erosIdParam)
 
 const json = (method: string, body: unknown): RequestInit => ({ method, body: JSON.stringify(body ?? {}) })
 const trendPath = (id: string, rest = '') => `api/radar/trends/${encodeURIComponent(id)}${rest}`

@@ -19,7 +19,7 @@ import {
   type TrendScan,
 } from '../shared/contentContracts.js'
 import { count, list, text, unwrap } from './erosContract.js'
-import { sendErosFailure, type ForwardResult } from './proxy.js'
+import { refusedText, sendErosFailure, type ErosFailure, type ForwardResult } from './proxy.js'
 
 export type * from '../shared/contentContracts.js'
 
@@ -212,11 +212,13 @@ const nouns: Record<ContentThing, { one: string, it: string }> = {
 }
 
 /** Un 4xx de Eros en español, nombrando lo que se pidió (no una vacante). */
-function rejection(upstream: number, thing: ContentThing): { status: number, body: AdminErrorBody } {
+function rejection(failure: ErosFailure, thing: ContentThing): { status: number, body: AdminErrorBody } {
   const noun = nouns[thing]
+  const upstream = failure.upstream
   if (upstream === 404) return { status: 404, body: { error: `Eros no tiene ${noun.one}: puede que se haya borrado.`, code: 'not_found', errors: [] } }
   if (upstream === 409) return { status: 409, body: { error: `Eros no pudo hacerlo: ${noun.it} cambió mientras tanto. Recargá la lista.`, code: 'conflict', errors: [] } }
-  return { status: 400, body: { error: 'Eros no aceptó el pedido. Revisá los datos y probá de nuevo.', code: 'invalid', errors: [] } }
+  const error = failure.detail ? refusedText('Eros no aceptó el pedido.', failure.detail) : 'Eros no aceptó el pedido. Revisá los datos y probá de nuevo.'
+  return { status: 400, body: { error, code: 'invalid', errors: [] } }
 }
 
 /**
@@ -228,7 +230,7 @@ export function sendContentFailure(res: Response, result: ForwardResult, thing: 
     sendErosFailure(res, result, consequence)
     return
   }
-  const { status, body } = rejection(result.failure.upstream, thing)
+  const { status, body } = rejection(result.failure, thing)
   res.status(status).json(consequence ? { ...body, error: `${body.error} ${consequence}` } : body)
 }
 
