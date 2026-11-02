@@ -167,6 +167,18 @@ export const EN: EnSeed = {
       },
       links: { 'https://github.com/MateoGs013/eros-agent': SOURCE, 'https://eros.mateogs.tech': 'control center' },
     },
+    'circuito-kitsune': {
+      role: 'Da Vinci coursework · design and development',
+      summary: 'A fictional cyberpunk Japanese-mask shop for the Web Portals and E-Commerce course. A Laravel monolith with a catalog, a blog and an admin panel.',
+      brief: 'An e-commerce brief solved as a piece of art direction: a clandestine circuit where each night a mask opens a district of Tokyo. The challenge wasn\'t the CRUD, but making a PHP coursework project feel like a brand object.',
+      outcome: 'A Laravel 13 monolith with Eloquent, migrations and seeders on SQLite: a catalog of 6 masks and a blog of transmissions, with session auth, mask reservations and a role-gated admin panel. A closed visual system in Tailwind v4 tokens, Lenis smooth scroll and reveals that respect prefers-reduced-motion.',
+      steps: {
+        1: { title: 'brief', body: 'A Web Portals and E-Commerce assignment asked for a shop with a catalog, a blog and admin CRUD. The decision was not to ship a generic CRUD but a brand with its own fiction: Tokyo\'s night shift and six identities.' },
+        2: { title: 'model', body: 'A Laravel 13 monolith: Eloquent, migrations and seeders for 6 masks and 5 transmissions on SQLite. Session auth, mask reservations and an admin panel behind role middleware. Five custom Blade components.' },
+        3: { title: 'piece', body: 'Editorial-cyberpunk art direction with a closed visual system in Tailwind v4 tokens: an Archivo Black masthead in fill and outline, a monospaced HUD, marquees and a portrait per mask. Lenis scroll and IntersectionObserver reveals, switched off with prefers-reduced-motion.' },
+      },
+      links: { 'https://github.com/MateoGs013/circuito-kitsune': SOURCE },
+    },
   },
 
   experience: {

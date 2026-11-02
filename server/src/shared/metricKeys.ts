@@ -106,6 +106,18 @@ export const metricKeys = {
     label: { es: 'Vida de los datos', en: 'Data lifetime' },
     desc: { es: 'Tiempo que un dato vive antes de borrarse solo.', en: 'How long a piece of data lives before it deletes itself.' },
   },
+  maskCount: {
+    label: { es: 'Máscaras', en: 'Masks' },
+    desc: { es: 'Identidades del catálogo, cada una modelada con Eloquent y su distrito.', en: 'Identities in the catalog, each modeled with Eloquent and its district.' },
+  },
+  districtCount: {
+    label: { es: 'Distritos', en: 'Districts' },
+    desc: { es: 'Territorios del circuito: una máscara opera en cada uno.', en: 'Territories of the circuit: one mask operates in each.' },
+  },
+  transmissionCount: {
+    label: { es: 'Transmisiones', en: 'Transmissions' },
+    desc: { es: 'Notas editoriales del blog, cargadas con seeders.', en: 'Editorial blog posts, loaded with seeders.' },
+  },
 } as const satisfies Readonly<Record<string, MetricKeyText>>
 
 export type MetricKey = keyof typeof metricKeys
