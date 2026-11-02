@@ -4,9 +4,8 @@
  * español nunca borra el inglés. La validación vive en docInput.ts.
  *
  * Los documentos no se crean ni se borran: son dos y fijos. Doc.title no se pide en el formulario y el
- * servidor conserva el guardado. El retrato se sube con POST /docs/about/portrait a
- * `public/media/projects/_perfil/`. Esa carpeta todavía no tiene volumen en producción (DEPLOY.md,
- * paso 6): hasta que lo tenga, el retrato subido dura hasta el próximo deploy.
+ * servidor conserva el guardado. El retrato se sube con POST /docs/about/portrait a `_perfil/` de la
+ * carpeta de subidas (mediaDirs.ts) y se sirve en `/media/projects/_perfil/`.
  */
 import { Router } from 'express'
 import { db } from '../db.js'

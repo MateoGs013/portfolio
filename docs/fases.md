@@ -201,7 +201,7 @@ Plan en `docs/rediseno-admin/plan.md` (mandan sus secciones finales: las respues
 
 **Queda pendiente, con motivo:**
 
-- **Volumen de media en Coolify.** La API no tiene volumen persistente: lo que se sube desde el admin (imágenes de obras y el retrato en `_perfil/`) se pierde en cada deploy. Hay que crear el volumen en `/app/public/media/projects` copiando antes las capturas versionadas (`DEPLOY.md`, paso 6).
+- **Volumen de media en Coolify.** Lo subido desde el admin va a `/app/uploads` (`MEDIA_UPLOAD_DIR`, aparte de lo versionado); falta crear ese volumen en la API (`DEPLOY.md`, paso 6). Sin él, lo subido se pierde en cada deploy.
 - **Producción.** `pg_dump`, `HUNTER_API_URL` verificada, deploy, el parche `2026-11-05-admin-datos.ts` (`--dry`, aplicar, `--dry`) y la auditoría de solo lectura de `/admin/`. Lo corre Mateo.
 - **La sesión cronometrada con una persona que no programa** (plan §9): la prueba automática mide el recorrido con las constantes de la auditoría; la sesión humana no quedó registrada.
 - **Dos rutas montadas sin uso en la UI** (`GET /media` y `GET /hunter/jobs/:id/apply-preview`): quedaron del panel anterior y figuran con su motivo en `docs/admin.md` §9; se pueden retirar.

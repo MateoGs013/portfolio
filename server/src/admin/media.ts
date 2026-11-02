@@ -1,7 +1,7 @@
 /**
  * Media de las obras: subida de imagen o video (con WebM y póster opcionales), reemplazo del archivo,
  * edición parcial y borrado. El tamaño y el formato se leen del archivo (magic bytes, mediaFiles.ts),
- * nunca del nombre ni del tipo declarado. Los archivos van a `public/media/projects/<slug>/`.
+ * nunca del nombre ni del tipo declarado. Los archivos van a `<slug>/` de la carpeta de subidas (mediaDirs.ts).
  * El alt y el pie en inglés llegan por PATCH en `en: { alt?, caption? }` (MediaTranslation).
  *
  * Reemplazar el archivo (POST /media/:id/file) conserva la fila: su id, su inglés y los pasos que la

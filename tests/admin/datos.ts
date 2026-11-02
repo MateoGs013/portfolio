@@ -6,6 +6,7 @@ import assert from 'node:assert/strict'
 import { existsSync, readFileSync, readdirSync, rmSync } from 'node:fs'
 import path from 'node:path'
 import pg from 'pg'
+import { UPLOAD_DIR, inDir } from '../../server/src/mediaDirs.js'
 import type { Reply } from './api.js'
 
 const base = process.env['ADMIN_API_URL'] ?? ''
@@ -45,10 +46,11 @@ export async function served(src: string): Promise<number> {
 }
 
 /** Ruta en el disco de un archivo `/media/projects/…` que escribe la API (corre en esta carpeta). */
-export const onDisk = (src: string) => path.resolve('public', '.' + src)
+/** Dónde está en disco: lo subido en UPLOAD_DIR (MEDIA_UPLOAD_DIR, mediaDirs.ts), lo demás bajo public/. */
+export const onDisk = (src: string) => inDir(UPLOAD_DIR, src) ?? path.resolve('public', '.' + src)
 
 export function folderFiles(folder: string): string[] {
-  const dir = path.resolve('public/media/projects', folder)
+  const dir = path.resolve(UPLOAD_DIR, folder)
   return existsSync(dir) ? readdirSync(dir) : []
 }
 
@@ -59,11 +61,11 @@ export function removeFiles(srcs: Iterable<string>): void {
 
 /** Borra la carpeta si quedó vacía (la que creó una prueba). */
 export function removeEmptyFolder(folder: string): void {
-  if (folderExists(folder) && folderFiles(folder).length === 0) rmSync(path.resolve('public/media/projects', folder), { recursive: true })
+  if (folderExists(folder) && folderFiles(folder).length === 0) rmSync(path.resolve(UPLOAD_DIR, folder), { recursive: true })
 }
 
 export function folderExists(folder: string): boolean {
-  return existsSync(path.resolve('public/media/projects', folder))
+  return existsSync(path.resolve(UPLOAD_DIR, folder))
 }
 
 /** Una consulta directa a la copia de la base de esta corrida (para dejarla sin un bloque, por ejemplo). */
