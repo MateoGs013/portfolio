@@ -64,7 +64,7 @@ describe('meta y estado', () => {
     const site = await call<Envelope<unknown[]>>('GET', '/api/projects')
     assert.equal(site.status, 200)
     assert.equal(meta.summary.projects.visible, site.body.meta.count)
-    assert.equal(meta.summary.projects.visible, 6)
+    assert.equal(meta.summary.projects.visible, 7)
     const all = await ok<unknown[]>('GET', '/projects')
     assert.equal(meta.summary.projects.visible + meta.summary.projects.hidden + meta.summary.projects.scheduled, all.length)
   })

@@ -116,10 +116,10 @@ export const hunter = {
   },
   purge: {
     title: 'Limpiar la cola',
-    message: 'Eros quita de la cola las vacantes descartadas y las que evaluó como incompatibles. Las guardadas y las postuladas quedan.',
-    impact: ['Las vacantes descartadas', 'Las vacantes que Eros evaluó como incompatibles'],
+    message: 'Eros pasa a descartadas las vacantes que ya no cumplen sus filtros. Las postuladas no se tocan, y nada se borra.',
+    impact: ['Las vacantes que ya no cumplen los filtros de Eros'],
     confirm: 'Limpiar la cola',
-    done: (n: number) => n ? `Se quitaron ${plural(n, 'vacante', 'vacantes')} de la cola.` : 'No había vacantes para quitar.',
+    done: (n: number) => (n === 1 ? 'Se descartó 1 vacante.' : n ? `Se descartaron ${n} vacantes.` : 'No había vacantes para descartar.'),
     failed: 'La cola no se limpió.',
   },
   manual: {

@@ -13,7 +13,7 @@ import { readFileSync } from 'node:fs'
 import { describe, test } from 'node:test'
 import type { AdminStatus } from '../../server/src/shared/adminContracts.js'
 import type { CvDocument } from '../../server/src/content/cv.js'
-import type { HunterJob, HunterStats, JobChange, Pitch, ScanResult, TailoredCv } from '../../server/src/shared/hunterContracts.js'
+import type { BatchEvaluation, HunterJob, HunterStats, JobChange, Pitch, PurgeResult, ScanResult, TailoredCv } from '../../server/src/shared/hunterContracts.js'
 import { extractHints, normalizeErosCv } from '../../server/src/admin/erosHints.js'
 import { erosState, forwardToEros } from '../../server/src/admin/proxy.js'
 import { admin, call, JARGON, ok } from './api.js'
@@ -220,6 +220,28 @@ if (online) {
       assert.deepEqual(scan, { scanned: 42, new_jobs: 2, evaluated_count: 0, vectorized: 2 })
       const semantic = await ok<{ results: HunterJob[] }>('POST', '/hunter/search/semantic', { query: 'vue' })
       assert.equal(semantic.results[0]!.semantic_score, 82)
+    })
+
+    test('escanear y evaluar esperan la tarea del Eros de ahora y aceptan la respuesta directa del de antes', async () => {
+      const eros = process.env['HUNTER_API_URL'] ?? ''
+      await fetch(`${eros}/__requests`, { method: 'DELETE' })
+      const scan = await ok<ScanResult>('POST', '/hunter/scan')
+      assert.deepEqual(scan, { scanned: 42, new_jobs: 2, evaluated_count: 0, vectorized: 2 })
+      const calls = ((await (await fetch(`${eros}/__requests`)).json()) as { method: string, path: string }[]).map(r => `${r.method} ${r.path}`)
+      assert.deepEqual(calls.filter(c => c.startsWith('GET /api/tasks/')).length, 2, 'consulta la tarea hasta que dice done')
+      const batch = await ok<BatchEvaluation>('POST', '/hunter/evaluate')
+      assert.deepEqual([batch.evaluated_count, batch.evaluated[0]?.id], [1, 'eros-mock-backend'])
+      assert.deepEqual(await ok<PurgeResult>('POST', '/hunter/purge'), { purged_count: 1 })
+
+      await fetch(`${eros}/__antes`, { method: 'PUT' })
+      try {
+        assert.deepEqual(await ok<ScanResult>('POST', '/hunter/scan'), scan)
+        assert.equal((await ok<BatchEvaluation>('POST', '/hunter/evaluate')).evaluated_count, 1)
+        assert.deepEqual(await ok<PurgeResult>('POST', '/hunter/purge'), { purged_count: 1 })
+      }
+      finally {
+        await fetch(`${eros}/__antes`, { method: 'DELETE' })
+      }
     })
 
     test('el CV adaptado no trae nada que no esté en la base', async () => {

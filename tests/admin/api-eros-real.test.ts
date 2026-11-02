@@ -14,6 +14,7 @@ import assert from 'node:assert/strict'
 import { describe, test } from 'node:test'
 import type { AdminStatus } from '../../server/src/shared/adminContracts.js'
 import type { ApplyPreview, FoundEmail, JobChange, JobEvaluation, Pitch } from '../../server/src/shared/hunterContracts.js'
+import { awaitErosTask } from '../../server/src/admin/erosTask.js'
 import { erosState, forwardToEros } from '../../server/src/admin/proxy.js'
 import { admin, ok } from './api.js'
 
@@ -105,6 +106,17 @@ if (online) {
       assert.equal(reply.body.error, 'Eros no aceptó el pedido. Eros dijo: «Input should be a valid string». El correo de contacto no cambió.')
     })
 
+    test('una tarea que Eros perdió (se reinició) no se da por hecha', async () => {
+      process.env['EROS_API_KEY'] = 'offline'
+      const accepted = { ok: true, status: 202, data: { task_id: 'scan_perdida' }, failure: null }
+      const lost = await awaitErosTask(accepted, Date.now(), 10_000)
+      assert.equal(lost.ok, false)
+      assert.equal((lost.data as ErrorBody).code, 'eros_error')
+      assert.match((lost.data as ErrorBody).error, /perdió la tarea/)
+      const direct = { ok: true, status: 200, data: { scanned: 1 }, failure: null }
+      assert.equal(await awaitErosTask(direct, Date.now(), 10_000), direct, 'la respuesta directa del Eros de antes pasa tal cual')
+    })
+
     test('una tarea larga cortada no cuenta como caída; un corte común sí', async () => {
       // El proxy corre en este proceso: la clave del simulado, nunca la del .env.
       process.env['EROS_API_KEY'] = 'offline'
@@ -120,14 +132,29 @@ if (online) {
       assert.equal(erosState().state, 'ok')
     })
 
-    test('«Buscar correo» lee contact_email, source y found, y marca el adivinado', async () => {
+    test('«Buscar correo» lee contact_email_source: del aviso o de Hunter.io', async () => {
       const posting = await ok<FoundEmail & { _source: string }>('POST', '/hunter/jobs/eros-mock-frontend/find-email')
-      assert.deepEqual([posting.email, posting.found, posting.origin, posting.source, posting._source], ['empleos@example.com', true, 'posting', 'description', 'eros'])
-      const guessed = await ok<FoundEmail>('POST', '/hunter/jobs/eros-mock-backend/find-email')
-      assert.deepEqual([guessed.email, guessed.origin, guessed.source], ['jobs@example.com', 'guessed', 'domain_guessing'])
+      assert.deepEqual([posting.email, posting.found, posting.origin, posting.source, posting._source], ['empleos@example.com', true, 'posting', 'posting', 'eros'])
+      const hunter = await ok<FoundEmail>('POST', '/hunter/jobs/eros-mock-backend/find-email')
+      assert.deepEqual([hunter.email, hunter.origin, hunter.source], ['seleccion@example.com', 'hunter', 'hunter'])
     })
 
-    test('la vista previa lleva el origen desde is_email_extracted, no contact_email_verified', async () => {
+    test('con el Eros de antes, «Buscar correo» lee source y marca el adivinado', async () => {
+      await fetch(`${eros}/__antes`, { method: 'PUT' })
+      try {
+        const posting = await ok<FoundEmail>('POST', '/hunter/jobs/eros-mock-frontend/find-email')
+        assert.deepEqual([posting.email, posting.found, posting.origin, posting.source], ['empleos@example.com', true, 'posting', 'description'])
+        const guessed = await ok<FoundEmail>('POST', '/hunter/jobs/eros-mock-backend/find-email')
+        assert.deepEqual([guessed.email, guessed.origin, guessed.source], ['jobs@example.com', 'guessed', 'domain_guessing'])
+        const preview = await ok<ApplyPreview>('POST', '/hunter/jobs/eros-mock-frontend/apply-preview', {})
+        assert.equal(preview.email_origin, 'posting', 'sin contact_email_source sale de is_email_extracted')
+      }
+      finally {
+        await fetch(`${eros}/__antes`, { method: 'DELETE' })
+      }
+    })
+
+    test('la vista previa lleva el origen desde contact_email_source, no contact_email_verified', async () => {
       const preview = await ok<ApplyPreview>('POST', '/hunter/jobs/eros-mock-frontend/apply-preview', {})
       assert.equal(preview.contact_email, 'empleos@example.com')
       assert.equal(preview.email_origin, 'posting')

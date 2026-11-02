@@ -28,14 +28,8 @@ watch(open, (value) => {
   if (value) channel.value = 'linkedin'
 })
 
-const options = publishChannels.map(value => ({ value, label: label(value), hint: t.publish.hints[value] }))
+const options = publishChannels.map(value => ({ value, label: publishChannelLabels[value], hint: t.publish.hints[value] }))
 const confirmLabel = computed(() => t.publish.confirm(publishChannelLabels[channel.value ?? 'all']))
-
-function label(value: PublishChannel): string {
-  const text = publishChannelLabels[value]
-  // «todos los canales» va en minúscula dentro de la frase; como opción, con mayúscula inicial.
-  return value === 'all' ? text.charAt(0).toUpperCase() + text.slice(1) : text
-}
 
 async function publish(): Promise<void> {
   if (pending.value || !channel.value) return
@@ -44,7 +38,7 @@ async function publish(): Promise<void> {
   try {
     const { post: next, status } = await dispatchPost(props.post, target)
     open.value = false
-    if (status === 'published') toast(t.publish.done)
+    if (status === 'dispatched') toast(t.publish.done)
     else toast(t.publish.approvedOnly, { tone: 'info' })
     emit('published', next)
   }
@@ -74,7 +68,7 @@ async function publish(): Promise<void> {
         <RadioGroup v-model="channel" :options="options" :label="t.publish.channel" variant="list" :disabled="pending" />
       </Field>
       <p class="m-0 text-label text-faint">
-        {{ t.publish.channelNote }} {{ t.publish.warning }}
+        {{ t.publish.warning }}
       </p>
     </div>
     <template #footer>

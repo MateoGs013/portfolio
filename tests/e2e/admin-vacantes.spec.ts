@@ -376,25 +376,39 @@ test('de dónde sale el correo y un puntaje sin Gemini se dicen en palabras (con
   const mode = await modeOf(request)
   if (mode !== 'mock') return
   await signedIn(page, '#/busqueda/vacantes/eros-mock-frontend/postular')
-  // El correo figura en el aviso (is_email_extracted): se dice, sin «verificado».
+  // El correo figura en el aviso (contact_email_source: posting): se dice, sin «verificado».
   await expect(page.getByRole('textbox', { name: 'Destinatario' })).toHaveValue('empleos@example.com')
   await expect(page.locator('[data-email-origin]')).toHaveText('Sale del texto del aviso.')
   await expect(page.getByRole('button', { name: 'Enviar desde Eros' })).toHaveCount(0)
   await expect(page.getByRole('link', { name: /Abrir en Gmail/ })).toBeVisible()
   await expect(page.getByRole('button', { name: 'Ya la envié' })).toBeVisible()
 
-  // La vacante en inglés no trae correo: Eros lo adivina con el dominio y queda marcado como adivinado.
+  // La vacante en inglés no trae correo: Eros lo encuentra con Hunter.io y lo dice.
   await page.goto(`${ADMIN}#/busqueda/vacantes/eros-mock-backend/postular`)
   await expect(page.locator('#main h1')).toHaveText(/Backend Developer/)
   await page.getByRole('button', { name: 'Buscar correo' }).click()
-  await expect(page.getByRole('textbox', { name: 'Destinatario' })).toHaveValue('jobs@example.com')
+  const to = page.getByRole('textbox', { name: 'Destinatario' })
+  await expect(to).toHaveValue('seleccion@example.com')
   const origin = page.locator('[data-email-origin]')
-  await expect(origin).toContainText('Adivinado')
-  await expect(origin).toContainText('puede no existir')
-  await expect(origin).not.toContainText(/verificad[oa]/i)
+  await expect(origin).toContainText('Hunter.io')
+  await expect(origin).toContainText('No está verificada')
+
+  // El Eros de antes lo adivinaba con el dominio: queda marcado como adivinado.
+  await request.put(`${erosUrl}/__antes`)
+  try {
+    await to.fill('')
+    await page.getByRole('button', { name: 'Buscar correo' }).click()
+    await expect(to).toHaveValue('jobs@example.com')
+    await expect(origin).toContainText('Adivinado')
+    await expect(origin).toContainText('puede no existir')
+    await expect(origin).not.toContainText(/verificad[oa]/i)
+  }
+  finally {
+    await request.delete(`${erosUrl}/__antes`)
+  }
   await noSeriousAxe(page)
   // Escrito a mano, la nota se va.
-  await page.getByRole('textbox', { name: 'Destinatario' }).fill('rrhh@example.com')
+  await to.fill('rrhh@example.com')
   await expect(origin).toHaveCount(0)
 
   // Eros la puntuó sin Gemini: el análisis lo dice y no figura como «Generado por Eros».

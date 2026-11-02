@@ -226,15 +226,32 @@ if (online) describe('con Eros (--eros-mock)', () => {
     assert.deepEqual(await ok('DELETE', '/content/posts/eros-mock-post-arquitectura'), { ok: true })
   })
 
-  test('publicar lee el status de Eros: publicada, o solo aprobada sin n8n', async () => {
+  test('publicar lee el status de Eros: despachada por sus canales, o solo aprobada sin n8n', async () => {
     await fetch(`${eros}/__requests`, { method: 'DELETE' })
     const sent = await ok<DispatchResult>('POST', '/content/posts/eros-mock-post-arquitectura/publish', { channel: 'linkedin' })
-    assert.deepEqual(sent, { ok: true, channel: 'linkedin', status: 'published', dispatched_at: null })
+    assert.deepEqual(sent, { ok: true, channel: 'linkedin', channels: ['linkedin'], status: 'dispatched', dispatched_at: '2026-11-02T12:00:00+00:00' })
     const [asked] = await mockRequests()
     assert.equal(asked?.path, '/api/content/posts/eros-mock-post-arquitectura/publish')
     assert.deepEqual(asked?.body, { channel: 'linkedin' })
     const local = await ok<DispatchResult>('POST', '/content/posts/eros-mock-post-aprendizaje/publish', { channel: 'all' })
-    assert.deepEqual(local, { ok: true, channel: 'all', status: 'approved_local', dispatched_at: null })
+    assert.deepEqual(local, { ok: true, channel: 'all', channels: [], status: 'approved_local', dispatched_at: null })
+  })
+
+  test('Dev.to no se despacha: el admin no lo ofrece y no le llega a Eros', async () => {
+    await fetch(`${eros}/__requests`, { method: 'DELETE' })
+    assertIssue(await admin('POST', '/content/posts/eros-mock-post-arquitectura/publish', { channel: 'devto' }), 'channel')
+    assert.deepEqual(await mockRequests(), [])
+  })
+
+  test('con el Eros de antes, su «published» se lee como despachada', async () => {
+    await fetch(`${eros}/__antes`, { method: 'PUT' })
+    try {
+      const sent = await ok<DispatchResult>('POST', '/content/posts/eros-mock-post-arquitectura/publish', { channel: 'linkedin' })
+      assert.deepEqual(sent, { ok: true, channel: 'linkedin', channels: [], status: 'dispatched', dispatched_at: null })
+    }
+    finally {
+      await fetch(`${eros}/__antes`, { method: 'DELETE' })
+    }
   })
 
   test('publicar en el blog crea un borrador que el sitio no lista', async () => {

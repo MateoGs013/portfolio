@@ -117,19 +117,19 @@ export interface Pitch {
 }
 
 /**
- * De dónde salió el correo de contacto, para decirlo en pantalla: del aviso, de la web de la empresa
- * (Hunter.io), adivinado con el dominio de la empresa (`jobs@empresa.com`), o no se sabe (el contacto
- * guardado en la vacante que no figura en el aviso). Ninguno está verificado: un correo adivinado
- * se marca como tal y nunca como verificado.
+ * De dónde salió el correo de contacto, para decirlo en pantalla: del aviso, de la web de la empresa,
+ * de Hunter.io, escrito a mano, adivinado con el dominio de la empresa (`jobs@empresa.com`, solo el
+ * Eros de antes) o no se sabe (el contacto guardado que no figura en el aviso). Un correo adivinado o
+ * de origen desconocido se marca como tal y nunca como verificado.
  */
-export const emailOrigins = ['posting', 'company_site', 'guessed', 'unknown'] as const
+export const emailOrigins = ['posting', 'company_site', 'hunter', 'manual', 'guessed', 'unknown'] as const
 export type EmailOrigin = (typeof emailOrigins)[number]
 
 /**
- * POST /jobs/:id/apply-preview. `email_origin` sale de `is_email_extracted` de Eros (o, sin Eros, de
- * si el aviso trae el correo): 'posting' si figura en el aviso, 'unknown' si no; null sin correo.
- * `contact_email_verified` de Eros no se lee: Eros lo calcula como lo contrario de `is_email_extracted`,
- * así que da «verificado» justo a los que no salen del aviso.
+ * POST /jobs/:id/apply-preview. `email_origin` sale de `contact_email_source` de Eros; con el Eros de
+ * antes, que no lo manda, de `is_email_extracted` ('posting' si figura en el aviso, 'unknown' si no).
+ * Sin Eros, de si el aviso trae el correo. null sin correo. `contact_email_verified` no se lee: el Eros
+ * de antes lo calculaba al revés.
  */
 export interface ApplyPreview {
   to_email: string | null
@@ -141,10 +141,11 @@ export interface ApplyPreview {
 }
 
 /**
- * POST /jobs/:id/find-email. Eros responde `{ contact_email, source, found }`: `source` es su código
- * (description, hunter_io, domain_guessing, mx_inference; null si no encontró) y `origin` lo mismo en
- * las cuatro categorías de arriba. `found` es false cuando Eros no encontró uno nuevo (puede volver
- * el que ya tenía la vacante, con origen 'unknown').
+ * POST /jobs/:id/find-email. Eros responde `{ contact_email, contact_email_source, source, found }`:
+ * `source` es su código (posting, company_site, hunter, manual; el de antes, description, hunter_io,
+ * domain_guessing o mx_inference; null si no encontró) y `origin`, lo mismo en las categorías de
+ * arriba. `found` es false cuando Eros no encontró uno nuevo: vuelve el que ya tenía la vacante, con su
+ * origen guardado si Eros lo sabe ('unknown' si no).
  */
 export interface FoundEmail {
   email: string | null

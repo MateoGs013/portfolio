@@ -260,4 +260,5 @@ export function normalizeJobChange(payload: unknown): JobChange {
 
 export const normalizeSemantic = (payload: unknown): SemanticResults => ({ results: normalizeJobs(payload) })
 export const normalizeVectorize = (payload: unknown): VectorizeResult => ({ vectorized_count: first(unwrap(payload), 'vectorized_count', 'vectorized') ?? 0 })
-export const normalizePurge = (payload: unknown): PurgeResult => ({ purged_count: first(unwrap(payload), 'purged_count', 'purged') ?? 0 })
+/** El Eros de ahora solo las descarta (`discarded_count`); el de antes las borraba (`purged_count`). */
+export const normalizePurge = (payload: unknown): PurgeResult => ({ purged_count: first(unwrap(payload), 'discarded_count', 'purged_count', 'purged') ?? 0 })
