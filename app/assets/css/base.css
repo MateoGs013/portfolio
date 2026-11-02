@@ -89,7 +89,9 @@
   --text-display-page--font-weight: 560;
   --text-display-name: clamp(3.4rem, 15.5vw, 16rem);
   --text-display-name--line-height: 0.82;
-  --text-display-name--letter-spacing: -0.058em;
+  /* Lo justo para que ninguna letra toque a la siguiente (e-o, t-e y o-g son los pares más cerrados);
+     en mobile se abre un poco más, ver el @layer base. */
+  --text-display-name--letter-spacing: -0.03em;
   --text-display-name--font-weight: 560;
   /* El nombre del cargador tiene su propio tamaño: viaja con FLIP hasta display-name. */
   --text-display-loader: clamp(2rem, 5.4vw, 5rem);
@@ -189,6 +191,14 @@
     -webkit-text-size-adjust: 100%;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* A tamaño de mobile el render junta las letras del nombre ~0,02em más: con el tracking de desktop
+     se pegan. Va en el token, así el cargador (que lo lee para su FLIP) sigue coincidiendo. */
+  @media (width < 48rem) {
+    :root {
+      --text-display-name--letter-spacing: -0.02em;
+    }
   }
 
   /* El único recorte horizontal del sitio; sin max-width: 100vw (corta con barra de scroll). */
