@@ -118,6 +118,22 @@ export const metricKeys = {
     label: { es: 'Transmisiones', en: 'Transmissions' },
     desc: { es: 'Notas editoriales del blog, cargadas con seeders.', en: 'Editorial blog posts, loaded with seeders.' },
   },
+  duendeCount: {
+    label: { es: 'Duendes', en: 'Sprites' },
+    desc: { es: 'Criaturas del catálogo, cada una con su rareza y accesorios.', en: 'Creatures in the catalog, each with its rarity and accessories.' },
+  },
+  rarezaCount: {
+    label: { es: 'Rarezas', en: 'Rarities' },
+    desc: { es: 'Niveles de rareza del catálogo, de común a legendario.', en: 'Catalog rarity tiers, from common to legendary.' },
+  },
+  accesorioCount: {
+    label: { es: 'Accesorios', en: 'Accessories' },
+    desc: { es: 'Accesorios que equipan a los duendes, sobre tablas propias.', en: 'Accessories that equip the sprites, on their own tables.' },
+  },
+  tableCount: {
+    label: { es: 'Tablas', en: 'Tables' },
+    desc: { es: 'Tablas del modelo relacional en MariaDB, accedidas con PDO.', en: 'Tables in the MariaDB relational model, accessed with PDO.' },
+  },
 } as const satisfies Readonly<Record<string, MetricKeyText>>
 
 export type MetricKey = keyof typeof metricKeys

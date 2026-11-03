@@ -1,9 +1,9 @@
 {
   "_generated": "pnpm db:snapshot — no editar",
-  "at": "2026-11-03T14:38:53.482Z",
+  "at": "2026-11-03T20:07:52.891Z",
   "projects": [
     {
-      "id": 240,
+      "id": 249,
       "slug": "la-rucula",
       "title": "La Rúcula Gastrobar",
       "year": 2026,
@@ -17,9 +17,9 @@
       "repo": "https://github.com/MateoGs013/LaRucula",
       "sortOrder": 0,
       "publishedAt": "2026-10-05T12:00:00.000Z",
-      "createdAt": "2026-11-03T14:38:21.692Z",
-      "updatedAt": "2026-11-03T14:38:21.692Z",
-      "orgId": 136,
+      "createdAt": "2026-11-03T20:07:19.845Z",
+      "updatedAt": "2026-11-03T20:07:19.845Z",
+      "orgId": 140,
       "org": {
         "slug": "la-rucula-gastrobar",
         "name": "La Rúcula Gastrobar",
@@ -188,6 +188,13 @@
                   "title": null
                 }
               ]
+            },
+            {
+              "slug": "tienda-mistica",
+              "title": "Tienda Mística",
+              "year": 2026,
+              "publishedAt": "2026-10-05T12:00:00.000Z",
+              "translations": []
             }
           ]
         },
@@ -284,7 +291,7 @@
       ],
       "media": [
         {
-          "id": 631,
+          "id": 662,
           "kind": "IMAGE",
           "role": "COVER",
           "src": "/media/projects/la-rucula/hero.webp",
@@ -298,10 +305,10 @@
           "height": 1800,
           "order": 0,
           "bytes": 21488,
-          "projectId": 240,
+          "projectId": 249,
           "translations": [
             {
-              "mediaId": 631,
+              "mediaId": 662,
               "locale": "en",
               "alt": "La Rúcula Gastrobar home page: editorial headline over a sunset on the coast",
               "caption": null
@@ -309,7 +316,7 @@
           ]
         },
         {
-          "id": 638,
+          "id": 670,
           "kind": "VIDEO",
           "role": "COVER",
           "src": "/media/projects/la-rucula/scroll.mp4",
@@ -323,10 +330,10 @@
           "height": 1200,
           "order": 1,
           "bytes": 2460051,
-          "projectId": 240,
+          "projectId": 249,
           "translations": [
             {
-              "mediaId": 638,
+              "mediaId": 670,
               "locale": "en",
               "alt": "Scrolling through the La Rúcula home page, from the hero to the footer",
               "caption": null
@@ -334,7 +341,7 @@
           ]
         },
         {
-          "id": 639,
+          "id": 671,
           "kind": "VIDEO",
           "role": "GALLERY",
           "src": "/media/projects/la-rucula/intro.mp4",
@@ -348,10 +355,10 @@
           "height": 1200,
           "order": 1,
           "bytes": 1484935,
-          "projectId": 240,
+          "projectId": 249,
           "translations": [
             {
-              "mediaId": 639,
+              "mediaId": 671,
               "locale": "en",
               "alt": "Opening animation of the La Rúcula site before the home page",
               "caption": "The site intro"
@@ -359,7 +366,7 @@
           ]
         },
         {
-          "id": 640,
+          "id": 672,
           "kind": "IMAGE",
           "role": "GALLERY",
           "src": "/media/projects/la-rucula/menu.webp",
@@ -373,10 +380,10 @@
           "height": 1800,
           "order": 2,
           "bytes": 19280,
-          "projectId": 240,
+          "projectId": 249,
           "translations": [
             {
-              "mediaId": 640,
+              "mediaId": 672,
               "locale": "en",
               "alt": "La Rúcula menu with its categories: coffee, food, drinks, cocktails and smoothies",
               "caption": "The menu, opened from the table QR code"
@@ -384,7 +391,7 @@
           ]
         },
         {
-          "id": 641,
+          "id": 673,
           "kind": "IMAGE",
           "role": "GALLERY",
           "src": "/media/projects/la-rucula/carta.webp",
@@ -398,10 +405,10 @@
           "height": 1800,
           "order": 3,
           "bytes": 23684,
-          "projectId": 240,
+          "projectId": 249,
           "translations": [
             {
-              "mediaId": 641,
+              "mediaId": 673,
               "locale": "en",
               "alt": "The food category of the menu: starters with their description and price",
               "caption": "One category of the menu"
@@ -409,7 +416,7 @@
           ]
         },
         {
-          "id": 642,
+          "id": 674,
           "kind": "IMAGE",
           "role": "GALLERY",
           "src": "/media/projects/la-rucula/atardeceres.webp",
@@ -423,10 +430,10 @@
           "height": 1800,
           "order": 4,
           "bytes": 18594,
-          "projectId": 240,
+          "projectId": 249,
           "translations": [
             {
-              "mediaId": 642,
+              "mediaId": 674,
               "locale": "en",
               "alt": "Sunsets at La Barrosa page: italic headline on a dark background",
               "caption": "Sunsets"
@@ -434,7 +441,7 @@
           ]
         },
         {
-          "id": 643,
+          "id": 675,
           "kind": "IMAGE",
           "role": "GALLERY",
           "src": "/media/projects/la-rucula/movil-hero.webp",
@@ -448,10 +455,10 @@
           "height": 2532,
           "order": 5,
           "bytes": 23848,
-          "projectId": 240,
+          "projectId": 249,
           "translations": [
             {
-              "mediaId": 643,
+              "mediaId": 675,
               "locale": "en",
               "alt": "La Rúcula home page on a phone",
               "caption": "The home page on a phone"
@@ -459,7 +466,7 @@
           ]
         },
         {
-          "id": 644,
+          "id": 676,
           "kind": "IMAGE",
           "role": "GALLERY",
           "src": "/media/projects/la-rucula/movil-carta.webp",
@@ -473,10 +480,10 @@
           "height": 2532,
           "order": 6,
           "bytes": 19352,
-          "projectId": 240,
+          "projectId": 249,
           "translations": [
             {
-              "mediaId": 644,
+              "mediaId": 676,
               "locale": "en",
               "alt": "The food category of the menu on a phone, with the categories in a swipeable row",
               "caption": "The menu on a phone"
@@ -486,15 +493,15 @@
       ],
       "steps": [
         {
-          "id": 628,
+          "id": 653,
           "order": 1,
           "title": "01 · encargo",
           "body": "De un encargo de \"página de restaurante\" a una experiencia menu-first pensada para el QR en la mesa. La carta tenía que sentirse tan cuidada como el plato.",
-          "projectId": 240,
+          "projectId": 249,
           "mediaId": null,
           "translations": [
             {
-              "stepId": 628,
+              "stepId": 653,
               "locale": "en",
               "title": "commission",
               "body": "From a \"restaurant page\" commission to a menu-first experience designed for the QR code on the table. The menu had to feel as carefully crafted as the dish."
@@ -503,15 +510,15 @@
           "media": null
         },
         {
-          "id": 629,
+          "id": 654,
           "order": 2,
           "title": "02 · taller",
           "body": "Arquitectura menu-first: el sitio se reduce a /, /menu y /menu/:slug. La mayoría del tráfico entra por QR, así que el menú es el producto. El contenido del shell vive en un CMS propio con fallback local: si la API duerme, el sitio no. Antes de cerrar una sección, review visual con Playwright en tres viewports y baseline de accesibilidad con axe.",
-          "projectId": 240,
+          "projectId": 249,
           "mediaId": null,
           "translations": [
             {
-              "stepId": 629,
+              "stepId": 654,
               "locale": "en",
               "title": "workshop",
               "body": "Menu-first architecture: the site comes down to /, /menu and /menu/:slug. Most traffic arrives through the QR code, so the menu is the product. The shell content lives in a custom CMS with a local fallback: if the API sleeps, the site doesn't. Before closing a section, a visual review with Playwright in three viewports and an accessibility baseline with axe."
@@ -520,15 +527,15 @@
           "media": null
         },
         {
-          "id": 630,
+          "id": 655,
           "order": 3,
           "title": "03 · pieza",
           "body": "Home inmersiva de dirección de arte mediterránea: editorial, calma, lejos del layout genérico de restaurante. Motion con significado: reveals de línea, stagger tipográfico y acentos SVG de trazo manual. La regla del proyecto: cohesión sobre novedad.",
-          "projectId": 240,
+          "projectId": 249,
           "mediaId": null,
           "translations": [
             {
-              "stepId": 630,
+              "stepId": 655,
               "locale": "en",
               "title": "piece",
               "body": "An immersive home with Mediterranean art direction: editorial, calm, far from the generic restaurant layout. Motion with meaning: line reveals, typographic stagger and hand-drawn SVG accents. The project's rule: cohesion over novelty."
@@ -539,26 +546,26 @@
       ],
       "links": [
         {
-          "id": 360,
+          "id": 373,
           "label": "sitio en vivo",
           "url": "https://laruculagastrobar.es/",
-          "projectId": 240,
+          "projectId": 249,
           "translations": [
             {
-              "linkId": 360,
+              "linkId": 373,
               "locale": "en",
               "label": "live site"
             }
           ]
         },
         {
-          "id": 361,
+          "id": 374,
           "label": "código fuente",
           "url": "https://github.com/MateoGs013/LaRucula",
-          "projectId": 240,
+          "projectId": 249,
           "translations": [
             {
-              "linkId": 361,
+              "linkId": 374,
               "locale": "en",
               "label": "source code"
             }
@@ -567,7 +574,7 @@
       ],
       "metrics": [
         {
-          "id": 868,
+          "id": 909,
           "key": "performanceScore",
           "value": "99",
           "items": [],
@@ -576,11 +583,11 @@
           "source": null,
           "measuredAt": null,
           "order": 0,
-          "projectId": 240,
+          "projectId": 249,
           "translations": []
         },
         {
-          "id": 869,
+          "id": 910,
           "key": "accessibilityScore",
           "value": "100",
           "items": [],
@@ -589,11 +596,11 @@
           "source": null,
           "measuredAt": null,
           "order": 1,
-          "projectId": 240,
+          "projectId": 249,
           "translations": []
         },
         {
-          "id": 870,
+          "id": 911,
           "key": "bestPracticesScore",
           "value": "100",
           "items": [],
@@ -602,11 +609,11 @@
           "source": null,
           "measuredAt": null,
           "order": 2,
-          "projectId": 240,
+          "projectId": 249,
           "translations": []
         },
         {
-          "id": 871,
+          "id": 912,
           "key": "seoScore",
           "value": "100",
           "items": [],
@@ -615,11 +622,11 @@
           "source": null,
           "measuredAt": null,
           "order": 3,
-          "projectId": 240,
+          "projectId": 249,
           "translations": []
         },
         {
-          "id": 872,
+          "id": 913,
           "key": "lcp",
           "value": "0.8",
           "items": [],
@@ -628,11 +635,11 @@
           "source": null,
           "measuredAt": null,
           "order": 4,
-          "projectId": 240,
+          "projectId": 249,
           "translations": []
         },
         {
-          "id": 873,
+          "id": 914,
           "key": "bundleSizeKb",
           "value": "42",
           "items": [],
@@ -641,11 +648,11 @@
           "source": null,
           "measuredAt": null,
           "order": 5,
-          "projectId": 240,
+          "projectId": 249,
           "translations": []
         },
         {
-          "id": 874,
+          "id": 915,
           "key": "localeCount",
           "value": "2",
           "items": [],
@@ -654,7 +661,7 @@
           "source": null,
           "measuredAt": null,
           "order": 6,
-          "projectId": 240,
+          "projectId": 249,
           "translations": []
         }
       ],
@@ -673,7 +680,7 @@
       ],
       "translations": [
         {
-          "projectId": 240,
+          "projectId": 249,
           "locale": "en",
           "title": null,
           "role": "Freelance · design and development",
@@ -684,7 +691,7 @@
       ]
     },
     {
-      "id": 241,
+      "id": 250,
       "slug": "argpiscinas",
       "title": "ARG Piscinas",
       "year": 2026,
@@ -698,9 +705,9 @@
       "repo": "https://github.com/MateoGs013/argpiscinas",
       "sortOrder": 1,
       "publishedAt": "2026-10-05T12:00:00.000Z",
-      "createdAt": "2026-11-03T14:38:21.715Z",
-      "updatedAt": "2026-11-03T14:38:21.715Z",
-      "orgId": 137,
+      "createdAt": "2026-11-03T20:07:19.885Z",
+      "updatedAt": "2026-11-03T20:07:19.885Z",
+      "orgId": 141,
       "org": {
         "slug": "arg-piscinas",
         "name": "ARG Piscinas",
@@ -884,6 +891,13 @@
                   "title": null
                 }
               ]
+            },
+            {
+              "slug": "tienda-mistica",
+              "title": "Tienda Mística",
+              "year": 2026,
+              "publishedAt": "2026-10-05T12:00:00.000Z",
+              "translations": []
             }
           ]
         },
@@ -980,7 +994,7 @@
       ],
       "media": [
         {
-          "id": 632,
+          "id": 663,
           "kind": "IMAGE",
           "role": "COVER",
           "src": "/media/projects/argpiscinas/hero.webp",
@@ -994,10 +1008,10 @@
           "height": 1800,
           "order": 0,
           "bytes": 38950,
-          "projectId": 241,
+          "projectId": 250,
           "translations": [
             {
-              "mediaId": 632,
+              "mediaId": 663,
               "locale": "en",
               "alt": "ARG Piscinas home page: “Peace of mind and comfort for your pool” over a photograph of a finished pool",
               "caption": null
@@ -1005,7 +1019,7 @@
           ]
         },
         {
-          "id": 645,
+          "id": 677,
           "kind": "VIDEO",
           "role": "COVER",
           "src": "/media/projects/argpiscinas/scroll.mp4",
@@ -1019,10 +1033,10 @@
           "height": 1200,
           "order": 1,
           "bytes": 2764291,
-          "projectId": 241,
+          "projectId": 250,
           "translations": [
             {
-              "mediaId": 645,
+              "mediaId": 677,
               "locale": "en",
               "alt": "Scrolling through the ARG Piscinas home page, from the hero to the footer",
               "caption": null
@@ -1030,7 +1044,7 @@
           ]
         },
         {
-          "id": 646,
+          "id": 678,
           "kind": "VIDEO",
           "role": "GALLERY",
           "src": "/media/projects/argpiscinas/idiomas.mp4",
@@ -1044,10 +1058,10 @@
           "height": 1200,
           "order": 1,
           "bytes": 3592040,
-          "projectId": 241,
+          "projectId": 250,
           "translations": [
             {
-              "mediaId": 646,
+              "mediaId": 678,
               "locale": "en",
               "alt": "The ARG Piscinas home page switching between Spanish, English and German",
               "caption": "The same site in Spanish, English and German"
@@ -1055,7 +1069,7 @@
           ]
         },
         {
-          "id": 647,
+          "id": 679,
           "kind": "IMAGE",
           "role": "GALLERY",
           "src": "/media/projects/argpiscinas/proyectos.webp",
@@ -1069,10 +1083,10 @@
           "height": 1800,
           "order": 2,
           "bytes": 42740,
-          "projectId": 241,
+          "projectId": 250,
           "translations": [
             {
-              "mediaId": 647,
+              "mediaId": 679,
               "locale": "en",
               "alt": "List of finished pools with search and filters by category, location and year",
               "caption": "Finished projects"
@@ -1080,7 +1094,7 @@
           ]
         },
         {
-          "id": 648,
+          "id": 680,
           "kind": "IMAGE",
           "role": "GALLERY",
           "src": "/media/projects/argpiscinas/proyecto.webp",
@@ -1094,10 +1108,10 @@
           "height": 1800,
           "order": 3,
           "bytes": 34486,
-          "projectId": 241,
+          "projectId": 250,
           "translations": [
             {
-              "mediaId": 648,
+              "mediaId": 680,
               "locale": "en",
               "alt": "A project page: a pool refurbished with reinforced membrane in Conil de la Frontera",
               "caption": "A single project"
@@ -1105,7 +1119,7 @@
           ]
         },
         {
-          "id": 649,
+          "id": 681,
           "kind": "IMAGE",
           "role": "GALLERY",
           "src": "/media/projects/argpiscinas/blog.webp",
@@ -1119,10 +1133,10 @@
           "height": 1800,
           "order": 4,
           "bytes": 49852,
-          "projectId": 241,
+          "projectId": 250,
           "translations": [
             {
-              "mediaId": 649,
+              "mediaId": 681,
               "locale": "en",
               "alt": "Blog with topic filters and articles on pool maintenance and lining",
               "caption": "The blog"
@@ -1130,7 +1144,7 @@
           ]
         },
         {
-          "id": 650,
+          "id": 682,
           "kind": "IMAGE",
           "role": "GALLERY",
           "src": "/media/projects/argpiscinas/movil-hero.webp",
@@ -1144,10 +1158,10 @@
           "height": 2532,
           "order": 5,
           "bytes": 27786,
-          "projectId": 241,
+          "projectId": 250,
           "translations": [
             {
-              "mediaId": 650,
+              "mediaId": 682,
               "locale": "en",
               "alt": "ARG Piscinas home page on a phone",
               "caption": "The home page on a phone"
@@ -1157,15 +1171,15 @@
       ],
       "steps": [
         {
-          "id": 631,
+          "id": 656,
           "order": 1,
           "title": "01 · encargo",
           "body": "Una constructora de piscinas que necesitaba mostrar obra terminada y cotizar sin fricción, en tres idiomas.",
-          "projectId": 241,
+          "projectId": 250,
           "mediaId": null,
           "translations": [
             {
-              "stepId": 631,
+              "stepId": 656,
               "locale": "en",
               "title": "commission",
               "body": "A pool builder that needed to show finished work and give quotes without friction, in three languages."
@@ -1174,15 +1188,15 @@
           "media": null
         },
         {
-          "id": 632,
+          "id": 657,
           "order": 2,
           "title": "02 · taller",
           "body": "Dos cuerpos sobre una misma API: catálogo público y panel de gestión. Node y Prisma con datos tipados de punta a punta. La obra que carga el cliente es exactamente la que muestra el sitio, sin intermediarios ni deploys de por medio.",
-          "projectId": 241,
+          "projectId": 250,
           "mediaId": null,
           "translations": [
             {
-              "stepId": 632,
+              "stepId": 657,
               "locale": "en",
               "title": "workshop",
               "body": "Two bodies on the same API: a public catalog and a management panel. Node and Prisma with data typed end to end. The work the client uploads is exactly what the site shows, with no middlemen or deploys in between."
@@ -1191,15 +1205,15 @@
           "media": null
         },
         {
-          "id": 633,
+          "id": 658,
           "order": 3,
           "title": "03 · pieza",
           "body": "Front Vue 3 directo y rápido: la obra primero, el argumento después. Catálogo, presupuesto y contacto en el camino más corto posible. El sitio trabaja como la empresa: sin vueltas.",
-          "projectId": 241,
+          "projectId": 250,
           "mediaId": null,
           "translations": [
             {
-              "stepId": 633,
+              "stepId": 658,
               "locale": "en",
               "title": "piece",
               "body": "A direct, fast Vue 3 front end: the work first, the pitch after. Catalog, quote and contact along the shortest possible path. The site works like the company: no detours."
@@ -1210,26 +1224,26 @@
       ],
       "links": [
         {
-          "id": 362,
+          "id": 375,
           "label": "sitio en vivo",
           "url": "https://www.argpiscinas.es/",
-          "projectId": 241,
+          "projectId": 250,
           "translations": [
             {
-              "linkId": 362,
+              "linkId": 375,
               "locale": "en",
               "label": "live site"
             }
           ]
         },
         {
-          "id": 363,
+          "id": 376,
           "label": "código fuente",
           "url": "https://github.com/MateoGs013/argpiscinas",
-          "projectId": 241,
+          "projectId": 250,
           "translations": [
             {
-              "linkId": 363,
+              "linkId": 376,
               "locale": "en",
               "label": "source code"
             }
@@ -1238,7 +1252,7 @@
       ],
       "metrics": [
         {
-          "id": 875,
+          "id": 916,
           "key": "performanceScore",
           "value": "98",
           "items": [],
@@ -1247,11 +1261,11 @@
           "source": null,
           "measuredAt": null,
           "order": 0,
-          "projectId": 241,
+          "projectId": 250,
           "translations": []
         },
         {
-          "id": 876,
+          "id": 917,
           "key": "accessibilityScore",
           "value": "98",
           "items": [],
@@ -1260,11 +1274,11 @@
           "source": null,
           "measuredAt": null,
           "order": 1,
-          "projectId": 241,
+          "projectId": 250,
           "translations": []
         },
         {
-          "id": 877,
+          "id": 918,
           "key": "bestPracticesScore",
           "value": "100",
           "items": [],
@@ -1273,11 +1287,11 @@
           "source": null,
           "measuredAt": null,
           "order": 2,
-          "projectId": 241,
+          "projectId": 250,
           "translations": []
         },
         {
-          "id": 878,
+          "id": 919,
           "key": "seoScore",
           "value": "100",
           "items": [],
@@ -1286,11 +1300,11 @@
           "source": null,
           "measuredAt": null,
           "order": 3,
-          "projectId": 241,
+          "projectId": 250,
           "translations": []
         },
         {
-          "id": 879,
+          "id": 920,
           "key": "lcp",
           "value": "0.9",
           "items": [],
@@ -1299,11 +1313,11 @@
           "source": null,
           "measuredAt": null,
           "order": 4,
-          "projectId": 241,
+          "projectId": 250,
           "translations": []
         },
         {
-          "id": 880,
+          "id": 921,
           "key": "bundleSizeKb",
           "value": "58",
           "items": [],
@@ -1312,11 +1326,11 @@
           "source": null,
           "measuredAt": null,
           "order": 5,
-          "projectId": 241,
+          "projectId": 250,
           "translations": []
         },
         {
-          "id": 881,
+          "id": 922,
           "key": "languages",
           "value": null,
           "items": [
@@ -1329,7 +1343,7 @@
           "source": null,
           "measuredAt": null,
           "order": 6,
-          "projectId": 241,
+          "projectId": 250,
           "translations": []
         }
       ],
@@ -1348,7 +1362,7 @@
       ],
       "translations": [
         {
-          "projectId": 241,
+          "projectId": 250,
           "locale": "en",
           "title": null,
           "role": "Freelance · custom front end and back end",
@@ -1359,7 +1373,7 @@
       ]
     },
     {
-      "id": 242,
+      "id": 251,
       "slug": "ynara",
       "title": "Ynara",
       "year": 2026,
@@ -1373,9 +1387,9 @@
       "repo": "https://github.com/BriarDevv/Ynara",
       "sortOrder": 2,
       "publishedAt": "2026-10-05T12:00:00.000Z",
-      "createdAt": "2026-11-03T14:38:21.727Z",
-      "updatedAt": "2026-11-03T14:38:21.727Z",
-      "orgId": 138,
+      "createdAt": "2026-11-03T20:07:19.911Z",
+      "updatedAt": "2026-11-03T20:07:19.911Z",
+      "orgId": 142,
       "org": {
         "slug": "escuela-da-vinci",
         "name": "Escuela Da Vinci",
@@ -1643,7 +1657,7 @@
       ],
       "media": [
         {
-          "id": 633,
+          "id": 664,
           "kind": "IMAGE",
           "role": "COVER",
           "src": "/media/projects/ynara-mtucqc2j.png",
@@ -1657,10 +1671,10 @@
           "height": 602,
           "order": 0,
           "bytes": 394847,
-          "projectId": 242,
+          "projectId": 251,
           "translations": [
             {
-              "mediaId": 633,
+              "mediaId": 664,
               "locale": "en",
               "alt": "Ynara, an adaptive on-premise AI assistant",
               "caption": null
@@ -1670,15 +1684,15 @@
       ],
       "steps": [
         {
-          "id": 634,
+          "id": 659,
           "order": 1,
           "title": "01 · hipótesis",
           "body": "Los asistentes en la nube sacrifican privacidad y contexto local. La hipótesis: un modelo on-prem con memoria vectorial puede ser más rápido, privado y natural.",
-          "projectId": 242,
+          "projectId": 251,
           "mediaId": null,
           "translations": [
             {
-              "stepId": 634,
+              "stepId": 659,
               "locale": "en",
               "title": "hypothesis",
               "body": "Cloud assistants sacrifice privacy and local context. The hypothesis: an on-prem model with vector memory can be faster, more private and more natural."
@@ -1687,15 +1701,15 @@
           "media": null
         },
         {
-          "id": 635,
+          "id": 660,
           "order": 2,
           "title": "02 · arquitectura",
           "body": "Monorepo con FastAPI para orquestación de embeddings y llamadas a Ollama; PostgreSQL 17 con pgvector para búsqueda por similitud coseno; Next.js 14 en frontend web y Expo para móvil.",
-          "projectId": 242,
+          "projectId": 251,
           "mediaId": null,
           "translations": [
             {
-              "stepId": 635,
+              "stepId": 660,
               "locale": "en",
               "title": "architecture",
               "body": "A monorepo with FastAPI orchestrating embeddings and calls to Ollama; PostgreSQL 17 with pgvector for cosine similarity search; Next.js 14 for the web front end and Expo for mobile."
@@ -1704,15 +1718,15 @@
           "media": null
         },
         {
-          "id": 636,
+          "id": 661,
           "order": 3,
           "title": "03 · resultado",
           "body": "Respuestas contextualizadas con menos de 50ms de latencia de consulta interna y almacenamiento local 100% cifrado.",
-          "projectId": 242,
+          "projectId": 251,
           "mediaId": null,
           "translations": [
             {
-              "stepId": 636,
+              "stepId": 661,
               "locale": "en",
               "title": "result",
               "body": "Contextualized answers with under 50ms of internal query latency and 100% encrypted local storage."
@@ -1723,13 +1737,13 @@
       ],
       "links": [
         {
-          "id": 364,
+          "id": 377,
           "label": "repositorio tesis",
           "url": "https://github.com/BriarDevv/Ynara",
-          "projectId": 242,
+          "projectId": 251,
           "translations": [
             {
-              "linkId": 364,
+              "linkId": 377,
               "locale": "en",
               "label": "thesis repository"
             }
@@ -1738,7 +1752,7 @@
       ],
       "metrics": [
         {
-          "id": 882,
+          "id": 923,
           "key": "commits",
           "value": "382",
           "items": [],
@@ -1747,11 +1761,11 @@
           "source": null,
           "measuredAt": null,
           "order": 0,
-          "projectId": 242,
+          "projectId": 251,
           "translations": []
         },
         {
-          "id": 883,
+          "id": 924,
           "key": "vectorDimensions",
           "value": "1536",
           "items": [],
@@ -1760,11 +1774,11 @@
           "source": null,
           "measuredAt": null,
           "order": 1,
-          "projectId": 242,
+          "projectId": 251,
           "translations": []
         },
         {
-          "id": 884,
+          "id": 925,
           "key": "averageLatencyMs",
           "value": "48",
           "items": [],
@@ -1773,11 +1787,11 @@
           "source": null,
           "measuredAt": null,
           "order": 2,
-          "projectId": 242,
+          "projectId": 251,
           "translations": []
         },
         {
-          "id": 885,
+          "id": 926,
           "key": "localModels",
           "value": null,
           "items": [
@@ -1789,11 +1803,11 @@
           "source": null,
           "measuredAt": null,
           "order": 3,
-          "projectId": 242,
+          "projectId": 251,
           "translations": []
         },
         {
-          "id": 886,
+          "id": 927,
           "key": "encryptionLayers",
           "value": "3",
           "items": [],
@@ -1802,7 +1816,7 @@
           "source": null,
           "measuredAt": null,
           "order": 4,
-          "projectId": 242,
+          "projectId": 251,
           "translations": []
         }
       ],
@@ -1821,7 +1835,7 @@
       ],
       "translations": [
         {
-          "projectId": 242,
+          "projectId": 251,
           "locale": "en",
           "title": null,
           "role": "Da Vinci Thesis 2026 · lead contributor",
@@ -1832,7 +1846,7 @@
       ]
     },
     {
-      "id": 243,
+      "id": 252,
       "slug": "barberpole",
       "title": "Barberpole",
       "year": 2026,
@@ -1846,8 +1860,8 @@
       "repo": "https://github.com/MateoGs013/barberpole",
       "sortOrder": 3,
       "publishedAt": "2026-10-05T12:00:00.000Z",
-      "createdAt": "2026-11-03T14:38:21.739Z",
-      "updatedAt": "2026-11-03T14:38:21.739Z",
+      "createdAt": "2026-11-03T20:07:19.930Z",
+      "updatedAt": "2026-11-03T20:07:19.930Z",
       "orgId": null,
       "org": null,
       "techs": [
@@ -1998,7 +2012,7 @@
       ],
       "media": [
         {
-          "id": 634,
+          "id": 665,
           "kind": "IMAGE",
           "role": "COVER",
           "src": "/media/projects/barberpole/hero.webp",
@@ -2012,10 +2026,10 @@
           "height": 1800,
           "order": 0,
           "bytes": 25752,
-          "projectId": 243,
+          "projectId": 252,
           "translations": [
             {
-              "mediaId": 634,
+              "mediaId": 665,
               "locale": "en",
               "alt": "barberpole home page: “Direct booking.” set in a monospaced typeface on a dark background",
               "caption": null
@@ -2023,7 +2037,7 @@
           ]
         },
         {
-          "id": 651,
+          "id": 683,
           "kind": "VIDEO",
           "role": "COVER",
           "src": "/media/projects/barberpole/scroll.mp4",
@@ -2037,10 +2051,10 @@
           "height": 1200,
           "order": 1,
           "bytes": 3566208,
-          "projectId": 243,
+          "projectId": 252,
           "translations": [
             {
-              "mediaId": 651,
+              "mediaId": 683,
               "locale": "en",
               "alt": "Scrolling through the barberpole home page, from the hero to the footer",
               "caption": null
@@ -2048,7 +2062,7 @@
           ]
         },
         {
-          "id": 652,
+          "id": 684,
           "kind": "IMAGE",
           "role": "GALLERY",
           "src": "/media/projects/barberpole/portal.webp",
@@ -2062,10 +2076,10 @@
           "height": 1800,
           "order": 1,
           "bytes": 21982,
-          "projectId": 243,
+          "projectId": 252,
           "translations": [
             {
-              "mediaId": 652,
+              "mediaId": 684,
               "locale": "en",
               "alt": "A studio booking portal: first step, choosing the service with its length and price",
               "caption": "The public booking portal"
@@ -2073,7 +2087,7 @@
           ]
         },
         {
-          "id": 653,
+          "id": 685,
           "kind": "IMAGE",
           "role": "GALLERY",
           "src": "/media/projects/barberpole/claro.webp",
@@ -2087,10 +2101,10 @@
           "height": 1800,
           "order": 2,
           "bytes": 25706,
-          "projectId": 243,
+          "projectId": 252,
           "translations": [
             {
-              "mediaId": 653,
+              "mediaId": 685,
               "locale": "en",
               "alt": "barberpole home page in light mode: “Direct booking.” in black on white",
               "caption": "Light mode"
@@ -2098,7 +2112,7 @@
           ]
         },
         {
-          "id": 654,
+          "id": 686,
           "kind": "IMAGE",
           "role": "GALLERY",
           "src": "/media/projects/barberpole/movil-hero.webp",
@@ -2112,10 +2126,10 @@
           "height": 2532,
           "order": 3,
           "bytes": 21964,
-          "projectId": 243,
+          "projectId": 252,
           "translations": [
             {
-              "mediaId": 654,
+              "mediaId": 686,
               "locale": "en",
               "alt": "barberpole home page on a phone",
               "caption": "The home page on a phone"
@@ -2123,7 +2137,7 @@
           ]
         },
         {
-          "id": 655,
+          "id": 687,
           "kind": "IMAGE",
           "role": "GALLERY",
           "src": "/media/projects/barberpole/movil-portal.webp",
@@ -2137,10 +2151,10 @@
           "height": 2532,
           "order": 4,
           "bytes": 21764,
-          "projectId": 243,
+          "projectId": 252,
           "translations": [
             {
-              "mediaId": 655,
+              "mediaId": 687,
               "locale": "en",
               "alt": "The booking portal on a phone: the list of services with their price",
               "caption": "The booking portal on a phone"
@@ -2150,15 +2164,15 @@
       ],
       "steps": [
         {
-          "id": 637,
+          "id": 662,
           "order": 1,
           "title": "01 · problema",
           "body": "El mostrador era el cuello de botella. Reservas por teléfono, cuaderno y memoria.",
-          "projectId": 243,
+          "projectId": 252,
           "mediaId": null,
           "translations": [
             {
-              "stepId": 637,
+              "stepId": 662,
               "locale": "en",
               "title": "problem",
               "body": "The front desk was the bottleneck. Bookings by phone, notebook and memory."
@@ -2167,15 +2181,15 @@
           "media": null
         },
         {
-          "id": 638,
+          "id": 663,
           "order": 2,
           "title": "02 · sistema",
           "body": "MERN completo: turnos, servicios, clientes y caja en un solo lugar. Auth por roles, agenda del día, precios y duraciones reales.",
-          "projectId": 243,
+          "projectId": 252,
           "mediaId": null,
           "translations": [
             {
-              "stepId": 638,
+              "stepId": 663,
               "locale": "en",
               "title": "system",
               "body": "Full MERN: appointments, services, clients and checkout in one place. Role-based auth, daily schedule, real prices and durations."
@@ -2184,15 +2198,15 @@
           "media": null
         },
         {
-          "id": 639,
+          "id": 664,
           "order": 3,
           "title": "03 · identidad",
           "body": "Identidad de barbería de barrio inspirada en el barber pole: neo-brutalista, directa, sin adornos. El mostrador respira.",
-          "projectId": 243,
+          "projectId": 252,
           "mediaId": null,
           "translations": [
             {
-              "stepId": 639,
+              "stepId": 664,
               "locale": "en",
               "title": "identity",
               "body": "A neighborhood barbershop identity inspired by the barber pole: neo-brutalist, direct, no frills. The front desk can breathe."
@@ -2203,26 +2217,26 @@
       ],
       "links": [
         {
-          "id": 365,
+          "id": 378,
           "label": "sitio en vivo",
           "url": "https://turnos.mateogs.tech/",
-          "projectId": 243,
+          "projectId": 252,
           "translations": [
             {
-              "linkId": 365,
+              "linkId": 378,
               "locale": "en",
               "label": "live site"
             }
           ]
         },
         {
-          "id": 366,
+          "id": 379,
           "label": "código fuente",
           "url": "https://github.com/MateoGs013/barberpole",
-          "projectId": 243,
+          "projectId": 252,
           "translations": [
             {
-              "linkId": 366,
+              "linkId": 379,
               "locale": "en",
               "label": "source code"
             }
@@ -2231,7 +2245,7 @@
       ],
       "metrics": [
         {
-          "id": 887,
+          "id": 928,
           "key": "performanceScore",
           "value": "95",
           "items": [],
@@ -2240,11 +2254,11 @@
           "source": null,
           "measuredAt": null,
           "order": 0,
-          "projectId": 243,
+          "projectId": 252,
           "translations": []
         },
         {
-          "id": 888,
+          "id": 929,
           "key": "accessibilityScore",
           "value": "96",
           "items": [],
@@ -2253,11 +2267,11 @@
           "source": null,
           "measuredAt": null,
           "order": 1,
-          "projectId": 243,
+          "projectId": 252,
           "translations": []
         },
         {
-          "id": 889,
+          "id": 930,
           "key": "bestPracticesScore",
           "value": "100",
           "items": [],
@@ -2266,11 +2280,11 @@
           "source": null,
           "measuredAt": null,
           "order": 2,
-          "projectId": 243,
+          "projectId": 252,
           "translations": []
         },
         {
-          "id": 890,
+          "id": 931,
           "key": "seoScore",
           "value": "95",
           "items": [],
@@ -2279,11 +2293,11 @@
           "source": null,
           "measuredAt": null,
           "order": 3,
-          "projectId": 243,
+          "projectId": 252,
           "translations": []
         },
         {
-          "id": 891,
+          "id": 932,
           "key": "lcp",
           "value": "1.1",
           "items": [],
@@ -2292,11 +2306,11 @@
           "source": null,
           "measuredAt": null,
           "order": 4,
-          "projectId": 243,
+          "projectId": 252,
           "translations": []
         },
         {
-          "id": 892,
+          "id": 933,
           "key": "bundleSizeKb",
           "value": "64",
           "items": [],
@@ -2305,14 +2319,14 @@
           "source": null,
           "measuredAt": null,
           "order": 5,
-          "projectId": 243,
+          "projectId": 252,
           "translations": []
         }
       ],
       "experiences": [],
       "translations": [
         {
-          "projectId": 243,
+          "projectId": 252,
           "locale": "en",
           "title": null,
           "role": "Own product · design and development",
@@ -2323,7 +2337,7 @@
       ]
     },
     {
-      "id": 244,
+      "id": 253,
       "slug": "ynara-web",
       "title": "Ynara Web",
       "year": 2026,
@@ -2337,8 +2351,8 @@
       "repo": "https://github.com/MateoGs013/Ynara-Web",
       "sortOrder": 4,
       "publishedAt": "2026-10-05T12:00:00.000Z",
-      "createdAt": "2026-11-03T14:38:21.749Z",
-      "updatedAt": "2026-11-03T14:38:21.749Z",
+      "createdAt": "2026-11-03T20:07:19.949Z",
+      "updatedAt": "2026-11-03T20:07:19.949Z",
       "orgId": null,
       "org": null,
       "techs": [
@@ -2594,6 +2608,13 @@
                   "title": null
                 }
               ]
+            },
+            {
+              "slug": "tienda-mistica",
+              "title": "Tienda Mística",
+              "year": 2026,
+              "publishedAt": "2026-10-05T12:00:00.000Z",
+              "translations": []
             }
           ]
         },
@@ -2678,7 +2699,7 @@
       ],
       "media": [
         {
-          "id": 635,
+          "id": 666,
           "kind": "IMAGE",
           "role": "COVER",
           "src": "/media/projects/ynara-web/hero.webp",
@@ -2692,21 +2713,21 @@
           "height": 1800,
           "order": 0,
           "bytes": 90156,
-          "projectId": 244,
+          "projectId": 253,
           "translations": []
         }
       ],
       "steps": [
         {
-          "id": 640,
+          "id": 665,
           "order": 1,
           "title": "01 · concepto",
           "body": "Traducir la inteligencia artificial adaptativa a una entidad lumínica tridimensional.",
-          "projectId": 244,
+          "projectId": 253,
           "mediaId": null,
           "translations": [
             {
-              "stepId": 640,
+              "stepId": 665,
               "locale": "en",
               "title": "concept",
               "body": "Translating adaptive artificial intelligence into a three-dimensional entity of light."
@@ -2715,15 +2736,15 @@
           "media": null
         },
         {
-          "id": 641,
+          "id": 666,
           "order": 2,
           "title": "02 · shaders",
           "body": "Vertex y fragment shaders personalizados en GLSL sobre Three.js orquestados con GSAP ScrollTrigger.",
-          "projectId": 244,
+          "projectId": 253,
           "mediaId": null,
           "translations": [
             {
-              "stepId": 641,
+              "stepId": 666,
               "locale": "en",
               "title": "shaders",
               "body": "Custom GLSL vertex and fragment shaders on Three.js, orchestrated with GSAP ScrollTrigger."
@@ -2734,13 +2755,13 @@
       ],
       "links": [
         {
-          "id": 367,
+          "id": 380,
           "label": "código fuente",
           "url": "https://github.com/MateoGs013/Ynara-Web",
-          "projectId": 244,
+          "projectId": 253,
           "translations": [
             {
-              "linkId": 367,
+              "linkId": 380,
               "locale": "en",
               "label": "source code"
             }
@@ -2749,7 +2770,7 @@
       ],
       "metrics": [
         {
-          "id": 893,
+          "id": 934,
           "key": "fpsTarget",
           "value": "60",
           "items": [],
@@ -2758,11 +2779,11 @@
           "source": null,
           "measuredAt": null,
           "order": 0,
-          "projectId": 244,
+          "projectId": 253,
           "translations": []
         },
         {
-          "id": 894,
+          "id": 935,
           "key": "drawCalls",
           "value": "4",
           "items": [],
@@ -2771,11 +2792,11 @@
           "source": null,
           "measuredAt": null,
           "order": 1,
-          "projectId": 244,
+          "projectId": 253,
           "translations": []
         },
         {
-          "id": 895,
+          "id": 936,
           "key": "bundleSizeKb",
           "value": "78",
           "items": [],
@@ -2784,14 +2805,14 @@
           "source": null,
           "measuredAt": null,
           "order": 2,
-          "projectId": 244,
+          "projectId": 253,
           "translations": []
         }
       ],
       "experiences": [],
       "translations": [
         {
-          "projectId": 244,
+          "projectId": 253,
           "locale": "en",
           "title": null,
           "role": "Immersive landing page · design and development",
@@ -2802,7 +2823,7 @@
       ]
     },
     {
-      "id": 245,
+      "id": 254,
       "slug": "eros",
       "title": "Eros Career OS",
       "year": 2026,
@@ -2816,8 +2837,8 @@
       "repo": "https://github.com/MateoGs013/eros-agent",
       "sortOrder": 5,
       "publishedAt": "2026-10-05T12:00:00.000Z",
-      "createdAt": "2026-11-03T14:38:21.761Z",
-      "updatedAt": "2026-11-03T14:38:21.761Z",
+      "createdAt": "2026-11-03T20:07:19.970Z",
+      "updatedAt": "2026-11-03T20:07:19.970Z",
       "orgId": null,
       "org": null,
       "techs": [
@@ -2992,7 +3013,7 @@
       ],
       "media": [
         {
-          "id": 636,
+          "id": 667,
           "kind": "IMAGE",
           "role": "COVER",
           "src": "/media/projects/eros.webp",
@@ -3006,10 +3027,10 @@
           "height": 1800,
           "order": 0,
           "bytes": 49746,
-          "projectId": 245,
+          "projectId": 254,
           "translations": [
             {
-              "mediaId": 636,
+              "mediaId": 667,
               "locale": "en",
               "alt": "Eros Job Hunter in the portfolio console: list of job openings with their match percentage and the evaluation of one of them",
               "caption": null
@@ -3017,7 +3038,7 @@
           ]
         },
         {
-          "id": 656,
+          "id": 688,
           "kind": "VIDEO",
           "role": "COVER",
           "src": "/media/projects/eros/admin-recorrido.mp4",
@@ -3031,10 +3052,10 @@
           "height": 1200,
           "order": 1,
           "bytes": 907340,
-          "projectId": 245,
+          "projectId": 254,
           "translations": [
             {
-              "mediaId": 656,
+              "mediaId": 688,
               "locale": "en",
               "alt": "A walk through Job Hunter, omnichannel content and TrendRadar inside the console",
               "caption": "A tour of the three modules"
@@ -3042,7 +3063,7 @@
           ]
         },
         {
-          "id": 657,
+          "id": 689,
           "kind": "IMAGE",
           "role": "GALLERY",
           "src": "/media/projects/eros/admin-hunter.webp",
@@ -3056,10 +3077,10 @@
           "height": 1800,
           "order": 1,
           "bytes": 49746,
-          "projectId": 245,
+          "projectId": 254,
           "translations": [
             {
-              "mediaId": 657,
+              "mediaId": 689,
               "locale": "en",
               "alt": "Job Hunter: list of job openings with their match percentage and the evaluation of one of them",
               "caption": "Job Hunter: every opening assessed with AI (sample data)"
@@ -3067,7 +3088,7 @@
           ]
         },
         {
-          "id": 658,
+          "id": 690,
           "kind": "IMAGE",
           "role": "GALLERY",
           "src": "/media/projects/eros/admin-contenido.webp",
@@ -3081,10 +3102,10 @@
           "height": 1800,
           "order": 2,
           "bytes": 52242,
-          "projectId": 245,
+          "projectId": 254,
           "translations": [
             {
-              "mediaId": 658,
+              "mediaId": 690,
               "locale": "en",
               "alt": "Omnichannel content: drafts and a post with its LinkedIn, X, Dev.to and carousel versions",
               "caption": "Omnichannel content: one topic, four formats"
@@ -3092,7 +3113,7 @@
           ]
         },
         {
-          "id": 659,
+          "id": 691,
           "kind": "IMAGE",
           "role": "GALLERY",
           "src": "/media/projects/eros/admin-radar.webp",
@@ -3106,10 +3127,10 @@
           "height": 1800,
           "order": 3,
           "bytes": 58522,
-          "projectId": 245,
+          "projectId": 254,
           "translations": [
             {
-              "mediaId": 659,
+              "mediaId": 691,
               "locale": "en",
               "alt": "TrendRadar: Hacker News, Dev.to and GitHub topics with their affinity to the stack",
               "caption": "TrendRadar: technical topics close to the stack"
@@ -3117,7 +3138,7 @@
           ]
         },
         {
-          "id": 660,
+          "id": 692,
           "kind": "IMAGE",
           "role": "GALLERY",
           "src": "/media/projects/eros/admin-dashboard.webp",
@@ -3131,10 +3152,10 @@
           "height": 1800,
           "order": 4,
           "bytes": 38826,
-          "projectId": 245,
+          "projectId": 254,
           "translations": [
             {
-              "mediaId": 660,
+              "mediaId": 692,
               "locale": "en",
               "alt": "Console dashboard with the portfolio collections and the three Eros modules",
               "caption": "Eros inside the portfolio console"
@@ -3142,7 +3163,7 @@
           ]
         },
         {
-          "id": 661,
+          "id": 693,
           "kind": "IMAGE",
           "role": "GALLERY",
           "src": "/media/projects/eros/admin-paleta.webp",
@@ -3156,10 +3177,10 @@
           "height": 1800,
           "order": 5,
           "bytes": 18356,
-          "projectId": 245,
+          "projectId": 254,
           "translations": [
             {
-              "mediaId": 661,
+              "mediaId": 693,
               "locale": "en",
               "alt": "Command palette open over the console, with the sections and their counts",
               "caption": "Command palette"
@@ -3169,15 +3190,15 @@
       ],
       "steps": [
         {
-          "id": 642,
+          "id": 667,
           "order": 1,
           "title": "01 · fuentes",
           "body": "Rastreo de vacantes en LinkedIn, Get on Board y RemoteOK, con filtros de stack, modalidad y salario.",
-          "projectId": 245,
+          "projectId": 254,
           "mediaId": null,
           "translations": [
             {
-              "stepId": 642,
+              "stepId": 667,
               "locale": "en",
               "title": "sources",
               "body": "Tracking job openings on LinkedIn, Get on Board and RemoteOK, with filters for stack, work mode and salary."
@@ -3186,15 +3207,15 @@
           "media": null
         },
         {
-          "id": 643,
+          "id": 668,
           "order": 2,
           "title": "02 · evaluación",
           "body": "Cada vacante pasa por Gemini: porcentaje de match, fortalezas, objeciones probables, skills que faltan y qué proyectos del portafolio conviene citar.",
-          "projectId": 245,
+          "projectId": 254,
           "mediaId": null,
           "translations": [
             {
-              "stepId": 643,
+              "stepId": 668,
               "locale": "en",
               "title": "evaluation",
               "body": "Every opening goes through Gemini: match percentage, strengths, likely objections, missing skills and which portfolio projects are worth citing."
@@ -3203,15 +3224,15 @@
           "media": null
         },
         {
-          "id": 644,
+          "id": 669,
           "order": 3,
           "title": "03 · postulación",
           "body": "CV Harvard ATS adaptado a la vacante en una página A4, email de postulación y nota de conexión para el hiring lead detectado en LinkedIn.",
-          "projectId": 245,
+          "projectId": 254,
           "mediaId": null,
           "translations": [
             {
-              "stepId": 644,
+              "stepId": 669,
               "locale": "en",
               "title": "application",
               "body": "A Harvard ATS CV tailored to the opening on one A4 page, an application email and a connection note for the hiring lead detected on LinkedIn."
@@ -3220,15 +3241,15 @@
           "media": null
         },
         {
-          "id": 645,
+          "id": 670,
           "order": 4,
           "title": "04 · contenido",
           "body": "TrendRadar detecta temas técnicos afines al stack en Hacker News, Dev.to y GitHub, y el módulo omnicanal los convierte en post de LinkedIn, hilo de X, artículo de Dev.to y carrusel PDF.",
-          "projectId": 245,
+          "projectId": 254,
           "mediaId": null,
           "translations": [
             {
-              "stepId": 645,
+              "stepId": 670,
               "locale": "en",
               "title": "content",
               "body": "TrendRadar detects technical topics related to the stack on Hacker News, Dev.to and GitHub, and the omnichannel module turns them into a LinkedIn post, an X thread, a Dev.to article and a PDF carousel."
@@ -3239,26 +3260,26 @@
       ],
       "links": [
         {
-          "id": 368,
+          "id": 381,
           "label": "código fuente",
           "url": "https://github.com/MateoGs013/eros-agent",
-          "projectId": 245,
+          "projectId": 254,
           "translations": [
             {
-              "linkId": 368,
+              "linkId": 381,
               "locale": "en",
               "label": "source code"
             }
           ]
         },
         {
-          "id": 369,
+          "id": 382,
           "label": "centro de control",
           "url": "https://eros.mateogs.tech",
-          "projectId": 245,
+          "projectId": 254,
           "translations": [
             {
-              "linkId": 369,
+              "linkId": 382,
               "locale": "en",
               "label": "control center"
             }
@@ -3267,7 +3288,7 @@
       ],
       "metrics": [
         {
-          "id": 896,
+          "id": 937,
           "key": "freeTierQuota",
           "value": "1500",
           "items": [],
@@ -3276,11 +3297,11 @@
           "source": null,
           "measuredAt": null,
           "order": 0,
-          "projectId": 245,
+          "projectId": 254,
           "translations": []
         },
         {
-          "id": 897,
+          "id": 938,
           "key": "operatingCost",
           "value": "0",
           "items": [],
@@ -3289,11 +3310,11 @@
           "source": null,
           "measuredAt": null,
           "order": 1,
-          "projectId": 245,
+          "projectId": 254,
           "translations": []
         },
         {
-          "id": 898,
+          "id": 939,
           "key": "platformsCount",
           "value": "4",
           "items": [],
@@ -3302,11 +3323,11 @@
           "source": null,
           "measuredAt": null,
           "order": 2,
-          "projectId": 245,
+          "projectId": 254,
           "translations": []
         },
         {
-          "id": 899,
+          "id": 940,
           "key": "responseLatencyMs",
           "value": "35",
           "items": [],
@@ -3315,7 +3336,7 @@
           "source": null,
           "measuredAt": null,
           "order": 3,
-          "projectId": 245,
+          "projectId": 254,
           "translations": []
         }
       ],
@@ -3334,7 +3355,7 @@
       ],
       "translations": [
         {
-          "projectId": 245,
+          "projectId": 254,
           "locale": "en",
           "title": null,
           "role": "Multi-agent system · AI & automation",
@@ -3345,7 +3366,7 @@
       ]
     },
     {
-      "id": 246,
+      "id": 255,
       "slug": "circuito-kitsune",
       "title": "Circuito Kitsune",
       "year": 2026,
@@ -3359,9 +3380,9 @@
       "repo": "https://github.com/MateoGs013/circuito-kitsune",
       "sortOrder": 6,
       "publishedAt": "2026-10-05T12:00:00.000Z",
-      "createdAt": "2026-11-03T14:38:21.773Z",
-      "updatedAt": "2026-11-03T14:38:21.773Z",
-      "orgId": 138,
+      "createdAt": "2026-11-03T20:07:19.995Z",
+      "updatedAt": "2026-11-03T20:07:19.995Z",
+      "orgId": 142,
       "org": {
         "slug": "escuela-da-vinci",
         "name": "Escuela Da Vinci",
@@ -3470,6 +3491,13 @@
                   "title": null
                 }
               ]
+            },
+            {
+              "slug": "tienda-mistica",
+              "title": "Tienda Mística",
+              "year": 2026,
+              "publishedAt": "2026-10-05T12:00:00.000Z",
+              "translations": []
             }
           ]
         },
@@ -3533,6 +3561,13 @@
                   "title": null
                 }
               ]
+            },
+            {
+              "slug": "tienda-mistica",
+              "title": "Tienda Mística",
+              "year": 2026,
+              "publishedAt": "2026-10-05T12:00:00.000Z",
+              "translations": []
             }
           ]
         },
@@ -3590,7 +3625,7 @@
       ],
       "media": [
         {
-          "id": 637,
+          "id": 668,
           "kind": "IMAGE",
           "role": "COVER",
           "src": "/media/projects/circuito-kitsune/hero.webp",
@@ -3604,21 +3639,21 @@
           "height": 1800,
           "order": 0,
           "bytes": 132818,
-          "projectId": 246,
+          "projectId": 255,
           "translations": []
         }
       ],
       "steps": [
         {
-          "id": 646,
+          "id": 671,
           "order": 1,
           "title": "01 · consigna",
           "body": "Un parcial de Portales y Comercio Electrónico pedía una tienda con catálogo, blog y ABM. La decisión fue no entregar un CRUD genérico sino una marca con ficción propia: el turno noche de Tokio y seis identidades.",
-          "projectId": 246,
+          "projectId": 255,
           "mediaId": null,
           "translations": [
             {
-              "stepId": 646,
+              "stepId": 671,
               "locale": "en",
               "title": "brief",
               "body": "A Web Portals and E-Commerce assignment asked for a shop with a catalog, a blog and admin CRUD. The decision was not to ship a generic CRUD but a brand with its own fiction: Tokyo's night shift and six identities."
@@ -3627,15 +3662,15 @@
           "media": null
         },
         {
-          "id": 647,
+          "id": 672,
           "order": 2,
           "title": "02 · modelo",
           "body": "Monolito Laravel 13: Eloquent, migraciones y seeders para 6 máscaras y 5 transmisiones sobre SQLite. Autenticación por sesión, reserva de máscaras y panel de administración detrás de middleware de rol. Cinco componentes Blade propios.",
-          "projectId": 246,
+          "projectId": 255,
           "mediaId": null,
           "translations": [
             {
-              "stepId": 647,
+              "stepId": 672,
               "locale": "en",
               "title": "model",
               "body": "A Laravel 13 monolith: Eloquent, migrations and seeders for 6 masks and 5 transmissions on SQLite. Session auth, mask reservations and an admin panel behind role middleware. Five custom Blade components."
@@ -3644,15 +3679,15 @@
           "media": null
         },
         {
-          "id": 648,
+          "id": 673,
           "order": 3,
           "title": "03 · pieza",
           "body": "Dirección editorial-cyberpunk con sistema visual cerrado en tokens Tailwind v4: masthead Archivo Black con relleno y contorno, HUD monoespaciado, marquees y retrato por máscara. Scroll Lenis y reveals por IntersectionObserver, apagados con prefers-reduced-motion.",
-          "projectId": 246,
+          "projectId": 255,
           "mediaId": null,
           "translations": [
             {
-              "stepId": 648,
+              "stepId": 673,
               "locale": "en",
               "title": "piece",
               "body": "Editorial-cyberpunk art direction with a closed visual system in Tailwind v4 tokens: an Archivo Black masthead in fill and outline, a monospaced HUD, marquees and a portrait per mask. Lenis scroll and IntersectionObserver reveals, switched off with prefers-reduced-motion."
@@ -3663,13 +3698,13 @@
       ],
       "links": [
         {
-          "id": 370,
+          "id": 383,
           "label": "código fuente",
           "url": "https://github.com/MateoGs013/circuito-kitsune",
-          "projectId": 246,
+          "projectId": 255,
           "translations": [
             {
-              "linkId": 370,
+              "linkId": 383,
               "locale": "en",
               "label": "source code"
             }
@@ -3678,7 +3713,7 @@
       ],
       "metrics": [
         {
-          "id": 900,
+          "id": 941,
           "key": "maskCount",
           "value": "6",
           "items": [],
@@ -3687,11 +3722,11 @@
           "source": null,
           "measuredAt": null,
           "order": 0,
-          "projectId": 246,
+          "projectId": 255,
           "translations": []
         },
         {
-          "id": 901,
+          "id": 942,
           "key": "districtCount",
           "value": "6",
           "items": [],
@@ -3700,11 +3735,11 @@
           "source": null,
           "measuredAt": null,
           "order": 1,
-          "projectId": 246,
+          "projectId": 255,
           "translations": []
         },
         {
-          "id": 902,
+          "id": 943,
           "key": "transmissionCount",
           "value": "5",
           "items": [],
@@ -3713,11 +3748,11 @@
           "source": null,
           "measuredAt": null,
           "order": 2,
-          "projectId": 246,
+          "projectId": 255,
           "translations": []
         },
         {
-          "id": 903,
+          "id": 944,
           "key": "bundleSizeKb",
           "value": "38",
           "items": [],
@@ -3726,14 +3761,14 @@
           "source": null,
           "measuredAt": null,
           "order": 3,
-          "projectId": 246,
+          "projectId": 255,
           "translations": []
         }
       ],
       "experiences": [],
       "translations": [
         {
-          "projectId": 246,
+          "projectId": 255,
           "locale": "en",
           "title": null,
           "role": "Da Vinci coursework · design and development",
@@ -3742,11 +3777,304 @@
           "outcome": "A Laravel 13 monolith with Eloquent, migrations and seeders on SQLite: a catalog of 6 masks and a blog of transmissions, with session auth, mask reservations and a role-gated admin panel. A closed visual system in Tailwind v4 tokens, Lenis smooth scroll and reveals that respect prefers-reduced-motion."
         }
       ]
+    },
+    {
+      "id": 256,
+      "slug": "tienda-mistica",
+      "title": "Tienda Mística",
+      "year": 2026,
+      "role": "Académico Da Vinci · PHP puro",
+      "status": "LIVE",
+      "featured": false,
+      "summary": "E-commerce ficticio de duendes mágicos en PHP puro, sin framework: front controller, PDO y MariaDB. Catálogo, carrito, blog y panel de administración, con estética arcade.",
+      "brief": "Un parcial de PHP resuelto a mano, sin framework que esconda el funcionamiento: front controller propio, clases con PDO y un modelo relacional en MariaDB. El reto era que los fundamentos se vieran y que la tienda igual tuviera identidad de marca.",
+      "outcome": "En producción en mistica.mateogs.tech. Catálogo de 21 duendes en cuatro rarezas sobre un modelo de 18 tablas, con carrito de sesión, blog de crónicas, contacto y panel ABM con autenticación. Todo en PHP puro servido por Apache + mod_php, sin dependencias de framework.",
+      "url": "https://mistica.mateogs.tech",
+      "repo": "https://github.com/MateoGs013/tienda-mistica",
+      "sortOrder": 7,
+      "publishedAt": "2026-10-05T12:00:00.000Z",
+      "createdAt": "2026-11-03T20:07:20.016Z",
+      "updatedAt": "2026-11-03T20:07:20.016Z",
+      "orgId": 142,
+      "org": {
+        "slug": "escuela-da-vinci",
+        "name": "Escuela Da Vinci",
+        "city": "Buenos Aires, AR"
+      },
+      "techs": [
+        {
+          "slug": "javascript",
+          "name": "JavaScript",
+          "category": "LANGUAGE",
+          "since": 2022,
+          "note": "Fundamento del desarrollo web moderno, estándares ECMAScript y manipulación del DOM nativo.",
+          "translations": [
+            {
+              "locale": "en",
+              "note": "The foundation of modern web development, ECMAScript standards and native DOM manipulation."
+            }
+          ],
+          "projects": [
+            {
+              "slug": "tienda-mistica",
+              "title": "Tienda Mística",
+              "year": 2026,
+              "publishedAt": "2026-10-05T12:00:00.000Z",
+              "translations": []
+            }
+          ]
+        },
+        {
+          "slug": "mariadb",
+          "name": "MariaDB",
+          "category": "DATA",
+          "since": 2025,
+          "note": "Base relacional MySQL-compatible accedida con PDO: catálogo, carrito y pedidos sobre un modelo normalizado, sin ORM de por medio.",
+          "translations": [],
+          "projects": [
+            {
+              "slug": "tienda-mistica",
+              "title": "Tienda Mística",
+              "year": 2026,
+              "publishedAt": "2026-10-05T12:00:00.000Z",
+              "translations": []
+            }
+          ]
+        },
+        {
+          "slug": "php",
+          "name": "PHP",
+          "category": "LANGUAGE",
+          "since": 2025,
+          "note": "Lenguaje backend tradicional utilizado en integraciones y módulos transaccionales de clientes.",
+          "translations": [
+            {
+              "locale": "en",
+              "note": "A traditional backend language used in client integrations and transactional modules."
+            }
+          ],
+          "projects": [
+            {
+              "slug": "circuito-kitsune",
+              "title": "Circuito Kitsune",
+              "year": 2026,
+              "publishedAt": "2026-10-05T12:00:00.000Z",
+              "translations": [
+                {
+                  "locale": "en",
+                  "title": null
+                }
+              ]
+            },
+            {
+              "slug": "tienda-mistica",
+              "title": "Tienda Mística",
+              "year": 2026,
+              "publishedAt": "2026-10-05T12:00:00.000Z",
+              "translations": []
+            }
+          ]
+        },
+        {
+          "slug": "tailwind",
+          "name": "Tailwind CSS",
+          "category": "TOOLING",
+          "since": 2026,
+          "note": "Sistema de diseño componible y utilitario con purga agresiva para bundles ultra ligeros.",
+          "translations": [
+            {
+              "locale": "en",
+              "note": "A composable, utility-first design system with aggressive purging for ultra-light bundles."
+            }
+          ],
+          "projects": [
+            {
+              "slug": "la-rucula",
+              "title": "La Rúcula Gastrobar",
+              "year": 2026,
+              "publishedAt": "2026-10-05T12:00:00.000Z",
+              "translations": [
+                {
+                  "locale": "en",
+                  "title": null
+                }
+              ]
+            },
+            {
+              "slug": "argpiscinas",
+              "title": "ARG Piscinas",
+              "year": 2026,
+              "publishedAt": "2026-10-05T12:00:00.000Z",
+              "translations": [
+                {
+                  "locale": "en",
+                  "title": null
+                }
+              ]
+            },
+            {
+              "slug": "ynara-web",
+              "title": "Ynara Web",
+              "year": 2026,
+              "publishedAt": "2026-10-05T12:00:00.000Z",
+              "translations": [
+                {
+                  "locale": "en",
+                  "title": null
+                }
+              ]
+            },
+            {
+              "slug": "circuito-kitsune",
+              "title": "Circuito Kitsune",
+              "year": 2026,
+              "publishedAt": "2026-10-05T12:00:00.000Z",
+              "translations": [
+                {
+                  "locale": "en",
+                  "title": null
+                }
+              ]
+            },
+            {
+              "slug": "tienda-mistica",
+              "title": "Tienda Mística",
+              "year": 2026,
+              "publishedAt": "2026-10-05T12:00:00.000Z",
+              "translations": []
+            }
+          ]
+        }
+      ],
+      "media": [
+        {
+          "id": 669,
+          "kind": "IMAGE",
+          "role": "COVER",
+          "src": "/media/projects/tienda-mistica/hero.jpg",
+          "srcWebm": null,
+          "poster": null,
+          "alt": "Portada de Tienda Mística: el masthead «TIENDA MÍSTICA — Colecciona Duendes Legendarios» en tipografía arcade sobre fondo oscuro con grilla",
+          "caption": null,
+          "tint": "#818cf8",
+          "viewport": "DESKTOP",
+          "width": 800,
+          "height": 500,
+          "order": 0,
+          "bytes": 34110,
+          "projectId": 256,
+          "translations": []
+        }
+      ],
+      "steps": [
+        {
+          "id": 674,
+          "order": 1,
+          "title": "01 · consigna",
+          "body": "Un parcial pedía una tienda con catálogo, carrito y administración en PHP sin framework. La decisión fue no entregar un CRUD pelado sino una marca: un arcade de duendes legendarios inspirado en los bosques encantados de Irlanda.",
+          "projectId": 256,
+          "mediaId": null,
+          "translations": [],
+          "media": null
+        },
+        {
+          "id": 675,
+          "order": 2,
+          "title": "02 · modelo",
+          "body": "Front controller propio (index.php) que rutea por sección, clases con PDO sobre MariaDB y un modelo relacional de 18 tablas: duendes, rarezas, materiales, accesorios, blog, carrito y pedidos. Panel ABM detrás de autenticación por sesión; sin framework que resuelva el trabajo por abajo.",
+          "projectId": 256,
+          "mediaId": null,
+          "translations": [],
+          "media": null
+        },
+        {
+          "id": 676,
+          "order": 3,
+          "title": "03 · pieza",
+          "body": "Dirección arcade-cyberpunk: masthead Orbitron, HUD monoespaciado y una intro que arma el «portal místico». Catálogo filtrable por rareza y detalle por duende, con sistema visual cerrado sobre tokens de color propios.",
+          "projectId": 256,
+          "mediaId": null,
+          "translations": [],
+          "media": null
+        }
+      ],
+      "links": [
+        {
+          "id": 384,
+          "label": "sitio en vivo",
+          "url": "https://mistica.mateogs.tech",
+          "projectId": 256,
+          "translations": []
+        },
+        {
+          "id": 385,
+          "label": "código fuente",
+          "url": "https://github.com/MateoGs013/tienda-mistica",
+          "projectId": 256,
+          "translations": []
+        }
+      ],
+      "metrics": [
+        {
+          "id": 945,
+          "key": "duendeCount",
+          "value": "21",
+          "items": [],
+          "unit": null,
+          "label": null,
+          "source": null,
+          "measuredAt": null,
+          "order": 0,
+          "projectId": 256,
+          "translations": []
+        },
+        {
+          "id": 946,
+          "key": "rarezaCount",
+          "value": "4",
+          "items": [],
+          "unit": null,
+          "label": null,
+          "source": null,
+          "measuredAt": null,
+          "order": 1,
+          "projectId": 256,
+          "translations": []
+        },
+        {
+          "id": 947,
+          "key": "accesorioCount",
+          "value": "40",
+          "items": [],
+          "unit": null,
+          "label": null,
+          "source": null,
+          "measuredAt": null,
+          "order": 2,
+          "projectId": 256,
+          "translations": []
+        },
+        {
+          "id": 948,
+          "key": "tableCount",
+          "value": "18",
+          "items": [],
+          "unit": null,
+          "label": null,
+          "source": null,
+          "measuredAt": null,
+          "order": 3,
+          "projectId": 256,
+          "translations": []
+        }
+      ],
+      "experiences": [],
+      "translations": []
     }
   ],
   "stack": [
     {
-      "id": 713,
+      "id": 736,
       "slug": "tailwind",
       "name": "Tailwind CSS",
       "category": "TOOLING",
@@ -3755,7 +4083,7 @@
       "color": "#06b6d4",
       "translations": [
         {
-          "techId": 713,
+          "techId": 736,
           "locale": "en",
           "note": "A composable, utility-first design system with aggressive purging for ultra-light bundles."
         }
@@ -3808,6 +4136,13 @@
               "title": null
             }
           ]
+        },
+        {
+          "slug": "tienda-mistica",
+          "title": "Tienda Mística",
+          "year": 2026,
+          "publishedAt": "2026-10-05T12:00:00.000Z",
+          "translations": []
         }
       ],
       "experiences": [
@@ -3840,7 +4175,7 @@
       ]
     },
     {
-      "id": 701,
+      "id": 723,
       "slug": "gsap",
       "name": "GSAP",
       "category": "MOTION",
@@ -3849,7 +4184,7 @@
       "color": "#88ce02",
       "translations": [
         {
-          "techId": 701,
+          "techId": 723,
           "locale": "en",
           "note": "Deterministic timeline orchestration for high-precision interfaces and spatial micro-interactions."
         }
@@ -3922,7 +4257,7 @@
       ]
     },
     {
-      "id": 702,
+      "id": 724,
       "slug": "lenis",
       "name": "Lenis",
       "category": "MOTION",
@@ -3931,7 +4266,7 @@
       "color": "#111111",
       "translations": [
         {
-          "techId": 702,
+          "techId": 724,
           "locale": "en",
           "note": "Normalized cross-platform inertial scrolling without breaking the browser's native behavior."
         }
@@ -3991,7 +4326,7 @@
       ]
     },
     {
-      "id": 699,
+      "id": 721,
       "slug": "react",
       "name": "React",
       "category": "FRAMEWORK",
@@ -4000,7 +4335,7 @@
       "color": "#61dafb",
       "translations": [
         {
-          "techId": 699,
+          "techId": 721,
           "locale": "en",
           "note": "A massive ecosystem, React Server Components and hybrid rendering, adopted in the Ynara thesis."
         }
@@ -4073,7 +4408,7 @@
       ]
     },
     {
-      "id": 694,
+      "id": 716,
       "slug": "typescript",
       "name": "TypeScript",
       "category": "LANGUAGE",
@@ -4082,7 +4417,7 @@
       "color": "#3178c6",
       "translations": [
         {
-          "techId": 694,
+          "techId": 716,
           "locale": "en",
           "note": "A mandatory standard on client and server: if it isn't typed at compile time, it doesn't reach production."
         }
@@ -4155,7 +4490,7 @@
       ]
     },
     {
-      "id": 714,
+      "id": 737,
       "slug": "vite",
       "name": "Vite",
       "category": "TOOLING",
@@ -4164,7 +4499,7 @@
       "color": "#646cff",
       "translations": [
         {
-          "techId": 714,
+          "techId": 737,
           "locale": "en",
           "note": "Ultra-fast tooling built on Rollup and esbuild for instant HMR in development."
         }
@@ -4210,7 +4545,7 @@
       "experiences": []
     },
     {
-      "id": 707,
+      "id": 729,
       "slug": "fastapi",
       "name": "FastAPI",
       "category": "BACKEND",
@@ -4219,7 +4554,7 @@
       "color": "#009688",
       "translations": [
         {
-          "techId": 707,
+          "techId": 729,
           "locale": "en",
           "note": "The core for AI/NLP inference and processing, with Pydantic typing and minimal latency."
         }
@@ -4293,7 +4628,7 @@
       ]
     },
     {
-      "id": 700,
+      "id": 722,
       "slug": "next",
       "name": "Next.js",
       "category": "FRAMEWORK",
@@ -4302,7 +4637,7 @@
       "color": "#000000",
       "translations": [
         {
-          "techId": 700,
+          "techId": 722,
           "locale": "en",
           "note": "A full-stack React framework with asset optimization, file-system routing and SSR."
         }
@@ -4350,7 +4685,7 @@
       ]
     },
     {
-      "id": 704,
+      "id": 726,
       "slug": "node",
       "name": "Node.js",
       "category": "BACKEND",
@@ -4359,7 +4694,7 @@
       "color": "#339933",
       "translations": [
         {
-          "techId": 704,
+          "techId": 726,
           "locale": "en",
           "note": "A high-performance runtime for lightweight REST APIs, middleware pipelines and event servers."
         }
@@ -4420,7 +4755,72 @@
       ]
     },
     {
-      "id": 709,
+      "id": 717,
+      "slug": "php",
+      "name": "PHP",
+      "category": "LANGUAGE",
+      "since": 2025,
+      "note": "Lenguaje backend tradicional utilizado en integraciones y módulos transaccionales de clientes.",
+      "color": "#777bb4",
+      "translations": [
+        {
+          "techId": 717,
+          "locale": "en",
+          "note": "A traditional backend language used in client integrations and transactional modules."
+        }
+      ],
+      "projects": [
+        {
+          "slug": "circuito-kitsune",
+          "title": "Circuito Kitsune",
+          "year": 2026,
+          "publishedAt": "2026-10-05T12:00:00.000Z",
+          "translations": [
+            {
+              "locale": "en",
+              "title": null
+            }
+          ]
+        },
+        {
+          "slug": "tienda-mistica",
+          "title": "Tienda Mística",
+          "year": 2026,
+          "publishedAt": "2026-10-05T12:00:00.000Z",
+          "translations": []
+        }
+      ],
+      "experiences": [
+        {
+          "slug": "escuela-da-vinci",
+          "kind": "EDUCATION",
+          "role": "Estudiante · Diseño y Desarrollo Web",
+          "startedAt": "2024-03-01T00:00:00.000Z",
+          "endedAt": null,
+          "translations": [
+            {
+              "locale": "en",
+              "role": "Student · Web Design and Development"
+            }
+          ]
+        },
+        {
+          "slug": "cet-30",
+          "kind": "EDUCATION",
+          "role": "Técnico en Programación",
+          "startedAt": "2017-03-01T00:00:00.000Z",
+          "endedAt": "2023-12-01T00:00:00.000Z",
+          "translations": [
+            {
+              "locale": "en",
+              "role": "Programming Technician"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": 731,
       "slug": "postgresql",
       "name": "PostgreSQL",
       "category": "DATA",
@@ -4429,7 +4829,7 @@
       "color": "#4169e1",
       "translations": [
         {
-          "techId": 709,
+          "techId": 731,
           "locale": "en",
           "note": "ACID relational persistence, declarative schemas and vector indexes with pgvector."
         }
@@ -4490,7 +4890,7 @@
       ]
     },
     {
-      "id": 696,
+      "id": 718,
       "slug": "python",
       "name": "Python",
       "category": "LANGUAGE",
@@ -4499,7 +4899,7 @@
       "color": "#3776ab",
       "translations": [
         {
-          "techId": 696,
+          "techId": 718,
           "locale": "en",
           "note": "The language of choice for data engineering, vector embeddings and LLM orchestration."
         }
@@ -4560,7 +4960,7 @@
       ]
     },
     {
-      "id": 698,
+      "id": 720,
       "slug": "vue",
       "name": "Vue 3",
       "category": "FRAMEWORK",
@@ -4569,7 +4969,7 @@
       "color": "#42b883",
       "translations": [
         {
-          "techId": 698,
+          "techId": 720,
           "locale": "en",
           "note": "Chosen for surgical reactivity, a clean Composition API and strict typing without boilerplate overhead."
         }
@@ -4656,7 +5056,7 @@
       ]
     },
     {
-      "id": 705,
+      "id": 727,
       "slug": "express",
       "name": "Express",
       "category": "BACKEND",
@@ -4665,7 +5065,7 @@
       "color": "#000000",
       "translations": [
         {
-          "techId": 705,
+          "techId": 727,
           "locale": "en",
           "note": "Minimalism and full control over the HTTP lifecycle, routing and authentication."
         }
@@ -4687,7 +5087,60 @@
       "experiences": []
     },
     {
-      "id": 706,
+      "id": 715,
+      "slug": "javascript",
+      "name": "JavaScript",
+      "category": "LANGUAGE",
+      "since": 2022,
+      "note": "Fundamento del desarrollo web moderno, estándares ECMAScript y manipulación del DOM nativo.",
+      "color": "#f7df1e",
+      "translations": [
+        {
+          "techId": 715,
+          "locale": "en",
+          "note": "The foundation of modern web development, ECMAScript standards and native DOM manipulation."
+        }
+      ],
+      "projects": [
+        {
+          "slug": "tienda-mistica",
+          "title": "Tienda Mística",
+          "year": 2026,
+          "publishedAt": "2026-10-05T12:00:00.000Z",
+          "translations": []
+        }
+      ],
+      "experiences": [
+        {
+          "slug": "freelance",
+          "kind": "FREELANCE",
+          "role": "Freelance · diseño y desarrollo web",
+          "startedAt": "2023-01-01T00:00:00.000Z",
+          "endedAt": null,
+          "translations": [
+            {
+              "locale": "en",
+              "role": "Freelance · web design and development"
+            }
+          ]
+        },
+        {
+          "slug": "cet-30",
+          "kind": "EDUCATION",
+          "role": "Técnico en Programación",
+          "startedAt": "2017-03-01T00:00:00.000Z",
+          "endedAt": "2023-12-01T00:00:00.000Z",
+          "translations": [
+            {
+              "locale": "en",
+              "role": "Programming Technician"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": 728,
       "slug": "laravel",
       "name": "Laravel",
       "category": "BACKEND",
@@ -4696,7 +5149,7 @@
       "color": "#ff2d20",
       "translations": [
         {
-          "techId": 706,
+          "techId": 728,
           "locale": "en",
           "note": "A robust monolith with Eloquent ORM, session authentication and job queues for transactional platforms."
         }
@@ -4745,7 +5198,27 @@
       ]
     },
     {
-      "id": 710,
+      "id": 733,
+      "slug": "mariadb",
+      "name": "MariaDB",
+      "category": "DATA",
+      "since": 2025,
+      "note": "Base relacional MySQL-compatible accedida con PDO: catálogo, carrito y pedidos sobre un modelo normalizado, sin ORM de por medio.",
+      "color": "#c0765a",
+      "translations": [],
+      "projects": [
+        {
+          "slug": "tienda-mistica",
+          "title": "Tienda Mística",
+          "year": 2026,
+          "publishedAt": "2026-10-05T12:00:00.000Z",
+          "translations": []
+        }
+      ],
+      "experiences": []
+    },
+    {
+      "id": 732,
       "slug": "mongodb",
       "name": "MongoDB",
       "category": "DATA",
@@ -4754,7 +5227,7 @@
       "color": "#47a248",
       "translations": [
         {
-          "techId": 710,
+          "techId": 732,
           "locale": "en",
           "note": "A document-oriented NoSQL database for agile prototyping and dynamic schemas in Barberpole."
         }
@@ -4790,65 +5263,7 @@
       ]
     },
     {
-      "id": 695,
-      "slug": "php",
-      "name": "PHP",
-      "category": "LANGUAGE",
-      "since": 2025,
-      "note": "Lenguaje backend tradicional utilizado en integraciones y módulos transaccionales de clientes.",
-      "color": "#777bb4",
-      "translations": [
-        {
-          "techId": 695,
-          "locale": "en",
-          "note": "A traditional backend language used in client integrations and transactional modules."
-        }
-      ],
-      "projects": [
-        {
-          "slug": "circuito-kitsune",
-          "title": "Circuito Kitsune",
-          "year": 2026,
-          "publishedAt": "2026-10-05T12:00:00.000Z",
-          "translations": [
-            {
-              "locale": "en",
-              "title": null
-            }
-          ]
-        }
-      ],
-      "experiences": [
-        {
-          "slug": "escuela-da-vinci",
-          "kind": "EDUCATION",
-          "role": "Estudiante · Diseño y Desarrollo Web",
-          "startedAt": "2024-03-01T00:00:00.000Z",
-          "endedAt": null,
-          "translations": [
-            {
-              "locale": "en",
-              "role": "Student · Web Design and Development"
-            }
-          ]
-        },
-        {
-          "slug": "cet-30",
-          "kind": "EDUCATION",
-          "role": "Técnico en Programación",
-          "startedAt": "2017-03-01T00:00:00.000Z",
-          "endedAt": "2023-12-01T00:00:00.000Z",
-          "translations": [
-            {
-              "locale": "en",
-              "role": "Programming Technician"
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "id": 708,
+      "id": 730,
       "slug": "prisma",
       "name": "Prisma",
       "category": "DATA",
@@ -4857,7 +5272,7 @@
       "color": "#2d3748",
       "translations": [
         {
-          "techId": 708,
+          "techId": 730,
           "locale": "en",
           "note": "An ORM typed end to end: it generates exact TypeScript types straight from the SQL schema."
         }
@@ -4893,7 +5308,7 @@
       ]
     },
     {
-      "id": 703,
+      "id": 725,
       "slug": "three",
       "name": "Three.js",
       "category": "GRAPHICS",
@@ -4902,7 +5317,7 @@
       "color": "#000000",
       "translations": [
         {
-          "techId": 703,
+          "techId": 725,
           "locale": "en",
           "note": "WebGL and GLSL shaders for immersive 3D experiences when the DOM isn't enough."
         }
@@ -4924,7 +5339,7 @@
       "experiences": []
     },
     {
-      "id": 697,
+      "id": 719,
       "slug": "angular",
       "name": "Angular",
       "category": "FRAMEWORK",
@@ -4933,7 +5348,7 @@
       "color": "#dd0031",
       "translations": [
         {
-          "techId": 697,
+          "techId": 719,
           "locale": "en",
           "note": "Enterprise architecture based on RxJS and Dependency Injection."
         }
@@ -4942,7 +5357,7 @@
       "experiences": []
     },
     {
-      "id": 712,
+      "id": 735,
       "slug": "firebase",
       "name": "Firebase",
       "category": "DATA",
@@ -4951,7 +5366,7 @@
       "color": "#ffca28",
       "translations": [
         {
-          "techId": 712,
+          "techId": 735,
           "locale": "en",
           "note": "A BaaS platform for a reactive NoSQL database and fast social authentication."
         }
@@ -4960,52 +5375,7 @@
       "experiences": []
     },
     {
-      "id": 693,
-      "slug": "javascript",
-      "name": "JavaScript",
-      "category": "LANGUAGE",
-      "since": 2022,
-      "note": "Fundamento del desarrollo web moderno, estándares ECMAScript y manipulación del DOM nativo.",
-      "color": "#f7df1e",
-      "translations": [
-        {
-          "techId": 693,
-          "locale": "en",
-          "note": "The foundation of modern web development, ECMAScript standards and native DOM manipulation."
-        }
-      ],
-      "projects": [],
-      "experiences": [
-        {
-          "slug": "freelance",
-          "kind": "FREELANCE",
-          "role": "Freelance · diseño y desarrollo web",
-          "startedAt": "2023-01-01T00:00:00.000Z",
-          "endedAt": null,
-          "translations": [
-            {
-              "locale": "en",
-              "role": "Freelance · web design and development"
-            }
-          ]
-        },
-        {
-          "slug": "cet-30",
-          "kind": "EDUCATION",
-          "role": "Técnico en Programación",
-          "startedAt": "2017-03-01T00:00:00.000Z",
-          "endedAt": "2023-12-01T00:00:00.000Z",
-          "translations": [
-            {
-              "locale": "en",
-              "role": "Programming Technician"
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "id": 711,
+      "id": 734,
       "slug": "supabase",
       "name": "Supabase",
       "category": "DATA",
@@ -5014,7 +5384,7 @@
       "color": "#3ecf8e",
       "translations": [
         {
-          "techId": 711,
+          "techId": 734,
           "locale": "en",
           "note": "Backend-as-a-Service with real-time Postgres, Row Level Security and S3 storage."
         }
@@ -5025,7 +5395,7 @@
   ],
   "experience": [
     {
-      "id": 201,
+      "id": 208,
       "slug": "ynara",
       "kind": "THESIS",
       "role": "Tesis en equipo · contribuidor principal",
@@ -5040,7 +5410,7 @@
       ],
       "location": null,
       "cvOrder": 1,
-      "orgId": 138,
+      "orgId": 142,
       "org": {
         "slug": "escuela-da-vinci",
         "name": "Escuela Da Vinci",
@@ -5089,7 +5459,7 @@
       ],
       "translations": [
         {
-          "experienceId": 201,
+          "experienceId": 208,
           "locale": "en",
           "role": "Team thesis · lead contributor",
           "summary": "382 commits in six weeks on Ynara, the thesis: an on-prem AI assistant with FastAPI, Next.js, Expo and Postgres with pgvector. Pre-approved; the defense is pending.",
@@ -5104,7 +5474,7 @@
       ]
     },
     {
-      "id": 202,
+      "id": 209,
       "slug": "la-rucula",
       "kind": "CLIENT",
       "role": "Freelance · diseño y desarrollo",
@@ -5119,7 +5489,7 @@
       ],
       "location": null,
       "cvOrder": 2,
-      "orgId": 136,
+      "orgId": 140,
       "org": {
         "slug": "la-rucula-gastrobar",
         "name": "La Rúcula Gastrobar",
@@ -5163,7 +5533,7 @@
       ],
       "translations": [
         {
-          "experienceId": 202,
+          "experienceId": 209,
           "locale": "en",
           "role": "Freelance · design and development",
           "summary": "Menu-first editorial site with its own management panel. In production.",
@@ -5178,7 +5548,7 @@
       ]
     },
     {
-      "id": 203,
+      "id": 210,
       "slug": "arg-piscinas",
       "kind": "CLIENT",
       "role": "Freelance · front y back a medida",
@@ -5193,7 +5563,7 @@
       ],
       "location": null,
       "cvOrder": 3,
-      "orgId": 137,
+      "orgId": 141,
       "org": {
         "slug": "arg-piscinas",
         "name": "ARG Piscinas",
@@ -5242,7 +5612,7 @@
       ],
       "translations": [
         {
-          "experienceId": 203,
+          "experienceId": 210,
           "locale": "en",
           "role": "Freelance · custom front end and back end",
           "summary": "Corporate website in three languages with a management panel and blog. In production.",
@@ -5257,7 +5627,7 @@
       ]
     },
     {
-      "id": 204,
+      "id": 211,
       "slug": "eros",
       "kind": "PERSONAL",
       "role": "Proyecto propio · IA y automatización",
@@ -5302,7 +5672,7 @@
       ],
       "translations": [
         {
-          "experienceId": 204,
+          "experienceId": 211,
           "locale": "en",
           "role": "Own project · AI and automation",
           "summary": "Autonomous career assistant: it tracks job openings, evaluates them with AI and tailors the Harvard ATS CV to each one. In production at eros.mateogs.tech.",
@@ -5317,7 +5687,7 @@
       ]
     },
     {
-      "id": 206,
+      "id": 213,
       "slug": "escuela-da-vinci",
       "kind": "EDUCATION",
       "role": "Estudiante · Diseño y Desarrollo Web",
@@ -5331,7 +5701,7 @@
       ],
       "location": null,
       "cvOrder": null,
-      "orgId": 138,
+      "orgId": 142,
       "org": {
         "slug": "escuela-da-vinci",
         "name": "Escuela Da Vinci",
@@ -5377,7 +5747,7 @@
       "projects": [],
       "translations": [
         {
-          "experienceId": 206,
+          "experienceId": 213,
           "locale": "en",
           "role": "Student · Web Design and Development",
           "summary": "Degree in progress, class of 2026. UI/UX, visual direction, modern front end, back end, databases and architecture. Pre-approved thesis: Ynara.",
@@ -5391,7 +5761,7 @@
       ]
     },
     {
-      "id": 205,
+      "id": 212,
       "slug": "freelance",
       "kind": "FREELANCE",
       "role": "Freelance · diseño y desarrollo web",
@@ -5443,7 +5813,7 @@
       "projects": [],
       "translations": [
         {
-          "experienceId": 205,
+          "experienceId": 212,
           "locale": "en",
           "role": "Freelance · web design and development",
           "summary": "Around ten real client projects since 2023. The first one: the website of an architecture studio.",
@@ -5458,7 +5828,7 @@
       ]
     },
     {
-      "id": 207,
+      "id": 214,
       "slug": "cet-30",
       "kind": "EDUCATION",
       "role": "Técnico en Programación",
@@ -5471,7 +5841,7 @@
       ],
       "location": null,
       "cvOrder": null,
-      "orgId": 139,
+      "orgId": 143,
       "org": {
         "slug": "cet-30",
         "name": "CET N.º 30",
@@ -5492,7 +5862,7 @@
       "projects": [],
       "translations": [
         {
-          "experienceId": 207,
+          "experienceId": 214,
           "locale": "en",
           "role": "Programming Technician",
           "summary": "Programming at CET N.º 30, Río Negro. Programming Technician degree in 2023.",
@@ -5507,7 +5877,7 @@
   ],
   "orgs": [
     {
-      "id": 137,
+      "id": 141,
       "slug": "arg-piscinas",
       "name": "ARG Piscinas",
       "url": "https://www.argpiscinas.es/",
@@ -5543,7 +5913,7 @@
       ]
     },
     {
-      "id": 139,
+      "id": 143,
       "slug": "cet-30",
       "name": "CET N.º 30",
       "url": null,
@@ -5566,7 +5936,7 @@
       ]
     },
     {
-      "id": 138,
+      "id": 142,
       "slug": "escuela-da-vinci",
       "name": "Escuela Da Vinci",
       "url": "https://www.davinci.edu.ar/",
@@ -5595,6 +5965,13 @@
               "title": null
             }
           ]
+        },
+        {
+          "slug": "tienda-mistica",
+          "title": "Tienda Mística",
+          "year": 2026,
+          "publishedAt": "2026-10-05T12:00:00.000Z",
+          "translations": []
         }
       ],
       "experiences": [
@@ -5627,7 +6004,7 @@
       ]
     },
     {
-      "id": 136,
+      "id": 140,
       "slug": "la-rucula-gastrobar",
       "name": "La Rúcula Gastrobar",
       "url": "https://laruculagastrobar.es/",
@@ -5761,7 +6138,7 @@
           "value": "Consolidarme como desarrollador en un equipo con proyectos reales de mayor escala. A mediano plazo, liderazgo técnico: coordinar, organizar, comunicar y conectar perfiles de distintas áreas (diseño, producto, frontend y backend)."
         }
       ],
-      "updatedAt": "2026-11-03T14:38:21.849Z"
+      "updatedAt": "2026-11-03T20:07:20.171Z"
     },
     {
       "key": "contact",
@@ -5828,12 +6205,12 @@
           "value": "Email directo, LinkedIn o mensaje vía GitHub"
         }
       ],
-      "updatedAt": "2026-11-03T14:38:21.849Z"
+      "updatedAt": "2026-11-03T20:07:20.171Z"
     }
   ],
   "articles": [
     {
-      "id": 24,
+      "id": 25,
       "slug": "postgresql-17-universal-vector-relational-production",
       "title": "PostgreSQL 17 como Base Relacional y Vectorial Universal en Producción",
       "summary": "Análisis de arquitectura y trade-offs: cómo consolidar pgvector y datos relacionales en PostgreSQL 17 reduciendo latencia y complejidad operativa.",
@@ -5845,8 +6222,8 @@
       "canonicalUrl": null,
       "sortOrder": 0,
       "publishedAt": "2026-10-12T12:00:00.000Z",
-      "createdAt": "2026-11-03T14:38:21.852Z",
-      "updatedAt": "2026-11-03T14:38:21.852Z",
+      "createdAt": "2026-11-03T20:07:20.176Z",
+      "updatedAt": "2026-11-03T20:07:20.176Z",
       "projectId": null,
       "techs": [
         {
@@ -5863,7 +6240,7 @@
       "project": null,
       "translations": [
         {
-          "articleId": 24,
+          "articleId": 25,
           "locale": "en",
           "title": "PostgreSQL 17 as a Universal Relational and Vector Database in Production",
           "summary": "An analysis of architecture and trade-offs: how to consolidate pgvector and relational data in PostgreSQL 17 while reducing latency and operational complexity.",

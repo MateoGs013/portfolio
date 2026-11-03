@@ -1,4 +1,4 @@
-/** Las seis obras que se muestran en el sitio, en el orden del sitio (sortOrder). */
+/** Las obras que se muestran en el sitio, en el orden del sitio (sortOrder). */
 import { ProjectStatus } from '../../generated/prisma/client.js'
 import type { SeedProject } from './types.js'
 
@@ -182,5 +182,32 @@ export const publicProjects: SeedProject[] = [
       { title: '03 · pieza', body: 'Dirección editorial-cyberpunk con sistema visual cerrado en tokens Tailwind v4: masthead Archivo Black con relleno y contorno, HUD monoespaciado, marquees y retrato por máscara. Scroll Lenis y reveals por IntersectionObserver, apagados con prefers-reduced-motion.' },
     ],
     cover: { src: '/media/projects/circuito-kitsune/hero.webp', alt: 'Portada de Circuito Kitsune: el masthead «CIRCUITO KITSUNE» en negro relleno y contorno sobre rojo ember, con una máscara de zorro cyberpunk a la derecha', tint: '#ff1919' },
+  },
+  {
+    slug: 'tienda-mistica',
+    title: 'Tienda Mística',
+    year: 2026,
+    role: 'Académico Da Vinci · PHP puro',
+    status: ProjectStatus.LIVE,
+    featured: false,
+    published: true,
+    summary: 'E-commerce ficticio de duendes mágicos en PHP puro, sin framework: front controller, PDO y MariaDB. Catálogo, carrito, blog y panel de administración, con estética arcade.',
+    brief: 'Un parcial de PHP resuelto a mano, sin framework que esconda el funcionamiento: front controller propio, clases con PDO y un modelo relacional en MariaDB. El reto era que los fundamentos se vieran y que la tienda igual tuviera identidad de marca.',
+    outcome: 'En producción en mistica.mateogs.tech. Catálogo de 21 duendes en cuatro rarezas sobre un modelo de 18 tablas, con carrito de sesión, blog de crónicas, contacto y panel ABM con autenticación. Todo en PHP puro servido por Apache + mod_php, sin dependencias de framework.',
+    url: 'https://mistica.mateogs.tech',
+    repo: 'https://github.com/MateoGs013/tienda-mistica',
+    org: 'escuela-da-vinci',
+    techs: ['php', 'mariadb', 'tailwind', 'javascript'],
+    metrics: { duendeCount: 21, rarezaCount: 4, accesorioCount: 40, tableCount: 18 },
+    links: [
+      { label: 'sitio en vivo', url: 'https://mistica.mateogs.tech' },
+      { label: 'código fuente', url: 'https://github.com/MateoGs013/tienda-mistica' },
+    ],
+    steps: [
+      { title: '01 · consigna', body: 'Un parcial pedía una tienda con catálogo, carrito y administración en PHP sin framework. La decisión fue no entregar un CRUD pelado sino una marca: un arcade de duendes legendarios inspirado en los bosques encantados de Irlanda.' },
+      { title: '02 · modelo', body: 'Front controller propio (index.php) que rutea por sección, clases con PDO sobre MariaDB y un modelo relacional de 18 tablas: duendes, rarezas, materiales, accesorios, blog, carrito y pedidos. Panel ABM detrás de autenticación por sesión; sin framework que resuelva el trabajo por abajo.' },
+      { title: '03 · pieza', body: 'Dirección arcade-cyberpunk: masthead Orbitron, HUD monoespaciado y una intro que arma el «portal místico». Catálogo filtrable por rareza y detalle por duende, con sistema visual cerrado sobre tokens de color propios.' },
+    ],
+    cover: { src: '/media/projects/tienda-mistica/hero.jpg', alt: 'Portada de Tienda Mística: el masthead «TIENDA MÍSTICA — Colecciona Duendes Legendarios» en tipografía arcade sobre fondo oscuro con grilla', tint: '#818cf8' },
   },
 ]
