@@ -3,22 +3,27 @@
  * Etapa Postular: destinatario (con de dónde salió), la vista previa del correo (POST
  * /jobs/:id/apply-preview con la vacante; si ya escribiste el mensaje, ese es el cuerpo) y las salidas:
  * - «Abrir en Gmail», el primario: abre el borrador y no marca nada.
- * - «Enviar desde Eros» (POST /jobs/:id/apply-email), apagado mientras EROS_SEND_ENABLED sea false:
- *   Eros adjunta su propio CV, no el de la base. Con el interruptor encendido vuelve con su
- *   confirmación de destinatario y asunto (y se apaga sin Eros, con una pegada o con la muestra).
+ * - «Enviar desde Eros» (POST /jobs/:id/apply-email), visible solo con EROS_SEND_ENABLED=on en la
+ *   API (`erosSend` de /status). La API imprime el PDF del CV de la etapa CV y Eros lo adjunta tal
+ *   cual; la confirmación nombra destinatario, asunto y adjunto (y se apaga sin Eros, con una pegada
+ *   o con la muestra). Si la API ya no tiene el CV (409 cv_expired) se rearma y se pide revisarlo
+ *   antes de enviar. Si un envío se cortó sin saber si salió, ofrece «Ya salió» o reintentar.
  * - «Ya la envié» (PATCH status applied): la única forma de marcarla como postulada a mano.
  */
-import { EROS_SEND_ENABLED, type HunterJob } from '@shared/hunterContracts'
+import type { HunterJob } from '@shared/hunterContracts'
 import { computed, onMounted, ref } from 'vue'
+import { RequestError } from '../../../api/errors'
 import { requestConfirm } from '../../../stores/dialogs'
 import { adminStatus } from '../../../stores/status'
 import { toast } from '../../../stores/toasts'
 import Button from '../../../ui/Button.vue'
 import Field from '../../../ui/Field.vue'
 import Spinner from '../../../ui/Spinner.vue'
+import StatusDot from '../../../ui/StatusDot.vue'
 import TextArea from '../../../ui/TextArea.vue'
 import TextInput from '../../../ui/TextInput.vue'
 import { failureText, hunterApi, originOf } from '../adapter'
+import { isCvExpired, refreshCv } from '../cvClient'
 import { job as t } from '../dictJob'
 import { isManual, isSample } from '../model'
 import OriginNote from '../OriginNote.vue'
@@ -88,29 +93,67 @@ const sendBlocked = computed<string | null>(() => {
   return null
 })
 
+/** «Enviar desde Eros» encendido en la API (EROS_SEND_ENABLED=on, llega por /status). */
+const sendEnabled = computed(() => adminStatus.value?.erosSend === true)
+
+/** Un envío se cortó y no se sabe si salió: el texto del servidor, hasta que se resuelva. */
+const unknownOutcome = ref<string | null>(null)
+
+const attachmentLine = computed(() => {
+  const m = work.measure
+  const what = m && m.pages === 1 ? t.apply.attachmentMeasured(Math.round(m.heightMm)) : t.apply.attachmentUnmeasured
+  return `${t.apply.attachment}: ${what}`
+})
+
 const sending = ref(false)
-async function send(): Promise<void> {
+async function send(retry = false): Promise<void> {
   const m = mail.value
-  if (!EROS_SEND_ENABLED || sending.value || sendBlocked.value || !validTo.value || !m) return
-  const ok = await requestConfirm({
-    title: t.apply.sendTitle,
-    message: t.apply.sendMessage,
-    impact: [`${t.apply.to}: ${m.to.trim()}`, `${t.apply.subject}: ${m.subject}`],
-    confirmLabel: t.apply.sendConfirm,
-  })
+  if (!sendEnabled.value || sending.value || sendBlocked.value || !validTo.value || !m) return
+  const ok = await requestConfirm(retry
+    ? {
+        title: t.apply.retryTitle,
+        message: t.apply.retryMessage,
+        impact: [`${t.apply.to}: ${m.to.trim()}`, attachmentLine.value],
+        confirmLabel: t.apply.retryConfirm,
+        destructive: true,
+      }
+    : {
+        title: t.apply.sendTitle,
+        message: t.apply.sendMessage,
+        impact: [`${t.apply.to}: ${m.to.trim()}`, `${t.apply.subject}: ${m.subject}`, attachmentLine.value],
+        confirmLabel: t.apply.sendConfirm,
+      })
   if (!ok) return
   sending.value = true
   try {
-    const result = await hunterApi.applyEmail(props.job, { to_email: m.to.trim(), subject: m.subject, body: m.body })
+    const result = await hunterApi.applyEmail(props.job, { to_email: m.to.trim(), subject: m.subject, body: m.body, force_retry: retry })
     // Eros puede responder 200 sin haber despachado nada: entonces la vacante no se marca postulada.
     if (!result.ok) {
       toast(`${t.apply.sendFailed} ${t.apply.notDispatched}`, { tone: 'error' })
       return
     }
+    unknownOutcome.value = null
     replaceJob({ ...props.job, status: 'applied' })
-    toast(t.apply.sent(result.dispatched_to ?? m.to.trim()))
+    const to = result.dispatched_to ?? m.to.trim()
+    toast(result.cv ? t.apply.sentWith(to, result.cv.filename) : t.apply.sent(to))
+    if (result.warning) toast(result.warning, { tone: 'error' })
   }
   catch (err) {
+    if (isCvExpired(err)) {
+      // El CV rearmado se revisa en la etapa CV antes de mandarlo: no se envía solo.
+      try {
+        await refreshCv(props.job)
+        toast(t.apply.cvRefreshed, { tone: 'error' })
+      }
+      catch (again) {
+        toast(failureText(again, t.apply.sendFailed), { tone: 'error' })
+      }
+      return
+    }
+    if (err instanceof RequestError && err.code === 'send_outcome_unknown') {
+      unknownOutcome.value = err.message
+      return
+    }
     toast(failureText(err, t.apply.sendFailed), { tone: 'error' })
   }
   finally {
@@ -124,6 +167,7 @@ async function markApplied(): Promise<void> {
   marking.value = true
   try {
     await changeStatus(props.job, 'applied')
+    unknownOutcome.value = null
     toast(t.apply.marked)
   }
   catch (err) {
@@ -156,19 +200,36 @@ async function markApplied(): Promise<void> {
           <TextArea v-model="mail.body" :rows="8" />
         </Field>
 
+        <section v-if="sendEnabled && unknownOutcome && !applied" class="grid gap-3 border-t border-rule pt-7" role="alert" aria-labelledby="envio-incierto">
+          <h3 id="envio-incierto" class="m-0 flex items-center gap-2 text-body font-semibold text-ink">
+            <StatusDot tone="wip" :label="t.apply.unknownTitle" strong />
+          </h3>
+          <p class="m-0 text-body text-dim">
+            {{ unknownOutcome }} {{ t.apply.unknownHint }}
+          </p>
+          <div class="flex flex-wrap items-center gap-2">
+            <Button variant="primary" :loading="marking" :disabled="!canChange(job)" @click="markApplied">
+              {{ t.apply.unknownSent }}
+            </Button>
+            <Button :loading="sending" :loading-label="t.apply.unknownRetry" :disabled="!!sendBlocked" @click="send(true)">
+              {{ t.apply.unknownRetry }}
+            </Button>
+          </div>
+        </section>
+
         <div class="grid gap-3 border-t border-rule pt-7">
           <div class="flex flex-wrap items-center gap-2">
             <Button variant="primary" :href="gmailUrl" external :disabled="!gmailUrl" :aria-describedby="gmailUrl ? undefined : 'postular-motivo'">
               {{ t.apply.gmail }}
             </Button>
             <Button
-              v-if="EROS_SEND_ENABLED"
+              v-if="sendEnabled && !unknownOutcome"
               :loading="sending"
               :loading-label="t.apply.send"
               :aria-disabled="sendBlocked || !validTo || sending ? 'true' : undefined"
               :aria-describedby="sendBlocked ? 'enviar-motivo' : !validTo ? 'postular-motivo' : undefined"
               :class="sendBlocked || !validTo ? 'opacity-45' : ''"
-              @click="send"
+              @click="send()"
             >
               {{ t.apply.send }}
             </Button>
@@ -187,7 +248,7 @@ async function markApplied(): Promise<void> {
           <p v-if="!gmailUrl" id="postular-motivo" class="m-0 text-label text-faint">
             {{ t.apply.toMissing }}
           </p>
-          <p v-if="EROS_SEND_ENABLED && sendBlocked" id="enviar-motivo" class="m-0 text-label text-faint">
+          <p v-if="sendEnabled && sendBlocked" id="enviar-motivo" class="m-0 text-label text-faint">
             {{ sendBlocked }}
           </p>
           <p v-if="!applied && !canChange(job)" id="marcar-motivo" class="m-0 text-label text-faint">

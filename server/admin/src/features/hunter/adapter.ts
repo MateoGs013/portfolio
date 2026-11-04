@@ -4,6 +4,7 @@
  * cuerpo: así anda con Eros caído y con las vacantes pegadas a mano.
  */
 import type {
+  ApplyEmailInput,
   ApplyEmailResult,
   ApplyPreview,
   BatchEvaluation,
@@ -58,8 +59,9 @@ export const hunterApi = {
   applyPreview: (job: HunterJob) => api.post<ApplyPreview & { _source?: string }>(path(job.id, '/apply-preview'), jobInput(job)),
   findEmail: (job: HunterJob) => api.post<FoundEmail & { _source?: string }>(path(job.id, '/find-email'), jobInput(job)),
   setContact: (job: HunterJob, email: string | null) => api.patch<JobChange>(path(job.id, '/contact-email'), { contact_email: email }),
-  applyEmail: (job: HunterJob, mail: { to_email: string, subject: string, body: string }) =>
-    api.post<ApplyEmailResult>(path(job.id, '/apply-email'), { ...mail, channel: 'n8n', confirmed: true }),
+  /** El CV no viaja: la API imprime el de la etapa CV (su caché) y se lo da a Eros. */
+  applyEmail: (job: HunterJob, mail: ApplyEmailInput) =>
+    api.post<ApplyEmailResult>(path(job.id, '/apply-email'), { ...mail, channel: 'n8n' }),
 }
 
 /** Eros no respondió (o rechazó la clave): la cola se lee de la sesión y las escrituras no corren. */

@@ -2,7 +2,7 @@
 /**
  * Corre un comando contra una API del admin propia y descartable: nunca contra la base de trabajo.
  *
- *   node scripts/admin-run.mjs [--eros-mock] [--demo] [--web] -- <comando…>
+ *   node scripts/admin-run.mjs [--eros-mock] [--demo] [--send] [--web] -- <comando…>
  *
  * 1. Copia la base (scripts/admin-db.mjs) a portfolio_admin_<x> y le aplica las migraciones pendientes.
  * 2. Levanta la API en un puerto libre entre 3940 y 3990 con un ADMIN_TOKEN al azar (no se imprime),
@@ -10,6 +10,7 @@
  *    el artículo de los lunes no se pide solo.
  *    --eros-mock  arranca tests/admin/eros-mock.ts en otro puerto libre y apunta HUNTER_API_URL ahí.
  *    --demo       suma EROS_DEMO=1 (la muestra de vacantes de la API de pruebas).
+ *    --send       suma EROS_SEND_ENABLED=on («Enviar desde Eros» encendido; con --eros-mock, nunca un correo real).
  *    --web        compila Nuxt con NUXT_PUBLIC_API_BASE a esa API y lo sirve en otro puerto (ADMIN_WEB_URL).
  * 3. Corre el comando con ADMIN_API_URL (origen de la API, sin /api), PW_ADMIN_TOKEN y ADMIN_DATABASE_URL.
  * 4. Al terminar, bien o mal, apaga todo y borra la copia. Sale con el código del comando.
@@ -28,11 +29,11 @@ const command = split === -1 ? [] : argv.slice(split + 1)
 const shell = process.platform === 'win32'
 
 if (!command.length) {
-  console.error('Uso: node scripts/admin-run.mjs [--eros-mock] [--demo] [--web] -- <comando…>')
+  console.error('Uso: node scripts/admin-run.mjs [--eros-mock] [--demo] [--send] [--web] -- <comando…>')
   process.exit(2)
 }
 for (const flag of flags) {
-  if (!['--eros-mock', '--demo', '--web'].includes(flag)) {
+  if (!['--eros-mock', '--demo', '--send', '--web'].includes(flag)) {
     console.error(`admin-run: opción desconocida ${flag}`)
     process.exit(2)
   }
@@ -171,6 +172,7 @@ try {
     ARTICLES_WEEKLY: 'off',
     CORS_ORIGIN: api,
     ...(flags.has('--demo') ? { EROS_DEMO: '1' } : {}),
+    EROS_SEND_ENABLED: flags.has('--send') ? 'on' : 'off',
   }
   const apiChild = start('api', 'pnpm', ['exec', 'tsx', 'server/src/index.ts'], apiEnv)
   await ready(`${api}/api/live`, apiChild, 60)
