@@ -58,7 +58,7 @@ const RETRY_DELAY_MS = 400
 /** El peor caso que se espera de una subida (unos 400 kbps): con menos, el corte avisa que no llegó. */
 const UPLOAD_BYTES_PER_SECOND = 50_000
 /** Rutas que esperan a Eros: el agente puede tardar en recorrer portales o redactar. */
-const EROS_PREFIXES = ['/hunter', '/content', '/radar']
+const EROS_PREFIXES = ['/hunter', '/radar', '/articles/generate']
 
 /** Escuchá 'write' para invalidar lo que dependa de los datos (CustomEvent<WriteEventDetail>). */
 export const apiEvents = new EventTarget()

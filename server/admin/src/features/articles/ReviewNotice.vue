@@ -1,7 +1,8 @@
 <script setup lang="ts">
 /**
- * El aviso de un borrador que armó «Publicar en el blog» (Búsqueda laboral · Publicaciones): qué
- * revisar antes de publicarlo. Se cierra con «Entendido» y no vuelve mientras dure el editor.
+ * El aviso de un artículo recién escrito por Eros (?origen=eros): ya está publicado en los dos
+ * idiomas y lo que se cambie se publica al guardar. Se cierra con «Entendido» y no vuelve mientras
+ * dure el editor.
  */
 import Button from '../../ui/Button.vue'
 import { articles } from './dict'
@@ -15,7 +16,7 @@ const t = articles.review
   <section :aria-label="t.title" class="mb-10 grid animate-enter gap-3 border-y border-rule py-5">
     <div class="grid gap-1">
       <h2 class="m-0 flex items-center gap-2.5 text-row text-ink">
-        <span class="size-1.5 shrink-0 rounded-full bg-wip" aria-hidden="true" />
+        <span class="size-1.5 shrink-0 rounded-full bg-ok" aria-hidden="true" />
         {{ t.title }}
       </h2>
       <p class="m-0 max-w-[68ch] text-body text-dim">

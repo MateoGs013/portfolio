@@ -84,8 +84,51 @@ export const articles = {
     unarchived: 'Artículo de vuelta en borrador',
   },
   review: {
-    title: 'Llegó desde Publicaciones: revisalo antes de publicar',
-    text: 'Eros armó este borrador con el texto de la publicación. Revisá el título, la bajada, la obra y las tecnologías, y escribí el inglés: el sitio no lo muestra hasta que lo publiques.',
+    title: 'Lo escribió Eros y ya está publicado',
+    text: 'Eros lo escribió en español y en inglés, y se publicó solo: ya se lee en el sitio. Si cambiás algo, se publica al guardar.',
     dismiss: 'Entendido',
+  },
+} as const
+
+const two = (n: number) => String(n).padStart(2, '0')
+
+/** «Pedir un artículo a Eros»: el diálogo, lo que tarda, lo que pasó y la línea del horario semanal. */
+export const asked = {
+  action: 'Pedir un artículo a Eros',
+  title: 'Pedir un artículo a Eros',
+  description: 'Eros lo escribe en español y en inglés y se publica solo en el sitio. Todo es opcional: sin tema, elige uno que no repita lo publicado.',
+  trendTitle: 'Escribir artículo desde esta tendencia',
+  trendDescription: (title: string) => `Eros escribe un artículo a partir de «${title}», en español y en inglés, y se publica solo en el sitio.`,
+  topic: 'Tema',
+  topicHint: 'De qué querés que hable. Si lo dejás vacío, Eros elige uno.',
+  project: 'Obra',
+  projectHint: 'Si querés que cuente una obra tuya.',
+  projectNone: 'Ninguna en particular',
+  optional: 'opcional',
+  submit: 'Pedir el artículo',
+  submitTrend: 'Escribir el artículo',
+  sending: 'Pidiendo…',
+  cancel: 'Cancelar',
+  writing: 'Eros está escribiendo…',
+  writingHint: 'Suele tardar uno o dos minutos. Podés cerrar esto: cuando lo publique, te avisa.',
+  elapsed: (seconds: number) => `Lleva ${Math.floor(seconds / 60)}:${two(seconds % 60)}`,
+  background: 'Seguir en segundo plano',
+  failedTitle: 'Eros no publicó el artículo',
+  failedFallback: 'No se sabe por qué: probá de nuevo en un momento.',
+  failedToast: (why: string) => `Eros no publicó el artículo. ${why}`,
+  failedRequest: 'No se pidió el artículo.',
+  retry: 'Probar de nuevo',
+  close: 'Cerrar',
+  published: (title: string) => `Eros publicó «${title}»: ya está en el sitio.`,
+  open: 'Abrir',
+  weekly: {
+    on: (next: string) => `Eros publica uno cada lunes a las 9:00 · próximo: ${next}`,
+    off: 'La publicación semanal está apagada',
+  },
+  last: {
+    running: 'Eros está escribiendo uno ahora.',
+    done: (when: string) => `El último, del ${when}:`,
+    gone: (when: string) => `El último, del ${when}, ya no está en Artículos.`,
+    failed: (when: string, why: string) => `El último pedido, del ${when}, falló. ${why}`,
   },
 } as const

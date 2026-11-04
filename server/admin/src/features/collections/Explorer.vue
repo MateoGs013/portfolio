@@ -136,6 +136,8 @@ if (props.model.routes.create) onShortcut('new', create)
     <p v-if="lead" class="mt-3.5 mb-0 max-w-[60ch] animate-rise text-lead text-dim stagger [--i:2]">
       {{ lead }}
     </p>
+    <!-- Una línea más de contexto bajo la bajada (Artículos: el horario de Eros). -->
+    <slot name="intro" />
 
     <div class="mt-8 flex max-w-[1080px] flex-wrap items-end justify-between gap-x-8 gap-y-5">
       <div v-if="filters.length > 1" role="group" :aria-label="t.filters" class="flex flex-wrap gap-x-5 gap-y-2">

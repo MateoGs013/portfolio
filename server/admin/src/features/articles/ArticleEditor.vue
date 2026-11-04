@@ -3,7 +3,8 @@
  * El editor de un artículo (#/articulos/:id y #/articulos/nuevo), en dos secciones: Lo esencial y
  * Texto. En el encabezado, la publicación («Mostrar en el sitio» pone PUBLISHED y la fecha desde la que
  * se ve) con su checklist, y en «Más acciones», Archivar o Sacar del archivo. Uno nuevo nace borrador:
- * la publicación aparece después de crearlo. Si llegó desde «Publicar en el blog», avisa qué revisar.
+ * la publicación aparece después de crearlo. Si llega recién escrito por Eros (?origen=eros), avisa que
+ * ya está publicado.
  */
 import { computed, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
@@ -75,23 +76,15 @@ async function onAction(id: string): Promise<void> {
   else form.value.status = before
 }
 
-/* ── Llegó desde Publicaciones ──────────────────────────── */
+/* ── Recién escrito por Eros ────────────────────────────── */
 
 const route = useRoute()
-const historyBack = () => (window.history.state as { back?: unknown } | null)?.back
-const cameFromPosts = () => {
-  const back = historyBack()
-  return typeof back === 'string' && back.startsWith('/busqueda/publicaciones')
-}
-/** Se recalcula con cada artículo: el editor se reusa al pasar de uno a otro. */
-const fromHistory = ref(cameFromPosts())
 const reviewDismissed = ref(false)
+// El editor se reusa al pasar de un artículo a otro: el aviso vuelve a contar para el nuevo.
 watch(() => props.id, () => {
-  fromHistory.value = cameFromPosts()
   reviewDismissed.value = false
 })
-const fromPosts = computed(() => route.query['origen'] === 'eros' || fromHistory.value)
-const review = computed(() => fromPosts.value && !reviewDismissed.value && record.value?.status === 'DRAFT')
+const review = computed(() => route.query['origen'] === 'eros' && !reviewDismissed.value && record.value?.status === 'PUBLISHED')
 </script>
 
 <template>
