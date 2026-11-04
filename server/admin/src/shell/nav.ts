@@ -38,7 +38,6 @@ const n = shell.nav
 
 export const SEARCH_TABS: readonly NavChild[] = [
   { label: n.jobs, to: '/busqueda/vacantes' },
-  { label: n.posts, to: '/busqueda/publicaciones' },
   { label: n.trends, to: '/busqueda/tendencias' },
 ]
 

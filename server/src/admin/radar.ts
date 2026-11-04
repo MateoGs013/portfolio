@@ -1,24 +1,14 @@
 /**
  * /api/admin/radar/*: las tendencias que detecta el radar de Eros (notas de terceros), con el
- * contrato de erosContentContract.ts. Sin Eros, la lista responde 503 { offline: true } y buscar,
- * cambiar el estado o crear una publicación fallan diciendo qué no pasó. Con EROS_DEMO=1 la lista
- * sale de la muestra, sin dirección, fecha ni afinidad, y nunca se modifica.
+ * contrato de erosRadarContract.ts. Sin Eros, la lista responde 503 { offline: true } y buscar o
+ * cambiar el estado fallan diciendo qué no pasó. Con EROS_DEMO=1 la lista sale de la muestra, sin
+ * dirección, fecha ni afinidad, y nunca se modifica. Una tendencia se vuelve artículo con
+ * POST /articles/generate { trendId } (articleRuns.ts).
  */
 import { Router, type Request, type Response } from 'express'
-import { isTrendStatus, trendStatusLabels, type TrendChange, type TrendPost } from '../shared/contentContracts.js'
-import {
-  erosTrendBody,
-  generateRequest,
-  invalid,
-  isErrorBody,
-  normalizeOnePost,
-  normalizeOneTrend,
-  normalizeTrends,
-  normalizeTrendScan,
-  sendContentFailure,
-  sendUnreadable,
-} from './erosContentContract.js'
-import { demoTrends, erosDemo, findDemoTrend, isDemoId, refuseDemo, sendDemo } from './fallbackContentData.js'
+import { isTrendStatus, trendStatusLabels, type TrendChange } from '../shared/radarContracts.js'
+import { invalid, normalizeOneTrend, normalizeTrends, normalizeTrendScan, sendRadarFailure, sendUnreadable } from './erosRadarContract.js'
+import { demoTrends, erosDemo, findDemoTrend, isDemoId, refuseDemo, sendDemo } from './fallbackRadarData.js'
 import { erosIdParam, forwardToEros, getParamId } from './proxy.js'
 
 export const radarRouter = Router()
@@ -45,7 +35,7 @@ radarRouter.get('/trends', async (req: Request, res: Response) => {
   }
   // La muestra no tiene afinidad: con un mínimo pedido no hay ninguna que lo cumpla.
   if (erosDemo()) sendDemo(res, query.has('min_score') ? [] : demoTrends().filter(t => !status || t.status === status))
-  else sendContentFailure(res, result, 'trend')
+  else sendRadarFailure(res, result)
 })
 
 /** POST /api/admin/radar/scan[?limit=] → TrendScan (solo Eros). */
@@ -54,7 +44,7 @@ radarRouter.post('/scan', async (req: Request, res: Response) => {
   const limit = Number.isFinite(rawLimit) && rawLimit > 0 ? Math.min(rawLimit, 100) : 15
   const result = await forwardToEros(`api/radar/scan?limit=${limit}`, { method: 'POST' }, 60000)
   if (result.ok) res.json(normalizeTrendScan(result.data))
-  else sendContentFailure(res, result, 'trend', 'No se buscaron tendencias nuevas.')
+  else sendRadarFailure(res, result, 'No se buscaron tendencias nuevas.')
 })
 
 /** GET /api/admin/radar/trends/:id → Trend. */
@@ -70,7 +60,7 @@ radarRouter.get('/trends/:id', async (req: Request, res: Response) => {
   const trend = result.ok ? normalizeOneTrend(result.data) : null
   if (trend) res.json(trend)
   else if (result.ok) sendUnreadable(res, 'Recargá la lista.')
-  else sendContentFailure(res, result, 'trend')
+  else sendRadarFailure(res, result)
 })
 
 /** PATCH /api/admin/radar/trends/:id/status { status } → TrendChange (solo Eros). */
@@ -84,30 +74,5 @@ radarRouter.patch('/trends/:id/status', async (req: Request, res: Response) => {
   if (refuseDemo(res, id)) return
   const result = await forwardToEros(trendPath(id, '/status'), json('PATCH', { status }))
   if (result.ok) res.json({ ok: true, trend: normalizeOneTrend(result.data) } satisfies TrendChange)
-  else sendContentFailure(res, result, 'trend', 'El estado no cambió.')
-})
-
-/**
- * POST /api/admin/radar/trends/:id/generate { pillar?, custom_angle?, project_slug?, key_points? } →
- * TrendPost: Eros escribe una publicación a partir de la tendencia (solo Eros). A Eros le llega
- * `{ pillar, project_slug?, custom_angle? }` (erosTrendBody): el enfoque siempre, el de arquitectura si
- * no se eligió ninguno.
- */
-radarRouter.post('/trends/:id/generate', async (req: Request, res: Response) => {
-  const id = getParamId(req)
-  // El tema es la tendencia: lo que valida generateRequest es el resto (enfoque, obra, puntos).
-  const request = generateRequest({ ...(req.body as Record<string, unknown> | undefined), topic: id })
-  if (isErrorBody(request)) {
-    res.status(400).json(request)
-    return
-  }
-  if (refuseDemo(res, id)) return
-  const result = await forwardToEros(trendPath(id, '/generate'), json('POST', erosTrendBody(request)), 60000)
-  if (!result.ok) {
-    sendContentFailure(res, result, 'trend', 'No se creó la publicación.')
-    return
-  }
-  const post = normalizeOnePost(result.data)
-  if (post) res.json({ ok: true, trend_id: id, post } satisfies TrendPost)
-  else sendUnreadable(res, 'Recargá Publicaciones: puede que se haya creado igual.')
+  else sendRadarFailure(res, result, 'El estado no cambió.')
 })

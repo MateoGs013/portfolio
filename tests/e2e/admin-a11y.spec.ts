@@ -6,7 +6,7 @@ import { ADMIN, allViews, horizontalOverflow, mod, noSeriousAxe, openFresh, pale
  * críticas en cada vista, editor y etapa; sin scroll horizontal de 390 a 1920 px; con movimiento
  * reducido no corre ninguna transición; ningún texto por debajo de 12 px; ninguna mayúscula forzada
  * fuera de la hoja del CV; y la consola sin violaciones de CSP en ninguna vista. Con la muestra de
- * EROS_DEMO, para que Búsqueda laboral tenga vacantes, publicaciones y tendencias que abrir:
+ * EROS_DEMO, para que Búsqueda laboral tenga vacantes y tendencias que abrir:
  *
  * admin-run: --demo
  *
@@ -42,7 +42,7 @@ test.describe('cada vista y editor', () => {
 
   test('axe sin serias ni críticas, letra de 12 px o más, sin mayúsculas forzadas ni violaciones de CSP', async ({ page, request }) => {
     const views = await allViews(request)
-    expect(views.length, 'con --demo entran las etapas, la publicación y la tendencia').toBeGreaterThanOrEqual(34)
+    expect(views.length, 'con --demo entran las etapas y la tendencia').toBeGreaterThanOrEqual(32)
     const violations = await watchCsp(page)
     await signedIn(page)
     const problems: string[] = []

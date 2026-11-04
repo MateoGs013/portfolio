@@ -32,10 +32,10 @@ if (process.env['NODE_ENV'] === 'production') {
 }
 
 /**
- * Qué abre un ticket: la hoja del CV de una vacante (`cv`), la hoja del CV base (`cv-base`) o un
- * carrusel. El alcance va dentro de la firma: un ticket de la vacante «base» no abre el CV base.
+ * Qué abre un ticket: la hoja del CV de una vacante (`cv`) o la hoja del CV base (`cv-base`). El
+ * alcance va dentro de la firma: un ticket de la vacante «base» no abre el CV base.
  */
-export type TicketScope = 'cv' | 'cv-base' | 'carousel'
+export type TicketScope = 'cv' | 'cv-base'
 
 const TICKET_TTL_MS = 3600_000
 
@@ -67,8 +67,6 @@ export function validateTicket(ticket: unknown, scope: TicketScope, id: string):
 
 export const createCvTicket = (id: string) => createTicket('cv', id)
 export const validateCvTicket = (ticket: unknown, id: string) => validateTicket(ticket, 'cv', id)
-export const createCarouselTicket = (id: string) => createTicket('carousel', id)
-export const validateCarouselTicket = (ticket: unknown, id: string) => validateTicket(ticket, 'carousel', id)
 
 /** Verifica si una petición cuenta con autorización Bearer válida */
 export function isAdminAuthorized(req: Request): boolean {
@@ -87,7 +85,7 @@ export function isAdminAuthorized(req: Request): boolean {
  * Las hojas que se abren en otra pestaña o en un iframe (sin el header Authorization): con ticket
  * pasan y su ruta valida el ticket para ese id.
  */
-const TICKET_ROUTES = [/^\/hunter\/cv\/[^/]+\/(html|txt)$/, /^\/hunter\/cv-base\/html$/, /^\/content\/carousel\/[^/]+\/html$/]
+const TICKET_ROUTES = [/^\/hunter\/cv\/[^/]+\/(html|txt)$/, /^\/hunter\/cv-base\/html$/]
 
 /** Bearer token fijo desde .env. Sin ADMIN_TOKEN válido el admin queda apagado.
  * No se acepta ADMIN_TOKEN por query string (?token=). */

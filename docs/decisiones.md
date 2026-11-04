@@ -6,6 +6,18 @@ Formato: decisión · alternativa descartada · por qué.
 
 ---
 
+## Artículos de Eros (4-nov-2026)
+
+**Se dejan LinkedIn y X: Eros escribe artículos que se publican solos.**
+*Descartado:* Publicaciones (LinkedIn, el hilo de X, Dev.to y el carrusel), con su revisión en el admin, el despacho por n8n y «Publicar en el blog» como borrador.
+*Por qué:* Mateo dejó de publicar en redes. Lo que queda es el blog del sitio: Eros escribe el artículo entero en español y en inglés y la API lo publica sin pasar por un borrador. Lo que se publica se valida igual (los dos idiomas, los topes del artículo, sin tablas ni HTML) y cada pedido queda anotado (`ArticleRun`) con su resultado o su motivo, a la vista en Artículos. Las Tendencias siguen: una tendencia ahora se vuelve artículo. La pantalla, sus rutas y el alcance `carousel` de los tickets se retiraron (`docs/admin.md` §9, «Retirados»).
+
+**El horario de los lunes vive en la API, no en n8n.**
+*Descartado:* un cron de n8n que llame al admin o a Eros los lunes.
+*Por qué:* para pedirle el artículo a la API, n8n necesitaría la clave del admin (o Eros, una clave para escribir en la base). Con el temporizador adentro de la API (`server/src/admin/articleSchedule.ts`, lunes 9:00 de Buenos Aires, cada 10 minutos mira si ya toca) n8n no necesita ninguna clave del portfolio, el pedido semanal se anota igual que los del admin y, si la API estuvo apagada el lunes, lo pide al volver. Se enciende solo en producción con Eros configurado; `ARTICLES_WEEKLY=off|on` lo fuerza.
+
+---
+
 ## Rediseño del admin (nov-2026)
 
 El plan está en `docs/rediseno-admin/plan.md` y la dirección aprobada en `docs/rediseno-admin/demo.html` (la capa «Dirección 2»).
@@ -23,7 +35,7 @@ Tema oscuro en `:root[data-theme=dark]`: `--bg` #0b0b0c, `--panel` #111113, `--s
 
 **Respuestas de Mateo a las seis preguntas del plan (31-oct-2026).**
 1. Build: Vite + `.vue` + TypeScript, compilado en la imagen del API (`Dockerfile.api` corre `pnpm build:admin`). *Descartado:* el plan B sin build.
-2. Publicaciones y Tendencias se conservan como pestañas de Búsqueda laboral, sin datos inventados: sin Eros dicen que no hay datos; la muestra existe solo con `EROS_DEMO=1` en pruebas.
+2. Publicaciones y Tendencias se conservan como pestañas de Búsqueda laboral, sin datos inventados: sin Eros dicen que no hay datos; la muestra existe solo con `EROS_DEMO=1` en pruebas. (Publicaciones se retiró el 4-nov-2026: ver «Artículos de Eros».)
 3. Job Hunter conserva todo menos «Borrar todas las vacantes» (`DELETE /hunter/jobs`), que se retira: un clic borraba la cola entera de Eros y «Limpiar la cola» ya cubre lo útil, con confirmación. Escanear desde el admin («Buscar vacantes nuevas») es requisito; la búsqueda por afinidad es un interruptor y la vectorización corre sola después de cada escaneo.
 4. El resumen que propone Eros entra al CV solo como propuesta al lado, aceptable con un clic; por defecto queda el de la base. *Descartado:* usar el CV de Eros con su resumen tal como llegaba, que metía en la hoja texto que nadie había revisado.
 5. Slugs fijos, con «Cambiar dirección» explícito y su aviso. *Descartado:* el slug que seguía al título (cambiaba la URL pública al corregir una palabra) y una tabla de alias, que pedía un endpoint público nuevo y una regla de redirección más para mantener.

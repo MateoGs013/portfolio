@@ -5,7 +5,7 @@
  * fuentes y al terminar un aviso cuenta lo que encontró), filtros por estado (?filtro=) y filas
  * grandes. Sin Eros la lista dice por qué está vacía: nada inventado.
  */
-import type { Trend } from '@shared/contentContracts'
+import type { Trend } from '@shared/radarContracts'
 import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { markTravel } from '../../shell/transition'
@@ -16,10 +16,10 @@ import EmptyState from '../../ui/EmptyState.vue'
 import ErrorState from '../../ui/ErrorState.vue'
 import Skeleton from '../../ui/Skeleton.vue'
 import Spinner from '../../ui/Spinner.vue'
-import ErosNotice from '../content/ErosNotice.vue'
-import ListFilters from '../content/ListFilters.vue'
 import { failureText } from '../hunter/adapter'
 import { radarApi } from './api'
+import ErosNotice from './ErosNotice.vue'
+import ListFilters from './ListFilters.vue'
 import { radar } from './dict'
 import { DEFAULT_TREND_FILTER, isTrendFilter, TREND_FILTERS } from './model'
 import { trends } from './store'

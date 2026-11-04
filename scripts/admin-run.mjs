@@ -6,7 +6,8 @@
  *
  * 1. Copia la base (scripts/admin-db.mjs) a portfolio_admin_<x> y le aplica las migraciones pendientes.
  * 2. Levanta la API en un puerto libre entre 3940 y 3990 con un ADMIN_TOKEN al azar (no se imprime),
- *    HUNTER_API_URL=http://127.0.0.1:9 y EROS_API_KEY=offline: Eros real nunca.
+ *    HUNTER_API_URL=http://127.0.0.1:9 y EROS_API_KEY=offline: Eros real nunca. ARTICLES_WEEKLY=off:
+ *    el artículo de los lunes no se pide solo.
  *    --eros-mock  arranca tests/admin/eros-mock.ts en otro puerto libre y apunta HUNTER_API_URL ahí.
  *    --demo       suma EROS_DEMO=1 (la muestra de vacantes de la API de pruebas).
  *    --web        compila Nuxt con NUXT_PUBLIC_API_BASE a esa API y lo sirve en otro puerto (ADMIN_WEB_URL).
@@ -166,6 +167,8 @@ try {
     ADMIN_TOKEN: token,
     HUNTER_API_URL: hunter,
     EROS_API_KEY: 'offline',
+    // El artículo de los lunes nunca corre en una prueba: pediría uno por su cuenta.
+    ARTICLES_WEEKLY: 'off',
     CORS_ORIGIN: api,
     ...(flags.has('--demo') ? { EROS_DEMO: '1' } : {}),
   }

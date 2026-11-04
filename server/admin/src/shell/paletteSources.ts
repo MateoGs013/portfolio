@@ -60,6 +60,7 @@ function actionItems(router: Router): PaletteItem[] {
     { id: 'new-project', label: p.newProject, to: '/obras/nueva' },
     { id: 'new-experience', label: p.newExperience, to: '/trayectoria/nueva' },
     { id: 'new-article', label: p.newArticle, to: '/articulos/nuevo' },
+    { id: 'ask-article', label: p.askArticle, keywords: 'eros escribir pedir articulo', to: { path: '/articulos', query: { pedir: '1' } } },
     { id: 'paste-job', label: p.pasteJob, to: { path: '/busqueda/vacantes', query: { pegar: '1' } } },
     { id: 'view-site', label: p.viewSite, run: () => void window.open(sitePath(router.currentRoute.value), '_blank', 'noopener') },
     {

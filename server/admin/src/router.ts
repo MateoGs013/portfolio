@@ -73,7 +73,6 @@ const routes: RouteRecordRaw[] = [
     children: [
       { path: '', redirect: '/busqueda/vacantes' },
       { path: `vacantes/:id?/:etapa(${JOB_STAGES})?`, name: 'vacantes', component: () => import('./features/hunter/Index.vue'), meta: { section: n.jobs } },
-      { path: 'publicaciones/:id?', name: 'publicaciones', component: () => import('./features/content/Index.vue'), meta: { section: n.posts } },
       { path: 'tendencias/:id?', name: 'tendencias', component: () => import('./features/radar/Index.vue'), meta: { section: n.trends } },
     ],
   },

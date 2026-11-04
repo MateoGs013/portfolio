@@ -1,6 +1,6 @@
 <script setup lang="ts">
 /**
- * Búsqueda laboral: Vacantes, Publicaciones y Tendencias como pestañas chicas en el margen de arriba
+ * Búsqueda laboral: Vacantes y Tendencias como pestañas chicas en el margen de arriba
  * de cada lista. Desde 768 px flotan en ese margen, así el título de la pantalla queda a la misma
  * altura que en el resto del admin; en el celular van en el flujo. Cada una es su propia dirección
  * (la ruta es el estado), así que son enlaces con aria-current, no tabs de panel. El subrayado en

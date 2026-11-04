@@ -71,4 +71,24 @@ export const Article = {
   project: relation('Project', 'Obra', 'La obra de la que habla, si la hay.', { surfaces: ['articles', 'case'] }),
   projectId: foreignKey('Obra'),
   translations: relation('ArticleTranslation', 'Inglés', 'Título, bajada y texto en inglés.', { editable: false }),
+  runs: relation('ArticleRun', 'Pedidos a Eros', 'Los pedidos a Eros que publicaron este artículo, si salió de uno.', { editable: false }),
+} satisfies ModelFields
+
+/**
+ * Un pedido de artículo a Eros (el de los lunes, uno del admin o uno desde una tendencia). Lo escribe
+ * el servidor: ningún formulario lo pide; Artículos muestra el último y su resultado.
+ */
+export const ArticleRun = {
+  id: system('Identificador', 'Lo asigna la base.'),
+  trigger: system('Origen', 'Quién lo pidió: el horario de los lunes, el admin o una tendencia.'),
+  status: system('Estado', 'Escribiendo, publicado o fallido.'),
+  topic: system('Tema', 'El tema que se le pidió a Eros, si se pidió uno.'),
+  projectSlug: system('Obra', 'La dirección de la obra de la que se pidió que hable, si se eligió una.'),
+  trendId: system('Tendencia', 'La tendencia del radar de la que salió, si salió de una.'),
+  error: system('Motivo del fallo', 'Qué pasó si no se publicó, en español.'),
+  errorCode: system('Código del fallo', 'El código que mandó Eros al fallar, si mandó uno.'),
+  article: relation('Article', 'Artículo', 'El artículo que se publicó.', { editable: false }),
+  articleId: foreignKey('Artículo'),
+  startedAt: system('Pedido el', 'Cuándo se le pidió a Eros.'),
+  finishedAt: system('Terminado el', 'Cuándo se publicó o falló.'),
 } satisfies ModelFields

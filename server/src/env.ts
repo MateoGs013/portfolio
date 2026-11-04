@@ -29,7 +29,5 @@ export const env = {
   databaseUrl: required('DATABASE_URL'),
   port: Number(process.env['PORT'] ?? process.env['API_PORT'] ?? 3001),
   corsOrigin: process.env['CORS_ORIGIN'] ?? 'http://localhost:3000,http://127.0.0.1:3000',
-  /** La usa content.ts para pedir el carrusel; proxy.ts la lee directo del entorno. */
-  erosApiKey: process.env['EROS_API_KEY'] ?? '',
 }
 
