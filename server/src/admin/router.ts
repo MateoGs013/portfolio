@@ -4,6 +4,7 @@
  */
 import { Router } from 'express'
 import { requireAdmin } from './auth.js'
+import { articleRunsRouter } from './articleRuns.js'
 import { articlesRouter } from './articles.js'
 import { forgetsLastGood } from './common.js'
 import { contentRouter } from './content.js'
@@ -20,10 +21,14 @@ import { radarRouter } from './radar.js'
 import { statusRouter } from './status.js'
 import { techsRouter } from './techs.js'
 
-/** Los módulos que escriben en la base: después de cada escritura buena se olvidan los respaldos. */
+/**
+ * Los módulos que escriben en la base: después de cada escritura buena se olvidan los respaldos. Los
+ * pedidos de artículos a Eros van antes que articles.ts (/articles/runs chocaría con /articles/:id);
+ * el artículo que publica Eros llega después de la respuesta y olvida los respaldos por su cuenta.
+ */
 const contentApi = Router()
 contentApi.use(forgetsLastGood)
-contentApi.use(metaRouter, projectsRouter, mediaRouter, experienceRouter, techsRouter, orgsRouter, articlesRouter, docsRouter)
+contentApi.use(metaRouter, projectsRouter, mediaRouter, experienceRouter, techsRouter, orgsRouter, articleRunsRouter, articlesRouter, docsRouter)
 
 export const adminApi = Router()
 adminApi.use((req, _res, next) => {

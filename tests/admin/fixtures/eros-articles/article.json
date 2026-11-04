@@ -1,0 +1,20 @@
+{
+  "ok": {
+    "topic": "Una sola forma de error en una API",
+    "project_slug": "la-rucula",
+    "trend_id": null,
+    "tags": ["vue", "Node.js", "postgresql", "inventada"],
+    "es": {
+      "title": "Una sola forma de error para toda la API",
+      "summary": "Cómo un formato de error único ordena el cliente, los formularios y los registros.",
+      "markdown": "## El problema\n\nCada ruta respondía sus errores a su manera, y el cliente tenía que adivinar.\n\n## La forma única\n\nTodas responden lo mismo:\n\n- un texto para quien lee\n- un código estable\n- la lista de campos que fallaron\n\n```ts\ninterface ErrorBody { error: string, code: string, errors: { path: string, message: string }[] }\nconst ejemplo = '<div>' // el HTML dentro del código no es marcado\n```\n\n> Un error que dice qué pasó y qué hacer vale más que diez códigos.\n\nEl `code` no cambia aunque cambie el texto, y **cada campo** queda marcado en el formulario. Más en [el sitio](https://mateogs.tech/articles)."
+    },
+    "en": {
+      "title": "One error shape for the whole API",
+      "summary": "How a single error format keeps the client, the forms and the logs in order.",
+      "markdown": "## The problem\n\nEvery route answered its errors its own way, and the client had to guess.\n\n## One shape\n\nAll of them answer the same:\n\n- a text for the reader\n- a stable code\n- the list of fields that failed\n\n```ts\ninterface ErrorBody { error: string, code: string, errors: { path: string, message: string }[] }\n```\n\n> An error that says what happened and what to do beats ten codes.\n\nThe `code` stays the same even when the text changes, and **every field** is marked in the form."
+    },
+    "model": "eros-mock"
+  },
+  "table": "## Comparación\n\n| Antes | Después |\n|---|---|\n| cada ruta | una forma |\n\nFin."
+}

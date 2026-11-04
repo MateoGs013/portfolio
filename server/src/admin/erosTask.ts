@@ -6,7 +6,7 @@
  * devuelve lo mismo que habría devuelto el Eros de antes.
  */
 import type { AdminErrorBody } from '../shared/adminContracts.js'
-import { forwardToEros, type ForwardResult } from './proxy.js'
+import { erosCode, forwardToEros, type ForwardResult } from './proxy.js'
 
 type Obj = Record<string, unknown>
 
@@ -23,9 +23,10 @@ export function erosTaskId(result: ForwardResult): string | null {
 
 const wait = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
 
-function failure(message: string, upstream: number): ForwardResult {
+/** `code` es el `error_code` de Eros en una tarea fallida (`llm_unavailable`…), si mandó uno. */
+function failure(message: string, upstream: number, code: string | null = null): ForwardResult {
   const body: AdminErrorBody & { offline: false } = { error: message, code: 'eros_error', errors: [], offline: false }
-  return { ok: false, status: 502, data: body, failure: { reason: 'server', upstream, message } }
+  return { ok: false, status: 502, data: body, failure: { reason: 'server', upstream, message, code } }
 }
 
 function stillWorking(seconds: number): ForwardResult {
@@ -55,7 +56,7 @@ export async function awaitErosTask(result: ForwardResult, started: number, budg
     if (task['status'] === 'done') return { ok: true, status: 200, data: task['result'] ?? {}, failure: null }
     if (task['status'] === 'failed') {
       const why = typeof task['error'] === 'string' ? task['error'].replace(/\s+/g, ' ').trim().slice(0, 200) : ''
-      return failure(why ? `La tarea falló en Eros: «${why}».` : 'La tarea falló en Eros.', 500)
+      return failure(why ? `La tarea falló en Eros: «${why}».` : 'La tarea falló en Eros.', 500, erosCode(task))
     }
   }
 }

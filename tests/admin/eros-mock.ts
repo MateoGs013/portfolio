@@ -26,12 +26,17 @@
  *   (`approved_local` para las de `publishedLocally`);
  * - crear desde una tendencia falla como el real: 422 con `pillar: null` y 500 sin enfoque o con uno
  *   que no existe (Eros cae en un valor por defecto inválido);
+ * - pedir un artículo (POST /api/articles/generate) responde 202 y la tarea termina con el artículo de
+ *   fixtures/eros-articles/ en los dos idiomas, con el tema, la obra y la tendencia que se pidieron.
+ *   PUT /__articulo { modo } cambia cómo termina la próxima: `ok`, `falla` (la tarea falla con
+ *   `error_code: llm_unavailable`), `tabla` (el texto trae una tabla) o `lento` (sigue escribiendo
+ *   hasta el próximo PUT /__articulo, que la suelta). Con el Eros de antes la ruta no existe (404);
  * - `eros-mock-falla` responde 500 y `eros-mock-redirige` una redirección (que el admin no sigue);
  *   `/api/lento` tarda 1,5 s, para probar los cortes del proxy.
  *
  * Un id que no está en las fixtures da 404. GET /__requests devuelve los pedidos recibidos (método,
  * ruta y cuerpo) y DELETE /__requests los olvida: así una prueba comprueba qué le llegó y qué no.
- * Ninguna de las dos rutas de control (/__requests, /__antes) queda registrada.
+ * Ninguna de las rutas de control (/__requests, /__antes, /__articulo) queda registrada.
  */
 import { readFileSync } from 'node:fs'
 import { createServer, type IncomingMessage, type ServerResponse } from 'node:http'
@@ -51,6 +56,7 @@ const apply = fixture('apply')
 const posts = read('eros-content', 'posts')['data'] as Obj[]
 const trends = read('eros-content', 'trends')['trends'] as Obj[]
 const contentActions = read('eros-content', 'actions')
+const articles = read('eros-articles', 'article')
 
 const PILLARS = ['architecture', 'production_lessons', 'performance_optimization', 'ai_agent_ops', 'fullstack_engineering']
 const pillarMessage = "Input should be 'architecture', 'production_lessons', 'performance_optimization', 'ai_agent_ops' or 'fullstack_engineering'"
@@ -60,14 +66,23 @@ const requests: { method: string, path: string, body: Obj }[] = []
 /** true mientras responde como el Eros de antes de la auditoría (PUT /__antes). */
 let before = false
 
-/** Las tareas largas en curso: id → cuántas consultas faltan para que diga `done`, y su resultado. */
-const tasks = new Map<string, { pending: number, result: unknown }>()
+interface Task {
+  kind: string
+  /** Cuántas consultas faltan para que diga `done` (o `failed`). */
+  pending: number
+  result: unknown
+  /** Si termina fallando: el `error` y el `error_code` de Eros. */
+  failure?: { error: string, error_code: string }
+}
+
+/** Las tareas largas en curso, por id. */
+const tasks = new Map<string, Task>()
 let taskCount = 0
 
 /** El 202 del Eros de ahora: la tarea arranca y el resultado sale de GET /api/tasks/:id. */
-function accepted(kind: string, result: unknown, pending = 0): Reply {
+function accepted(kind: string, result: unknown, pending = 0, failure?: Task['failure']): Reply {
   const task_id = `${kind}_mock${++taskCount}`
-  tasks.set(task_id, { pending, result })
+  tasks.set(task_id, { kind, pending, result, failure })
   return { status: 202, body: { ok: true, task_id, kind, status: 'running', started_at: '2026-11-02T12:00:00+00:00', already_running: false, status_url: `/api/tasks/${task_id}` } }
 }
 
@@ -76,7 +91,34 @@ function taskStatus(id: string): Reply {
   if (!task) return { status: 404, body: { detail: 'Tarea no encontrada (puede que Eros se haya reiniciado).' } }
   const running = task.pending > 0
   if (running) task.pending -= 1
+  if (!running && task.failure) return ok({ task_id: id, status: 'failed', result: null, ...task.failure })
   return ok({ task_id: id, status: running ? 'running' : 'done', result: running ? null : task.result, error: null })
+}
+
+/** Cómo termina el próximo artículo (PUT /__articulo). */
+type ArticleMode = 'ok' | 'falla' | 'tabla' | 'lento'
+let articleMode: ArticleMode = 'ok'
+/** Una tarea `lento` no termina sola: sigue hasta que se suelta. */
+const HELD = 1_000_000
+
+/** El artículo de la fixture con lo que se pidió: tema, obra y tendencia. */
+function generatedArticle(body: Obj): Obj {
+  const base = articles['ok'] as Obj
+  const es = { ...(base['es'] as Obj) }
+  if (articleMode === 'tabla') es['markdown'] = articles['table']
+  return {
+    ...base,
+    es,
+    topic: typeof body['topic'] === 'string' ? body['topic'] : base['topic'],
+    project_slug: typeof body['project_slug'] === 'string' ? body['project_slug'] : base['project_slug'],
+    trend_id: typeof body['trend_id'] === 'string' ? body['trend_id'] : null,
+  }
+}
+
+function generateArticle(body: Obj): Reply {
+  if (before) return notFound
+  const failure = articleMode === 'falla' ? { error: 'El modelo de IA no está disponible.', error_code: 'llm_unavailable' } : undefined
+  return accepted('article', generatedArticle(body), articleMode === 'lento' ? HELD : 1, failure)
 }
 
 /** Un error del Eros de ahora: `{ detail, error_code }` con su código. */
@@ -167,6 +209,7 @@ const fixed: Record<string, (body: Obj) => Reply | Promise<Reply>> = {
   'POST /api/evaluate': () => (before ? ok(queue['evaluate']) : accepted('evaluate', queue['evaluate'])),
   'POST /api/jobs/semantic-search': body => ok({ data: jobs.map(job => ({ ...job, semantic_score: queue['semanticScore'] })), count: jobs.length, query: body['query'] }),
   'GET /api/lento': () => new Promise(resolve => setTimeout(() => resolve(ok({ ok: true })), 1500)),
+  'POST /api/articles/generate': generateArticle,
 }
 
 const generatedPost = (pillar: unknown, topic?: unknown): Obj => ({
@@ -263,6 +306,17 @@ const server = createServer(async (req, res) => {
     if (method === 'PUT') before = true
     if (method === 'DELETE') before = false
     send(res, ok({ before }))
+    return
+  }
+  if (path === '/__articulo') {
+    const body = await readBody(req)
+    const mode = body['modo']
+    if (method === 'PUT' && (mode === 'ok' || mode === 'falla' || mode === 'tabla' || mode === 'lento')) {
+      articleMode = mode
+      // Suelta los artículos que seguían escribiendo: terminan en la consulta siguiente.
+      for (const task of tasks.values()) if (task.kind === 'article' && task.pending === HELD) task.pending = 0
+    }
+    send(res, ok({ modo: articleMode }))
     return
   }
   if (path === '/') {

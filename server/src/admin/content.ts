@@ -20,7 +20,7 @@ import {
   type DispatchResult,
   type PostResult,
 } from '../shared/contentContracts.js'
-import { SLUG_MAX, slugify } from '../shared/slug.js'
+import { freeArticleSlug } from './articleRelations.js'
 import { contentCarouselRouter } from './contentCarousel.js'
 import {
   erosGenerateBody,
@@ -193,18 +193,6 @@ function lead(markdown: string): string {
   return end === -1 ? flat : flat.slice(0, end + 1)
 }
 
-/** La dirección del título; si ya la usa otro artículo, la primera libre con -2, -3… (nunca al azar). */
-async function freeSlug(title: string): Promise<string> {
-  const base = slugify(title) || 'articulo'
-  const stem = base.slice(0, SLUG_MAX - 4).replace(/-+$/, '')
-  const taken = new Set((await db.article.findMany({ where: { slug: { startsWith: stem } }, select: { slug: true } })).map(r => r.slug))
-  if (!taken.has(base)) return base
-  for (let n = 2; ; n++) {
-    const candidate = `${base.slice(0, SLUG_MAX - String(n).length - 1).replace(/-+$/, '')}-${n}`
-    if (!taken.has(candidate)) return candidate
-  }
-}
-
 const compact = (value: string) => value.toLowerCase().replace(/[^a-z0-9]/g, '')
 
 /** La obra y las tecnologías de la base que nombra la publicación; lo que no existe, no se suma. */
@@ -247,7 +235,7 @@ contentRouter.post('/posts/:id/publish-to-blog', async (req: Request, res: Respo
   const title = clip(post.devto_title || post.title || post.topic || '', ARTICLE_MAX.title) || clip(lead(content), ARTICLE_MAX.title)
   const summary = clip(post.hook ?? lead(content), ARTICLE_MAX.summary) || title
   const words = content.split(/\s+/).filter(Boolean).length
-  const [slug, { projectId, techIds }] = await Promise.all([freeSlug(title), relations(post)])
+  const [slug, { projectId, techIds }] = await Promise.all([freeArticleSlug(title), relations(post)])
 
   const article = await db.article.create({
     data: {
