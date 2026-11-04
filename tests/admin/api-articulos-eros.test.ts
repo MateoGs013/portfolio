@@ -232,14 +232,26 @@ if (online) describe('con Eros (--eros-mock)', () => {
     assert.equal((await settled(reply.body.run.id)).status, 'done')
   })
 
+  test('una tendencia que Eros no conoce: 202 y el pedido falla con trend_not_found, en español', async () => {
+    await mode('ok')
+    const reply = await admin<ArticleRunReply>('POST', '/articles/generate', { trendId: 'una-tendencia-que-eros-no-tiene' })
+    assert.equal(reply.status, 202)
+    const run = await settled(reply.body.run.id)
+    assert.equal(run.status, 'failed')
+    assert.equal(run.errorCode, 'trend_not_found')
+    assert.match(run.error ?? '', /^Eros no encontró esa tendencia/)
+    assert.doesNotMatch(run.error ?? '', /not found/)
+  })
+
   test('la lista trae los pedidos del más nuevo al más viejo, con el artículo de los hechos', async () => {
     const { runs, next, weekly } = await ok<ArticleRunList>('GET', '/articles/runs?limit=50')
     assert.equal(weekly, false)
     assert.equal(next, null)
-    assert.ok(runs.length >= 5)
+    assert.ok(runs.length >= 6)
     const times = runs.map(r => Date.parse(r.startedAt))
     assert.deepEqual(times, [...times].sort((a, b) => b - a))
     assert.equal(runs[0]?.trigger, 'trend')
+    assert.equal(runs[0]?.errorCode, 'trend_not_found')
     for (const run of runs) {
       assert.notEqual(run.status, 'running')
       assert.equal(run.status === 'done', run.article !== null)

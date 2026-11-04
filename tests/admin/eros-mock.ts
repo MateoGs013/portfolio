@@ -24,7 +24,8 @@
  *   fixtures/eros-articles/ en los dos idiomas, con el tema, la obra y la tendencia que se pidieron.
  *   PUT /__articulo { modo } cambia cómo termina la próxima: `ok`, `falla` (la tarea falla con
  *   `error_code: llm_unavailable`), `tabla` (el texto trae una tabla) o `lento` (sigue escribiendo
- *   hasta el próximo PUT /__articulo, que la suelta);
+ *   hasta el próximo PUT /__articulo, que la suelta). Una tendencia o una obra que no conoce se
+ *   aceptan y la tarea falla con `trend_not_found` o `project_not_found`, como el real;
  * - `eros-mock-falla` responde 500 y `eros-mock-redirige` una redirección (que el admin no sigue);
  *   `/api/lento` tarda 1,5 s, para probar los cortes del proxy.
  *
@@ -105,9 +106,21 @@ function generatedArticle(body: Obj): Obj {
   }
 }
 
+/** Como el real: la tendencia o la obra que no conoce se aceptan (202) y la tarea falla después. */
+const KNOWN_PROJECTS = new Set(['la-rucula', 'arg-piscinas', 'barberpole', 'eros', 'circuito-kitsune', 'ynara-web', 'tienda-mistica'])
+
+function articleFailure(body: Obj): Task['failure'] {
+  if (articleMode === 'falla') return { error: 'El modelo de IA no está disponible.', error_code: 'llm_unavailable' }
+  const trend = body['trend_id']
+  if (typeof trend === 'string' && !trends.some(t => t['id'] === trend)) return { error: `Trend ${trend} not found`, error_code: 'trend_not_found' }
+  const project = body['project_slug']
+  if (typeof project === 'string' && !KNOWN_PROJECTS.has(project)) return { error: `Project ${project} not found`, error_code: 'project_not_found' }
+  return undefined
+}
+
 function generateArticle(body: Obj): Reply {
   if (before) return notFound
-  const failure = articleMode === 'falla' ? { error: 'El modelo de IA no está disponible.', error_code: 'llm_unavailable' } : undefined
+  const failure = articleFailure(body)
   return accepted('article', generatedArticle(body), articleMode === 'lento' ? HELD : 1, failure)
 }
 

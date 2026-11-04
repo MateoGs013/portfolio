@@ -4,7 +4,7 @@
  *
  * `startArticleRun` anota el pedido (ArticleRun), se lo pasa a Eros (POST /api/articles/generate, que
  * responde 202 con una tarea en el acto) y devuelve el pedido sin esperar el artículo: la tarea se
- * sigue en segundo plano (`finishRun`) hasta que Eros termina, falla o pasan ocho minutos. Solo hay
+ * sigue en segundo plano (`finishRun`) hasta que Eros termina, falla o pasan doce minutos. Solo hay
  * uno a la vez. Lo que vuelve se valida en erosArticleContract.ts y se publica en una transacción
  * (artículo, inglés y pedido hecho); después se olvidan los respaldos de la API pública.
  *
@@ -23,8 +23,11 @@ import { forwardToEros, type ForwardResult } from './proxy.js'
 
 /** Un pedido que lleva más de esto escribiendo se dio por cortado. */
 export const RUN_STALE_MS = 20 * 60_000
-/** Lo que se espera a Eros desde el pedido hasta el artículo. */
-const RUN_BUDGET_MS = 8 * 60_000
+/**
+ * Lo que se espera a Eros desde el pedido hasta el artículo: en el peor caso Eros tarda unos 10
+ * minutos (dos llamadas al modelo de 150 s cada una, y un corte puede pasar al modelo siguiente).
+ */
+const RUN_BUDGET_MS = 12 * 60_000
 /** El 202 de Eros llega en el acto: si tarda más que esto, Eros no está. */
 const KICKOFF_MS = 20_000
 const AVOID_MAX = 300
@@ -110,6 +113,15 @@ async function erosBody(input: ArticleRunInput): Promise<Record<string, unknown>
   return body
 }
 
+/**
+ * Los `error_code` de una tarea de artículo que falló en Eros con lo que se dice en vez del texto de
+ * Eros: la tendencia o la obra que Eros no conoce (las pide igual y la tarea falla).
+ */
+const TASK_FAILURES: Readonly<Record<string, string>> = {
+  trend_not_found: 'Eros no encontró esa tendencia: puede que ya no esté en el radar. Abrila de nuevo desde Tendencias.',
+  project_not_found: 'Eros no conoce esa obra: puede que todavía no la tenga cargada. Elegí otra o pedilo sin obra.',
+}
+
 /** El motivo del fallo de Eros para el pedido, en español, y su código. */
 function erosFailure(result: ForwardResult): { error: string, code: string } {
   const failure = result.failure
@@ -122,6 +134,8 @@ function erosFailure(result: ForwardResult): { error: string, code: string } {
     return { error: `Eros no aceptó el pedido.${said} No se publicó nada.`, code: failure.code ?? 'invalid' }
   }
   if (failure?.upstream === 404) return { error: 'Eros se reinició y perdió el pedido. No se publicó nada.', code: 'cut' }
+  const known = failure?.code ? TASK_FAILURES[failure.code] : undefined
+  if (known && failure?.code) return { error: `${known} No se publicó nada.`, code: failure.code }
   const message = typeof data.error === 'string' ? data.error : failure?.message ?? 'Eros no respondió.'
   const code = failure?.code ?? (typeof data.code === 'string' ? data.code : 'eros_error')
   return { error: `${message.replace(/\s+$/, '')} No se publicó nada.`, code }
