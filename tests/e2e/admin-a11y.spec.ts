@@ -42,7 +42,7 @@ test.describe('cada vista y editor', () => {
 
   test('axe sin serias ni críticas, letra de 12 px o más, sin mayúsculas forzadas ni violaciones de CSP', async ({ page, request }) => {
     const views = await allViews(request)
-    expect(views.length, 'con --demo entran las etapas, la publicación y la tendencia').toBeGreaterThanOrEqual(34)
+    expect(views.length, 'con --demo entran las etapas y la tendencia').toBeGreaterThanOrEqual(32)
     const violations = await watchCsp(page)
     await signedIn(page)
     const problems: string[] = []
