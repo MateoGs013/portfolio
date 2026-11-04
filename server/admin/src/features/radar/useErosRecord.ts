@@ -1,5 +1,5 @@
 /**
- * Un registro de una lista de Eros (una publicación, una tendencia) abierto por su dirección: se
+ * Un registro de una lista de Eros (una tendencia) abierto por su dirección: se
  * muestra enseguida la copia de la lista, si la hay, y se pide a Eros la versión al día (GET /:id).
  * Si esa lectura falla pero había copia, queda la copia; si no había, se dice por qué no se ve:
  * no existe, Eros no responde u otro error.

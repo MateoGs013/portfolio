@@ -15,7 +15,7 @@ import { isSlug } from '../shared/slug.js'
 import { findRun, listRuns, startArticleRun } from './articleAuto.js'
 import { nextWeeklySlot, weeklyEnabled } from './articleSlots.js'
 import { paramId, readOr503 } from './common.js'
-import { demoRefusal, isDemoId } from './fallbackContentData.js'
+import { demoRefusal, isDemoId } from './fallbackRadarData.js'
 import { HttpError } from './input.js'
 import { isErosId, type ForwardResult } from './proxy.js'
 

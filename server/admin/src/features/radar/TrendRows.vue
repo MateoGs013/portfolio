@@ -5,15 +5,14 @@
  * (sin fecha, no se inventa una). Es un listbox: un enlace adentro de una opción no se alcanza con
  * el teclado, así que la nota original se abre desde el registro.
  */
-import type { Trend } from '@shared/contentContracts'
+import type { Trend } from '@shared/radarContracts'
 import { computed, ref } from 'vue'
 import Listbox from '../../ui/Listbox.vue'
 import type { ListboxItem } from '../../ui/listbox'
 import Mono from '../../ui/Mono.vue'
 import StatusDot from '../../ui/StatusDot.vue'
-import { shortDay } from '../content/model'
 import { radar } from './dict'
-import { hostOf, relevanceOf, sourceOf, trendStatusOf, trendTitle } from './model'
+import { hostOf, relevanceOf, shortDay, sourceOf, trendStatusOf, trendTitle } from './model'
 
 const props = defineProps<{ trends: readonly Trend[] }>()
 

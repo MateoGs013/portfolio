@@ -2,12 +2,12 @@
 /**
  * Una tendencia ocupa la pantalla sola: «← Tendencias», la fuente con la fecha real y la afinidad,
  * el título en display (el que viajó desde la fila), la nota original y, como único primario,
- * «Crear publicación desde esta tendencia» (POST /radar/trends/:id/generate, solo con Eros). Debajo,
- * el resumen, el ángulo que propone Eros, los temas y la publicación que ya salió de ella.
+ * «Escribir artículo» (POST /articles/generate { trendId }, solo con Eros: el mismo diálogo y el mismo
+ * progreso que en Artículos, y al terminar lleva al artículo publicado). Debajo, el resumen, el
+ * ángulo que propone Eros, los temas y el artículo que ya salió de ella.
  */
-import type { ContentPost, GenerateRequest } from '@shared/contentContracts'
-import { computed, ref } from 'vue'
-import { RouterLink, useRouter } from 'vue-router'
+import { computed, onMounted, ref } from 'vue'
+import { RouterLink } from 'vue-router'
 import { useRecordTitle } from '../../shell/title'
 import { TRAVEL_NAME } from '../../shell/transition'
 import Button from '../../ui/Button.vue'
@@ -16,20 +16,19 @@ import ErrorState from '../../ui/ErrorState.vue'
 import Icon from '../../ui/Icon.vue'
 import Skeleton from '../../ui/Skeleton.vue'
 import StatusDot from '../../ui/StatusDot.vue'
-import GenerateDialog from '../content/GenerateDialog.vue'
-import { isSampleRow } from '../content/erosList'
-import { longDay } from '../content/model'
-import { useErosRecord } from '../content/useErosRecord'
+import AskDialog from '../articles/AskDialog.vue'
+import { loadRuns, runs, tracked } from '../articles/runs'
 import { radarApi } from './api'
 import { radar, trend as t } from './dict'
-import { originalOf, relevanceOf, sourceOf, trendStatusOf, trendTitle } from './model'
-import { postFromTrend, trends } from './store'
+import { isSampleRow } from './erosList'
+import { longDay, originalOf, relevanceOf, sourceOf, trendStatusOf, trendTitle } from './model'
+import { trends } from './store'
 import TrendMenu from './TrendMenu.vue'
+import { useErosRecord } from './useErosRecord'
 
 const props = defineProps<{ id: string }>()
 
 const LOCKED_ID = 'tendencia-bloqueada'
-const router = useRouter()
 
 const { record, phase, error, reload } = useErosRecord(() => props.id, trends, id => radarApi.trend(id))
 
@@ -56,15 +55,22 @@ function startCreate(): void {
   if (!locked.value) createOpen.value = true
 }
 
-function run(request: GenerateRequest): Promise<ContentPost | null> {
-  if (!record.value) return Promise.resolve(null)
-  const { topic: _topic, ...rest } = request
-  return postFromTrend(record.value, rest)
-}
+const askedTrend = computed(() => (record.value ? { id: record.value.id, title: trendTitle(record.value) } : null))
 
-function onCreated(post: ContentPost | null): void {
-  if (post) void router.push(`/busqueda/publicaciones/${encodeURIComponent(post.id)}`)
-}
+/* ── El artículo que salió de esta tendencia ────────────── */
+
+onMounted(() => void loadRuns(50))
+
+/** El pedido más nuevo desde esta tendencia: el de esta pestaña o el de la lista. */
+const fromHere = computed(() => {
+  const mine = tracked.value?.trendId === props.id ? tracked.value : null
+  return mine ?? runs.value?.runs.find(r => r.trendId === props.id && r.status !== 'failed') ?? null
+})
+const article = computed(() => (fromHere.value?.status === 'done' ? fromHere.value.article : null))
+const articleNote = computed(() => {
+  if (article.value) return t.article.linked
+  return fromHere.value?.status === 'running' ? t.article.writing : t.article.none
+})
 </script>
 
 <template>
@@ -145,20 +151,20 @@ function onCreated(post: ContentPost | null): void {
           </section>
           <section class="grid gap-3">
             <h2 class="m-0 text-label font-[420] text-dim">
-              {{ t.post.heading }}
+              {{ t.article.heading }}
             </h2>
             <p class="m-0 text-body text-dim">
-              {{ record.post_id ? t.post.linked : t.post.none }}
+              {{ articleNote }}
             </p>
-            <div v-if="record.post_id">
-              <Button variant="secondary" icon="arrow-right" :href="`#/busqueda/publicaciones/${encodeURIComponent(record.post_id)}`">
-                {{ t.post.open }}
+            <div v-if="article">
+              <Button variant="secondary" icon="arrow-right" :href="`#/articulos/${article.id}`">
+                {{ t.article.open }}
               </Button>
             </div>
           </section>
         </aside>
       </div>
-      <GenerateDialog v-model:open="createOpen" :trend-title="trendTitle(record)" :run="run" @created="onCreated" />
+      <AskDialog v-model:open="createOpen" :trend="askedTrend" />
     </template>
 
     <template v-else-if="phase === 'loading'">

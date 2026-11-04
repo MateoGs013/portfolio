@@ -41,9 +41,7 @@ describe('lo que nunca llega a Eros', () => {
       ['POST', '/hunter/jobs/a%20b/evaluate', job('Frontend', 'Vue')],
       ['POST', '/hunter/jobs/a%2Fb/find-email'],
       ['POST', '/hunter/cv/a%3Fb', job('Frontend', 'Vue')],
-      ['GET', '/content/posts/%2F'],
-      ['DELETE', '/content/posts/x%2F..'],
-      ['POST', '/content/carousel/%2F/ticket'],
+      ['GET', '/radar/trends/%2F'],
       ['PATCH', '/radar/trends/%2F/status', { status: 'DISCARDED' }],
     ]
     for (const [method, path, body] of attempts) {

@@ -7,7 +7,6 @@ import { requireAdmin } from './auth.js'
 import { articleRunsRouter } from './articleRuns.js'
 import { articlesRouter } from './articles.js'
 import { forgetsLastGood } from './common.js'
-import { contentRouter } from './content.js'
 import { docsRouter } from './docs.js'
 import { adminErrors } from './errors.js'
 import { experienceRouter } from './experience.js'
@@ -36,11 +35,9 @@ adminApi.use((req, _res, next) => {
   next()
 })
 adminApi.use(requireAdmin)
-// Eros: /hunter, /content y /radar son proxys que no tocan lo que muestra el sitio. Lo único que
-// /content escribe en la base es un artículo en borrador («Publicar en el blog»), que la API pública
-// no lista: no hace falta olvidar sus respaldos.
+// Eros: /hunter y /radar son proxys que no tocan lo que muestra el sitio. Los artículos que escribe
+// Eros van por /articles/generate, dentro de contentApi.
 adminApi.use('/hunter', hunterRouter)
-adminApi.use('/content', contentRouter)
 adminApi.use('/radar', radarRouter)
 adminApi.use(statusRouter)
 // La bandeja del Inicio solo lee.

@@ -1,7 +1,7 @@
 /**
  * Eros simulado para las pruebas del admin (scripts/admin-run.mjs --eros-mock). Responde con las
  * formas que manda el Eros real (eros-agent/src/eros/api.py y sus modelos), escritas en
- * tests/admin/fixtures/eros/ y eros-content/, incluido un CV con textos inventados que la API tiene
+ * tests/admin/fixtures/eros/, eros-radar/ y eros-articles/, incluido un CV con textos inventados que la API tiene
  * que descartar. Nunca contacta al Eros real.
  *
  *   PORT=4000 pnpm exec tsx tests/admin/eros-mock.ts
@@ -14,23 +14,17 @@
  * - «Buscar correo» manda `contact_email_source` (del aviso para la vacante en español, de Hunter.io
  *   para la de inglés) y la vista previa, `contact_email_source`; antes, `source` con un correo
  *   adivinado para la vacante en inglés e `is_email_extracted`;
- * - publicar responde `status: 'dispatched'` con `dispatched_channels`, 409 `already_published` para
- *   una publicada y 422 `invalid_channel` para Dev.to; antes, `status: 'published'`.
+ * - pedir un artículo responde 202 con su tarea; antes la ruta no existía (404).
  *
  * Lo demás que imita del real, para que las pruebas cubran lo que pasa de verdad:
  * - el pitch trae el asunto en `subject_or_hook`;
  * - los cambios de estado y de contacto responden `{ ok, job_id, new_status }` y `{ ok, job_id,
  *   contact_email }`, sin la vacante; un contacto que no es texto da 422 con su `detail`;
- * - las publicaciones traen Dev.to anidado (`devto: { title, tags, markdown_body }`) y los enfoques de
- *   `ContentPillar`; generar con un enfoque que no existe da 422; publicar responde `status`
- *   (`approved_local` para las de `publishedLocally`);
- * - crear desde una tendencia falla como el real: 422 con `pillar: null` y 500 sin enfoque o con uno
- *   que no existe (Eros cae en un valor por defecto inválido);
  * - pedir un artículo (POST /api/articles/generate) responde 202 y la tarea termina con el artículo de
  *   fixtures/eros-articles/ en los dos idiomas, con el tema, la obra y la tendencia que se pidieron.
  *   PUT /__articulo { modo } cambia cómo termina la próxima: `ok`, `falla` (la tarea falla con
  *   `error_code: llm_unavailable`), `tabla` (el texto trae una tabla) o `lento` (sigue escribiendo
- *   hasta el próximo PUT /__articulo, que la suelta). Con el Eros de antes la ruta no existe (404);
+ *   hasta el próximo PUT /__articulo, que la suelta);
  * - `eros-mock-falla` responde 500 y `eros-mock-redirige` una redirección (que el admin no sigue);
  *   `/api/lento` tarda 1,5 s, para probar los cortes del proxy.
  *
@@ -53,13 +47,9 @@ const cvEn = fixture('cv-en')
 const queue = fixture('queue')
 const apply = fixture('apply')
 
-const posts = read('eros-content', 'posts')['data'] as Obj[]
-const trends = read('eros-content', 'trends')['trends'] as Obj[]
-const contentActions = read('eros-content', 'actions')
+const trends = read('eros-radar', 'trends')['trends'] as Obj[]
+const trendScan = read('eros-radar', 'scan')
 const articles = read('eros-articles', 'article')
-
-const PILLARS = ['architecture', 'production_lessons', 'performance_optimization', 'ai_agent_ops', 'fullstack_engineering']
-const pillarMessage = "Input should be 'architecture', 'production_lessons', 'performance_optimization', 'ai_agent_ops' or 'fullstack_engineering'"
 
 const requests: { method: string, path: string, body: Obj }[] = []
 
@@ -120,9 +110,6 @@ function generateArticle(body: Obj): Reply {
   const failure = articleMode === 'falla' ? { error: 'El modelo de IA no está disponible.', error_code: 'llm_unavailable' } : undefined
   return accepted('article', generatedArticle(body), articleMode === 'lento' ? HELD : 1, failure)
 }
-
-/** Un error del Eros de ahora: `{ detail, error_code }` con su código. */
-const refused = (status: number, error_code: string, detail: string): Reply => ({ status, body: { detail, error_code } })
 
 /** Una respuesta del simulado: código y cuerpo (texto plano si es un string, como el 500 de FastAPI). */
 interface Reply { status: number, body: unknown, headers?: Record<string, string> }
@@ -212,60 +199,28 @@ const fixed: Record<string, (body: Obj) => Reply | Promise<Reply>> = {
   'POST /api/articles/generate': generateArticle,
 }
 
-const generatedPost = (pillar: unknown, topic?: unknown): Obj => ({
-  ...(contentActions['generated'] as Obj),
-  ...(typeof topic === 'string' ? { topic } : {}),
-  pillar: typeof pillar === 'string' ? pillar : 'architecture',
-})
-
-/** Rutas de contenido sin id: [método ruta] → respuesta. */
-const contentFixed: Record<string, (body: Obj) => Reply> = {
-  'GET /api/content/posts': () => ok({ data: posts, count: posts.length }),
-  'POST /api/content/generate': body => body['pillar'] !== undefined && body['pillar'] !== null && !PILLARS.includes(String(body['pillar']))
-    ? unprocessable('pillar', pillarMessage)
-    : ok({ ok: true, data: generatedPost(body['pillar'], body['topic']) }),
+/** Rutas del radar sin id: [método ruta] → respuesta. */
+const radarFixed: Record<string, (body: Obj) => Reply> = {
   'GET /api/radar/trends': () => ok(trends),
-  'POST /api/radar/scan': () => ok({ ...(contentActions['scan'] as Obj), trends: trends.slice(0, 1) }),
+  'POST /api/radar/scan': () => ok({ ...trendScan, trends: trends.slice(0, 1) }),
 }
 
-/** Publicaciones y tendencias por id: [método acción] → respuesta, con el registro encontrado. */
-const perPost: Record<string, (post: Obj, body: Obj) => Reply> = {
-  'GET ': post => ok({ data: post }),
-  'DELETE ': post => ok({ ok: true, deleted: post['id'] }),
-  'PATCH status': (post, body) => ok({ ok: true, post_id: post['id'], new_status: body['status'] }),
-  'POST publish': (post, body) => {
-    const local = (contentActions['publishedLocally'] as string[]).includes(String(post['id']))
-    if (local) return ok({ ...(contentActions['approvedLocal'] as Obj), post })
-    if (before) return ok(contentActions['published'])
-    if (body['channel'] === 'devto') return refused(422, 'invalid_channel', 'Dev.to no tiene publicación automática.')
-    if (post['status'] === 'published') return refused(409, 'already_published', 'La publicación ya fue publicada; no se republica.')
-    return ok(contentActions['dispatched'])
-  },
-}
+/** Tendencias por id: [método acción] → respuesta, con la tendencia encontrada. */
 const perTrend: Record<string, (trend: Obj, body: Obj) => Reply> = {
   'GET ': trend => ok(trend),
   'PATCH status': (trend, body) => ok({ ok: true, id: trend['id'], status: body['status'] }),
-  'POST generate': (trend, body) => {
-    if (!('pillar' in body)) return crash
-    if (typeof body['pillar'] !== 'string') return unprocessable('pillar', 'Input should be a valid string')
-    if (!PILLARS.includes(body['pillar'])) return crash
-    return ok({ ok: true, trend_id: trend['id'], post: generatedPost(body['pillar'], trend['title']) })
-  },
 }
 
-/** /api/content/posts/:id[/acción] y /api/radar/trends/:id[/acción] → la respuesta, o null si no es de contenido. */
-function contentRoute(method: string, path: string, body: Obj): Reply | null {
-  const route = contentFixed[`${method} ${path}`]
-  if (route) return route(body)
-  const match = path.match(/^\/api\/(content\/posts|radar\/trends|content\/carousel)\/([^/]+)(?:\/([a-z-]+))?$/)
+/** /api/radar/trends[/:id[/acción]] → la respuesta, o null si no es del radar. */
+function radarRoute(method: string, path: string, body: Obj): Reply | null {
+  const fixedRoute = radarFixed[`${method} ${path}`]
+  if (fixedRoute) return fixedRoute(body)
+  const match = path.match(/^\/api\/radar\/trends\/([^/]+)(?:\/([a-z-]+))?$/)
   if (!match) return null
-  const [, kind, rawId, action = ''] = match
+  const [, rawId, action = ''] = match
   const id = decodeURIComponent(rawId!)
-  if (kind === 'content/carousel') return notFound
-  const rows = kind === 'content/posts' ? posts : trends
-  const handlers = kind === 'content/posts' ? perPost : perTrend
-  const row = rows.find(r => r['id'] === id)
-  const handler = handlers[`${method} ${action}`]
+  const row = trends.find(r => r['id'] === id)
+  const handler = perTrend[`${method} ${action}`]
   return row && handler ? handler(row, body) : notFound
 }
 
@@ -278,8 +233,8 @@ function jobRoute(path: string): { id: string, action: string } | null {
 }
 
 async function route(method: string, path: string, body: Obj): Promise<Reply> {
-  const content = contentRoute(method, path, body)
-  if (content) return content
+  const radar = radarRoute(method, path, body)
+  if (radar) return radar
   const own = fixed[`${method} ${path}`]
   if (own) return own(body)
   const task = method === 'GET' ? path.match(/^\/api\/tasks\/([^/]+)$/) : null

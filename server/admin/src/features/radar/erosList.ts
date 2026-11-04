@@ -1,5 +1,5 @@
 /**
- * Una lista que vive en Eros (las publicaciones, las tendencias), una sola copia por módulo para la
+ * Una lista que vive en Eros (las tendencias), una sola copia por módulo para la
  * pantalla, el registro y volver a la lista sin pedir de nuevo:
  * - `ready`: Eros respondió (o la muestra de EROS_DEMO, que se reconoce por `demo`).
  * - `offline`: Eros no respondió. No se guarda ni se inventa nada: la lista queda vacía y se dice por qué.

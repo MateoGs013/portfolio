@@ -1,9 +1,10 @@
 /**
  * Textos de Tendencias (Búsqueda laboral): notas de terceros que encuentra el radar de Eros. Español
- * claro, minúscula de oración; los estados y las fuentes con los rótulos de @shared/contentContracts.
+ * claro, minúscula de oración; los estados y las fuentes con los rótulos de @shared/radarContracts.
  */
-import { trendSourceLabels } from '@shared/contentContracts'
-import { plural } from '../content/dict'
+import { trendSourceLabels } from '@shared/radarContracts'
+
+export const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`
 
 /** «Hacker News, Dev.to, GitHub y blogs técnicos»: las fuentes del radar, en una frase. */
 const sources = Object.values(trendSourceLabels)
@@ -12,13 +13,13 @@ const sourceList = `${sources.slice(0, -1).join(', ')} y ${last.charAt(0).toLowe
 
 export const radar = {
   title: 'Tendencias',
-  lead: 'Notas de terceros que encuentra el radar de Eros. Cada una puede volverse una publicación tuya.',
+  lead: 'Notas de terceros que encuentra el radar de Eros. Cada una puede volverse un artículo tuyo.',
   listLabel: 'Tendencias del radar',
   filters: {
     label: 'Filtrar tendencias',
     all: 'Todas',
     discovered: 'Nuevas',
-    generated: 'Con publicación',
+    generated: 'Usadas',
     discarded: 'Descartadas',
   },
   sample: 'Muestra de prueba: estas tendencias no vienen de ninguna fuente y no se pueden cambiar.',
@@ -56,16 +57,17 @@ export const trend = {
   noSummary: 'Eros no trajo un resumen de esta nota.',
   angle: 'Cómo contarla desde tu trabajo',
   tags: 'Temas',
-  post: {
-    heading: 'Publicación',
-    linked: 'Eros ya escribió una publicación desde esta tendencia.',
-    open: 'Ver la publicación',
-    none: 'Todavía no hay una publicación desde esta tendencia.',
+  article: {
+    heading: 'Artículo',
+    linked: 'Eros ya escribió un artículo desde esta tendencia y está publicado.',
+    open: 'Abrir el artículo',
+    writing: 'Eros está escribiendo un artículo desde esta tendencia.',
+    none: 'Todavía no hay un artículo desde esta tendencia.',
   },
-  create: 'Crear publicación desde esta tendencia',
+  create: 'Escribir artículo',
   locked: {
-    sample: 'Es una muestra: se puede leer, pero no cambiar ni volverla publicación.',
-    offline: 'Eros no responde: se puede leer, pero no cambiar ni volverla publicación.',
+    sample: 'Es una muestra: se puede leer, pero no cambiar ni volverla artículo.',
+    offline: 'Eros no responde: se puede leer, pero no cambiar ni volverla artículo.',
   },
   status: {
     discard: 'Descartar',
