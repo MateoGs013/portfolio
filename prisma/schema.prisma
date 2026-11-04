@@ -260,6 +260,7 @@ model Article {
   project      Project?             @relation(fields: [projectId], references: [id], onDelete: SetNull)
   projectId    Int?
   translations ArticleTranslation[]
+  runs         ArticleRun[]
 
   @@index([status, publishedAt])
   @@index([projectId])
@@ -269,6 +270,27 @@ enum ArticleStatus {
   DRAFT
   PUBLISHED
   ARCHIVED
+}
+
+// Cada pedido a Eros de un artículo: el de los lunes (weekly), el del admin (manual) o el que sale de
+// una tendencia (trend). Eros lo escribe en los dos idiomas y la API lo publica sola; acá queda qué
+// pasó. No es contenido del sitio: la API pública no lo lee.
+model ArticleRun {
+  id          Int       @id @default(autoincrement())
+  trigger     String // weekly | manual | trend
+  status      String    @default("running") // running | done | failed
+  topic       String?
+  projectSlug String?
+  trendId     String?
+  error       String?   @db.Text
+  errorCode   String?
+  article     Article?  @relation(fields: [articleId], references: [id], onDelete: SetNull)
+  articleId   Int?
+  startedAt   DateTime  @default(now())
+  finishedAt  DateTime?
+
+  @@index([trigger, startedAt])
+  @@index([articleId])
 }
 
 // ─── Traducciones ───────────────────────────────────────────────────────────

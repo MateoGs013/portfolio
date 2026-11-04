@@ -6,7 +6,7 @@
  * formularios se arman con esto y llega entero en GET /api/admin/meta). scripts/check-admin-schema.mjs
  * falla si un campo de prisma/schema.prisma no tiene entrada, o si una entrada ya no existe.
  */
-import { Article, Doc, Experience, Org, Tech } from './schema/catalog.js'
+import { Article, ArticleRun, Doc, Experience, Org, Tech } from './schema/catalog.js'
 import { translationOf, type FieldDescriptor, type ModelFields } from './schema/field.js'
 import { Link, Media, Metric, Project, ProcessStep } from './schema/work.js'
 
@@ -23,6 +23,7 @@ export const adminSchema = {
   Org,
   Doc,
   Article,
+  ArticleRun,
   ProjectTranslation: translationOf(Project, { owner: 'Project', relation: 'project', key: 'projectId' }, ['title', 'role', 'summary', 'brief', 'outcome']),
   ProcessStepTranslation: translationOf(ProcessStep, { owner: 'ProcessStep', relation: 'step', key: 'stepId' }, ['title', 'body']),
   MetricTranslation: translationOf(Metric, { owner: 'Metric', relation: 'metric', key: 'metricId' }, ['label']),
