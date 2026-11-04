@@ -6,6 +6,7 @@
 import { Router } from 'express'
 import { db } from '../db.js'
 import type { AdminStatus } from '../shared/adminContracts.js'
+import { erosSendEnabled } from './hunterApply.js'
 import { erosState } from './proxy.js'
 
 const DB_TIMEOUT_MS = 3000
@@ -28,6 +29,6 @@ export const statusRouter = Router()
 
 statusRouter.get('/status', async (_req, res) => {
   const ok = await dbOk()
-  const status: AdminStatus = { db: { ok, checkedAt: new Date().toISOString() }, eros: erosState() }
+  const status: AdminStatus = { db: { ok, checkedAt: new Date().toISOString() }, eros: erosState(), erosSend: erosSendEnabled() }
   res.set('Cache-Control', 'no-store').json(status)
 })

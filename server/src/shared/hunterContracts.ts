@@ -154,11 +154,31 @@ export interface FoundEmail {
   source: string | null
 }
 
+/** POST /jobs/:id/apply-email: lo que manda el admin. El CV no viaja: el servidor imprime el del caché. */
+export interface ApplyEmailInput {
+  to_email: string
+  subject: string
+  body: string
+  /** Reintentar un envío que se cortó sin saber si salió (`send_outcome_unknown`), después de revisar el correo enviado. */
+  force_retry?: boolean
+}
+
+/** El PDF que adjuntó Eros: el CV de la etapa CV, impreso y medido por la API. */
+export interface SentCv {
+  filename: string
+  height_mm: number
+  sha256: string
+}
+
 export interface ApplyEmailResult {
   ok: boolean
   dispatched_to: string | null
   provider: string | null
   applied_at: string | null
+  /** El CV que se adjuntó; null si no se envió. */
+  cv: SentCv | null
+  /** Algo salió pero hay que mirarlo (Eros no confirmó el CV o no pudo anotar la postulación). */
+  warning: string | null
 }
 
 /**
@@ -171,14 +191,6 @@ export interface JobChange {
   status: HunterJobStatus | null
   contact_email: string | null
 }
-
-/**
- * «Enviar desde Eros» está apagado: Eros adjunta su propio CV (escrito a mano en Eros, no el de la
- * base) y marca como verificados correos adivinados. Hasta que Eros adjunte el CV armado desde la
- * base, la postulación sale desde Gmail y se marca con «Ya la envié». Con true vuelven el botón y la
- * ruta POST /hunter/jobs/:id/apply-email (que hoy responde 409 `send_disabled`).
- */
-export const EROS_SEND_ENABLED = false as boolean
 
 export interface SemanticResults {
   results: HunterJob[]

@@ -54,9 +54,9 @@ pnpm start                 # Servir el build (pnpm start:api para la API sin wat
 pnpm build:api             # Compilar el admin, generar Prisma y ejecutar migraciones
 pnpm cv:pdf                # Regenerar los dos PDF ATS desde el sitio local (CV_BASE_URL), con la cota dual, y el sello server/src/snapshot/cv-stamp.json (se commitea con ellos; Inicio del admin avisa si no coincide con la base)
 pnpm test:e2e              # Playwright contra el build (tests/e2e/run.mjs): el sitio en 3 anchos x 2 temas, reduced motion y sin JS, y cada spec del admin en sus modos
-node scripts/admin-run.mjs [--demo] [--eros-mock] [--web] -- <comando>
+node scripts/admin-run.mjs [--demo] [--eros-mock] [--send] [--web] -- <comando>
                            # Admin contra una copia descartable de la base, API en 3940-3990 y Eros apagado;
-                           # --demo la muestra (EROS_DEMO=1), --eros-mock el Eros simulado, --web compila Nuxt contra esa API
+                           # --demo la muestra (EROS_DEMO=1), --eros-mock el Eros simulado, --send enciende «Enviar desde Eros», --web compila Nuxt contra esa API
 ```
 
 ---

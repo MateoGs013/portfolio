@@ -22,6 +22,12 @@
  *   contact_email }`, sin la vacante; un contacto que no es texto da 422 con su `detail`;
  * - pedir un artículo (POST /api/articles/generate) responde 202 y la tarea termina con el artículo de
  *   fixtures/eros-articles/ en los dos idiomas, con el tema, la obra y la tendencia que se pidieron.
+ * - postular (POST /api/jobs/:id/apply-email) valida el `cv` como eros/hunter/attached_cv.py: sin él
+ *   422 `cv_required`; con base64 roto, sin `%PDF-`, sha256 distinto o nombre con ruta, 422
+ *   `invalid_cv`; bien, 200 con `cv_sha256` y `cv_filename`. No envía nada a ningún lado.
+ *   PUT /__envio { modo } decide cómo termina el próximo envío: `ok`, `cortado` (504
+ *   `send_outcome_unknown`; los siguientes dan 409 hasta un `force_retry: true`) o `rechazado` (502
+ *   `provider_rejected`). Con PUT /__antes responde como el de antes: ok sin mirar el `cv` ni confirmarlo.
  *   PUT /__articulo { modo } cambia cómo termina la próxima: `ok`, `falla` (la tarea falla con
  *   `error_code: llm_unavailable`), `tabla` (el texto trae una tabla) o `lento` (sigue escribiendo
  *   hasta el próximo PUT /__articulo, que la suelta). Una tendencia o una obra que no conoce se
@@ -31,8 +37,9 @@
  *
  * Un id que no está en las fixtures da 404. GET /__requests devuelve los pedidos recibidos (método,
  * ruta y cuerpo) y DELETE /__requests los olvida: así una prueba comprueba qué le llegó y qué no.
- * Ninguna de las rutas de control (/__requests, /__antes, /__articulo) queda registrada.
+ * Ninguna de las rutas de control (/__requests, /__antes, /__articulo, /__envio) queda registrada.
  */
+import { createHash } from 'node:crypto'
 import { readFileSync } from 'node:fs'
 import { createServer, type IncomingMessage, type ServerResponse } from 'node:http'
 
@@ -178,6 +185,62 @@ function preview(job: Obj): Obj {
   }
 }
 
+/** Cómo termina el próximo envío (PUT /__envio). */
+type SendMode = 'ok' | 'cortado' | 'rechazado'
+let sendMode: SendMode = 'ok'
+/** Vacantes con un envío cortado: hasta un `force_retry` responden 409 send_outcome_unknown. */
+const unknownSends = new Set<string>()
+
+const applyError = (status: number, code: string, detail: string, extra: Obj = {}): Reply => ({ status, body: { detail, error_code: code, ...extra } })
+
+/** El `cv` del pedido validado como eros/hunter/attached_cv.py; el error o el sha256 del PDF. */
+function checkCv(raw: unknown): Reply | { sha256: string, filename: string } {
+  if (raw === undefined || raw === null) return applyError(422, 'cv_required', 'Falta el CV: Eros solo adjunta el CV que arma el portafolio desde su base.')
+  const cv = raw && typeof raw === 'object' ? raw as Obj : {}
+  const filename = cv['filename']
+  if (typeof filename !== 'string' || !/^[A-Za-z0-9][A-Za-z0-9._-]{0,150}\.pdf$/.test(filename)) return applyError(422, 'invalid_cv', 'El nombre del PDF del CV no es válido.')
+  const encoded = cv['pdf_base64']
+  if (typeof encoded !== 'string' || !/^[A-Za-z0-9+/]+={0,2}$/.test(encoded)) return applyError(422, 'invalid_cv', 'El PDF del CV no es base64 válido.')
+  const pdf = Buffer.from(encoded, 'base64')
+  if (!pdf.subarray(0, 5).equals(Buffer.from('%PDF-'))) return applyError(422, 'invalid_cv', 'El adjunto del CV no es un PDF.')
+  const sha256 = createHash('sha256').update(pdf).digest('hex')
+  if (cv['sha256'] !== sha256) return applyError(422, 'invalid_cv', 'El sha256 no coincide con el PDF del CV.')
+  if (typeof cv['text'] !== 'string' || !cv['text'].trim()) return applyError(422, 'invalid_cv', 'Falta el CV en texto plano.')
+  return { sha256, filename }
+}
+
+/** POST /api/jobs/:id/apply-email como el dispatcher de Eros, sin proveedor real. */
+function applyEmail(job: Obj, body: Obj): Reply {
+  const id = String(job['id'])
+  if (before) return ok({ ...(apply['applyEmail'] as Obj), job_id: id })
+  const cv = checkCv(body['cv'])
+  if ('status' in cv) return cv
+  if (unknownSends.has(id) && body['force_retry'] !== true) {
+    return applyError(409, 'send_outcome_unknown', 'Un envío anterior se cortó y no sabemos si salió.', { send_state: 'unknown' })
+  }
+  if (sendMode === 'cortado') {
+    unknownSends.add(id)
+    return applyError(504, 'send_outcome_unknown', 'El envío se cortó y no sabemos si salió.', { provider: 'n8n', send_state: 'unknown' })
+  }
+  if (sendMode === 'rechazado') return applyError(502, 'provider_rejected', 'No se envió: n8n rechazó el pedido.', { provider: 'n8n', send_state: null })
+  unknownSends.delete(id)
+  const to = typeof body['to_email'] === 'string' ? body['to_email'] : job['contact_email']
+  return ok({
+    ok: true,
+    job_id: id,
+    dispatched_to: to,
+    contact_email_source: 'manual',
+    provider: 'n8n',
+    status: 'applied',
+    applied_at: '2026-11-04T12:00:00+00:00',
+    idempotency_key: `apply-${id}`,
+    cv_filename: cv.filename,
+    cv_sha256: cv.sha256,
+    warning: null,
+    message: `Postulación enviada a ${String(to)} vía N8N.`,
+  })
+}
+
 /** Respuestas por vacante: [método, acción] → respuesta, con la vacante encontrada. */
 const perJob: Record<string, (job: Obj, body: Obj) => Reply> = {
   'POST evaluate': (job) => {
@@ -193,7 +256,7 @@ const perJob: Record<string, (job: Obj, body: Obj) => Reply> = {
     const found = (apply[before ? 'findEmailBefore' : 'findEmail'] as Record<string, Obj>)[String(job['id'])]
     return ok({ ok: true, job_id: job['id'], ...(found ?? { contact_email: job['contact_email'] ?? null, source: null, found: false }) })
   },
-  'POST apply-email': job => ok({ ...(apply['applyEmail'] as Obj), job_id: job['id'] }),
+  'POST apply-email': applyEmail,
   'PATCH contact-email': (job, body) => typeof body['contact_email'] === 'string'
     ? ok({ ok: true, job_id: job['id'], contact_email: body['contact_email'].trim().toLowerCase() })
     : unprocessable('contact_email', 'Input should be a valid string'),
@@ -285,6 +348,17 @@ const server = createServer(async (req, res) => {
       for (const task of tasks.values()) if (task.kind === 'article' && task.pending === HELD) task.pending = 0
     }
     send(res, ok({ modo: articleMode }))
+    return
+  }
+  if (path === '/__envio') {
+    const body = await readBody(req)
+    const mode = body['modo']
+    if (method === 'PUT' && (mode === 'ok' || mode === 'cortado' || mode === 'rechazado')) sendMode = mode
+    if (method === 'DELETE') {
+      sendMode = 'ok'
+      unknownSends.clear()
+    }
+    send(res, ok({ modo: sendMode }))
     return
   }
   if (path === '/') {

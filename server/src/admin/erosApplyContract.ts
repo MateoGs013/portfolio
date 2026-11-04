@@ -75,5 +75,7 @@ export function normalizeApplyEmail(payload: unknown): ApplyEmailResult {
     dispatched_to: text(o['dispatched_to']),
     provider: text(o['provider']),
     applied_at: text(o['applied_at']),
+    cv: null,
+    warning: text(o['warning']),
   }
 }
