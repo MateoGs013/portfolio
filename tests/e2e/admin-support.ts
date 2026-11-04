@@ -164,7 +164,6 @@ export async function allViews(request: APIRequestContext): Promise<View[]> {
     { name: 'Empresas', hash: '#/empresas' },
     { name: 'Empresa', hash: `#/empresas/${org}` },
     { name: 'Vacantes', hash: '#/busqueda/vacantes' },
-    { name: 'Publicaciones', hash: '#/busqueda/publicaciones' },
     { name: 'Tendencias', hash: '#/busqueda/tendencias' },
     { name: 'Pantalla que no existe', hash: '#/no-hay-nada-aca' },
   ]
@@ -173,8 +172,6 @@ export async function allViews(request: APIRequestContext): Promise<View[]> {
     const job = (await jobs.json() as { id: string }[])[0]!.id
     views.push(...['analisis', 'mensaje', 'cv', 'postular'].map(s => ({ name: `Vacante · ${s}`, hash: `#/busqueda/vacantes/${job}/${s}` })))
   }
-  const posts = await request.get('/api/admin/content/posts', { headers: auth })
-  if (posts.ok()) views.push({ name: 'Publicación', hash: `#/busqueda/publicaciones/${(await posts.json() as { id: string }[])[0]!.id}` })
   const trends = await request.get('/api/admin/radar/trends', { headers: auth })
   if (trends.ok()) views.push({ name: 'Tendencia', hash: `#/busqueda/tendencias/${(await trends.json() as { id: string }[])[0]!.id}` })
   return views

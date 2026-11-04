@@ -8,7 +8,7 @@ import { ADMIN } from './admin-support'
  * Artículos (U6) sobre una copia de la base: la lista con sus filtros, un artículo que nace borrador y
  * sin fecha, la dirección que sale del título («ñandú» → nandu) y después queda fija, el inglés con su
  * vista previa, la publicación con «Mostrar en el sitio» (la API pública lo muestra, en ?lang=en con el
- * inglés), «Cambiar dirección», Archivar, el aviso de un borrador que llega de Publicaciones y la vista
+ * inglés), «Cambiar dirección», Archivar, el aviso de un artículo que acaba de publicar Eros y la vista
  * previa comparada bloque por bloque con el HTML de /articles/:slug del sitio.
  *
  *   node scripts/admin-run.mjs -- pnpm exec playwright test -c playwright.admin.config.ts tests/e2e/admin-articulos.spec.ts
@@ -286,16 +286,28 @@ test('archivar: sale del sitio y queda en la lista como Archivado', async ({ pag
   await expect(page.getByRole('option', { name: new RegExp(TITLE) })).toContainText('Archivado')
 })
 
-test('desde Publicaciones: el borrador avisa qué revisar; Falta inglés lo lista', async ({ page }, info) => {
+test('recién publicado por Eros: el artículo lo avisa; un borrador no; Falta inglés lo lista', async ({ page }, info) => {
   const res = await fetch(`${api}/api/admin/articles`, {
     method: 'POST',
     headers: { ...auth, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ title: 'Borrador de Eros', summary: 'Armado desde una publicación.', content: 'Texto del borrador.' }),
+    body: JSON.stringify({ title: 'Borrador de Eros', summary: 'Escrito por Eros.', content: 'Texto del artículo.' }),
   })
   expect(res.status).toBe(201)
   const draft = await res.json() as Article
+  // Un borrador no es lo que publica Eros: con ?origen=eros no hay aviso.
   await signedIn(page, `#/articulos/${draft.id}?origen=eros`)
-  const notice = page.getByRole('region', { name: /Llegó desde Publicaciones/ })
+  await expect(page.locator('#main h1')).toHaveText('Borrador de Eros')
+  await expect(page.getByRole('region', { name: /Lo escribió Eros/ })).toHaveCount(0)
+
+  const published = await fetch(`${api}/api/admin/articles/${draft.id}`, {
+    method: 'PUT',
+    headers: { ...auth, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ ...draft, techIds: [], status: 'PUBLISHED', publishedAt: new Date().toISOString() }),
+  })
+  expect(published.status, await published.text()).toBe(200)
+  await page.goto(`${ADMIN}#/articulos/${draft.id}?origen=eros`)
+  await page.reload()
+  const notice = page.getByRole('region', { name: /Lo escribió Eros y ya está publicado/ })
   await expect(notice).toBeVisible()
   await noSeriousAxe(page)
   await shot(page, info, 'aviso-eros')

@@ -6,7 +6,7 @@ import { ADMIN, allViews, horizontalOverflow, mod, noSeriousAxe, openFresh, pale
  * críticas en cada vista, editor y etapa; sin scroll horizontal de 390 a 1920 px; con movimiento
  * reducido no corre ninguna transición; ningún texto por debajo de 12 px; ninguna mayúscula forzada
  * fuera de la hoja del CV; y la consola sin violaciones de CSP en ninguna vista. Con la muestra de
- * EROS_DEMO, para que Búsqueda laboral tenga vacantes, publicaciones y tendencias que abrir:
+ * EROS_DEMO, para que Búsqueda laboral tenga vacantes y tendencias que abrir:
  *
  * admin-run: --demo
  *
