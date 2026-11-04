@@ -32,13 +32,13 @@ El router va por hash (`server/admin/src/router.ts`). La ruta es el estado: `?fi
 | Inicio | `#/inicio` | Línea de resumen con cifras reales, bandeja de pendientes que lleva al campo exacto, vacantes nuevas compatibles, Eros caído y el aviso del PDF del CV |
 | Obras | `#/obras`, `#/obras/nueva`, `#/obras/:id/:seccion` | Lista (con `?vista=orden` para el orden del sitio) y editor en cuatro secciones: `esencial`, `relato`, `imagenes`, `datos` |
 | Trayectoria | `#/trayectoria`, `#/trayectoria/nueva`, `#/trayectoria/:id`, `#/trayectoria/cv` | Entradas de trabajo y formación; la Vista CV ordena las entradas del CV y muestra la hoja A4 real medida (`?idioma=en`) |
-| Artículos | `#/articulos`, `#/articulos/nuevo`, `#/articulos/:id` | Texto en markdown con la vista previa del sitio e inglés; `?origen=eros` cuando llega desde Publicaciones |
+| Artículos | `#/articulos`, `#/articulos/nuevo`, `#/articulos/:id` | Texto en markdown con la vista previa del sitio e inglés. En la lista, «Pedir un artículo a Eros» y la línea del horario de los lunes con el último pedido; `?origen=eros` cuando llega recién publicado por Eros |
 | Perfil | `#/perfil/sobre-mi`, `#/perfil/contacto` | Los documentos `about` y `contact` como formularios fijos desde `server/src/shared/docSchema.ts`, retrato y bloques libres |
 | Catálogos | `#/tecnologias[/:id]`, `#/empresas[/:id]` | Plegados en la navegación. El alta es un diálogo (`?nueva=1`), con «Dónde se usa» y reasignación al borrar |
-| Búsqueda laboral | `#/busqueda/vacantes/:id?/:etapa?`, `#/busqueda/publicaciones/:id?`, `#/busqueda/tendencias/:id?` | Tres pestañas. Vacantes recorre las etapas `analisis`, `mensaje`, `cv` y `postular` |
+| Búsqueda laboral | `#/busqueda/vacantes/:id?/:etapa?`, `#/busqueda/tendencias/:id?` | Dos pestañas. Vacantes recorre las etapas `analisis`, `mensaje`, `cv` y `postular`; una tendencia se vuelve artículo con «Escribir artículo» |
 | Ingreso | `#/ingresar?volver=` | La clave (`ADMIN_TOKEN`) queda en `sessionStorage` (`adm-token`) |
 
-Cada área tiene una sola entrada, `features/<área>/Index.vue`, que elige lista o registro según la ruta. Consultas que abren algo y se limpian solas: `#/busqueda/vacantes?pegar=1` (pegar una vacante), `#/busqueda/publicaciones?generar=1`, `#/empresas?nueva=1`, `#/tecnologias?nueva=1` y `#/busqueda/vacantes/:id/cv?adaptar=1`. `#/muestrario` (los componentes base) existe solo en desarrollo.
+Cada área tiene una sola entrada, `features/<área>/Index.vue`, que elige lista o registro según la ruta. Consultas que abren algo y se limpian solas: `#/busqueda/vacantes?pegar=1` (pegar una vacante), `#/articulos?pedir=1` (pedir un artículo a Eros), `#/empresas?nueva=1`, `#/tecnologias?nueva=1` y `#/busqueda/vacantes/:id/cv?adaptar=1`. `#/muestrario` (los componentes base) existe solo en desarrollo.
 
 La navegación (`shell/nav.ts`) no lleva iconos ni numeración; el contador aparece solo cuando hay pendientes (obras ocultas, borradores, vacantes nuevas compatibles).
 
@@ -125,7 +125,8 @@ Qué se edita de cada modelo, dónde y por qué endpoint. El descriptor de cada 
 | Media | archivo, versión WebM, póster, rol, alt, pie, tinte, viewport, orden | alt y pie | Obras → Imágenes | `/media`, `/media/:id/file`, `/webm`, `/poster` |
 | Experience | dirección, tipo, cargo, fechas, resumen, relato, viñetas, lugar, orden del CV, empresa, tecnologías, obras | cargo, resumen, relato, viñetas (alineadas por posición), lugar | Trayectoria | `PUT /experience/:id`, `PATCH /experience/:id/slug`, `PATCH /experience/order` |
 | Tech · Org | nombre, dirección, categoría, desde, nota, color · nombre, dirección, sitio, ciudad | nota · nada | Catálogos | `/techs`, `/orgs`, con impacto y reasignación al borrar |
-| Article | título, dirección, resumen, texto, minutos de lectura, estado, destacado, canónica, orden, publicación, tecnologías, obra | título, resumen, texto | Artículos | `/articles`, `PATCH /articles/:id/slug`; nace en borrador |
+| Article | título, dirección, resumen, texto, minutos de lectura, estado, destacado, canónica, orden, publicación, tecnologías, obra | título, resumen, texto | Artículos | `/articles`, `PATCH /articles/:id/slug`; nace en borrador, salvo el que escribe Eros, que nace publicado |
+| ArticleRun | no se edita: lo escribe el servidor en cada pedido a Eros (origen, estado, tema, obra, tendencia, motivo del fallo, artículo) | — | Artículos (la línea del horario), Tendencias | `POST /articles/generate`, `GET /articles/runs[/:id]` |
 | Doc `about` · `contact` | bloques fijos del esquema más bloques libres; el retrato es una imagen sin inglés; `cv` es una ruta por idioma; email y direcciones sin inglés | solo los bloques de texto y lista | Perfil | `GET/PUT /docs/:key`, `POST /docs/about/portrait` |
 | PDF del CV | derivado, no se edita | ES y EN | Inicio avisa | `pnpm cv:pdf` (§10) |
 
@@ -135,11 +136,11 @@ Qué se edita de cada modelo, dónde y por qué endpoint. El descriptor de cada 
 
 ## 8. Contrato con Eros
 
-Eros es el agente de Job Hunter y de contenido. Corre aparte, en la red interna de Coolify (`HUNTER_API_URL=http://eros:8000`, con `EROS_API_KEY`), y el admin le habla solo a través de `/api/admin/hunter`, `/content` y `/radar` (`server/src/admin/proxy.ts`). Los tipos del cable están en `server/src/shared/hunterContracts.ts` y `contentContracts.ts`; lo que Eros manda se normaliza en `erosContract.ts` y `erosContentContract.ts`.
+Eros es el agente de Job Hunter y de contenido. Corre aparte, en la red interna de Coolify (`HUNTER_API_URL=http://eros:8000`, con `EROS_API_KEY`), y el admin le habla solo a través de `/api/admin/hunter`, `/radar` y `/articles/generate` (`server/src/admin/proxy.ts`). Los tipos del cable están en `server/src/shared/hunterContracts.ts`, `radarContracts.ts` y `articleRunContracts.ts`; lo que Eros manda se normaliza en `erosContract.ts`, `erosRadarContract.ts` y `erosArticleContract.ts`.
 
 **Estado.** `GET /status` informa `eros.state`: `ok`, `cooldown` (el corte abierto después de tres errores de red o tiempos agotados seguidos, con `retryInSec`), `down`, `auth` (Eros responde pero rechaza la clave) o `unconfigured` (falta `HUNTER_API_URL`). Solo cuenta lo que dice que Eros no está: un 5xx, una redirección o un 4xx son respuestas y ponen el corte en cero. El reintento a `127.0.0.1:8000` existe solo con `HUNTER_LOCAL_FALLBACK=1` fuera de producción.
 
-**Ids y redirecciones.** Todo id que el admin reenvía a Eros (vacante, publicación, tendencia, carrusel, CV) pasa por `erosIdParam` (`router.param('id', …)` en cada router de Eros): fuera de `^[A-Za-z0-9_-]+$` responde 400 `invalid` y no sale nada (un `%2F` llegaba a `DELETE /api/jobs`, que borra la cola entera). `proxy.ts` pide con `redirect: 'manual'`: un 3xx de Eros no se sigue, así la clave nunca viaja a otra dirección, y se informa como error de Eros.
+**Ids y redirecciones.** Todo id que el admin reenvía a Eros (vacante, tendencia, CV) pasa por `erosIdParam` (`router.param('id', …)` en cada router de Eros): fuera de `^[A-Za-z0-9_-]+$` responde 400 `invalid` y no sale nada (un `%2F` llegaba a `DELETE /api/jobs`, que borra la cola entera). `proxy.ts` pide con `redirect: 'manual'`: un 3xx de Eros no se sigue, así la clave nunca viaja a otra dirección, y se informa como error de Eros.
 
 **Sin Eros, honesto.** Las lecturas responden 503 `{ code: 'offline', offline: true, retryInSec }` (504 si se agotó el tiempo) y el admin dice «Eros no responde»; las escrituras fallan diciendo qué no pasó («El estado no cambió.»). Un 5xx o una redirección de Eros llega como 502 `eros_error` («Eros respondió con un error (500).», más lo que dijo Eros si mandó un `detail`, como «IA no disponible»), que no es una caída: la cola no pasa a solo lectura. Un 401/403 de Eros llega como 502 `eros_auth`. Un 400/422 de Eros llega como 400 `invalid` con su `detail` saneado (sin direcciones, etiquetas ni saltos, hasta 200 caracteres) después de «Eros no aceptó el pedido. Eros dijo: «…».». Analizar, el mensaje, la vista previa del correo y el CV reciben la vacante entera en el cuerpo (`{ job }`) y caen al respaldo local (`_source: 'fallback'`, cabecera `X-Eros-Source`). Los tiempos: el servidor espera a Eros 60 s y el cliente 90 s; escanear y evaluar en lote son tareas largas (abajo).
 
@@ -151,7 +152,7 @@ Eros es el agente de Job Hunter y de contenido. Corre aparte, en la red interna 
 
 **De dónde sale el correo.** «Buscar correo» lee `{ contact_email, contact_email_source, source, found }` y lo lleva a `FoundEmail { email, found, origin, source }`: `origin` es `posting` (del aviso), `company_site` (la web de la empresa), `hunter` (Hunter.io), `manual` (escrito a mano), `guessed` (solo el Eros de antes, con `domain_guessing` o `mx_inference`: `jobs@<dominio>`) o `unknown`. Del Eros de antes, que no manda `contact_email_source`, se lee `source` (`description` → del aviso, `hunter_io` → Hunter.io). La vista previa trae `email_origin` desde `contact_email_source` o, con el de antes, desde `is_email_extracted`. La UI lo dice debajo del destinatario en español; uno adivinado o sin origen lleva la marca «Adivinado» o «Sin verificar». `contact_email_verified` de Eros no se lee: el de antes lo calculaba al revés.
 
-**Estimaciones sin Gemini.** Cuando Eros no puede usar el modelo puntúa por palabras clave y lo marca con `scored_by: 'heuristic'` (en la vacante y en el análisis). El contrato lo lleva como `estimated` y la UI lo rotula «estimado» en la cola y «Estimación sin Gemini…» en el análisis, nunca como «Generado por Eros». El mensaje y las publicaciones de Eros no traen esa marca: no se pueden distinguir.
+**Estimaciones sin Gemini.** Cuando Eros no puede usar el modelo puntúa por palabras clave y lo marca con `scored_by: 'heuristic'` (en la vacante y en el análisis). El contrato lo lleva como `estimated` y la UI lo rotula «estimado» en la cola y «Estimación sin Gemini…» en el análisis, nunca como «Generado por Eros». El mensaje de Eros no trae esa marca: no se puede distinguir.
 
 **Asunto del mensaje.** Eros manda el asunto en `subject_or_hook`; `subject` queda como respaldo.
 
@@ -165,11 +166,11 @@ Eros es el agente de Job Hunter y de contenido. Corre aparte, en la red interna 
 
 La respuesta trae `_adaptation { categories, entries, bullets, discarded, proposal }`.
 
-**Caché y 409.** El CV adaptado queda en memoria por vacante una hora (`hunterCvCache.ts`). De ahí salen `/cv/:id/html` (la hoja, con `?measure=1` para medirla en un iframe `sandbox="allow-scripts"` que responde `postMessage({ type: 'cv-measure', heightMm, pages })`) y `/cv/:id/txt`. Si no está en caché (reinicio o más de una hora) responden 409 `cv_expired` y el cliente vuelve a hacer `POST /cv/:id` con la misma vacante y repite una vez. Las hojas que se abren en otra pestaña o en un iframe usan un ticket HMAC de una hora (`auth.ts`, alcances `cv`, `cv-base` y `carousel`), nunca la clave. El CV se imprime o se guarda como PDF desde esa hoja; Eros ya no arma PDF.
+**Caché y 409.** El CV adaptado queda en memoria por vacante una hora (`hunterCvCache.ts`). De ahí salen `/cv/:id/html` (la hoja, con `?measure=1` para medirla en un iframe `sandbox="allow-scripts"` que responde `postMessage({ type: 'cv-measure', heightMm, pages })`) y `/cv/:id/txt`. Si no está en caché (reinicio o más de una hora) responden 409 `cv_expired` y el cliente vuelve a hacer `POST /cv/:id` con la misma vacante y repite una vez. Las hojas que se abren en otra pestaña o en un iframe usan un ticket HMAC de una hora (`auth.ts`, alcances `cv` y `cv-base`), nunca la clave. El CV se imprime o se guarda como PDF desde esa hoja; Eros ya no arma PDF.
 
-**Publicaciones y tendencias.** Los enfoques son los valores de `ContentPillar` de Eros (`architecture`, `production_lessons`, `performance_optimization`, `ai_agent_ops`, `fullstack_engineering`) con su rótulo en `contentContracts.ts`; sin elegir, Eros usa arquitectura. A `POST /api/content/generate` le llega `{ topic, pillar?, project_slug?, custom_instructions? }` (un `pillar: null` no se manda; los puntos clave y el ángulo van en `custom_instructions`). A `POST /api/radar/trends/:id/generate` le llega `{ pillar, project_slug?, custom_angle? }` con el enfoque siempre (sin él Eros cae en un valor que no existe) y los puntos dentro de `custom_angle`. Dev.to se lee del objeto anidado `devto: { title, tags, markdown_body }`, y «Publicar en el blog» usa ese Markdown. Se publica por LinkedIn, X o los dos (`all`); Dev.to no tiene publicación automática y se copia a mano. Al publicar se lee el `status` de Eros: `dispatched` (se la pasó a n8n y queda publicada cuando n8n confirma cada red; el `published` del Eros de antes se lee igual) con `dispatched_channels`, o `approved_local` (Eros no tiene n8n: la aprobó y no salió a ninguna red); cualquier otra cosa es un error. Los `error_code` de Eros salen con su texto: ya publicada o rechazada (409), ya despachada sin confirmar (409, no se manda dos veces), canal que no existe (400), n8n que no la aceptó o no respondió a tiempo (502, «puede que haya salido»).
+**Artículos que escribe Eros.** Mateo dejó LinkedIn y X (decisión del 2026-11-04 en `docs/decisiones.md`): Eros escribe artículos enteros y la API los publica solos en `/articles`, en español y en inglés. Se piden de tres maneras: el horario de los lunes a las 9:00 de Buenos Aires (`server/src/admin/articleSchedule.ts`, un temporizador de la API cada 10 minutos; encendido en producción con `HUNTER_API_URL`, `ARTICLES_WEEKLY=off` lo apaga y `=on` lo enciende en cualquier entorno), «Pedir un artículo a Eros» en Artículos (tema y obra opcionales) y «Escribir artículo» en una tendencia. Los tres pasan por `startArticleRun` (`articleAuto.ts`): anota el pedido (`ArticleRun`), manda a `POST /api/articles/generate` de Eros `{ topic?, project_slug?, trend_id?, angle?, avoid_titles }` (los títulos que ya hay, hasta 300) y responde 202 con el pedido apenas Eros devuelve su tarea; la tarea se sigue en segundo plano por `GET /api/tasks/:id` (`erosTask.ts`, hasta 8 minutos). El resultado `{ topic, project_slug, trend_id, tags, es: { title, summary, markdown }, en: { … }, model }` se valida en `erosArticleContract.ts`: los dos idiomas completos, título y bajada recortados a los topes del artículo, el texto hasta 60 000 caracteres y sin tablas ni HTML fuera del código (el sitio no los dibuja). Se publica en una transacción: dirección libre a partir del título (`articleRelations.ts`, con `-2`, `-3`…), `PUBLISHED` con la fecha de ahora, minutos de lectura del español, las etiquetas que coinciden con una tecnología de la base y la obra si existe, más el inglés en `ArticleTranslation`; después se olvidan los respaldos de la API pública. Uno a la vez: con otro escribiendo, pedir responde 409 `conflict` con el que está en curso; uno que lleva más de 20 minutos o que quedó de un arranque anterior de la API se da por cortado. Si Eros falla, el pedido queda `failed` con el motivo en español y su código (`llm_unavailable` o `llm_output_invalid` de Eros; `offline`, `invalid_output`, `not_supported` o `cut` del servidor). Sin Eros, pedir responde 503 `{ offline: true }` y el pedido queda anotado como fallido; el Eros de antes, que no tiene la ruta, da 502 «todavía no escribe artículos». Las tendencias se leen igual que antes (`GET /api/radar/trends`, `scan` y `status`).
 
-**Muestra para pruebas.** `EROS_DEMO=1` (y nunca con `NODE_ENV=production`) sirve una cola y publicaciones ficticias (ids `demo-*`, empresas Ejemplo/Example, `X-Eros-Source: demo`) para pruebas y capturas. En Publicaciones y Tendencias las escrituras sobre ids `demo-*` responden 400 y no se guardan. En Vacantes solo se frenan los ids `manual-*`: cambiar la etapa o borrar una vacante `demo-*` va a Eros y, sin Eros, falla como sin conexión. Las pruebas que necesitan un Eros que responda usan el simulado de `tests/admin/eros-mock.ts`; el Eros real nunca se contacta desde una prueba.
+**Muestra para pruebas.** `EROS_DEMO=1` (y nunca con `NODE_ENV=production`) sirve una cola y tendencias ficticias (ids `demo-*`, empresas Ejemplo/Example, `X-Eros-Source: demo`) para pruebas y capturas. En Tendencias las escrituras sobre ids `demo-*` responden 400 y no se guardan, y una tendencia de muestra no se vuelve artículo (400); no hay artículo de muestra: pedir uno va a Eros y, sin Eros, falla como sin conexión. En Vacantes solo se frenan los ids `manual-*`: cambiar la etapa o borrar una vacante `demo-*` va a Eros y, sin Eros, falla como sin conexión. Las pruebas que necesitan un Eros que responda usan el simulado de `tests/admin/eros-mock.ts`; el Eros real nunca se contacta desde una prueba.
 
 ---
 
@@ -259,24 +260,17 @@ Todas las rutas van debajo de `/api/admin`, detrás del Bearer `ADMIN_TOKEN` (la
 | POST | `/hunter/cv-base/ticket` | Ticket de la hoja del CV base | `features/experience/CvSheet.vue`, `features/experience/CvView.vue` |
 | GET | `/hunter/cv-base/html` | La hoja del CV base de Trayectoria (`?lang=`, `?measure=1`) | `features/experience/CvSheet.vue`, `features/experience/CvView.vue` |
 
-### Publicaciones y Tendencias
+### Artículos de Eros y Tendencias
 
 | Método | Ruta | Qué hace | Dónde está en la UI |
 |---|---|---|---|
-| GET | `/content/posts` | Publicaciones de Eros | `features/content/api.ts` |
-| GET | `/content/posts/:id` | Una publicación | `features/content/api.ts` |
-| POST | `/content/generate` | «Generar una publicación» | `features/content/api.ts` |
-| PATCH | `/content/posts/:id/status` | Aprobar, descartar, volver a borrador | `features/content/api.ts` |
-| DELETE | `/content/posts/:id` | Elimina en Eros | `features/content/api.ts` |
-| POST | `/content/posts/:id/publish` | «Publicar por n8n», con confirmación; dice si Eros la publicó o solo la aprobó (`status`) | `features/content/api.ts` |
-| POST | `/content/posts/:id/publish-to-blog` | Crea un artículo en borrador y lleva a su editor | `features/content/api.ts` |
-| POST | `/content/carousel/:id/ticket` | Ticket del carrusel | `features/content/api.ts` |
-| GET | `/content/carousel/:id/html` | El carrusel para ver o imprimir | `features/content/api.ts` |
+| POST | `/articles/generate` | Pide un artículo a Eros (`{ topic?, projectSlug?, trendId? }`) → 202 con el pedido; 409 si hay otro escribiendo | `features/articles/runs.ts` |
+| GET | `/articles/runs` | Los últimos pedidos (`?limit=`), el próximo lunes y si el horario está encendido | `features/articles/runs.ts` |
+| GET | `/articles/runs/:id` | Un pedido, con su artículo cuando se publicó (se consulta cada 3 s mientras Eros escribe) | `features/articles/runs.ts` |
 | GET | `/radar/trends` | Tendencias detectadas | `features/radar/api.ts` |
 | GET | `/radar/trends/:id` | Una tendencia | `features/radar/api.ts` |
 | POST | `/radar/scan` | Buscar tendencias nuevas | `features/radar/api.ts` |
 | PATCH | `/radar/trends/:id/status` | Estado de la tendencia | `features/radar/api.ts` |
-| POST | `/radar/trends/:id/generate` | Crea una publicación desde la tendencia | `features/radar/api.ts` |
 
 ### Sin uso en la UI
 
@@ -312,6 +306,16 @@ Ya no existen. Si alguno vuelve a montarse, el chequeo falla.
 | PATCH | `/hunter/contact-email/:id` | Alias de `PATCH /hunter/jobs/:id/contact-email` |
 | GET | `/docs` | La lista de documentos: solo la leía el panel anterior |
 | DELETE | `/docs/:key` | Borrar `about` o `contact` dejaba al sitio sin bloques que el código lee por nombre |
+| GET | `/content/posts` | Publicaciones (LinkedIn, X, Dev.to y carrusel): Mateo dejó LinkedIn y X el 2026-11-04 y Eros escribe artículos que se publican solos (§8) |
+| GET | `/content/posts/:id` | Una publicación: se fue con Publicaciones |
+| POST | `/content/generate` | «Generar una publicación»: lo reemplaza `POST /articles/generate` |
+| PATCH | `/content/posts/:id/status` | Aprobar o descartar una publicación: se fue con Publicaciones |
+| DELETE | `/content/posts/:id` | Eliminar una publicación: se fue con Publicaciones |
+| POST | `/content/posts/:id/publish` | «Publicar por n8n» en LinkedIn y X: ya no se publica en redes |
+| POST | `/content/posts/:id/publish-to-blog` | El borrador desde una publicación: el artículo de Eros se publica directo |
+| POST | `/content/carousel/:id/ticket` | Ticket del carrusel de LinkedIn: se fue con Publicaciones (y el alcance `carousel`) |
+| GET | `/content/carousel/:id/html` | El carrusel de LinkedIn: se fue con Publicaciones |
+| POST | `/radar/trends/:id/generate` | Una publicación desde una tendencia: lo reemplaza `POST /articles/generate { trendId }` |
 
 Fuera de la API también se retiraron `/admin-next` (la convivencia durante el rediseño), los archivos estáticos del panel anterior (`server/admin/index.html`, `js/`, `vendor/`, `admin.css`) y el botón «dev-token» del ingreso.
 

@@ -102,8 +102,9 @@ El repositorio cuenta con Dockerfiles optimizados para producción:
    EROS_API_KEY=tu-clave-secreta-compartida-con-eros
    GEMINI_API_KEY=tu-api-key-de-gemini
    ```
-   - `HUNTER_API_URL` es **obligatoria** para que Eros ande: no tiene valor por defecto. Sin ella el admin muestra Eros como «no configurado», Vacantes, Publicaciones y Tendencias no traen nada y el CV se sigue armando desde la base. Verificarla en Coolify antes de cada deploy (`http://eros:8000`, la red interna).
+   - `HUNTER_API_URL` es **obligatoria** para que Eros ande: no tiene valor por defecto. Sin ella el admin muestra Eros como «no configurado», Vacantes y Tendencias no traen nada, no se escriben artículos (ni el de los lunes) y el CV se sigue armando desde la base. Verificarla en Coolify antes de cada deploy (`http://eros:8000`, la red interna).
    - Nunca `EROS_DEMO=1` en producción (la muestra de pruebas igual se apaga con `NODE_ENV=production`), ni `HUNTER_LOCAL_FALLBACK`.
+   - El artículo de los lunes: con `NODE_ENV=production` y `HUNTER_API_URL`, la API le pide uno a Eros cada lunes a las 9:00 de Buenos Aires y lo publica sola (si estuvo apagada el lunes, lo pide al volver). `ARTICLES_WEEKLY=off` lo apaga sin tocar el resto de Eros; `ARTICLES_WEEKLY=on` lo enciende en cualquier entorno (fuera de producción, solo contra un Eros y una base de prueba). El estado y el próximo lunes se ven en Artículos del admin. La migración `20261106000000_article_runs` (tabla `ArticleRun`) la aplica el arranque del contenedor.
    - `ADMIN_TOKEN` es la clave del admin: sin un valor válido el admin responde 503. No hay `dev-token` en producción.
 8. Hacé clic en **"Deploy"**.
 9. **Ejecutar migraciones y seed inicial:**

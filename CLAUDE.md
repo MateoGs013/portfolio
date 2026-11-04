@@ -6,7 +6,7 @@ El portafolio se estructura en torno a:
 - **Sitio público:** inicio (`/`), obra (`/projects`), caso (`/projects/:slug`), sobre mí (`/about`) y artículos (`/articles`), en ES y EN (`?lang=en`), con el contenido entero desde la base. Cada página se puede ver como registro tipado de la base con `R` (`?vista=registro`).
 - **Modo Focus / Hiperfoco (`useHyperfocus.ts`):** una tecla (`H`) que deja una columna de lectura en monocromo, sin ornamentos ni movimiento ambiental y con la navegación intacta. El estado vive en una cookie que lee el SSR, así no parpadea.
 - **CV Harvard ATS (`app/components/cv/`):** en `/about?cv=ats`, imprimible en una sola página A4. Un PDF ATS por idioma (`public/cv/CV-{ES,EN}-Mateo-Sonzogni-ATS.pdf`); las URL sin `-ATS` redirigen a ellos.
-- **Consola de Administración (`/admin`):** la mesa de trabajo del contenido y de la búsqueda laboral con Eros (vacantes, publicaciones y tendencias), con el CV Harvard ATS adaptado a cada vacante y armado siempre desde la base. Una cosa por pantalla, con los tokens del sitio (`docs/admin.md`).
+- **Consola de Administración (`/admin`):** la mesa de trabajo del contenido y de la búsqueda laboral con Eros (vacantes y tendencias; Eros escribe artículos que se publican solos, uno cada lunes), con el CV Harvard ATS adaptado a cada vacante y armado siempre desde la base. Una cosa por pantalla, con los tokens del sitio (`docs/admin.md`).
 
 ---
 
