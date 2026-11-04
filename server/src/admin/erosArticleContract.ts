@@ -57,8 +57,12 @@ function prose(markdown: string): string {
 
 /** Una fila de tabla de Markdown: empieza y termina con `|`, o es la línea separadora `---|---`. */
 const TABLE_LINE = /^\s*\|.*\|\s*$|^\s*:?-{3,}:?\s*\|\s*:?-{3,}/m
-/** Una etiqueta o un comentario HTML: `<div>`, `</p>`, `<br/>`, `<!-- … -->`. */
-const HTML = /<\/?[a-z][a-z0-9-]*(?:\s[^<>]*)?\/?>|<!--/i
+/**
+ * Una etiqueta HTML de verdad o un comentario: `<div>`, `</p>`, `<br/>`, `<!-- … -->`. Solo nombres de
+ * etiquetas reales, como valida Eros: `Array<string>` o `<T>` en el texto son tipos, no marcado (y el
+ * sitio los dibuja como texto, nunca como HTML).
+ */
+const HTML = /<\/?(?:a|abbr|article|aside|b|blockquote|br|button|code|details|div|em|figure|footer|form|h[1-6]|header|hr|i|iframe|img|input|li|link|main|meta|nav|object|ol|p|picture|pre|script|section|small|source|span|strong|style|sub|summary|sup|svg|table|tbody|td|th|thead|tr|u|ul|video)(?:\s[^<>]*)?\/?>|<!--/i
 
 /** Por qué no se publica este Markdown, o null si se puede. */
 export function markdownProblem(markdown: string): string | null {

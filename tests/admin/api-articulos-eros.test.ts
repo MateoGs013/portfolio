@@ -63,6 +63,8 @@ describe('el contrato del artículo de Eros (sin red)', () => {
     assert.match(markdownProblem('Hola <div>mundo</div>') ?? '', /HTML/)
     assert.match(markdownProblem('Un comentario <!-- oculto -->') ?? '', /HTML/)
     assert.equal(markdownProblem('```html\n<div>|a|b|</div>\n```\n\nY `<br>` en línea, 3 < 4 y a | b.'), null)
+    assert.equal(markdownProblem('Un `Ref` es un Array<string> o un Map<K, V> en el texto.'), null)
+    assert.match(markdownProblem('Una imagen <img src="x.png"> suelta') ?? '', /HTML/)
   })
 
   test('los dos idiomas completos, recortados y con los topes del admin', () => {
