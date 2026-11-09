@@ -174,10 +174,13 @@ async function record(ctx, site, item, dir) {
   await writeFile(join(tmp, 'list.txt'), list)
   const base = join(dir, item.name)
   const input = ['-f', 'concat', '-safe', '0', '-i', join(tmp, 'list.txt')]
-  const vf = 'fps=30,scale=1920:1200:flags=lanczos,format=yuv420p'
+  // Los cuadros son JPEG de rango completo (pc). El video va en rango limitado (tv), el de todo video web:
+  // Chromium en Windows no decodifica un VP9 de rango completo (PIPELINE_ERROR_DECODE) y no cae al MP4.
+  const vf = 'fps=30,scale=1920:1200:flags=lanczos:in_range=pc:out_range=tv,format=yuv420p'
+  const range = ['-color_range', 'tv']
   // Tope de bitrate: un scroll con mucho detalle no puede pasar de ~4 MB, es un video de fondo
-  ffmpeg([...input, '-vf', vf, '-c:v', 'libx264', '-crf', '24', '-maxrate', '3M', '-bufsize', '6M', '-preset', 'slow', '-movflags', '+faststart', '-an', `${base}.mp4`])
-  ffmpeg([...input, '-vf', vf, '-c:v', 'libvpx-vp9', '-crf', '34', '-b:v', '0', '-row-mt', '1', '-an', `${base}.webm`])
+  ffmpeg([...input, '-vf', vf, ...range, '-c:v', 'libx264', '-crf', '24', '-maxrate', '3M', '-bufsize', '6M', '-preset', 'slow', '-movflags', '+faststart', '-an', `${base}.mp4`])
+  ffmpeg([...input, '-vf', vf, ...range, '-c:v', 'libvpx-vp9', '-crf', '34', '-b:v', '0', '-row-mt', '1', '-an', `${base}.webm`])
   ffmpeg(['-i', join(tmp, 'f00000.jpg'), '-vf', 'scale=1920:1200', '-c:v', 'libwebp', '-quality', '82', `${base}-poster.webp`])
   await rm(tmp, { recursive: true, force: true })
   console.log(`  ✓ ${item.name} (${frames.length} cuadros, ${(frames.at(-1).t - frames[0].t).toFixed(1)} s)`)

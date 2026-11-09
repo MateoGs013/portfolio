@@ -84,6 +84,22 @@ test.describe('en el caso', () => {
     expect(await cover.evaluate((v: HTMLVideoElement) => v.paused)).toBe(true)
   })
 
+  test('si el WebM no se puede decodificar, la portada sigue con el MP4', async ({ page }) => {
+    // El contenedor llega entero y los cuadros, rotos: el navegador da error de decodificación (como
+    // un VP9 de rango completo en Chromium para Windows) y no prueba solo la fuente siguiente.
+    await page.route('**/*.webm', async (route) => {
+      const res = await route.fetch({ headers: { ...route.request().headers(), range: '' } })
+      const body = Buffer.from(await res.body())
+      body.fill(0xA5, 4096, Math.min(body.length, 65536))
+      await route.fulfill({ status: 200, body, headers: { 'content-type': 'video/webm' } })
+    })
+    await open(page, '/projects/la-rucula')
+    const cover = page.locator('[data-vt="cover"] video').first()
+    await cover.evaluate(v => v.scrollIntoView({ block: 'center' }))
+    await expect.poll(() => cover.evaluate((v: HTMLVideoElement) => v.currentSrc), { timeout: 8000 }).toMatch(/\.mp4$/)
+    await expect.poll(() => cover.evaluate((v: HTMLVideoElement) => v.currentTime), { timeout: 8000 }).toBeGreaterThan(0)
+  })
+
   test('un video de la galería no se descarga hasta que se ve y entonces reproduce', async ({ page }) => {
     await open(page, '/projects/la-rucula')
     // El índice, no el atributo: al arrancar, el video pasa a preload="auto".
