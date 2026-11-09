@@ -1,6 +1,6 @@
 {
   "_generated": "pnpm db:snapshot — no editar",
-  "at": "2026-11-03T20:07:52.891Z",
+  "at": "2026-11-09T19:54:44.103Z",
   "projects": [
     {
       "id": 249,
@@ -194,7 +194,12 @@
               "title": "Tienda Mística",
               "year": 2026,
               "publishedAt": "2026-10-05T12:00:00.000Z",
-              "translations": []
+              "translations": [
+                {
+                  "locale": "en",
+                  "title": null
+                }
+              ]
             }
           ]
         },
@@ -897,7 +902,12 @@
               "title": "Tienda Mística",
               "year": 2026,
               "publishedAt": "2026-10-05T12:00:00.000Z",
-              "translations": []
+              "translations": [
+                {
+                  "locale": "en",
+                  "title": null
+                }
+              ]
             }
           ]
         },
@@ -2614,7 +2624,12 @@
               "title": "Tienda Mística",
               "year": 2026,
               "publishedAt": "2026-10-05T12:00:00.000Z",
-              "translations": []
+              "translations": [
+                {
+                  "locale": "en",
+                  "title": null
+                }
+              ]
             }
           ]
         },
@@ -2714,7 +2729,14 @@
           "order": 0,
           "bytes": 90156,
           "projectId": 253,
-          "translations": []
+          "translations": [
+            {
+              "mediaId": 666,
+              "locale": "en",
+              "alt": "Ynara Web cover: the blue ribbon of light from the WebGL field crossing the charcoal, with the headline “One app to organize your life, remember everything and keep you company every day” and the colossal Ynara wordmark next to its symbol",
+              "caption": null
+            }
+          ]
         }
       ],
       "steps": [
@@ -3497,7 +3519,12 @@
               "title": "Tienda Mística",
               "year": 2026,
               "publishedAt": "2026-10-05T12:00:00.000Z",
-              "translations": []
+              "translations": [
+                {
+                  "locale": "en",
+                  "title": null
+                }
+              ]
             }
           ]
         },
@@ -3567,7 +3594,12 @@
               "title": "Tienda Mística",
               "year": 2026,
               "publishedAt": "2026-10-05T12:00:00.000Z",
-              "translations": []
+              "translations": [
+                {
+                  "locale": "en",
+                  "title": null
+                }
+              ]
             }
           ]
         },
@@ -3640,7 +3672,14 @@
           "order": 0,
           "bytes": 132818,
           "projectId": 255,
-          "translations": []
+          "translations": [
+            {
+              "mediaId": 668,
+              "locale": "en",
+              "alt": "Circuito Kitsune cover: the “CIRCUITO KITSUNE” masthead in solid and outlined black on ember red, with a cyberpunk fox mask on the right",
+              "caption": null
+            }
+          ]
         }
       ],
       "steps": [
@@ -3820,7 +3859,12 @@
               "title": "Tienda Mística",
               "year": 2026,
               "publishedAt": "2026-10-05T12:00:00.000Z",
-              "translations": []
+              "translations": [
+                {
+                  "locale": "en",
+                  "title": null
+                }
+              ]
             }
           ]
         },
@@ -3830,14 +3874,24 @@
           "category": "DATA",
           "since": 2025,
           "note": "Base relacional MySQL-compatible accedida con PDO: catálogo, carrito y pedidos sobre un modelo normalizado, sin ORM de por medio.",
-          "translations": [],
+          "translations": [
+            {
+              "locale": "en",
+              "note": "A MySQL-compatible relational database accessed through PDO: catalog, cart and orders on a normalized model, with no ORM in between."
+            }
+          ],
           "projects": [
             {
               "slug": "tienda-mistica",
               "title": "Tienda Mística",
               "year": 2026,
               "publishedAt": "2026-10-05T12:00:00.000Z",
-              "translations": []
+              "translations": [
+                {
+                  "locale": "en",
+                  "title": null
+                }
+              ]
             }
           ]
         },
@@ -3871,7 +3925,12 @@
               "title": "Tienda Mística",
               "year": 2026,
               "publishedAt": "2026-10-05T12:00:00.000Z",
-              "translations": []
+              "translations": [
+                {
+                  "locale": "en",
+                  "title": null
+                }
+              ]
             }
           ]
         },
@@ -3941,7 +4000,12 @@
               "title": "Tienda Mística",
               "year": 2026,
               "publishedAt": "2026-10-05T12:00:00.000Z",
-              "translations": []
+              "translations": [
+                {
+                  "locale": "en",
+                  "title": null
+                }
+              ]
             }
           ]
         }
@@ -3963,7 +4027,14 @@
           "order": 0,
           "bytes": 34110,
           "projectId": 256,
-          "translations": []
+          "translations": [
+            {
+              "mediaId": 669,
+              "locale": "en",
+              "alt": "Tienda Mística cover: the “TIENDA MÍSTICA — Collect Legendary Elves” masthead in arcade type on a dark background with a grid",
+              "caption": null
+            }
+          ]
         }
       ],
       "steps": [
@@ -3974,7 +4045,14 @@
           "body": "Un parcial pedía una tienda con catálogo, carrito y administración en PHP sin framework. La decisión fue no entregar un CRUD pelado sino una marca: un arcade de duendes legendarios inspirado en los bosques encantados de Irlanda.",
           "projectId": 256,
           "mediaId": null,
-          "translations": [],
+          "translations": [
+            {
+              "stepId": 674,
+              "locale": "en",
+              "title": "brief",
+              "body": "A coursework assignment asked for a shop with a catalog, a cart and administration in PHP without a framework. The decision was not to ship a bare CRUD but a brand: an arcade of legendary elves inspired by the enchanted forests of Ireland."
+            }
+          ],
           "media": null
         },
         {
@@ -3984,7 +4062,14 @@
           "body": "Front controller propio (index.php) que rutea por sección, clases con PDO sobre MariaDB y un modelo relacional de 18 tablas: duendes, rarezas, materiales, accesorios, blog, carrito y pedidos. Panel ABM detrás de autenticación por sesión; sin framework que resuelva el trabajo por abajo.",
           "projectId": 256,
           "mediaId": null,
-          "translations": [],
+          "translations": [
+            {
+              "stepId": 675,
+              "locale": "en",
+              "title": "model",
+              "body": "A custom front controller (index.php) that routes by section, PDO classes on MariaDB and an 18-table relational model: elves, rarities, materials, accessories, blog, cart and orders. An admin panel behind session authentication; no framework doing the work underneath."
+            }
+          ],
           "media": null
         },
         {
@@ -3994,7 +4079,14 @@
           "body": "Dirección arcade-cyberpunk: masthead Orbitron, HUD monoespaciado y una intro que arma el «portal místico». Catálogo filtrable por rareza y detalle por duende, con sistema visual cerrado sobre tokens de color propios.",
           "projectId": 256,
           "mediaId": null,
-          "translations": [],
+          "translations": [
+            {
+              "stepId": 676,
+              "locale": "en",
+              "title": "piece",
+              "body": "Arcade-cyberpunk art direction: an Orbitron masthead, a monospaced HUD and an intro that assembles the “mystic portal”. A catalog filterable by rarity and a detail page for each elf, with a closed visual system on its own color tokens."
+            }
+          ],
           "media": null
         }
       ],
@@ -4004,14 +4096,26 @@
           "label": "sitio en vivo",
           "url": "https://mistica.mateogs.tech",
           "projectId": 256,
-          "translations": []
+          "translations": [
+            {
+              "linkId": 384,
+              "locale": "en",
+              "label": "live site"
+            }
+          ]
         },
         {
           "id": 385,
           "label": "código fuente",
           "url": "https://github.com/MateoGs013/tienda-mistica",
           "projectId": 256,
-          "translations": []
+          "translations": [
+            {
+              "linkId": 385,
+              "locale": "en",
+              "label": "source code"
+            }
+          ]
         }
       ],
       "metrics": [
@@ -4069,7 +4173,17 @@
         }
       ],
       "experiences": [],
-      "translations": []
+      "translations": [
+        {
+          "projectId": 256,
+          "locale": "en",
+          "title": null,
+          "role": "Da Vinci coursework · pure PHP",
+          "summary": "A fictional e-commerce store of magical elves in pure PHP, with no framework: a front controller, PDO and MariaDB. Catalog, cart, blog and admin panel, with an arcade look.",
+          "brief": "A PHP coursework project built by hand, with no framework hiding how it works: a custom front controller, PDO classes and a relational model on MariaDB. The challenge was to make the fundamentals visible and still give the shop a brand identity.",
+          "outcome": "In production at mistica.mateogs.tech. A catalog of 21 elves across four rarities on an 18-table model, with a session cart, a blog of chronicles, a contact page and an admin panel with authentication. All in pure PHP served by Apache + mod_php, with no framework dependencies."
+        }
+      ]
     }
   ],
   "stack": [
@@ -4142,7 +4256,12 @@
           "title": "Tienda Mística",
           "year": 2026,
           "publishedAt": "2026-10-05T12:00:00.000Z",
-          "translations": []
+          "translations": [
+            {
+              "locale": "en",
+              "title": null
+            }
+          ]
         }
       ],
       "experiences": [
@@ -4787,7 +4906,12 @@
           "title": "Tienda Mística",
           "year": 2026,
           "publishedAt": "2026-10-05T12:00:00.000Z",
-          "translations": []
+          "translations": [
+            {
+              "locale": "en",
+              "title": null
+            }
+          ]
         }
       ],
       "experiences": [
@@ -5107,7 +5231,12 @@
           "title": "Tienda Mística",
           "year": 2026,
           "publishedAt": "2026-10-05T12:00:00.000Z",
-          "translations": []
+          "translations": [
+            {
+              "locale": "en",
+              "title": null
+            }
+          ]
         }
       ],
       "experiences": [
@@ -5205,14 +5334,25 @@
       "since": 2025,
       "note": "Base relacional MySQL-compatible accedida con PDO: catálogo, carrito y pedidos sobre un modelo normalizado, sin ORM de por medio.",
       "color": "#c0765a",
-      "translations": [],
+      "translations": [
+        {
+          "techId": 733,
+          "locale": "en",
+          "note": "A MySQL-compatible relational database accessed through PDO: catalog, cart and orders on a normalized model, with no ORM in between."
+        }
+      ],
       "projects": [
         {
           "slug": "tienda-mistica",
           "title": "Tienda Mística",
           "year": 2026,
           "publishedAt": "2026-10-05T12:00:00.000Z",
-          "translations": []
+          "translations": [
+            {
+              "locale": "en",
+              "title": null
+            }
+          ]
         }
       ],
       "experiences": []
@@ -5971,7 +6111,12 @@
           "title": "Tienda Mística",
           "year": 2026,
           "publishedAt": "2026-10-05T12:00:00.000Z",
-          "translations": []
+          "translations": [
+            {
+              "locale": "en",
+              "title": null
+            }
+          ]
         }
       ],
       "experiences": [
