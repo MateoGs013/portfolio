@@ -179,6 +179,18 @@ export const EN: EnSeed = {
       },
       links: { 'https://github.com/MateoGs013/circuito-kitsune': SOURCE },
     },
+    'tienda-mistica': {
+      role: 'Da Vinci coursework · pure PHP',
+      summary: 'A fictional e-commerce store of magical elves in pure PHP, with no framework: a front controller, PDO and MariaDB. Catalog, cart, blog and admin panel, with an arcade look.',
+      brief: 'A PHP coursework project built by hand, with no framework hiding how it works: a custom front controller, PDO classes and a relational model on MariaDB. The challenge was to make the fundamentals visible and still give the shop a brand identity.',
+      outcome: 'In production at mistica.mateogs.tech. A catalog of 21 elves across four rarities on an 18-table model, with a session cart, a blog of chronicles, a contact page and an admin panel with authentication. All in pure PHP served by Apache + mod_php, with no framework dependencies.',
+      steps: {
+        1: { title: 'brief', body: 'A coursework assignment asked for a shop with a catalog, a cart and administration in PHP without a framework. The decision was not to ship a bare CRUD but a brand: an arcade of legendary elves inspired by the enchanted forests of Ireland.' },
+        2: { title: 'model', body: 'A custom front controller (index.php) that routes by section, PDO classes on MariaDB and an 18-table relational model: elves, rarities, materials, accessories, blog, cart and orders. An admin panel behind session authentication; no framework doing the work underneath.' },
+        3: { title: 'piece', body: 'Arcade-cyberpunk art direction: an Orbitron masthead, a monospaced HUD and an intro that assembles the “mystic portal”. A catalog filterable by rarity and a detail page for each elf, with a closed visual system on its own color tokens.' },
+      },
+      links: { 'https://mistica.mateogs.tech': LIVE, 'https://github.com/MateoGs013/tienda-mistica': SOURCE },
+    },
   },
 
   experience: {
@@ -271,6 +283,7 @@ export const EN: EnSeed = {
     laravel: 'A robust monolith with Eloquent ORM, session authentication and job queues for transactional platforms.',
     php: 'A traditional backend language used in client integrations and transactional modules.',
     javascript: 'The foundation of modern web development, ECMAScript standards and native DOM manipulation.',
+    mariadb: 'A MySQL-compatible relational database accessed through PDO: catalog, cart and orders on a normalized model, with no ORM in between.',
   },
 
   docs: {

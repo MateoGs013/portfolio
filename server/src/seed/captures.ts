@@ -37,6 +37,9 @@ export const COVER_ALT_EN: Record<string, string> = {
   'ynara': 'Ynara, an adaptive on-premise AI assistant',
   'barberpole': 'barberpole home page: “Direct booking.” set in a monospaced typeface on a dark background',
   'eros': 'Eros Job Hunter in the portfolio console: list of job openings with their match percentage and the evaluation of one of them',
+  'ynara-web': 'Ynara Web cover: the blue ribbon of light from the WebGL field crossing the charcoal, with the headline “One app to organize your life, remember everything and keep you company every day” and the colossal Ynara wordmark next to its symbol',
+  'circuito-kitsune': 'Circuito Kitsune cover: the “CIRCUITO KITSUNE” masthead in solid and outlined black on ember red, with a cyberpunk fox mask on the right',
+  'tienda-mistica': 'Tienda Mística cover: the “TIENDA MÍSTICA — Collect Legendary Elves” masthead in arcade type on a dark background with a grid',
 }
 
 const phoneHome = (site: string, en: string): Piece => ({
