@@ -124,7 +124,9 @@ test.describe('og:image', () => {
   }
 
   test('sin portada: la imagen por defecto de 1200x630', async ({ request }) => {
-    for (const path of ['/', '/about', '/projects', '/projects/ynara-web']) {
+    // Desde fb94729 Ynara Web tiene portada y hoy ninguna obra publicada queda sin COVER: el respaldo
+    // de una obra sin portada no tiene con qué probarse, quedan las páginas que nunca la tienen.
+    for (const path of ['/', '/about', '/projects']) {
       const image = await checkImage(request, await headOf(request, path))
       expect(new URL(image.url).pathname).toBe('/og/default.png')
       expect([image.width, image.height]).toEqual([1200, 630])
