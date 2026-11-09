@@ -9,8 +9,8 @@ import { expect, type APIRequestContext, type BrowserContext, type Page } from '
 /** Las cuatro páginas del sitio que toda spec recorre (el caso más completo es La Rúcula). */
 export const PAGES = ['/', '/projects', '/projects/la-rucula', '/about'] as const
 
-/** Las seis obras publicadas y las dos que quedan en la base sin publicar (decisión 1). */
-export const WORKS = ['la-rucula', 'argpiscinas', 'ynara', 'barberpole', 'ynara-web', 'eros'] as const
+/** Las ocho obras publicadas (desde Tienda Mística) y las dos que quedan en la base sin publicar (decisión 1). */
+export const WORKS = ['la-rucula', 'argpiscinas', 'ynara', 'barberpole', 'ynara-web', 'eros', 'circuito-kitsune', 'tienda-mistica'] as const
 export const HIDDEN_WORKS = ['null-net', 'lampone'] as const
 
 export const HYPERFOCUS_COOKIE = 'pf-hyperfocus'

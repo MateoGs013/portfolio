@@ -1,6 +1,6 @@
 import { expect, test, type Page } from '@playwright/test'
 import shell from '../../app/lib/dict/shell'
-import { api, horizontalOverflow, PAGES } from './support'
+import { api, horizontalOverflow, PAGES, WORKS } from './support'
 
 /**
  * Sin JS (proyecto no-js): el SSR entrega la página entera y se navega por enlaces reales
@@ -37,7 +37,7 @@ test('se navega por enlaces reales: menú, tarjeta, siguiente obra y volver al i
   await page.goto('/')
   await page.locator('header[data-chrome] nav a', { hasText: shell['nav.work'].es }).click()
   await expect(page).toHaveURL(/\/projects$/)
-  await expect(page.locator('#contenido a[data-card]')).toHaveCount(6)
+  await expect(page.locator('#contenido a[data-card]')).toHaveCount(WORKS.length)
 
   await page.locator('#contenido a[data-card]').first().click()
   await expect(page).toHaveURL(/\/projects\/[\w-]+$/)
@@ -68,6 +68,6 @@ test('el CV se lee y se descarga sin JS', async ({ page }) => {
 test('el registro de la obra es una tabla tipada', async ({ page }) => {
   await page.goto('/projects?vista=registro')
   await expect(page.locator('html')).toHaveAttribute('data-vista', 'registro')
-  await expect(page.locator('#contenido table tbody tr.f')).toHaveCount(6)
+  await expect(page.locator('#contenido table tbody tr.f')).toHaveCount(WORKS.length)
   await expect(page.locator('#contenido table th[scope="row"] a').first()).toHaveAttribute('href', /^\/projects\/[\w-]+/)
 })
