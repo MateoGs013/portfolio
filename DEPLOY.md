@@ -133,6 +133,12 @@ El repositorio cuenta con Dockerfiles optimizados para producción:
 > 6. Auditoría de solo lectura en `https://mateogs.tech/admin/`: ingreso, Inicio, una obra, la Vista CV y Vacantes (con Eros arriba y su estado).
 > Para volver atrás: `pg_restore --clean --if-exists --dbname="$DATABASE_URL" antes-admin.dump` y desplegar el código anterior.
 
+> [!WARNING] Sumar Tienda Mística a una base ya cargada (9-nov-2026)
+> Tienda Mística y la tecnología MariaDB entraron al seed el 3-nov y producción quedó sin ellas. Sin migraciones; todo en la terminal de la API, después de un respaldo de la base (en Coolify, «Backup now» de la base):
+> 1. `pnpm tsx server/src/patches/2026-11-09-tienda-mistica.ts --dry`, sin `--dry` y `--dry` otra vez («sin cambios»). Crea las dos solo si faltan, con su inglés y el de la portada.
+> 2. `pnpm tsx server/src/scripts/import-captures.ts --db-only --dry` y sin `--dry`: suma el alt en inglés de las portadas de Ynara Web y Circuito Kitsune.
+> 3. Reiniciar la API.
+
 > [!NOTE] Seguridad de Eros Agent
 > Eros no debe publicarse con un dominio en Internet. Debe correr en la misma red de Coolify bajo `http://eros:8000` y con `EROS_API_KEY` compartida requerida en todas sus peticiones.
 
