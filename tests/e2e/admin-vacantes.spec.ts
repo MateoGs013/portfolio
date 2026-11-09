@@ -213,7 +213,7 @@ test.describe('vacante pegada', () => {
     expect(pdf.match(/\/Type\s*\/Page(?!s)/g)?.length).toBe(1)
     await sheet.close()
 
-    // Postular: el destinatario pegado, sin «Enviar desde Eros» (apagado: Eros adjunta otro CV), y «Ya la envié».
+    // Postular: el destinatario pegado, sin «Enviar desde Eros» (apagado sin EROS_SEND_ENABLED=on; encendido en admin-enviar-eros.spec.ts), y «Ya la envié».
     await stage(page, 'Postular').click()
     await expect(page.getByRole('textbox', { name: 'Destinatario' })).toHaveValue(PASTED.email)
     await expect(page.getByRole('button', { name: 'Enviar desde Eros' })).toHaveCount(0)

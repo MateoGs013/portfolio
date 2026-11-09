@@ -26,7 +26,10 @@ export type AdminErrorCode =
   | 'eros_auth' // 502: Eros responde pero rechaza EROS_API_KEY
   | 'eros_error' // 502: Eros respondió con un 5xx o una redirección (no es una caída)
   | 'eros_busy' // 504: una tarea larga (escanear, evaluar en lote) no terminó a tiempo y puede seguir en Eros
-  | 'send_disabled' // 409: «Enviar desde Eros» está apagado (EROS_SEND_ENABLED)
+  | 'send_disabled' // 409: «Enviar desde Eros» está apagado (EROS_SEND_ENABLED en el entorno de la API)
+  | 'cv_out_of_bounds' // 422: el PDF del CV no entra en una página A4 dentro de la cota dual (248-265 mm)
+  | 'pdf_unavailable' // 503: la API no puede imprimir el PDF del CV (falta Chromium)
+  | 'send_outcome_unknown' // 409 o 502: un envío se cortó y no se sabe si salió (409 uno anterior, 502 este)
   | 'internal' // 500
 
 /** Todo error del admin: `error` en español para mostrar tal cual, `errors` por campo (puede venir vacío). */
@@ -181,6 +184,8 @@ export type ErosState = 'ok' | 'cooldown' | 'down' | 'unconfigured' | 'auth'
 export interface AdminStatus {
   db: { ok: boolean, checkedAt: string }
   eros: { state: ErosState, retryInSec: number }
+  /** «Enviar desde Eros» encendido (EROS_SEND_ENABLED=on en el entorno de la API). */
+  erosSend: boolean
 }
 
 // ─── Pendientes (Inicio) ────────────────────────────────────────────────────

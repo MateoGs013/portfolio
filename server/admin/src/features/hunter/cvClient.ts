@@ -43,6 +43,18 @@ function adopt(job: HunterJob, tailored: TailoredCv): void {
   work.cv = tailored
 }
 
+/**
+ * Rearma el CV de la etapa con el mismo pedido (el resumen que estaba en uso) y lo adopta. Lo usa
+ * Postular ante un 409 cv_expired: el CV nuevo se muestra en la etapa CV antes de enviarlo.
+ */
+export async function refreshCv(job: HunterJob): Promise<TailoredCv> {
+  const tailored = await generateCv(job, { useSummaryProposal: workOf(job).cv?.usesSummaryProposal ?? false })
+  adopt(job, tailored)
+  workOf(job).measure = null
+  workOf(job).sheetUrl = null
+  return tailored
+}
+
 /** Corre `read`; ante un 409 rearma el CV con la misma vacante, lo adopta y lo corre una vez más. */
 async function withCv<T>(job: HunterJob, request: CvRequest, read: () => Promise<T>): Promise<T> {
   try {

@@ -106,6 +106,7 @@ El repositorio cuenta con Dockerfiles optimizados para producción:
    - Nunca `EROS_DEMO=1` en producción (la muestra de pruebas igual se apaga con `NODE_ENV=production`), ni `HUNTER_LOCAL_FALLBACK`.
    - El artículo de los lunes: con `NODE_ENV=production` y `HUNTER_API_URL`, la API le pide uno a Eros cada lunes a las 9:00 de Buenos Aires y lo publica sola (si estuvo apagada el lunes, lo pide al volver). `ARTICLES_WEEKLY=off` lo apaga sin tocar el resto de Eros; `ARTICLES_WEEKLY=on` lo enciende en cualquier entorno (fuera de producción, solo contra un Eros y una base de prueba). El estado y el próximo lunes se ven en Artículos del admin. La migración `20261106000000_article_runs` (tabla `ArticleRun`) la aplica el arranque del contenedor.
    - `ADMIN_TOKEN` es la clave del admin: sin un valor válido el admin responde 503. No hay `dev-token` en producción.
+   - «Enviar desde Eros»: apagado sin valor. `EROS_SEND_ENABLED=on` lo enciende, solo después de desplegar el Eros que adjunta el CV del portafolio (eros-agent `feat/cv-del-portfolio`); `off` lo apaga sin deploy. La imagen de la API trae Chromium y las fuentes Liberation (`CHROMIUM_PATH=/usr/bin/chromium` ya viene en `Dockerfile.api`) para imprimir el PDF del CV que se adjunta.
 8. Hacé clic en **"Deploy"**.
 9. **Ejecutar migraciones y seed inicial:**
    - Una vez finalizado el build, ingresá a la pestaña **"Terminal"** del contenedor del backend en Coolify y ejecutá:

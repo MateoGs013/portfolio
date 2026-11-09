@@ -6,6 +6,22 @@ Formato: decisión · alternativa descartada · por qué.
 
 ---
 
+## «Enviar desde Eros» con el CV de la base (4-nov-2026)
+
+**La API imprime el PDF del CV y Eros lo adjunta tal cual.**
+*Descartado:* que Eros arme el PDF desde el HTML de la hoja (PyMuPDF no dibuja el CSS de la hoja y la medida no coincidiría con la etapa CV), un servicio de PDF aparte (Gotenberg: otro contenedor que desplegar y cuidar) y adjuntar solo un enlace o el texto plano.
+*Por qué:* el invariante 6 pide una sola fuente del CV y la cota dual. La API ya arma la hoja desde la base; con Chromium en su imagen (más fuentes Liberation, iguales en medida a Times New Roman) la imprime, la mide como `scripts/cv-pdf.mjs` y se niega a enviar fuera de 248–265 mm. Eros recibe el PDF, su texto y su sha256, los valida antes de tomar la marca de envío y nunca usa uno propio: sin `cv` no envía. Telegram deja de postular porque ahí no hay CV de la base.
+
+**El interruptor es una variable de entorno, no una constante.**
+*Descartado:* `EROS_SEND_ENABLED` en `hunterContracts.ts`.
+*Por qué:* enviar correos es irreversible: Mateo lo prende o lo apaga en Coolify sin un deploy, y las pruebas lo encienden solo contra el Eros simulado (`admin-run --send`).
+
+**Un envío cortado se resuelve a mano: «Ya salió» o reintentar.**
+*Descartado:* solo «Ya la envié» (sin reintento desde el admin) y reintentar solo.
+*Por qué:* nadie sabe si el correo salió hasta mirar el correo enviado. Reintentar manda `force_retry` y pide confirmación diciendo que, si había salido, la empresa la recibe dos veces.
+
+---
+
 ## Artículos de Eros (4-nov-2026)
 
 **Se dejan LinkedIn y X: Eros escribe artículos que se publican solos.**

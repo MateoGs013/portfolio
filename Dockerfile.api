@@ -9,6 +9,10 @@ RUN pnpm install --frozen-lockfile
 
 FROM base AS runner
 ENV NODE_ENV=production
+# «Enviar desde Eros»: la API imprime el PDF del CV con Chromium (server/src/admin/hunterCvPdf.ts).
+# Liberation Serif es métricamente igual a Times New Roman: la hoja mide lo mismo que en la etapa CV.
+RUN apk add --no-cache chromium font-liberation
+ENV CHROMIUM_PATH=/usr/bin/chromium
 # Lo subido desde el admin, aparte de lo versionado: el volumen persistente va en /app/uploads (DEPLOY.md, paso 6).
 ENV MEDIA_UPLOAD_DIR=/app/uploads/projects
 COPY --from=deps /app/node_modules ./node_modules
