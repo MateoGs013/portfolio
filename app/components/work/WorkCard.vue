@@ -6,10 +6,11 @@
  * tinte de la obra si lo tiene. El video de portada corre al apuntar o enfocar la tarjeta y se funde
  * sobre la captura (0,6 s) cuando ya tiene cuadros.
  *
- * Capas que mueve la galería: `data-motion="skew"` (inclinación por velocidad) y
- * `data-motion="parallax"` (la imagen dentro de su marco, más ancha solo en el modo horizontal).
+ * La galería inclina la tarjeta por velocidad (`data-motion="skew"`). La portada se ve entera: nada
+ * la agranda dentro del marco, y una de otra proporción entra entera sobre el fondo (fitClass).
  */
 import type { ProjectSummary, ProjectStatus } from '~/lib/api'
+import { fitClass } from '~/lib/media'
 
 const props = withDefaults(defineProps<{
   project: ProjectSummary
@@ -49,14 +50,15 @@ const DOT: Record<ProjectStatus, string> = { LIVE: 'bg-ok', WIP: 'bg-wip', ARCHI
         >
           {{ project.title }}
         </div>
-        <div v-if="image || video" data-motion="parallax" class="absolute inset-0 group-data-[track]/gallery:-inset-x-[8%]">
+        <div v-if="image || video" class="absolute inset-0">
           <MediaImage
             v-if="image"
             :media="image"
             decorative
             :loading="eager ? 'eager' : 'lazy'"
             :fetchpriority="priority ? 'high' : 'auto'"
-            class="size-full object-cover"
+            :class="fitClass(image)"
+            class="size-full"
           />
           <div v-if="video" aria-hidden="true" class="absolute inset-0">
             <MediaVideo

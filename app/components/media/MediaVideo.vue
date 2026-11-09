@@ -3,7 +3,9 @@
  * Un video de la base (`Media` de tipo VIDEO): WebM y MP4, póster, mudo, en bucle y `playsinline`.
  * Corre solo mientras se ve (IntersectionObserver al 35 %) y según el modo:
  *
- * - `autoplay`: arranca solo (la portada del caso); es el único con `preload="auto"`.
+ * - `autoplay`: arranca solo (la portada del caso); es el único con `preload="auto"`. Le alcanza con
+ *   asomar un 10 %: la portada es alta y al cargar suele empezar en la mitad de abajo de la pantalla
+ *   (en 1440×900 se ve un 34 % de ella), y al 35 % quedaba quieta hasta scrollear.
  * - `in-view`: arranca al entrar en pantalla (los videos de la galería).
  * - `hover`: arranca al apuntar o enfocar la tarjeta o fila que lo contiene. En táctil pasa a `in-view`,
  *   salvo que el navegador pida ahorrar datos.
@@ -29,8 +31,9 @@ const props = withDefaults(defineProps<{
   decorative?: boolean
 }>(), { mode: 'in-view', vt: undefined, hoverTarget: '[data-card], [data-row], [data-view], a', decorative: false })
 
-/** Lo visible que tiene que estar para correr. */
+/** Lo visible que tiene que estar para correr; la portada en autoplay, con asomar. */
 const THRESHOLD = 0.35
+const AUTOPLAY_THRESHOLD = 0.1
 /** Al dejar de apuntar, el video se funde antes de pausarse. */
 const HOVER_PAUSE_MS = 500
 /** WCAG 2.2.2: lo que se mueve solo y no se puede pausar dura 5 s o menos. */
@@ -135,7 +138,7 @@ onMounted(() => {
   observer = new IntersectionObserver(([entry]) => {
     visible.value = !!entry?.isIntersecting
     if (!visible.value) capped.value = false
-  }, { threshold: THRESHOLD })
+  }, { threshold: props.mode === 'autoplay' ? AUTOPLAY_THRESHOLD : THRESHOLD })
   observer.observe(el)
   mounted.value = true
 })

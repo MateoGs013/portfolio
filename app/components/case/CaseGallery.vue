@@ -3,7 +3,9 @@
  * Piezas de la galería (GALLERY, en su `order`), cada una en su marco con el pie de la base como
  * figcaption. Los marcos reservan la proporción real de la pieza (CLS 0).
  *
- * - Captura de escritorio: la imagen se mueve ±6 % dentro del marco (Seguir, parallax con scrub).
+ * - Pieza de escritorio: se ve entera, en su marco exacto; lo que se mueve es la pieza con su pie, de
+ *   +40 a −40 px (Seguir, parallax con scrub). Agrandar la imagen adentro del marco para moverla la
+ *   recortaría por los cuatro lados aun quieta.
  * - Video: corre solo mientras se ve (MediaVideo `in-view`), con su botón de pausa.
  * - `phones`: las de viewport MOBILE, en teléfonos lado a lado que suben a distinto ritmo según la
  *   paridad de su índice.
@@ -23,6 +25,8 @@ const { langAttr } = useLocale()
 const root = useTemplateRef<HTMLElement>('root')
 
 const ratio = (m: Media) => ({ aspectRatio: `${m.width} / ${m.height}` })
+/** Px que sube una pieza de escritorio mientras cruza la pantalla, de +40 a −40. */
+const SHOT_DRIFT = 40
 /** El teléfono impar arranca más abajo y sube más: los dos se cruzan al pasar. */
 const phoneRange = (i: number) => (i % 2 ? { from: 90, to: -30 } : { from: 20, to: -10 })
 
@@ -36,8 +40,8 @@ useMotion(root, ({ el, ambient, desktop }) => {
     })
     return
   }
-  el.querySelectorAll<HTMLElement>('[data-parallax]').forEach((img) => {
-    gsap.fromTo(img, { yPercent: -6 }, { yPercent: 6, ease: 'none', scrollTrigger: scrub(img.parentElement ?? img) })
+  el.querySelectorAll<HTMLElement>('[data-parallax]').forEach((shot) => {
+    gsap.fromTo(shot, { y: SHOT_DRIFT }, { y: -SHOT_DRIFT, ease: 'none', scrollTrigger: scrub(shot.parentElement ?? shot) })
   })
   return undefined
 })
@@ -62,20 +66,20 @@ useMotion(root, ({ el, ambient, desktop }) => {
 
     <div v-else class="flex flex-col gap-[clamp(2.5rem,8vh,5rem)]">
       <figure v-for="m in items" :key="m.src" class="m-0">
-        <div class="relative overflow-hidden rounded-[3px] bg-surface" :style="ratio(m)">
-          <MediaVideo v-if="m.kind === 'VIDEO'" :media="m" class="absolute! inset-0" />
-          <MediaImage
-            v-else
-            :media="m"
-            data-parallax
-            data-motion
-            sizes="(min-width: 48rem) 62vw, 100vw"
-            class="absolute inset-x-0 -top-[10%] h-[120%] w-full max-w-none object-cover"
-          />
+        <div data-parallax data-motion>
+          <div class="relative overflow-hidden rounded-[3px] bg-surface" :style="ratio(m)">
+            <MediaVideo v-if="m.kind === 'VIDEO'" :media="m" class="absolute! inset-0" />
+            <MediaImage
+              v-else
+              :media="m"
+              sizes="(min-width: 48rem) 62vw, 100vw"
+              class="absolute inset-0 size-full object-cover"
+            />
+          </div>
+          <figcaption v-if="m.caption" class="mt-3 text-xs text-dim" :lang="langAttr(m, 'caption')">
+            {{ m.caption }}
+          </figcaption>
         </div>
-        <figcaption v-if="m.caption" class="mt-3 text-xs text-dim" :lang="langAttr(m, 'caption')">
-          {{ m.caption }}
-        </figcaption>
       </figure>
     </div>
   </div>

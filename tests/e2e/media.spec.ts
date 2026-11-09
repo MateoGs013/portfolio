@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test'
+import { expect, test, type Page } from '@playwright/test'
 import motion from '../../app/lib/dict/motion'
 import { api, open, WORKS } from './support'
 
@@ -38,7 +38,36 @@ test('el video admite pedidos por rango (para buscar y reanudar)', async ({ requ
   expect((await res.body()).length).toBe(1024)
 })
 
+/** La caja de cada imagen o video de `scope` contra la del marco que la recorta (más de 1: se sale y se recorta). */
+async function shown(page: Page, scope: string) {
+  return page.locator(scope).evaluateAll(els => els.map((el) => {
+    const r = el.getBoundingClientRect()
+    let frame = el.parentElement
+    while (frame && !['hidden', 'clip'].includes(getComputedStyle(frame).overflow)) frame = frame.parentElement
+    const f = (frame ?? el).getBoundingClientRect()
+    return { src: (el as HTMLImageElement).currentSrc || el.getAttribute('src'), w: r.width / f.width, h: r.height / f.height }
+  }))
+}
+
+test.describe('las capturas se ven enteras', () => {
+  // Una caja más grande que el marco con object-cover agranda la captura y la recorta por los cuatro lados.
+  for (const [path, scope] of [['/projects/la-rucula', '[data-vt="cover"] :is(img, video), figure :is(img, video)'], ['/projects', '[data-card] :is(img, video)']] as const) {
+    test(`ninguna se agranda dentro de su marco en ${path}`, async ({ page }) => {
+      await open(page, path)
+      const boxes = await shown(page, scope)
+      expect(boxes.length).toBeGreaterThan(0)
+      for (const box of boxes) expect(Math.max(box.w, box.h), box.src ?? '').toBeLessThanOrEqual(1.005)
+    })
+  }
+})
+
 test.describe('en el caso', () => {
+  test('la portada en video arranca al cargar, aunque asome menos de un tercio', async ({ page }) => {
+    await open(page, '/projects/la-rucula')
+    const cover = page.locator('[data-vt="cover"] video').first()
+    await expect.poll(() => cover.evaluate((v: HTMLVideoElement) => v.currentTime), { timeout: 8000 }).toBeGreaterThan(0)
+  })
+
   test('la portada en video arranca sola al verse y su botón la pausa', async ({ page }) => {
     await open(page, '/projects/la-rucula')
     const cover = page.locator('[data-vt="cover"] video').first()

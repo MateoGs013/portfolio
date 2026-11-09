@@ -5,6 +5,7 @@
  * valor es `NULL`. La forma la decide `cellFor` de app/lib/record.ts; `class` y `lang` van a la raíz.
  */
 import type { RouteLocationRaw } from 'vue-router'
+import { fitClass } from '~/lib/media'
 import { valueClass, type Cell } from '~/lib/record'
 
 const props = withDefaults(defineProps<{
@@ -29,7 +30,8 @@ const link = 'underline decoration-faint decoration-1 underline-offset-4 transit
     <li v-for="(media, i) in cell.media" :key="i" class="flex items-center gap-4">
       <img
         v-if="media.src"
-        class="flip block aspect-[16/10] w-34 shrink-0 rounded-[2px] bg-surface object-cover"
+        :class="fitClass(media)"
+        class="flip block aspect-[16/10] w-34 shrink-0 rounded-[2px] bg-surface"
         :src="media.src"
         :alt="media.alt"
         :width="media.width"

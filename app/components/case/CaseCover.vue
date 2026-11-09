@@ -2,18 +2,21 @@
 /**
  * La captura que crece (Transformar, docs/diseno.md §2): la portada del caso como pantalla enmarcada.
  * Con desktop, puntero fino y movimiento, arranca a .88 con radio de 6 px y llega al borde con scrub
- * (de `top 85%` a `top 10%`) mientras la imagen se desliza adentro de 0 a −8 %. En táctil, por debajo de
- * 768 px, con reduced motion o en Hiperfoco queda estática.
+ * (de `top 85%` a `top 10%`). En táctil, por debajo de 768 px, con reduced motion o en Hiperfoco queda
+ * estática. La captura se ve entera: el marco es 16:10 como ella (nunca más alto que la pantalla: en una
+ * pantalla más ancha se angosta en vez de recortarla) y nada la agranda adentro.
  *
  * - `data-vt="cover"` en el marco: el par de la portada de la tarjeta, la fila o «Siguiente», con la
  *   misma imagen (la COVER IMAGE, eager y prioridad alta: es el LCP).
  * - La COVER VIDEO corre encima en autoplay y se funde sobre la captura cuando ya tiene cuadros.
- * - El marco reserva su caja con aspect-ratio (CLS 0). Sin portada, una placa con el título.
+ * - El marco reserva su caja con aspect-ratio (CLS 0). Sin portada, una placa con el título. Una
+ *   portada de otra proporción entra entera sobre el fondo del marco (fitClass).
  * - El SSR ya pinta el estado inicial del crecimiento con las mismas condiciones, así no salta al hidratar.
  * - En registro, el campo `media` muestra todas las piezas de la obra como miniaturas.
  */
 import gsap from 'gsap'
 import type { Project } from '~/lib/api'
+import { fitClass } from '~/lib/media'
 
 const props = defineProps<{ project: Project }>()
 
@@ -21,7 +24,6 @@ const HEX = /^#[0-9a-f]{6}$/i
 
 const section = useTemplateRef<HTMLElement>('section')
 const frame = useTemplateRef<HTMLElement>('frame')
-const inner = useTemplateRef<HTMLElement>('inner')
 
 const covers = computed(() => props.project.media.filter(m => m.role === 'COVER'))
 const image = computed(() => covers.value.find(m => m.kind === 'IMAGE') ?? covers.value[0])
@@ -42,13 +44,6 @@ useMotion(section, ({ el, ambient, desktop, fine }) => {
     // SSR es exacto (sin salto al hidratar).
     scrollTrigger: { trigger: el, start: 'clamp(top 85%)', end: 'top 10%', scrub: true },
   })
-  if (inner.value) {
-    gsap.fromTo(inner.value, { yPercent: 0 }, {
-      yPercent: -8,
-      ease: 'none',
-      scrollTrigger: { trigger: el, start: 'top bottom', end: 'bottom top', scrub: true },
-    })
-  }
   return undefined
 })
 
@@ -64,18 +59,17 @@ const growing = 'md:motion-safe:fine:[:root:not([data-hyperfocus=true])_&]:[tran
         data-vt="cover"
         data-motion
         :class="growing"
-        class="relative aspect-[16/10] max-h-svh w-full origin-top overflow-hidden bg-surface will-change-transform focus-mode:rounded-[3px]"
+        class="relative mx-auto aspect-[16/10] w-full max-w-[160svh] origin-top overflow-hidden bg-surface will-change-transform focus-mode:rounded-[3px]"
       >
-        <div ref="inner" data-motion class="absolute inset-x-0 top-0 h-[112%]">
-          <MediaImage
-            v-if="image"
-            :media="image"
-            loading="eager"
-            fetchpriority="high"
-            sizes="100vw"
-            class="size-full object-cover object-top"
-          />
-        </div>
+        <MediaImage
+          v-if="image"
+          :media="image"
+          loading="eager"
+          fetchpriority="high"
+          sizes="100vw"
+          :class="fitClass(image)"
+          class="size-full"
+        />
         <MediaVideo
           v-if="video"
           :media="video"
