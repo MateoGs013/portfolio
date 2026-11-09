@@ -15,6 +15,9 @@
  * Pausa visible (WCAG 2.2.2): un botón sobre el video, abajo a la izquierda (las capturas suelen tener
  * su propio botón flotante abajo a la derecha). Dentro de un enlace no puede haber un botón,
  * así que ahí lo que arranca solo se detiene a los 5 s (el margen que da la pauta).
+ *
+ * Si el WebM no se puede decodificar, se queda el MP4: un error de decodificación no hace que el
+ * navegador pruebe la fuente siguiente (pasó con VP9 de rango completo en Chromium para Windows).
  */
 import type { Media } from '~/lib/api'
 import type { VtName } from '~/composables/useMotion'
@@ -53,6 +56,8 @@ const playing = ref(false)
 const capped = ref(false)
 /** Lo que pidió la persona con el botón: manda sobre lo automático. */
 const choice = ref<'auto' | 'play' | 'pause'>('auto')
+/** El WebM falló al decodificar: desde ahí, solo el MP4. */
+const webmFailed = ref(false)
 
 /** El disparador real en este dispositivo. */
 const trigger = computed<Mode | 'none'>(() => {
@@ -113,6 +118,16 @@ watch(ambient, (on) => {
   stop(el, 0)
   if (props.media.poster && el.currentTime > 0) el.load()
 })
+
+/** Un WebM que no decodifica no pasa solo al MP4: se saca su fuente y se vuelve a cargar. */
+async function onError() {
+  const el = video.value
+  if (!el || webmFailed.value || !props.media.srcWebm || !/\.webm$/i.test(el.currentSrc)) return
+  webmFailed.value = true
+  await nextTick()
+  el.load()
+  if (shouldPlay.value) start(el)
+}
 
 function toggle() {
   choice.value = playing.value ? 'pause' : 'play'
@@ -175,8 +190,9 @@ onBeforeUnmount(() => {
       :data-vt="vt"
       @playing="playing = true"
       @pause="playing = false"
+      @error="onError"
     >
-      <source v-if="media.srcWebm" :src="media.srcWebm" type="video/webm">
+      <source v-if="media.srcWebm && !webmFailed" :src="media.srcWebm" type="video/webm">
       <source :src="media.src" type="video/mp4">
     </video>
     <button
