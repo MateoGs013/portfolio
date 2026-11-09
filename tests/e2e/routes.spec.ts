@@ -1,10 +1,10 @@
 import { expect, test } from '@playwright/test'
 import shell from '../../app/lib/dict/shell'
-import { HIDDEN_WORKS, WORKS } from './support'
+import { api, HIDDEN_WORKS, WORKS } from './support'
 
 /**
- * La ruta es el estado (docs/diseno.md §8): las canónicas responden 200 desde el SSR, solo las seis
- * obras publicadas existen, todo lo demás redirige con 301 conservando la query y el sitemap lista lo
+ * La ruta es el estado (docs/diseno.md §8): las canónicas responden 200 desde el SSR, solo las obras
+ * publicadas existen, todo lo demás redirige con 301 conservando la query y el sitemap lista lo
  * mismo que se puede visitar. Se lee el HTML tal como llega, sin JS.
  */
 const CANONICAL = [
@@ -46,7 +46,7 @@ test.describe('obras', () => {
     })
   }
 
-  test('la lista de la API son exactamente las seis obras', async ({ request }) => {
+  test('la lista de la API son exactamente las obras publicadas', async ({ request }) => {
     const { data } = await (await request.get('/api/projects')).json() as { data: { slug: string }[] }
     expect(data.map(p => p.slug).sort()).toEqual([...WORKS].sort())
   })
@@ -122,12 +122,16 @@ test.describe('estado del SSR en <html>', () => {
   })
 })
 
-test('el sitemap lista 11 páginas en castellano y en inglés, cada una con sus alternativas', async ({ request }) => {
-  // /, /projects, /about, las 6 obras, /articles y el artículo del seed; cada una como ES y como EN.
+test('el sitemap lista cada página en castellano y en inglés, cada una con sus alternativas', async ({ request }) => {
+  // /, /projects, /about, las obras publicadas, /articles y cada artículo publicado (Eros suma uno por
+  // semana); cada una como ES y como EN.
+  const articles = await api<{ slug: string }[]>(request, '/articles')
+  const pages = 3 + WORKS.length + 1 + articles.length
   const xml = await (await request.get('/sitemap.xml')).text()
-  expect(xml.match(/<url>/g)).toHaveLength(22)
-  expect(xml.match(/<loc>[^<]+\?lang=en<\/loc>/g)).toHaveLength(11)
-  expect(xml.match(/hreflang="en"/g)).toHaveLength(22)
+  expect(xml.match(/<url>/g)).toHaveLength(pages * 2)
+  expect(xml.match(/<loc>[^<]+\?lang=en<\/loc>/g)).toHaveLength(pages)
+  expect(xml.match(/hreflang="en"/g)).toHaveLength(pages * 2)
+  for (const { slug } of articles) expect(xml).toContain(`/articles/${slug}</loc>`)
   for (const slug of WORKS) expect(xml).toContain(`/projects/${slug}</loc>`)
   for (const slug of HIDDEN_WORKS) expect(xml).not.toContain(slug)
 })

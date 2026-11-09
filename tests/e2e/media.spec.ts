@@ -11,7 +11,7 @@ interface MediaRow { kind: 'IMAGE' | 'VIDEO', role: string, src: string, srcWebm
 
 const TYPES: Record<string, RegExp> = { webp: /image\/webp/, png: /image\/png/, jpg: /image\/jpeg/, webm: /video\/webm/, mp4: /video\/mp4/ }
 
-test('cada archivo de las seis obras responde desde el origen del sitio con su tipo', async ({ request, baseURL }) => {
+test('cada archivo de las obras publicadas responde desde el origen del sitio con su tipo', async ({ request, baseURL }) => {
   const files = new Set<string>()
   for (const slug of WORKS) {
     const project = await api<{ media: MediaRow[], steps: { media: MediaRow | null }[] }>(request, `/projects/${slug}`)

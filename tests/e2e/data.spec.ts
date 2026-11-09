@@ -1,7 +1,7 @@
 import { readdirSync, readFileSync } from 'node:fs'
 import { join, relative } from 'node:path'
 import { expect, test } from '@playwright/test'
-import { api } from './support'
+import { api, WORKS } from './support'
 
 /**
  * Cero contenido escrito a mano (decisión 5): nombres, ubicaciones, cifras, obras y enlaces salen de
@@ -59,7 +59,7 @@ test.describe('literales prohibidos', () => {
 
   test('en el inicio y la obra (P1, P2): ni las obras ni el nombre', async ({ request }) => {
     const works = await api<{ slug: string, title: string }[]>(request, '/projects')
-    expect(works.length).toBe(6)
+    expect(works.length).toBe(WORKS.length)
     const home = [...under('app/components/home'), 'app/pages/index.vue']
     expect(offenders(home, [...works.map(w => w.title), ...works.map(w => w.slug), 'Mateo', 'Sonzogni'])).toEqual([])
     expect(offenders(under('app/components/work'), works.map(w => w.slug))).toEqual([])
