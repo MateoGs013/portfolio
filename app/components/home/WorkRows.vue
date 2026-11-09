@@ -15,6 +15,7 @@
  * previa vive afuera, en el body.
  */
 import type { ProjectSummary } from '~/lib/api'
+import { fitClass } from '~/lib/media'
 
 defineProps<{
   projects: readonly ProjectSummary[]
@@ -74,7 +75,8 @@ const dim = 'fine:not-focus-mode:group-hover/rows:not-hover:opacity-25'
             :media="coverOf(p)!"
             decorative
             sizes="8rem"
-            class="block aspect-[16/10] w-full object-cover"
+            :class="fitClass(coverOf(p)!)"
+            class="block aspect-[16/10] w-full"
             :data-travel-cover="thumbTravels ? '' : undefined"
           />
         </span>

@@ -15,6 +15,7 @@
  */
 import gsap from 'gsap'
 import type { ProjectSummary } from '~/lib/api'
+import { fitClass } from '~/lib/media'
 
 const props = defineProps<{
   projects: readonly ProjectSummary[]
@@ -142,7 +143,8 @@ defineExpose({
                 fetchpriority="low"
                 sizes="26rem"
                 :data-preview-cover="`/projects/${item.slug}`"
-                class="block aspect-[16/10] w-full object-cover"
+                :class="fitClass(item.cover)"
+                class="block aspect-[16/10] w-full bg-surface"
               />
               <div
                 v-else
