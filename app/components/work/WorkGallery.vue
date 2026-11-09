@@ -7,7 +7,6 @@
  *
  * - `pin` del escenario interno (nunca de la raíz del componente, que Vue tiene que poder sacar), con
  *   `scrub: .8`, `invalidateOnRefresh` y una barra de progreso de 1 px.
- * - Parallax de cada imagen dentro de su marco (±5 %, `containerAnimation`).
  * - `skewX` por velocidad de scroll con `quickTo` (tope ±6°), que vuelve a 0 al frenar y antes de
  *   navegar, así la foto de la view transition sale derecha.
  * - Foco con Tab o j/k en una tarjeta fuera de cuadro: el scroll (Lenis si está) la trae a la vista.
@@ -30,7 +29,6 @@ const props = defineProps<{
 const SKEW_MAX = 6
 /** Grados por px/s de velocidad: el −velocity × .18 del prototipo, con la velocidad por cuadro de Lenis. */
 const SKEW_PER_SPEED = 0.003
-const PARALLAX = 5
 const SCRUB = 0.8
 
 const { t } = useLocale()
@@ -54,13 +52,13 @@ const items = () => [...(track.value?.children ?? [])] as HTMLElement[]
 const layers = (selector: string) => items().map(li => li.querySelector<HTMLElement>(selector)).filter(el => el !== null)
 
 interface Horizontal {
-  /** Las tarjetas cambiaron: parallax nuevo y medidas nuevas. */
+  /** Las tarjetas cambiaron: medidas nuevas. */
   rebuild: () => void
   destroy: () => void
 }
 
 /** La pista horizontal. Crea todo dentro de la escena: revertirla deshace el pin y su espaciador. */
-function horizontal(el: HTMLElement, pinned: HTMLElement, list: HTMLElement, add: <T>(fn: () => T) => T): Horizontal {
+function horizontal(el: HTMLElement, pinned: HTMLElement, list: HTMLElement): Horizontal {
   el.dataset.track = ''
   const dist = () => Math.max(0, list.scrollWidth - pinned.clientWidth)
   const tween = gsap.to(list, { x: () => -dist(), ease: 'none' })
@@ -89,20 +87,6 @@ function horizontal(el: HTMLElement, pinned: HTMLElement, list: HTMLElement, add
       if (!self.isActive) toLean(0)
     },
   })
-
-  let parallax: gsap.core.Tween[] = []
-  function buildParallax() {
-    parallax.forEach((p) => {
-      p.scrollTrigger?.kill()
-      p.kill()
-    })
-    parallax = layers('[data-motion="parallax"]').map(layer => gsap.fromTo(layer, { xPercent: -PARALLAX }, {
-      xPercent: PARALLAX,
-      ease: 'none',
-      scrollTrigger: { trigger: layer.closest('li'), containerAnimation: tween, start: 'left right', end: 'right left', scrub: true },
-    }))
-  }
-  buildParallax()
 
   const settle = () => toLean(0)
   ScrollTrigger.addEventListener('scrollEnd', settle)
@@ -138,7 +122,6 @@ function horizontal(el: HTMLElement, pinned: HTMLElement, list: HTMLElement, add
   return {
     rebuild() {
       skews = layers('[data-motion="skew"]')
-      add(buildParallax)
       ScrollTrigger.refresh()
     },
     destroy() {
@@ -147,7 +130,6 @@ function horizontal(el: HTMLElement, pinned: HTMLElement, list: HTMLElement, add
       offBefore()
       offAfter()
       gsap.killTweensOf(lean)
-      parallax.forEach(p => p.revert())
       st.kill(true)
       tween.revert()
       gsap.set(skews, { clearProps: 'transform' })
@@ -164,7 +146,7 @@ useMotion(root, ({ el, desktop, ambient, transitions, hyperfocus, add }) => {
 
   // Con dos tarjetas o menos la grilla ya es la pista: no hay nada que desplazar.
   const wantsRail = () => desktop && ambient && list.children.length > 2
-  let rail = wantsRail() ? horizontal(el, pinned, list, add) : null
+  let rail = wantsRail() ? horizontal(el, pinned, list) : null
 
   let state: Flip.FlipState | null = null
   beforeChange = () => {
@@ -176,7 +158,7 @@ useMotion(root, ({ el, desktop, ambient, transitions, hyperfocus, add }) => {
       rail = null
       ScrollTrigger.refresh()
     }
-    else if (!rail && wantsRail()) rail = add(() => horizontal(el, pinned, list, add))
+    else if (!rail && wantsRail()) rail = add(() => horizontal(el, pinned, list))
     else rail?.rebuild()
     if (!state) return
     const from = state
@@ -196,7 +178,7 @@ useMotion(root, ({ el, desktop, ambient, transitions, hyperfocus, add }) => {
     rail = null
   }
   const onPrint = () => {
-    if (!rail && wantsRail()) rail = add(() => horizontal(el, pinned, list, add))
+    if (!rail && wantsRail()) rail = add(() => horizontal(el, pinned, list))
   }
   window.addEventListener('beforeprint', offPrint)
   window.addEventListener('afterprint', onPrint)
